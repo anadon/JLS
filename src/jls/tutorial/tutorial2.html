@@ -1,0 +1,139 @@
+<html>
+
+<head>
+<title>JLS Tutorial</title>
+</head>
+
+<body>
+<center>
+<h2>A 4-bit Counter</h2>
+</center>
+
+<p>
+We could build this whole circuit from gates and wires, but we'll make it a
+lot simpler by using a register, and adder, and a clock.
+Here's what it will look like:
+<br>
+<img src=counter.jpg>
+
+<p>
+If you just finished the previous tutorial, then lets hide the simulator
+window so we have more room to work.
+To do so, select <b>Hide</b> from the <b>Simulator</b> menu.
+
+<p>
+Now lets get rid of the previous circuit.
+You have several options.
+
+<ol>
+<li>
+Pick the close option from the <b>File</b> menu, then create a new
+circuit as we did when we first started the previous circuit.
+<li>
+Get the cursor into the circuit editing area and type CTRL-A
+(select all), followed by CTRL-X (cut) or "delete".
+<li>
+Select all the elements in the old circuit by moving the cursor somewhere
+to the left/right top/bottom of the everything that is there, drag the mouse
+to draw a rectangle around everything, releasing it and cutting or deleting
+what was selected.
+After you select everything but before you delete everything, try dragging
+everything around (just so you know you can do it, even when you only
+select some of the elements in the circuit in this way).
+</ol>
+
+<p>
+Select the register element from the toolbar (near the middle, looks like
+a D flip-flop).
+Pick <b>Neg Trig</b>, give it a name, set the bits to 4 and click on <b>OK</b>.
+Place it in the middle somewhere.
+You now have a 4-bit register constructed from four negative-edge triggered
+D flip-flops.
+
+<p>
+Next select an adder element from the toolbar (the icon with the plus sign
+in the middle).
+Give it 4 bits, then place it to the right of the register.
+
+<p>
+Draw a wire from the Q output of the register to either the A or B input
+of the adder.
+This wire is actually a bundle of four wires - move the cursor over the wire
+and check the description in the <font color=cyan>cyan</font> message
+area below the tool bar.
+
+<p>
+Create a constant element with value 1 and connect it to the other input of
+the adder.
+Create a constant element with value 0 and connect it to the Cin (carry in)
+input of the adder.
+
+<p>
+Connect the S output of the adder to the D input of the register with a
+multi-segment wire.
+
+<p>
+We now need to cycle the C input of the register to make the circuit count.
+The cycle time must be long enough get a value into and out of the register
+and through the adder.
+Check the propogation delays of the elements (50 for the register, 120 for 
+the adder), so the cycle time must be at least 50+120 = 170.
+Its not a good idea to have the cycle time be exactly the propagation delay
+of the circuit (in fact the simulator actions will be undefined if you do),
+so we'll create a clock element with a cycle time larger than 170.
+
+<p>
+Select the clock element (just right of the adder on the toolbar), and set the
+cycle time to 175.
+You can leave the "One Time" set to 1 or change it to any value less than 175.
+The "One Time" is the lenght of time the clock output will be a 1.
+The remaining time the clock will be 0.
+Connect the clock to the C input of the register, drag the clock to the
+left a couple of inches, then put a probe on the wire connecting the clock and
+the register (call it "clock"!).
+
+<p>
+We could put a probe on hte wire connected to the D output of the register
+in order to trace the value in the register.
+However, a register (and a few other elements, like memory) can be
+<i>watched</i>, which will also produce a trace of the value in the register.
+Lets make the register watched by right clicking on it and selecting the
+<b>Watch Element</b> option.
+Notice that the element turns blue when the cursor is not on it.
+This indicates that it is being "watched".
+
+<p>
+We'll step the simulator for now since otherwise it will run for a long, long time (since the clock will keep cycling).
+Since the cycle time is long, it will be a pain to step one time unit at a time,
+so set the step time to something like 10 to make things go faster.
+Now start clicking the <font color=cyan>Step</font> button.
+The signal traces will show the clock cycling and the output of the register
+increasing as you progress.
+
+<p>
+Click the <font color=red>Stop</font> button when you've seen enough.
+
+<p>
+Now select the "stop" element from the toolbar (the one looks like a stop
+sign) and connect any of its four inputs to the Cout (carry out) output of the
+adder.
+The stop element will stop the simulator when its input becomes a one.
+Now click the <font color=green>Restart</font> button to run the simulator.
+It will simulate until the counter becomes 15 and the carry out becomes 1,
+then stop automatically.
+
+<p>
+The signal trace ran off the screen, but it can be compressed to fit.
+Change the value in the "Scale Factor" box to 5 and click on <b>Apply</b>.
+
+<p>
+The values in the signal trace are in decimal (base 10).
+To see them in binary or hex, click on the appropriate button below the
+scale factor.
+
+<p>
+To re-arrange the stacking order of the traces, right click on the probe
+name of any signal and select the desired option.
+
+</body>
+</html>

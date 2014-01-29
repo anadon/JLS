@@ -1,0 +1,128 @@
+<html>
+
+<head>
+<title>JLS Tutorial</title>
+</head>
+
+<body>
+<center>
+<h2>Sign Extension</h2>
+</center>
+
+<p>
+A single "wire" (a line) connecting elements can represent one wire or a bundle of wires.
+The bundle element allows you to create a wire bundle from existing single
+wires or smaller bundles.
+The unbundle elements allows you to break up a bundle into various
+combinations of wires and bundles.
+
+<p>
+To demonstrate this, we'll construct a subcircuit that has a single 16-bit
+input, assumed to represent a 16-bit two's complement binary number, and a
+single 32-bit output which will equal the same number being input as a 32-bit
+two's complement number.
+To do so we need sign extend the 16-bit input to 32 bits.
+
+<p>
+To do this in JLS we need to do three things:
+<ol>
+<li>
+Unbundle the 16-bit input into two parts: a single-bit (the sign bit)
+and the lower 15 bits.
+<li>
+Make 17 copies of the sign bit.
+<li>
+Bundle the 17 copies of the sign bit with the lower 15 bits from the input.
+</ol>
+
+<p>
+Here's what the circuit will look like when we are done:
+<p>
+<img src=signext.jpg>
+
+<p>
+Let's assume this will be a subcircuit, so first create the 16-bit input pin
+and the 32-bit output pin.
+Then select the unbundle element from the toolbar (it looks like a left set
+brace with three dots).
+When the create dialog appears first set the number of bits to 16.
+
+<p>
+Now we need to choose between unbundling the single 16-bit input wire into 16
+separate single output wires, or to group the output wires.
+You might want to try the first option just to see what happens - if you do,
+then just delete the element you get and start over.
+
+<p>
+Select the "Group Bits" option and then click the "OK" button.
+You will get a new dialog with all the input bit numbers on the left and an
+area to show the output groupings on the right.
+We need two outputs: bit 15 (the sign) and bits 14-0 (the rest).
+Since the input bits are shown from 0 on top to 15 on the bottom, we'll create
+the 15-bit output first.
+
+<p>
+To select a group (range), you first need to click on one of the bits
+(high or low), then hold the shift key down and click on the other one.
+Since our range is 14-0, and since bit 0 is already selected (highlighted),
+all you need to do is scroll down to bit 14, hold the shift key down, and click
+on 14.
+This will cause the entire group to become highlighted.
+If this doesn't happen you probably forgot to hold down the shift key.
+
+<p>
+To make the selection "official", now click on the "&gt;&gt;&gt;" button just
+to the right.
+When you do so the bit range (group) just selected is now shown in the "chosen"
+box.
+(You can remove a bit range from the chosen side by clicking on it and then
+clicking on the "&lt;&lt;&lt;" button.)
+Now return to the input bits and click on bit 15, then on the "&gt;&gt;&gt;"
+button.
+The chosen box should now show 14-0 and 15 as the chosen outputs.
+Click on OK and then connect the input of the new element to the output of
+the "Input" pin.
+
+<p>
+Next we have to make 17 copies of bit 15.
+Select the bit copy elements from the toolbar (it looks like a left square
+bracket with two dots and a right set brace and is right under the output
+pin element in the toolbar).
+Set the number of bits to 17 and click on OK, then place the element a short
+distance away from the unbundle element you created previously.
+Connect output bit 15 of the unbundle element to the input of the bit copy
+element with a wire.
+
+<p>
+Finally we need to bundle the remaining 15 bits from the unbundle element
+with the 17 bits from the bit copy element.
+Select the bundle element from the toolbar (it is just to the right of the
+unbundle element).
+Set the number of bits to 32, pick the "Group Bits" option, and click on OK.
+This time the bit groups we want are 14-0 (from the unbundle element) and
+15-31 (from the bit copy element).
+This works just like the unbundle element, so click on bit 0 then hold the
+shift key down and click on bit 14, then click on "&gt;&gt;&gt;" to choose it.
+Then do likewise for bits 31-15.
+When you are done the chosen box should show the two desired ranges.
+Click on OK and place the element so that the output of the new bundle element
+is connected to the input of the "Output" pin.
+
+<p>
+To complete the circuit, draw wires between the 0-14 output of the unbundle
+element to the 14-0 input of the bundle element, and between the output of the
+bit copy element to the 31-15 input of the bundle element.
+
+<p>
+That completes this tutorial, but here's something about the unbundle element
+that can be very useful.
+The unbundle element can create different outputs that have overlapping inputs.
+For example, a 3-bit input (bits 0, 1 and 2) could be unbundled into all (or
+any combination) of the outputs: 0, 1, 2, 1-0, 2-1, 2-0.
+A particular common use of this feature would be to unbundle an encoded
+CPU instruction word into various fields when there are multiple instruction
+formats (i.e., the bits in the instruction mean different things depending
+on the op-code).
+
+</body>
+</html>

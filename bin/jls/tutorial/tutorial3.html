@@ -1,0 +1,110 @@
+<html>
+
+<head>
+<title>JLS Tutorial</title>
+</head>
+
+<body>
+<center>
+<h2>Full Adder from Half Adder Subcircuits</h2>
+</center>
+
+<p>
+First we'll construct a half adder circuit.
+This is simply an XOR gate for the sum and an AND gate for the carry,
+both connected to the same two inputs, and looks like this:
+<br>
+<img src=halfadder.jpg>
+
+<p>
+Since this is a subcircuit, we will eventually need a way to refer to the
+inputs and outputs of this subcircuit.
+Thats what the symbols labelled "A", "B", "SUM" and "Carry" are.
+These are input and output "pins".
+Find the symbols in the toolbar and create them by filling in the names
+in the dialog boxes when they appear.
+Then create the XOR and AND gates and connect the outputs of the gates
+to the inputs of the "SUM" and "Carry" output pins.
+
+<p>
+The wiring between the input pins A and B and the gates is slightly more
+complex this time because we have to connect one output (e.g., A) to two
+inputs (the XOR gate and the AND gate).
+Its easy to do.
+First connect the output of A to the input of the XOR by drawing a wire.
+
+<p>
+Next let's draw a wire starting at the middle of the A-to-XOR wire to the
+top input of the AND gate.
+First start a wire (via menu or hot key), then drag the wire start circle
+so that it touches the existing wire somewhere along its length.
+The wire start circle and the wire will become green when a connection is
+possible.
+Left click to connect, then finish the wire to the input of the AND gate.
+Use the same process to finish connecting B.
+
+<p>
+This completes the subcircuit.
+Now let's create another circuit, a full adder, that includes to half adder
+subcircuits.
+Without closing the "ha" circuit create a new circuit called "fa".
+Note the tabs showing that both circuits are avialable to be editted simply
+by clicking on the associated tag.
+
+<p>
+The circuit we will construct looks like this:
+<br>
+<img src=fulladder.jpg>
+
+<p>
+The two large squares represent "imported" <i>copies</i> of the half adder
+circuit we just created.
+These are not links to the half adder, but two distinct copies.
+We could even change one of the half adder copies and leave the other
+alone if we wanted to.
+Also note that a subsequent change to the original half adder circuit will
+NOT be reflected in the imported copies.
+
+<p>
+Lets first import the two half adders, then you can hook things up.
+Click on the <b>Import</b> pull-down list at the right end of the toolbar.
+The circuit "ha" will appear.
+Select it.
+Type in the name "upper" in the dialog box and place the resulting element
+somewhere in the drawing area.
+Now do the same thing again, this time giving it the name "lower".
+"upper" and "lower" are the local names of the subcircuits in the larger
+"fa" circuit.
+Now add the OR gate and hook things up.
+
+<p>
+Just for fun let's modify one of the imported half adders by replacing the
+XOR gate with the AND/OR/NOT equivalent.
+Right click on the "upper" element and select <b>modify</b>.
+Note that the imported circuit appears, and that there is now a tab with
+the label "upper in fa".
+This clearly identifies the circuit you are editting as the one called
+"upper", which is a subcircuit of "fa".
+There is no longer any association of the subcircuit with the original
+"ha" circuit.
+
+<p>
+Now delete the XOR gate by right clicking on it and selecting <b>delete</b>.
+Then add the equivalent AND, OR and NOT gates.
+You'll probably have to move things around to make room.
+When you are done you must close the subcircuit circuit in order to make
+any changes to the main circuit that contains it.
+
+<p>
+Now test your full adder circuit by attaching constant inputs and putting probes
+on the outputs.
+It should be interesting to see the resulting output signal traces with
+all the various gate propagation delays.
+
+<p>
+If you have time, try creating an N-bit adder circuit using full-adder
+subcircuits.
+Subcircuits can be arbitrarily nested!
+
+</body>
+</html>

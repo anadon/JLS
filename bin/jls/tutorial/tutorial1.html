@@ -1,0 +1,246 @@
+<html>
+
+<head>
+<title>JLS Tutorial</title>
+</head>
+
+<body>
+<center>
+<h2>
+JLS Introduction
+<br>
+Simple Combinational Circuit
+<br>
+A + ~B
+</h2>
+</center>
+
+<p>
+The first thing you need to do is create a new circuit and editor.
+Pull down the <b>File</b> menu and select <b>New</b>.
+A dialog box will appear.
+Type in any name you like for your circuit and hit return(enter)
+or click on <b>OK</b>.
+Give it a few seconds as a lot needs to be done and it takes a while
+over the network (including loading images).
+
+<p>
+The circuit we will draw and eventually simulate looks like:
+<br>
+<img src=AornotB.jpg>
+<br>
+so lets get started.
+
+<p>
+You will see a large drawing area and a toolbar full of logic elements.
+Click on the OR gate.
+A dialog box will appear that will allow you to customize the gate.
+The gate we want is the default case (2 inputs, one gate, facing right), so
+simply click on <b>OK</b>.
+
+<p>
+The symbol for the OR gate should now appear, outlined in
+<font color=pink>pink</font>.
+It will follow the movement of the mouse, so move it to the center of the
+drawing area and left click to place it (right clicking will cancel
+the creation of the gate).
+Notice that when you are placing the gate there is a message with a yellow
+background in the upper left of the window that guides you.
+You can check this at any time if you are unsure what to do next or what
+"state" the circuit editor is in.
+
+<p>
+Once you've placed the gate, move the cursor around the window.
+Note that whenever you move the cursor over the gate its bounding box
+becomes visible.
+Move the cursor over the gate, press and hold the left mouse button,
+and drag the gate around the screen.
+Releasing the mouse button will place the gate at its current location.
+
+<p>
+Next select a NOT gate, say <b>OK</b> to the default characteristics, and get
+ready to place it.
+You have a couple of options.
+You can place it near the OR gate and then create a wire to connect it
+to the OR gate.
+Alternatively you can move the output of the NOT gate so that it touches
+one of the inputs of the OR gate - this will automatically connect them.
+We'll automatically connect them right now and draw wires later.
+
+<p>
+Drag the NOT gate so that its output touches the lower input of the OR gate.
+Notice that the output/input become green when they touch.
+This means that a connection is possible.
+Many connections are not possible (e.g., connecting the outputs of two
+gates) and if you try to make one you won't get a green.
+Once you get a green, left click to place the NOT gate and automatically
+connect it to the OR gate.
+
+<p>
+If you'd now like the NOT gate to be a little farther away from the OR
+gate, just move the cursor over it, press and old the left mouse button,
+and drag the NOT gate wherever you want it.
+Notice that there is a wire connecting the two gates that follows the
+NOT gate as you drag it around.
+
+<p>
+At this point we have all the gates we need for the boolean expression.
+The unattached input of the OR gate is A and the input of the NOT gate
+is B.
+Lets test it by connecting constant values (0's or 1's) to the inputs.
+
+<p>
+We'll first place and connect two elements that generate constant values in
+our circuit.
+Pick the image from the toolbar that is a small rectangle with the letter N
+inside and a line sticking out the right end.
+You'll get a dialog box in which you can set the constant value, and there
+are two ways to do it.
+One is to type the value into the box indicated.
+The other is to click on the <b>black</b> triangle and get a keypad that you
+can click in the digits of the value.
+Try both if you like.
+Click <b>OK</b> when you have picked a value (0 or 1) and place the element
+a couple of inches to the left of the NOT gate (don't connect it automatically).
+This time we will connect it by drawing a wire.
+
+<p>
+Move the cursor into an open area and right click.
+A menu will pop up - select <b>wire(s)</b>.
+When you do, the menu will disappear and a small circle will appear.
+This is the beginning of a wire.
+Move the cursor (and the circle) over the output circle of the constant
+element you just placed.
+When it turns green, left click and then move the cursor to draw the other
+end of the wire.
+We'll make this a segmented wire (just for demonstration purposes) for now.
+Drag the new end of the wire someplace and left click.
+Drag again and left click several times to draw a wire with lots of segments.
+Don't worry about neatness.
+Finally drag the new end to the input of the NOT gate and left click again.
+This will complete the wire connecting the constant generator and the NOT
+gate.
+
+<p>
+The wire you just drew probably wanders all over the place.
+Lets clean it up.
+Drag the cursor over any part of the wire (avoid corners for now).
+Notice that that part of the wire turns
+<font color=pink>pink</font> when the cursor is over it -
+that how you know the editor is selecting it.
+Select some middle segment of your wire and right click.
+Pick <b>delete</b> from the menu that appears and watch that segment of the
+wire disappear.
+If you move the cursor onto a corner of your wire a little
+<font color=pink>pink</font> circle will appear.
+If you right click at this time and choose delete you'll remove the corner
+and both line segments connected at that point.
+Keep deleting parts of your wire until there is little (but not nothing) left.
+Then grab a dangling end of your wire and drag it onto another dangling end
+(or onto a gate input or output).
+Release the mouse button to re-connect.
+
+<p>
+Now create another constant element and connect it to the free input of the
+OR gate.
+Finally, begin a wire at the output of the OR gate.
+Draw a single wire segment a couple of inches long to the right, left click
+to place the corner, and then right click to stop drawing wire segments.
+Be sure to left click before right clicking.
+
+<p>
+We now have a complete circuit that we can test with the given input values.
+To test it, pull down the <b>Simulator</b> menu and pick <b>Run</b>.
+This will run the simulator on your circuit.
+
+<p>
+The simulator runs as long as some value could possibly change in the circuit.
+Once no more changes are possible, the simulator stops.
+At this point the color of a wire is black if it has zero on it,
+<font color=red>red</font> if it is a one
+(or more correctly, non-zero - this applies to wire "bundles", which
+is a single "line" that represents several wires bundled together).
+
+<p>
+The values on the wires obviously depend on the values of the constant value
+elements you chose for your circuit, so verify that the wire values are right.
+You can also move the cursor over a wire and see the current value in the
+<font color=cyan>cyan</font> message bar above the circuit.
+
+<p>
+All gates have a built-in propagation delay that are used during simulation
+(wires have no delay).
+It can be interesting to see the time history of each signal as it propagates
+through the circuit.
+An interesting case is when A (the upper input to the OR gate) is 0 and B
+(the input to the NOT gate) is 1.
+This will cause the output of the OR gate to temporarily have the wrong value
+as the 1 propagates through the NOT gate and then the OR gate.
+
+<p>
+Lets make the inputs have the right values (if they already do, then just
+follow along anyway).
+Right click on the constant generating element for the upper OR input.
+One way to change the value is to either <b>cut</b> or <b>delete</b> the
+element and create a new one with the value 0.
+The other way (try this way) is to select the <b>modify</b> menu option.
+This will pop up a dialog box in which you can change the value.
+Make the value be 0 and click <b>OK</b>.
+Now make the input to the NOT gate be 1 by whatever technique you choose.
+
+<p>
+To see the time history of the value on a wire you must attach a "probe"
+to the wire.
+Move the cursor onto the output wire, right click, and select the
+<b>Attach Probe</b> option.
+A dialog box will appear so you can give a name to the probe.
+Type in something descriptive, like "output".
+When done you'll see the name you typed in <font color=blue>blue</font>
+above the wire, thereby indicating that a probe is now connected.
+Your circuit should now look like this:
+<br>
+<img src=AornotBprobe.jpg>
+
+<p>
+Now pull down the <b>Simulator</b> menu and select <b>Show</b>.
+The bottom of the window will now show simulator controls.
+Put the cursor on the divider between the simulator controls and the
+circuit editing window and drag it up to show more of the simulator.
+Below the buttons will appear an area where signal traces will appear
+when the simulator is run again.
+Show about an inch or so of this white trace area, then click on the
+<font color=green>Restart</font> button.
+This will re-initialize the circuit and run the simulator again.
+You should now see a trace of the output wire, and in particular see that
+it started at 0, became 1 for a short time, and then went back to 0, which
+is the correct final value for this circuit.
+Move the mouse over the trace to see the exact timing of each signal change.
+
+<p>
+It is often handy to be able to run the simulator for a little while, stop,
+start again for a little while, etc.
+To do this, click on <font color=cyan>Step</font> now.
+The simulator will run for one unit of time (you can assume this unit to be
+whatever you like - a nanosecond, picosecond).
+Each click on the button will run the simulator for another time unit.
+If this is too slow, change the value in the <b>Step</b> box at the top
+right of the simulator window.
+Then each click of the button will run the simulator for that length of time.
+
+<p>
+Lets change the propagation delays of the two gates in the circuit.
+Move the cursor over one of them and right click.
+Pick <b>Change Timing</b>, put a new value in the value box, and click
+<b>OK</b>.
+Change the other gate's propagation delay similarly.
+
+<p>
+To run the simulator with these new values, first make sure that the
+previous simulation was done.
+If you had stepped it for a while but not to the end, click on the
+<font color=red>Stop</font> button.
+Now either <font color=green>Restart</font> the simulator, or
+<font color=cyan>Step</font> through it and observe the signal trace.
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>Interactive Simulation</title>
+</head>
+
+<body>
+<h1>Interactive Simulation</h1>
+
+<p>
+When run in the interactive mode the simulator simulates the operation of the
+circuit currently visible in the editting window.
+If the visible circuit is a subcircuit of another circuit,
+then the simulator will simulate the entire circuit the subcircuit is in.
+
+<p>
+The simulator can be visible or not when running.
+To make it visible, select the <a href=../../menus/sim/show.html>Show</a>
+item in the <b>Simulator</b> menu;
+select the <a href=../../menus/sim/hide.html>Hide</a>
+item in the <b>Simulator</b> menu to hide it.
+When first shown, the signal trace area is not displayed.
+To see it, drag the divider between the editting window and the simulation
+window up.
+
+<p>
+If the simulator is not visible when started (i.e., via the menu), then a
+yellow simulator bar will appear below the editting window.
+It will show the current state of the simulation (e.g., running, stopped)
+and the number of time units that have been simulated so far.
+To stop it prematurely, use the <a href=../../menus/sim/stop.html>stop</a>
+item from the <b>Simulator</b> menu.
+
+<p>
+A visible simulator window allows more control over the execution of the
+simulator (e.g., stepping by various time amounts) and allows you to see
+a trace of various signal and element values versus time.
+Simulation can be started via the <a href=start.html>start</a> button,
+paused via the <a href=pause.html>pause</a> button,
+resumed via the <a href=resume.html>resume</a> button,
+stopped via the <a href=stop.html>stop</a> button,
+stepped by some number of time units via the 
+<a href=step.html>step</a> button,
+and animated via the <a href=animate.html>animate</a> button.
+
+<p>
+The <b>Start</b> button only works when the simulation is stopped.
+If it is being stepped or has been paused, clicking on <b>Start</b> has
+no effect.
+However, a stepped or paused simuation can be resumed, or a paused simulation
+stepped.
+
+<p>
+When the simulation stops, finishes a step, or pauses,
+wires that have the value 0 are shown in <b>black</b>
+and wires that have non-zero values are shown in
+<b><font color=red>red</font></b>.
+Signal traces are also updated.
+The actual value on any wire can be displayed in the
+<font color=cyan>cyan</font> message area above the circuit by moving the
+cursor over the wire.
+Register values can be seen analogously.
+The contents of a memory element can be displayed by right clicking on the
+element and picking the <b>View Contents</b> item from the menu that pops up.
+
+<p>
+Signal traces can be printed by clicking on the <b>Print</b> button.
+A dialog box will appear in which you can specify various printing
+parameters.
+
+</body>
+
+</html>

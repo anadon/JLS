@@ -1,37 +1,21 @@
 package jls.sim;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.print.Book;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
-import java.math.BigInteger;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
+import jls.*;
+import jls.elem.*;
+import jls.edit.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.print.*;
+import java.math.*;
 import javax.print.PrintService;
+import javax.swing.*;
+import javax.swing.text.AbstractDocument;
 
-import jls.BitSetUtils;
-import jls.Circuit;
-import jls.JLSInfo;
-import jls.elem.Element;
-import jls.elem.LogicElement;
-import jls.elem.SigGen;
-import jls.elem.SubCircuit;
-import jls.elem.TestGen;
+import java.util.*;
 
 /**
  * Event driven circuit simulator.
- * 
+ *
  * @author David A. Poplawski
  */
 public class BatchSimulator extends Simulator {
@@ -41,8 +25,8 @@ public class BatchSimulator extends Simulator {
 		public long time;
 		public BitSet value;
 	}
-
-	private Map<LogicElement, LinkedList<TrEvent>> eventTrace = new HashMap<LogicElement, LinkedList<TrEvent>>();
+	private Map<LogicElement,LinkedList<TrEvent>> eventTrace = 
+		new HashMap<LogicElement,LinkedList<TrEvent>>();
 
 	/**
 	 * Create a new Simulator object.
@@ -62,10 +46,10 @@ public class BatchSimulator extends Simulator {
 	} // end of stop method
 
 	/**
-	 * Stop simulation. It doesn't make sense to pause it in batch mode.
-	 * 
-	 * @param which
-	 *            Ignored.
+	 * Stop simulation.
+	 * It doesn't make sense to pause it in batch mode.
+	 *
+	 * @param which Ignored.
 	 */
 	public void pause(boolean which) {
 
@@ -89,7 +73,7 @@ public class BatchSimulator extends Simulator {
 		// initialize all elements
 		for (Element el : circuit.getElements()) {
 			if (el instanceof LogicElement) {
-				LogicElement lel = (LogicElement) el;
+				LogicElement lel = (LogicElement)el;
 				lel.initSim(me);
 			}
 		}
@@ -106,7 +90,7 @@ public class BatchSimulator extends Simulator {
 
 			// update clock
 			now = event.getTime();
-
+			
 			// quit if after time limit
 			if (now > maxTime) {
 				now = maxTime;
@@ -114,21 +98,21 @@ public class BatchSimulator extends Simulator {
 			}
 
 			// make the event happen
-			event.getCallBack().react(now, me, event.getTodo());
+			event.getCallBack().react(now,me,event.getTodo());
 
 			// trace it
 			if (JLSInfo.printTrace) {
 
 				// see if changing element is watched
-				LogicElement el = (LogicElement) event.getCallBack();
+				LogicElement el = (LogicElement)event.getCallBack();
 				if (el.isWatched()) {
 
-					// get the event trace for this element,
+					// get the event trace for this element, 
 					// or create one if none yet
 					LinkedList<TrEvent> events = eventTrace.get(el);
 
 					// create bitset for HiZ
-					BitSet off = new BitSet(el.getBits() + 1);
+					BitSet off = new BitSet(el.getBits()+1);
 					off.set(el.getBits());
 
 					// add an event to the end of the event list
@@ -150,10 +134,10 @@ public class BatchSimulator extends Simulator {
 		} // end of event loop
 
 	} // end of runSim
-
+	
 	/**
-	 * Create and add TestGen element to circuit. Remove any SigGen's in the
-	 * circuit.
+	 * Create and add TestGen element to circuit.
+	 * Remove any SigGen's in the circuit.
 	 */
 	public void addTestGen() {
 
@@ -162,7 +146,7 @@ public class BatchSimulator extends Simulator {
 			TestGen gen = new TestGen(circuit);
 			circuit.addElement(gen);
 			gen.setFile(testFileName);
-
+			
 			// remove any signal generators from this circuit
 			// (signal generators in subcircuits will disable themselves)
 			Set<Element> gens = new HashSet<Element>();
@@ -178,30 +162,30 @@ public class BatchSimulator extends Simulator {
 	} // end of addTestGen method
 
 	/**
-	 * Find all watched elements and add entries to batch trace map. Recursively
-	 * checks all subcircuits.
+	 * Find all watched elements and add entries to batch trace map.
+	 * Recursively checks all subcircuits.
 	 * 
-	 * @param circuit
-	 *            The circuit (or subcircuit) to look in.
+	 * @param circuit The circuit (or subcircuit) to look in.
 	 */
 	private void findWatched(Circuit circ) {
 
 		for (Element el : circ.getElements()) {
 			if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit) el;
+				SubCircuit sub = (SubCircuit)el;
 				findWatched(sub.getSubCircuit());
-			} else if (el.isWatched()) {
-				LogicElement lel = (LogicElement) el;
+			}
+			else if (el.isWatched()) {
+				LogicElement lel = (LogicElement)el;
 				LinkedList<TrEvent> events = new LinkedList<TrEvent>();
 				TrEvent event = new TrEvent();
 				event.time = 0;
 				event.value = lel.getCurrentValue();
 				if (event.value == null) {
-					event.value = new BitSet(lel.getBits() + 1);
+					event.value = new BitSet(lel.getBits()+1);
 					event.value.set(lel.getBits());
 				}
 				events.add(event);
-				eventTrace.put(lel, events);
+				eventTrace.put(lel,events);
 			}
 		}
 	} // end of findWatched method
@@ -209,14 +193,13 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Print trace.
 	 * 
-	 * @param printer
-	 *            The name of the printer to print to.
+	 * @param printer The name of the printer to print to.
 	 */
 	public void printTrace(String printer) {
 
 		// set up printer job
 		PrinterJob job = PrinterJob.getPrinterJob();
-		PrintService[] services = PrinterJob.lookupPrintServices();
+		PrintService [] services = job.lookupPrintServices();
 		PrintService want = null;
 		if (printer == null) {
 			System.out.println("no printer specified, use -p");
@@ -233,7 +216,8 @@ public class BatchSimulator extends Simulator {
 		}
 		try {
 			job.setPrintService(want);
-		} catch (PrinterException ex) {
+		}
+		catch (PrinterException ex) {
 			System.out.println(printer + " is an invalid printer");
 		}
 		PageFormat format = job.defaultPage();
@@ -246,10 +230,9 @@ public class BatchSimulator extends Simulator {
 
 				int HEIGHT = 40;
 
-				if (pagenum > 0)
-					return Printable.NO_SUCH_PAGE;
-				Graphics2D gg = (Graphics2D) g;
-				gg.translate(format.getImageableX(), format.getImageableY());
+				if (pagenum > 0) return Printable.NO_SUCH_PAGE;
+				Graphics2D gg = (Graphics2D)g;
+				gg.translate(format.getImageableX(),format.getImageableY());
 				double pageWidth = format.getImageableWidth();
 				double pageHeight = format.getImageableHeight();
 
@@ -259,42 +242,41 @@ public class BatchSimulator extends Simulator {
 				int width = 0;
 				int height = 0;
 				long maxTime = 0;
-				Map<String, LogicElement> map = new TreeMap<String, LogicElement>();
+				Map<String,LogicElement> map = new TreeMap<String,LogicElement>();
 				for (LogicElement el : eventTrace.keySet()) {
 					String name = " " + el.getFullName();
-					width = Math.max(width, fm.stringWidth(name));
+					width = Math.max(width,fm.stringWidth(name));
 					height += HEIGHT;
 					map.put(name, el);
-					maxTime = Math.max(maxTime,
-							eventTrace.get(el).getLast().time);
+					maxTime = Math.max(maxTime,eventTrace.get(el).getLast().time);
 				}
 				width += 1000;
 				height += HEIGHT;
-				double timeScaleFactor = 1000.0 / (maxTime + 10);
+				double timeScaleFactor = 1000.0/(maxTime+10);
 
 				double scale = 1.0;
 				if (width > pageWidth) {
-					scale = 1.0 * pageWidth / width;
+					scale = 1.0*pageWidth/width;
 				}
 				if (height > pageHeight) {
-					scale = Math.min(scale, 1.0 * pageHeight / height);
+					scale = Math.min(scale,1.0*pageHeight/height);
 				}
-				gg.scale(scale, scale);
+				gg.scale(scale,scale);
 
 				// draw time scale
-				int inc = (int) (maxTime / 10);
+				int inc = (int)(maxTime/10);
 				long time = 0;
 				gg.setColor(Color.gray);
-				for (int i = 0; i <= 10; i += 1) {
-					int xpos = (int) (time * timeScaleFactor);
-					g.drawLine(xpos, 0, xpos, height - HEIGHT / 2);
-					g.drawString(time + "", xpos, height - descent);
+				for (int i=0; i<=10; i+=1) {
+					int xpos = (int)(time*timeScaleFactor);
+					g.drawLine(xpos, 0, xpos, height-HEIGHT/2);
+					g.drawString(time+"", xpos, height-descent);
 					time += inc;
 				}
 
 				// draw all traces
 				int top = 0;
-				int offset = (HEIGHT - (ascent + descent)) / 2 + ascent;
+				int offset = (HEIGHT - (ascent+descent))/2 + ascent;
 				gg.setColor(Color.black);
 				for (String sig : map.keySet()) {
 
@@ -305,29 +287,30 @@ public class BatchSimulator extends Simulator {
 					if (el.getBits() == 1) {
 
 						// create bitset for HiZ
-						BitSet off = new BitSet(el.getBits() + 1);
+						BitSet off = new BitSet(el.getBits()+1);
 						off.set(el.getBits());
 
 						// single bit signal
-						long prevValue = BitSetUtils
-								.ToLong(events.getFirst().value);
+						long prevValue = BitSetUtils.ToLong(events.getFirst().value);
 						if (events.getFirst().value.equals(off))
 							prevValue = -1;
 						int prevXpos = 0;
 						for (TrEvent event : events) {
-							int xpos = (int) (event.time * timeScaleFactor + 0.5);
+							int xpos = (int)(event.time*timeScaleFactor + 0.5);
 
 							// draw horizontal line
 							int ypos = 0;
 							if (prevValue == 0) {
-								gg.drawLine(prevXpos, top + 30, xpos, top + 30);
-								ypos = top + 30;
-							} else if (prevValue == 1) {
-								gg.drawLine(prevXpos, top + 10, xpos, top + 10);
-								ypos = top + 10;
-							} else {
-								gg.drawLine(prevXpos, top + 20, xpos, top + 20);
-								ypos = top + 20;
+								gg.drawLine(prevXpos,top+30,xpos,top+30);
+								ypos = top+30;
+							}
+							else if (prevValue == 1){
+								gg.drawLine(prevXpos,top+10,xpos,top+10);
+								ypos = top+10;
+							}
+							else {
+								gg.drawLine(prevXpos,top+20,xpos,top+20);
+								ypos = top+20;
 							}
 
 							// update
@@ -338,56 +321,59 @@ public class BatchSimulator extends Simulator {
 
 							// draw vertical line
 							if (prevValue == 0) {
-								gg.drawLine(xpos, ypos, xpos, top + 30);
-							} else if (prevValue == 1) {
-								gg.drawLine(xpos, ypos, xpos, top + 10);
-							} else {
-								gg.drawLine(xpos, ypos, xpos, top + 20);
+								gg.drawLine(xpos,ypos,xpos,top+30);
+							}
+							else if (prevValue == 1) {
+								gg.drawLine(xpos,ypos,xpos,top+10);
+							}
+							else {
+								gg.drawLine(xpos,ypos,xpos,top+20);
 							}
 
 						}
 						if (prevValue == 0) {
-							gg.drawLine(prevXpos, top + 30, 1000, top + 30);
-						} else if (prevValue == 1) {
-							gg.drawLine(prevXpos, top + 10, 1000, top + 10);
-						} else {
-							gg.drawLine(prevXpos, top + 20, 1000, top + 20);
+							gg.drawLine(prevXpos,top+30,1000,top+30);
 						}
-					} else {
+						else if (prevValue == 1) {
+							gg.drawLine(prevXpos,top+10,1000,top+10);
+						}
+						else {
+							gg.drawLine(prevXpos,top+20,1000,top+20);
+						}
+					}
+					else {
 
 						// create bitset for HiZ
-						BitSet off = new BitSet(el.getBits() + 1);
+						BitSet off = new BitSet(el.getBits()+1);
 						off.set(el.getBits());
 
 						// multiple bit signal
-						BigInteger prevValue = BitSetUtils.ToBigInteger(events
-								.getFirst().value);
+						BigInteger prevValue = BitSetUtils.ToBigInteger(events.getFirst().value);
 						if (events.getFirst().value.equals(off))
 							prevValue = null;
 						int prevXpos = 0;
 						for (TrEvent event : eventTrace.get(map.get(sig))) {
-							int xpos = (int) (event.time * timeScaleFactor + 0.5);
+							int xpos = (int)(event.time*timeScaleFactor + 0.5);
 
 							// draw horizontal line
 							if (prevValue != null) {
-								gg.drawLine(prevXpos, top + 30, xpos, top + 30);
-								gg.drawLine(prevXpos, top + 10, xpos, top + 10);
-							} else {
-								gg.drawLine(prevXpos, top + 20, xpos, top + 20);
+								gg.drawLine(prevXpos,top+30,xpos,top+30);
+								gg.drawLine(prevXpos,top+10,xpos,top+10);
+							}
+							else {
+								gg.drawLine(prevXpos,top+20,xpos,top+20);
 							}
 
 							// draw vertical line
-							gg.drawLine(xpos, top + 10, xpos, top + 30);
-
+							gg.drawLine(xpos,top+10,xpos,top+30);
+							
 							// draw signal value
 							if (prevValue != null) {
-								String val = String.format(" %s ",
-										prevValue.toString(16));
+								String val = String.format(" %s ", prevValue.toString(16));
 								int valWidth = fm.stringWidth(val);
-								if (valWidth <= xpos - prevXpos) {
-									gg.drawString(val, prevXpos, top
-											+ (HEIGHT - ascent - descent) / 2
-											+ ascent);
+								if (valWidth <= xpos-prevXpos) {
+									gg.drawString(val, prevXpos,
+											top+(HEIGHT-ascent-descent)/2+ascent);
 								}
 							}
 
@@ -397,28 +383,27 @@ public class BatchSimulator extends Simulator {
 								prevValue = null;
 							prevXpos = xpos;
 						}
-
+						
 						// draw extra signal at end
 						if (prevValue != null) {
-							gg.drawLine(prevXpos, top + 30, 1000, top + 30);
-							gg.drawLine(prevXpos, top + 10, 1000, top + 10);
-						} else {
-							gg.drawLine(prevXpos, top + 20, 1000, top + 20);
+							gg.drawLine(prevXpos,top+30,1000,top+30);
+							gg.drawLine(prevXpos,top+10,1000,top+10);
+						}
+						else {
+							gg.drawLine(prevXpos,top+20,1000,top+20);
 						}
 						if (prevValue != null) {
-							String val = String.format(" %s ",
-									prevValue.toString(16));
+							String val = String.format(" %s ", prevValue.toString(16));
 							int valWidth = fm.stringWidth(val);
-							if (valWidth <= 1000 - prevXpos) {
-								gg.drawString(val, prevXpos, top
-										+ (HEIGHT - ascent - descent) / 2
-										+ ascent);
+							if (valWidth <= 1000-prevXpos) {
+								gg.drawString(val, prevXpos,
+										top+(HEIGHT-ascent-descent)/2+ascent);
 							}
 						}
 					}
 
 					// draw signal name
-					gg.drawString(sig, 1000, top + offset);
+					gg.drawString(sig, 1000, top+offset);
 
 					top += HEIGHT;
 				}
@@ -429,17 +414,18 @@ public class BatchSimulator extends Simulator {
 
 		// set up book
 		Book book = new Book();
-		book.append(pr, format);
+		book.append(pr,format);
 		job.setPageable(book);
 
 		// print the trace
 		try {
 			job.print();
-		} catch (PrinterException ex) {
+		}
+		catch (PrinterException ex) {
 			System.out.println("printing error: " + ex.getMessage());
 		}
 	} // end of printTrace method
-
+	
 	/**
 	 * Display reason for stopping and the time at which it stopped.
 	 */

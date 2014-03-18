@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='ISO-8859-1'  ?>
+<!DOCTYPE toc
+  PUBLIC "JLS JavaHelp TOC Version 1.0//EN">
+<toc>
+<tocitem text="JLS">
+    <tocitem text="Overview" target="top"/>
+    <tocitem text="Running JLS" target="execution">
+	<tocitem text="Startup Parameter File" target="startup"/>
+	<tocitem text="Signal Specification File" target="sigformat"/>
+    </tocitem>
+    <tocitem text="Menus">
+   	<tocitem text="File Menu">
+   	    <tocitem text="New Circuit" target="new.circuit"/>
+   	    <tocitem text="Open Existing Circuit" target="open.circuit"/>
+   	    <tocitem text="Save Circuit" target="save.circuit"/>
+   	    <tocitem text="Save Circuit As" target="saveas.circuit"/>
+   	    <tocitem text="Print Circuit" target="print.circuit"/>
+   	    <tocitem text="Import Circuit" target="import.circuit"/>
+   	    <tocitem text="Export Circuit Image" target="export.circuit"/>
+   	    <tocitem text="Close Circuit" target="close.circuit"/>
+   	    <tocitem text="Exit" target="exit"/>
+        </tocitem>
+   	<tocitem text="Simulator Menu">
+   	    <tocitem text="Run" target="run.sim"/>
+   	    <tocitem text="Stop" target="stop.sim"/>
+   	    <tocitem text="Show" target="show.sim"/>
+   	    <tocitem text="Hide" target="hide.sim"/>
+        </tocitem>
+   	<tocitem text="Global Menu">
+   	    <tocitem text="Reset Propagation Delays" target="reset.prop"/>
+   	    <tocitem text="Remove Probles" target="remove.probe"/>
+   	    <tocitem text="Unwatch All Elements" target="unwatch"/>
+   	    <tocitem text="Expand Drawing Area" target="expand.area"/>
+   	    <tocitem text="Change Editor Window Colors" target="change.colors"/>
+        </tocitem>
+    </tocitem>
+    <tocitem text="Editor" target="edit.over">
+	<tocitem text="Picking/Placing Elements" target="picking"/>
+	<tocitem text="Wiring" target="wiring"/>
+	<tocitem text="Selecting" target="selecting"/>
+	<tocitem text="Moving" target="moving"/>
+	<tocitem text="Cut/Copy/Delete" target="cutcopydel"/>
+	<tocitem text="Paste" target="paste"/>
+	<tocitem text="Undo/Redo" target="undoredo"/>
+	<tocitem text="Keyboard Accelerators" target="hotkeys"/>
+    </tocitem>
+    <tocitem text="Circuits" target="circuits.over">
+   	<tocitem text="Wiring" target="wires">
+   	    <tocitem text="Named Wire" target="start"/>
+   	    <tocitem text="Connect to Named Wire" target="end"/>
+   	    <tocitem text="Bundle Wires" target="bundle"/>
+   	    <tocitem text="Unbundle Wires" target="unbundle"/>
+   	    <tocitem text="Input Pin" target="Input"/>
+   	    <tocitem text="Output Pin" target="Output"/>
+   	    <tocitem text="Copy 1 Wire to Multiple Wires" target="extend"/>
+   	    <tocitem text="Constant" target="const"/>
+	</tocitem>
+   	<tocitem text="Gates" target="gates">
+   	    <tocitem text="AND" target="AND"/>
+   	    <tocitem text="OR" target="OR"/>
+   	    <tocitem text="NOT" target="NOT"/>
+   	    <tocitem text="NAND" target="NAND"/>
+   	    <tocitem text="NOR" target="NOR"/>
+   	    <tocitem text="XOR" target="XOR"/>
+   	    <tocitem text="Delay" target="DELAY"/>
+   	    <tocitem text="Tri-State" target="TRISTATE"/>
+	</tocitem>
+   	<tocitem text="Components">
+   	    <tocitem text="Multiplexor" target="mux"/>
+   	    <tocitem text="Decoder" target="decoder"/>
+   	    <tocitem text="Adder" target="adder"/>
+	</tocitem>
+   	<tocitem text="Memory">
+   	    <tocitem text="Register" target="register"/>
+	    <tocitem text="RAM/ROM" target="memory"/>
+	</tocitem>
+   	<tocitem text="Timing">
+	    <tocitem text="Clock" target="clock"/>
+	    <tocitem text="Stop Simulation" target="stop"/>
+	    <tocitem text="Pause Simulation" target="pause"/>
+	</tocitem>
+	<tocitem text="State Machine" target="stmach"/>
+	<tocitem text="Signal Generator" target="siggen"/>
+	<tocitem text="Value Display" target="display"/>
+	<tocitem text="Text" target="text"/>
+	<tocitem text="Subcircuits" target="import"/>
+    </tocitem>
+    <tocitem text="Simulator" target="sim.over">
+	<tocitem text="batch" target="batch.sim"/>
+	<tocitem text="interactive" target="inter.sim">
+	    <tocitem text="Start" target="sim.start"/>
+	    <tocitem text="Step" target="sim.step"/>
+	    <tocitem text="Animate" target="sim.animate"/>
+	    <tocitem text="Pause" target="sim.pause"/>
+	    <tocitem text="Resume" target="sim.resume"/>
+	    <tocitem text="Stop" target="sim.stop"/>
+	    <tocitem text="Print" target="sim.print"/>
+    	</tocitem>
+    </tocitem>
+</tocitem>
+</toc>

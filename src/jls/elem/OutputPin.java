@@ -30,14 +30,14 @@ public class OutputPin extends Pin implements TriProp {
 		super(circ);
 		orientation = JLSInfo.Orientation.RIGHT;
 	} // end of constructor
-
+	
 	/**
 	 * Return a string version of this element.
 	 * 
 	 * @return the string.
 	 */
 	public String toString() {
-
+		
 		return "OutputPin[" + super.toString() + "]";
 	} // end of toString method
 
@@ -143,12 +143,15 @@ public class OutputPin extends Pin implements TriProp {
 		if (orientation == JLSInfo.Orientation.LEFT) {
 			bx = x + s;
 			bwidth = width - s;
-		} else if (orientation == JLSInfo.Orientation.RIGHT) {
+		}
+		else if (orientation == JLSInfo.Orientation.RIGHT) {
 			bwidth = width - s;
-		} else if (orientation == JLSInfo.Orientation.UP) {
+		}
+		else if (orientation == JLSInfo.Orientation.UP) {
 			by = y + s;
 			bheight = height - s;
-		} else { // DOWN
+		}
+		else { // DOWN
 			bheight = height - s;
 		}
 		int dx = (int) ((bwidth - tw) / 2);
@@ -237,11 +240,11 @@ public class OutputPin extends Pin implements TriProp {
 	public void printValue(String qual) {
 
 		if (qual.equals("")) {
-			System.out.printf("Output Pin %s: %s\n", name,
-					BitSetUtils.toDisplay(currentValue, bits));
+			System.out.printf("Output Pin %s: %s\n", name, BitSetUtils
+					.toDisplay(currentValue, bits));
 		} else {
-			System.out.printf("Output Pin %s.%s: %s\n", qual, name,
-					BitSetUtils.toDisplay(currentValue, bits));
+			System.out.printf("Output Pin %s.%s: %s\n", qual, name, BitSetUtils
+					.toDisplay(currentValue, bits));
 		}
 
 	} // end of printValue method
@@ -443,8 +446,8 @@ public class OutputPin extends Pin implements TriProp {
 	 */
 	public void showCurrentValue(Point where) {
 
-		JOptionPane.showMessageDialog(JLSInfo.frame,
-				BitSetUtils.toDisplay(currentValue, bits), "Information",
+		JOptionPane.showMessageDialog(JLSInfo.frame, BitSetUtils.toDisplay(
+				currentValue, bits), "Information",
 				JOptionPane.INFORMATION_MESSAGE);
 	} // end of showCurrentValue method
 

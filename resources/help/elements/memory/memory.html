@@ -1,0 +1,143 @@
+<html>
+<head>
+<title>RAM / ROM</title>
+</head>
+
+<body>
+<h1>RAM / ROM</h1>
+
+<h2>
+<a href=#create>Creation</a>
+<br>
+<a href=#oper>Operation</a>
+<br>
+<a href=#view>Viewing Contents</a>
+</h2>
+
+<a name=create></a>
+
+<h2>Creation</h2>
+
+<p>
+Chose either RAM or ROM (RAM is SRAM - DRAM is not supported by JLS).
+
+<p>
+Enter the name of the memory element in the <b>Name</b> field.
+This name must not be the same as the name of any other register or memory
+element in the circuit.
+
+<p>
+Set the number of bits in each word by entering a number in the
+<b>Bits/Word</b> field or using the <a href=../keypad.html>keypad</a>.
+
+<p>
+Set the capacity (in words) by entering a number in the
+<b>Capacity (words)</b> field or using the <a href=../keypad.html>keypad</a>.
+A memory must have at least two words.
+
+<p>
+The values of all words of memory will be zero by default.
+Some or all words of this memory element can be given non-zero initial
+values (that are reset every time the circuit is simulated).
+There are two ways to specify these initial values.
+
+<ul>
+<li>
+Build the initial values into the circuit (<b>Built In</b>).
+The memory will be initialized to these values every time this circuit's
+simulation is started.
+<li>
+Read the initial values from a file (<b>from File</b>).
+The memory will be initialized to the values in the file every time the
+circuit's simulation is started.
+</ul>
+
+<p>
+If you choose neither initial memory contents options, this memory element
+will be initialized to all 0's when simulation begins.
+
+<p>
+If you have both built-in values and a file name, the file name takes
+precedence.
+The simulator will read the file (if possible) and ignore the built-in
+contents.
+
+<p>
+If you choose <b>Built In</b>, then a dialog will pop up.
+Enter the initial contents of whatever words you like.
+Each line of text will initialize one word of memory.
+The line contains two numbers, both in base 16 (hexadecimal), separated
+by one or more spaces/tabs.
+The first number is the address of the word to be initialized.
+The second number is the initial value.
+That same line may contain any other characters (e.g., comments) after
+the second number as long as whitespace follows the second number.
+Blank lines and lines whose first non-whitespace character is '#' are
+ignored.
+
+<p>
+Click on the <font color=green>OK</font> button to begin placing the memory
+element, or on <font color=pink>Cancel</font> to cancel it.
+
+<a name=oper></a>
+
+<h2>Operation</h2>
+
+<p>
+<b>read</b>
+The output of a memory element is tri-state, and is enabled whenever both
+CS and OE are 0.
+The output value is the word selected by the current address input.
+The memory access time is the time between a change in any input and 
+a corresponding change in the output.
+For example, if CS and OE are zero and the address changes, then the
+output will not change for a time equal to the memory access time.
+Likewise CS and OE are not both 0, then they both become 0, the output
+will still be HiZ for the memory access time.
+Right click on the memory element and select <b>Change Timing</b> to
+see and/or change the current memory access time).
+
+<p>
+If the address is greater than the number of words of memory then the output
+will become HiZ.
+For example, if you have 12 words of memory and the address is between 12 and
+15, then HiZ will be output since there are no words with those addresses.
+
+<p>
+<b>write</b>
+Any time an input of a RAM changes there is the possibility of a write.
+If CS and WE become 0, then a write will be initiated using the current
+values of the address and data inputs.
+If CS and WE are already 0 and either the address or data input changes,
+a write will be initiated.
+The write will complete after the memory access time.
+Right click on the memory element and select <b>Change Timing</b> to
+see and/or change the current memory access time).
+
+<p>
+If the address is greater than the number of words of memory then nothing will
+be written to any memory locations.
+</body>
+
+<a name=view></a>
+<h2>Viewing Contents</h2>
+
+<p>
+When simulation stops or is paused, the contents of a memory element can be
+viewed by right clicking on the element and selecting <b>View Contents</b>.
+A window will pop up showing the address and value of all words of memory
+(with a scrollbar).
+The address will be shown in hexadecimal and decimal.
+The contents will be shown in hexadecimal, and as an unsigned and signed
+base 10 integer).
+
+<p>
+Writes to RAM can also be <i>watched</i>  (i.e., traced) during simulation.
+When watched, a pop-up window will show the address, value and time a write
+completed.
+Right click on the element and select <b>Watch Element</b> to 
+make a RAM element watched.
+Right click on the element and select <b>Un-watch Element</b> to 
+turn watching off.
+
+</html>

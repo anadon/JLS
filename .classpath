@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="xz"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="/home/anadon/downloads/jh2.0/javahelp/lib/jhall.jar"/>
+	<classpathentry kind="lib" path="lib/jhall.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

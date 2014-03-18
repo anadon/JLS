@@ -1,0 +1,86 @@
+<html>
+<head>
+<title>Signal Format</title>
+</head>
+
+<body>
+<h1>Signal Format</h1>
+
+<p>
+Each signal begins with the name of the input pin the signal will be sent
+to.
+This is followed by one or more items (see below), followed by the
+final value of the signal, followed by the word "end" (lower case, no quotes).
+For example,
+
+<ul>
+<pre>
+Input <i>term term</i> 0 end
+</pre>
+</ul>
+
+<p>
+Each term is a signal value, followed by the word "for" or "until", followed
+by a positive integer.
+If the word "for" appears, then the signal value will persist at the input
+pin for that length of time.
+If the word "until" appears, then the signal value will persist until the
+given time.
+For example,
+
+<p>
+<code>0 for 10</code> means 0 will persist for 10 simulation time units
+<br>
+<code>7 until 125</code> means 7 will persist until simulation time 125
+
+<p>
+All signal values are base 10 non-negative integers.
+
+<p>
+Terms using "for" can be mixed with terms using "until" in the same signal
+specification.
+
+<p>
+All words and values must be separated by white space (one or more spaces,
+tabs or new lines).
+Inputs for a given signal can appear on separate lines.
+
+<p>
+Everything following a # on a line is considered to be a comment and will
+be ignored.
+
+<p>
+Multiple signals can be specified in the same specification.
+For example,
+
+<ul>
+<pre>
+# First input signal
+Input1   0 for 10    # first value
+	 1 for 100   # second value
+	 0 for 30    # third value
+	 1 end       # final value
+
+# Second input signal
+Input2   3 until 50   0 for 10   5   end
+</pre>
+</ul>
+
+<p>
+The until time must be greater than then time of the last signal change.
+For example, 
+
+<ul>
+<pre>
+Input   0 for 100   1 until <font color=red>99</font>   1   end
+</pre>
+</ul>
+
+<p>
+is an error because the signal was 0 from time 0 to time 100.
+The time value after "until" must be at least 101.
+
+<p>
+Errors will not be checked for until the simulator is run.
+
+</html>

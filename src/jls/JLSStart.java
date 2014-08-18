@@ -1,25 +1,61 @@
 package jls;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.zip.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.HeadlessException;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.print.Book;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+import java.util.Vector;
+import java.util.zip.ZipInputStream;
 
-import javax.help.*;
-import javax.print.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.help.CSH;
+import javax.help.HelpSet;
+import javax.print.PrintService;
+import javax.swing.Box;
+import javax.swing.JColorChooser;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import org.tukaani.xz.XZInputStream;
-
-import jls.edit.*;
-import jls.elem.*;
-import jls.sim.*;
-
-import java.math.*;
+import jls.edit.Editor;
+import jls.elem.Element;
+import jls.elem.LogicElement;
+import jls.elem.Memory;
+import jls.elem.OutputPin;
+import jls.elem.Register;
+import jls.elem.SubCircuit;
+import jls.sim.BatchSimulator;
+import jls.sim.InterractiveSimulator;
 
 @SuppressWarnings("serial")
 public class JLSStart extends JFrame implements ChangeListener {
@@ -87,7 +123,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 						+ " is not a valid circuit file name");
 				System.exit(1);
 			}
-			InputStream in = null;
 			try {
 
 				// see if the .jls file is in zip format
@@ -98,9 +133,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 					// if not, open as an ordinary file
 					temp.close();
 					inz.close();
-					in = new FileInputStream(startFile);
-				} else {
-					in = inz;
 				}
 			} catch (IOException ex) {
 				System.out.println("Can't read from " + startFile);

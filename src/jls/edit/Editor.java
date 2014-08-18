@@ -1,14 +1,22 @@
 package jls.edit;
 
-import jls.*;
-import jls.elem.*;
+import java.awt.Component;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import java.io.*;
-import java.util.zip.*;
-import java.awt.*;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JTabbedPane;
 
-import javax.swing.*;
-import org.tukaani.xz.XZOutputStream;
+import jls.Circuit;
+import jls.JLSInfo;
+import jls.Util;
+import jls.elem.Element;
+import jls.elem.SubCircuit;
 
 /**
  * Adds naming and file save/saveas/close capability to an edited circuit. Used

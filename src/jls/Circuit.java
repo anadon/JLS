@@ -1,22 +1,43 @@
 package jls;
 
-import jls.elem.*;
-import jls.edit.*;
-import jls.elem.sm.*;
-import jls.elem.bool.*;
-import jls.elem2.Element2;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.awt.print.Book;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.io.File;
+import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import java.util.*;
-import java.awt.*;
-import java.awt.print.*;
-import java.io.*;
-import java.lang.reflect.*;
-import java.awt.image.*;
+import javax.imageio.ImageIO;
 
-import javax.imageio.*;
-
-import java.awt.geom.*;
-import java.math.*;
+import jls.edit.Editor;
+import jls.edit.SimpleEditor;
+import jls.elem.Element;
+import jls.elem.JumpStart;
+import jls.elem.LogicElement;
+import jls.elem.Output;
+import jls.elem.StateMachine;
+import jls.elem.SubCircuit;
+import jls.elem.TruthTable;
+import jls.elem.Wire;
+import jls.elem.WireEnd;
+import jls.elem.WireNet;
 
 /**
  * The main (container) class for each circuit.
@@ -1048,7 +1069,7 @@ public final class Circuit implements Printable {
 
 		String str;
 		while (read.size() > 0 && (str = read.pop()).equals("ENDCIRCUIT")) {
-			loadedElements.add((Element2) Class.forName("jls.elem2." + str).getConstructors()[0].newInstance(this, read));
+			loadedElements.add((Element) Class.forName("jls.elem2." + str).getConstructors()[0].newInstance(this, read));
 		}
 	}
 	

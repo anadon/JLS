@@ -1,3 +1,7 @@
 JLSerror
 *.jls
 bin/
+bin
+bin*
+*.class
+bin*

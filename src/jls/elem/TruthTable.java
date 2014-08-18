@@ -1,19 +1,45 @@
 package jls.elem;
 
-import jls.*;
-import jls.elem.*;
-import jls.sim.SimEvent;
-import jls.sim.Simulator;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.PrintWriter;
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
-import java.util.*;
+import jls.Circuit;
+import jls.JLSInfo;
+import jls.Util;
+import jls.sim.SimEvent;
+import jls.sim.Simulator;
 
 /**
  * Logic specified via a truth table. Editor and simulation code.
@@ -1576,8 +1602,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			// for each output value...
 			int offset = inputNames.size();
 			int pos = 0;
-			for (Output output : outputs) {
-
+			for (int i = 0; i < outputs.size(); i++) {
 				// if it is different than the value propagating through
 				// this circuit, then post an event
 				int outValue = table[matchingRow][pos + offset];

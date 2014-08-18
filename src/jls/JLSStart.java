@@ -152,8 +152,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 
 			// finish up load
-			if (!circ.finishLoad(null)) {
+			try {
+				if (!circ.finishLoad(null)) {
+					System.out.println(startFile + " is not a valid circuit file");
+					System.exit(1);
+				}
+			} catch (Exception e) {
 				System.out.println(startFile + " is not a valid circuit file");
+				e.printStackTrace();
 				System.exit(1);
 			}
 
@@ -608,7 +614,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		menu.add(importItem);
 		importItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				fileImport();
+				try {
+					fileImport();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -618,7 +628,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 		menu.add(exportItem);
 		exportItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				exportImage();
+				try {
+					exportImage();
+				} catch (Exception e) {
+					System.out.println("ERROR: failed to export image, invalid "
+							+ "class reference; could not initialize graphics");
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -1162,8 +1178,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 	/**
 	 * Import a circuit from a file into this circuit.
+	 * @throws Exception 
 	 */
-	public void fileImport() {
+	public void fileImport() throws Exception {
 
 		Editor ed = (Editor) edits.getSelectedComponent();
 		if (ed == null) {
@@ -1610,10 +1627,15 @@ public class JLSStart extends JFrame implements ChangeListener {
 			loadOK = false; // file shouldn't have anything after ENDCIRCUIT
 		input.close();
 		if (!loadOK) {
-			System.out.println(startFile + " is not a valid circuit file");
+		}
+		try {
+			circ.finishLoad(null);
+		} catch (Exception e) {
+			System.out.println(startFile + " is not a valid circuit file, bad "
+					+ "class reference");
+			e.printStackTrace();
 			return;
 		}
-		circ.finishLoad(null);
 
 		// set up printer job
 		PrinterJob job = PrinterJob.getPrinterJob();
@@ -1657,8 +1679,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 	/**
 	 * Write an image of the circuit to a file.
+	 * @throws Exception 
 	 */
-	public void exportImage() {
+	public void exportImage() throws Exception {
 
 		Editor ed = (Editor) edits.getSelectedComponent();
 		if (ed == null)

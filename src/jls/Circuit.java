@@ -333,7 +333,12 @@ public final class Circuit implements Printable {
 				sub.setSubCircuit(subCirc);
 				sub.setName(subCirc.getName());
 				addName(subCirc.getName());
-				if (!subCirc.finishLoad(null)) {
+				try {
+					if (!subCirc.finishLoad(null)) {
+						return false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 					return false;
 				}
 				continue;
@@ -438,8 +443,9 @@ public final class Circuit implements Printable {
 	 *            The Graphics object to use.
 	 * 
 	 * @return false if any exceptions occur
+	 * @throws Exception 
 	 */
-	public boolean finishLoad(Graphics g) {
+	public boolean finishLoad(Graphics g) throws Exception {
 
 		// if any exceptions, assume load problem
 		try {
@@ -582,8 +588,9 @@ public final class Circuit implements Printable {
 	 *            The second set of elements to draw.
 	 * @param ed
 	 *            The editor window doing the drawing.
+	 * @throws Exception 
 	 */
-	public void draw(Graphics g, Set<Element> second, SimpleEditor ed) {
+	public void draw(Graphics g, Set<Element> second, SimpleEditor ed) throws Exception {
 
 		// finish up loading process if necessary
 		if (loadedElements.size() > 0) {
@@ -680,7 +687,11 @@ public final class Circuit implements Printable {
 				+ JLSInfo.pointDiameter / 2);
 
 		// print
-		draw(gg, new HashSet<Element>(), null);
+		try {
+			draw(gg, new HashSet<Element>(), null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return Printable.PAGE_EXISTS;
 	} // end of print method
@@ -731,8 +742,9 @@ public final class Circuit implements Printable {
 	 * 
 	 * @param file
 	 *            The name of the file to write to.
+	 * @throws Exception 
 	 */
-	public void exportImage(String file) {
+	public void exportImage(String file) throws Exception {
 
 		// get bounds of actual circuit
 		Rectangle rect = getBounds();
@@ -1085,7 +1097,12 @@ public final class Circuit implements Printable {
 				sub.setSubCircuit(subCirc);
 				sub.setName(subCirc.getName());
 				addName(subCirc.getName());
-				if (!subCirc.finishLoad(null)) {
+				try {
+					if (!subCirc.finishLoad(null)) {
+						return false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 					return false;
 				}
 				continue;

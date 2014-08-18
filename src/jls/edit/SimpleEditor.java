@@ -1306,7 +1306,11 @@ public abstract class SimpleEditor extends JPanel {
 			}
 
 			// draw all elements, selected ones last
-			circuit.draw(g, selected, me);
+			try {
+				circuit.draw(g, selected, me);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			// draw selecting rectangle if necessary
 			if (currentState == State.selecting) {

@@ -1720,7 +1720,7 @@ public class State {
 		// properties
 		private JButton close = new JButton("close window");
 		private JList<Out> outList;
-		DefaultListModel model;
+		DefaultListModel<Out> model;
 		private JButton add = new JButton("add new output");
 		private JButton delete = new JButton("delete selected output");
 		private JTextField signalField = new JTextField(10);
@@ -1744,11 +1744,11 @@ public class State {
 			window.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
 
 			// set up output list
-			model = new DefaultListModel();
+			model = new DefaultListModel<Out>();
 			for (Out output : outs) {
 				model.addElement(output);
 			}
-			outList = new JList(model);
+			outList = new JList<Out>(model);
 			outList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			JScrollPane pane = new JScrollPane(outList);
 			pane.setSize(400, 400);
@@ -1906,6 +1906,7 @@ public class State {
 		 * 
 		 * @return true if cancelled, false if not.
 		 */
+		@SuppressWarnings("unused")
 		public boolean wasCancelled() {
 
 			return cancelled;

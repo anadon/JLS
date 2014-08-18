@@ -18,7 +18,7 @@ import java.math.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Element {
+public class Element {
 
 	// saved properties
 	private int id; // unique for every element when written to file
@@ -223,7 +223,9 @@ public abstract class Element {
 	 * @param g
 	 *            The graphics object to use.
 	 */
-	public abstract void init(Graphics g);
+	public void init(Graphics g) throws Exception{
+		throw new Exception("ERROR: using undefined function from " + this.getName());
+	}
 
 	/**
 	 * Placeholder for element copies.

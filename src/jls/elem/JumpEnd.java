@@ -422,7 +422,7 @@ public class JumpEnd extends LogicElement {
 			heading.setAlignmentX((float) 0.5);
 			window.add(heading);
 
-			starts = new JList(circuit.getJumpStartNames().toArray());
+			starts = new JList<String>((String[]) circuit.getJumpStartNames().toArray());
 			starts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			starts.setVisibleRowCount(Math.min(circuit.getJumpStartNames()
 					.size(), 10));

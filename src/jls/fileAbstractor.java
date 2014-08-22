@@ -13,8 +13,23 @@ import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.XZInputStream;
 import org.tukaani.xz.XZOutputStream;
 
+/**
+ * 
+ * @author Josh Marshall
+ * 
+ * Here's some code that was used to organize my thoughts.  I'm including it because
+ * might one day be useful for fully abstracting file read/writes out of the other 
+ * logic.
+ *
+ */
 public class fileAbstractor {
 
+	/**
+	 * 
+	 * @param filePath
+	 * @return
+	 * @throws IOException
+	 */
 	static LinkedList<String> read(String filePath) throws IOException{
 		LinkedList<String> toReturn = new LinkedList<String>();
 		
@@ -41,6 +56,12 @@ public class fileAbstractor {
 		return toReturn;
 	}
 	
+	/**
+	 * 
+	 * @param filePath
+	 * @param toWrite
+	 * @throws IOException
+	 */
 	static void write(String filePath, LinkedList<String> toWrite) throws IOException{
 
 		OutputStream textOutput = null;

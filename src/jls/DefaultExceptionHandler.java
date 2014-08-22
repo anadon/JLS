@@ -24,7 +24,7 @@ public final class DefaultExceptionHandler implements
 	 *            A reference to the main class.
 	 */
 	public void setJLS(JLSStart jls) {
-
+		
 		this.jls = jls;
 	} // end of setJLS method
 

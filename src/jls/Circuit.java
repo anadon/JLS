@@ -44,7 +44,7 @@ import jls.elem.WireNet;
  * 
  * @author David A. Poplawski
  */
-public final class Circuit implements Printable {
+public class Circuit implements Printable {
 
 	// properties
 	private String name = null; // will be the file name after appending .jls
@@ -1003,9 +1003,14 @@ public final class Circuit implements Printable {
 		return name + "(" + super.toString() + ")";
 	} // end of toString method
 
+	/**
+	 * TODO: it looks like this function could use some clean up; hints
+	 * at possible circuit encoding improvements.
+	 * 
+	 * @param read
+	 * @return
+	 */
 	public boolean load(LinkedList<String> read) {
-		
-
 
 		String str = read.pop();
 		if (!str.equals("CIRCUIT")) {
@@ -1021,44 +1026,40 @@ public final class Circuit implements Printable {
 
 		// read circuit and get basic info for each element
 		lineNumber += 1;
-		while (read.size() > 0) {
-			str = read.pop();
+		try {
+			while (read.size() > 0) {
+				str = read.pop();
 
-			// if end of top level circuit
-			if (str.equals("ENDCIRCUIT")) { return true; }
+				// if end of top level circuit
+				if (str.equals("ENDCIRCUIT")) { return true; }
 
-			// should be the beginning of an(other) element
-			if (!str.equals("ELEMENT")) { return false; }
+				// should be the beginning of an(other) element
+				if (!str.equals("ELEMENT")) { return false; }
 
-			// get element type and create element
-			String elementType = read.pop();
-			Element obj = null;
-			try {
-				Class<?> c = null;
-				try {
-					c = Class.forName("jls.elem." + elementType);
-				} catch (ClassNotFoundException ex) {}
-				if (c == null)
-					try {
-						c = Class.forName("jls.elem.bool." + elementType);
-					} catch (ClassNotFoundException ex) {}
-				if (c == null) {
-					c = Class.forName("jls.elem.sm." + elementType);
-				}
-				obj = (Element) c.getConstructors()[0].newInstance(this);
-			} catch (ClassNotFoundException ex) 	{ return false;
-			} catch (InstantiationException ex) 	{ return false;
-			} catch (IllegalAccessException ex) 	{ return false; 
-			} catch (InvocationTargetException ex) 	{ return false; }
-
-			// load the element
+				// get element type, create element, and load the element
+				Element obj = (Element) Class.forName("jls.elem." + read.pop())
+						.getConstructors()[0].newInstance(this);
 			
-			if (loadElement(obj, read)) {
-				loadedElements.add(obj);
-			} else {
-				return false;
+				if (loadElement(obj, read)) {
+					loadedElements.add(obj);
+				} else {
+					return false;
+				}
 			}
+		} catch (ClassNotFoundException ex) 	{
+			TellUser.err("Invalid element in file ", true);
+			return false;
+		} catch (InstantiationException ex) 	{ 
+			TellUser.err("Could not initialize listed class", true);
+			return false;
+		} catch (IllegalAccessException ex) 	{ 
+			TellUser.err("Illegal Class Access", true); // This should never be hit
+			return false; 
+		} catch (InvocationTargetException ex) 	{ 
+			TellUser.err("InvocationTargetException", true);
+			return false; 
 		}
+		TellUser.err("Input file inappropriately terminates", true);
 		return false; // no trailer
 	}
 

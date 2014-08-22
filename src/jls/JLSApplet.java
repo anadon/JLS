@@ -184,6 +184,8 @@ public class JLSApplet extends JApplet implements ActionListener,
 	 * Set up file menu.
 	 * 
 	 * @return the menu.
+	 * 
+	 * TODO implement tool tips
 	 */
 	public JMenu fileMenu() {
 

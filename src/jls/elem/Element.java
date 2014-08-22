@@ -309,6 +309,8 @@ public class Element {
 	/**
 	 * See if this element intersects another.
 	 * 
+	 * TODO major point of optimization
+	 * 
 	 * @param other
 	 *            The other element.
 	 * 

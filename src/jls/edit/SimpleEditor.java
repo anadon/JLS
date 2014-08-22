@@ -2881,6 +2881,8 @@ public abstract class SimpleEditor extends JPanel {
 		 * See if the selected elements overlap non-selected elements.
 		 * Highlights possible connections when there is no overlap.
 		 * 
+		 * TODO major point of optimization
+		 * 
 		 * @return true if there is overlap, false if not.
 		 */
 		private boolean overlap() {

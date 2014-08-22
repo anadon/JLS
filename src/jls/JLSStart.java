@@ -1222,66 +1222,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 	
 
 	/**
-	 * 
-	 * @param fileName
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private static Scanner staticGetScannerForFile(String fileName){
-		
-		File file = null;
-		String name;
-		
-		if (fileName.endsWith(".jls~")) {
-			name = fileName.replaceAll("\\.jls~$", "");
-		} else {
-			name = fileName.replaceAll("\\.jls$", "");
-		}
-		String cname = Util.isValidFileName(name);
-		if (cname == null) 
-			return null;
-
-		// open file and create scanner
-		InputStream in = null;
-
-		//See if the .jls file is in xz format
-		try{
-			in = new SeekableXZInputStream(new SeekableFileInputStream(file));
-		}catch(Throwable e){
-			//not an xz file
-		}
-		
-		if(in == null){
-			try {
-				// see if the .jls file is in zip format
-				in = new ZipInputStream(new FileInputStream(file));
-				
-				if (((ZipInputStream)in).getNextEntry() == null) {
-
-					// if not, then not a zip file
-					in.close();
-					in = null;
-				}
-			} catch (IOException ex) {
-				//not a zip file
-			}
-		}
-		
-		if(in == null){
-			try{
-				//final try -- plain text
-				in = new FileInputStream(file);
-			} catch (IOException ex) {
-				System.out.println(startFile + " is not a valid circuit file, bad "
-						+ "class reference");
-				return null;
-			}
-		}
-		
-		return new Scanner(in);
-	}
-	
-	/**
 	 * Import a circuit from a file into this circuit.
 	 * @throws Exception 
 	 */

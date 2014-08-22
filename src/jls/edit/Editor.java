@@ -3,10 +3,7 @@ package jls.edit;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -17,6 +14,9 @@ import jls.JLSInfo;
 import jls.Util;
 import jls.elem.Element;
 import jls.elem.SubCircuit;
+
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZOutputStream;
 
 /**
  * Adds naming and file save/saveas/close capability to an edited circuit. Used
@@ -58,17 +58,17 @@ public class Editor extends SimpleEditor {
 			JOptionPane.showMessageDialog(getTopLevelAncestor(),
 					"Can't save an imported circuit", "Error",
 					JOptionPane.ERROR_MESSAGE);
-			// return false;
+			return false;
 		}
 
 		// create output file
 		String dir = circuit.getDirectory() + "/";
 		String fileName = dir + circuit.getName() + ".jls";
-		ZipOutputStream out = null;
+		XZOutputStream out = null;
 		try {
-			out = new ZipOutputStream(new FileOutputStream(fileName));
-			out.putNextEntry(new ZipEntry("JLSCircuit"));
-		} catch (IOException ex) {
+			out = new XZOutputStream(new FileOutputStream(fileName), new LZMA2Options());
+			//out.putNextEntry(new ZipEntry("JLSCircuit"));
+		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(getTopLevelAncestor(),
 					"Can't write to " + fileName, "Error",
 					JOptionPane.ERROR_MESSAGE);
@@ -97,7 +97,7 @@ public class Editor extends SimpleEditor {
 			JOptionPane.showMessageDialog(null,
 					"Can't save an imported circuit", "Error",
 					JOptionPane.ERROR_MESSAGE);
-			// return;
+			return;
 		}
 
 		// get name from user

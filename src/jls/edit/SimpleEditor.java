@@ -346,7 +346,7 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of quickReset method
 
 	/**
-	 * This should overriden in the Editor subclass.
+	 * This should be overridden in the Editor subclass.
 	 */
 	public void close() {
 

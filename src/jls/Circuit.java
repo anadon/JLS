@@ -260,26 +260,11 @@ public final class Circuit implements Printable {
 				Object obj = null;
 				try {
 					Class<?> c = null;
-					try {
-						c = Class.forName("jls.elem." + elementType);
-					} catch (ClassNotFoundException ex) {
-						c = null;
-						// not a problem, yet
-					}
-					if (c == null)
-						try {
-							c = Class.forName("jls.elem.bool." + elementType);
-						} catch (ClassNotFoundException ex) {
-							c = null;
-							// not a problem, yet
-						}
-					if (c == null) {
-						c = Class.forName("jls.elem.sm." + elementType);
-					}
+					c = Class.forName("jls.elem." + elementType);
 					Constructor<?>[] cn = c.getConstructors();
 					obj = cn[0].newInstance(this);
 				} catch (ClassNotFoundException ex) {
-					return false;
+					return false; //Element class not found
 				} catch (InstantiationException ex) {
 					return false;
 				} catch (IllegalAccessException ex) {

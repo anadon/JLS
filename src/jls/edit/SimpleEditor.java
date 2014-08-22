@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -2893,6 +2894,30 @@ public abstract class SimpleEditor extends JPanel {
 			untouchAll();
 
 			// check every element in the selected set
+			//TODO radix sort when done, then check for collisions using bin search
+			/*ArrayDeque<Element> selE = new ArrayDeque<Element>();
+			ArrayDeque<Element> other = new ArrayDeque<Element>();
+			
+			for(Element el : circuit.getElements()){
+				if(selected.contains(el))
+					selE.add(el);
+				else
+					other.add(el);
+			}
+			
+			for(Element test1 : selE){
+				for(Element test2 : other){
+					if(!test1.intersects(test2)) continue;
+					if(!(test1 instanceof Wire || test1 instanceof WireEnd) &&
+						!(test2 instanceof Wire || test2 instanceof WireEnd)){
+						return true;
+					}
+						
+					//TODO fringe cases
+					
+				}
+			}*/
+			
 			for (Element sel : selected) {
 
 				// check against every element in the circuit

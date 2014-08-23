@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>Creating Wires</title>
+</head>
+
+<body>
+<h1>Creating Wires</h1>
+
+<p>
+A wire connects elements.
+In the editor a wire is represented by a multi-segmented line.
+This line may represent a single wire carrying a single boolean value
+(or "neither" for wires connected to the outputs of tri-state devices).
+A single line may also represent a <i>bundle</i> of two or more wires.
+
+<p>
+A wire can have one or more segments and can branch out to connect many
+elements.
+Wires cannot, however, contain a loop.
+That is, starting at any place on a wire, you should not be able to follow
+segments of the wire from place to place and then return to your staring place.
+JLS will not let you connect a wire with a loop.
+
+<p>
+Click <a href=../../editor/editing/wiring.html>here</a> to see how to
+create wires.
+
+<p>
+You can easily find out how many wires (bits) a given line represents
+by moving the cursor over the line and checking the information shown
+in the blue message bar above the circuit.
+If the wire is not yet connected to anything it will not know how many
+bits it represents.
+Once connected to something, it will tell you how many bits there are.
+If the wire is not yet connected to the output of any element, then it
+will tell you so.
+
+<p>
+When pointing at a wire you will also be told the current value on that wire.
+This will be 0 before any simulation has been done.
+It will be the current value while
+<a href=../../simulator/interactive/step.html>stepping</a> the simulation,
+or the final value after simulation completes.
+The final value will remain even if you make changes to the circuit.
+
+<p>
+The current value will be shown in three ways.
+The first is as a hexadecimal value, then in parenthesis as an unsigned
+integer (base 10) and a signed (2's complement) integer (base 10).
+For example, an eight-bit wire bundle with hex value 0xf9 will be shown
+as:
+
+<ul>
+<kbd>0xf9 (249 unsigned, -7 signed)</kbd>
+</ul>
+
+<p>
+Wires will appear <b><font color=red>red</font></b> when their current value
+is non-zero, <b>black</b> when their current value is zero.
+</body>
+
+</html>

@@ -1,31 +1,28 @@
 package jls;
 
-import java.io.File;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Vector;
+import java.util.*;
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.*;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
 /**
- * Main JLS class. Sets up exception handler and EULA, then finds plugins (if
- * any), then has JLSStart do the rest of the work.
+ * Main JLS class.
+ * Sets up exception handler and EULA, then finds plugins (if any), 
+ * then has JLSStart do the rest of the work.
  * 
  * @author David A. Poplawski, Nick Lanam (test)
  */
-public class JLS {
+public final class JLS  {
 
 	/**
 	 * Set up exception handler and EULA agreement, then start up JLS.
 	 * 
-	 * @param args
-	 *            Command line arguments.
+	 * @param args Command line arguments.
 	 */
 	public static void main(String[] args) {
 
@@ -38,7 +35,7 @@ public class JLS {
 		if (!Eula.accepted()) {
 			System.exit(1);
 		}
-
+		
 		// look for JLS.jar...
 		// first, get all paths in classpath
 		String fsep = System.getProperty("file.separator");
@@ -46,16 +43,16 @@ public class JLS {
 		String psep = System.getProperty("path.separator");
 		Vector<String> paths = new Vector<String>();
 		int from = 0;
-		int pos = d.indexOf(psep, from);
+		int pos = d.indexOf(psep,from);
 		while (pos != -1) {
-			paths.add(d.substring(from, pos));
+			paths.add(d.substring(from,pos));
 			from = pos + 1;
-			pos = d.indexOf(psep, from);
+			pos = d.indexOf(psep,from);
 		}
 		paths.add(d.substring(from));
 
 		// now look for JLS.jar in some path, putting directory prefix in base
-		String base = "." + fsep;
+		String base = "."+fsep;
 		boolean jlsFound = false;
 		for (String p : paths) {
 			if (p.equals("JLS.jar")) {
@@ -66,9 +63,10 @@ public class JLS {
 				// annoying file separator difference between platforms!!!
 				base = p.replace("JLS.jar", "");
 				if (fsep.equals("/")) {
-					base = base.replaceAll("\\\\", "/");
-				} else {
-					base = base.replaceAll("/", "\\\\");
+					base = base.replaceAll("\\\\","/");
+				}
+				else {
+					base = base.replaceAll("/","\\\\");
 				}
 				jlsFound = true;
 				break;
@@ -79,7 +77,7 @@ public class JLS {
 		if (!jlsFound) {
 
 			// start JLS in my eclipse development environment
-			JLSStart.start(args, exHandler);
+			JLSStart.start(args,exHandler);
 			return;
 		}
 
@@ -92,13 +90,13 @@ public class JLS {
 			if (entry.endsWith(".xml") && new File(fullEntry).isFile()) {
 
 				// read xml file
-				DocumentBuilderFactory dbf = DocumentBuilderFactory
-						.newInstance();
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				Document doc = null;
 				try {
 					DocumentBuilder db = dbf.newDocumentBuilder();
 					doc = db.parse(entry);
-				} catch (Exception ex) {
+				}
+				catch(Exception ex) {
 					System.out.println(ex);
 					System.exit(1);
 				}
@@ -107,15 +105,15 @@ public class JLS {
 				String affil = get(docEle, "Affiliation");
 				String contact = get(docEle, "ContactInfo");
 				cl = get(docEle, "Class");
-				if (author == null || affil == null || contact == null
-						|| cl == null) {
+				if (author == null || affil == null || contact == null || cl == null) {
 					break;
 				}
 				cl = cl.trim();
 				String jar = fullEntry.replaceFirst("\\.xml$", "") + ".jar";
 				if (new File(jar).exists()) {
 					urlName = new File(jar).getAbsolutePath();
-				} else {
+				}
+				else {
 					urlName = new File(base).getAbsolutePath() + "/";
 				}
 				break;
@@ -124,23 +122,23 @@ public class JLS {
 
 		// if no plugins found, start JLS normally
 		if (urlName == null)
-			JLSStart.start(args, exHandler);
+			JLSStart.start(args,exHandler);
 
 		// otherwise set up new classloader and run specified config
 		else {
 			try {
-				URL[] url = new URL[1];
+				URL [] url = new URL[1];
 				url[0] = new URL("file:" + urlName);
-				Class c = new URLClassLoader(url).loadClass(cl);
-				Method[] methods = c.getMethods();
+				Class<?> c = new URLClassLoader(url).loadClass(cl);
+				Method [] methods = c.getMethods();
 				for (Method m : methods) {
 					if (m.getName().equals("config")) {
 						m.invoke(null, args, exHandler);
 						break;
 					}
 				}
-
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				System.out.println(ex);
 				System.exit(1);
 			}
@@ -151,19 +149,18 @@ public class JLS {
 	/**
 	 * Get the value of a given XML field.
 	 * 
-	 * @param docEle
-	 *            A document element.
-	 * @param name
-	 *            The name of the field.
+	 * @param docEle A document element.
+	 * @param name The name of the field.
 	 * 
 	 * @return the value for the given name.
 	 */
 	private static String get(Element docEle, String name) {
-
+		
 		NodeList nl = docEle.getElementsByTagName(name);
-		if (nl != null && nl.getLength() == 1) {
-			return ((Element) nl.item(0)).getTextContent();
-		} else {
+		if(nl != null && nl.getLength() == 1) {
+			return ((Element)nl.item(0)).getTextContent();
+		}
+		else {
 			return null;
 		}
 	} // end of get method

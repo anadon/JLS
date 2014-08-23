@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>Drawing Wires</title>
+</head>
+
+<body>
+<h1>Drawing Wires</h1>
+
+<p>
+A <a href=../../elements/wiring/wires.html>wire or wire bundle</a> is
+represented by a multi-segment line.
+To draw a wire, position the cursor in an open area of the circuit,
+click the right mouse button, and select "wires" from the menu.
+You will see a small circle appear at the cursor.
+This is the beginning end of a wire.
+Move the circle to the place where you want to start the wire and click the
+left mouse button.
+Notice as you are moving the wire end around that red messages will appear 
+in the blue message bar from time to time telling you why the wire cannot be
+placed at a given spot (e.g., it is right on top of some element).
+As long as no message is showing the wire end can be placed at the current
+spot.
+If there is a message, then clicking the left mouse button will have no effect.
+
+<p>
+The wire end can be placed in any open area, or it can be immediately connected
+to an input or output of an element, or another wire.
+When the wire end overlaps an unconnected input or output of an element
+(represented by a white circle), or another wire, the wire end will become
+<font color=green>green</font>, indicating that the wire end can be connected
+at that place.
+A new wire end will be connected when you left click only if it is green.
+If it is not green then the wire end will be placed but not connected
+(later you can drag it somewhere and connect it, or connect something to it).
+
+<p>
+Once the wire end is placed, move the mouse to draw a wire segment and the
+next wire end.
+Left click to place the new end.
+If placing it also connects it, then you are done drawing the wire.
+Otherwise move the mouse to draw the next wire segment and the next wire
+end.
+Repeat until you connect the final end.
+Right click to stop drawing the wire before connecting it to anything.
+Right clicking always terminates the drawing of a wire.
+
+</body>
+
+</html>

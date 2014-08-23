@@ -1,0 +1,30 @@
+<html>
+<head>
+<title>Batch Simulation</title>
+</head>
+
+<body>
+<h1>Batch Simulation</h1>
+
+<p>
+When JLS is run in batch (non-GUI) mode,
+a circuit file is loaded, the simulator run, and then the final contents
+of any watched elements (registers, memories) are printed to the standard
+output.
+
+<p>
+Simulation stops when there are no more events, a <i>stop</i> element in
+the circuit gets a 1 input, or the time limit is reached.
+
+<p>
+Watched register contents are printed in three ways: hexadecimal, unsigned
+decimal and signed (two's complement) decimal.
+
+<p>
+Only those words of a watched memory element that are different at the
+end of simulation than they were at the beginning of simulation are printed,
+showing both the initial value and final value.
+
+</body>
+
+</html>

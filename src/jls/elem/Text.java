@@ -6,19 +6,18 @@ import java.awt.*;
 import java.util.*;
 import java.io.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 /**
- * Put text into the circuit. Has nothing to do with simulation, used simply to
- * annotate the circuit.
+ * Put text into the circuit.
+ * Has nothing to do with simulation, used simply to annotate the circuit.
  * 
  * @author David A. Poplawski
  */
 public class Text extends DisplayElement {
 
 	// named constants
-	private final int size = 500; // width and height of dialog
+	private final int size = 500;	// width and height of dialog
 
 	// saved properties
 	private String text = "";
@@ -36,8 +35,7 @@ public class Text extends DisplayElement {
 	/**
 	 * Create a new Text element.
 	 * 
-	 * @param circuit
-	 *            The circuit this element will be part of.
+	 * @param circuit The circuit this element will be part of.
 	 */
 	public Text(Circuit circuit) {
 
@@ -47,14 +45,10 @@ public class Text extends DisplayElement {
 	/**
 	 * Display dialog to get text info.
 	 * 
-	 * @param g
-	 *            The Graphics object to use.
-	 * @param editWindow
-	 *            The window this element will be displayed in.
-	 * @param x
-	 *            The x-coordinate of the last known mouse position.
-	 * @param y
-	 *            The y-coordinate of the last known mouse position.
+	 * @param g The Graphics object to use.
+	 * @param editWindow The window this element will be displayed in.
+	 * @param x The x-coordinate of the last known mouse position.
+	 * @param y The y-coordinate of the last known mouse position.
 	 * 
 	 * @return true if there is text, false if not.
 	 */
@@ -65,9 +59,10 @@ public class Text extends DisplayElement {
 		Point pos = editWindow.getMousePosition();
 		Point win = editWindow.getLocationOnScreen();
 		if (pos == null) {
-			text = new TextEdit(x + win.x, y + win.y, true).getText();
-		} else {
-			text = new TextEdit(pos.x + win.x, pos.y + win.y, true).getText();
+			text = new TextEdit(x+win.x,y+win.y,true).getText();
+		}
+		else {
+			text = new TextEdit(pos.x+win.x,pos.y+win.y,true).getText();
 		}
 
 		// if cancelled, return
@@ -86,30 +81,30 @@ public class Text extends DisplayElement {
 		p.x -= win.x;
 		p.y -= win.y;
 		if (p != null)
-			super.setXY(p.x - width / 2, p.y - height / 2);
+			super.setXY(p.x-width/2,p.y-height/2);
 
 		return true;
 
 	} // end of init method
 
 	/**
-	 * Initialize internal info for this element. Figures out height and width
-	 * using font info from graphics object.
+	 * Initialize internal info for this element.
+	 * Figures out height and width using font info from graphics object.
 	 * 
-	 * @param g
-	 *            The Graphics object to use.
+	 * @param g The Graphics object to use.
 	 */
 	public void init(Graphics g) {
 
 		// first split lines
 		lines.clear();
 		String str = "";
-		for (int p = 0; p < text.length(); p += 1) {
+		for (int p=0; p<text.length(); p+=1) {
 			char c = text.charAt(p);
 			if (c == '\n') {
 				lines.add(str);
 				str = "";
-			} else {
+			}
+			else {
 				str += c;
 			}
 		}
@@ -130,11 +125,9 @@ public class Text extends DisplayElement {
 			fontSize = g.getFont().getSize();
 		}
 		int bi = 0;
-		if (isBold)
-			bi |= Font.BOLD;
-		if (isItalic)
-			bi |= Font.ITALIC;
-		Font f = new Font(fontName, bi, fontSize);
+		if (isBold) bi |= Font.BOLD;
+		if (isItalic) bi |= Font.ITALIC;
+		Font f = new Font(fontName,bi,fontSize);
 		Graphics gg = g.create();
 		gg.setFont(f);
 
@@ -154,41 +147,41 @@ public class Text extends DisplayElement {
 	/**
 	 * Set a string instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the instance variable.
-	 * @param value
-	 *            The value to set it to.
+	 * @param name The name of the instance variable.
+	 * @param value The value to set it to.
 	 */
 	public void setValue(String name, String value) {
 
 		if (name.equals("text")) {
 			text = value;
-		} else if (name.equals("fn")) {
+		}
+		else if (name.equals("fn")) {
 			fontName = value;
 		}
-		super.setValue(name, value);
+		super.setValue(name,value);
 	} // end of setValue method
 
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the instance variable.
-	 * @param value
-	 *            The value to set it to.
+	 * @param name The name of the instance variable.
+	 * @param value The value to set it to.
 	 */
 	public void setValue(String name, int value) {
 
 		if (name.equals("fs")) {
 			fontSize = value;
-		} else if (name.equals("bold")) {
+		}
+		else if (name.equals("bold")) {
 			isBold = value == 1;
-		} else if (name.equals("ital")) {
+		}
+		else if (name.equals("ital")) {
 			isItalic = value == 1;
-		} else if (name.equals("color")) {
+		}
+		else if (name.equals("color")) {
 			color = new Color(value);
 		}
-		super.setValue(name, value);
+		super.setValue(name,value);
 	} // end of setValue method
 
 	/**
@@ -215,16 +208,15 @@ public class Text extends DisplayElement {
 	/**
 	 * Save this element in a file.
 	 * 
-	 * @param output
-	 *            A print writer to write to.
+	 * @param output A print writer to write to.
 	 */
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Text");
 		super.save(output);
-		String str = text.replace("\\", "\\\\");
-		str = str.replace("\"", "\\\"");
-		str = str.replace("\n", "\\n");
+		String str = text.replace("\\","\\\\");
+		str = str.replace("\"","\\\"");
+		str = str.replace("\n","\\n");
 		output.println(" String text \"" + str + "\"");
 		output.println(" String fn \"" + fontName + "\"");
 		output.println(" int fs " + fontSize);
@@ -237,8 +229,7 @@ public class Text extends DisplayElement {
 	/**
 	 * Draw this element.
 	 * 
-	 * @param g
-	 *            The Graphics element to draw with.
+	 * @param g The Graphics element to draw with.
 	 */
 	public void draw(Graphics g) {
 
@@ -247,11 +238,9 @@ public class Text extends DisplayElement {
 
 		// draw the text
 		int bi = 0;
-		if (isBold)
-			bi |= Font.BOLD;
-		if (isItalic)
-			bi |= Font.ITALIC;
-		myg.setFont(new Font(fontName, bi, fontSize));
+		if (isBold) bi |= Font.BOLD;
+		if (isItalic) bi |= Font.ITALIC;
+		myg.setFont(new Font(fontName,bi,fontSize));
 		FontMetrics fm = myg.getFontMetrics();
 		int ascent = fm.getAscent();
 		int descent = fm.getDescent();
@@ -260,14 +249,14 @@ public class Text extends DisplayElement {
 		this.width = 0;
 		for (String str : lines) {
 			this.height += height;
-			this.width = Math.max(this.width, fm.stringWidth(str));
+			this.width = Math.max(this.width,fm.stringWidth(str));
 		}
 
 		super.draw(g);
 		int y = this.y + ascent;
 		myg.setColor(color);
 		for (String str : lines) {
-			myg.drawString(str, x, y);
+			myg.drawString(str,x,y);
 			y += height;
 		}
 
@@ -284,16 +273,13 @@ public class Text extends DisplayElement {
 	} // end of canChange method
 
 	/**
-	 * Show edit dialog. Make user re-place element if any changes are made.
+	 * Show edit dialog.
+	 * Make user re-place element if any changes are made.
 	 * 
-	 * @param g
-	 *            The Graphics object to use to determine size.
-	 * @param editWindow
-	 *            The editor window this element is in.
-	 * @param x
-	 *            The current x-coordinate of the mouse.
-	 * @param y
-	 *            The current y-coordinate of the mouse.
+	 * @param g The Graphics object to use to determine size.
+	 * @param editWindow The editor window this element is in.
+	 * @param x The current x-coordinate of the mouse.
+	 * @param y The current y-coordinate of the mouse.
 	 * 
 	 * @return true if element must be re-placed in the circuit, false if not.
 	 */
@@ -306,9 +292,10 @@ public class Text extends DisplayElement {
 		Point win = editWindow.getLocationOnScreen();
 		TextEdit ed = null;
 		if (pos == null) {
-			ed = new TextEdit(x + win.x, y + win.y, false);
-		} else {
-			ed = new TextEdit(pos.x + win.x, pos.y + win.y, false);
+			ed = new TextEdit(x+win.x,y+win.y,false);
+		}
+		else {
+			ed = new TextEdit(pos.x+win.x,pos.y+win.y,false);
 		}
 
 		// if cancelled, return
@@ -330,15 +317,12 @@ public class Text extends DisplayElement {
 	/**
 	 * Dialog to get text information from user.
 	 */
-	@SuppressWarnings("serial")
 	private class TextEdit extends JDialog implements ActionListener {
 
 		// GUI elements
-		private JComboBox<?> fonts;
-		private String[] fontSizes = { "8", "9", "10", "11", "12", "13", "14",
-				"15", "16", "17", "18", "19", "20", "24", "28", "32", "36",
-				"40", "48", "56", "64", "72" };
-		private JComboBox<String> fontSz = new JComboBox<String>(fontSizes);
+		private JComboBox fonts;
+		private String [] fontSizes = {"8","9","10","11","12","13","14","15","16","17","18","19","20","24","28","32","36","40","48","56","64","72"};
+		private JComboBox fontSz = new JComboBox(fontSizes);
 		private JRadioButton bold = new JRadioButton("Bold");
 		private JRadioButton italic = new JRadioButton("Italic");
 		private JButton colorButton = new JButton("Color");
@@ -357,16 +341,13 @@ public class Text extends DisplayElement {
 		/**
 		 * Initialize the dialog at a given position.
 		 * 
-		 * @param x
-		 *            The x-coordinate of the upper left of the dialog box.
-		 * @param y
-		 *            The y-coordinate of the upper left of the dialog box.
-		 * @param creating
-		 *            True if creating, false if changing.
+		 * @param x The x-coordinate of the upper left of the dialog box.
+		 * @param y The y-coordinate of the upper left of the dialog box.
+		 * @param creating True if creating, false if changing.
 		 */
 		public TextEdit(int x, int y, boolean creating) {
 
-			super(JLSInfo.frame, "Create/Modify Text Element", true);
+			super(JLSInfo.frame,"Create/Modify Text Element",true);
 
 			// set up GUI
 			Container window = getContentPane();
@@ -376,26 +357,27 @@ public class Text extends DisplayElement {
 			JPanel details = new JPanel(new FlowLayout());
 
 			// set up font name
-			GraphicsEnvironment ge = GraphicsEnvironment
-					.getLocalGraphicsEnvironment();
-			String[] names = ge.getAvailableFontFamilyNames();
+			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			String [] names = ge.getAvailableFontFamilyNames();
 			if (fontName.equals("")) {
 				Font f = textArea.getFont();
 				fn = f.getFamily();
-			} else {
+			}
+			else {
 				fn = new String(fontName);
 			}
-			fonts = new JComboBox<String>(names);
+			fonts = new JComboBox(names);
 			fonts.setSelectedItem(fn);
 			details.add(new JLabel("Font:"));
 			details.add(fonts);
 
 			if (fontSize == 0) {
 				fs = textArea.getFont().getSize();
-			} else {
+			}
+			else {
 				fs = fontSize;
 			}
-			fontSz.setSelectedItem(fs + "");
+			fontSz.setSelectedItem(fs+"");
 			fontSz.setEditable(true);
 			details.add(new JLabel("Size:"));
 			details.add(fontSz);
@@ -419,22 +401,20 @@ public class Text extends DisplayElement {
 			bold.addActionListener(this);
 			italic.addActionListener(this);
 			colorButton.addActionListener(this);
-			window.add(details, BorderLayout.NORTH);
+			window.add(details,BorderLayout.NORTH);
 			if (!creating) {
 				textArea.setText(text);
 				int bi = 0;
-				if (isBold)
-					bi |= Font.BOLD;
-				if (isItalic)
-					bi |= Font.ITALIC;
-				textArea.setFont(new Font(fontName, bi, fontSize));
+				if (isBold) bi |= Font.BOLD;
+				if (isItalic) bi |= Font.ITALIC;
+				textArea.setFont(new Font(fontName,bi,fontSize));
 				textArea.setForeground(color);
 			}
 			JScrollPane pane = new JScrollPane(textArea);
-			pane.setPreferredSize(new Dimension(size, size));
+			pane.setPreferredSize(new Dimension(size,size));
 			window.add(pane, BorderLayout.CENTER);
 			JPanel buttons = new JPanel();
-			buttons.setLayout(new GridLayout(1, 3));
+			buttons.setLayout(new GridLayout(1,3));
 			buttons.add(ok);
 			buttons.add(cancel);
 			ok.setBackground(Color.green);
@@ -443,49 +423,48 @@ public class Text extends DisplayElement {
 			if (JLSInfo.hb == null)
 				Util.noHelp(help);
 			else
-				JLSInfo.hb.enableHelpOnButton(help, "text", null);
+				JLSInfo.hb.enableHelpOnButton(help,"text",null);
 			buttons.add(help);
 			window.add(buttons, BorderLayout.SOUTH);
 
 			// add listeners
 			ok.addActionListener(this);
 			cancel.addActionListener(this);
-
+			
 			// make the text area get the focus
 			this.addWindowFocusListener(new WindowAdapter() {
-				public void windowGainedFocus(WindowEvent e) {
-					textArea.requestFocusInWindow();
-				}
+			    public void windowGainedFocus(WindowEvent e) {
+			        textArea.requestFocusInWindow();
+			    }
 			});
 
 			// make it visible
 			pack();
-			setLocation(x - size / 2, y - size / 2);
+			setLocation(x-size/2,y-size/2);
 			setVisible(true);
 		} // end of constructor
 
 		/**
 		 * React to buttons.
 		 * 
-		 * @param event
-		 *            The event object for this event.
+		 * @param event The event object for this event.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == fonts) {
-				fn = (String) fonts.getSelectedItem();
+				fn = (String)fonts.getSelectedItem();
 				int bi = 0;
-				if (isB)
-					bi |= Font.BOLD;
-				if (isI)
-					bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn, bi, fs));
+				if (isB) bi |= Font.BOLD;
+				if (isI) bi |= Font.ITALIC;
+				textArea.setFont(new Font(fn,bi,fs));
 				changed = true;
 				return;
-			} else if (event.getSource() == fontSz) {
+			}
+			else if (event.getSource() == fontSz) {
 				try {
-					fs = Integer.parseInt((String) fontSz.getSelectedItem());
-				} catch (NumberFormatException ex) {
+					fs = Integer.parseInt((String)fontSz.getSelectedItem());
+				}
+				catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(this, "Invalid Font Size");
 					return;
 				}
@@ -494,49 +473,44 @@ public class Text extends DisplayElement {
 					return;
 				}
 				int bi = 0;
-				if (isB)
-					bi |= Font.BOLD;
-				if (isI)
-					bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn, bi, fs));
+				if (isB) bi |= Font.BOLD;
+				if (isI) bi |= Font.ITALIC;
+				textArea.setFont(new Font(fn,bi,fs));
 				changed = true;
 				return;
-			} else if (event.getSource() == bold) {
+			}
+			else if (event.getSource() == bold) {
 				isB = bold.isSelected();
 				int bi = 0;
-				if (isB)
-					bi |= Font.BOLD;
-				if (isI)
-					bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn, bi, fs));
+				if (isB) bi |= Font.BOLD;
+				if (isI) bi |= Font.ITALIC;
+				textArea.setFont(new Font(fn,bi,fs));
 				changed = true;
 				return;
-			} else if (event.getSource() == italic) {
+			}
+			else if (event.getSource() == italic) {
 				isI = italic.isSelected();
 				int bi = 0;
-				if (isB)
-					bi |= Font.BOLD;
-				if (isI)
-					bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn, bi, fs));
+				if (isB) bi |= Font.BOLD;
+				if (isI) bi |= Font.ITALIC;
+				textArea.setFont(new Font(fn,bi,fs));
 				changed = true;
 				return;
-			} else if (event.getSource() == colorButton) {
+			}
+			else if (event.getSource() == colorButton) {
 				final JColorChooser ch = new JColorChooser(color);
 				ch.setPreviewPanel(new JPanel());
-				ActionListener ok = new ActionListener() {
-					public void actionPerformed(ActionEvent event) {
-						col = ch.getColor();
-						textArea.setForeground(col);
-						changed = true;
-					}
-				};
-				JDialog cl = JColorChooser.createDialog(this, "pick", true, ch,
-						ok, null);
+				ActionListener ok = new ActionListener(){public void actionPerformed(ActionEvent event) {
+					col = ch.getColor();
+					textArea.setForeground(col);
+					changed = true;
+				}};
+				JDialog cl = JColorChooser.createDialog(this, "pick", true, ch, ok, null);
 				cl.setVisible(true);
 				cl.dispose();
 				return;
-			} else if (event.getSource() == ok) {
+			}
+			else if (event.getSource() == ok) {
 				result = textArea.getText();
 				if (changed) {
 					fontName = new String(fn);
@@ -545,7 +519,8 @@ public class Text extends DisplayElement {
 					isItalic = isI;
 					color = col;
 				}
-			} else if (event.getSource() == cancel) {
+			}
+			else if (event.getSource() == cancel) {
 				cancelled = true;
 			}
 			dispose();

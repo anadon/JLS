@@ -1,0 +1,71 @@
+<html>
+<head>
+<title>Picking and Placing Elements</title>
+</head>
+
+<body>
+<h1>Picking and Placing Elements</h1>
+
+<p>
+To add a new element to the circuit, click on the appropriate element
+icon on the toolbar.
+A dialog box will open up that will allow you to customize the element.
+Once customized, click on the OK button in the dialog box to begin placing
+the element in the circuit.
+If you decide that you don't want the element, click on the cancel button.
+For help with the customization options for the element, click on the help
+button.
+
+<p>
+Once you've customized the element and clicked the ok button, use the
+mouse to move the element to the place in the circuit you want it to be.
+Note the informational message at the right of the blue message bar under
+the elements tool bar.
+As you see, you can fix the place of the element by clicking the left mouse
+button, and you can still cancel the element by clicking on the right mouse
+button.
+
+<p>
+New elements cannot be placed anywhere.
+All elements have a rectangular <i>bounding box</i> that must not overlap
+with the bounding box of any other element.
+This bounding box is shown in pink while you are placing the new element, and
+will disappear when the element is finally placed.
+
+<p>
+When you are moving a new element around the circuit, notice the red message
+that sometimes appears in the middle of the blue message bar.
+This message indicates that the element cannot be placed where it currently
+is shown in the circuit.
+When there is no message showing, the element may be placed.
+
+<p>
+There are a few simple rules about placing elements.
+
+<ol>
+<li>
+Elements can not overlap other elements.
+<li>
+Outputs of elements cannot be connected either to other element outputs or
+to wires that are connected to other element outputs, <i>unless</i> all outputs
+are tri-stated.
+<li>
+Inputs or outputs of elements cannot connect to inputs or outputs or wires that
+have differing number of bits.
+Constant elements assume the number of bits of the thing they are connected
+to, so this rule doesn't apply to them.
+</ol>
+
+<p>
+If you left click to place an element where it is not allowed, the left
+click will be ignored.
+You must either move the element to an allowable place and then left click,
+or you must cancel the element by right clicking.
+
+<p>
+You can still move an element after it has been placed.
+See <a href=moving.html>moving elements/wires</a> for an explaination.
+
+</body>
+
+</html>

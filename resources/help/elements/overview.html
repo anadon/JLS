@@ -1,0 +1,71 @@
+<html>
+<head>
+<title>Circuits</title>
+</head>
+
+<body>
+<h1>Circuits</h1>
+
+<p>
+A JLS circuit consists of logic elements and connections between them (wires).
+A circuit may also contain (i.e., import)
+<a href=import/import.html>sub-circuits</a>, nested to an arbitrary level.
+<a href=other/text.html>Text</a> can be used to annotate a circuit.
+
+<p>
+JLS supports logic elements in several general categories: gates, components,
+memories and other.
+Gates are the common logic gates:
+<a href=gates/and.html>AND</a>,
+<a href=gates/or.html>OR</a>,
+<a href=gates/not.html>NOT</a>,
+<a href=gates/nand.html>NAND</a>,
+<a href=gates/nor.html>NOR</a>, and
+<a href=gates/xor.html>XOR</a>, and also include a
+<a href=gates/tristate.html>tri-state buffer</a> and
+a <a href=gates/delay.html>logically neutral gate</a> that simply delays its input
+signal by a given amount of time.
+Components are a
+<a href=components/multiplexor.html>multiplexor</a>,
+<a href=components/decoder.html>decoder</a> and
+<a href=components/adder.html>adder</a>.
+Memories are
+<a href=memory/memory.html>SRAM and ROM</a>, and
+<a href=memory/register.html>registers</a> with various triggerings
+(level, edge). 
+Other elements are a
+<a href=timing/clock.html>clock</a>, elements that will
+<a href=timing/pause.html>pause</a> and
+<a href=timing/stop.html>stop</a> the simulator,
+and and element that will
+<a href=other/display.html>display</a> its input value when the simulator
+pauses or stops.
+
+<p>
+Wiring is the connections between gates, and also includes mechanisms for
+<a href=wiring/bundle.html>bundling</a> and
+<a href=wiring/unbundle.html>unbundling</a> multiple wire connections,
+<a href=wiring/expand.html>expanding</a> a single wire value into mutiple
+wires (useful for sign extension), generating
+<a href=wiring/const.html>constant values</a>, and a
+<a href=wiring/start.html>mechanism</a> for connecting wires without drawing
+lines across entire circuits.
+
+<p>
+JLS has a
+<a href=stmach/stmach.html>state machine editor</a> that creates an element
+that implements a Moore-style statemachine directly from a user-drawn state
+diagram.
+
+<p>
+JLS also has a
+<a href=truth/truth.html>truth table editor</a> that creates an element
+that implements a logic circuit directly from a user-drawn truth table.
+
+<p>
+Finally the user can create a <a href=other/siggen.html>signal generator</a>
+element that outputs one or more arbitrary signals.
+This is very useful for testing new circuits.
+</body>
+
+</html>

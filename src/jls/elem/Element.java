@@ -2,46 +2,40 @@ package jls.elem;
 
 import jls.*;
 import jls.edit.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-
 import javax.swing.*;
-
 import java.util.*;
 import java.math.*;
 
 /**
- * Super class for all logic elements (including non-active ones). Contains
- * common display info and methods.
+ * Super class for all logic elements (including non-active ones).
+ * Contains common display info and methods.
  * 
  * @author David A. Poplawski
  */
 public class Element {
 
 	// saved properties
-	private int id; // unique for every element when written to file
-	protected int x; // upper left corner of element
-	protected int y; // (snap-to position for most elements)
-	protected int width = 0; // size of element
+	private int id; 						// unique for every element when written to file
+	protected int x; 						// upper left corner of element
+	protected int y;						//   (snap-to position for most elements)
+	protected int width = 0; 				// size of element
 	protected int height = 0;
-	private boolean uneditable = false; // to keep others from editing this
-										// element
-	private int tracePosition = -1; // position in signal trace (-1 if none)
+	private boolean uneditable = false;		// to keep others from editing this element
+	private int tracePosition = -1;			// position in signal trace (-1 if none)
 
 	// running properties
-	protected boolean highlight = false; // whether the elements should be drawn
-											// highlighted
-	private int savex; // so it can be put back after an aborted move
+	protected boolean highlight = false;	// whether the elements should be drawn highlighted
+	private int savex;						// so it can be put back after an aborted move
 	private int savey;
-	protected Circuit circuit; // the circuit this element is part of
+	protected Circuit circuit;				// the circuit this element is part of
 
 	/**
 	 * Create a new Element object.
 	 * 
-	 * @param circuit
-	 *            The circuit this element is part of.
+	 * @param circuit The circuit this element is part of.
 	 */
 	public Element(Circuit circuit) {
 
@@ -59,10 +53,8 @@ public class Element {
 	/**
 	 * Set coordinates of this element.
 	 * 
-	 * @param x
-	 *            The x-coordinate of the upper left corner of this element.
-	 * @param y
-	 *            The y-coordinate of the upper left corner of this element.
+	 * @param x The x-coordinate of the upper left corner of this element.
+	 * @param y The y-coordinate of the upper left corner of this element.
 	 */
 	public void setXY(int x, int y) {
 
@@ -73,8 +65,7 @@ public class Element {
 	/**
 	 * Change the circuit this element is in.
 	 * 
-	 * @param circuit
-	 *            The new circuit.
+	 * @param circuit The new circuit.
 	 */
 	public void setCircuit(Circuit circuit) {
 
@@ -120,35 +111,32 @@ public class Element {
 
 		return y;
 	} // end of getY method
-
+	
 	/**
 	 * Get the trace position of this element.
 	 * 
 	 * @return the trace position (-1 if not traced)
 	 */
 	public int getTracePosition() {
-
+		
 		return tracePosition;
 	} // end of getTracePosition method
-
+	
 	/**
 	 * Set the trace position of this element.
 	 * 
-	 * @param position
-	 *            The position.
+	 * @param position The position.
 	 */
 	public void setTracePosition(int position) {
-
+		
 		tracePosition = position;
 	} // end of setTracePosition method
 
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the variable.
-	 * @param value
-	 *            The value of the variable.
+	 * @param name The name of the variable.
+	 * @param value The value of the variable.
 	 */
 	public void setValue(String name, int value) {
 
@@ -172,10 +160,8 @@ public class Element {
 	/**
 	 * Set a long instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the variable.
-	 * @param value
-	 *            The value of the variable.
+	 * @param name The name of the variable.
+	 * @param value The value of the variable.
 	 */
 	public void setValue(String name, long value) {
 
@@ -184,10 +170,8 @@ public class Element {
 	/**
 	 * Set a BigInteger instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the variable.
-	 * @param value
-	 *            The value of the variable.
+	 * @param name The name of the variable.
+	 * @param value The value of the variable.
 	 */
 	public void setValue(String name, BigInteger value) {
 
@@ -196,10 +180,8 @@ public class Element {
 	/**
 	 * Set a String instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The name of the variable.
-	 * @param value
-	 *            The value of the variable.
+	 * @param name The name of the variable.
+	 * @param value The value of the variable.
 	 */
 	public void setValue(String name, String value) {
 
@@ -208,10 +190,8 @@ public class Element {
 	/**
 	 * Set a pair of int instance variable values (during a load).
 	 * 
-	 * @param v1
-	 *            The first value.
-	 * @param v1
-	 *            The second value.
+	 * @param v1 The first value.
+	 * @param v1 The second value.
 	 */
 	public void setPair(int v1, int v2) {
 
@@ -220,8 +200,7 @@ public class Element {
 	/**
 	 * Initialize internal information for this element.
 	 * 
-	 * @param g
-	 *            The graphics object to use.
+	 * @param g The graphics object to use.
 	 */
 	public void init(Graphics g) throws Exception{
 		throw new Exception("ERROR: using undefined function from " + this.getName());
@@ -238,8 +217,7 @@ public class Element {
 	/**
 	 * Make a copy of this element in the parameter object.
 	 * 
-	 * @param it
-	 *            The element to copy info to.
+	 * @param it The element to copy info to.
 	 */
 	public void copy(Element it) {
 
@@ -272,10 +250,8 @@ public class Element {
 	/**
 	 * Move element.
 	 * 
-	 * @param dx
-	 *            Distance to move in the x-direction.
-	 * @param dy
-	 *            Distance to move in the y-direction.
+	 * @param dx Distance to move in the x-direction.
+	 * @param dy Distance to move in the y-direction.
 	 */
 	public void move(int dx, int dy) {
 
@@ -293,26 +269,28 @@ public class Element {
 	/**
 	 * See if the given point is inside the element's display area.
 	 * 
-	 * @param x
-	 *            The x-coordinate of the given point.
-	 * @param y
-	 *            The y-coordinate of the given point.
+	 * @param x The x-coordinate of the given point.
+	 * @param y The y-coordinate of the given point.
 	 * 
 	 * @return true if the point is in the display area, false if not.
 	 */
 	public boolean contains(int x, int y) {
 
 		Rectangle thisRect = getRect();
-		return thisRect.contains(x, y);
+		return thisRect.contains(x,y);
 	} // end of contains method
 
 	/**
 	 * See if this element intersects another.
 	 * 
+<<<<<<< HEAD
 	 * TODO major point of optimization
 	 * 
 	 * @param other
 	 *            The other element.
+=======
+	 * @param other The other element.
+>>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 * 
 	 * @return true if this element intersects the other, false if not.
 	 */
@@ -320,7 +298,7 @@ public class Element {
 
 		// special case for intersecting with a wire
 		if (other instanceof Wire) {
-			Wire wire = (Wire) other;
+			Wire wire = (Wire)other;
 			WireEnd end1 = wire.getEnd();
 			WireEnd end2 = wire.getOtherEnd(end1);
 
@@ -329,8 +307,7 @@ public class Element {
 				return false;
 			}
 
-			// otherwise check for wire intersection with this element's
-			// bounding rectangle
+			// otherwise check for wire intersection with this element's bounding rectangle
 			return wire.intersects(getRect());
 		}
 
@@ -343,8 +320,7 @@ public class Element {
 	/**
 	 * See if this element is completely inside a given rectangle.
 	 * 
-	 * @param rect
-	 *            The given rectangle.
+	 * @param rect The given rectangle.
 	 * 
 	 * @return true if the element is inside, false if not.
 	 */
@@ -357,8 +333,7 @@ public class Element {
 	/**
 	 * Set/reset highlight.
 	 * 
-	 * @param light
-	 *            True if item should be highlighted, false otherwise.
+	 * @param light True if item should be highlighted, false otherwise.
 	 */
 	public void setHighlight(boolean light) {
 
@@ -368,8 +343,7 @@ public class Element {
 	/**
 	 * Set id of this element (for file save).
 	 * 
-	 * @param id
-	 *            The id.
+	 * @param id The id.
 	 */
 	public void setID(int id) {
 
@@ -379,8 +353,7 @@ public class Element {
 	/**
 	 * Save all information about this element in a file.
 	 * 
-	 * @param output
-	 *            The print writer to use.
+	 * @param output The print writer to use.
 	 */
 	public void save(PrintWriter output) {
 
@@ -398,17 +371,17 @@ public class Element {
 	} // end of save method
 
 	/**
-	 * Highlight this element on the screen. Subclasses draw the element itself.
+	 * Highlight this element on the screen.
+	 * Subclasses draw the element itself.
 	 * 
-	 * @param g
-	 *            The Graphics object to draw with.
+	 * @param g The Graphics object to draw with.
 	 */
 	public void draw(Graphics g) {
 
 		// highlight if necessary
 		if (highlight) {
 			g.setColor(Color.pink);
-			Graphics2D gg = (Graphics2D) g;
+			Graphics2D gg = (Graphics2D)g;
 			gg.fill(getRect());
 		}
 	} // end of draw method
@@ -416,8 +389,7 @@ public class Element {
 	/**
 	 * This element will be removed, so do whatever is needed.
 	 * 
-	 * @param circ
-	 *            A reference back to the circuit the element is in.
+	 * @param circ A reference back to the circuit the element is in.
 	 */
 	public void remove(Circuit circ) {
 
@@ -435,16 +407,15 @@ public class Element {
 	/**
 	 * Display infomation about element (overridden).
 	 * 
-	 * @param info
-	 *            A JLabel to display with.
+	 * @param info A JLabel to display with.
 	 */
 	public void showInfo(JLabel info) {
 
 	} // end of showInfo method
 
 	/**
-	 * See if this element is touching (for possible connections). This is
-	 * overridden in wire ends.
+	 * See if this element is touching (for possible connections).
+	 * This is overridden in wire ends.
 	 */
 	public boolean isTouching() {
 
@@ -454,43 +425,38 @@ public class Element {
 	/**
 	 * Untouch all inputs and outputs.
 	 */
-	public void untouchPuts() {
-	}
+	public void untouchPuts() {}
 
 	/**
-	 * Get all inputs and outputs. Generally overridden.
+	 * Get all inputs and outputs.
+	 * Generally overridden.
 	 * 
 	 * @return a set of all inputs and outputs.
 	 */
-	public Set<Put> getAllPuts() {
-		return new HashSet<Put>();
-	}
+	public Set<Put> getAllPuts() { return new HashSet<Put>(); }
 
 	/**
 	 * Get the rectangle bounding this element.
-	 * 
+	 *  
 	 * @return the bounding rectangle.
 	 */
 	public Rectangle getRect() {
 
-		return new Rectangle(x, y, width, height);
+		return new Rectangle(x,y,width,height);
 	} // end of getRect method
 
 	/**
-	 * Set/reset touching flag(s) for this element. Overridden by wire ends and
-	 * logic elements.
+	 * Set/reset touching flag(s) for this element.
+	 * Overridden by wire ends and logic elements.
 	 * 
-	 * @param setting
-	 *            True to set, false to reset.
+	 * @param setting True to set, false to reset.
 	 */
-	public void setTouching(boolean setting) {
-	}
+	public void setTouching(boolean setting) {}
 
 	/**
 	 * Get put by name.
 	 * 
-	 * @param name
-	 *            Name of the put.
+	 * @param name Name of the put.
 	 * 
 	 * @return The put.
 	 */
@@ -501,7 +467,8 @@ public class Element {
 
 	/**
 	 * Check whether the element can be changed after it is created and placed.
-	 * Default is not. Overriden by elements that can.
+	 * Default is not.
+	 * Overriden by elements that can.
 	 * 
 	 * @return true if element can be change, false otherwise.
 	 */
@@ -511,16 +478,13 @@ public class Element {
 	} // end of canChange method
 
 	/**
-	 * Change element characteristics. Overridden in elements that can change.
+	 * Change element characteristics.
+	 * Overridden in elements that can change.
 	 * 
-	 * @param g
-	 *            A Graphics object to use for sizing.
-	 * @param editWindow
-	 *            The editor window.
-	 * @param x
-	 *            The current x-coordinate of the cursor.
-	 * @param y
-	 *            The current y-coordinate of the cursor.
+	 * @param g A Graphics object to use for sizing.
+	 * @param editWindow The editor window.
+	 * @param x The current x-coordinate of the cursor.
+	 * @param y The current y-coordinate of the cursor.
 	 * 
 	 * @return true if the element did change, false if not.
 	 */
@@ -530,8 +494,8 @@ public class Element {
 	} // end of change method
 
 	/**
-	 * Check whether element has a quick change (shortcut) option. Overridden by
-	 * elements than can.
+	 * Check whether element has a quick change (shortcut) option.
+	 * Overridden by elements than can.
 	 * 
 	 * @return true if is does, false if not.
 	 */
@@ -541,13 +505,13 @@ public class Element {
 	} // end of quicChange method
 
 	/**
-	 * Set up menu item for quick changes. Overridden by elements that can do
-	 * it. Should never be called.
+	 * Set up menu item for quick changes.
+	 * Overridden by elements that can do it.
+	 * Should never be called.
 	 * 
 	 * @return a menu item (can be a menu with submenu items)
 	 * 
-	 * @throws UnsupportedOperationException
-	 *             if called and not overridden.
+	 * @throws UnsupportedOperationException if called and not overridden.
 	 */
 	public JMenuItem setupQuickMenu(SimpleEditor sed) {
 
@@ -555,8 +519,9 @@ public class Element {
 	} // end of setupQuickMenu method
 
 	/**
-	 * Check whether the element has timing info, i.e., propagation delay or
-	 * access time. Default is do not. Overridden by elements tht do.
+	 * Check whether the element has timing info, i.e., propagation delay or access time.
+	 * Default is do not.
+	 * Overridden by elements tht do.
 	 * 
 	 * @return true if the element has timing info, false if not.
 	 */
@@ -568,14 +533,10 @@ public class Element {
 	/**
 	 * Show timing change dialog.
 	 * 
-	 * @param g
-	 *            The Graphics object to use to determine size.
-	 * @param editWindow
-	 *            The editor window this element is in.
-	 * @param x
-	 *            The current x-coordinate of the mouse.
-	 * @param y
-	 *            The current y-coordinate of the mouse.
+	 * @param g The Graphics object to use to determine size.
+	 * @param editWindow The editor window this element is in.
+	 * @param x The current x-coordinate of the mouse.
+	 * @param y The current y-coordinate of the mouse.
 	 */
 	public void changeTiming(JPanel editWindow, int x, int y) {
 
@@ -583,107 +544,99 @@ public class Element {
 		Point pos = editWindow.getMousePosition();
 		Point win = editWindow.getLocationOnScreen();
 		if (pos == null) {
-			new DelayChange(x + win.x, y + win.y, this instanceof Memory);
-		} else {
-			new DelayChange(pos.x + win.x, pos.y + win.y,
-					this instanceof Memory);
+			new DelayChange(x+win.x,y+win.y,this instanceof Memory);
+		}
+		else {
+			new DelayChange(pos.x+win.x,pos.y+win.y,this instanceof Memory);
 		}
 
 	} // end of changeTiming method
 
 	/**
-	 * Tells if an element is capable of rotatating, defaults to false. This
-	 * method may be overridden if an element supports rotation
-	 * 
+	 * Tells if an element is capable of rotatating, defaults to false.
+	 * This method may be overridden if an element supports rotation
 	 * @return True if an element supports rotation otherwise false
 	 */
-	public boolean canRotate() {
+	public boolean canRotate()
+	{
 		return false;
 	}
 
 	/**
-	 * This method will rotate the element if it is supported. This must be
-	 * overridden by supporting classes.
-	 * 
-	 * @param direction
-	 *            The direction to rotate
-	 * @param g
-	 *            The current graphics context for use in recalculating size
+	 *  This method will rotate the element if it is supported.
+	 *  This must be overridden by supporting classes.
+	 * @param direction The direction to rotate
+	 * @param g The current graphics context for use in recalculating size
 	 */
-	public void rotate(JLSInfo.Orientation direction, Graphics g) {
+	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	{
 		throw new UnsupportedOperationException("Rotate");
 	}
 
 	/**
-	 * Tells if an element is capable of flipping, defaults to false. This
-	 * method may be overridden if an element supports flipping
-	 * 
+	 * Tells if an element is capable of flipping, defaults to false.
+	 * This method may be overridden if an element supports flipping
 	 * @return True if an element supports flipping otherwise false
 	 */
-	public boolean canFlip() {
+	public boolean canFlip()
+	{
 		return false;
 	}
 
 	/**
-	 * This method will flip an element, it must be overridden by classes that
-	 * support it
-	 * 
-	 * @param g
-	 *            The current graphics context to facilitate recalculation of
-	 *            size when flipping
+	 * This method will flip an element, it must be overridden by classes that support it
+	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
-	public void flip(Graphics g) {
+	public void flip(Graphics g)
+	{
 		throw new UnsupportedOperationException("Flip");
 	}
 
 	/**
 	 * Display dialog letting user change the propagation delay or access time.
 	 */
-	@SuppressWarnings("serial")
 	private class DelayChange extends JDialog implements ActionListener {
 
 		// properties
 		private JButton ok = new JButton("OK");
 		private JButton cancel = new JButton("Cancel");
 		private JTextField delayField = new JTextField(10);
-		private KeyPad delayPad = new KeyPad(delayField, 10, 0, this);
+		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
 
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x
-		 *            The x-coordinate of the position of the dialog.
-		 * @param y
-		 *            The y-coordinate of the position of the dialog.
-		 * @param isMemory
-		 *            True if this is a memory element, false if not.
+		 * @param x The x-coordinate of the position of the dialog.
+		 * @param y The y-coordinate of the position of the dialog.
+		 * @param isMemory True if this is a memory element, false if not.
 		 */
 		private DelayChange(int x, int y, boolean isMemory) {
 
 			// set up window title
-			super(JLSInfo.frame, "Change Timing", true);
+			super(JLSInfo.frame,"Change Timing",true);
 
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
+			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel delay;
 			if (isMemory) {
-				delay = new JLabel("Memory access time: ", SwingConstants.RIGHT);
-			} else {
-				delay = new JLabel("Propagation delay: ", SwingConstants.RIGHT);
+				delay = new JLabel("Memory access time: ",SwingConstants.RIGHT);
 			}
-			info.add(delay, BorderLayout.WEST);
-			info.add(delayField, BorderLayout.CENTER);
-			delayField.setText(getDelay() + "");
-			info.add(delayPad, BorderLayout.EAST);
+			else {
+				delay = new JLabel("Propagation delay: ",SwingConstants.RIGHT);
+			}
+			info.add(delay,BorderLayout.WEST);
+			info.add(delayField,BorderLayout.CENTER);
+			delayField.setText(getDelay()+"");
+			info.add(delayPad,BorderLayout.EAST);
 			window.add(info);
 
 			// set up ok and cancel buttons
 			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1, 2));
+			JPanel okCancel = new JPanel(new GridLayout(1,2));
 			ok.setBackground(Color.green);
 			okCancel.add(ok);
 			cancel.setBackground(Color.pink);
@@ -697,24 +650,25 @@ public class Element {
 
 			// set up window close listener to cancel gate
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent e) {
-					dispose();
-				}
-			});
+			addWindowListener (
+					new WindowAdapter() {
+						public void windowClosing(WindowEvent e) {
+							dispose();
+						}
+					}
+			);
 
 			// finish up GUI
 			pack();
 			Dimension d = getSize();
-			setLocation(x - d.width / 2, y - d.height / 2);
+			setLocation(x-d.width/2,y-d.height/2);
 			setVisible(true);
 		} // end of constructor
 
 		/**
 		 * React to ok, reset and cancel buttons.
 		 * 
-		 * @param event
-		 *            The event object for this action.
+		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
@@ -722,7 +676,8 @@ public class Element {
 				int temp = 0;
 				try {
 					temp = Integer.parseInt(delayField.getText());
-				} catch (NumberFormatException ex) {
+				}
+				catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(this,
 							"Value not numeric, try again", "Error",
 							JOptionPane.ERROR_MESSAGE);
@@ -730,13 +685,14 @@ public class Element {
 				}
 				if (temp <= 0) {
 					JOptionPane.showMessageDialog(this,
-							"Propagation delay must be greater than 0",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Propagation delay must be greater than 0", "Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				setDelay(temp);
 				dispose();
-			} else if (event.getSource() == cancel) {
+			}
+			else if (event.getSource() == cancel) {
 				dispose();
 			}
 
@@ -745,8 +701,8 @@ public class Element {
 	} // end of DelayChange class
 
 	/**
-	 * Get the propagation delay or access time in this element. Overridden by
-	 * elements with timing info.
+	 * Get the propagation delay or access time in this element.
+	 * Overridden by elements with timing info.
 	 * 
 	 * @return the current delay.
 	 */
@@ -756,11 +712,11 @@ public class Element {
 	} // end of getDelay method
 
 	/**
-	 * Set the propagation delay or access time in this element. Overridden by
-	 * elements with timing info.
+	 * Set the propagation delay or access time in this element.
+	 * Overridden by elements with timing info.
 	 * 
-	 * @param amount
-	 *            The new delay amount. Must be Integer, don't change to int!
+	 * @param amount The new delay amount.
+	 *        Must be Integer, don't change to int!
 	 */
 	public void setDelay(int temp) {
 
@@ -768,8 +724,9 @@ public class Element {
 	} // end of setDelay method
 
 	/**
-	 * Check wether the element can be watched. Default is not. Overridden by
-	 * elements that can be.
+	 * Check wether the element can be watched.
+	 * Default is not.
+	 * Overridden by elements that can be.
 	 * 
 	 * @return false;
 	 */
@@ -779,8 +736,9 @@ public class Element {
 	} // end of canWatch method
 
 	/**
-	 * See if element is currently watched. Default is not. Overridden by
-	 * elements that can be watched.
+	 * See if element is currently watched.
+	 * Default is not.
+	 * Overridden by elements that can be watched.
 	 * 
 	 * @return false.
 	 */
@@ -790,30 +748,28 @@ public class Element {
 	} // end of isWatched method
 
 	/**
-	 * Set whether this element is watched or not. Overridden by elements that
-	 * can be watched.
+	 * Set whether this element is watched or not.
+	 * Overridden by elements that can be watched.
 	 * 
-	 * @param state
-	 *            Unused.
+	 * @param state Unused.
 	 */
 	public void setWatched(boolean state) {
 
 	} // end of setWatched method
 
 	/**
-	 * Display the current value of this element. Only works for watchable
-	 * elements, and is overridden there.
+	 * Display the current value of this element.
+	 * Only works for watchable elements, and is overridden there.
 	 * 
-	 * @param where
-	 *            The point on the screen to display at.
+	 * @param where The point on the screen to display at.
 	 */
 	public void showCurrentValue(Point where) {
 
 	} // end of showCurrent value method
 
 	/**
-	 * Get the name of this element. Overridden by elements that actually have
-	 * names.
+	 * Get the name of this element.
+	 * Overridden by elements that actually have names.
 	 * 
 	 * @return null;
 	 */
@@ -833,8 +789,8 @@ public class Element {
 	} // end of isUneditable method
 
 	/**
-	 * Make this element uneditable. This cannot be undone without editting the
-	 * saved file.
+	 * Make this element uneditable.
+	 * This cannot be undone without editting the saved file.
 	 */
 	public void makeUneditable() {
 

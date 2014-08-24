@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>JLS Startup File</title>
+</head>
+
+<body>
+<h1>JLS Startup File</h1>
+
+<p>
+The JLS startup file is used to force various circuit properties when JLS is
+run in batch mode.
+The startup file is ignored if JLS is started up in interractive mode.
+
+<ul>
+<li>
+Specify default propagation delays for any or all element types.
+<pre>
+    TYPE type PROPDELAY delay
+</pre>
+<p>
+where <i>type</i> is one of
+<b>
+<code>AndGate</code>,
+<code>OrGate</code>,
+<code>NotGate</code>,
+<code>XorGate</code>,
+<code>NandGate</code>,
+<code>NorGate</code>,
+<code>DelayGate</code>,
+<code>TriState</code>,
+<code>Register</code>,
+<code>Memory</code>,
+<code>MUX</code>,
+<code>Adder</code>,
+<code>Decoder</code>,
+</b>
+and <i>delay</i> is a positive integer.
+<li>
+Make all elements in the circuit being loaded <i>unwatched</i>.
+<pre>
+    CLEAR WATCHES
+</pre>
+<li>
+Remove all <i>probes</i> from the circuit being loaded.
+<pre>
+    CLEAR PROBES
+</pre>
+<li>
+Reset all propagation delays to their default values in the circuit being
+loaded.
+<pre>
+    RESET PROPDELAYS
+</pre>
+<li>
+Specify that specifically named elements (registers,
+memories, etc.) be <i>watched</i> or not.
+<pre>
+    ELEMENT <i>name</i> WATCHED true/false
+</pre>
+<p>
+where <i>name</i> is the name of an element in the circuit and true/false
+is either the word <code>true</code> or the word <code>false</code>.
+If <i>name</i> is an element in a subcircuit, then the sequence of subcircuit
+names starting with subcircuit in the main circuit must be used, with
+periods between the names.
+For example, if the main circuit has a subcircuit called "cache" and the
+cache subcircuit has a subcircuit called "control" and the control subcircuit
+has a register element called "tag", then the name of the tag register is
+cache.control.tag.
+<li>
+Specify propagation delays for specifically named elements (registers,
+memories, etc.).
+<pre>
+    ELEMENT <i>name</i> PROPDELAY value
+</pre>
+<p>
+where <i>name</i> is the name of an element in the circuit and value is the
+propagation delay (or access time in the case of a memory element) and
+is a positive integer.
+If <i>name</i> is an element in a subcircuit, then it must be qualified as
+in the previous specification.
+<li>
+Specify initial values for specifically named registers.
+<p>
+<pre>
+    ELEMENT <i>name</i> INITIALLY value
+</pre>
+<p>
+where <i>name</i> is the name of a register element in the circuit and value
+is the initial value for that register, a positive integer.
+If <i>name</i> is an element in a subcircuit, then it must be qualified as
+in the previous specification.
+<li>
+Specify the file name for specificially named memories to read their 
+initial contents from.
+<p>
+<pre>
+    ELEMENT <i>name</i> FILENAME filename
+</pre>
+<p>
+where <i>name</i> is the name of a memory element in the circuit and filename
+is the name of the file to read initial memory contents from when simulation
+begins.
+This overrides any builtin memory values.
+If <i>name</i> is an element in a subcircuit, then it must be qualified as
+in the previous specification.
+</ul>
+
+<p>
+The parameter file is read in order and each specification is processed 
+in order.
+For example, to make exactly one register (say PC) be watched and everything
+else not watched, first specify that all elements be unwatched, then make
+the PC watched.
+
+<p>
+Note that all parameter file information is case sensitive.
+Otherwise no special formatting is required, other than words and numbers must
+be separated by white space (one or more spaces, tabs and/or new lines).
+If any errors are encountered when JLS reads the parameter file, an error
+message is printed and JLS terminates immediately.
+
+</body>
+
+</html>

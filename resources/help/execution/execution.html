@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>Running JLS</title>
+</head>
+
+<body>
+<h1>Running JLS </h1>
+
+<p>
+JLS is contained in a JAR (Java ARchive) file.
+It can be run from a command line, or, depending on the operating system
+and window manager, by clicking on an icon.
+It runs in one of two modes:
+<a href=../simulator/interactive/overview.html>interactive</a> (with GUI)
+or
+<a href= ../simulator/batch/overview.html>batch</a> (no GUI).
+Interactive is the default.
+Use the -b flag (see below) to run JLS in batch mode.
+
+<p>
+When run in the interactive mode, JLS will create a checkpoint file after
+every 10 changes.
+The name of the checkpoint file is the name of the circuit with ".jls~"
+appended.
+If JLS aborts and you are not able to save the circuit you are working on,
+then you can recover the checkpointed state by renaming the checkpoint
+file (delete the "~") and starting JLS again.
+
+<h2>Command Line Execution</h2>
+<p>
+The basic command for starting JLS in interactive mode is:
+
+<pre>
+    java -jar JLS.jar
+</pre>
+
+This starts up JLS with no circuit in the editor.
+The user can subsequently create a new circuit or open an existing circuit.
+
+<p>
+If a circuit file name is specified on the command line then JLS will start up
+with the circuit already loaded in the editor, e.g.
+
+<pre>
+    java -jar JLS.jar <i>circuit.jls</i>
+</pre>
+
+To run JLS in batch mode type
+
+<pre>
+    java -jar JLS.jar <i>-b</i> circuit.jls
+</pre>
+
+<p>
+(note that a circuit file must be specified when -b is used)
+
+<h2>Icon Startup</h2>
+<p>
+The mechanism for starting JLS by clicking on an icon is dependent on the
+particular operating system and window manager.
+While the details differ, most allow the icon to be parameterized in such
+a way as to allow the various command line options to be specified.
+
+<h2>Flags</h2>
+
+<p>
+<b>-b</b>
+Batch mode.
+
+<p>
+<b>-dtime</b>
+Set the simulation time limit.
+The time is a positive integer immediately following <b>-d</b>, e.g.,
+-d1000.
+
+<p>
+<b>-h</b>
+Print a short help message.
+
+<p>
+<b>-sname</b>
+Read JLS <a href=startup.html>start-up</a> file before loading any circuits.
+The name of the file immediately follows the <b>-s</b>, e.g.,
+-sparameters.
+Any legal file name not containing spaces is allowed.
+
+<p>
+<b>-tname</b>
+Read JLS <a href=../elements/other/sigformat.html>test input</a>
+file just before simulating a circuit.
+The file will be read every time the simulator is started, so changes
+made to the file will affect a subsequent simulation run.
+The name of the file immediately follows the <b>-t</b>, e.g.,
+-tinputsigs.
+Any legal file name not containing spaces is allowed.
+
+<p>
+<b>-pprinter</b>
+When used with batch mode causes the entire circuit to be printed.
+If a printer name is present, the output will be sent to it.
+
+<p>
+<b>-vprinter</b>
+When used with batch mode causes the top level of the circuit to be printed (no subcircuits).
+If a printer name is present, the output will be sent to it.
+
+<p>
+<b>-rprinter</b>
+Forces batch mode, runs the simulator, and prints the signal trace to the named printer.
+
+</body>
+
+</html>

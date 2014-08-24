@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>Delay Gate</title>
+</head>
+
+<body>
+<h1>Delay Gate</h1>
+
+<p>
+A delay gate provides no logical function.
+Its only purpose is to delay the change of a signal between its input
+and output.
+
+<p>
+Set the (propagation) delay of the delay gate by typing or using the
+<a href=../keypad.html>keypad</a>.
+
+<p>
+By default a single delay gate is created, with each input being a single wire.
+Multiple delay gates, with the input being a bundle of wires, can also be
+specified by typing or using the <a href=../keypad.html>keypad</a>
+to enter the desired number of gates in the "Gates (bits)" field.
+The resulting single gate symbol will then be a shorthand for multiple
+delay gates, with the input of each gate being the corresponding bit position from each wire in the input bundle.
+For example, specifying two gates (bits) will produce the equivalent of
+two gates (one symbol), with the input of one of the gates being from bit
+position 0 of the input wire bundle and the input of the other gate being
+from bit position 1 of the input wire bundle.
+
+<p>
+A delay gate can point in any of four directions: up, down, left or right.
+Pointing right (the default) means that the output of the gate is to the
+right of the inputs.
+Select the orientation of the gate you are creating by clicking on the
+appropriately labelled button.
+
+<p>
+To finish the dialog and place the newly created gate, click on the
+<font color=green>OK</font> button.
+Then move the mouse to position the gate where you want it in the circuit
+and left click to fix it in that position (it can be moved later, so don't
+have to be in exactly the right spot).
+
+<p>
+If you change your mind and decide you don't want a gate of the type you
+are currently creating, click on the <font color=fuchsia>Cancel</font>
+button in the dialog.
+If you have already clicked on the <font color=green>OK</font> button but
+have not yet fixed the place of the new gate, you can still cancel the gate
+by right clicking the mouse.
+
+</body>
+
+</html>

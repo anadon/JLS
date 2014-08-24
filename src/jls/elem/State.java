@@ -1,5 +1,6 @@
 package jls.elem;
 
+<<<<<<< HEAD:src/jls/elem/State.java
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -43,6 +44,19 @@ import jls.BitSetUtils;
 import jls.JLSInfo;
 import jls.KeyPad;
 import jls.sim.Simulator;
+=======
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import java.io.*;
+import java.util.*;
+
+import javax.swing.*;
+
+import jls.*;
+import jls.elem.*;
+import jls.sim.*;
+>>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/sm/State.java
 
 /**
  * A single state.
@@ -50,7 +64,7 @@ import jls.sim.Simulator;
 public class State {
 
 	// properties
-	private StateMachine machine; // the state machine this state is in
+	private StateMachine machine;	// the state machine this state is in
 	private String name;
 	private boolean initial = false;
 	private Vector<Out> outs = new Vector<Out>();
@@ -58,14 +72,12 @@ public class State {
 	private int x;
 	private int y;
 	private int diameter;
-
 	private class Check {
 		public int bits;
-		public boolean isInput; // false if output
+		public boolean isInput;	// false if output
 		public int refs; // delete from map when 0
 	};
-
-	private Map<String, Check> bitmap = new HashMap<String, Check>();
+	private Map <String,Check> bitmap = new HashMap<String,Check>();
 	// signal names to number of bits, for consistency check
 
 	// other temporary properties
@@ -79,15 +91,13 @@ public class State {
 	/**
 	 * Outputs from this state.
 	 */
-	public class Out {
+	private class Out {
 
 		public String signal;
 		public int bits;
 		public long value;
 
-		public String toString() {
-			return signal + "[" + bits + "] = " + value;
-		}
+		public String toString() { return signal + "[" + bits + "] = " + value; }
 	} // end of Out class
 
 	/**
@@ -103,18 +113,17 @@ public class State {
 		public boolean other = false;
 		public State nextState;
 		public String nextStateName = null; // temporarily used during load
-		public Vector<Point> points = new Vector<Point>();
+		public Vector<Point>points = new Vector<Point>();
 		public Point highlight = null;
 		public boolean highlighted;
 	} // end of Transition class
 
 	/**
-	 * Create a new state. Make its diameter large enough to contain the name.
+	 * Create a new state.
+	 * Make its diameter large enough to contain the name.
 	 * 
-	 * @param name
-	 *            The name of the state.
-	 * @param g
-	 *            The Graphics object to use.
+	 * @param name The name of the state.
+	 * @param g The Graphics object to use.
 	 */
 	public State(StateMachine machine, String name, Graphics g) {
 
@@ -122,22 +131,20 @@ public class State {
 		this.name = name;
 		if (g != null) {
 			FontMetrics fm = g.getFontMetrics();
-			diameter = Math.max(fm.stringWidth("  " + name + "  "),
-					JLSInfo.stateDiameter);
+			diameter = Math.max(fm.stringWidth("  " + name + "  "),JLSInfo.stateDiameter);
 		}
 	} // end of constructor
 
 	/**
 	 * Draw this state.
 	 * 
-	 * @param g
-	 *            The Graphics object to use.
+	 * @param g The Graphics object to use.
 	 */
 	public void draw(Graphics g) {
 
 		// set up
 		int d = diameter;
-		int r = d / 2;
+		int r = d/2;
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int descent = fm.getDescent();
@@ -158,25 +165,25 @@ public class State {
 				// draw line from start state edge to end state edge
 				int w = tr.nextState.x - x;
 				int h = y - tr.nextState.y;
-				double dist = Math.sqrt(w * w + h * h);
-				int dxf = (int) Math.rint(w * r / dist); // start edge
-				int dyf = (int) Math.rint(h * r / dist);
-				int or = tr.nextState.diameter / 2;
-				int dxt = (int) Math.rint(w * or / dist);
-				int dyt = (int) Math.rint(h * or / dist);
-				int endx = tr.nextState.x - dxt; // end edge
-				int endy = tr.nextState.y + dyt;
+				double dist = Math.sqrt(w*w+h*h);
+				int dxf = (int)Math.rint(w*r/dist); // start edge
+				int dyf = (int)Math.rint(h*r/dist);
+				int or = tr.nextState.diameter/2;
+				int dxt = (int)Math.rint(w*or/dist);
+				int dyt = (int)Math.rint(h*or/dist);
+				int endx = tr.nextState.x-dxt;	// end edge
+				int endy = tr.nextState.y+dyt;
 				g.setColor(color);
-				g.drawLine(x + dxf, y - dyf, endx, endy);
+				g.drawLine(x+dxf,y-dyf,endx,endy);
 
 				// draw arrow
-				double angle = SMUtil.getAngle(w, h);
-				SMUtil.drawArrow(endx, endy, angle, g);
+				double angle = SMUtil.getAngle(w,h);
+				SMUtil.drawArrow(endx,endy,angle,g);
 
 				// draw condition info
-				int midx = (x + dxf + endx) / 2;
-				int midy = (y - dyf + endy) / 2;
-				drawCond(tr, midx, midy, angle, g);
+				int midx = (x+dxf+endx)/2;
+				int midy = (y-dyf+endy)/2;
+				drawCond(tr,midx,midy,angle,g);
 			}
 
 			// otherwise draw transition in segments
@@ -187,24 +194,24 @@ public class State {
 				int ny = tr.points.get(0).y;
 				int w = nx - x;
 				int h = y - ny;
-				double dist = Math.sqrt(w * w + h * h);
-				int dxf = (int) Math.rint(w * r / dist);
-				int dyf = (int) Math.rint(h * r / dist);
+				double dist = Math.sqrt(w*w+h*h);
+				int dxf = (int)Math.rint(w*r/dist);
+				int dyf = (int)Math.rint(h*r/dist);
 				g.setColor(color);
-				g.drawLine(x + dxf, y - dyf, nx, ny);
+				g.drawLine(x+dxf,y-dyf,nx,ny);
 
 				// draw condition info
-				int midx = (x + dxf + nx) / 2;
-				int midy = (y - dyf + ny) / 2;
-				drawCond(tr, midx, midy, SMUtil.getAngle(w, h), g);
+				int midx = (x+dxf+nx)/2;
+				int midy = (y-dyf+ny)/2;
+				drawCond(tr,midx,midy,SMUtil.getAngle(w,h),g);
 
 				// draw all but last segment
 				int px = nx;
 				int py = ny;
-				for (int i = 1; i < tr.points.size(); i += 1) {
+				for (int i=1; i<tr.points.size(); i+=1) {
 					nx = tr.points.get(i).x;
 					ny = tr.points.get(i).y;
-					g.drawLine(px, py, nx, ny);
+					g.drawLine(px,py,nx,ny);
 					px = nx;
 					py = ny;
 				}
@@ -212,24 +219,23 @@ public class State {
 				// draw last segment
 				w = tr.nextState.x - px;
 				h = py - tr.nextState.y;
-				dist = Math.sqrt(w * w + h * h);
-				int or = tr.nextState.diameter / 2;
-				int dxt = (int) Math.rint(w * or / dist);
-				int dyt = (int) Math.rint(h * or / dist);
-				int endx = tr.nextState.x - dxt; // end edge
-				int endy = tr.nextState.y + dyt;
-				g.drawLine(px, py, endx, endy);
+				dist = Math.sqrt(w*w+h*h);
+				int or = tr.nextState.diameter/2;
+				int dxt = (int)Math.rint(w*or/dist);
+				int dyt = (int)Math.rint(h*or/dist);
+				int endx = tr.nextState.x-dxt;	// end edge
+				int endy = tr.nextState.y+dyt;
+				g.drawLine(px,py,endx,endy);
 
 				// draw arrow
-				double angle = SMUtil.getAngle(w, h);
-				SMUtil.drawArrow(endx, endy, angle, g);
+				double angle = SMUtil.getAngle(w,h);
+				SMUtil.drawArrow(endx,endy,angle,g);
 
 				// draw highlight point if there is one
 				if (tr.highlight != null) {
 					int pd = JLSInfo.pointDiameter;
 					g.setColor(JLSInfo.highlightColor);
-					g.fillOval(tr.highlight.x - pd / 2,
-							tr.highlight.y - pd / 2, pd, pd);
+					g.fillOval(tr.highlight.x-pd/2,tr.highlight.y-pd/2,pd,pd);
 				}
 			}
 		}
@@ -237,22 +243,22 @@ public class State {
 		// show initial if necessary
 		if (initial) {
 			g.setColor(JLSInfo.initialStateColor);
-			g.fillOval(x - r, y - r, d + 1, d + 1);
+			g.fillOval(x-r,y-r,d+1,d+1);
 		}
 
 		// highlight if necessary
 		if (highlight) {
 			g.setColor(JLSInfo.highlightColor);
-			g.fillOval(x - r, y - r, d + 1, d + 1);
+			g.fillOval(x-r,y-r,d+1,d+1);
 		}
 
 		// draw circle
 		g.setColor(Color.BLACK);
-		g.drawOval(x - r, y - r, d, d);
+		g.drawOval(x-r,y-r,d,d);
 
 		// draw name
 		int width = fm.stringWidth(name);
-		g.drawString(name, x - width / 2, y - height / 2 + ascent);
+		g.drawString(name,x-width/2,y-height/2+ascent);
 
 	} // end of draw method
 
@@ -260,47 +266,43 @@ public class State {
 	 * Draw the condition information on a transition.
 	 * 
 	 * @param trans A transition.
-	 * 
 	 * @param x The x-coordinate of the middle of a line segment.
-	 * 
 	 * @param y The y-coordinate of the middle of a line segment.
-	 * 
 	 * @param angle The angle of a line segment (in degrees).
-	 * 
 	 * @param g The Graphics object to use.
 	 */
-	public void drawCond(Transition trans, int x, int y, double angle,
-			Graphics g) {
+	public void drawCond(Transition trans, int x, int y, double angle, Graphics g) {
 
 		String cond = "";
 		if (trans.other) {
 			cond = "else";
-		} else if (!trans.unconditional) {
+		}
+		else if (!trans.unconditional) {
 			String rel = " != ";
 			if (trans.equal) {
 				rel = " = ";
 			}
-			cond = trans.signal + "[" + trans.bits + "]" + rel + trans.value;
+			cond = trans.signal + "[" + trans.bits + "]"+ rel + trans.value;
 		}
 		FontMetrics fm = g.getFontMetrics();
 		int descent = fm.getDescent();
 		int width = fm.stringWidth(cond);
 
 		if (angle == 0.0 || angle == 180) {
-			g.drawString(cond, x - width / 2, y - descent - 1);
-		} else if (0.0 < angle && angle <= 90.0 || 180.0 < angle
-				&& angle < 270.0) {
-			g.drawString(cond, x - width, y - descent - 1);
-		} else {
-			g.drawString(cond, x + 1, y - descent - 1);
+			g.drawString(cond,x-width/2,y-descent-1);
+		}
+		else if (0.0 < angle && angle <= 90.0 || 180.0 < angle && angle < 270.0) {
+			g.drawString(cond,x-width,y-descent-1);
+		}
+		else {
+			g.drawString(cond,x+1,y-descent-1);
 		}
 	} // end of drawCond method
 
 	/**
 	 * Get the bounds of this state.
 	 * 
-	 * @param g
-	 *            The graphics object to use.
+	 * @param g The graphics object to use.
 	 * 
 	 * @return The bounds of this state and all of its outward transitions.
 	 */
@@ -308,8 +310,8 @@ public class State {
 
 		// add circle to bounds
 		int d = diameter;
-		int r = d / 2;
-		Rectangle bounds = new Rectangle(x - r, y - r, d, d);
+		int r = d/2;
+		Rectangle bounds = new Rectangle(x-r,y-r,d,d);
 
 		// add transition to bounds
 		for (Transition tr : trans) {
@@ -325,18 +327,18 @@ public class State {
 				// direct
 				int w = tr.nextState.x - x;
 				int h = y - tr.nextState.y;
-				double dist = Math.sqrt(w * w + h * h);
-				int dxf = (int) Math.rint(w * r / dist); // start edge
-				int dyf = (int) Math.rint(h * r / dist);
-				int or = tr.nextState.diameter / 2;
-				int dxt = (int) Math.rint(w * or / dist);
-				int dyt = (int) Math.rint(h * or / dist);
-				int endx = tr.nextState.x - dxt; // end edge
-				int endy = tr.nextState.y + dyt;
-				double angle = SMUtil.getAngle(w, h);
-				int midx = (x + dxf + endx) / 2;
-				int midy = (y - dyf + endy) / 2;
-				bounds.add(boundCond(tr, midx, midy, angle, g));
+				double dist = Math.sqrt(w*w+h*h);
+				int dxf = (int)Math.rint(w*r/dist); // start edge
+				int dyf = (int)Math.rint(h*r/dist);
+				int or = tr.nextState.diameter/2;
+				int dxt = (int)Math.rint(w*or/dist);
+				int dyt = (int)Math.rint(h*or/dist);
+				int endx = tr.nextState.x-dxt;	// end edge
+				int endy = tr.nextState.y+dyt;
+				double angle = SMUtil.getAngle(w,h);
+				int midx = (x+dxf+endx)/2;
+				int midy = (y-dyf+endy)/2;
+				bounds.add(boundCond(tr,midx,midy,angle,g));
 			}
 
 			// otherwise get bounds of segments
@@ -347,48 +349,44 @@ public class State {
 				int ny = tr.points.get(0).y;
 				int w = nx - x;
 				int h = y - ny;
-				double dist = Math.sqrt(w * w + h * h);
-				int dxf = (int) Math.rint(w * r / dist);
-				int dyf = (int) Math.rint(h * r / dist);
-				int midx = (x + dxf + nx) / 2;
-				int midy = (y - dyf + ny) / 2;
-				bounds.add(boundCond(tr, midx, midy, SMUtil.getAngle(w, h), g));
+				double dist = Math.sqrt(w*w+h*h);
+				int dxf = (int)Math.rint(w*r/dist);
+				int dyf = (int)Math.rint(h*r/dist);
+				int midx = (x+dxf+nx)/2;
+				int midy = (y-dyf+ny)/2;
+				bounds.add(boundCond(tr,midx,midy,SMUtil.getAngle(w,h),g));
 			}
 		}
 		return bounds;
 	} // end of getBounds method
 
 	/*
-	 * Get the bounds on the condition. If g is null, then return a 0x0
-	 * rectangle at x,y.
+	 * Get the bounds on the condition.
+	 * If g is null, then return a 0x0 rectangle at x,y.
 	 * 
 	 * @param trans A transition.
-	 * 
 	 * @param x The x-coordinate of the middle of a line segment.
-	 * 
 	 * @param y The y-coordinate of the middle of a line segment.
-	 * 
 	 * @param angle The angle of a line segment (in degrees).
-	 * 
 	 * @param g The Graphics object to use.
 	 * 
 	 * @return The bounds of the condition on this transition.
 	 */
-	public Rectangle boundCond(Transition trans, int x, int y, double angle,
-			Graphics g) {
+	public Rectangle boundCond(Transition trans, int x, int y, double angle, Graphics g) {
 
 		if (g == null) {
-			return new Rectangle(x, y, 0, 0);
+			return new Rectangle(x,y,0,0);
 		}
 		String cond = "";
 		if (trans.other) {
 			cond = "else";
-		} else if (!trans.unconditional) {
+		}
+		else if (!trans.unconditional) {
 			String rel = " != ";
 			if (trans.equal) {
 				rel = " = ";
 			}
-			cond = trans.signal + "[" + trans.bits + "]" + rel + trans.value;
+			cond = trans.signal + "[" + trans.bits + "]"+ rel + trans.value;
 		}
 		FontMetrics fm = g.getFontMetrics();
 		int descent = fm.getDescent();
@@ -396,28 +394,28 @@ public class State {
 		int width = fm.stringWidth(cond);
 
 		if (angle == 0.0 || angle == 180) {
-			return new Rectangle(x - width / 2, y, width, height);
-		} else if (0.0 < angle && angle <= 90.0 || 180.0 < angle
-				&& angle < 270.0) {
-			return new Rectangle(x - width, y, width, height);
-		} else {
-			return new Rectangle(x, y, width, height);
+			return new Rectangle(x-width/2,y,width,height);
+		}
+		else if (0.0 < angle && angle <= 90.0 || 180.0 < angle && angle < 270.0) {
+			return new Rectangle(x-width,y,width,height);
+		}
+		else {
+			return new Rectangle(x,y,width,height);
 		}
 	} // end of boundCond method
 
 	/**
-	 * Make a copy of this state. *
-	 * 
-	 * @param it
-	 *            The new state machine.
+	 * Make a copy of this state.
+	 * * 
+	 * @param it The new state machine.
 	 * 
 	 * @return A copy of this state.
 	 */
 	public State copy(StateMachine it) {
 
 		// create new state and add to map
-		State newState = new State(it, name, null);
-		// stateMap.put(name,newState);
+		State newState = new State(it,name,null);
+		//stateMap.put(name,newState);
 
 		// fill in basic info
 		newState.x = x;
@@ -445,13 +443,13 @@ public class State {
 			newTrans.bits = tran.bits;
 			newTrans.nextStateName = new String(tran.nextState.getName());
 			for (Point p : tran.points) {
-				newTrans.points.add(new Point(p.x, p.y));
+				newTrans.points.add(new Point(p.x,p.y));
 			}
 			newState.trans.add(newTrans);
 		}
 
 		// make a copy of the signal bitmap
-		newState.bitmap = new HashMap<String, Check>();
+		newState.bitmap = new HashMap<String,Check>();
 		for (String sig : bitmap.keySet()) {
 			Check ch = bitmap.get(sig);
 			Check newch = new Check();
@@ -466,10 +464,9 @@ public class State {
 	/**
 	 * Replace all symbolic links to next states with actual references.
 	 * 
-	 * @param it
-	 *            The new state machine.
+	 * @param it The new state machine.
 	 */
-	public void linkTrans(StateMachine it, Map<String, State> stateMap) {
+	public void linkTrans(StateMachine it, Map<String,State>stateMap) {
 
 		for (Transition tran : trans) {
 			if (tran.nextStateName != null) {
@@ -481,8 +478,7 @@ public class State {
 	/**
 	 * Save information about this state.
 	 * 
-	 * @param output
-	 *            The PrintWriter to write to.
+	 * @param output The PrintWriter to write to.
 	 */
 	public void save(PrintWriter output) {
 
@@ -520,10 +516,8 @@ public class State {
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setValue(String name, int value) {
 
@@ -544,10 +538,8 @@ public class State {
 	/**
 	 * Set an output String instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setOutputValue(String name, String value) {
 
@@ -559,10 +551,8 @@ public class State {
 	/**
 	 * Set an output int instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setOutputValue(String name, int value) {
 
@@ -574,8 +564,9 @@ public class State {
 				ch.bits = buildOut.bits;
 				ch.isInput = false;
 				ch.refs = 1;
-				bitmap.put(buildOut.signal, ch);
-			} else {
+				bitmap.put(buildOut.signal,ch);
+			}
+			else {
 				ch.refs += 1;
 			}
 		}
@@ -584,10 +575,8 @@ public class State {
 	/**
 	 * Set an output long instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setOutputValue(String name, long value) {
 
@@ -599,10 +588,8 @@ public class State {
 	/**
 	 * Set an transition String instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setTransValue(String name, String value) {
 
@@ -614,10 +601,11 @@ public class State {
 				buildTrans.unconditional = true;
 			else if (value.equals("else"))
 				buildTrans.other = true;
-			else
+			else 
 				buildTrans.signal = value;
 			trans.add(buildTrans);
-		} else if (name.equals("next")) {
+		}
+		else if (name.equals("next")) {
 
 			// link to state if possible
 			for (State state : machine.getStates()) {
@@ -635,10 +623,8 @@ public class State {
 	/**
 	 * Set a transition int instance variable value (during a load).
 	 * 
-	 * @param name
-	 *            The instance variable name.
-	 * @param value
-	 *            The instance variable value.
+	 * @param name The instance variable name.
+	 * @param value The instance variable value.
 	 */
 	public void setTransValue(String name, int value) {
 
@@ -647,9 +633,11 @@ public class State {
 				buildTrans.equal = true;
 			else
 				buildTrans.equal = false;
-		} else if (name.equals("value")) {
+		}
+		else if (name.equals("value")) {
 			buildTrans.value = value;
-		} else if (name.equals("bits")) {
+		}
+		else if (name.equals("bits")) {
 			buildTrans.bits = value;
 			Check ch = bitmap.get(buildTrans.signal);
 			if (ch == null) {
@@ -658,9 +646,10 @@ public class State {
 					ch.bits = buildTrans.bits;
 					ch.isInput = true;
 					ch.refs = 1;
-					bitmap.put(buildTrans.signal, ch);
+					bitmap.put(buildTrans.signal,ch);
 				}
-			} else {
+			}
+			else {
 				ch.refs += 1;
 			}
 		}
@@ -669,20 +658,17 @@ public class State {
 	/**
 	 * Set a pair of int instance variable values (during a load).
 	 * 
-	 * @param v1
-	 *            The first value.
-	 * @param v1
-	 *            The second value.
+	 * @param v1 The first value.
+	 * @param v1 The second value.
 	 */
 	public void setTransPair(int v1, int v2) {
 
-		buildTrans.points.add(new Point(v1, v2));
+		buildTrans.points.add(new Point(v1,v2));
 
 	} // end of setPair method
 
 	/**
-	 * Fix any transitions pointing at this state symbolically to real
-	 * references.
+	 * Fix any transitions pointing at this state symbolically to real references.
 	 */
 	public void fixTrans() {
 
@@ -690,7 +676,7 @@ public class State {
 		for (State state : machine.getStates()) {
 			for (Transition tr : state.trans) {
 				if (tr == buildTrans)
-					continue; // catch it later
+					continue;	// catch it later
 				if (tr.nextStateName != null && tr.nextStateName.equals(name)) {
 					tr.nextState = this;
 					tr.nextStateName = null;
@@ -700,11 +686,11 @@ public class State {
 	} // end of fixTrans method
 
 	/**
-	 * Get the number of bits in a given input signal. If this state doesn't
-	 * have a transition using that signal, return 0.
+	 * Get the number of bits in a given input signal.
+	 * If this state doesn't have a transition using that signal,
+	 * return 0.
 	 * 
-	 * @param signal
-	 *            The input signal name.
+	 * @param signal The input signal name.
 	 * 
 	 * @return the number of bits, or 0 if signal not used.
 	 */
@@ -718,11 +704,11 @@ public class State {
 	} // end of inputBits method
 
 	/**
-	 * Get the number of bits in a given output signal. If this state doesn't
-	 * have an output using that signal, return 0.
+	 * Get the number of bits in a given output signal.
+	 * If this state doesn't have an output using that signal,
+	 * return 0.
 	 * 
-	 * @param signal
-	 *            The output signal name.
+	 * @param signal The output signal name.
 	 * 
 	 * @return the number of bits, or 0 if signal not used.
 	 */
@@ -738,19 +724,18 @@ public class State {
 	/**
 	 * See if a given point is inside this state.
 	 * 
-	 * @param x
-	 *            The x-coordinate of the point.
-	 * @param y
-	 *            The y-coordinate of the point.
+	 * @param x The x-coordinate of the point.
+	 * @param y The y-coordinate of the point.
 	 * 
 	 * @return true if it is, false if not.
 	 */
 	public boolean contains(int x, int y) {
 
-		int r = diameter / 2;
-		if ((this.x - x) * (this.x - x) + (this.y - y) * (this.y - y) < r * r) {
+		int r = diameter/2;
+		if ((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y) < r*r) {
 			return true;
-		} else {
+		}
+		else {
 			return false;
 		}
 	} // end of contains method
@@ -758,17 +743,17 @@ public class State {
 	/**
 	 * See if this state overlaps another state.
 	 * 
-	 * @param other
-	 *            the other state
+	 * @param other the other state
 	 */
 	public boolean overlaps(State other) {
 
 		int d = JLSInfo.stateDiameter;
 		int ox = other.x;
 		int oy = other.y;
-		if ((x - ox) * (x - ox) + (y - oy) * (y - oy) <= d * d) {
+		if ((x-ox)*(x-ox)+(y-oy)*(y-oy) <= d*d) {
 			return true;
-		} else {
+		}
+		else {
 			return false;
 		}
 	} // end of overlaps method
@@ -776,8 +761,7 @@ public class State {
 	/**
 	 * See if this state is completely inside the given rectangle.
 	 * 
-	 * @param rect
-	 *            The rectangle.
+	 * @param rect The rectangle.
 	 * 
 	 * @return true if it is inside, false if not.
 	 */
@@ -789,8 +773,7 @@ public class State {
 	/**
 	 * Set/reset highlight property of this state.
 	 * 
-	 * @param which
-	 *            True to highlight, false not to.
+	 * @param which True to highlight, false not to.
 	 */
 	public void setHighlight(boolean which) {
 
@@ -798,15 +781,13 @@ public class State {
 	} // end of setHighlight method
 
 	/**
-	 * Move state by a given amount. Also move every point in this state's
-	 * transitions if the end state of those transitions is also selected.
+	 * Move state by a given amount.
+	 * Also move every point in this state's transitions if the 
+	 * end state of those transitions is also selected.
 	 * 
-	 * @param dx
-	 *            The distance to move in the x direction.
-	 * @param dy
-	 *            The distance to move in the y direction.
-	 * @param selected
-	 *            The selected states.
+	 * @param dx The distance to move in the x direction.
+	 * @param dy The distance to move in the y direction.
+	 * @param selected The selected states.
 	 */
 	public void move(int dx, int dy, Set<State> selected) {
 
@@ -815,7 +796,7 @@ public class State {
 		for (Transition tr : trans) {
 			if (selected.contains(tr.nextState)) {
 				for (Point p : tr.points) {
-					p.translate(dx, dy);
+					p.translate(dx,dy);
 				}
 			}
 		}
@@ -824,10 +805,8 @@ public class State {
 	/**
 	 * Move state to new position.
 	 * 
-	 * @param x
-	 *            The new x-coordinate.
-	 * @param y
-	 *            The new y-coordinate.
+	 * @param x The new x-coordinate.
+	 * @param y The new y-coordinate.
 	 */
 	public void moveTo(int x, int y) {
 
@@ -861,8 +840,8 @@ public class State {
 	public Rectangle getRect() {
 
 		int d = diameter;
-		int r = d / 2;
-		return new Rectangle(x - r, y - r, d, d);
+		int r = d/2;
+		return new Rectangle(x-r,y-r,d,d);
 	} // end of getRect method
 
 	/**
@@ -888,10 +867,8 @@ public class State {
 	/**
 	 * Change the name of this state if it fits.
 	 * 
-	 * @param name
-	 *            The new name.
-	 * @param g
-	 *            The Graphics object to use.
+	 * @param name The new name.
+	 * @param g The Graphics object to use.
 	 */
 	public boolean changeName(String name, Graphics g) {
 
@@ -899,7 +876,8 @@ public class State {
 		int w = fm.stringWidth("  " + name + "  ");
 		if (w > diameter) {
 			return false;
-		} else {
+		}
+		else {
 			this.name = name;
 			return true;
 		}
@@ -908,11 +886,8 @@ public class State {
 	/**
 	 * Make a new transition from this state.
 	 * 
-	 * @param to
-	 *            The state the transition is to.
-	 * @param points
-	 *            The list of points in the transition (the last one will not be
-	 *            used).
+	 * @param to The state the transition is to.
+	 * @param points The list of points in the transition (the last one will not be used).
 	 */
 	public void newTransition(State to, Vector<Point> points, JDialog mainDialog) {
 
@@ -930,7 +905,7 @@ public class State {
 		newTrans.nextState = to;
 		newTrans.signal = "";
 		newTrans.bits = -1;
-		for (int i = 0; i < points.size() - 1; i += 1) {
+		for (int i=0; i<points.size()-1; i+=1) {
 			newTrans.points.add(points.get(i));
 		}
 
@@ -945,7 +920,7 @@ public class State {
 		}
 
 		// get condition info
-		CreateTrans ct = new CreateTrans(newTrans, this, mainDialog);
+		CreateTrans ct = new CreateTrans(newTrans,this,mainDialog);
 
 		// if it wasn't canceled...
 		if (!ct.wasCancelled()) {
@@ -959,18 +934,21 @@ public class State {
 			for (Transition oldTrans : trans) {
 				if (oldTrans.unconditional) {
 					hasUnconditional = true;
-				} else if (oldTrans.other) {
+				}
+				else if (oldTrans.other) {
 					hasOther = true;
-				} else if (oldTrans.equal) {
+				}
+				else if (oldTrans.equal) {
 					signal = oldTrans.signal;
 					bits = oldTrans.bits;
 					tested.set(oldTrans.value);
-				} else {
+				}
+				else {
 					signal = oldTrans.signal;
 					bits = oldTrans.bits;
 					BitSet temp = new BitSet();
 					temp.set(oldTrans.value);
-					temp.flip(0, 1 << bits);
+					temp.flip(0,1<<bits);
 					tested.or(temp);
 				}
 			}
@@ -984,8 +962,8 @@ public class State {
 			}
 			if (newTrans.unconditional && !trans.isEmpty()) {
 				JOptionPane.showMessageDialog(mainDialog,
-						"Can't add an unconditional transition", "Error",
-						JOptionPane.ERROR_MESSAGE);
+						"Can't add an unconditional transition",
+						"Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			if (newTrans.other) {
@@ -997,11 +975,11 @@ public class State {
 				}
 				if (hasOther) {
 					JOptionPane.showMessageDialog(mainDialog,
-							"State already has an else transition", "Error",
-							JOptionPane.ERROR_MESSAGE);
+							"State already has an else transition",
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (tested.cardinality() == 1 << bits) {
+				if (tested.cardinality() == 1<<bits) {
 					JOptionPane.showMessageDialog(mainDialog,
 							"Existing transitions cover all possible cases",
 							"Error", JOptionPane.ERROR_MESSAGE);
@@ -1012,12 +990,13 @@ public class State {
 			}
 			if (!signal.equals("") && !signal.equals(newTrans.signal)) {
 				JOptionPane.showMessageDialog(mainDialog,
-						"Can't test different signals in same state", "Error",
-						JOptionPane.ERROR_MESSAGE);
+						"Can't test different signals in same state",
+						"Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			if (bits > 0 && bits != newTrans.bits) {
-				JOptionPane.showMessageDialog(mainDialog, "Bits differ",
+				JOptionPane.showMessageDialog(mainDialog,
+						"Bits differ",
 						"Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
@@ -1030,9 +1009,10 @@ public class State {
 					ch.bits = newTrans.bits;
 					ch.isInput = true;
 					ch.refs = 1;
-					bitmap.put(newTrans.signal, ch);
+					bitmap.put(newTrans.signal,ch);
 				}
-			} else {
+			}
+			else {
 				if (!ch.isInput) {
 					JOptionPane.showMessageDialog(mainDialog,
 							"This signal is already an output", "Error",
@@ -1040,31 +1020,25 @@ public class State {
 					return;
 				}
 				if (ch.bits != newTrans.bits) {
-					JOptionPane
-							.showMessageDialog(
-									mainDialog,
-									"Bits not consistent with previous use of this signal",
-									"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainDialog,
+							"Bits not consistent with previous use of this signal",
+							"Error",JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				ch.refs += 1;
 			}
 			if (newTrans.equal) {
 				if (tested.get(newTrans.value)) {
-					JOptionPane
-							.showMessageDialog(
-									mainDialog,
-									"This value already tested in an existing transition",
-									"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainDialog,
+							"This value already tested in an existing transition",
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				tested.set(newTrans.value);
-				if (hasOther && tested.cardinality() == 1 << bits) {
-					JOptionPane
-							.showMessageDialog(
-									mainDialog,
-									"New transition would make else transition impossible",
-									"Error", JOptionPane.ERROR_MESSAGE);
+				if (hasOther && tested.cardinality() == 1<<bits) {
+					JOptionPane.showMessageDialog(mainDialog,
+							"New transition would make else transition impossible",
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				trans.add(newTrans);
@@ -1072,22 +1046,18 @@ public class State {
 			}
 			if (!newTrans.equal) {
 				if (hasOther) {
-					JOptionPane
-							.showMessageDialog(
-									mainDialog,
-									"New transition would make else transition impossible",
-									"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainDialog,
+							"New transition would make else transition impossible",
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				BitSet temp = new BitSet();
 				temp.set(newTrans.value);
-				temp.flip(0, 1 << bits);
+				temp.flip(0,1<<bits);
 				if (temp.intersects(tested)) {
-					JOptionPane
-							.showMessageDialog(
-									mainDialog,
-									"These values already tested in existing transition(s)",
-									"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainDialog,
+							"These values already tested in existing transition(s)",
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				trans.add(newTrans);
@@ -1096,12 +1066,11 @@ public class State {
 	} // end of newTransition method
 
 	/**
-	 * Turn on/off initial state status. Not responsible for turning off initial
-	 * state status in another state.
+	 * Turn on/off initial state status.
+	 * Not responsible for turning off initial state status in another state.
 	 * 
-	 * @param which
-	 *            True to make this state the initial state, false to make it
-	 *            not be initial.
+	 * @param which True to make this state the initial state, false to make it
+	 * 				not be initial.
 	 */
 	public void setInitial(boolean which) {
 
@@ -1115,19 +1084,18 @@ public class State {
 	 */
 	public Point getLocation() {
 
-		return new Point(x, y);
+		return new Point(x,y);
 	} // end of getLocation method
 
 	/**
-	 * Remove all transitions from this state to the given state (because the
-	 * given state is being removed).
+	 * Remove all transitions from this state to the given state
+	 * (because the given state is being removed).
 	 * 
-	 * @param other
-	 *            The state being removed.
+	 * @param other The state being removed.
 	 */
 	public void removeTrans(State other) {
 
-		Set<Transition> removes = new HashSet<Transition>();
+		Set <Transition> removes = new HashSet<Transition>();
 		for (Transition tr : trans) {
 			if (tr.nextState == other) {
 				removes.add(tr);
@@ -1148,20 +1116,18 @@ public class State {
 	/**
 	 * Highlight any transition corner that is close to a given point.
 	 * 
-	 * @param x
-	 *            The x-coordinate of the given point.
-	 * @param y
-	 *            The y-coordinate of the given point.
+	 * @param x The x-coordinate of the given point.
+	 * @param y The y-coordinate of the given point.
 	 * 
 	 * @return the point if there is one, else null.
 	 */
 	public Point highlightTransPoints(int x, int y) {
 
-		int ds = JLSInfo.pointDiameter * JLSInfo.pointDiameter;
+		int ds = JLSInfo.pointDiameter*JLSInfo.pointDiameter;
 		for (Transition tr : trans) {
 			tr.highlight = null;
 			for (Point p : tr.points) {
-				if ((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < ds) {
+				if ((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y) < ds) {
 					tr.highlight = p;
 					return p;
 				}
@@ -1172,13 +1138,11 @@ public class State {
 
 	/**
 	 * Highlight any transition that has a line segment close to a given point.
-	 * Also save reference to the highlighted transition so it can be deleted if
-	 * the user wants to.
+	 * Also save reference to the highlighted transition so it can be deleted
+	 * if the user wants to.
 	 * 
-	 * @param x
-	 *            The x-coordinate of the given point.
-	 * @param y
-	 *            The y-coordinate of the given point.
+	 * @param x The x-coordinate of the given point.
+	 * @param y The y-coordinate of the given point.
 	 * 
 	 * @return true if some transition is highlighted, false if none
 	 */
@@ -1193,30 +1157,30 @@ public class State {
 
 			// if a single segment line...
 			if (tran.points.isEmpty()) {
-				double maind = Line2D.ptSegDist(x, y, tran.nextState.x,
-						tran.nextState.y, xp, yp);
-				if (maind < d && !contains(xp, yp)
-						&& !tran.nextState.contains(xp, yp)) {
+				double maind =
+					Line2D.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
+				if (maind < d && !contains(xp,yp) && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
 					return true;
 				}
-			} else {
+			}
+			else {
 
 				// check out first segment
 				Point p = tran.points.get(0);
-				double maind = Line2D.ptSegDist(x, y, p.x, p.y, xp, yp);
-				if (maind < d && !contains(xp, yp)) {
+				double maind = Line2D.ptSegDist(x,y,p.x,p.y,xp,yp);
+				if (maind < d && !contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
 					return true;
 				}
 
 				// check out middle segments
-				for (int i = 1; i < tran.points.size(); i += 1) {
-					Point p1 = tran.points.get(i - 1);
+				for (int i=1; i<tran.points.size(); i+=1) {
+					Point p1 = tran.points.get(i-1);
 					Point p2 = tran.points.get(i);
-					maind = Line2D.ptSegDist(p1.x, p1.y, p2.x, p2.y, xp, yp);
+					maind = Line2D.ptSegDist(p1.x,p1.y,p2.x,p2.y,xp,yp);
 					if (maind < d) {
 						tran.highlighted = true;
 						lastHighlighted = tran;
@@ -1225,10 +1189,9 @@ public class State {
 				}
 
 				// check out last segment
-				p = tran.points.get(tran.points.size() - 1);
-				maind = Line2D.ptSegDist(p.x, p.y, tran.nextState.x,
-						tran.nextState.y, xp, yp);
-				if (maind < d && !tran.nextState.contains(xp, yp)) {
+				p = tran.points.get(tran.points.size()-1);
+				maind = Line2D.ptSegDist(p.x,p.y,tran.nextState.x,tran.nextState.y,xp,yp);
+				if (maind < d && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
 					return true;
@@ -1286,11 +1249,10 @@ public class State {
 	} // end of deleteAllTrans method
 
 	/**
-	 * Get the maximum width (in pixels) of all input and output names in this
-	 * state.
+	 * Get the maximum width (in pixels) of all input and output names in
+	 * this state.
 	 * 
-	 * @param fm
-	 *            A FontMetrics object to use.
+	 * @param fm A FontMetrics object to use.
 	 * 
 	 * @return the maximum width.
 	 */
@@ -1298,10 +1260,10 @@ public class State {
 
 		int width = 0;
 		for (Out out : outs) {
-			width = Math.max(width, fm.stringWidth(out.signal));
+			width = Math.max(width,fm.stringWidth(out.signal));
 		}
 		for (Transition tr : trans) {
-			width = Math.max(width, fm.stringWidth(tr.signal));
+			width = Math.max(width,fm.stringWidth(tr.signal));
 		}
 		return width;
 	} // end of getWidthInfo method
@@ -1338,7 +1300,6 @@ public class State {
 	/**
 	 * Dialog to create info about a transition.
 	 */
-	@SuppressWarnings("serial")
 	private class CreateTrans extends JDialog implements ActionListener {
 
 		// properties
@@ -1349,25 +1310,23 @@ public class State {
 		private JTextField signalField = new JTextField(10);
 		private JButton equalOrNot = new JButton("=");
 		private JTextField valueField = new JTextField(10);
-		private KeyPad valuePad = new KeyPad(valueField, 10, 0, this);
+		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
 		private JTextField bitsField = new JTextField(10);
-		private KeyPad bitsPad = new KeyPad(bitsField, 10, 1, this);
+		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
 		private JRadioButton conditional = new JRadioButton("conditional");
 		private JRadioButton unconditional = new JRadioButton("unconditional");
-		private JRadioButton otherwise = new JRadioButton(
-				"if no other condition");
+		private JRadioButton otherwise = new JRadioButton("if no other condition");
 		private boolean cancelled;
 
 		/**
 		 * Initialize dialog.
 		 * 
-		 * @param tr
-		 *            The transition to edit.
+		 * @param tr The transition to edit.
 		 */
 		public CreateTrans(Transition tr, State st, JDialog theDialog) {
 
 			// set up
-			super(theDialog, "Create Transition", true);
+			super(theDialog,"Create Transition",true);
 			cancelled = false;
 
 			// save working transition and its state
@@ -1376,33 +1335,33 @@ public class State {
 
 			// get window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
+			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up signal/value
 			JPanel sigval = new JPanel(new BorderLayout());
-			JPanel sig = new JPanel(new GridLayout(3, 1));
-			sig.add(new JLabel("signal", SwingConstants.CENTER));
+			JPanel sig = new JPanel(new GridLayout(3,1));
+			sig.add(new JLabel("signal",SwingConstants.CENTER));
 			sig.add(signalField);
 			sig.add(new JLabel(" "));
-			sigval.add(sig, BorderLayout.WEST);
+			sigval.add(sig,BorderLayout.WEST);
 			JPanel other = new JPanel(new BorderLayout());
-			JPanel misc = new JPanel(new GridLayout(3, 1));
+			JPanel misc = new JPanel(new GridLayout(3,1));
 			misc.add(new JLabel(" "));
 			misc.add(equalOrNot);
 			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
-			other.add(misc, BorderLayout.WEST);
-			JPanel values = new JPanel(new GridLayout(3, 1));
-			values.add(new JLabel("value", SwingConstants.CENTER));
+			other.add(misc,BorderLayout.WEST);
+			JPanel values = new JPanel(new GridLayout(3,1));
+			values.add(new JLabel("value",SwingConstants.CENTER));
 			JPanel val = new JPanel(new BorderLayout());
-			val.add(valueField, BorderLayout.CENTER);
-			val.add(valuePad, BorderLayout.EAST);
+			val.add(valueField,BorderLayout.CENTER);
+			val.add(valuePad,BorderLayout.EAST);
 			values.add(val);
 			JPanel bits = new JPanel(new BorderLayout());
-			bits.add(bitsField, BorderLayout.CENTER);
-			bits.add(bitsPad, BorderLayout.EAST);
+			bits.add(bitsField,BorderLayout.CENTER);
+			bits.add(bitsPad,BorderLayout.EAST);
 			values.add(bits);
-			other.add(values, BorderLayout.CENTER);
-			sigval.add(other, BorderLayout.CENTER);
+			other.add(values,BorderLayout.CENTER);
+			sigval.add(other,BorderLayout.CENTER);
 			window.add(sigval);
 
 			// add radio buttons
@@ -1419,7 +1378,7 @@ public class State {
 
 			// add ok/cancel
 			window.add(new JLabel(" "));
-			JPanel okcancel = new JPanel(new GridLayout(1, 2));
+			JPanel okcancel = new JPanel(new GridLayout(1,2));
 			okcancel.add(ok);
 			ok.setBackground(Color.GREEN);
 			okcancel.add(cancel);
@@ -1430,25 +1389,28 @@ public class State {
 			signalField.setText(tr.signal);
 			if (tr.equal) {
 				equalOrNot.setText("=");
-			} else {
+			}
+			else {
 				equalOrNot.setText("!=");
 			}
-			valueField.setText(tr.value + "");
+			valueField.setText(tr.value+"");
 			if (tr.bits == -1)
 				bitsField.setText("1");
 			else
-				bitsField.setText(tr.bits + "");
+				bitsField.setText(tr.bits+"");
 			if (tr.unconditional) {
 				unconditional.setSelected(true);
 				signalField.setEditable(false);
 				valueField.setEditable(false);
 				bitsField.setEditable(false);
-			} else if (tr.other) {
+			}
+			else if (tr.other) {
 				otherwise.setSelected(true);
 				signalField.setEditable(false);
 				valueField.setEditable(false);
 				bitsField.setEditable(false);
-			} else if (!tr.signal.equals("")) {
+			}
+			else if (!tr.signal.equals("")) {
 				signalField.setEditable(false);
 				bitsField.setEditable(false);
 			}
@@ -1462,24 +1424,25 @@ public class State {
 			otherwise.addActionListener(this);
 
 			// set up window close listener to cancel element
-			addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent e) {
-					cancelled = true;
-					dispose();
-				}
-			});
+			addWindowListener (
+					new WindowAdapter() {
+						public void windowClosing(WindowEvent e) {
+							cancelled = true;
+							dispose();
+						}
+					}
+			);
 
 			// finish up
 			pack();
-			setLocation(100, 100);
+			setLocation(100,100);
 			setVisible(true);
 		} // end of constructor
 
 		/**
 		 * React to events.
 		 * 
-		 * @param event
-		 *            The event object.
+		 * @param event The event object.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
@@ -1504,20 +1467,23 @@ public class State {
 
 				// check for missing signal name
 				if (signalField.getText().equals("")) {
-					JOptionPane.showMessageDialog(this, "Missing signal name",
-							"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(this,
+							"Missing signal name", "Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
 				// check for invalid signal names
 				if (signalField.getText().equals("else")) {
-					JOptionPane.showMessageDialog(this, "Invalid signal name",
-							"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(this,
+							"Invalid signal name", "Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (signalField.getText().equals("clock")) {
-					JOptionPane.showMessageDialog(this, "Invalid signal name",
-							"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(this,
+							"Invalid signal name", "Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
@@ -1530,81 +1496,85 @@ public class State {
 						}
 					}
 				}
-
+				
 				// get value and bits from dialog
 				int tempValue = 0;
 				int tempBits = 0;
 				try {
 					tempValue = Integer.parseInt(valueField.getText());
 					tempBits = Integer.parseInt(bitsField.getText());
-				} catch (NumberFormatException ex) {
+				}
+				catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(this,
 							"Invalid numeric value", "Error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-
+				
 				// make sure bits match with existing input
 				if (hasBits > 0 && tempBits != hasBits) {
 					JOptionPane.showMessageDialog(this,
-							"Bits don't match with previous signal specification of "
-									+ hasBits + " bits", "Error",
+							"Bits don't match with previous signal specification of " +
+							hasBits + " bits", "Error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				int newbits = Integer.parseInt(bitsField.getText());
 				if (trans.bits != -1 && trans.bits != newbits) {
 					JOptionPane.showMessageDialog(this,
-							"Bits don't match with previous signal specification of "
-									+ trans.bits + " bits", "Error",
+							"Bits don't match with previous signal specification of " +
+							trans.bits + " bits", "Error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-
+				
 				// make sure value will fit
-				if (Math.log(tempValue + 1) / Math.log(2) > tempBits) {
+				if (Math.log(tempValue+1)/Math.log(2) > tempBits) {
 					JOptionPane.showMessageDialog(this,
 							"Value too large for number of bits", "Error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-
+				
 				// finish conditional transition
 				trans.unconditional = false;
 				trans.other = false;
 				trans.signal = signalField.getText();
 				if (equalOrNot.getText().equals("=")) {
 					trans.equal = true;
-				} else {
+				}
+				else {
 					trans.equal = false;
 				}
 				trans.value = Integer.parseInt(valueField.getText());
 				trans.bits = newbits;
 				dispose();
 			}
-
+			
 			// cancel new transition
 			else if (event.getSource() == cancel) {
 				cancelled = true;
 				dispose();
 			}
-
+			
 			// save equality type check
 			else if (event.getSource() == equalOrNot) {
 				if (equalOrNot.getText().equals("=")) {
 					equalOrNot.setText("!=");
-				} else {
+				}
+				else {
 					equalOrNot.setText("=");
 				}
 			}
-
+			
 			// handle new conditional transition
 			else if (event.getSource() == conditional) {
 				if (trans.signal.equals("")) {
 					signalField.setEditable(true);
 					valueField.setEditable(true);
 					bitsField.setEditable(true);
-				} else {
+				}
+				else {
 					signalField.setEditable(false);
 					valueField.setEditable(true);
 					bitsField.setEditable(false);
@@ -1617,15 +1587,15 @@ public class State {
 						used.set(tran.value);
 					}
 					int val = used.nextClearBit(0);
-					if (val < 1 << bits) {
-						valueField.setText(val + "");
+					if (val < 1<<bits) {
+						valueField.setText(val+"");
 					}
 				}
 			}
-
+			
 			// handle new unconditional or else transition
-			else if (event.getSource() == unconditional
-					|| event.getSource() == otherwise) {
+			else if (event.getSource() == unconditional ||
+					event.getSource() == otherwise) {
 				signalField.setEditable(false);
 				valueField.setEditable(false);
 				bitsField.setEditable(false);
@@ -1651,7 +1621,7 @@ public class State {
 	public void showOuts(Point mp, JDialog theDialog) {
 
 		// set up dialog
-		final JDialog show = new JDialog(theDialog, false);
+		final JDialog show = new JDialog(theDialog,false);
 		Container window = show.getContentPane();
 		addOuts(window);
 		JButton close = new JButton("close window");
@@ -1670,26 +1640,25 @@ public class State {
 		if (mp == null) {
 			Dimension md = theDialog.getSize();
 			Dimension sd = show.getSize();
-			show.setLocation(dp.x + (md.width - sd.width) / 2, dp.y
-					+ (md.height - sd.height) / 2);
-		} else {
-			show.setLocation(mp.x + dp.x, mp.y + dp.y);
+			show.setLocation(dp.x+(md.width-sd.width)/2,dp.y+(md.height-sd.height)/2);
+		}
+		else {
+			show.setLocation(mp.x+dp.x,mp.y+dp.y);
 		}
 		show.setVisible(true);
 	} // end of showOuts method
 
 	/**
-	 * Add labels for each output signal to a container. Give the container a
-	 * grid layout of the appropriate size.
+	 * Add labels for each output signal to a container.
+	 * Give the container a grid layout of the appropriate size.
 	 * 
-	 * @param window
-	 *            The container to add to.
+	 * @param window The container to add to.
 	 */
 	public void addOuts(Container window) {
 
 		// set up container
 		window.setBackground(Color.WHITE);
-		window.setLayout(new GridLayout(outs.size() + 2, 1));
+		window.setLayout(new GridLayout(outs.size()+2,1));
 
 		// add title
 		JLabel title = new JLabel("Outputs for state: " + name);
@@ -1699,7 +1668,7 @@ public class State {
 
 		// add labels, one per output
 		for (Out out : outs) {
-			window.add(new JLabel(out.toString(), SwingConstants.CENTER));
+			window.add(new JLabel(out.toString(),SwingConstants.CENTER));
 		}
 
 	}
@@ -1714,20 +1683,24 @@ public class State {
 	/**
 	 * Dialog to create outputs for a state.
 	 */
-	@SuppressWarnings("serial")
 	private class EditOutputs extends JDialog implements ActionListener {
 
 		// properties
 		private JButton close = new JButton("close window");
+<<<<<<< HEAD:src/jls/elem/State.java
 		private JList<Out> outList;
 		DefaultListModel<Out> model;
+=======
+		private JList outList;
+		DefaultListModel model;
+>>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/sm/State.java
 		private JButton add = new JButton("add new output");
 		private JButton delete = new JButton("delete selected output");
 		private JTextField signalField = new JTextField(10);
 		private JTextField valueField = new JTextField("1");
-		private KeyPad valuePad = new KeyPad(valueField, 10, 0, this);
+		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
 		private JTextField bitsField = new JTextField("1");
-		private KeyPad bitsPad = new KeyPad(bitsField, 10, 1, this);
+		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
 		private boolean cancelled;
 
 		/**
@@ -1736,12 +1709,12 @@ public class State {
 		public EditOutputs(JDialog theDialog) {
 
 			// set up
-			super(theDialog, "Edit Outputs", true);
+			super(theDialog,"Edit Outputs",true);
 			cancelled = false;
 
 			// get window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window, BoxLayout.Y_AXIS));
+			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up output list
 			model = new DefaultListModel<Out>();
@@ -1750,8 +1723,8 @@ public class State {
 			}
 			outList = new JList<Out>(model);
 			outList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			JScrollPane pane = new JScrollPane(outList);
-			pane.setSize(400, 400);
+			JScrollPane pane =  new JScrollPane(outList);
+			pane.setSize(400,400);
 			window.add(pane);
 
 			// set up add/delete buttons
@@ -1762,34 +1735,34 @@ public class State {
 
 			// set up signal/value
 			JPanel sigval = new JPanel(new BorderLayout());
-			JPanel sig = new JPanel(new GridLayout(3, 1));
-			sig.add(new JLabel("signal", SwingConstants.CENTER));
+			JPanel sig = new JPanel(new GridLayout(3,1));
+			sig.add(new JLabel("signal",SwingConstants.CENTER));
 			sig.add(signalField);
 			sig.add(new JLabel(" "));
-			sigval.add(sig, BorderLayout.WEST);
+			sigval.add(sig,BorderLayout.WEST);
 			JPanel other = new JPanel(new BorderLayout());
-			JPanel misc = new JPanel(new GridLayout(3, 1));
+			JPanel misc = new JPanel(new GridLayout(3,1));
 			misc.add(new JLabel(" "));
 			misc.add(new JLabel("="));
 			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
-			other.add(misc, BorderLayout.WEST);
-			JPanel values = new JPanel(new GridLayout(3, 1));
-			values.add(new JLabel("value", SwingConstants.CENTER));
+			other.add(misc,BorderLayout.WEST);
+			JPanel values = new JPanel(new GridLayout(3,1));
+			values.add(new JLabel("value",SwingConstants.CENTER));
 			JPanel val = new JPanel(new BorderLayout());
-			val.add(valueField, BorderLayout.CENTER);
-			val.add(valuePad, BorderLayout.EAST);
+			val.add(valueField,BorderLayout.CENTER);
+			val.add(valuePad,BorderLayout.EAST);
 			values.add(val);
 			JPanel bits = new JPanel(new BorderLayout());
-			bits.add(bitsField, BorderLayout.CENTER);
-			bits.add(bitsPad, BorderLayout.EAST);
+			bits.add(bitsField,BorderLayout.CENTER);
+			bits.add(bitsPad,BorderLayout.EAST);
 			values.add(bits);
-			other.add(values, BorderLayout.CENTER);
-			sigval.add(other, BorderLayout.CENTER);
+			other.add(values,BorderLayout.CENTER);
+			sigval.add(other,BorderLayout.CENTER);
 			window.add(sigval);
 
 			// add close window button
 			window.add(new JLabel(" "));
-			JPanel cl = new JPanel(new GridLayout(1, 1));
+			JPanel cl = new JPanel(new GridLayout(1,1));
 			close.setBackground(Color.GREEN);
 			cl.add(close);
 			window.add(cl);
@@ -1800,46 +1773,50 @@ public class State {
 			delete.addActionListener(this);
 
 			// set up window close listener to close window
-			addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent e) {
-					dispose();
-				}
-			});
+			addWindowListener (
+					new WindowAdapter() {
+						public void windowClosing(WindowEvent e) {
+							dispose();
+						}
+					}
+			);
 
 			// finish up
 			pack();
-			setLocation(100, 100);
+			setLocation(100,100);
 			setVisible(true);
 		} // end of constructor
 
 		/**
 		 * React to events.
 		 * 
-		 * @param event
-		 *            The event object.
+		 * @param event The event object.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == close) {
 				dispose();
-			} else if (event.getSource() == add) {
+			}
+			else if (event.getSource() == add) {
 				Out newOut = new Out();
 				newOut.signal = signalField.getText().trim();
 				if (newOut.signal.equals("")) {
-					JOptionPane.showMessageDialog(this, "Missing signal name",
-							"Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(this,
+							"Missing signal name", "Error",
+							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				try {
 					newOut.value = Integer.parseInt(valueField.getText());
 					newOut.bits = Integer.parseInt(bitsField.getText());
-				} catch (NumberFormatException ex) {
+				}
+				catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(this,
 							"Value or bits not valid", "Error",
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (Math.log(newOut.value + 1) / Math.log(2) > newOut.bits) {
+				if (Math.log(newOut.value+1)/Math.log(2) > newOut.bits) {
 					JOptionPane.showMessageDialog(this,
 							"Value too large for number of bits", "Error",
 							JOptionPane.ERROR_MESSAGE);
@@ -1857,16 +1834,16 @@ public class State {
 					}
 				}
 
-				// check for consistentcy for this signal throughout state
-				// machine
+				// check for consistentcy for this signal throughout state machine
 				Check ch = bitmap.get(newOut.signal);
 				if (ch == null) {
 					ch = new Check();
 					ch.bits = newOut.bits;
 					ch.isInput = false;
 					ch.refs = 1;
-					bitmap.put(newOut.signal, ch);
-				} else {
+					bitmap.put(newOut.signal,ch);
+				}
+				else {
 					if (ch.isInput) {
 						JOptionPane.showMessageDialog(this,
 								"This signal is already an input", "Error",
@@ -1874,21 +1851,20 @@ public class State {
 						return;
 					}
 					if (ch.bits != newOut.bits) {
-						JOptionPane
-								.showMessageDialog(
-										this,
-										"Bits not consistent with previous use of this signal",
-										"Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(this,
+								"Bits not consistent with previous use of this signal",
+								"Error",JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					ch.refs += 1;
 				}
 				outs.add(newOut);
 				model.addElement(newOut);
-			} else if (event.getSource() == delete) {
+			}
+			else if (event.getSource() == delete) {
 				int pos = outList.getSelectedIndex();
 				if (pos >= 0) {
-					Out out = (Out) model.getElementAt(pos);
+					Out out = (Out)model.getElementAt(pos);
 					Check ch = bitmap.get(out.signal);
 					ch.refs -= 1;
 					if (ch.refs == 0) {
@@ -1917,8 +1893,7 @@ public class State {
 	/**
 	 * Determine the maximum printing width of this state.
 	 * 
-	 * @param g
-	 *            The Graphics object to use to determine sizes.
+	 * @param g The Graphics object to use to determine sizes.
 	 * 
 	 * @return the maximum printing width.
 	 */
@@ -1927,7 +1902,7 @@ public class State {
 		FontMetrics fm = g.getFontMetrics();
 		int max = fm.stringWidth("state: " + name);
 		for (Out out : outs) {
-			max = Math.max(max, fm.stringWidth(out.signal + "=" + out.value));
+			max = Math.max(max,fm.stringWidth(out.signal + "=" + out.value));
 		}
 		return max;
 	} // end of maxWidth method
@@ -1935,8 +1910,7 @@ public class State {
 	/**
 	 * Determine the maximum printing height of this state.
 	 * 
-	 * @param g
-	 *            The Graphics object to use to determine sizes.
+	 * @param g The Graphics object to use to determine sizes.
 	 * 
 	 * @return the maximum printing height.
 	 */
@@ -1944,35 +1918,32 @@ public class State {
 
 		FontMetrics fm = g.getFontMetrics();
 		int height = fm.getAscent() + fm.getDescent();
-		return (outs.size() + 1) * height;
+		return (outs.size()+1)*height;
 	} // end of maxHeight method
 
 	/**
 	 * Print this state's outputs.
 	 * 
-	 * @param g
-	 *            The Graphics object to use.
-	 * @param x
-	 *            The x-coordinate of the upper left corner of the print area.
-	 * @param y
-	 *            The y-coordinate of the upper left corner of the print area.
+	 * @param g The Graphics object to use.
+	 * @param x The x-coordinate of the upper left corner of the print area.
+	 * @param y The y-coordinate of the upper left corner of the print area.
 	 */
 	public void print(Graphics g, int x, int y) {
 
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int height = ascent + fm.getDescent();
-		g.drawString("State: " + name, x, y + ascent);
+		g.drawString("State: " + name,x,y+ascent);
 		y += height;
 		for (Out out : outs) {
-			g.drawString(out.signal + "=" + out.value, x, y + ascent);
+			g.drawString(out.signal + "=" + out.value,x,y+ascent);
 			y += height;
 		}
 	} // end of print method
 
-	// -----------------------------
+	//-----------------------------
 	// simulation
-	// -----------------------------
+	//-----------------------------
 
 	/**
 	 * Get the next state from a given one given the current input values.
@@ -1987,6 +1958,7 @@ public class State {
 		// check transitions looking for match
 		for (Transition tran : trans) {
 
+
 			// if unconditional, then simply go to its next state
 			if (tran.unconditional)
 				return tran.nextState;
@@ -2000,7 +1972,7 @@ public class State {
 			// if a match with a conditional, then go to its next state
 			else {
 				BitSet inp = machine.getInput(tran.signal).getValue();
-				if (inp == null)
+				if (inp ==  null)
 					inp = new BitSet();
 				long inputValue = BitSetUtils.ToLong(inp);
 				if (tran.equal && inputValue == tran.value)
@@ -2018,12 +1990,9 @@ public class State {
 	 * Send all out values of this state to the state machine outputs.
 	 * Unspecified outputs will be made 0.
 	 * 
-	 * @param mach
-	 *            This state machine.
-	 * @param now
-	 *            The current simulation time.
-	 * @param sim
-	 *            The simulator.
+	 * @param mach This state machine.
+	 * @param now The current simulation time.
+	 * @param sim The simulator.
 	 */
 	public void sendOutputs(StateMachine mach, long now, Simulator sim) {
 
@@ -2033,14 +2002,14 @@ public class State {
 		for (Out out : outs) {
 			Output output = machine.getOutput(out.signal);
 			BitSet value = BitSetUtils.Create(out.value);
-			output.propagate(value, now, sim);
+			output.propagate(value,now,sim);
 			sent.add(output);
 		}
 
 		// send 0 to all unspecified outputs
 		for (Output output : machine.getOutputs()) {
 			if (!sent.contains(output)) {
-				output.propagate(new BitSet(), now, sim);
+				output.propagate(new BitSet(),now,sim);
 			}
 		}
 	} // end of sendOutputs method
@@ -2068,19 +2037,18 @@ public class State {
 	/**
 	 * Set the x-coordinate of this state
 	 * 
-	 * @param newx
-	 *            The new x-coordinate.
+	 * @param newx The new x-coordinate.
 	 */
 	void setX(int newx) {
 
 		x = newx;
 	} // end of setX method
 
+
 	/**
 	 * Set the y-coordinate of this state
 	 * 
-	 * @param newy
-	 *            The new y-coordinate.
+	 * @param newy The new y-coordinate.
 	 */
 	void setY(int newy) {
 

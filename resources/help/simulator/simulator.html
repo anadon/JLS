@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>The JLS Simulator</title>
+</head>
+
+<body>
+<h1>The JLS Simulator</h1>
+
+<p>
+
+The JLS simulator operates in one of two modes - interactive or batch.
+The interactive mode is run by the user when the GUI is open and a circuit
+is visible in the editting window.
+The batch mode is run via the command line.
+In both cases the circuit is simulated in the same way.
+The difference is in how the simulator's execution is managed and viewed.
+
+<p>
+When the simulator is executed all logic elements in the circuit are
+first initialized to their initial values.
+The outputs of most logic elements will be initialized to 0.
+Not gates will be initialized to 1, registers to the initial values given
+by the user, and state machines to the specified outputs of the initial
+state.
+All wires initially carry 0.
+
+<p>
+Simulation then begins with all elements that output anything other than
+0 sending their values through their outputs, along the wires they are
+connected to, to the inputs of other elements.
+Each element then performs its respective function with this new input value,
+perhaps sending a new value through its output after an element-specific
+delay (propagation delay).
+
+<p>
+Simulation continues until one of three things happens:
+
+<ul>
+<li>
+No more signal (wire) changes are possible.
+<li>
+The simulation time limit is reached.
+<li>
+The user explicitly stops the simulation.
+</ul>
+
+For more information, see the <a href=interactive/overview.html>interactive</a>
+or <a href=batch/overview.html>batch</a> overview.
+
+</body>
+
+</html>

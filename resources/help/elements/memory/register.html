@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>Register</title>
+</head>
+
+<body>
+<h1>Register</h1>
+
+<h2>
+<a href=#create>Creation</a>
+<br>
+<a href=#oper>Operation</a>
+<br>
+<a href=#view>Viewing Contents</a>
+</h2>
+
+<a name=create></a>
+<h2>Creation</h2>
+
+Pick either level,
+{positive,leading,rising} edge or
+{negative,trailing,falling} edge.
+
+<p>
+Enter the name of the register in the <b>Name</b> field.
+This name must not be the same as the name of any other register or memory
+element in the circuit.
+
+<p>
+A register is one or more latches/flip-flops, all triggered in the same way.
+Set the number of bits in the register by entering a number in the <b>Bits</b>
+field or using the <a href=../keypad.html>keypad</a>.
+A 1-bit register is essentially a single latch/flip-flip.
+
+<p>
+Give the register an initial value by entering a number in the
+<b>Initial value</b> field or using the <a href=../keypad.html>keypad</a>.
+Only positive numbers can be entered.
+
+<p>
+The number shown as you enter it will be interpreted to be in the
+radix (base) currently selected by one of the radix buttons.
+For example, if "2" is selected, then the number you enter as an initial
+value must be a binary number, and will be intrepreted as being so.
+If fact, if "2" is selected, you will not be allowed to enter anything
+other than a binary number.
+
+<p>
+Click on the <font color=green>OK</b> button to begin placing the register,
+or on <font color=pink>Cancel</font> to cancel it.
+
+<a name=operation></a>
+<h2>Operation</h2>
+
+<a name=view></a>
+<h2>Viewing Contents</h2>
+
+<p>
+When simulation stops or is paused the contents of a register can be
+viewed by moving the cursor over it.
+The contents will be displayed in the <font color=cyan>cyan</font> display
+area below the toolbar.
+The contents will be shown in hexadecimal and as an unsigned and a signed
+base 10 integer.
+
+<p>
+The contents of a register can also be shown as a signal trace during
+simulation.
+To make this happen, right click in the register and chose the
+<b>Watch Element</b> menu option.
+
+</body>
+
+</html>

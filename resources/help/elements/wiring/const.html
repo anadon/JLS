@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>Constant Values</title>
+</head>
+
+<body>
+<h1>Constant Values</h1>
+
+<p>
+An element that outputs a constant signal value (single or multiple bit) 
+is created by selected the <img src=../../../edu/mtu/cs/jls/images/const.gif>
+icon from the toolbar.
+
+<p>
+Select the radix (base) of the number entered in the "Value" box.
+Then enter the desired constant value, using the selected base, either
+by typing the value in the box or using the
+<a href=../keypad>keypad</a>.
+
+<p>
+To set the value and radix to the same value/radix of the previously
+created constant value element, click on
+<font color=yellow>Repeat Previous Value</font>.
+
+<p>
+A constant element will adapt to the number of bits of the wire or element
+it is connected to.
+For example, if a constant element with value 109 is connected to an 8-bit
+adder input, then the 8-bit binary equivalent of 109 will be output by the
+constant element when the circuit it simulated.
+If the number is too large to fit in the available wires, then the upper
+bits are discarded.
+For example, if the constant element with value 109<sub>10</sub> is connected
+to a 4-bit adder input, then the lower four bits
+(1101<sub>2</sub> = 13<sub> 10</sub>) will be sent to the adder.
+
+<p>
+To finish the dialog and place the newly created gate, click on the
+<font color=green>OK</font> button.
+
+<p>
+If you change your mind and decide you don't want a gate of the type you
+are currently creating, click on the <font color=pink>Cancel</font>
+button in the dialog.
+If you have already clicked on the <font color=green>OK</font> button but
+have not yet fixed the place of the new gate, you can still cancel the gate
+by right clicking the mouse.
+
+</body>
+
+</html>

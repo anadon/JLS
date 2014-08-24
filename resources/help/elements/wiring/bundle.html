@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Bundling Wires</title>
+</head>
+
+<body>
+<h1>Bundling Wires</h1>
+
+<p>
+A wire bundle is a single line in the circuit drawing that corresponds to
+multiple single wires.
+
+<p>
+Bundles are created automatically when you create a wire that connects
+to a multi-bit input or output of an element, or to another wire bundle.
+
+<p>
+You can create a bundle from a collection of individual wires, and/or other
+wire bundles, by creating a wire bundling element.
+To do so, pick the
+<img src=../../../edu/mtu/cs/jls/images/bind.gif> icon from the toolbar,
+then pick the number of bits that you want in the new bundle.
+
+<p>
+If all the wires that will form the bundle are single wires, then select
+the <b>Single Bits</b> option.
+If some of them are already bundles, then pick the </b>Group Bits</b> option.
+Then click on <font color=green>OK</font> button
+(or <font color=fuchsia>Cancel</font> to cancel the creation of a bundle).
+
+<p>
+If you selected the <b>Single Bits</b> option, then place and connect the
+new bundling element.
+If you selected the <b>Group Bits</b> option, then a new dialog will appear.
+
+<p>
+Pick a single wire position or a range of wire positions from the list on the
+left.
+To pick a range, select the first position in the range, the hold the shift
+key when you select the last position in the range.
+The entire range will then be highlighted. You can also hold the control key to
+add specific wires to a range without selecting whole sections.
+
+<p>
+Now click on the "&gt;&gt;&gt;" button between the lists to move the selected
+wire or wire range to the list on the right.
+Note that when you do this, the positions in the left list are shown to be
+<i>bundled</i>.
+You will not be able to move an already bundled position to the the right list
+again.
+
+<p>
+To remove a wire or wire range from the right list, select the one you want to
+remove and click on the "&lt;&lt;&lt;" button.
+Note that the position or positions removed are no longer shown as bundled
+in the right list.
+
+<p>
+Once you have grouped everything you need into the right list, click on
+<font color=green>OK</font> to place the element, or on
+<font color=fuchsia>Cancel</font> to cancel the creation of the element.
+</body>
+
+</html>

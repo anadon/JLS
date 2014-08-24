@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>Truth Table Editor</title>
+</head>
+
+<body>
+<h1>Truth Table Editor</h1>
+
+<p>
+A combinational subcircuit can be specified via a truth table instead of gates
+and wires.
+The truth table editor allows you to add, rename and remove input and output
+variables, specify output values for all input assignments, use input and
+output don't-cares, and re-arrange the appearance of the truth table.
+
+<p>
+To add a new input variable, type the name the "New Inputs" field and hit
+return.
+The new variable will be added and input value assignments generated.
+Input variables can be renamed by clicking on the variable, picking the
+<b>rename</b> option, and typing the new name in the dialog box
+that appears.
+
+<p>
+To add a new output variable, type the name in the "New Outputs" field and hit
+return.
+The new variable will be added with all assignments set to don't-cares.
+Output variables can be renamed using the same process as renaming input
+variables.
+
+<p>
+An output value can be changed by clicking on the value.
+Each click will toggle the value from don't-care to 0, to 1, and then back
+to don't-care.
+
+<p>
+An input value assignment can be changed to a don't-care by clicking on it.
+However this can't be done if the two rows of the truth table that will
+collapse into one to account for the don't-care have different values for
+any of the output variables.
+For example, in the truth table below, the input value assignment shown
+in <font color=blue>blue</font> cannot be made into a don't care because the
+two values for the output "f" are different.
+
+<ul>
+<pre>
+a  b  |  f
+------+---
+0  <font color=blue>0</font>  |  <font color=red>0</font>
+0  1  |  <font color=red>1</font>
+1  0  |  0
+1  1  |  0
+</pre>
+</ul>
+
+<p>
+Input variables can be removed from the table, but only if there are
+no resulting conficts among any of the output values.
+To remove an input variable, click on it and pick <b>delete</b>.
+
+<p>
+Ouput variables can be removed from the table by simply clicking on the
+variable and picking <b>delete</b>.
+
+<p>
+The position of an input or output variable in the truth table can be
+adjusted by clicking on the variable and picking <b>move left</b> or
+<b>move right</b>.
+The entire column will be moved left or right as appropriate.
+When an input variable is moved, the rows of the truth table will be re-ordered
+to preserve the property that rows increase in binary value as you go
+down the table.
+
+</body>
+
+</html>

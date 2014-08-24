@@ -129,14 +129,9 @@ public final class JLS  {
 			try {
 				URL [] url = new URL[1];
 				url[0] = new URL("file:" + urlName);
-<<<<<<< HEAD
 				@SuppressWarnings({ "resource", "unchecked" })
 				Class<Element> newElement = (Class<Element>) new URLClassLoader(url).loadClass(cl);
 				Method[] methods = newElement.getMethods();
-=======
-				Class<?> c = new URLClassLoader(url).loadClass(cl);
-				Method [] methods = c.getMethods();
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 				for (Method m : methods) {
 					if (m.getName().equals("config")) {
 						m.invoke(null, args, exHandler);

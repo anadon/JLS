@@ -1,6 +1,5 @@
 package jls;
 
-<<<<<<< HEAD
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -39,21 +38,6 @@ import jls.elem.TruthTable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
-=======
-import jls.elem.*;
-import jls.edit.*;
-import jls.elem.sm.*;
-import jls.elem.bool.*;
-import java.util.*;
-import java.awt.*;
-import java.awt.print.*;
-import java.io.*;
-import java.lang.reflect.*;
-import java.awt.image.*;
-import javax.imageio.*;
-import java.awt.geom.*;
-import java.math.*;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 
 /**
  * The main (container) class for each circuit.
@@ -63,27 +47,30 @@ import java.math.*;
 public class Circuit implements Printable {
 
 	// properties
-	private String name = null; 				// will be the file name after appending .jls
-	private String dir = "";					// the directory the file is in
-	private Set<Element>elements = new HashSet<Element>();
-	private SubCircuit subElement = null;		// the element referring to this circuit
-	private Editor editor = null;				// this circuit's editor (null if none)
-	private Set<String> namesUsed =
-			new HashSet<String>();					// so element names can be unique
-	private SortedMap<String,JumpStart> starts =
-			new TreeMap<String,JumpStart>();		// jumpstarts
+	private String name = null; // will be the file name after appending .jls
+	private String dir = ""; // the directory the file is in
+	private Set<Element> elements = new HashSet<Element>();
+	private SubCircuit subElement = null; // the element referring to this
+											// circuit
+	private Editor editor = null; // this circuit's editor (null if none)
+	private Set<String> namesUsed = new HashSet<String>(); // so element names
+															// can be unique
+	private SortedMap<String, JumpStart> starts = new TreeMap<String, JumpStart>(); // jumpstarts
 	private boolean changed = false;
 
-	private Set<Element>loadedElements =
-			new HashSet<Element>();					// for loading from file
-	private Map<Integer,Element> elementMap = 
-			new HashMap<Integer,Element>();			// for loading from file
-	private static int lineNumber;				// to report errors when reading circuit file
+	private Set<Element> loadedElements = new HashSet<Element>(); // for loading
+																	// from file
+	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for
+																				// loading
+																				// from
+																				// file
+	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
 	 * Create a new, empty circuit.
 	 * 
-	 * @param name The name of this circuit.
+	 * @param name
+	 *            The name of this circuit.
 	 */
 	public Circuit(String name) {
 
@@ -103,7 +90,8 @@ public class Circuit implements Printable {
 	/**
 	 * Set the directory the circuit file is store in.
 	 * 
-	 * @param dir The full path name of the directory.
+	 * @param dir
+	 *            The full path name of the directory.
 	 */
 	public void setDirectory(String dir) {
 
@@ -123,7 +111,8 @@ public class Circuit implements Printable {
 	/**
 	 * Change name of this circuit.
 	 * 
-	 * @param name New name.
+	 * @param name
+	 *            New name.
 	 */
 	public void setName(String name) {
 
@@ -141,9 +130,8 @@ public class Circuit implements Printable {
 	} // end of hasChanged method
 
 	/**
-	 * Mark this circuit as changed.
-	 * If it is a subcircuit, mark the circuit it is in as changed too.
-	 * If a simulator is running, stop it.
+	 * Mark this circuit as changed. If it is a subcircuit, mark the circuit it
+	 * is in as changed too. If a simulator is running, stop it.
 	 */
 	public void markChanged() {
 
@@ -169,7 +157,8 @@ public class Circuit implements Printable {
 	/**
 	 * Add an element to this circuit.
 	 * 
-	 * @param el The element to add.
+	 * @param el
+	 *            The element to add.
 	 */
 	public void addElement(Element el) {
 
@@ -178,10 +167,11 @@ public class Circuit implements Printable {
 	} // end of addElement method
 
 	/**
-	 * Delete element from circuit.
-	 * Do nothing if the element is not in the circuit.
+	 * Delete element from circuit. Do nothing if the element is not in the
+	 * circuit.
 	 * 
-	 * @param el The element to remove.
+	 * @param el
+	 *            The element to remove.
 	 */
 	public void remove(Element el) {
 
@@ -199,22 +189,25 @@ public class Circuit implements Printable {
 	/**
 	 * Load circuit from file.
 	 * 
-	 * @param scanner A scanner to read with.
+	 * @param scanner
+	 *            A scanner to read with.
 	 * 
 	 * @return false if there were problems, true if load was successful.
 	 */
 	public boolean load(Scanner input) {
 
 		lineNumber = 1;
-		return load(input,0);
+		return load(input, 0);
 	} // end of load method
 
 	/**
 	 * Load circuit from file.
 	 * 
-	 * @param scanner A scanner to read with.
-	 * @param ln Unused, except to give a different signature for the
-	 *        recursive call that doesn't reset the line number counter.
+	 * @param scanner
+	 *            A scanner to read with.
+	 * @param ln
+	 *            Unused, except to give a different signature for the recursive
+	 *            call that doesn't reset the line number counter.
 	 * 
 	 * @return false if there were problems, true if load was successful.
 	 */
@@ -271,59 +264,17 @@ public class Circuit implements Printable {
 				String elementType = input.next();
 				Object obj = null;
 				try {
-					Class<?> c = null;
-<<<<<<< HEAD
-					c = Class.forName("jls.elem." + elementType);
+					Class<?> c = Class.forName("jls.elem." + elementType);
 					Constructor<?>[] cn = c.getConstructors();
 					obj = cn[0].newInstance(this);
 				} catch (ClassNotFoundException ex) {
-					return false; //Element class not found
+					return false; // Element class not found
 				} catch (InstantiationException ex) {
-=======
-					try {
-						c = Class.forName("jls.elem." + elementType);
-					}
-					catch (ClassNotFoundException ex) {
-						c = null;
-						// not a problem, yet
-					}
-					if (c == null) try {
-						c = Class.forName("jls.elem.bool." + elementType);
-					}
-					catch (ClassNotFoundException ex) {
-						c = null;
-						// not a problem, yet
-					}
-					if (c == null) {
-						c = Class.forName("jls.elem.sm." + elementType);
-					}
-					Constructor<?> [] cn = c.getConstructors();
-					
-					// find the right one-arg constructor
-					for (Constructor con : cn) {
-						if (con.getParameterTypes().length == 1 && con.getParameterTypes()[0].getName().equals("jls.Circuit")) {
-							obj = con.newInstance(this);
-						}
-					}
-					if (obj == null) {
-						JLSInfo.loadError = "bad constructor";
-						return false;
-					}
-				}
-				catch(ClassNotFoundException ex) {
-					JLSInfo.loadError = "bad element class name";
 					return false;
-				}
-				catch (InstantiationException ex) {
-					JLSInfo.loadError = "can't instantiate element object";
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
-					return false;
-				}
-				catch (IllegalAccessException ex) {
+				} catch (IllegalAccessException ex) {
 					JLSInfo.loadError = "illegal access exception";
 					return false;
-				}
-				catch (InvocationTargetException ex) {
+				} catch (InvocationTargetException ex) {
 					JLSInfo.loadError = "invocation target exception";
 					return false;
 				}
@@ -335,28 +286,26 @@ public class Circuit implements Printable {
 				}
 
 				// load the element
-				Element newElement = (Element)obj;
+				Element newElement = (Element) obj;
 				lineNumber += 1;
-				boolean loadOK = loadElement(newElement,input);
+				boolean loadOK = loadElement(newElement, input);
 				if (loadOK) {
 					loadedElements.add(newElement);
-				}
-				else {
+				} else {
 					JLSInfo.loadError = "false from loadElement";
 					return false;
 				}
 			}
 			JLSInfo.loadError = "no trailer";
-			return false;	// no trailer
-		}
-		catch (Exception ex) {
+			return false; // no trailer
+		} catch (Exception ex) {
 			JLSInfo.loadError = "load exception: " + ex.getMessage();
-			for (int i=0; i<ex.getStackTrace().length; i+=1) {
-				JLSInfo.loadError += "\n" + ex.getStackTrace()[i].getFileName() + ex.getStackTrace()[i].getLineNumber();
+			for (int i = 0; i < ex.getStackTrace().length; i += 1) {
+				JLSInfo.loadError += "\n" + ex.getStackTrace()[i].getFileName()
+						+ ex.getStackTrace()[i].getLineNumber();
 			}
 			return false;
-		}
-		catch (Error er) {
+		} catch (Error er) {
 			JLSInfo.loadError = "load error: " + er.getMessage();
 			return false;
 		}
@@ -365,7 +314,8 @@ public class Circuit implements Printable {
 	/**
 	 * Load an element by reading all of its instance variable values.
 	 * 
-	 * @param instance An empty object to load.
+	 * @param instance
+	 *            An empty object to load.
 	 * 
 	 * @return false if the file is not in the right format, true if it is.
 	 */
@@ -377,27 +327,22 @@ public class Circuit implements Printable {
 					return false;
 				}
 				Circuit subCirc = new Circuit("");
-				if (!subCirc.load(input,0)) {
+				if (!subCirc.load(input, 0)) {
 					JLSInfo.loadError = "false from subCirc.load(input,0)";
 					return false;
 				}
-				SubCircuit sub = (SubCircuit)el;
+				SubCircuit sub = (SubCircuit) el;
 				subCirc.setImported(sub);
 				sub.setSubCircuit(subCirc);
 				sub.setName(subCirc.getName());
 				addName(subCirc.getName());
-<<<<<<< HEAD
 				try {
 					if (!subCirc.finishLoad(null)) {
+						JLSInfo.loadError = "false from subCir.finishLoad(null)";
 						return false;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
-=======
-				if (!subCirc.finishLoad(null)) {
-					JLSInfo.loadError = "false from subCir.finishLoad(null)";
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
-					return false;
 				}
 				continue;
 			}
@@ -418,12 +363,11 @@ public class Circuit implements Printable {
 				}
 				int value = input.nextInt();
 				if (name.equals("id")) {
-					elementMap.put(value,el);
+					elementMap.put(value, el);
 				}
-				el.setValue(name,value);
+				el.setValue(name, value);
 				lineNumber += 1;
-			} 
-			else if (type.equals("long")) {
+			} else if (type.equals("long")) {
 				if (!input.hasNext()) {
 					JLSInfo.loadError = "unexpected end";
 					return false;
@@ -434,10 +378,9 @@ public class Circuit implements Printable {
 					return false;
 				}
 				long value = input.nextLong();
-				el.setValue(name,value);
+				el.setValue(name, value);
 				lineNumber += 1;
-			} 
-			else if (type.equals("Int")) { // BigInteger
+			} else if (type.equals("Int")) { // BigInteger
 				if (!input.hasNext()) {
 					JLSInfo.loadError = "unexpected end";
 					return false;
@@ -448,10 +391,9 @@ public class Circuit implements Printable {
 					return false;
 				}
 				BigInteger value = input.nextBigInteger();
-				el.setValue(name,value);
+				el.setValue(name, value);
 				lineNumber += 1;
-			} 
-			else if (type.equals("String")) {
+			} else if (type.equals("String")) {
 				if (!input.hasNext()) {
 					JLSInfo.loadError = "unexpected end";
 					return false;
@@ -463,11 +405,12 @@ public class Circuit implements Printable {
 					JLSInfo.loadError = "null findInLine";
 					return false;
 				}
-				value = value.replace("\\\\","\\");
-				value = value.replace("\\\"","\"");
-				value = value.replace("\\n","\n");
-				value = value.substring(value.indexOf('"')+1,value.lastIndexOf('"'));
-				el.setValue(name,value);
+				value = value.replace("\\\\", "\\");
+				value = value.replace("\\\"", "\"");
+				value = value.replace("\\n", "\n");
+				value = value.substring(value.indexOf('"') + 1,
+						value.lastIndexOf('"'));
+				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("ref")) {
 				if (!input.hasNext()) {
@@ -480,7 +423,7 @@ public class Circuit implements Printable {
 					return false;
 				}
 				int value = input.nextInt();
-				el.setValue(name,value);
+				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("pair")) {
 				if (!input.hasNextInt()) {
@@ -493,7 +436,7 @@ public class Circuit implements Printable {
 					return false;
 				}
 				int v2 = input.nextInt();
-				el.setPair(v1,v2);
+				el.setPair(v1, v2);
 				lineNumber += 1;
 			} else if (type.equals("probe")) {
 				if (!input.hasNextInt()) {
@@ -507,19 +450,19 @@ public class Circuit implements Printable {
 					JLSInfo.loadError = "null findInLine";
 					return false;
 				}
-				value = value.replace("\\\\","\\");
-				value = value.replace("\\\"","\"");
-				value = value.replace("\\n","\n");
-				value = value.substring(value.indexOf('"')+1,value.lastIndexOf('"'));
+				value = value.replace("\\\\", "\\");
+				value = value.replace("\\\"", "\"");
+				value = value.replace("\\n", "\n");
+				value = value.substring(value.indexOf('"') + 1,
+						value.lastIndexOf('"'));
 				if (!(el instanceof WireEnd)) {
 					JLSInfo.loadError = "expecting WireEnd";
 					return false;
 				}
-				WireEnd end = (WireEnd)el;
-				end.setProbe(id,value);
+				WireEnd end = (WireEnd) el;
+				end.setProbe(id, value);
 				lineNumber += 1;
-			}
-			else {
+			} else {
 				JLSInfo.loadError = "expecting item type";
 				return false;
 			}
@@ -531,10 +474,11 @@ public class Circuit implements Printable {
 	/**
 	 * Finish load of circuit.
 	 * 
-	 * @param g The Graphics object to use.
+	 * @param g
+	 *            The Graphics object to use.
 	 * 
 	 * @return false if any exceptions occur
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public boolean finishLoad(Graphics g) throws Exception {
 
@@ -552,9 +496,9 @@ public class Circuit implements Printable {
 			// finish up wire ends
 			LinkedList<WireEnd> ends = new LinkedList<WireEnd>();
 			for (Element el : loadedElements) {
-				if (!(el instanceof WireEnd)) 
+				if (!(el instanceof WireEnd))
 					continue;
-				WireEnd end = (WireEnd)el;
+				WireEnd end = (WireEnd) el;
 				end.init(this);
 				elements.add(end);
 				ends.add(end);
@@ -564,13 +508,13 @@ public class Circuit implements Printable {
 			while (!ends.isEmpty()) {
 
 				// start visit list and new wire net
-				LinkedList<WireEnd>visit = new LinkedList<WireEnd>();
+				LinkedList<WireEnd> visit = new LinkedList<WireEnd>();
 				WireEnd end = ends.remove();
 				visit.add(end);
 				WireNet net = new WireNet();
 
 				// visit ends in visit list until empty
-				Set<WireEnd>visited = new HashSet<WireEnd>();
+				Set<WireEnd> visited = new HashSet<WireEnd>();
 				while (!visit.isEmpty()) {
 
 					// get wire end, add to wire net
@@ -589,7 +533,8 @@ public class Circuit implements Printable {
 						}
 					}
 
-					// add wires to wire net and add opposite wire ends to visit list
+					// add wires to wire net and add opposite wire ends to visit
+					// list
 					for (Wire wire : vend.getWires()) {
 						WireEnd otherEnd = wire.getOtherEnd(vend);
 						if (!visited.contains(otherEnd)) {
@@ -602,12 +547,10 @@ public class Circuit implements Printable {
 			}
 
 			loadedElements.clear();
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			JLSInfo.loadError = "finishLoad Exception " + ex.getMessage();
 			return false;
-		}
-		catch (Error er) {
+		} catch (Error er) {
 			JLSInfo.loadError = "finishLoad Error " + er.getMessage();
 			return false;
 		}
@@ -630,8 +573,7 @@ public class Circuit implements Printable {
 			if (firstTime) {
 				rect = el.getRect();
 				firstTime = false;
-			}
-			else {
+			} else {
 				rect.add(el.getRect());
 			}
 		}
@@ -641,15 +583,15 @@ public class Circuit implements Printable {
 	/**
 	 * Save circuit in file.
 	 * 
-	 * @param output The file to write to.
+	 * @param output
+	 *            The file to write to.
 	 */
 	public void save(PrintWriter output) {
 
 		// write header
 		if (isImported()) {
 			output.println("CIRCUIT " + subElement.getName());
-		}
-		else {
+		} else {
 			output.println("CIRCUIT " + name);
 		}
 
@@ -673,33 +615,39 @@ public class Circuit implements Printable {
 	} // end of save method
 
 	/**
-	 * Draw the circuit by drawing every element.
-	 * First the set of elements not in the second set are drawn,
-	 * then the ones in the second set are drawn.
+	 * Draw the circuit by drawing every element. First the set of elements not
+	 * in the second set are drawn, then the ones in the second set are drawn.
 	 * Wires are drawn first in each set.
 	 * 
-<<<<<<< HEAD
+	 * <<<<<<< HEAD
+	 * 
 	 * @param g
 	 *            The graphics object to draw with.
 	 * @param second
 	 *            The second set of elements to draw.
 	 * @param ed
 	 *            The editor window doing the drawing.
-	 * @throws Exception 
-=======
-	 * @param g The graphics object to draw with.
-	 * @param second The second set of elements to draw.
-	 * @param ed The editor window doing the drawing.
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
+	 * @throws Exception
+	 *             =======
+	 * @param g
+	 *            The graphics object to draw with.
+	 * @param second
+	 *            The second set of elements to draw.
+	 * @param ed
+	 *            The editor window doing the drawing. >>>>>>>
+	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
-	public void draw(Graphics g, Set<Element> second, SimpleEditor ed) throws Exception {
+	public void draw(Graphics g, Set<Element> second, SimpleEditor ed)
+			throws Exception {
 
 		// finish up loading process if necessary
 		if (loadedElements.size() > 0) {
 			finishLoad(g);
 
-			// set circuit size to the largest of the default area or the needed area
-			Rectangle rect = new Rectangle(0,0,JLSInfo.circuitsize,JLSInfo.circuitsize);
+			// set circuit size to the largest of the default area or the needed
+			// area
+			Rectangle rect = new Rectangle(0, 0, JLSInfo.circuitsize,
+					JLSInfo.circuitsize);
 			rect.add(getBounds());
 			ed.setCircuitSize(rect.getSize());
 		}
@@ -732,16 +680,19 @@ public class Circuit implements Printable {
 	/**
 	 * Print the circuit.
 	 * 
-	 * @param g The graphics object to use
-	 * @param format Page format info.
-	 * @param pagenum Ignored.
+	 * @param g
+	 *            The graphics object to use
+	 * @param format
+	 *            Page format info.
+	 * @param pagenum
+	 *            Ignored.
 	 * 
 	 * @return Printable.PAGE_EXISTS.
 	 */
 	public int print(Graphics g, PageFormat format, int pagenum) {
 
 		// use better graphics
-		Graphics2D gg = (Graphics2D)g;
+		Graphics2D gg = (Graphics2D) g;
 
 		// construct name
 		Circuit c = this;
@@ -763,34 +714,32 @@ public class Circuit implements Printable {
 		// translate to page area
 		double width = format.getImageableWidth();
 		double height = format.getImageableHeight();
-		gg.translate(format.getImageableX(),format.getImageableY());
+		gg.translate(format.getImageableX(), format.getImageableY());
 
 		// draw title
-		gg.drawString(nm,0,ascent);
+		gg.drawString(nm, 0, ascent);
 
 		// translate and scale to fit circuit to remaining page area
-		gg.translate(0,fontHeight*2);
-		height -= fontHeight*2;
+		gg.translate(0, fontHeight * 2);
+		height -= fontHeight * 2;
 		double scale = 1.0;
 		if (rect.width > width) {
-			scale = width/rect.width;
+			scale = width / rect.width;
 		}
-		if (rect.height+JLSInfo.pointDiameter > height) {
-			scale = Math.min(scale,height/(rect.height+JLSInfo.pointDiameter));
+		if (rect.height + JLSInfo.pointDiameter > height) {
+			scale = Math.min(scale, height
+					/ (rect.height + JLSInfo.pointDiameter));
 		}
-		gg.scale(scale,scale);
-		gg.translate(-rect.x+JLSInfo.pointDiameter/2,-rect.y+JLSInfo.pointDiameter/2);
+		gg.scale(scale, scale);
+		gg.translate(-rect.x + JLSInfo.pointDiameter / 2, -rect.y
+				+ JLSInfo.pointDiameter / 2);
 
 		// print
-<<<<<<< HEAD
 		try {
 			draw(gg, new HashSet<Element>(), null);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-=======
-		draw(gg,new HashSet<Element>(),null);
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 
 		return Printable.PAGE_EXISTS;
 	} // end of print method
@@ -799,37 +748,39 @@ public class Circuit implements Printable {
 	 * Add this circuit to the print book, add any of its state machines, truth
 	 * tables and all subcircuits.
 	 * 
-	 * @param book The book to add to.
-	 * @param format The page format to use.
+	 * @param book
+	 *            The book to add to.
+	 * @param format
+	 *            The page format to use.
 	 */
 	public void addToBook(Book book, PageFormat format) {
 
 		// add this circuit
-		book.append(this,format);
+		book.append(this, format);
 
 		// add state machines
 		for (Element el : elements) {
 			if (el instanceof StateMachine) {
-				StateMachine sm = (StateMachine)el;
-				book.append(sm,format);
+				StateMachine sm = (StateMachine) el;
+				book.append(sm, format);
 				Printable p = sm.makeOutSum();
 				if (p != null)
-					book.append(p,format);
+					book.append(p, format);
 			}
 		}
 
 		// add truth tables
 		for (Element el : elements) {
 			if (el instanceof TruthTable) {
-				TruthTable tt = (TruthTable)el;
-				book.append(tt,format);
+				TruthTable tt = (TruthTable) el;
+				book.append(tt, format);
 			}
 		}
 
 		// add subcircuits
 		for (Element el : elements) {
 			if (el instanceof SubCircuit) {
-				((SubCircuit)el).getSubCircuit().addToBook(book,format);
+				((SubCircuit) el).getSubCircuit().addToBook(book, format);
 			}
 		}
 	} // end of addToBook method
@@ -837,13 +788,15 @@ public class Circuit implements Printable {
 	/**
 	 * Export an image of the circuit.
 	 * 
-<<<<<<< HEAD
+	 * <<<<<<< HEAD
+	 * 
 	 * @param file
 	 *            The name of the file to write to.
-	 * @throws Exception 
-=======
-	 * @param file The name of the file to write to.
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
+	 * @throws Exception
+	 *             =======
+	 * @param file
+	 *            The name of the file to write to. >>>>>>>
+	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
 	public void exportImage(String file) throws Exception {
 
@@ -852,12 +805,12 @@ public class Circuit implements Printable {
 
 		// add 10 pixels on all edges
 		int border = 10;
-		rect = new Rectangle(rect.x-border,rect.y-border,
-				rect.width+2*border,rect.height+2*border);
+		rect = new Rectangle(rect.x - border, rect.y - border, rect.width + 2
+				* border, rect.height + 2 * border);
 
 		// set up image
-		BufferedImage image =
-				new BufferedImage(rect.width,rect.height,BufferedImage.TYPE_INT_RGB);
+		BufferedImage image = new BufferedImage(rect.width, rect.height,
+				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = image.createGraphics();
 		AffineTransform translate = new AffineTransform();
 		translate.translate(-rect.x, -rect.y);
@@ -866,13 +819,12 @@ public class Circuit implements Printable {
 		// draw the image
 		g.setColor(Color.white);
 		g.fill(rect);
-		draw(g,new HashSet<Element>(),null);
+		draw(g, new HashSet<Element>(), null);
 
 		// write the image
 		try {
 			ImageIO.write(image, "JPEG", new File(file));
-		}
-		catch(Exception ex) {
+		} catch (Exception ex) {
 			System.out.println("image write exception");
 		}
 
@@ -896,7 +848,8 @@ public class Circuit implements Printable {
 	/**
 	 * Get an element from the load map.
 	 * 
-	 * @param id The id of the element.
+	 * @param id
+	 *            The id of the element.
 	 * 
 	 * @return the element with the given id, or null if not in the map.
 	 */
@@ -906,10 +859,11 @@ public class Circuit implements Printable {
 	} // end of getElementByID method
 
 	/**
-	 * Add a name to the list of names used.
-	 * If already used in the list, don't add it.
+	 * Add a name to the list of names used. If already used in the list, don't
+	 * add it.
 	 * 
-	 * @param name The new name.
+	 * @param name
+	 *            The new name.
 	 * 
 	 * @return false if the name is already in the list, true if not.
 	 */
@@ -924,7 +878,8 @@ public class Circuit implements Printable {
 	/**
 	 * See if this circuit already has an element with a given name.
 	 * 
-	 * @param name The name to check for.
+	 * @param name
+	 *            The name to check for.
 	 * 
 	 * @return true if the name is already used, false if not.
 	 */
@@ -934,10 +889,11 @@ public class Circuit implements Printable {
 	} // end of hasName method
 
 	/**
-	 * Remove a name from the list of names used.
-	 * Do nothing if not there to start with.
+	 * Remove a name from the list of names used. Do nothing if not there to
+	 * start with.
 	 * 
-	 * @param name The name to remove.
+	 * @param name
+	 *            The name to remove.
 	 */
 	public void removeName(String name) {
 
@@ -945,10 +901,12 @@ public class Circuit implements Printable {
 	} // end of removeName method
 
 	/**
-	 * Set that this circuit is an imported circuit.
-	 * This means it cannot be saved in a file and that pins cannot be added or removed.
+	 * Set that this circuit is an imported circuit. This means it cannot be
+	 * saved in a file and that pins cannot be added or removed.
 	 * 
-	 * @param sub The SubCircuit element in the main circuit that refers to this subcircuit.
+	 * @param sub
+	 *            The SubCircuit element in the main circuit that refers to this
+	 *            subcircuit.
 	 */
 	public void setImported(SubCircuit sub) {
 
@@ -982,11 +940,10 @@ public class Circuit implements Printable {
 
 		for (Element el : elements) {
 			if (el instanceof Wire) {
-				Wire wire = (Wire)el;
+				Wire wire = (Wire) el;
 				wire.removeProbe();
-			}
-			else if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)el;
+			} else if (el instanceof SubCircuit) {
+				SubCircuit sub = (SubCircuit) el;
 				sub.getSubCircuit().removeAllProbes();
 			}
 		}
@@ -999,10 +956,9 @@ public class Circuit implements Printable {
 
 		for (Element el : elements) {
 			if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)el;
+				SubCircuit sub = (SubCircuit) el;
 				sub.getSubCircuit().clearAllWatches();
-			}
-			else {
+			} else {
 				if (!el.isUneditable())
 					el.setWatched(false);
 			}
@@ -1015,38 +971,43 @@ public class Circuit implements Printable {
 	public void resetAllDelays() {
 
 		for (Element el : elements) {
-			if (!(el instanceof LogicElement)) 
+			if (!(el instanceof LogicElement))
 				continue;
 			if (el.isUneditable())
 				continue;
-			LogicElement logic = (LogicElement)el;
+			LogicElement logic = (LogicElement) el;
 			logic.resetPropDelay();
 		}
 	} // end of resetAllDelays method
 
 	/**
-	 * Add a jumpstart to the list of jumpstarts in this circuit.
-	 * If there is already one with the given name, do not add it.
+	 * Add a jumpstart to the list of jumpstarts in this circuit. If there is
+	 * already one with the given name, do not add it.
 	 * 
-	 * @param name The name of the jumpstart.
-	 * @param start The jumpstart object.
+	 * @param name
+	 *            The name of the jumpstart.
+	 * @param start
+	 *            The jumpstart object.
 	 * 
-	 * @return false if there already is a jumpstart with the given name, true otherwise.
+	 * @return false if there already is a jumpstart with the given name, true
+	 *         otherwise.
 	 */
 	public boolean addJumpStart(String name, JumpStart start) {
 
 		if (starts.containsKey(name))
 			return false;
-		starts.put(name,start);
+		starts.put(name, start);
 		return true;
 	} // end of addJumpStart method
 
 	/**
 	 * Get the jumpstart with the given name.
 	 * 
-	 * @param name The name of the desired jumpstart.
+	 * @param name
+	 *            The name of the desired jumpstart.
 	 * 
-	 * @return the jumpstart, or null if it no jumpstart with the given name exists.
+	 * @return the jumpstart, or null if it no jumpstart with the given name
+	 *         exists.
 	 */
 	public JumpStart getJumpStart(String name) {
 
@@ -1066,7 +1027,8 @@ public class Circuit implements Printable {
 	/**
 	 * Remove a jump start from the list.
 	 * 
-	 * @param name The name of this jump start.
+	 * @param name
+	 *            The name of this jump start.
 	 */
 	public void removeJumpStart(String name) {
 
@@ -1076,7 +1038,8 @@ public class Circuit implements Printable {
 	/**
 	 * Set the editor of this circuit.
 	 * 
-	 * @param ed The current editor, or null to indicate not being edited.
+	 * @param ed
+	 *            The current editor, or null to indicate not being edited.
 	 */
 	public void setEditor(Editor ed) {
 
@@ -1094,9 +1057,8 @@ public class Circuit implements Printable {
 	} // end of getEditor method
 
 	/**
-	 * Get the current line number of the loaded circuit file.
-	 * Used when an error occurs so a meaningful error message
-	 * can be printed.
+	 * Get the current line number of the loaded circuit file. Used when an
+	 * error occurs so a meaningful error message can be printed.
 	 */
 	public int getLineNumber() {
 
@@ -1113,10 +1075,9 @@ public class Circuit implements Printable {
 		return name + "(" + super.toString() + ")";
 	} // end of toString method
 
-<<<<<<< HEAD
 	/**
-	 * TODO: it looks like this function could use some clean up; hints
-	 * at possible circuit encoding improvements.
+	 * TODO: it looks like this function could use some clean up; hints at
+	 * possible circuit encoding improvements.
 	 * 
 	 * @param read
 	 * @return
@@ -1129,10 +1090,7 @@ public class Circuit implements Printable {
 		}
 
 		/*
-		 * TODO
-		 * FIXME
-		 * Circuit name goes here
-		 * 
+		 * TODO FIXME Circuit name goes here
 		 */
 
 		// read circuit and get basic info for each element
@@ -1142,53 +1100,66 @@ public class Circuit implements Printable {
 				str = read.pop();
 
 				// if end of top level circuit
-				if (str.equals("ENDCIRCUIT")) { return true; }
+				if (str.equals("ENDCIRCUIT")) {
+					return true;
+				}
 
 				// should be the beginning of an(other) element
-				if (!str.equals("ELEMENT")) { return false; }
+				if (!str.equals("ELEMENT")) {
+					return false;
+				}
 
 				// get element type, create element, and load the element
 				Element obj = (Element) Class.forName("jls.elem." + read.pop())
 						.getConstructors()[0].newInstance(this);
-			
+
 				if (loadElement(obj, read)) {
 					loadedElements.add(obj);
 				} else {
 					return false;
 				}
 			}
-		} catch (ClassNotFoundException ex) 	{
+		} catch (ClassNotFoundException ex) {
 			TellUser.err("Invalid element in file ", true);
 			return false;
-		} catch (InstantiationException ex) 	{ 
+		} catch (InstantiationException ex) {
 			TellUser.err("Could not initialize listed class", true);
 			return false;
-		} catch (IllegalAccessException ex) 	{ 
-			TellUser.err("Illegal Class Access", true); // This should never be hit
-			return false; 
-		} catch (InvocationTargetException ex) 	{ 
+		} catch (IllegalAccessException ex) {
+			TellUser.err("Illegal Class Access", true); // This should never be
+														// hit
+			return false;
+		} catch (InvocationTargetException ex) {
 			TellUser.err("InvocationTargetException", true);
-			return false; 
+			return false;
 		}
 		TellUser.err("Input file inappropriately terminates", true);
 		return false; // no trailer
 	}
 
-	public void load_JLS2(LinkedList<String> read) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException, ClassNotFoundException {
+	public void load_JLS2(LinkedList<String> read)
+			throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException,
+			SecurityException, ClassNotFoundException {
 
 		String str;
 		while (read.size() > 0 && (str = read.pop()).equals("ENDCIRCUIT")) {
-			loadedElements.add((Element) Class.forName("jls.elem2." + str).getConstructors()[0].newInstance(this, read));
+			loadedElements.add((Element) Class.forName("jls.elem2." + str)
+					.getConstructors()[0].newInstance(this, read));
 		}
 	}
-	
+
 	public boolean loadElement(Element el, LinkedList<String> read) {
 		String str;
 		while (!(str = read.pop()).equals("")) {
 			if (str.contains("SUBCIRCUIT")) {
-				if (!(el instanceof SubCircuit)){ return false; }
+				if (!(el instanceof SubCircuit)) {
+					return false;
+				}
 				Circuit subCirc = new Circuit("");
-				if (!subCirc.load(read)){ return false; }
+				if (!subCirc.load(read)) {
+					return false;
+				}
 				SubCircuit sub = (SubCircuit) el;
 				subCirc.setImported(sub);
 				sub.setSubCircuit(subCirc);
@@ -1207,7 +1178,7 @@ public class Circuit implements Printable {
 			String type = read.pop();
 			if (type.equals("END")) {
 				return true;
-			}else if (type.equals("int")) {
+			} else if (type.equals("int")) {
 				String name = read.pop();
 				int value = Integer.parseInt(read.pop());
 				if (name.equals("id")) {
@@ -1217,22 +1188,23 @@ public class Circuit implements Printable {
 			} else if (type.equals("long")) {
 				el.setValue(read.pop(), Long.parseLong(read.pop()));
 			} else if (type.equals("Int")) { // BigInteger
-				el.setValue(read.pop(), BigInteger.valueOf(Long.parseLong(read.pop())));
+				el.setValue(read.pop(),
+						BigInteger.valueOf(Long.parseLong(read.pop())));
 			} else if (type.equals("String")) {
 				el.setValue(read.pop(), read.pop());
 			} else if (type.equals("ref")) {
 				el.setValue(read.pop(), Integer.parseInt(read.pop()));
 			} else if (type.equals("pair")) {
-				el.setPair(Integer.parseInt(read.pop()), Integer.parseInt(read.pop()));
+				el.setPair(Integer.parseInt(read.pop()),
+						Integer.parseInt(read.pop()));
 			} else if (type.equals("probe")) {
-				((WireEnd)el).setProbe(Integer.parseInt(read.pop()), read.pop());
+				((WireEnd) el).setProbe(Integer.parseInt(read.pop()),
+						read.pop());
 			} else {
 				return false;
 			}
 		}
 		return false;
 	} // end of loadElement method
-	
-=======
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
+
 } // end of Circuit class

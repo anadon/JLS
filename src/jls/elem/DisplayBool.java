@@ -11,14 +11,9 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-<<<<<<< HEAD:src/jls/elem/DisplayBool.java
 @SuppressWarnings("serial")
 public final class DisplayBool extends JPanel implements MouseListener {
 
-=======
-public final class Display extends JPanel implements MouseListener {
-	
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/bool/Display.java
 	// properties
 	private TruthTable ttelem;
 	private Entry [][] dtable;
@@ -30,13 +25,8 @@ public final class Display extends JPanel implements MouseListener {
 	 * 
 	 * @param ttelem The truth table element this is a part of.
 	 */
-<<<<<<< HEAD:src/jls/elem/DisplayBool.java
 	public DisplayBool(TruthTable ttelem) {
 
-=======
-	public Display(TruthTable ttelem) {
-		
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/bool/Display.java
 		this.ttelem = ttelem;
 		addMouseListener(this);
 	} // end of constructor

@@ -1,6 +1,5 @@
 package jls.edit;
 
-<<<<<<< HEAD
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -8,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -90,19 +89,6 @@ import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
 import jls.elem.XorGate;
-=======
-import jls.*;
-import jls.elem.*;
-import jls.elem.sm.*;
-import jls.elem.bool.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import javax.swing.*;
-import java.util.zip.*;
-import java.io.*;
-import java.net.*;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 
 /**
  * Main circuit editing class.
@@ -110,6 +96,7 @@ import java.net.*;
  * 
  * @author David A. Poplawski
  */
+@SuppressWarnings("serial")
 public abstract class SimpleEditor extends JPanel {
 
 	// properties
@@ -120,14 +107,14 @@ public abstract class SimpleEditor extends JPanel {
 	private JScrollPane pane;			// the scroll page it is in
 	protected JPanel top;				// here so Editor class can display file menu
 	protected JLabel editable =
-		new JLabel(" ");				// to show if circuit editing is enabled
+			new JLabel(" ");				// to show if circuit editing is enabled
 	private JLabel message = 
-		new JLabel(" ");				// editing status message display
+			new JLabel(" ");				// editing status message display
 	private JLabel info =
-		new JLabel(" ",SwingConstants.CENTER);	// element information display
+			new JLabel(" ",SwingConstants.CENTER);	// element information display
 	private Circuit clipboard;			// for cut and paste
 	private JPopupMenu importMenu = 
-		new JPopupMenu();				// to display importable circuits
+			new JPopupMenu();				// to display importable circuits
 	private SimpleEditor me;
 	private Stack<Circuit> undos = new Stack<Circuit>();
 	private Stack<Circuit> redos = new Stack<Circuit>();
@@ -396,15 +383,15 @@ public abstract class SimpleEditor extends JPanel {
 			private int x, y;					// latest actual cursor coordinates
 			private Rectangle selRect = null;	// selection rectangle
 			private Set<Element>selected =
-				new HashSet<Element>();			// currently selected elements
+					new HashSet<Element>();			// currently selected elements
 			private WireEnd wireEnd;			// used for drawing wires
 			private Wire wire;
 			private WireNet net;
 			private WireEnd prev = null;
 			private Set<Element>adds =
-				new HashSet<Element>();			// for adding elements during a connect
+					new HashSet<Element>();			// for adding elements during a connect
 			private Set<Element>subs =
-				new HashSet<Element>();			// for removing elements during a connect
+					new HashSet<Element>();			// for removing elements during a connect
 			private String overlapMessage = "";
 
 			/**
@@ -438,7 +425,7 @@ public abstract class SimpleEditor extends JPanel {
 				delete.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0));
 				lock.setToolTipText("make selected elements uneditable (cannot be undone)");
 				lock.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,InputEvent.CTRL_MASK));
-				
+
 				// TODO: Make an action for this.
 				//matchJump.setToolTipText("create the wire end to match this wire start");
 				//matchJump.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,InputEvent.CTRL_MASK));
@@ -1222,7 +1209,12 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// draw all elements, selected ones last
-				circuit.draw(g,selected,me);
+				try {
+					circuit.draw(g,selected,me);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 				// draw selecting rectangle if necessary
 				if (currentState == State.selecting) {
@@ -1259,301 +1251,296 @@ public abstract class SimpleEditor extends JPanel {
 					if (!enabled)
 						return;
 
-<<<<<<< HEAD
-			// draw all elements, selected ones last
-			try {
-				circuit.draw(g, selected, me);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-=======
-					doProbe();
-				}
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
+					//			// draw all elements, selected ones last
+					//			try {
+					//				circuit.draw(g, selected, me);
+					//			} catch (Exception e) {
+					//				e.printStackTrace();
+					//			}
 
-				// if watch option selected, ...
-				if (event.getSource() == watch) {
+					// if watch option selected, ...
+					if (event.getSource() == watch) {
 
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
 
-					// get the single item in the selected set
-					Element el = (Element)(selected.toArray()[0]);
+						// get the single item in the selected set
+						Element el = (Element)(selected.toArray()[0]);
 
-					// if its locked, don't change it
-					if (el.isUneditable())
-						return;
+						// if its locked, don't change it
+						if (el.isUneditable())
+							return;
 
-					// remove if watched, add if not
-					if (el.isWatched()) {
-						el.setWatched(false);
-					}
-					else {
-						el.setWatched(true);
-					}
-					markChanged();
-
-					// clean up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if view option selected, ...
-				if (event.getSource() == modify) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-					doModify();
-				}
-
-				// if change timing, then it must have timing info
-				if (event.getSource() == timing) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					doTiming();
-				}
-
-				// if view, then it must be a watchable element
-				if (event.getSource() == view) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// get the single item in the selected set
-					Element el = (Element)(selected.toArray()[0]);
-
-					// ask element to display its current value
-					el.showCurrentValue(new Point(x,y));
-
-					// clean up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if cut option selected, copy selected elements to clipboard,
-				// then delete those elements
-				if (event.getSource() == cut) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// copy, then remove
-					copy();
-					remove();
-
-					// clean up
-					removeCoLinear();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if copy option, copy selected elements to clipboard
-				if (event.getSource() == copy) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					copy();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if delete option, delete selected elements
-				if (event.getSource() == delete) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// remove
-					remove();
-					removeCoLinear();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if lock, set all selected elements to uneditable
-				if (event.getSource() == lock) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// warn user first
-					int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
-							"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-							"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-					// if user still ok with it ...
-					if (opt == JOptionPane.OK_OPTION) {
-
-						// make selected elements uneditable
-						for (Element el : selected) {
-							el.makeUneditable();
+						// remove if watched, add if not
+						if (el.isWatched()) {
+							el.setWatched(false);
 						}
+						else {
+							el.setWatched(true);
+						}
+						markChanged();
+
+						// clean up
+						clearSelected();
+						setState(State.idle);
+						repaint();
+						return;
 					}
 
-					// finish up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
+					// if view option selected, ...
+					if (event.getSource() == modify) {
 
-				// paste contents of clipboard
-				if (event.getSource() == paste) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// paste
-					if (clipboard.getElements().size() == 0)
-						return;
-					if (paste(clipboard)) {
-						setState(State.placing);
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+						doModify();
 					}
-					repaint();
-					return;
-				}
 
-				// if select all option, select everything
-				if (event.getSource() == selAll) {
+					// if change timing, then it must have timing info
+					if (event.getSource() == timing) {
 
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
 
-					doSelectAll();
-				}
-
-				// if close, close this circuit (or subcircuit)
-				if (event.getSource() == close) {
-					close();
-				}
-
-				// if undo, restore prevous copy of circuit
-				if (event.getSource() == undo) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					undo();
-					repaint();
-				}
-
-				// if redo, restore future copy of circuit
-				if (event.getSource() == redo) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					redo();
-				}
-
-				if(event.getSource() == Crotate)
-				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					el.rotate(JLSInfo.Orientation.RIGHT, this.getGraphics());
-					markChanged();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-
-
-				}
-
-				if(event.getSource() == CCrotate)
-				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					el.rotate(JLSInfo.Orientation.LEFT, this.getGraphics());
-					markChanged();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-				}
-				
-				if(event.getSource() == matchJump) {
-					if(!enabled)
-						return;
-					
-					JumpStart el = (JumpStart)(selected.toArray()[0]);
-					JumpEnd nel = new JumpEnd(circuit, el.getName());
-					Point p = getMousePosition();
-					if(p == null) { // If the context menu wasn't within JLS
-						p = MouseInfo.getPointerInfo().getLocation();
-						p.x -= getLocationOnScreen().x;
-						p.y -= getLocationOnScreen().y;
+						doTiming();
 					}
-					x = p.x;
-					y = p.y;
-					nel.setup(graphics, this, p.x, p.y);
-					
-					clearSelected();
-					circuit.addElement(nel);
-					nel.setHighlight(true);
-					selected.add(nel);
-					
-					setState(State.chosen);
-					markChanged();
-					repaint();
-				}
 
-				if(event.getSource() == flip)
-				{
-					if(!enabled)
+					// if view, then it must be a watchable element
+					if (event.getSource() == view) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						// get the single item in the selected set
+						Element el = (Element)(selected.toArray()[0]);
+
+						// ask element to display its current value
+						el.showCurrentValue(new Point(x,y));
+
+						// clean up
+						clearSelected();
+						setState(State.idle);
+						repaint();
 						return;
-					Element el = (Element)(selected.toArray()[0]);
-					el.flip(this.getGraphics());
-					markChanged();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-				}
-				// if connection, start drawing wires
-				else if (event.getSource() == connect) {
+					}
 
-					// do nothing if editor is disabled
-					if (!enabled)
+					// if cut option selected, copy selected elements to clipboard,
+					// then delete those elements
+					if (event.getSource() == cut) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						// copy, then remove
+						copy();
+						remove();
+
+						// clean up
+						removeCoLinear();
+						clearSelected();
+						setState(State.idle);
+						repaint();
 						return;
+					}
 
-					setState(State.startwire);
-					wireEnd = new WireEnd(circuit);
-					wireEnd.setXY(x,y);
-					wireEnd.init(circuit);
-					circuit.addElement(wireEnd);
-					selected.add(wireEnd);
-					wire = null;
-					net = new WireNet();
-					net.add(wireEnd);
-					wireEnd.setNet(net);
-					repaint();
+					// if copy option, copy selected elements to clipboard
+					if (event.getSource() == copy) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						copy();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+						return;
+					}
+
+					// if delete option, delete selected elements
+					if (event.getSource() == delete) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						// remove
+						remove();
+						removeCoLinear();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+						return;
+					}
+
+					// if lock, set all selected elements to uneditable
+					if (event.getSource() == lock) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						// warn user first
+						int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
+								"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
+								"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+						// if user still ok with it ...
+						if (opt == JOptionPane.OK_OPTION) {
+
+							// make selected elements uneditable
+							for (Element el : selected) {
+								el.makeUneditable();
+							}
+						}
+
+						// finish up
+						clearSelected();
+						setState(State.idle);
+						repaint();
+						return;
+					}
+
+					// paste contents of clipboard
+					if (event.getSource() == paste) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						// paste
+						if (clipboard.getElements().size() == 0)
+							return;
+						if (paste(clipboard)) {
+							setState(State.placing);
+						}
+						repaint();
+						return;
+					}
+
+					// if select all option, select everything
+					if (event.getSource() == selAll) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						doSelectAll();
+					}
+
+					// if close, close this circuit (or subcircuit)
+					if (event.getSource() == close) {
+						close();
+					}
+
+					// if undo, restore prevous copy of circuit
+					if (event.getSource() == undo) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						undo();
+						repaint();
+					}
+
+					// if redo, restore future copy of circuit
+					if (event.getSource() == redo) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						redo();
+					}
+
+					if(event.getSource() == Crotate)
+					{
+						if(!enabled)
+							return;
+						Element el = (Element)(selected.toArray()[0]);
+						el.rotate(JLSInfo.Orientation.RIGHT, this.getGraphics());
+						markChanged();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+
+
+					}
+
+					if(event.getSource() == CCrotate)
+					{
+						if(!enabled)
+							return;
+						Element el = (Element)(selected.toArray()[0]);
+						el.rotate(JLSInfo.Orientation.LEFT, this.getGraphics());
+						markChanged();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+					}
+
+					if(event.getSource() == matchJump) {
+						if(!enabled)
+							return;
+
+						JumpStart el = (JumpStart)(selected.toArray()[0]);
+						JumpEnd nel = new JumpEnd(circuit, el.getName());
+						Point p = getMousePosition();
+						if(p == null) { // If the context menu wasn't within JLS
+							p = MouseInfo.getPointerInfo().getLocation();
+							p.x -= getLocationOnScreen().x;
+							p.y -= getLocationOnScreen().y;
+						}
+						x = p.x;
+						y = p.y;
+						nel.setup(graphics, this, p.x, p.y);
+
+						clearSelected();
+						circuit.addElement(nel);
+						nel.setHighlight(true);
+						selected.add(nel);
+
+						setState(State.chosen);
+						markChanged();
+						repaint();
+					}
+
+					if(event.getSource() == flip)
+					{
+						if(!enabled)
+							return;
+						Element el = (Element)(selected.toArray()[0]);
+						el.flip(this.getGraphics());
+						markChanged();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+					}
+					// if connection, start drawing wires
+					else if (event.getSource() == connect) {
+
+						// do nothing if editor is disabled
+						if (!enabled)
+							return;
+
+						setState(State.startwire);
+						wireEnd = new WireEnd(circuit);
+						wireEnd.setXY(x,y);
+						wireEnd.init(circuit);
+						circuit.addElement(wireEnd);
+						selected.add(wireEnd);
+						wire = null;
+						net = new WireNet();
+						net.add(wireEnd);
+						wireEnd.setNet(net);
+						repaint();
+					}
 				}
-
 
 
 			} // end of actionPerformed method
@@ -2593,7 +2580,7 @@ public abstract class SimpleEditor extends JPanel {
 						return false;
 					}
 				}
-				
+
 				// groups cannot have both tri-state and normal connections
 				if(put.getElement() instanceof Group) {
 					boolean tri = false;
@@ -2793,44 +2780,32 @@ public abstract class SimpleEditor extends JPanel {
 					TriProp pin = (TriProp)p2.getElement();
 					pin.setTriState(true);
 				}
+			}
 
-<<<<<<< HEAD
-		/**
-		 * See if the selected elements overlap non-selected elements.
-		 * Highlights possible connections when there is no overlap.
-		 * 
-		 * TODO major point of optimization
-		 * 
-		 * @return true if there is overlap, false if not.
-		 */
-		private boolean overlap() {
-=======
-			} // end of connect method (put to put)
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
+				/**
+				 * See if the selected elements overlap non-selected elements.
+				 * Highlights possible connections when there is no overlap.
+				 * 
+				 * TODO major point of optimization
+				 * 
+				 * @return true if there is overlap, false if not.
+				 */
+				private boolean overlap() {
 
-			/**
-			 * See if the selected elements overlap non-selected elements.
-			 * Highlights possible connections when there is no overlap.
-			 * 
-			 * @return true if there is overlap, false if not.
-			 */
-			private boolean overlap() {
+					overlapMessage = "";
 
-				overlapMessage = "";
-
-<<<<<<< HEAD
-			// check every element in the selected set
-			//TODO radix sort when done, then check for collisions using bin search
-			/*ArrayDeque<Element> selE = new ArrayDeque<Element>();
+					// check every element in the selected set
+					//TODO radix sort when done, then check for collisions using bin search
+					/*ArrayDeque<Element> selE = new ArrayDeque<Element>();
 			ArrayDeque<Element> other = new ArrayDeque<Element>();
-			
+
 			for(Element el : circuit.getElements()){
 				if(selected.contains(el))
 					selE.add(el);
 				else
 					other.add(el);
 			}
-			
+
 			for(Element test1 : selE){
 				for(Element test2 : other){
 					if(!test1.intersects(test2)) continue;
@@ -2838,1179 +2813,1174 @@ public abstract class SimpleEditor extends JPanel {
 						!(test2 instanceof Wire || test2 instanceof WireEnd)){
 						return true;
 					}
-						
+
 					//TODO fringe cases
-					
+
 				}
 			}*/
-			
-			for (Element sel : selected) {
-=======
-				// untouch everything
-				untouchAll();
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 
-				// check every element in the selected set
-				for (Element sel : selected) {
 
-					// check against every element in the circuit
-					for (Element el : circuit.getElements()) {
+						// check every element in the selected set
+						for (Element sel : selected) {
 
-						// ignore elements in the selected set
-						if (selected.contains(el))
-							continue;
+							// check against every element in the circuit
+							for (Element el : circuit.getElements()) {
 
-						// check simple overlap of areas
-						if (sel.intersects(el)) {
+								// ignore elements in the selected set
+								if (selected.contains(el))
+									continue;
 
-							// no overlap if possible connection,
-							boolean ok = false;
+								// check simple overlap of areas
+								if (sel.intersects(el)) {
 
-							// if selected is a wire end ...
-							if (sel instanceof WireEnd) {
+									// no overlap if possible connection,
+									boolean ok = false;
 
-								WireEnd end = (WireEnd)sel;
+									// if selected is a wire end ...
+									if (sel instanceof WireEnd) {
 
-								if (el instanceof WireEnd) {
+										WireEnd end = (WireEnd)sel;
 
-									// wire end to wire end
-									WireEnd otherEnd = (WireEnd)el;
-									if (!canConnect(end,otherEnd)) {
-										untouchAll();
-										return true;
+										if (el instanceof WireEnd) {
+
+											// wire end to wire end
+											WireEnd otherEnd = (WireEnd)el;
+											if (!canConnect(end,otherEnd)) {
+												untouchAll();
+												return true;
+											}
+											end.setTouching(true);
+											otherEnd.setTouching(true);
+											ok = true;
+										}
+										else if (el instanceof Wire) {
+
+											// wire end to wire
+											Wire wire = (Wire)el;
+											if (!canConnect(end,wire)) {
+												untouchAll();
+												return true;
+											}
+											end.setTouching(true);
+											wire.setTouching(true);
+											ok = true;
+										}
+										else {
+
+											// wire end to put
+
+											// can't attach if there is no put
+											Put put = el.getPut(end.getX(),end.getY());
+											if (put == null) {
+												overlapMessage = "overlap";
+												untouchAll();
+												return true;
+											}
+
+											// if already attached, ignore
+											WireEnd putEnd = put.getWireEnd();
+											if (end == putEnd) {
+												ok = true;
+												continue;
+											}
+
+											// if attached through a single wire, ignore
+											if (putEnd != null) {
+												Wire onlyWire = putEnd.getOnlyWire();
+												if (onlyWire.getOtherEnd(putEnd) == end) {
+													ok = true;
+													continue;
+												}
+											}
+
+											// make sure connection can be made to this put
+											if (!canConnect(end,put)) {
+												untouchAll();
+												return true;
+											}
+
+											// no overlap if we get this far
+											end.setTouching(true);
+											put.setTouching(true);
+											ok = true;
+										}
 									}
-									end.setTouching(true);
-									otherEnd.setTouching(true);
-									ok = true;
-								}
-								else if (el instanceof Wire) {
 
-									// wire end to wire
-									Wire wire = (Wire)el;
-									if (!canConnect(end,wire)) {
-										untouchAll();
-										return true;
+									// selected is not a wire end
+									else {
+
+										// put to wire end
+										for (Put put : sel.getAllPuts()) {
+
+											// if not a wire end, ignore
+											if (!(el instanceof WireEnd))
+												continue;
+											WireEnd end = (WireEnd)el;
+
+											// if don't line up, ignore
+											if (put.getX() != end.getX() || put.getY() != end.getY()) {
+												continue;
+											}
+
+											// if already attached to this wire end, ignore
+											if (end == put.getWireEnd()) {
+												ok = true;
+												continue;
+											}
+
+											// if attached through a single wire, ignore
+											WireEnd putEnd = put.getWireEnd();
+											if (putEnd != null &&
+													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
+												ok = true;
+												continue;
+											}
+
+											// if cannot connect, return
+											if (!canConnect(end,put)) {
+												untouchAll();
+												return true;
+											}
+
+											end.setTouching(true);
+											put.setTouching(true);
+											ok = true;
+										}
 									}
-									end.setTouching(true);
-									wire.setTouching(true);
-									ok = true;
-								}
-								else {
-
-									// wire end to put
-
-									// can't attach if there is no put
-									Put put = el.getPut(end.getX(),end.getY());
-									if (put == null) {
+									if (!ok) {
 										overlapMessage = "overlap";
 										untouchAll();
 										return true;
 									}
-
-									// if already attached, ignore
-									WireEnd putEnd = put.getWireEnd();
-									if (end == putEnd) {
-										ok = true;
-										continue;
-									}
-
-									// if attached through a single wire, ignore
-									if (putEnd != null) {
-										Wire onlyWire = putEnd.getOnlyWire();
-										if (onlyWire.getOtherEnd(putEnd) == end) {
-											ok = true;
-											continue;
-										}
-									}
-
-									// make sure connection can be made to this put
-									if (!canConnect(end,put)) {
-										untouchAll();
-										return true;
-									}
-
-									// no overlap if we get this far
-									end.setTouching(true);
-									put.setTouching(true);
-									ok = true;
 								}
-							}
 
-							// selected is not a wire end
-							else {
-
-								// put to wire end
-								for (Put put : sel.getAllPuts()) {
-
-									// if not a wire end, ignore
-									if (!(el instanceof WireEnd))
-										continue;
-									WireEnd end = (WireEnd)el;
-
-									// if don't line up, ignore
-									if (put.getX() != end.getX() || put.getY() != end.getY()) {
-										continue;
-									}
-
-									// if already attached to this wire end, ignore
-									if (end == put.getWireEnd()) {
-										ok = true;
-										continue;
-									}
-
-									// if attached through a single wire, ignore
-									WireEnd putEnd = put.getWireEnd();
-									if (putEnd != null &&
-											putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
-										ok = true;
-										continue;
-									}
-
-									// if cannot connect, return
-									if (!canConnect(end,put)) {
-										untouchAll();
-										return true;
-									}
-
-									end.setTouching(true);
-									put.setTouching(true);
-									ok = true;
-								}
-							}
-							if (!ok) {
-								overlapMessage = "overlap";
-								untouchAll();
-								return true;
-							}
-						}
-
-						// no intersection, but wires may be overlapping wire ends
-						// or puts might line up
-						else {
-
-							// see if wires connected to a wire end dragged onto wire ends
-							if (sel instanceof WireEnd) {
-								WireEnd end = (WireEnd)sel;
-								for (Wire wire : end.getWires()) {
-									for (Element elm : circuit.getElements()) {
-										if (sel == elm)
-											continue;
-										if (!(elm instanceof WireEnd)) {
-											continue;
-										}
-										WireEnd otherEnd = (WireEnd)elm;
-										if (wire.touches(otherEnd)) {
-											overlapMessage = "overlap";
-											untouchAll();
-											return true;
-										}
-									}
-								}
-							}
-
-							// see if wires connected to puts dragged onto wire ends
-							for (Put p : sel.getAllPuts()) {
-								if (p.isAttached()) {
-									Wire wire = p.getWireEnd().getOnlyWire();
-									for (Element elm : circuit.getElements()) {
-										if (sel == elm)
-											continue;
-										if (!(elm instanceof WireEnd)) {
-											continue;
-										}
-										WireEnd otherEnd = (WireEnd)elm;
-										if (wire.touches(otherEnd)) {
-											overlapMessage = "overlap";
-											untouchAll();
-											return true;
-										}
-									}
-								}
-							}
-
-							// check all put combinations
-							for (Put p1 : sel.getAllPuts()) {
-								for (Put p2 : el.getAllPuts()) {
-
-									// if don't line up, ignore
-									if (p1.getX() != p2.getX() || p1.getY() != p2.getY()) {
-										continue;
-									}
-
-									// ignore overlaps on already connected puts
-									WireEnd end1 = p1.getWireEnd();
-									WireEnd end2 = p2.getWireEnd();
-									if (end1 != null && end2 != null && 
-											end1.getOnlyWire().getOtherEnd(end1) == end2) {
-										continue;
-									}
-
-									// make sure can connect
-									if (!canConnect(p1,p2)) {
-										untouchAll();
-										return true;
-									}
-									else {
-										p1.setTouching(true);
-										p2.setTouching(true);
-									}
-								}
-							}
-						}
-					}
-				}
-				repaint();
-				return false;
-			} // end of overlap method
-
-			/**
-			 * Connect everything possible.
-			 * Assumes there is no overlap.
-			 */
-			public void connect() {
-
-				// untouch everything
-				untouchAll();
-
-				// clear adds
-				adds.clear();
-				subs.clear();
-
-				// check every element in the selected set
-				for (Element sel : selected) {
-
-					// check against every element in the circuit
-					for (Element el : circuit.getElements()) {
-
-						// ignore elements in the selected set
-						if (selected.contains(el))
-							continue;
-
-						// check simple overlap of areas
-						if (sel.intersects(el)) {
-
-							// no overlap if possible connection,
-							boolean ok = false;
-
-							// if a wire end ...
-							if (sel instanceof WireEnd) {
-
-								WireEnd end = (WireEnd)sel;
-
-								if (el instanceof WireEnd) {
-
-									// wire end to wire end
-									WireEnd otherEnd = (WireEnd)el;
-									WireEnd endLeft = connect(end,otherEnd);
-									if (currentState == State.startwire) {
-										wireEnd = endLeft;
-										net = endLeft.getNet();
-									}
-									ok = true;
-								}
-								else if (el instanceof Wire) {
-
-									// wire end to wire
-									Wire wire = (Wire)el;
-									WireEnd it = connect(end,wire);
-									if (currentState == State.startwire) {
-										wireEnd = it;
-										net = it.getNet();
-									}
-									ok = true;
-								}
+								// no intersection, but wires may be overlapping wire ends
+								// or puts might line up
 								else {
 
-									// wire end to put
-									Put put = el.getPut(end.getX(),end.getY());
-
-									// if already attached, ignore
-									if (end == put.getWireEnd()) {
-										ok = true;
-										continue;
+									// see if wires connected to a wire end dragged onto wire ends
+									if (sel instanceof WireEnd) {
+										WireEnd end = (WireEnd)sel;
+										for (Wire wire : end.getWires()) {
+											for (Element elm : circuit.getElements()) {
+												if (sel == elm)
+													continue;
+												if (!(elm instanceof WireEnd)) {
+													continue;
+												}
+												WireEnd otherEnd = (WireEnd)elm;
+												if (wire.touches(otherEnd)) {
+													overlapMessage = "overlap";
+													untouchAll();
+													return true;
+												}
+											}
+										}
 									}
 
-									// if attached through a single wire, ignore
-									WireEnd putEnd = put.getWireEnd();
-									if (putEnd != null &&
-											putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
-										ok = true;
-										continue;
+									// see if wires connected to puts dragged onto wire ends
+									for (Put p : sel.getAllPuts()) {
+										if (p.isAttached()) {
+											Wire wire = p.getWireEnd().getOnlyWire();
+											for (Element elm : circuit.getElements()) {
+												if (sel == elm)
+													continue;
+												if (!(elm instanceof WireEnd)) {
+													continue;
+												}
+												WireEnd otherEnd = (WireEnd)elm;
+												if (wire.touches(otherEnd)) {
+													overlapMessage = "overlap";
+													untouchAll();
+													return true;
+												}
+											}
+										}
 									}
-									connect(end,put);
-									ok = true;
+
+									// check all put combinations
+									for (Put p1 : sel.getAllPuts()) {
+										for (Put p2 : el.getAllPuts()) {
+
+											// if don't line up, ignore
+											if (p1.getX() != p2.getX() || p1.getY() != p2.getY()) {
+												continue;
+											}
+
+											// ignore overlaps on already connected puts
+											WireEnd end1 = p1.getWireEnd();
+											WireEnd end2 = p2.getWireEnd();
+											if (end1 != null && end2 != null && 
+													end1.getOnlyWire().getOtherEnd(end1) == end2) {
+												continue;
+											}
+
+											// make sure can connect
+											if (!canConnect(p1,p2)) {
+												untouchAll();
+												return true;
+											}
+											else {
+												p1.setTouching(true);
+												p2.setTouching(true);
+											}
+										}
+									}
 								}
 							}
+						}
+					repaint();
+					return false;
+					} // end of overlap method
 
-							// selected is not a wire end
-							else {
+					/**
+					 * Connect everything possible.
+					 * Assumes there is no overlap.
+					 */
+					public void connect() {
 
-								// put to wire end
-								for (Put put : sel.getAllPuts()) {
+						// untouch everything
+						untouchAll();
 
-									// if not a wire end, ignore
-									if (!(el instanceof WireEnd))
-										continue;
-									WireEnd end = (WireEnd)el;
+						// clear adds
+						adds.clear();
+						subs.clear();
 
-									// if don't line up, ignore
-									if (put.getX() != end.getX() || put.getY() != end.getY()) {
-										continue;
+						// check every element in the selected set
+						for (Element sel : selected) {
+
+							// check against every element in the circuit
+							for (Element el : circuit.getElements()) {
+
+								// ignore elements in the selected set
+								if (selected.contains(el))
+									continue;
+
+								// check simple overlap of areas
+								if (sel.intersects(el)) {
+
+									// no overlap if possible connection,
+									boolean ok = false;
+
+									// if a wire end ...
+									if (sel instanceof WireEnd) {
+
+										WireEnd end = (WireEnd)sel;
+
+										if (el instanceof WireEnd) {
+
+											// wire end to wire end
+											WireEnd otherEnd = (WireEnd)el;
+											WireEnd endLeft = connect(end,otherEnd);
+											if (currentState == State.startwire) {
+												wireEnd = endLeft;
+												net = endLeft.getNet();
+											}
+											ok = true;
+										}
+										else if (el instanceof Wire) {
+
+											// wire end to wire
+											Wire wire = (Wire)el;
+											WireEnd it = connect(end,wire);
+											if (currentState == State.startwire) {
+												wireEnd = it;
+												net = it.getNet();
+											}
+											ok = true;
+										}
+										else {
+
+											// wire end to put
+											Put put = el.getPut(end.getX(),end.getY());
+
+											// if already attached, ignore
+											if (end == put.getWireEnd()) {
+												ok = true;
+												continue;
+											}
+
+											// if attached through a single wire, ignore
+											WireEnd putEnd = put.getWireEnd();
+											if (putEnd != null &&
+													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
+												ok = true;
+												continue;
+											}
+											connect(end,put);
+											ok = true;
+										}
 									}
 
-									// if already attached to this wire end, ignore
-									if (end == put.getWireEnd()) {
-										ok = true;
-										continue;
-									}
+									// selected is not a wire end
+									else {
 
-									// if attached through a single wire, ignore
-									WireEnd putEnd = put.getWireEnd();
-									if (putEnd != null &&
-											putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
-										ok = true;
-										continue;
-									}
+										// put to wire end
+										for (Put put : sel.getAllPuts()) {
 
-									connect(end,put);
-									ok = true;
+											// if not a wire end, ignore
+											if (!(el instanceof WireEnd))
+												continue;
+											WireEnd end = (WireEnd)el;
+
+											// if don't line up, ignore
+											if (put.getX() != end.getX() || put.getY() != end.getY()) {
+												continue;
+											}
+
+											// if already attached to this wire end, ignore
+											if (end == put.getWireEnd()) {
+												ok = true;
+												continue;
+											}
+
+											// if attached through a single wire, ignore
+											WireEnd putEnd = put.getWireEnd();
+											if (putEnd != null &&
+													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
+												ok = true;
+												continue;
+											}
+
+											connect(end,put);
+											ok = true;
+										}
+									}
+									if (!ok) {
+										return;
+									}
+								}
+
+								// no intersection, but puts might line up
+								else {
+
+									// check all put combinations
+									for (Put p1 : sel.getAllPuts()) {
+										for (Put p2 : el.getAllPuts()) {
+
+											// if don't line up, ignore
+											if (p1.getX() != p2.getX() || p1.getY() != p2.getY()) {
+												continue;
+											}
+
+											// ignore overlaps on already connected puts
+											WireEnd end1 = p1.getWireEnd();
+											WireEnd end2 = p2.getWireEnd();
+											if (end1 != null && end2 != null && 
+													end1.getOnlyWire().getOtherEnd(end1) == end2) {
+												continue;
+											}
+
+											// put to put
+											connect(p1,p2);
+										}
+									}
 								}
 							}
-							if (!ok) {
+						}
+
+						// add any new wires created by connecting puts to puts
+						for (Element el : adds) {
+							circuit.addElement(el);
+						}
+
+						// remove any wire ends when merging nets
+						// or wires when splicing
+						for (Element el : subs) {
+							circuit.remove(el);
+						}
+					} // end of connect method
+
+					/**
+					 * Untouch all wire ends and puts.
+					 */
+					private void untouchAll() {
+
+						for (Element el : circuit.getElements()) {
+							el.setTouching(false);
+						}
+					} // end of untouchAll method
+
+					/**
+					 * Copy all selected elements to the clipboard.
+					 */
+					private void copy() {
+
+						// clear clipboard
+						clipboard.clear();
+
+						// do copy
+						Point min = Util.copy(selected,clipboard);
+
+						// adjust positions of all elements and set circuit they are in
+						for (Element el : clipboard.getElements()) {
+
+							el.setCircuit(clipboard);
+
+							// don't adjust wires
+							if (el instanceof Wire)
+								continue;
+
+							// or attached wire ends
+							if (el instanceof WireEnd) {
+								WireEnd end = (WireEnd)el;
+								if (end.isAttached())
+									continue;
+							}
+
+							// adjust
+							el.move(-min.x,-min.y);
+						}
+					} // end of copy method
+
+					/**
+					 * Remove all elements in the selected set.
+					 * Abort removal if any elements in the set are uneditable.
+					 */
+					private void remove() {
+
+						// make sure no element is uneditable
+						for (Element el : selected) {
+							if (el.isUneditable()) {
+								JOptionPane.showMessageDialog(JLSInfo.frame,
+										"can't delete uneditable element");
 								return;
 							}
 						}
 
-						// no intersection, but puts might line up
-						else {
+						// remove each element
+						for (Element el : selected) {
+							el.remove(circuit); // elements remove themselves
+						}
 
-							// check all put combinations
-							for (Put p1 : sel.getAllPuts()) {
-								for (Put p2 : el.getAllPuts()) {
+						// mark the circuit as changed
+						markChanged();
+					} // end of remove method
 
-									// if don't line up, ignore
-									if (p1.getX() != p2.getX() || p1.getY() != p2.getY()) {
-										continue;
-									}
+					/**
+					 * Paste all elements from a given circuit into the current circuit.
+					 * Can't be done if there are elements in the "from" circuit that
+					 * have the same names as elements in the current circuit.
+					 * 
+					 * @param from The circuit to copy from.
+					 * 
+					 * @return false if can't be done, true if done.
+					 */
+					private boolean paste(Circuit from) {
 
-									// ignore overlaps on already connected puts
-									WireEnd end1 = p1.getWireEnd();
-									WireEnd end2 = p2.getWireEnd();
-									if (end1 != null && end2 != null && 
-											end1.getOnlyWire().getOtherEnd(end1) == end2) {
-										continue;
-									}
-
-									// put to put
-									connect(p1,p2);
+						// check for naming conflicts
+						for (Element el : from.getElements()) {
+							if (el instanceof JumpEnd)
+								continue;
+							String name = el.getName();
+							if (name != null && !name.equals("")) {
+								if (circuit.hasName(name)) {
+									info.setForeground(Color.red);
+									info.setText("Paste will result in elements with duplicate names");
+									return false;
 								}
 							}
 						}
-					}
-				}
 
-				// add any new wires created by connecting puts to puts
-				for (Element el : adds) {
-					circuit.addElement(el);
-				}
-
-				// remove any wire ends when merging nets
-				// or wires when splicing
-				for (Element el : subs) {
-					circuit.remove(el);
-				}
-			} // end of connect method
-
-			/**
-			 * Untouch all wire ends and puts.
-			 */
-			private void untouchAll() {
-
-				for (Element el : circuit.getElements()) {
-					el.setTouching(false);
-				}
-			} // end of untouchAll method
-
-			/**
-			 * Copy all selected elements to the clipboard.
-			 */
-			private void copy() {
-
-				// clear clipboard
-				clipboard.clear();
-
-				// do copy
-				Point min = Util.copy(selected,clipboard);
-
-				// adjust positions of all elements and set circuit they are in
-				for (Element el : clipboard.getElements()) {
-
-					el.setCircuit(clipboard);
-
-					// don't adjust wires
-					if (el instanceof Wire)
-						continue;
-
-					// or attached wire ends
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
-						if (end.isAttached())
-							continue;
-					}
-
-					// adjust
-					el.move(-min.x,-min.y);
-				}
-			} // end of copy method
-
-			/**
-			 * Remove all elements in the selected set.
-			 * Abort removal if any elements in the set are uneditable.
-			 */
-			private void remove() {
-
-				// make sure no element is uneditable
-				for (Element el : selected) {
-					if (el.isUneditable()) {
-						JOptionPane.showMessageDialog(JLSInfo.frame,
-						"can't delete uneditable element");
-						return;
-					}
-				}
-
-				// remove each element
-				for (Element el : selected) {
-					el.remove(circuit); // elements remove themselves
-				}
-
-				// mark the circuit as changed
-				markChanged();
-			} // end of remove method
-
-			/**
-			 * Paste all elements from a given circuit into the current circuit.
-			 * Can't be done if there are elements in the "from" circuit that
-			 * have the same names as elements in the current circuit.
-			 * 
-			 * @param from The circuit to copy from.
-			 * 
-			 * @return false if can't be done, true if done.
-			 */
-			private boolean paste(Circuit from) {
-
-				// check for naming conflicts
-				for (Element el : from.getElements()) {
-					if (el instanceof JumpEnd)
-						continue;
-					String name = el.getName();
-					if (name != null && !name.equals("")) {
-						if (circuit.hasName(name)) {
-							info.setForeground(Color.red);
-							info.setText("Paste will result in elements with duplicate names");
-							return false;
+						// check for duplicate jump start names
+						// also save all jump start names in pasted circuit
+						Set<String> jsnames = new HashSet<String>();
+						for (Element el : from.getElements()) {
+							if (el instanceof JumpStart) {
+								String name = el.getName();
+								jsnames.add(name);
+								if (circuit.getJumpStart(name) != null) {
+									info.setForeground(Color.red);
+									info.setText("Paste will result in duplicate named wires");
+									return false;
+								}
+							}
 						}
-					}
-				}
 
-				// check for duplicate jump start names
-				// also save all jump start names in pasted circuit
-				Set<String> jsnames = new HashSet<String>();
-				for (Element el : from.getElements()) {
-					if (el instanceof JumpStart) {
-						String name = el.getName();
-						jsnames.add(name);
-						if (circuit.getJumpStart(name) != null) {
-							info.setForeground(Color.red);
-							info.setText("Paste will result in duplicate named wires");
-							return false;
+						// make sure there are no jump ends without a matching jump start
+						for (Element el : from.getElements()) {
+							if (el instanceof JumpEnd) {
+								String name = el.getName();
+								if (!jsnames.contains(name) && circuit.getJumpStart(name) == null) {
+									info.setForeground(Color.red);
+									info.setText("Paste will result in wire end(s) with no source");
+									return false;
+								}
+							}
 						}
-					}
-				}
 
-				// make sure there are no jump ends without a matching jump start
-				for (Element el : from.getElements()) {
-					if (el instanceof JumpEnd) {
-						String name = el.getName();
-						if (!jsnames.contains(name) && circuit.getJumpStart(name) == null) {
-							info.setForeground(Color.red);
-							info.setText("Paste will result in wire end(s) with no source");
-							return false;
+						// add names to circuit name list
+						for (Element el : from.getElements()) {
+							String name = el.getName();
+							if (name != null && !name.equals(""))
+								circuit.addName(name);
 						}
-					}
-				}
 
-				// add names to circuit name list
-				for (Element el : from.getElements()) {
-					String name = el.getName();
-					if (name != null && !name.equals(""))
-						circuit.addName(name);
-				}
-
-				// initialize
-				clearSelected();
-				Point pos = getMousePosition();
-				if (pos == null)
-					return false;
-				x = pos.x;
-				y = pos.y;
-
-				// first copy all but wires and wire ends
-				for (Element el : from.getElements()) {
-					if (el instanceof Wire || el instanceof WireEnd) 
-						continue;
-					Element cel = el.copy();
-					cel.fixPosition();
-					cel.move(x,y);
-					circuit.addElement(cel);
-					selected.add(cel);
-					cel.setHighlight(true);
-
-					// if a jump start, add name to start list
-					if (cel instanceof JumpStart) {
-						JumpStart j = (JumpStart)cel;
-						circuit.addJumpStart(j.getName(),j);
-					}
-				}
-
-				// now copy all wire ends, checking for those attached to puts,
-				// create set of all new wire ends for net partitioning later
-				LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
-				for (Element el : from.getElements()) {
-					if (!(el instanceof WireEnd))
-						continue;
-					WireEnd oldEnd = (WireEnd)el;
-					WireEnd newEnd = (WireEnd)(el.copy());
-					newEnd.fixPosition();
-					newEnd.move(x,y);
-					circuit.addElement(newEnd);
-					ends.add(newEnd);
-					if (oldEnd.isAttached()) {
-						Put newPut = oldEnd.getPut().getCopy();
-						newEnd.setPut(newPut);
-						newPut.setAttached(newEnd);
-					}
-					else {
-						selected.add(newEnd);
-						newEnd.setHighlight(true);
-					}
-				}
-
-				// add wires
-				for (Element el : from.getElements()) {
-					if (!(el instanceof Wire))
-						continue;
-					Wire wire = (Wire)el;
-					WireEnd end1 = wire.getEnd();
-					WireEnd end2 = wire.getOtherEnd(end1);
-
-					// create new wire and add to new ends
-					Wire newWire = new Wire(end1.getCopy(),end2.getCopy());
-					end1.getCopy().addWire(newWire);
-					end2.getCopy().addWire(newWire);
-					circuit.addElement(newWire);
-					selected.add(newWire);
-				}
-
-				// partition ends into wire nets
-				Util.partition(circuit);
-
-
-				// set circuit elements are now in
-				for (Element el : circuit.getElements()) {
-					el.setCircuit(circuit);
-				}
-
-				// indicate that circuit has changed
-				markChanged();
-				return true;
-			} // end of paste method
-
-			/**
-			 * Reset highlights of elements in selected set, then clear selected set.
-			 */
-			private void clearSelected() {
-
-				for (Element el : selected) {
-					el.setHighlight(false);
-				}
-				selected.clear();
-			} // end of clearSelected method
-
-			/**
-			 * Select all elements currently in the circuit, except attached wire ends.
-			 */
-			private void doSelectAll() {
-
-				if (circuit.getElements().size() == 0)
-					return;
-				clearSelected();
-				selRect = null;
-				for (Element el : circuit.getElements()) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
-						if (end.isAttached())
-							continue;
-					}
-					selected.add(el);
-					el.setHighlight(true);
-					if (el instanceof Wire)
-						continue;
-					if (selRect == null) {
-						selRect = new Rectangle(el.getRect());
-					}
-					else {
-						selRect.add(el.getRect());
-					}
-				}
-				if (selRect != null)
-					setState(State.selected);
-				repaint();
-			} // end of doSelectAll method
-
-			/**
-			 * Change an element (if it can change).
-			 */
-			private void doModify() {
-
-				// get the single item in the selected set
-				Element el = (Element)(selected.toArray()[0]);
-
-				// if it is a subcircuit...
-				if (el instanceof SubCircuit) {
-
-					// get circuit and set up editor for it
-					SubCircuit sub = (SubCircuit)el;
-					Circuit subcirc = sub.getSubCircuit();
-					String tabName = sub.getName() + " in " + circuit.getName();
-					for (int e=0; e<tabbedParent.getTabCount(); e+=1) {
-						if (tabName.equals(tabbedParent.getTitleAt(e))) {
-							JOptionPane.showMessageDialog(getTopLevelAncestor(),
-									tabName + " is already being editted", "Error",
-									JOptionPane.ERROR_MESSAGE);
-							clearSelected();
-							setState(State.idle);
-							repaint();
-							return;
-						}
-					}
-					subcirc.setImported(sub);
-					Editor ed = new Editor(tabbedParent,subcirc,sub.getName(),clipboard);
-					Dimension all = subcirc.getBounds().getSize();
-					ed.setCircuitSize(all);
-					subcirc.setEditor(ed);
-
-					// set up import menu
-					for (Component edit : tabbedParent.getComponents()) {
-						if (!(edit instanceof Editor))
-							continue;
-						Editor otherEditor = (Editor)edit;
-						if (!otherEditor.getCircuit().isImported())
-							ed.addToImportMenu(otherEditor.getCircuit());
-					}
-
-					// add to tabbed pane
-					tabbedParent.add(tabName,ed);
-					tabbedParent.setSelectedComponent(ed);
-
-					// disable this editor while subcircuit it being editted
-					enabled = false;
-					editable.setText("editting is disabled while a subcircuit is being modified");
-				}
-
-				// otherwise element will change itself
-				else {
-					boolean mustReplace = el.change(this.getGraphics(), this, x, y);
-
-					// if size has changed, force user to reposition
-					if (mustReplace) {
+						// initialize
 						clearSelected();
-						selected.add(el);
-						el.setHighlight(true);
-						setState(State.placing);
-						repaint();
-						return;
-					}
-				}
-
-				// finish up
-				clearSelected();
-				setState(State.idle);
-				repaint();
-			} // end of doModify method
-
-			/**
-			 * Put a probe on a wire.
-			 */
-			private void doProbe() {
-
-				// get the single item in the selected set
-				Wire wire = (Wire)(selected.toArray()[0]);
-
-				// remove if wire has a probe, add if not
-				if (wire.hasProbe()) {
-					wire.removeProbe();
-				}
-				else {
-					wire.attachProbe(null);
-				}
-
-				// clean up
-				markChanged();
-				clearSelected();
-				setState(State.idle);
-				repaint();
-			} // end of doProbe method
-
-			/**
-			 * Change the propagation delay or access time of an element.
-			 */
-			private void doTiming() {
-
-				// get the single item in the selected set
-				Element el = (Element)(selected.toArray()[0]);
-
-				// change its timing info
-				el.changeTiming(this, x, y);
-
-				// clean up
-				clearSelected();
-				setState(State.idle);
-				repaint();
-			} // end of doTiming method
-
-			/**
-			 * Remove any wire end that has degree 2 and is co-linear
-			 * (horizontally or vertically) with opposite ends, or that
-			 * has degree 1, not attached and is in the same place as its other end.
-			 */
-			private void removeCoLinear() {
-
-				// get all editable wire ends
-				Set<WireEnd> ends = new HashSet<WireEnd>();
-				for (Element el : circuit.getElements()) {
-					if (!(el instanceof WireEnd))
-						continue;
-					if (el.isUneditable())
-						continue;
-					ends.add((WireEnd)el);
-				}
-
-				// check each wire end
-				for (WireEnd end : ends) {
-
-					// check degree 1
-					if (end.degree() == 1) {
-						Object [] wires = end.getWires().toArray();
-						Wire wire = (Wire)wires[0];
-						WireEnd otherEnd = wire.getOtherEnd(end);
-						if (end.isAttached() || !otherEnd.isAttached() || !end.intersects(otherEnd))
-							continue;
-						wire.remove(circuit);
-					}
-
-					// check degree 2
-					else if (end.degree() == 2) {
-
-						// must be co-linear
-						boolean colinear = false;
-						Object [] wires = end.getWires().toArray();
-						Wire wire0 = (Wire)wires[0];
-						Wire wire1 = (Wire)wires[1];
-						int x0 = wire0.getOtherEnd(end).getX();
-						int x1 = end.getX();
-						int x2 = wire1.getOtherEnd(end).getX();
-						if (x0 == x1 && x1 == x2) {
-							colinear = true;
-						}
-						int y0 = wire0.getOtherEnd(end).getY();
-						int y1 = end.getY();
-						int y2 = wire1.getOtherEnd(end).getY();
-						if (y0 == y1 && y1 == y2) {
-							colinear = true;
-						}
-						if (!colinear)
-							continue;
-
-						// create new wire
-						WireNet net = end.getNet();
-						WireEnd end0 = wire0.getOtherEnd(end);
-						WireEnd end1 = wire1.getOtherEnd(end);
-						Wire newWire = new Wire(end0,end1);
-						end0.addWire(newWire);
-						end1.addWire(newWire);
-						net.add(newWire);
-						newWire.setNet(net);
-						circuit.addElement(newWire);
-
-						// delete wire end and old wires
-						net.remove(end);
-						net.remove(wire0);
-						net.remove(wire1);
-						end.remove(circuit);
-					}
-				}
-
-			} // end of removeCoLinear method
-
-			/**
-			 * Set up new element if editor is enabled.
-			 * Usually pops up dialog to enter characteristics.
-			 * If not cancelled, then adds it to the circuit and gets ready
-			 * to place it.
-			 * 
-			 * @param item The element to set up.
-			 * @param fromToolBar True if toolbar button selected, false if from menu.
-			 */
-			private void setup(Element item, boolean fromToolBar) {
-
-				// if disabled, do nothing
-				if (!enabled)
-					return;
-
-				// if in the middle of an edit, do nothing
-				if (currentState != State.idle) {
-					return;
-				}
-
-				// can't put an input or output pin in an existing subcircuit
-				if (circuit.isImported()) {
-					if (item instanceof InputPin) {
-						JOptionPane.showMessageDialog(JLSInfo.frame,
-						"Can't add an input pin to a subcircuit");
-						return;
-					}
-					else if (item instanceof OutputPin) {
-						JOptionPane.showMessageDialog(JLSInfo.frame,
-						"Can't add an output pin to a subcircuit");
-						return;
-					}
-				}
-
-				// clear selected if there is any, and turn off highlights
-				for (Element el : selected) {
-					el.setHighlight(false);
-				}
-				selected.clear();
-
-				// decide position for create dialog
-				int dx = x;
-				int dy = y;
-				if (fromToolBar) {
-					dx = tabbedParent.getSize().width/2;
-					dy = tabbedParent.getSize().height/4;
-				}
-
-				// if not cancelled...
-				Point view = pane.getViewport().getViewPosition();
-				if (item.setup(graphics,this,dx+view.x,dy+view.y)) {
-
-					// put into circuit
-					Point pos = getMousePosition();
-					if (pos == null) {
-
-						// add to circuit and selected set
-						circuit.addElement(item);
-						selected.add(item);
-						item.setHighlight(true);
-
-						// get ready to place it
-						setState(State.chosen);
-					}
-					else {
+						Point pos = getMousePosition();
+						if (pos == null)
+							return false;
 						x = pos.x;
 						y = pos.y;
-						item.savePosition();
 
-						// add to circuit and selected set
-						circuit.addElement(item);
-						selected.add(item);
-						item.setHighlight(true);
+						// first copy all but wires and wire ends
+						for (Element el : from.getElements()) {
+							if (el instanceof Wire || el instanceof WireEnd) 
+								continue;
+							Element cel = el.copy();
+							cel.fixPosition();
+							cel.move(x,y);
+							circuit.addElement(cel);
+							selected.add(cel);
+							cel.setHighlight(true);
 
-						// place it
-						setState(State.placing);
+							// if a jump start, add name to start list
+							if (cel instanceof JumpStart) {
+								JumpStart j = (JumpStart)cel;
+								circuit.addJumpStart(j.getName(),j);
+							}
+						}
+
+						// now copy all wire ends, checking for those attached to puts,
+						// create set of all new wire ends for net partitioning later
+						LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
+						for (Element el : from.getElements()) {
+							if (!(el instanceof WireEnd))
+								continue;
+							WireEnd oldEnd = (WireEnd)el;
+							WireEnd newEnd = (WireEnd)(el.copy());
+							newEnd.fixPosition();
+							newEnd.move(x,y);
+							circuit.addElement(newEnd);
+							ends.add(newEnd);
+							if (oldEnd.isAttached()) {
+								Put newPut = oldEnd.getPut().getCopy();
+								newEnd.setPut(newPut);
+								newPut.setAttached(newEnd);
+							}
+							else {
+								selected.add(newEnd);
+								newEnd.setHighlight(true);
+							}
+						}
+
+						// add wires
+						for (Element el : from.getElements()) {
+							if (!(el instanceof Wire))
+								continue;
+							Wire wire = (Wire)el;
+							WireEnd end1 = wire.getEnd();
+							WireEnd end2 = wire.getOtherEnd(end1);
+
+							// create new wire and add to new ends
+							Wire newWire = new Wire(end1.getCopy(),end2.getCopy());
+							end1.getCopy().addWire(newWire);
+							end2.getCopy().addWire(newWire);
+							circuit.addElement(newWire);
+							selected.add(newWire);
+						}
+
+						// partition ends into wire nets
+						Util.partition(circuit);
+
+
+						// set circuit elements are now in
+						for (Element el : circuit.getElements()) {
+							el.setCircuit(circuit);
+						}
+
+						// indicate that circuit has changed
+						markChanged();
+						return true;
+					} // end of paste method
+
+					/**
+					 * Reset highlights of elements in selected set, then clear selected set.
+					 */
+					private void clearSelected() {
+
+						for (Element el : selected) {
+							el.setHighlight(false);
+						}
+						selected.clear();
+					} // end of clearSelected method
+
+					/**
+					 * Select all elements currently in the circuit, except attached wire ends.
+					 */
+					private void doSelectAll() {
+
+						if (circuit.getElements().size() == 0)
+							return;
+						clearSelected();
+						selRect = null;
+						for (Element el : circuit.getElements()) {
+							if (el instanceof WireEnd) {
+								WireEnd end = (WireEnd)el;
+								if (end.isAttached())
+									continue;
+							}
+							selected.add(el);
+							el.setHighlight(true);
+							if (el instanceof Wire)
+								continue;
+							if (selRect == null) {
+								selRect = new Rectangle(el.getRect());
+							}
+							else {
+								selRect.add(el.getRect());
+							}
+						}
+						if (selRect != null)
+							setState(State.selected);
 						repaint();
-					}
-				}
-			} // end of setup method
+					} // end of doSelectAll method
 
-			/**
-			 * Import a copy of a subcircuit.
-			 * 
-			 * @param name The name of the subcircuit.
-			 */
-			public void doImport(String name) {
+					/**
+					 * Change an element (if it can change).
+					 */
+					private void doModify() {
 
-				// make a set of all elements except attached wire ends from subcircuit
-				Circuit source = circMap.get(name);
-				Set<Element> elements = new HashSet<Element>();
-				for (Element el : source.getElements()) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
-						if (end.isAttached())
-							continue;
-					}
-					elements.add(el);
-				}
+						// get the single item in the selected set
+						Element el = (Element)(selected.toArray()[0]);
 
-				// copy elements to new circuit
-				Circuit newCopy = new Circuit(name);
-				Util.copy(elements,newCopy);
-				Util.partition(newCopy);
-				for (Element el : newCopy.getElements()) {
-					el.setCircuit(newCopy);
-				}
+						// if it is a subcircuit...
+						if (el instanceof SubCircuit) {
 
-				// add jumpstarts to list
-				updateJumpStarts(newCopy);
+							// get circuit and set up editor for it
+							SubCircuit sub = (SubCircuit)el;
+							Circuit subcirc = sub.getSubCircuit();
+							String tabName = sub.getName() + " in " + circuit.getName();
+							for (int e=0; e<tabbedParent.getTabCount(); e+=1) {
+								if (tabName.equals(tabbedParent.getTitleAt(e))) {
+									JOptionPane.showMessageDialog(getTopLevelAncestor(),
+											tabName + " is already being editted", "Error",
+											JOptionPane.ERROR_MESSAGE);
+									clearSelected();
+									setState(State.idle);
+									repaint();
+									return;
+								}
+							}
+							subcirc.setImported(sub);
+							Editor ed = new Editor(tabbedParent,subcirc,sub.getName(),clipboard);
+							Dimension all = subcirc.getBounds().getSize();
+							ed.setCircuitSize(all);
+							subcirc.setEditor(ed);
 
-				finishImport(newCopy);
+							// set up import menu
+							for (Component edit : tabbedParent.getComponents()) {
+								if (!(edit instanceof Editor))
+									continue;
+								Editor otherEditor = (Editor)edit;
+								if (!otherEditor.getCircuit().isImported())
+									ed.addToImportMenu(otherEditor.getCircuit());
+							}
 
-			} // end of doImport method
+							// add to tabbed pane
+							tabbedParent.add(tabName,ed);
+							tabbedParent.setSelectedComponent(ed);
 
-			/**
-			 * Mark the editted circuit as changed, save a copy of
-			 * the circuit for undo, and checkpoint file if it is time.
-			 */
-			public void markChanged() {
+							// disable this editor while subcircuit it being editted
+							enabled = false;
+							editable.setText("editting is disabled while a subcircuit is being modified");
+						}
 
-				// mark the circuit
-				circuit.markChanged();
+						// otherwise element will change itself
+						else {
+							boolean mustReplace = el.change(this.getGraphics(), this, x, y);
 
-				// push a copy for undo
-				pushCopy();
+							// if size has changed, force user to reposition
+							if (mustReplace) {
+								clearSelected();
+								selected.add(el);
+								el.setHighlight(true);
+								setState(State.placing);
+								repaint();
+								return;
+							}
+						}
 
-				// clear redos
-				redos.clear();
+						// finish up
+						clearSelected();
+						setState(State.idle);
+						repaint();
+					} // end of doModify method
 
-				// save checkpoint file (if it is time)
-				check += 1;
-				if (check > JLSInfo.checkPointFreq) {
-					check = 1;
+					/**
+					 * Put a probe on a wire.
+					 */
+					private void doProbe() {
 
-					// get top level circuit
-					Circuit circ = circuit;
-					while (circ.isImported()) {
-						circ = circ.getSubElement().getCircuit();
-					}
+						// get the single item in the selected set
+						Wire wire = (Wire)(selected.toArray()[0]);
 
-					// create checkpoint file
-
-					String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-					ZipOutputStream out = null;
-					try {
-						out = new ZipOutputStream(new FileOutputStream(fileName));
-						out.putNextEntry(new ZipEntry("JLSCheckpoint"));
-					}
-					catch (IOException ex) {
-						return;
-					}
-					PrintWriter output = new PrintWriter(out);
-
-					// save the circuit
-					boolean changed = circuit.hasChanged();
-					circuit.save(output);
-					output.close();
-					if (changed)
-						circuit.markChanged();
-				}
-
-			} // end of markChanged method
-
-			/**
-			 * Push a copy of the circuit being edited on the undo stack.
-			 */
-			public void pushCopy() {
-
-				// see if undo stack is full
-				if (undos.size() > JLSInfo.undoStackDepth) {
-
-					// delete bottom of stack
-					undos.remove(0);
-				}
-
-				// make a set of all elements except attached wire ends
-				Set<Element> elements = new HashSet<Element>();
-				for (Element el : circuit.getElements()) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
-						if (end.isAttached())
-							continue;
-					}
-					elements.add(el);
-				}
-
-				// copy elements to new circuit
-				Circuit newCopy = new Circuit(circuit.getName());
-				Util.copy(elements,newCopy);
-				newCopy.setDirectory(circuit.getDirectory());
-
-				// save for undo
-				undos.push(newCopy);
-			} // end of pushCopy method
-
-			/**
-			 * Do undo.
-			 */
-			public void undo() {
-
-				// no undo left if stack only has a copy of the original circuit
-				if (undos.size() == 1) {
-					return;
-				}
-
-				// pop copy of current circuit and put on redo stack
-				Circuit temp = undos.pop();
-				redos.push(temp);
-
-				// if nothing left, quit
-				if (undos.isEmpty()) {
-					return;
-				}
-
-				// make a copy of the pushed circuit
-				Editor ed = circuit.getEditor();
-				temp = undos.peek();
-				finishDo(temp);
-				circuit.setEditor(ed);
-			} // end of undo method
-
-			/**
-			 * Do redo.
-			 */
-			public void redo() {
-
-				// if nothing on the redo stack, then there is nothing to do
-				if (redos.isEmpty()) {
-					return;
-				}
-
-				// pop circuit from redo stack and push on undo stack
-				Circuit temp = redos.pop();
-				undos.push(temp);
-
-				// make a copy of the circuit
-				Editor ed = circuit.getEditor();
-				finishDo(temp);
-				circuit.setEditor(ed);
-			} // end of redo method
-
-			/**
-			 * Finish up undo or redo.
-			 * Used by undo and redo to make a copy of the circuit.
-			 * 
-			 * @param temp The circuit being copied.
-			 */
-			private void finishDo(Circuit temp) {
-
-				// start a new copy of the circuit
-				Circuit newCopy = new Circuit(circuit.getName());
-
-				// create set of all elements except attached wire ends
-				Set<Element> elements = new HashSet<Element>();
-				for (Element el : temp.getElements()) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
-						if (end.isAttached())
-							continue;
-					}
-					elements.add(el);
-				}
-
-				// copy them to the new circuit
-				Util.copy(elements,newCopy);
-
-				// partition wires and wire ends into wire nets
-				Util.partition(newCopy);
-
-				// set their circuit to the new circuit
-				for (Element el : newCopy.getElements()) {
-					el.setCircuit(newCopy);
-				}
-
-				// link into subcircuit if it is imported
-				SubCircuit sub = circuit.getSubElement();
-				newCopy.setImported(sub);
-				if (sub != null) {
-					sub.setSubCircuit(newCopy);
-					sub.remapPins(newCopy);
-				}
-
-				// make it be the current circuit
-				circuit = newCopy;
-				circuit.setDirectory(temp.getDirectory());
-				circuit.markChanged();
-
-				// update jump start list
-				updateJumpStarts(circuit);
-				
-				// update names used list
-				updateNamesUsed(circuit);
-				
-				// if not imported, point simulator at it
-				if (!circuit.isImported()) {
-					JLSInfo.sim.setCircuit(circuit);
-				}
-
-				else {
-
-					// propagate tri-state to outputs
-					for (Element el : circuit.getElements()) {
-						if (!(el instanceof OutputPin))
-							continue;
-						OutputPin pin = (OutputPin)el;
-						SubCircuit subc = pin.getCircuit().getSubElement();
-						Output put = (Output)subc.getPut(pin.getName());
-						Input input = pin.getInput("input");
-						if (!input.isAttached()) {
-							put.setTriState(false);
+						// remove if wire has a probe, add if not
+						if (wire.hasProbe()) {
+							wire.removeProbe();
 						}
 						else {
-							put.setTriState(input.getWireEnd().isTriState());
+							wire.attachProbe(null);
 						}
-					}
-				}
-			} // end of finishDo method
 
-			/**
-			 * Find all jump start elements and add names to the jumpstart list in this circuit.
-			 * Do the same for all subcircuits.
-			 * 
-			 * @param circ The circuit to process.
-			 */
-			private void updateJumpStarts(Circuit circ) {
+						// clean up
+						markChanged();
+						clearSelected();
+						setState(State.idle);
+						repaint();
+					} // end of doProbe method
 
-				for (Element el : circ.getElements()) {
-					if (el instanceof JumpStart) {
-						JumpStart j = (JumpStart)el;
-						circ.addJumpStart(j.getName(),j);
-					}
-					else if (el instanceof SubCircuit) {
-						SubCircuit sc = (SubCircuit)el;
-						updateJumpStarts(sc.getSubCircuit());
-					}
-				}
-			} // end of updateJumpStarts method
-			
-			/**
-			 * Find all named elements and add names to the namesUsed list in this circuit.
-			 * Do the same for all subcircuits.
-			 * 
-			 * @param The circuit to process.
-			 */
-			private void updateNamesUsed(Circuit circ) {
+					/**
+					 * Change the propagation delay or access time of an element.
+					 */
+					private void doTiming() {
 
-				for (Element el : circ.getElements()) {
-					if (el.getName() != null) {
-						String name = el.getName();
-						circ.addName(name);
-					}
-					else if (el instanceof SubCircuit) {
-						SubCircuit sc = (SubCircuit)el;
-						updateNamesUsed(sc.getSubCircuit());
-					}
-				}
-			} // end of updateJumpStarts method
+						// get the single item in the selected set
+						Element el = (Element)(selected.toArray()[0]);
 
-		} // end of EditWindow class
+						// change its timing info
+						el.changeTiming(this, x, y);
 
-} // end of SimpleEditor class
+						// clean up
+						clearSelected();
+						setState(State.idle);
+						repaint();
+					} // end of doTiming method
+
+					/**
+					 * Remove any wire end that has degree 2 and is co-linear
+					 * (horizontally or vertically) with opposite ends, or that
+					 * has degree 1, not attached and is in the same place as its other end.
+					 */
+					private void removeCoLinear() {
+
+						// get all editable wire ends
+						Set<WireEnd> ends = new HashSet<WireEnd>();
+						for (Element el : circuit.getElements()) {
+							if (!(el instanceof WireEnd))
+								continue;
+							if (el.isUneditable())
+								continue;
+							ends.add((WireEnd)el);
+						}
+
+						// check each wire end
+						for (WireEnd end : ends) {
+
+							// check degree 1
+							if (end.degree() == 1) {
+								Object [] wires = end.getWires().toArray();
+								Wire wire = (Wire)wires[0];
+								WireEnd otherEnd = wire.getOtherEnd(end);
+								if (end.isAttached() || !otherEnd.isAttached() || !end.intersects(otherEnd))
+									continue;
+								wire.remove(circuit);
+							}
+
+							// check degree 2
+							else if (end.degree() == 2) {
+
+								// must be co-linear
+								boolean colinear = false;
+								Object [] wires = end.getWires().toArray();
+								Wire wire0 = (Wire)wires[0];
+								Wire wire1 = (Wire)wires[1];
+								int x0 = wire0.getOtherEnd(end).getX();
+								int x1 = end.getX();
+								int x2 = wire1.getOtherEnd(end).getX();
+								if (x0 == x1 && x1 == x2) {
+									colinear = true;
+								}
+								int y0 = wire0.getOtherEnd(end).getY();
+								int y1 = end.getY();
+								int y2 = wire1.getOtherEnd(end).getY();
+								if (y0 == y1 && y1 == y2) {
+									colinear = true;
+								}
+								if (!colinear)
+									continue;
+
+								// create new wire
+								WireNet net = end.getNet();
+								WireEnd end0 = wire0.getOtherEnd(end);
+								WireEnd end1 = wire1.getOtherEnd(end);
+								Wire newWire = new Wire(end0,end1);
+								end0.addWire(newWire);
+								end1.addWire(newWire);
+								net.add(newWire);
+								newWire.setNet(net);
+								circuit.addElement(newWire);
+
+								// delete wire end and old wires
+								net.remove(end);
+								net.remove(wire0);
+								net.remove(wire1);
+								end.remove(circuit);
+							}
+						}
+
+					} // end of removeCoLinear method
+
+					/**
+					 * Set up new element if editor is enabled.
+					 * Usually pops up dialog to enter characteristics.
+					 * If not cancelled, then adds it to the circuit and gets ready
+					 * to place it.
+					 * 
+					 * @param item The element to set up.
+					 * @param fromToolBar True if toolbar button selected, false if from menu.
+					 */
+					private void setup(Element item, boolean fromToolBar) {
+
+						// if disabled, do nothing
+						if (!enabled)
+							return;
+
+						// if in the middle of an edit, do nothing
+						if (currentState != State.idle) {
+							return;
+						}
+
+						// can't put an input or output pin in an existing subcircuit
+						if (circuit.isImported()) {
+							if (item instanceof InputPin) {
+								JOptionPane.showMessageDialog(JLSInfo.frame,
+										"Can't add an input pin to a subcircuit");
+								return;
+							}
+							else if (item instanceof OutputPin) {
+								JOptionPane.showMessageDialog(JLSInfo.frame,
+										"Can't add an output pin to a subcircuit");
+								return;
+							}
+						}
+
+						// clear selected if there is any, and turn off highlights
+						for (Element el : selected) {
+							el.setHighlight(false);
+						}
+						selected.clear();
+
+						// decide position for create dialog
+						int dx = x;
+						int dy = y;
+						if (fromToolBar) {
+							dx = tabbedParent.getSize().width/2;
+							dy = tabbedParent.getSize().height/4;
+						}
+
+						// if not cancelled...
+						Point view = pane.getViewport().getViewPosition();
+						if (item.setup(graphics,this,dx+view.x,dy+view.y)) {
+
+							// put into circuit
+							Point pos = getMousePosition();
+							if (pos == null) {
+
+								// add to circuit and selected set
+								circuit.addElement(item);
+								selected.add(item);
+								item.setHighlight(true);
+
+								// get ready to place it
+								setState(State.chosen);
+							}
+							else {
+								x = pos.x;
+								y = pos.y;
+								item.savePosition();
+
+								// add to circuit and selected set
+								circuit.addElement(item);
+								selected.add(item);
+								item.setHighlight(true);
+
+								// place it
+								setState(State.placing);
+								repaint();
+							}
+						}
+					} // end of setup method
+
+					/**
+					 * Import a copy of a subcircuit.
+					 * 
+					 * @param name The name of the subcircuit.
+					 */
+					public void doImport(String name) {
+
+						// make a set of all elements except attached wire ends from subcircuit
+						Circuit source = circMap.get(name);
+						Set<Element> elements = new HashSet<Element>();
+						for (Element el : source.getElements()) {
+							if (el instanceof WireEnd) {
+								WireEnd end = (WireEnd)el;
+								if (end.isAttached())
+									continue;
+							}
+							elements.add(el);
+						}
+
+						// copy elements to new circuit
+						Circuit newCopy = new Circuit(name);
+						Util.copy(elements,newCopy);
+						Util.partition(newCopy);
+						for (Element el : newCopy.getElements()) {
+							el.setCircuit(newCopy);
+						}
+
+						// add jumpstarts to list
+						updateJumpStarts(newCopy);
+
+						finishImport(newCopy);
+
+					} // end of doImport method
+
+					/**
+					 * Mark the editted circuit as changed, save a copy of
+					 * the circuit for undo, and checkpoint file if it is time.
+					 */
+					public void markChanged() {
+
+						// mark the circuit
+						circuit.markChanged();
+
+						// push a copy for undo
+						pushCopy();
+
+						// clear redos
+						redos.clear();
+
+						// save checkpoint file (if it is time)
+						check += 1;
+						if (check > JLSInfo.checkPointFreq) {
+							check = 1;
+
+							// get top level circuit
+							Circuit circ = circuit;
+							while (circ.isImported()) {
+								circ = circ.getSubElement().getCircuit();
+							}
+
+							// create checkpoint file
+
+							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
+							ZipOutputStream out = null;
+							try {
+								out = new ZipOutputStream(new FileOutputStream(fileName));
+								out.putNextEntry(new ZipEntry("JLSCheckpoint"));
+							}
+							catch (IOException ex) {
+								return;
+							}
+							PrintWriter output = new PrintWriter(out);
+
+							// save the circuit
+							boolean changed = circuit.hasChanged();
+							circuit.save(output);
+							output.close();
+							if (changed)
+								circuit.markChanged();
+						}
+
+					} // end of markChanged method
+
+					/**
+					 * Push a copy of the circuit being edited on the undo stack.
+					 */
+					public void pushCopy() {
+
+						// see if undo stack is full
+						if (undos.size() > JLSInfo.undoStackDepth) {
+
+							// delete bottom of stack
+							undos.remove(0);
+						}
+
+						// make a set of all elements except attached wire ends
+						Set<Element> elements = new HashSet<Element>();
+						for (Element el : circuit.getElements()) {
+							if (el instanceof WireEnd) {
+								WireEnd end = (WireEnd)el;
+								if (end.isAttached())
+									continue;
+							}
+							elements.add(el);
+						}
+
+						// copy elements to new circuit
+						Circuit newCopy = new Circuit(circuit.getName());
+						Util.copy(elements,newCopy);
+						newCopy.setDirectory(circuit.getDirectory());
+
+						// save for undo
+						undos.push(newCopy);
+					} // end of pushCopy method
+
+					/**
+					 * Do undo.
+					 */
+					public void undo() {
+
+						// no undo left if stack only has a copy of the original circuit
+						if (undos.size() == 1) {
+							return;
+						}
+
+						// pop copy of current circuit and put on redo stack
+						Circuit temp = undos.pop();
+						redos.push(temp);
+
+						// if nothing left, quit
+						if (undos.isEmpty()) {
+							return;
+						}
+
+						// make a copy of the pushed circuit
+						Editor ed = circuit.getEditor();
+						temp = undos.peek();
+						finishDo(temp);
+						circuit.setEditor(ed);
+					} // end of undo method
+
+					/**
+					 * Do redo.
+					 */
+					public void redo() {
+
+						// if nothing on the redo stack, then there is nothing to do
+						if (redos.isEmpty()) {
+							return;
+						}
+
+						// pop circuit from redo stack and push on undo stack
+						Circuit temp = redos.pop();
+						undos.push(temp);
+
+						// make a copy of the circuit
+						Editor ed = circuit.getEditor();
+						finishDo(temp);
+						circuit.setEditor(ed);
+					} // end of redo method
+
+					/**
+					 * Finish up undo or redo.
+					 * Used by undo and redo to make a copy of the circuit.
+					 * 
+					 * @param temp The circuit being copied.
+					 */
+					private void finishDo(Circuit temp) {
+
+						// start a new copy of the circuit
+						Circuit newCopy = new Circuit(circuit.getName());
+
+						// create set of all elements except attached wire ends
+						Set<Element> elements = new HashSet<Element>();
+						for (Element el : temp.getElements()) {
+							if (el instanceof WireEnd) {
+								WireEnd end = (WireEnd)el;
+								if (end.isAttached())
+									continue;
+							}
+							elements.add(el);
+						}
+
+						// copy them to the new circuit
+						Util.copy(elements,newCopy);
+
+						// partition wires and wire ends into wire nets
+						Util.partition(newCopy);
+
+						// set their circuit to the new circuit
+						for (Element el : newCopy.getElements()) {
+							el.setCircuit(newCopy);
+						}
+
+						// link into subcircuit if it is imported
+						SubCircuit sub = circuit.getSubElement();
+						newCopy.setImported(sub);
+						if (sub != null) {
+							sub.setSubCircuit(newCopy);
+							sub.remapPins(newCopy);
+						}
+
+						// make it be the current circuit
+						circuit = newCopy;
+						circuit.setDirectory(temp.getDirectory());
+						circuit.markChanged();
+
+						// update jump start list
+						updateJumpStarts(circuit);
+
+						// update names used list
+						updateNamesUsed(circuit);
+
+						// if not imported, point simulator at it
+						if (!circuit.isImported()) {
+							JLSInfo.sim.setCircuit(circuit);
+						}
+
+						else {
+
+							// propagate tri-state to outputs
+							for (Element el : circuit.getElements()) {
+								if (!(el instanceof OutputPin))
+									continue;
+								OutputPin pin = (OutputPin)el;
+								SubCircuit subc = pin.getCircuit().getSubElement();
+								Output put = (Output)subc.getPut(pin.getName());
+								Input input = pin.getInput("input");
+								if (!input.isAttached()) {
+									put.setTriState(false);
+								}
+								else {
+									put.setTriState(input.getWireEnd().isTriState());
+								}
+							}
+						}
+					} // end of finishDo method
+
+					/**
+					 * Find all jump start elements and add names to the jumpstart list in this circuit.
+					 * Do the same for all subcircuits.
+					 * 
+					 * @param circ The circuit to process.
+					 */
+					private void updateJumpStarts(Circuit circ) {
+
+						for (Element el : circ.getElements()) {
+							if (el instanceof JumpStart) {
+								JumpStart j = (JumpStart)el;
+								circ.addJumpStart(j.getName(),j);
+							}
+							else if (el instanceof SubCircuit) {
+								SubCircuit sc = (SubCircuit)el;
+								updateJumpStarts(sc.getSubCircuit());
+							}
+						}
+					} // end of updateJumpStarts method
+
+					/**
+					 * Find all named elements and add names to the namesUsed list in this circuit.
+					 * Do the same for all subcircuits.
+					 * 
+					 * @param The circuit to process.
+					 */
+					private void updateNamesUsed(Circuit circ) {
+
+						for (Element el : circ.getElements()) {
+							if (el.getName() != null) {
+								String name = el.getName();
+								circ.addName(name);
+							}
+							else if (el instanceof SubCircuit) {
+								SubCircuit sc = (SubCircuit)el;
+								updateNamesUsed(sc.getSubCircuit());
+							}
+						}
+					} // end of updateJumpStarts method
+
+				} // end of EditWindow class
+
+			} // end of SimpleEditor class

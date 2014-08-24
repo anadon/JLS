@@ -1,6 +1,5 @@
 package jls.elem;
 
-<<<<<<< HEAD:src/jls/elem/State.java
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -44,19 +43,6 @@ import jls.BitSetUtils;
 import jls.JLSInfo;
 import jls.KeyPad;
 import jls.sim.Simulator;
-=======
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-import java.io.*;
-import java.util.*;
-
-import javax.swing.*;
-
-import jls.*;
-import jls.elem.*;
-import jls.sim.*;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/sm/State.java
 
 /**
  * A single state.
@@ -1687,13 +1673,8 @@ public class State {
 
 		// properties
 		private JButton close = new JButton("close window");
-<<<<<<< HEAD:src/jls/elem/State.java
 		private JList<Out> outList;
 		DefaultListModel<Out> model;
-=======
-		private JList outList;
-		DefaultListModel model;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/sm/State.java
 		private JButton add = new JButton("add new output");
 		private JButton delete = new JButton("delete selected output");
 		private JTextField signalField = new JTextField(10);

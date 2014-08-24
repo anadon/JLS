@@ -1,4 +1,3 @@
-<<<<<<< HEAD:src/jls/elem/StateMachine.java
 package jls.elem;
 
 import java.awt.BorderLayout;
@@ -59,20 +58,6 @@ import jls.Circuit;
 import jls.JLSInfo;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
-=======
-package jls.elem.sm;
-
-import jls.*;
-import jls.elem.*;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.PrintWriter;
-import javax.swing.*;
-
-import java.awt.print.*;
-import java.util.*;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/sm/StateMachine.java
 
 /**
  * The state machine editor and simulation code.

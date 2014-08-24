@@ -1,4 +1,3 @@
-<<<<<<< HEAD:src/jls/elem/TruthTable.java
 package jls.elem;
 
 import java.awt.BorderLayout;
@@ -41,22 +40,6 @@ import jls.JLSInfo;
 import jls.Util;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
-=======
-package jls.elem.bool;
-
-import jls.*;
-import jls.elem.*;
-import jls.sim.SimEvent;
-import jls.sim.Simulator;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.io.PrintWriter;
-import javax.swing.*;
-
-import java.util.*;
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a:src/jls/elem/bool/TruthTable.java
 
 /**
  * Logic specified via a truth table.

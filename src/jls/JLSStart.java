@@ -23,9 +23,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.help.CSH;
@@ -125,7 +130,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.exit(1);
 			}
 			
-			Scanner input = staticGetScannerForFile(startFile);
+			Scanner input = getScannerForFile(startFile);
 
 			// create new circuit
 			Circuit circ = new Circuit(cname);
@@ -1232,81 +1237,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 		return false;
 	} // end of duplicateName method
 
-	/**
-	 * 
-	 * @param filePath
-	 * @return
-	 */
-	private Scanner getScannerForFile(String filePath){
-		
-		File file = null;
-		String name;
-		
-		if (filePath.endsWith(".jls~")) {
-			name = filePath.replaceAll("\\.jls~$", "");
-		} else {
-			name = filePath.replaceAll("\\.jls$", "");
-		}
-		String cname = Util.isValidFileName(name);
-		if (cname == null) {
-			JOptionPane
-					.showMessageDialog(
-							this,
-							name
-									+ " is not a valid circuit file name.\n It must start with a letter and contain letters, digits and underscores.",
-							"Error", JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-		if (duplicateName(cname))
-			return null;
-
-		// open file and create scanner
-		InputStream in = null;
-		file = new File(filePath);
-		
-
-		//See if the .jls file is in xz format
-		try{
-			in = new SeekableXZInputStream(new SeekableFileInputStream(file));
-		}catch(Throwable e){
-			//not an xz file
-			System.out.println("Not a XZ compressed file, trying to open as zip");
-		}
-		
-		if(in == null){
-			try {
-				// see if the .jls file is in zip format
-				FileInputStream temp2 = new FileInputStream(file);
-				in = new ZipInputStream(temp2);
-				
-				if (((ZipInputStream)in).getNextEntry() == null) {
-
-					// if not, then not a zip file
-					in.close();
-					in = null;
-				}
-			} catch (IOException ex) {
-				//not a zip file
-				System.out.println("Not a zip compressed file, trying to open as "
-						+ "plain text");
-			}
-		}
-		
-		if(in == null){
-			try{
-				//final try -- plain text
-				in = new FileInputStream(file);
-			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(this, "Can't read from " + filePath,
-						"Error", JOptionPane.ERROR_MESSAGE);
-				return null;
-			}
-		}
-		
-		return new Scanner(in);
-	}
 	
-	private static Scanner staticGetScannerForFile(String filePath){
+	
+	private static Scanner getScannerForFile(String filePath){
 		
 		File file = null;
 		String name;
@@ -1340,8 +1273,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		if(in == null){
 			try {
 				// see if the .jls file is in zip format
-				FileInputStream temp2 = new FileInputStream(file);
-				in = new ZipInputStream(temp2);
+				in = new ZipInputStream(new FileInputStream(file));
 				
 				if (((ZipInputStream)in).getNextEntry() == null) {
 

@@ -1,13 +1,20 @@
 package jls.elem;
 
-import jls.*;
-import jls.elem.Group.Entry;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
-import javax.swing.*;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import jls.Circuit;
+import jls.JLSInfo;
+import jls.sim.Simulator;
 
 /**
  * Bind multiple input wires (or bundles) into a single bundle.

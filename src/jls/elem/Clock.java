@@ -2,10 +2,12 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.BitSet;
+
 import javax.swing.*;
 
 /**
@@ -367,6 +369,7 @@ public class Clock extends LogicElement {
 	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
 	 * Used by all simple gates (nand, and, nor, or, xor, not).
 	 */
+	@SuppressWarnings("serial")
 	private class ClockCreate extends JDialog implements ActionListener {
 		
 		// properties

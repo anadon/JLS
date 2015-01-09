@@ -1,16 +1,42 @@
 package jls.elem;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.Vector;
 
-import javax.swing.*;
-import jls.*;
-import jls.elem.Gate.Orientation;
-import jls.sim.*;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
+
+import jls.BitSetUtils;
+import jls.Circuit;
+import jls.JLSInfo;
+import jls.KeyPad;
+import jls.Util;
+import jls.sim.Simulator;
 
 /**
  * Display an input value on the circuit editor screen.
@@ -310,6 +336,7 @@ public class Display extends LogicElement {
 	/**
 	 * Dialog box to set inputs and bits.
 	 */
+	@SuppressWarnings("serial")
 	protected class DispCreate extends JDialog implements ActionListener {
 		
 		// properties

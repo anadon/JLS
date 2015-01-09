@@ -2,9 +2,11 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+
 import javax.swing.*;
 
 import java.io.*;
@@ -245,7 +247,6 @@ public class Adder extends LogicElement {
 		else if(orientation == JLSInfo.Orientation.UP)
 		{
 			int ascent = fm.getAscent();
-			int descent = fm.getDescent();
 			Rectangle2D t = fm.getStringBounds("A",g);
 			g.drawString("A", (int)(x+s-t.getWidth()/2), (int)(y+height-t.getHeight())+ascent);
 			t = fm.getStringBounds("B",g);
@@ -259,7 +260,6 @@ public class Adder extends LogicElement {
 			g.setFont(nf);
 			fm = g.getFontMetrics();
 			ascent = fm.getAscent();
-			descent = fm.getDescent();
 			t = fm.getStringBounds("Cin",g);
 			g.drawString("Cin", x+5, y+height/2+ascent);
 			t = fm.getStringBounds("Cout",g);
@@ -511,6 +511,7 @@ public class Adder extends LogicElement {
 	/**
 	 * Dialog box to set bits.
 	 */
+	@SuppressWarnings("serial")
 	private class AdderCreate extends JDialog implements ActionListener {
 		
 		// properties

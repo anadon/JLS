@@ -5,6 +5,7 @@ import jls.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+
 import javax.swing.*;
 
 import java.util.*;
@@ -274,6 +275,7 @@ public abstract class Group extends LogicElement {
 	/**
 	 * Dialog box to set bits.
 	 */
+	@SuppressWarnings("serial")
 	protected class GroupCreate extends JDialog implements ActionListener {
 		
 		// properties
@@ -456,12 +458,13 @@ public abstract class Group extends LogicElement {
 	/**
 	 * Get bit group info.
 	 */
+	@SuppressWarnings("serial")
 	protected class GetRanges extends JDialog implements ActionListener {
 		
 		// properties
-		private DefaultListModel pick = new DefaultListModel();
+		private DefaultListModel<Entry> pick = new DefaultListModel<Entry>();
 		private JList choose = new JList(pick); // LeftList?
-		private DefaultListModel picked = new DefaultListModel();
+		private DefaultListModel<Entry> picked = new DefaultListModel<Entry>();
 		private JList chosen = new JList(picked);
 		private JButton add = new JButton(">>");
 		private JButton remove = new JButton("<<");

@@ -1,15 +1,42 @@
 package jls.elem;
 
-import jls.*;
-import jls.elem.Gate.Orientation;
-import jls.sim.*;
-import java.awt.*;
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.Rectangle2D;
+import java.io.PrintWriter;
+import java.util.BitSet;
 
-import java.awt.event.*;
-import java.awt.geom.*;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
+
+import jls.BitSetUtils;
+import jls.Circuit;
+import jls.JLSInfo;
+import jls.KeyPad;
+import jls.Util;
+import jls.sim.SimEvent;
+import jls.sim.Simulator;
 
 /**
  * n-input, 2^n-output decoder.
@@ -453,6 +480,7 @@ public class Decoder extends LogicElement {
 	/**
 	 * Dialog box to set bits.
 	 */
+	@SuppressWarnings("serial")
 	private class DecoderCreate extends JDialog implements ActionListener {
 		
 		// properties

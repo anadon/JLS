@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -366,6 +367,7 @@ public class JumpEnd extends LogicElement {
 	/**
 	 * Dialog box to set jump end characteristics.
 	 */
+	@SuppressWarnings("serial")
 	private class EndCreate extends JDialog implements ActionListener {
 		
 		// properties

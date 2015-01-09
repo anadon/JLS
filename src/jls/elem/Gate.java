@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.io.*;
+
 import javax.swing.*;
 
 /**
@@ -577,6 +578,7 @@ public abstract class Gate extends LogicElement {
 	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
 	 * Used by all simple gates (nand, and, nor, or, xor).
 	 */
+	@SuppressWarnings("serial")
 	protected class GateCreate extends JDialog implements ActionListener {
 		
 		// properties

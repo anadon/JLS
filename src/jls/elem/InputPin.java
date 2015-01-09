@@ -142,8 +142,8 @@ public class InputPin extends Pin implements TriProp {
 		super.draw(g);
 		
 		// draw box
-		Rectangle original = getRect();
-		Rectangle r = new Rectangle(original.x,original.y,original.width-s,original.height);
+		//Rectangle original = getRect();
+		//Rectangle r = new Rectangle(original.x,original.y,original.width-s,original.height);
 		g.setColor(Color.BLACK);
 		g.drawPolygon(p);
 		

@@ -2,10 +2,13 @@ package jls.elem;
 
 import jls.*;
 import jls.edit.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+
 import javax.swing.*;
+
 import java.util.*;
 import java.math.*;
 
@@ -595,6 +598,7 @@ public class Element {
 	/**
 	 * Display dialog letting user change the propagation delay or access time.
 	 */
+	@SuppressWarnings("serial")
 	private class DelayChange extends JDialog implements ActionListener {
 
 		// properties

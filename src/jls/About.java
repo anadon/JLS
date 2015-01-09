@@ -1,7 +1,9 @@
 package jls;
 
 import java.awt.*;
+
 import javax.swing.*;
+
 import java.awt.event.*;
 
 /**
@@ -9,6 +11,7 @@ import java.awt.event.*;
  * 
  * @author David A. Poplawski
  */
+@SuppressWarnings("serial")
 public final class About extends JDialog implements ActionListener {
 
 	/**

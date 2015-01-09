@@ -2,9 +2,11 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+
 import javax.swing.*;
 
 import java.io.*;
@@ -127,6 +129,7 @@ public class DelayGate extends Gate {
 	/**
 	 * Dialog box to set delay gate parameters.
 	 */
+	@SuppressWarnings("serial")
 	private class DelayCreate extends JDialog implements ActionListener {
 			
 			// properties

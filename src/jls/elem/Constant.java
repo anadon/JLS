@@ -3,10 +3,12 @@ package jls.elem;
 import jls.*;
 import jls.edit.*;
 import jls.sim.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.io.*;
+
 import javax.swing.*;
 
 import java.math.*;
@@ -420,6 +422,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
 	 * Used by all simple gates (nand, and, nor, or, xor, not).
 	 */
+	@SuppressWarnings("serial")
 	private class ConstantCreate extends JDialog implements ActionListener {
 		
 		// properties
@@ -737,6 +740,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * Display dialog letting user change the value of the constant.
 	 * New value must fit in current element.
 	 */
+	@SuppressWarnings("serial")
 	private class ConstantChange extends JDialog implements ActionListener {
 		
 		// properties

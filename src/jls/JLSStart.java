@@ -120,8 +120,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			String name = "";
 			if (startFile.endsWith(".jls~")) {
 				name = startFile.replaceAll("\\.jls~$","");
-			}
-			else {
+			} else {
 				name = startFile.replaceAll("\\.jls$","");
 			}
 			String cname = Util.isValidFileName(name);
@@ -1043,18 +1042,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * @param name The name of the circuit.  If null, then prompt user for
 	 * the name.
 	 */
-	private void open(String fileName) {
+	private void open(String filePath) {
 
 		File file = null;
 		String dir = "";
 
 		// get circuit name from user if parameter is null
-		if (fileName == null) {
-			JFileChooser chooser = null;
-			if (prevOpenDir.equals(""))
-				chooser = new JFileChooser(System.getProperty("user.dir"));
-			else
-				chooser = new JFileChooser(prevOpenDir);
+		if (filePath == null) {
+			prevOpenDir = prevOpenDir.equals("") ? System.getProperty("user.dir") : prevOpenDir;
+			JFileChooser chooser = new JFileChooser( prevOpenDir );
+			
 			javax.swing.filechooser.FileFilter filter =
 				new javax.swing.filechooser.FileFilter() {
 				public boolean accept(File f) {
@@ -1065,37 +1062,29 @@ public class JLSStart extends JFrame implements ChangeListener {
 					return "JLS Circuit Files";
 				}
 			};
+			
 			chooser.setFileFilter(filter);
 			if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) 
 				return;
 			file = chooser.getSelectedFile();
-			fileName = file.getName().trim();
-			if (fileName == null || fileName.equals(""))
+			filePath = file.getAbsolutePath();
+			if (filePath == null || filePath.equals(""))
 				return;
-			dir = chooser.getCurrentDirectory().toString();
-		}
-		else {
-			file = new File(fileName);
-			dir = file.getParent();
-			if (dir == null)
-				dir = System.getProperty("user.dir");
+			prevOpenDir = chooser.getCurrentDirectory().toString();
+		}else {
+			file = new File(filePath);
+			prevOpenDir = file.getParent().equals("") ? System.getProperty("user.dir") : file.getParent();
 		}
 		
-		Scanner input = getScannerForFile(fileName);
+		Scanner input = getScannerForFile(filePath);
 
 		String cname;
-		if (fileName.endsWith(".jls~")) {
-			cname = fileName.replaceAll("\\.jls~$", "");
-		} else {
-			cname = fileName.replaceAll("\\.jls$", "");
-		}
+		cname = file.getName().replaceAll("\\.jls~$", "");
+		cname = cname.replaceAll("\\.jls$", "");
 
 		// create new circuit
 		Circuit circ = new Circuit(cname);
-		circ.setDirectory(dir);
-
-		// save directory name for next open
-		prevOpenDir = new String(dir);
+		//circ.setDirectory(dir);
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
@@ -1104,7 +1093,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		input.close();
 		if (!loadOK) {
 			JOptionPane.showMessageDialog(this,
-					fileName + " is not a valid circuit file (line " + circ.getLineNumber() + "): " + JLSInfo.loadError, "Error",
+					filePath + " is not a valid circuit file (line " + circ.getLineNumber() + "): " + JLSInfo.loadError, "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1238,67 +1227,71 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of duplicateName method
 
 	
+	private static Scanner testScanner(Scanner toTest){
+		if (toTest.hasNext() == false) {
+			toTest.close();
+			toTest = null;
+		}
+		return toTest;
+	}
+	
+	private static Scanner getXZScanner(String filePath){
+		try{
+			return testScanner(new Scanner(new SeekableXZInputStream(new SeekableFileInputStream(new File(filePath)))));
+		}catch(Throwable e){
+			return null;
+		}
+	}
+	
+	private static Scanner getZipScanner(String filePath){
+		try{
+			ZipFile target = new ZipFile(new File(filePath));
+			Scanner toReturn = testScanner(new Scanner(target.getInputStream(target.getEntry("JLSCircuit"))));
+			target.close();
+			return toReturn;
+		}catch(Throwable e){
+			return null;
+		}
+	}
+	
+	private static Scanner getTextScanner(String filePath){
+		try{
+			return testScanner(new Scanner(new File(filePath)));
+		}catch(Throwable e){
+			return null;
+		}
+	}
 	
 	private static Scanner getScannerForFile(String filePath){
 		
-		File file = null;
 		String name;
 		
-		if (filePath.endsWith(".jls~")) {
-			name = filePath.replaceAll("\\.jls~$", "");
-		} else {
-			name = filePath.replaceAll("\\.jls$", "");
-		}
-		String cname = Util.isValidFileName(name);
-		if (cname == null) {
+		name = filePath.replaceAll("\\.jls~$", "");
+		name = name.replaceAll("\\.jls$", "");
+
+		if (Util.isValidFileName(name) == null) {
 			TellUser.err(name + " is not a valid circuit file name.\n"
 					+ "It must start with a letter and contain letters, "
 					+"digits and underscores.", true);
 			return null;
 		}
-
-		// open file and create scanner
-		InputStream in = null;
-		file = new File(filePath);
 		
-
+		Scanner toReturn = null;
+		System.out.println(filePath);
+		
 		//See if the .jls file is in xz format
-		try{
-			in = new SeekableXZInputStream(new SeekableFileInputStream(file));
-		}catch(Throwable e){
-			//not an xz file
-			System.out.println("Not a XZ compressed file, trying to open as zip");
-		}
+		if((toReturn = getXZScanner(filePath)) != null) return toReturn;
 		
-		if(in == null){
-			try {
-				// see if the .jls file is in zip format
-				in = new ZipInputStream(new FileInputStream(file));
-				
-				if (((ZipInputStream)in).getNextEntry() == null) {
-
-					// if not, then not a zip file
-					in.close();
-					in = null;
-				}
-			} catch (IOException ex) {
-				//not a zip file
-				System.out.println("Not a zip compressed file, trying to open as "
-						+ "plain text");
-			}
-		}
+		System.out.println("Not a XZ compressed file, trying to open as zip");
+		if((toReturn = getZipScanner(filePath)) != null) return toReturn;
 		
-		if(in == null){
-			try{
-				//final try -- plain text
-				in = new FileInputStream(file);
-			} catch (IOException ex) {
-				TellUser.err("Can't read from " + filePath, true);
-				return null;
-			}
-		}
+			
+		System.out.println("Not a zip compressed file, trying to open as plain text");
+		if((toReturn = getTextScanner(filePath)) != null) return toReturn;
+					
 		
-		return new Scanner(in);
+		System.out.println("Unable to open specified file.");		
+		return null;
 	}
 	
 	
@@ -1328,18 +1321,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		chooser.setFileFilter(filter);
 		if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) 
 			return;
-		String fileName = chooser.getSelectedFile().getName().trim();
-		if (fileName == null || fileName.equals(""))
-			return;
-		if (!fileName.endsWith(".jls"))
-			fileName = fileName + ".jls";
-		String name = fileName.replaceAll("\\.jls$","");
-		fileName = chooser.getCurrentDirectory().toString() + "/"+ fileName;
-
-		Scanner input = getScannerForFile(fileName);
+		
+		Scanner input = getScannerForFile(chooser.getSelectedFile().getAbsolutePath());
 
 		// create new circuit
-		Circuit circ = new Circuit(name);
+		Circuit circ = new Circuit(chooser.getSelectedFile().getName().trim().replaceAll("\\.jls$",""));
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
@@ -1348,7 +1334,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		input.close();
 		if (!loadOK) {
 			JOptionPane.showMessageDialog(this,
-					fileName + " is not a valid circuit file", "Error",
+					circ.getName() + " is not a valid circuit file", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1635,6 +1621,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				}
 
 			}
+			scan.close();
 		}
 		catch (FileNotFoundException ex) {
 			System.out.println("warning: can't open parameter file " + paramFile + ", file ignored");
@@ -1694,7 +1681,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// set up printer job
 		PrinterJob job = PrinterJob.getPrinterJob();
-		PrintService [] services = job.lookupPrintServices();
+		PrintService [] services = PrinterJob.lookupPrintServices();
 		PrintService want = null;
 		for (PrintService s : services) {
 			if (s.getName().equals(printer)) {

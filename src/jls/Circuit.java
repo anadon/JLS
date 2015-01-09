@@ -292,7 +292,7 @@ public class Circuit implements Printable {
 				if (loadOK) {
 					loadedElements.add(newElement);
 				} else {
-					JLSInfo.loadError = "false from loadElement";
+					JLSInfo.loadError += "; false from loadElement";
 					return false;
 				}
 			}

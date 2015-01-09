@@ -72,7 +72,7 @@ public class WireEnd extends LogicElement {
 		fixPosition();
 		
 		// hook up wires
-   next:for (int elid : loadWires) {
+		next:for (int elid : loadWires) {
 	   		// attach to put if needed
 			if (loadPut != null) {
 				Element elem = circ.getElementByID(loadAttach);

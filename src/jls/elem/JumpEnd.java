@@ -48,12 +48,12 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @param circuit The circuit this element is part of.
 	 * @param name The name of the wire jump start this end should match.
-	 */
+	 *//*
 	public JumpEnd(Circuit circuit, String name) {
 		
 		super(circuit);
 		this.name = name;
-	}
+	}*/
 	
 	/**
 	 * Display dialog to get characteristics.
@@ -558,5 +558,9 @@ public class JumpEnd extends LogicElement {
 			out.propagate((BitSet)value.clone(),now,sim);
 	
 	} // end of react method
+
+	public void setName(String newName) {
+		name = newName;
+	}
 
 } // end of JumpEnd method

@@ -1489,7 +1489,8 @@ public abstract class SimpleEditor extends JPanel {
 							return;
 
 						JumpStart el = (JumpStart)(selected.toArray()[0]);
-						JumpEnd nel = new JumpEnd(circuit, el.getName());
+						JumpEnd nel = new JumpEnd(circuit);
+						nel.setName(el.getName());
 						Point p = getMousePosition();
 						if(p == null) { // If the context menu wasn't within JLS
 							p = MouseInfo.getPointerInfo().getLocation();

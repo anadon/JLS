@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -2822,12 +2823,26 @@ public abstract class SimpleEditor extends JPanel {
 			}*/
 
 
-						// ...
 						// Set is O(n log(n)) to traverse over and doesn't benefit from cache locality.
 						// we're doing a lot of iterating over the same collection here,
 						// so it makes sense to use a temporary array for cache locality and O(n) traversal.
 						Element[] selectedArr = selected.toArray(Element[]::new);
 						ArrayList<Element> elementsArr = new ArrayList(circuit.getElements());
+						// elementsArr.removeAll(selected);
+						{
+							int i = 0;
+							while (i < elementsArr.size()) {
+								if (selected.contains(elementsArr.get(i))) {
+									// "swap" remove - slightly cheaper because we don't care about order
+									elementsArr.set(i, elementsArr.get(elementsArr.size() - 1));
+									elementsArr.remove(elementsArr.size() - 1); // pop
+									// don't increment on erase because [i] now refers to a new element
+								}
+								else {
+									i++;
+								}
+							}
+						}
 
 						// bounding box just adds a redundant step if selection is 1
 						if (selected.size() > 1) {
@@ -2846,9 +2861,21 @@ public abstract class SimpleEditor extends JPanel {
 
 							Rectangle bounds = new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 
-							elementsArr.removeIf(el -> !el.isOverlapping(bounds) || selected.contains(el));
-						} else {
-							elementsArr.removeAll(selected);
+							// elementsArr.removeIf(el -> !el.isOverlapping(bounds));
+							{
+								int i = 0;
+								while (i < elementsArr.size()) {
+									if (!elementsArr.get(i).isOverlapping(bounds)) {
+										// "swap" remove - slightly cheaper because we don't care about order
+										elementsArr.set(i, elementsArr.get(elementsArr.size() - 1));
+										elementsArr.remove(elementsArr.size() - 1); // pop
+										// don't increment on erase because [i] now refers to a new element
+									}
+									else {
+										i++;
+									}
+								}
+							}
 						}
 
 						// check every element in the selected set

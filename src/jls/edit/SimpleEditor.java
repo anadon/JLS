@@ -2876,15 +2876,19 @@ public abstract class SimpleEditor extends JPanel {
 								}
 							}
 						}
+						elementsArr.trimToSize();
 
 						// check every element in the selected set
 						for (Element sel : selectedArr) {
+
+							boolean anyIntersection = false;
 
 							// check against every (unselected, bounds-overlapping) element in the circuit
 							for (Element el : elementsArr) {
 
 								// check simple overlap of areas
 								if (sel.intersects(el)) {
+									anyIntersection = true;
 
 									// no overlap if possible connection,
 									boolean ok = false;
@@ -2962,42 +2966,42 @@ public abstract class SimpleEditor extends JPanel {
 									// selected is not a wire end
 									else {
 
-										// put to wire end
-										for (Put put : sel.getAllPuts()) {
-
-											// if not a wire end, ignore
-											if (!(el instanceof WireEnd))
-												continue;
+										// if element is a wire end, ...
+										if (el instanceof WireEnd) {
 											WireEnd end = (WireEnd)el;
 
-											// if don't line up, ignore
-											if (put.getX() != end.getX() || put.getY() != end.getY()) {
-												continue;
-											}
+											// put to wire end
+											for (Put put : sel.getAllPuts()) {
 
-											// if already attached to this wire end, ignore
-											if (end == put.getWireEnd()) {
+												// if don't line up, ignore
+												if (put.getX() != end.getX() || put.getY() != end.getY()) {
+													continue;
+												}
+
+												// if already attached to this wire end, ignore
+												if (end == put.getWireEnd()) {
+													ok = true;
+													continue;
+												}
+
+												// if attached through a single wire, ignore
+												WireEnd putEnd = put.getWireEnd();
+												if (putEnd != null &&
+														putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
+													ok = true;
+													continue;
+												}
+
+												// if cannot connect, return
+												if (!canConnect(end,put)) {
+													untouchAll();
+													return true;
+												}
+
+												end.setTouching(true);
+												put.setTouching(true);
 												ok = true;
-												continue;
 											}
-
-											// if attached through a single wire, ignore
-											WireEnd putEnd = put.getWireEnd();
-											if (putEnd != null &&
-													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
-												ok = true;
-												continue;
-											}
-
-											// if cannot connect, return
-											if (!canConnect(end,put)) {
-												untouchAll();
-												return true;
-											}
-
-											end.setTouching(true);
-											put.setTouching(true);
-											ok = true;
 										}
 									}
 									if (!ok) {
@@ -3006,52 +3010,50 @@ public abstract class SimpleEditor extends JPanel {
 										return true;
 									}
 								}
+							}
 
-								// no intersection, but wires may be overlapping wire ends
-								// or puts might line up
-								else {
+							// no intersection, but wires may be overlapping wire ends
+							// or puts might line up
+							if (!anyIntersection) {
 
-									// see if wires connected to a wire end dragged onto wire ends
-									if (sel instanceof WireEnd) {
-										WireEnd end = (WireEnd)sel;
-										for (Wire wire : end.getWires()) {
-											for (Element elm : circuit.getElements()) {
-												if (sel == elm)
-													continue;
-												if (!(elm instanceof WireEnd)) {
-													continue;
-												}
-												WireEnd otherEnd = (WireEnd)elm;
-												if (wire.touches(otherEnd)) {
-													overlapMessage = "overlap";
-													untouchAll();
-													return true;
-												}
+								// see if wires connected to a wire end dragged onto wire ends
+								if (sel instanceof WireEnd) {
+									WireEnd end = (WireEnd)sel;
+									for (Wire wire : end.getWires()) {
+										for (Element elm : elementsArr) {
+											if (!(elm instanceof WireEnd)) {
+												continue;
+											}
+											WireEnd otherEnd = (WireEnd)elm;
+											if (wire.touches(otherEnd)) {
+												overlapMessage = "overlap";
+												untouchAll();
+												return true;
 											}
 										}
 									}
+								}
 
-									// see if wires connected to puts dragged onto wire ends
-									for (Put p : sel.getAllPuts()) {
-										if (p.isAttached()) {
-											Wire wire = p.getWireEnd().getOnlyWire();
-											for (Element elm : circuit.getElements()) {
-												if (sel == elm)
-													continue;
-												if (!(elm instanceof WireEnd)) {
-													continue;
-												}
-												WireEnd otherEnd = (WireEnd)elm;
-												if (wire.touches(otherEnd)) {
-													overlapMessage = "overlap";
-													untouchAll();
-													return true;
-												}
+								// see if wires connected to puts dragged onto wire ends
+								for (Put p : sel.getAllPuts()) {
+									if (p.isAttached()) {
+										Wire wire = p.getWireEnd().getOnlyWire();
+										for (Element elm : elementsArr) {
+											if (!(elm instanceof WireEnd)) {
+												continue;
+											}
+											WireEnd otherEnd = (WireEnd)elm;
+											if (wire.touches(otherEnd)) {
+												overlapMessage = "overlap";
+												untouchAll();
+												return true;
 											}
 										}
 									}
+								}
 
-									// check all put combinations
+								// check all put combinations
+								for (Element el : elementsArr) {
 									for (Put p1 : sel.getAllPuts()) {
 										for (Put p2 : el.getAllPuts()) {
 
@@ -3082,8 +3084,8 @@ public abstract class SimpleEditor extends JPanel {
 								}
 							}
 						}
-					repaint();
-					return false;
+						repaint();
+						return false;
 					} // end of overlap method
 
 					/**

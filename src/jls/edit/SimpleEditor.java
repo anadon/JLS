@@ -3020,11 +3020,11 @@ public abstract class SimpleEditor extends JPanel {
 								if (sel instanceof WireEnd) {
 									WireEnd end = (WireEnd)sel;
 									for (Wire wire : end.getWires()) {
-										for (Element elm : elementsArr) {
-											if (!(elm instanceof WireEnd)) {
+										for (Element el : elementsArr) {
+											if (!(el instanceof WireEnd)) {
 												continue;
 											}
-											WireEnd otherEnd = (WireEnd)elm;
+											WireEnd otherEnd = (WireEnd)el;
 											if (wire.touches(otherEnd)) {
 												overlapMessage = "overlap";
 												untouchAll();
@@ -3038,11 +3038,11 @@ public abstract class SimpleEditor extends JPanel {
 								for (Put p : sel.getAllPuts()) {
 									if (p.isAttached()) {
 										Wire wire = p.getWireEnd().getOnlyWire();
-										for (Element elm : elementsArr) {
-											if (!(elm instanceof WireEnd)) {
+										for (Element el : elementsArr) {
+											if (!(el instanceof WireEnd)) {
 												continue;
 											}
-											WireEnd otherEnd = (WireEnd)elm;
+											WireEnd otherEnd = (WireEnd)el;
 											if (wire.touches(otherEnd)) {
 												overlapMessage = "overlap";
 												untouchAll();

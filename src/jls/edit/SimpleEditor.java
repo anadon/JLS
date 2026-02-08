@@ -2848,7 +2848,7 @@ public abstract class SimpleEditor extends JPanel {
 
 							elementsArr.removeIf(el -> !el.isOverlapping(bounds) || selected.contains(el));
 						} else {
-							elementsArr.removeIf(el -> selected.contains(el));
+							elementsArr.removeAll(selected);
 						}
 
 						// check every element in the selected set

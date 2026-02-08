@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -93,7 +94,7 @@ import jls.elem.XorGate;
 /**
  * Main circuit editing class.
  * Sets up and manages GUI.
- * 
+ *
  * @author David A. Poplawski
  */
 @SuppressWarnings("serial")
@@ -108,12 +109,12 @@ public abstract class SimpleEditor extends JPanel {
 	protected JPanel top;				// here so Editor class can display file menu
 	protected JLabel editable =
 			new JLabel(" ");				// to show if circuit editing is enabled
-	private JLabel message = 
+	private JLabel message =
 			new JLabel(" ");				// editing status message display
 	private JLabel info =
 			new JLabel(" ",SwingConstants.CENTER);	// element information display
 	private Circuit clipboard;			// for cut and paste
-	private JPopupMenu importMenu = 
+	private JPopupMenu importMenu =
 			new JPopupMenu();				// to display importable circuits
 	private SimpleEditor me;
 	private Stack<Circuit> undos = new Stack<Circuit>();
@@ -124,7 +125,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Create new editor.
-	 * 
+	 *
 	 * @param pane The tabbed pane this editor is in.
 	 * @param circuit The circuit it will edit.
 	 * @param name The name of the circuit.
@@ -188,7 +189,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Get the circuit being editted by this editor.
-	 * 
+	 *
 	 * @return the circuit.
 	 */
 	public Circuit getCircuit() {
@@ -198,7 +199,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Add a circuit to the import menu.
-	 * 
+	 *
 	 * @param subCirc The circuit to add.
 	 */
 	public void addToImportMenu(Circuit subCirc) {
@@ -233,7 +234,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Change the name of a circuit in the import menu.
-	 * 
+	 *
 	 * @param oldname The current name.
 	 * @param newname The new name.
 	 */
@@ -258,7 +259,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Set the size of the circuit drawing area.
-	 * 
+	 *
 	 * @param size The size.
 	 */
 	public void setCircuitSize(Dimension size) {
@@ -287,7 +288,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Finish up import of a circuit.
-	 * 
+	 *
 	 * @param impCirc The imported circuit.
 	 */
 	public void finishImport(Circuit impCirc) {
@@ -313,7 +314,7 @@ public abstract class SimpleEditor extends JPanel {
 	/**
 	 * Make the editor able to make changes.
 	 * Usually turned off during simulation.
-	 * 
+	 *
 	 * @param which True to enable editing, false to disable it.
 	 */
 	public void enableEditor(boolean which) {
@@ -1145,7 +1146,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Get image.
-			 * 
+			 *
 			 * @param name Base name of image.
 			 */
 			public ImageIcon getImage(String name) {
@@ -1155,7 +1156,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Make a single element for the toolbar and menu.
-			 * 
+			 *
 			 * @param action The action for this element.
 			 * @param tip The tool tip for this element.
 			 */
@@ -1174,7 +1175,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Get the tool bar.
-			 * 
+			 *
 			 * @return the tool bar.
 			 */
 			public JPanel getToolBar() {
@@ -1184,7 +1185,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Draw the window.
-			 * 
+			 *
 			 * @param g The Graphics object to draw with.
 			 */
 			public void paintComponent(Graphics g) {
@@ -1236,7 +1237,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to menu item selections.
-			 * 
+			 *
 			 * @param event The event object for actions.
 			 */
 			public void actionPerformed(ActionEvent event) {
@@ -1548,7 +1549,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mousePressed events
-			 * 
+			 *
 			 * @param event The event object for presses.
 			 */
 			public void mousePressed(MouseEvent event) {
@@ -1923,7 +1924,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mouse release events.
-			 * 
+			 *
 			 * @param event The event object for releases.
 			 */
 			public void mouseReleased(MouseEvent event) {
@@ -1979,7 +1980,7 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 
-					// otherwise 
+					// otherwise
 					else {
 
 						// fix elements at their new positions
@@ -2060,7 +2061,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mouse dragged events.
-			 * 
+			 *
 			 * @param event The event object for drags.
 			 */
 			public void mouseDragged(MouseEvent event) {
@@ -2134,7 +2135,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mouse movements.
-			 * 
+			 *
 			 * @param event The event object for moves.
 			 */
 			public void mouseMoved(MouseEvent event) {
@@ -2207,7 +2208,7 @@ public abstract class SimpleEditor extends JPanel {
 						// don't show overlap while new wire end is still
 						// close to the previously placed wire end
 						if (!(currentState == State.drawire &&
-								prev != null && prev.getX() == wireEnd.getX() && 
+								prev != null && prev.getX() == wireEnd.getX() &&
 								prev.getY() == wireEnd.getY())) {
 							info.setText(overlapMessage);
 							info.setForeground(Color.red);
@@ -2225,14 +2226,14 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Unused.
-			 * 
+			 *
 			 * @param event Unused.
 			 */
 			public void mouseClicked(MouseEvent event) {}
 
 			/**
 			 * Get focus for keyboard events.
-			 * 
+			 *
 			 * @param event Unused.
 			 */
 			public void mouseEntered(MouseEvent event) {
@@ -2242,7 +2243,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * If in the idle state, unhighlight everything.
-			 * 
+			 *
 			 * @param event Unused.
 			 */
 			public void mouseExited(MouseEvent event) {
@@ -2257,7 +2258,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Update current state and show corresponding message.
-			 * 
+			 *
 			 * @param newState The new state.
 			 */
 			private void setState(State newState) {
@@ -2306,10 +2307,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Not possible if part of the same wire net.
 			 * Not possible if bits don't match.
 			 * Not possible if both have inputs already.
-			 * 
+			 *
 			 * @param end1 The wire being connected.
 			 * @param end2 The other wire being connected.
-			 * 
+			 *
 			 * @return false if bits don' match or both have inputs, true otherwise.
 			 */
 			private boolean canConnect(WireEnd end1, WireEnd end2) {
@@ -2355,10 +2356,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Assumes ends can be connected (overlap, one end dangling, one input, bits match,
 			 * not same net).
 			 * One wire end will be deleted, and the remaining one is returned.
-			 * 
+			 *
 			 * @param end1 The wire end being connected.
 			 * @param end2 The other wire end being connected.
-			 * 
+			 *
 			 * @return the remaining wire end.
 			 */
 			private WireEnd connect(WireEnd end1, WireEnd end2) {
@@ -2423,10 +2424,10 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * See if a wire end can attach to a wire.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param wire The wire.
-			 * 
+			 *
 			 * @returns true if can connect, false if not.
 			 */
 			public boolean canConnect(WireEnd end1, Wire wire) {
@@ -2481,10 +2482,10 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * Connect a wire end to a wire.
 			 * Return the end that was connected.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param wire The wire.
-			 * 
+			 *
 			 * @return the end that was connected.
 			 */
 			public WireEnd connect(WireEnd end, Wire wire) {
@@ -2544,10 +2545,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * See if a wire end can attach to a put.
 			 * Not possible if put is already attached, or bits don't match, or
 			 * put is an output and wire end is already connected to an input.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param put The put.
-			 * 
+			 *
 			 * @return false if put is already attached or bits do not match, true otherwise.
 			 */
 			private boolean canConnect(WireEnd end, Put put) {
@@ -2639,7 +2640,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * Bits will be set in the net.
 			 * Has-input will be set in the net if necessary.
 			 * Tri-state will be set in the net if necessary.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param put The put.
 			 */
@@ -2673,10 +2674,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Not possible if bits don't match.
 			 * Not possible if both are outputs or both are inputs,
 			 * unless both are tristate outputs.
-			 * 
+			 *
 			 * @param put1 The put.
 			 * @param put2 The other put.
-			 * 
+			 *
 			 * @return true if puts can be attached, false if not.
 			 */
 			private boolean canConnect(Put p1, Put p2) {
@@ -2713,7 +2714,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * The puts must overlap.
 			 * The puts must not be attached.
 			 * Bits must match
-			 * 
+			 *
 			 * @param p1 The put.
 			 * @param p2 The other put.
 			 */
@@ -2786,9 +2787,9 @@ public abstract class SimpleEditor extends JPanel {
 				/**
 				 * See if the selected elements overlap non-selected elements.
 				 * Highlights possible connections when there is no overlap.
-				 * 
+				 *
 				 * TODO major point of optimization
-				 * 
+				 *
 				 * @return true if there is overlap, false if not.
 				 */
 				private boolean overlap() {
@@ -2821,15 +2822,40 @@ public abstract class SimpleEditor extends JPanel {
 			}*/
 
 
+						// ...
+						// Set is O(n log(n)) to traverse over and doesn't benefit from cache locality.
+						// we're doing a lot of iterating over the same collection here,
+						// so it makes sense to use a temporary array for cache locality and O(n) traversal.
+						Element[] selectedArr = selected.toArray(Element[]::new);
+						ArrayList<Element> elementsArr = new ArrayList(circuit.getElements());
+
+						// bounding box just adds a redundant step if selection is 1
+						if (selected.size() > 1) {
+							int xmin = Integer.MAX_VALUE;
+							int xmax = Integer.MIN_VALUE;
+							int ymin = Integer.MAX_VALUE;
+							int ymax = Integer.MIN_VALUE;
+
+							// build up a bounding box
+							for (Element sel : selectedArr) {
+								xmin = Math.min(xmin, sel.getX());
+								xmax = Math.max(xmax, sel.getX() + sel.getWidth());
+								ymin = Math.min(ymin, sel.getY());
+								ymax = Math.max(ymax, sel.getY() + sel.getHeight());
+							}
+
+							Rectangle bounds = new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+
+							elementsArr.removeIf(el -> !el.isOverlapping(bounds) || selected.contains(el));
+						} else {
+							elementsArr.removeIf(el -> selected.contains(el));
+						}
+
 						// check every element in the selected set
-						for (Element sel : selected) {
+						for (Element sel : selectedArr) {
 
-							// check against every element in the circuit
-							for (Element el : circuit.getElements()) {
-
-								// ignore elements in the selected set
-								if (selected.contains(el))
-									continue;
+							// check against every (unselected, bounds-overlapping) element in the circuit
+							for (Element el : elementsArr) {
 
 								// check simple overlap of areas
 								if (sel.intersects(el)) {
@@ -3011,7 +3037,7 @@ public abstract class SimpleEditor extends JPanel {
 											// ignore overlaps on already connected puts
 											WireEnd end1 = p1.getWireEnd();
 											WireEnd end2 = p2.getWireEnd();
-											if (end1 != null && end2 != null && 
+											if (end1 != null && end2 != null &&
 													end1.getOnlyWire().getOtherEnd(end1) == end2) {
 												continue;
 											}
@@ -3167,7 +3193,7 @@ public abstract class SimpleEditor extends JPanel {
 											// ignore overlaps on already connected puts
 											WireEnd end1 = p1.getWireEnd();
 											WireEnd end2 = p2.getWireEnd();
-											if (end1 != null && end2 != null && 
+											if (end1 != null && end2 != null &&
 													end1.getOnlyWire().getOtherEnd(end1) == end2) {
 												continue;
 											}
@@ -3262,9 +3288,9 @@ public abstract class SimpleEditor extends JPanel {
 					 * Paste all elements from a given circuit into the current circuit.
 					 * Can't be done if there are elements in the "from" circuit that
 					 * have the same names as elements in the current circuit.
-					 * 
+					 *
 					 * @param from The circuit to copy from.
-					 * 
+					 *
 					 * @return false if can't be done, true if done.
 					 */
 					private boolean paste(Circuit from) {
@@ -3327,7 +3353,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// first copy all but wires and wire ends
 						for (Element el : from.getElements()) {
-							if (el instanceof Wire || el instanceof WireEnd) 
+							if (el instanceof Wire || el instanceof WireEnd)
 								continue;
 							Element cel = el.copy();
 							cel.fixPosition();
@@ -3628,7 +3654,7 @@ public abstract class SimpleEditor extends JPanel {
 					 * Usually pops up dialog to enter characteristics.
 					 * If not cancelled, then adds it to the circuit and gets ready
 					 * to place it.
-					 * 
+					 *
 					 * @param item The element to set up.
 					 * @param fromToolBar True if toolbar button selected, false if from menu.
 					 */
@@ -3706,7 +3732,7 @@ public abstract class SimpleEditor extends JPanel {
 
 					/**
 					 * Import a copy of a subcircuit.
-					 * 
+					 *
 					 * @param name The name of the subcircuit.
 					 */
 					public void doImport(String name) {
@@ -3868,7 +3894,7 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Finish up undo or redo.
 					 * Used by undo and redo to make a copy of the circuit.
-					 * 
+					 *
 					 * @param temp The circuit being copied.
 					 */
 					private void finishDo(Circuit temp) {
@@ -3945,7 +3971,7 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Find all jump start elements and add names to the jumpstart list in this circuit.
 					 * Do the same for all subcircuits.
-					 * 
+					 *
 					 * @param circ The circuit to process.
 					 */
 					private void updateJumpStarts(Circuit circ) {
@@ -3965,7 +3991,7 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Find all named elements and add names to the namesUsed list in this circuit.
 					 * Do the same for all subcircuits.
-					 * 
+					 *
 					 * @param The circuit to process.
 					 */
 					private void updateNamesUsed(Circuit circ) {

@@ -15,7 +15,7 @@ import java.math.*;
 /**
  * Super class for all logic elements (including non-active ones).
  * Contains common display info and methods.
- *
+ * 
  * @author David A. Poplawski
  */
 public class Element {
@@ -37,7 +37,7 @@ public class Element {
 
 	/**
 	 * Create a new Element object.
-	 *
+	 * 
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Element(Circuit circuit) {
@@ -55,7 +55,7 @@ public class Element {
 
 	/**
 	 * Set coordinates of this element.
-	 *
+	 * 
 	 * @param x The x-coordinate of the upper left corner of this element.
 	 * @param y The y-coordinate of the upper left corner of this element.
 	 */
@@ -67,7 +67,7 @@ public class Element {
 
 	/**
 	 * Change the circuit this element is in.
-	 *
+	 * 
 	 * @param circuit The new circuit.
 	 */
 	public void setCircuit(Circuit circuit) {
@@ -77,7 +77,7 @@ public class Element {
 
 	/**
 	 * Get the circuit this element is part of.
-	 *
+	 * 
 	 * @return the circuit.
 	 */
 	public Circuit getCircuit() {
@@ -87,7 +87,7 @@ public class Element {
 
 	/**
 	 * Get the element's id.
-	 *
+	 * 
 	 * @return the id.
 	 */
 	public int getID() {
@@ -97,7 +97,7 @@ public class Element {
 
 	/**
 	 * Get x-coordinate of this element.
-	 *
+	 * 
 	 * @return the x-coordinate.
 	 */
 	public int getX() {
@@ -107,7 +107,7 @@ public class Element {
 
 	/**
 	 * Get y-coordinate of this element.
-	 *
+	 * 
 	 * @return the y-coordinate.
 	 */
 	public int getY() {
@@ -134,30 +134,30 @@ public class Element {
 
 		return height;
 	} // end of getHeight method
-
+	
 	/**
 	 * Get the trace position of this element.
-	 *
+	 * 
 	 * @return the trace position (-1 if not traced)
 	 */
 	public int getTracePosition() {
-
+		
 		return tracePosition;
 	} // end of getTracePosition method
-
+	
 	/**
 	 * Set the trace position of this element.
-	 *
+	 * 
 	 * @param position The position.
 	 */
 	public void setTracePosition(int position) {
-
+		
 		tracePosition = position;
 	} // end of setTracePosition method
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 *
+	 * 
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -182,7 +182,7 @@ public class Element {
 
 	/**
 	 * Set a long instance variable value (during a load).
-	 *
+	 * 
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -192,7 +192,7 @@ public class Element {
 
 	/**
 	 * Set a BigInteger instance variable value (during a load).
-	 *
+	 * 
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -202,7 +202,7 @@ public class Element {
 
 	/**
 	 * Set a String instance variable value (during a load).
-	 *
+	 * 
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -212,7 +212,7 @@ public class Element {
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 *
+	 * 
 	 * @param v1 The first value.
 	 * @param v1 The second value.
 	 */
@@ -222,7 +222,7 @@ public class Element {
 
 	/**
 	 * Initialize internal information for this element.
-	 *
+	 * 
 	 * @param g The graphics object to use.
 	 */
 	public void init(Graphics g) throws Exception{
@@ -239,7 +239,7 @@ public class Element {
 
 	/**
 	 * Make a copy of this element in the parameter object.
-	 *
+	 * 
 	 * @param it The element to copy info to.
 	 */
 	public void copy(Element it) {
@@ -272,7 +272,7 @@ public class Element {
 
 	/**
 	 * Move element.
-	 *
+	 * 
 	 * @param dx Distance to move in the x-direction.
 	 * @param dy Distance to move in the y-direction.
 	 */
@@ -291,10 +291,10 @@ public class Element {
 
 	/**
 	 * See if the given point is inside the element's display area.
-	 *
+	 * 
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 *
+	 * 
 	 * @return true if the point is in the display area, false if not.
 	 */
 	public boolean contains(int x, int y) {
@@ -305,16 +305,16 @@ public class Element {
 
 	/**
 	 * See if this element intersects another.
-	 *
+	 * 
 <<<<<<< HEAD
 	 * TODO major point of optimization
-	 *
+	 * 
 	 * @param other
 	 *            The other element.
 =======
 	 * @param other The other element.
 >>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
-	 *
+	 * 
 	 * @return true if this element intersects the other, false if not.
 	 */
 	public boolean intersects(Element other) {
@@ -342,9 +342,9 @@ public class Element {
 
 	/**
 	 * See if this element is completely inside a given rectangle.
-	 *
+	 * 
 	 * @param rect The given rectangle.
-	 *
+	 * 
 	 * @return true if the element is inside, false if not.
 	 */
 	public boolean isInside(Rectangle rect) {
@@ -368,7 +368,7 @@ public class Element {
 
 	/**
 	 * Set/reset highlight.
-	 *
+	 * 
 	 * @param light True if item should be highlighted, false otherwise.
 	 */
 	public void setHighlight(boolean light) {
@@ -378,7 +378,7 @@ public class Element {
 
 	/**
 	 * Set id of this element (for file save).
-	 *
+	 * 
 	 * @param id The id.
 	 */
 	public void setID(int id) {
@@ -388,7 +388,7 @@ public class Element {
 
 	/**
 	 * Save all information about this element in a file.
-	 *
+	 * 
 	 * @param output The print writer to use.
 	 */
 	public void save(PrintWriter output) {
@@ -409,7 +409,7 @@ public class Element {
 	/**
 	 * Highlight this element on the screen.
 	 * Subclasses draw the element itself.
-	 *
+	 * 
 	 * @param g The Graphics object to draw with.
 	 */
 	public void draw(Graphics g) {
@@ -424,7 +424,7 @@ public class Element {
 
 	/**
 	 * This element will be removed, so do whatever is needed.
-	 *
+	 * 
 	 * @param circ A reference back to the circuit the element is in.
 	 */
 	public void remove(Circuit circ) {
@@ -442,7 +442,7 @@ public class Element {
 
 	/**
 	 * Display infomation about element (overridden).
-	 *
+	 * 
 	 * @param info A JLabel to display with.
 	 */
 	public void showInfo(JLabel info) {
@@ -466,14 +466,14 @@ public class Element {
 	/**
 	 * Get all inputs and outputs.
 	 * Generally overridden.
-	 *
+	 * 
 	 * @return a set of all inputs and outputs.
 	 */
 	public Set<Put> getAllPuts() { return new HashSet<Put>(); }
 
 	/**
 	 * Get the rectangle bounding this element.
-	 *
+	 *  
 	 * @return the bounding rectangle.
 	 */
 	public Rectangle getRect() {
@@ -484,16 +484,16 @@ public class Element {
 	/**
 	 * Set/reset touching flag(s) for this element.
 	 * Overridden by wire ends and logic elements.
-	 *
+	 * 
 	 * @param setting True to set, false to reset.
 	 */
 	public void setTouching(boolean setting) {}
 
 	/**
 	 * Get put by name.
-	 *
+	 * 
 	 * @param name Name of the put.
-	 *
+	 * 
 	 * @return The put.
 	 */
 	public Put getPut(String name) {
@@ -505,7 +505,7 @@ public class Element {
 	 * Check whether the element can be changed after it is created and placed.
 	 * Default is not.
 	 * Overriden by elements that can.
-	 *
+	 * 
 	 * @return true if element can be change, false otherwise.
 	 */
 	public boolean canChange() {
@@ -516,12 +516,12 @@ public class Element {
 	/**
 	 * Change element characteristics.
 	 * Overridden in elements that can change.
-	 *
+	 * 
 	 * @param g A Graphics object to use for sizing.
 	 * @param editWindow The editor window.
 	 * @param x The current x-coordinate of the cursor.
 	 * @param y The current y-coordinate of the cursor.
-	 *
+	 * 
 	 * @return true if the element did change, false if not.
 	 */
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
@@ -532,7 +532,7 @@ public class Element {
 	/**
 	 * Check whether element has a quick change (shortcut) option.
 	 * Overridden by elements than can.
-	 *
+	 * 
 	 * @return true if is does, false if not.
 	 */
 	public boolean quickChange() {
@@ -544,9 +544,9 @@ public class Element {
 	 * Set up menu item for quick changes.
 	 * Overridden by elements that can do it.
 	 * Should never be called.
-	 *
+	 * 
 	 * @return a menu item (can be a menu with submenu items)
-	 *
+	 * 
 	 * @throws UnsupportedOperationException if called and not overridden.
 	 */
 	public JMenuItem setupQuickMenu(SimpleEditor sed) {
@@ -558,7 +558,7 @@ public class Element {
 	 * Check whether the element has timing info, i.e., propagation delay or access time.
 	 * Default is do not.
 	 * Overridden by elements tht do.
-	 *
+	 * 
 	 * @return true if the element has timing info, false if not.
 	 */
 	public boolean hasTiming() {
@@ -568,7 +568,7 @@ public class Element {
 
 	/**
 	 * Show timing change dialog.
-	 *
+	 * 
 	 * @param g The Graphics object to use to determine size.
 	 * @param editWindow The editor window this element is in.
 	 * @param x The current x-coordinate of the mouse.
@@ -642,7 +642,7 @@ public class Element {
 
 		/**
 		 * Set up create dialog window.
-		 *
+		 * 
 		 * @param x The x-coordinate of the position of the dialog.
 		 * @param y The y-coordinate of the position of the dialog.
 		 * @param isMemory True if this is a memory element, false if not.
@@ -704,7 +704,7 @@ public class Element {
 
 		/**
 		 * React to ok, reset and cancel buttons.
-		 *
+		 * 
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
@@ -740,7 +740,7 @@ public class Element {
 	/**
 	 * Get the propagation delay or access time in this element.
 	 * Overridden by elements with timing info.
-	 *
+	 * 
 	 * @return the current delay.
 	 */
 	public int getDelay() {
@@ -751,7 +751,7 @@ public class Element {
 	/**
 	 * Set the propagation delay or access time in this element.
 	 * Overridden by elements with timing info.
-	 *
+	 * 
 	 * @param amount The new delay amount.
 	 *        Must be Integer, don't change to int!
 	 */
@@ -764,7 +764,7 @@ public class Element {
 	 * Check wether the element can be watched.
 	 * Default is not.
 	 * Overridden by elements that can be.
-	 *
+	 * 
 	 * @return false;
 	 */
 	public boolean canWatch() {
@@ -776,7 +776,7 @@ public class Element {
 	 * See if element is currently watched.
 	 * Default is not.
 	 * Overridden by elements that can be watched.
-	 *
+	 * 
 	 * @return false.
 	 */
 	public boolean isWatched() {
@@ -787,7 +787,7 @@ public class Element {
 	/**
 	 * Set whether this element is watched or not.
 	 * Overridden by elements that can be watched.
-	 *
+	 * 
 	 * @param state Unused.
 	 */
 	public void setWatched(boolean state) {
@@ -797,7 +797,7 @@ public class Element {
 	/**
 	 * Display the current value of this element.
 	 * Only works for watchable elements, and is overridden there.
-	 *
+	 * 
 	 * @param where The point on the screen to display at.
 	 */
 	public void showCurrentValue(Point where) {
@@ -807,7 +807,7 @@ public class Element {
 	/**
 	 * Get the name of this element.
 	 * Overridden by elements that actually have names.
-	 *
+	 * 
 	 * @return null;
 	 */
 	public String getName() {
@@ -817,7 +817,7 @@ public class Element {
 
 	/**
 	 * See if this element is uneditable.
-	 *
+	 * 
 	 * @return true if it is uneditable, false if not.
 	 */
 	public boolean isUneditable() {

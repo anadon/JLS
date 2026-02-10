@@ -65,7 +65,7 @@ public final class Editor extends SimpleEditor {
 			//out.putNextEntry(new ZipEntry("JLSCircuit"));
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(getTopLevelAncestor(),
-					"Can't write to " + fileName, "Error",
+					"Can't write to " + fileName + ": " + ex.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}

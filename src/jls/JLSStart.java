@@ -145,7 +145,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 				JOptionPane.showMessageDialog(null, "invalid circuit file: " + JLSInfo.loadError );
 				System.exit(1);
 			}
-			input.close();
 
 			// finish up load
 			try {
@@ -247,7 +246,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 				JOptionPane.showMessageDialog(null, "invalid circuit file: " + JLSInfo.loadError );
 				System.exit(1);
 			}
-			input.close();
 
 			// finish up load
 			try {

@@ -1,8 +1,5 @@
 JLSerror
 *.jls
-bin/
-bin
-bin*
+/bin
 *.class
-bin*
-.class
+/JLS.jar

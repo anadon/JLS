@@ -1043,7 +1043,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private void open(String filePath) {
 
 		File file = null;
-		String dir = "";
+		String dir = null;
 
 		// get circuit name from user if parameter is null
 		if (filePath == null) {
@@ -1073,6 +1073,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			file = new File(filePath);
 			prevOpenDir = file.getParent().equals("") ? System.getProperty("user.dir") : file.getParent();
 		}
+		dir = prevOpenDir;
 		
 		Scanner input = getScannerForFile(filePath);
 
@@ -1082,7 +1083,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// create new circuit
 		Circuit circ = new Circuit(cname);
-		//circ.setDirectory(dir);
+		circ.setDirectory(dir);
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);

@@ -2843,41 +2843,6 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// bounding box just adds a redundant step if selection is 1
-						if (selected.size() > 1) {
-							int xmin = Integer.MAX_VALUE;
-							int xmax = Integer.MIN_VALUE;
-							int ymin = Integer.MAX_VALUE;
-							int ymax = Integer.MIN_VALUE;
-
-							// build up a bounding box
-							for (Element sel : selectedArr) {
-								xmin = Math.min(xmin, sel.getX());
-								xmax = Math.max(xmax, sel.getX() + sel.getWidth());
-								ymin = Math.min(ymin, sel.getY());
-								ymax = Math.max(ymax, sel.getY() + sel.getHeight());
-							}
-
-							Rectangle bounds = new Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
-
-							// elementsArr.removeIf(el -> !el.isOverlapping(bounds));
-							{
-								int i = 0;
-								while (i < elementsArr.size()) {
-									if (!elementsArr.get(i).isOverlapping(bounds)) {
-										// "swap" remove - slightly cheaper because we don't care about order
-										elementsArr.set(i, elementsArr.get(elementsArr.size() - 1));
-										elementsArr.remove(elementsArr.size() - 1); // pop
-										// don't increment on erase because [i] now refers to a new element
-									}
-									else {
-										i++;
-									}
-								}
-							}
-						}
-						elementsArr.trimToSize();
-
 						// check every element in the selected set
 						for (Element sel : selectedArr) {
 

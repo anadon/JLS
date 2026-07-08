@@ -227,68 +227,87 @@ public class JumpEnd extends LogicElement {
 		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
 	} // end of getRect method
 	
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes. The
+	// " int tristate 1" line reflects derived output state, not a plain
+	// field, so it stays hand-printed in save() and hand-loaded in
+	// setValue below.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((JumpEnd)el).name; }
+			protected void set(Element el, String v) {
+				// loading a name registers it with the circuit
+				((JumpEnd)el).name = v;
+				el.getCircuit().addName(v);
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy assigned the field without
+				// registering the name
+				((JumpEnd)to).name = ((JumpEnd)from).name;
+			}
+		},
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((JumpEnd)el).bits; }
+			protected void set(Element el, int v) { ((JumpEnd)el).bits = v; }
+		},
+		new Attribute.OrientationAttribute("orientation") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((JumpEnd)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((JumpEnd)el).orientation = o;
+			}
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("tristate")) {
+
+		if (name.equals("tristate")) {
 			loadTriState = true;
 		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
-	/**
-	 * Set a string instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("name")) {
-			this.name = value;
-			circuit.addName(value);
-		} else if(name.equals("orientation")) {
-			orientation = JLSInfo.Orientation.valueOf(value);
-		}else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT JumpEnd");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int bits " + bits);
-		output.println(" String orientation \"" + orientation + "\"");
 		if (outputs.get(0).isTriState())
 			output.println(" int tristate 1");
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		JumpEnd it = new JumpEnd(circuit);
-		it.name = name;
-		it.bits = bits;
 		it.outputs.add(outputs.get(0).copy(it));
-		it.orientation = orientation;
 		super.copy(it);
 		return it;
 	} // end of copy method
@@ -368,11 +387,9 @@ public class JumpEnd extends LogicElement {
 	 * Dialog box to set jump end characteristics.
 	 */
 	@SuppressWarnings("serial")
-	private class EndCreate extends JDialog implements ActionListener {
-		
+	private class EndCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JList starts;
 		private JRadioButton left = new JRadioButton("left");
 		private JRadioButton right = new JRadioButton("right");
@@ -387,15 +404,14 @@ public class JumpEnd extends LogicElement {
 		private EndCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Wire End",true);
-			
+			super("Create Wire End","end");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up jumpstart name list
 			JLabel heading = new JLabel("Select Wire Name",SwingConstants.CENTER);
 			heading.setAlignmentX((float)0.5);
@@ -429,80 +445,39 @@ public class JumpEnd extends LogicElement {
 			group.add(right);
 			right.setSelected(true);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "end");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to events.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the jump end.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			// if ok button pushed...
-			if (event.getSource() == ok) {
-				if (starts.getSelectedIndex() < 0) {
-					JOptionPane.showMessageDialog(this,
-							"Nothing selected", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				name = (String)starts.getSelectedValue();
-				bits = circuit.getJumpStart(name).getBits();
-				if (right.isSelected()) {
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else {
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			if (starts.getSelectedIndex() < 0) {
+				reject("Nothing selected");
+				return;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			name = (String)starts.getSelectedValue();
+			bits = circuit.getJumpStart(name).getBits();
+			if (right.isSelected()) {
+				orientation = JLSInfo.Orientation.RIGHT;
 			}
-			
-		} // end of actionPerformed method
-		
+			else {
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this jump end.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of EndCreate class
 	
 //	-------------------------------------------------------------------------------

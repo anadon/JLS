@@ -353,44 +353,49 @@ public abstract class Gate extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("numInputs")) {
-			numInputs = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for the attributes shared by every gate kind.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Gate)el).bits; }
+			protected void set(Element el, int v) { ((Gate)el).bits = v; }
+		},
+		new Attribute.IntAttribute("numInputs") {
+			protected int get(Element el) { return ((Gate)el).numInputs; }
+			protected void set(Element el, int v) { ((Gate)el).numInputs = v; }
+		},
+		new Attribute.StringAttribute("orientation") {
+			protected String get(Element el) {
+				return ((Gate)el).orientation.toString();
+			}
+			protected void set(Element el, String v) {
+				// gates use their own lowercase orientation enum;
+				// unknown strings leave the orientation unchanged
+				for (Orientation o : Orientation.values()) {
+					if (o.toString().equals(v)) {
+						((Gate)el).orientation = o;
+					}
+				}
+			}
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((Gate)el).propDelay; }
+			protected void set(Element el, int v) { ((Gate)el).propDelay = v; }
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set a String instance variable value (during a load);
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus the shared gate attributes, in save order
+	 * (#23).
 	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("orientation")) {
-			if (value.equals("left")) {
-				orientation = Orientation.left;
-			}
-			else if (value.equals("up")) {
-				orientation = Orientation.up;
-			}
-			else if (value.equals("down")) {
-				orientation = Orientation.down;
-			}
-			else if (value.equals("right")) {
-				orientation = Orientation.right;
-			}
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
 	
 	/**
 	 * Copy this gate.
@@ -414,11 +419,7 @@ public abstract class Gate extends LogicElement {
 	 * @param it The element to copy to.
 	 */
 	public void copy(Gate it) {
-		
-		it.numInputs = numInputs;
-		it.bits = bits;
-		it.orientation = orientation;
-		it.propDelay = propDelay;
+
 		it.outputs.add(outputs.get(0).copy(it));
 		for (Input in : inputs) {
 			it.inputs.add(in.copy(it));
@@ -444,13 +445,9 @@ public abstract class Gate extends LogicElement {
 	 * @param triState If true, save that this element has a tri-state output.
 	 */
 	public void save(PrintWriter output, String type, boolean triState) {
-		
+
 		output.println("ELEMENT " + type);
 		super.save(output);
-		output.println(" int bits " + bits);
-		output.println(" int numInputs " + numInputs);
-		output.println(" String orientation \"" + orientation + "\"");
-		output.println(" int delay " + propDelay);
 		if (triState) {
 			output.println(" int tristate 1");
 		}

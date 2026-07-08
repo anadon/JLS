@@ -204,70 +204,70 @@ public class JumpStart extends LogicElement implements TriProp {
 		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
 	} // end of getRect method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("watch")) {
-			if (value == 0)
-				watched = false;
-			else
-				watched = true;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((JumpStart)el).name; }
+			protected void set(Element el, String v) {
+				// loading a name registers it with the circuit
+				((JumpStart)el).name = v;
+				el.getCircuit().addName(v);
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy assigned the field without
+				// registering the name
+				((JumpStart)to).name = ((JumpStart)from).name;
+			}
+		},
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((JumpStart)el).bits; }
+			protected void set(Element el, int v) { ((JumpStart)el).bits = v; }
+		},
+		new Attribute.IntAttribute("watch") {
+			protected int get(Element el) { return ((JumpStart)el).watched ? 1 : 0; }
+			protected void set(Element el, int v) { ((JumpStart)el).watched = v != 0; }
+		},
+		new Attribute.OrientationAttribute("orientation") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((JumpStart)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((JumpStart)el).orientation = o;
+			}
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set a string instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("name")) {
-			this.name = value;
-			circuit.addName(value);
-		} else if(name.equals("orientation")) {
-			orientation = JLSInfo.Orientation.valueOf(value);
-		}else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT JumpStart");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int bits " + bits);
-		output.println(" int watch " + (watched ? 1 : 0));
-		output.println(" String orientation \"" + orientation + "\"");
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		JumpStart it = new JumpStart(circuit);
-		it.name = name;
-		it.bits = bits;
-		it.watched = watched;
-		it.orientation = orientation;
 		it.inputs.add(inputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -408,11 +408,9 @@ public class JumpStart extends LogicElement implements TriProp {
 	/**
 	 * Dialog box to set input pin characteristics.
 	 */
-	private class StartCreate extends JDialog implements ActionListener {
-		
+	private class StartCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField("",12);
 		private JTextField bitsField = new JTextField("1",5);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
@@ -428,15 +426,14 @@ public class JumpStart extends LogicElement implements TriProp {
 		private StartCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Wire Start",true);
-			
+			super("Create Wire Start","start");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JPanel labels = new JPanel(new GridLayout(2,1,1,5));
@@ -472,105 +469,57 @@ public class JumpStart extends LogicElement implements TriProp {
 			group.add(right);
 			left.setSelected(true);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "start");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			nameField.addActionListener(this);
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(nameField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to events.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the jump start.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			// if ok button pushed or enter(return) typed in name field,
-			// then check name for validity
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				String tname = nameField.getText();
-				if (!Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Bits not numeric", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (!circuit.addName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Name already used", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (right.isSelected()) {
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else {
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				circuit.addJumpStart(tname,me);
-				name = tname;
-				bitsPad.close();
-				dispose();
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText();
+			if (!Util.isValidName(tname)) {
+				reject("Invalid name");
+				return;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			
-		} // end of actionPerformed method
-		
+			catch (NumberFormatException ex) {
+				reject("Bits not numeric");
+				return;
+			}
+			if (bits < 1) {
+				reject("Must have at least 1 bit");
+				return;
+			}
+			if (!circuit.addName(tname)) {
+				reject("Name already used");
+				return;
+			}
+			if (right.isSelected()) {
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else {
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			circuit.addJumpStart(tname,me);
+			name = tname;
+			bitsPad.close();
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of StartCreate class
 
 	/**

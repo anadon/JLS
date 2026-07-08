@@ -48,7 +48,60 @@ public final class JLSInfo {
 	public static boolean batch = false;				// batch mode
 	public static boolean printTrace = false;			// print signal trace
 	public static boolean imgexport = false;			// export image from command line
-	public enum Orientation { UP, DOWN, LEFT, RIGHT; }
+	public enum Orientation { UP, DOWN, LEFT, RIGHT;
+
+		/**
+		 * The orientation after a quarter-turn counterclockwise (what
+		 * rotating an element "left" does to each of its orientations).
+		 */
+		public Orientation ccw() {
+			switch (this) {
+			case LEFT: return DOWN;
+			case DOWN: return RIGHT;
+			case RIGHT: return UP;
+			default: return LEFT;
+			}
+		} // end of ccw method
+
+		/**
+		 * The orientation after a quarter-turn clockwise (rotating an
+		 * element "right").
+		 */
+		public Orientation cw() {
+			switch (this) {
+			case LEFT: return UP;
+			case UP: return RIGHT;
+			case RIGHT: return DOWN;
+			default: return LEFT;
+			}
+		} // end of cw method
+
+		/**
+		 * The opposite orientation (what flipping an element does).
+		 */
+		public Orientation flipped() {
+			switch (this) {
+			case LEFT: return RIGHT;
+			case RIGHT: return LEFT;
+			case UP: return DOWN;
+			default: return UP;
+			}
+		} // end of flipped method
+
+		/**
+		 * The orientation named by a saved-file string, or the given
+		 * current value if the string names none (the handwritten
+		 * loaders always ignored unknown strings).
+		 */
+		public static Orientation parse(String value, Orientation current) {
+			for (Orientation o : values()) {
+				if (o.toString().equals(value)) {
+					return o;
+				}
+			}
+			return current;
+		} // end of parse method
+	}
 	public static Color gridColor = 
 		new Color(240,240,240);							// editor window grid
 	public static Color backgroundColor =  Color.white;	// editor window grid

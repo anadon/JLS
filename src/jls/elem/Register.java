@@ -479,133 +479,106 @@ public class Register extends LogicElement {
 		
 	} // end of draw method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else if (name.equals("watch")) {
-			if (value == 0)
-				watched = false;
-			else
-				watched = true;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((Register)el).name; }
+			protected void set(Element el, String v) {
+				// loading a name registers it with the circuit
+				((Register)el).name = v;
+				el.getCircuit().addName(v);
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy assigned the field without
+				// registering the name
+				((Register)to).name = ((Register)from).name;
+			}
+		},
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Register)el).bits; }
+			protected void set(Element el, int v) { ((Register)el).bits = v; }
+		},
+		new Attribute.BigIntAttribute("init") {
+			protected BigInteger get(Element el) {
+				return ((Register)el).initialValue;
+			}
+			protected void set(Element el, BigInteger v) {
+				// the handwritten loader (and copy) also reset the
+				// displayed current value
+				Register reg = (Register)el;
+				reg.initialValue = v.add(BigInteger.ZERO);
+				reg.currentValue = BitSetUtils.Create(v);
+			}
+		},
+		new Attribute.OrientationAttribute("orient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Register)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Register)el).orientation = o;
+			}
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((Register)el).propDelay; }
+			protected void set(Element el, int v) { ((Register)el).propDelay = v; }
+		},
+		new Attribute.StringAttribute("type") {
+			protected String get(Element el) {
+				switch (((Register)el).type) {
+				case PosFF: return "pff";
+				case NegFF: return "nff";
+				default: return "latch";
+				}
+			}
+			protected void set(Element el, String v) {
+				// unknown strings leave the type unchanged, as the
+				// handwritten loader did
+				if (v.equals("latch"))
+					((Register)el).type = Type.Latch;
+				else if (v.equals("pff"))
+					((Register)el).type = Type.PosFF;
+				else if (v.equals("nff"))
+					((Register)el).type = Type.NegFF;
+			}
+		},
+		new Attribute.IntAttribute("watch") {
+			protected int get(Element el) { return ((Register)el).watched ? 1 : 0; }
+			protected void set(Element el, int v) { ((Register)el).watched = v != 0; }
 		}
-	} // end of setValue method
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
 
 	/**
-	 * Set a long instance variable value (during a load).
-	 * This is here for compatibility with early version of JLS that saved the initial
-	 * value as a long instead of a BigInteger.
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, long value) {
-		
-		if (name.equals("init")) {
-			initialValue = BigInteger.valueOf(value);
-			currentValue = BitSetUtils.Create(value);
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
-	/**
-	 * Set a BigInteger instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, BigInteger value) {
-		
-		if (name.equals("init")) {
-			initialValue = value.add(BigInteger.ZERO);
-			currentValue = BitSetUtils.Create(value);
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
-	/**
-	 * Set a String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("name")) {
-			this.name = value;
-			circuit.addName(value);
-		} else if (name.equals("type")) {
-			if (value.equals("latch"))
-				type = Type.Latch;
-			else if (value.equals("pff"))
-				type = Type.PosFF;
-			else if (value.equals("nff"))
-				type = Type.NegFF;
-		}
-		else if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			} 
-			} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Register");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int bits " + bits);
-		output.println(" Int init " + initialValue.toString());
-		output.println(" String orient \"" + orientation.toString() + "\"");
-		output.println(" int delay " + propDelay);
-		switch (type) {
-		case Latch: output.println(" String type \"latch\""); break;
-		case PosFF: output.println(" String type \"pff\""); break;
-		case NegFF: output.println(" String type \"nff\""); break;
-		}
-		output.println(" int watch " + (watched ? 1 : 0));
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Can't copy registers ('cause they have names).
-	 * 
+	 *
 	 * @return false;
 	 */
 	public boolean canCopy() {
-		
+
 		return false;
 	} // end of canCopy method
 
@@ -613,17 +586,9 @@ public class Register extends LogicElement {
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		Register it = new Register(circuit);
-		it.name = new String(name);
-		it.type = type;
-		it.bits = bits;
-		it.propDelay = propDelay;
-		it.initialValue = initialValue.add(BigInteger.ZERO);
-		it.currentValue = BitSetUtils.Create(initialValue);
-		it.base = base;
-		it.orientation = orientation;
-		it.watched = watched;
+		it.base = base;	// display radix is not a saved attribute
 		it.inputs.add(inputs.get(0).copy(it));
 		it.inputs.add(inputs.get(1).copy(it));
 		it.outputs.add(outputs.get(0).copy(it));
@@ -756,32 +721,10 @@ public class Register extends LogicElement {
 	public void rotate(JLSInfo.Orientation direction, Graphics g) {
 		
 		if(direction == JLSInfo.Orientation.LEFT) {
-			if(orientation == JLSInfo.Orientation.LEFT) {
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN) {
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT) {
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP) {
-				orientation = JLSInfo.Orientation.LEFT;
-			}
+			orientation = orientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT) {
-			if(orientation == JLSInfo.Orientation.LEFT) {
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN) {
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT) {
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP) {
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
@@ -816,18 +759,7 @@ public class Register extends LogicElement {
 	 */
 	public void flip(Graphics g) {
 		
-		if(orientation == JLSInfo.Orientation.LEFT) {
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP) {
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN) {
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;
@@ -838,11 +770,9 @@ public class Register extends LogicElement {
 	/**
 	 * Dialog box to create/modify register characteristics.
 	 */
-	private class RegisterEdit extends JDialog implements ActionListener {
-		
+	private class RegisterEdit extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField(name);
 		private JTextField bitsField = new JTextField(bits+"");
 		private JTextField valueField = new JTextField("");
@@ -870,18 +800,17 @@ public class Register extends LogicElement {
 		private RegisterEdit(int x, int y, boolean creating) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Register",true);
-			
+			super("Create Register","register");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// save create/modify
 			this.creating = creating;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up types
 			JLabel tlbl = new JLabel("Trigger");
 			tlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -1015,138 +944,100 @@ public class Register extends LogicElement {
 				break;
 			}
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "register");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			nameField.addActionListener(this);
-			bitsField.addActionListener(this);
-			valueField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			base2.addActionListener(this);
 			base10.addActionListener(this);
 			base16.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(nameField);
+			confirmOnEnter(bitsField);
+			confirmOnEnter(valueField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to buttons.
-		 * 
+		 * Validate the form and apply it to the register.
+		 */
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText().trim();
+			if (tname.equals("") || !Util.isValidName(tname)) {
+				reject("Missing or invalid name");
+				return;
+			}
+			int tbits = bits;
+			BigInteger tinitialValue = BigInteger.ZERO;
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			try {
+				if (creating) {
+					tbits = Integer.parseInt(bitsField.getText());
+				}
+				tinitialValue = new BigInteger(valueField.getText(),base);
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric");
+				return;
+			}
+			if (tbits < 1) {
+				reject("Must have at least 1 bit");
+				return;
+			}
+			if (tinitialValue.bitLength() > tbits) {
+				reject("Value too large for number of bits");
+				return;
+			}
+			if (!creating) {
+				circuit.removeName(name);
+			}
+			if (!circuit.addName(tname)) {
+				reject("Duplicate name");
+				return;
+			}
+			name = tname;
+			bits = tbits;
+			initialValue = tinitialValue.add(BigInteger.ZERO);
+			currentValue = BitSetUtils.Create(initialValue);
+			if (latch.isSelected())
+				type = Register.Type.Latch;
+			else if (negFF.isSelected())
+				type = Register.Type.NegFF;
+			else
+				type = Register.Type.PosFF;
+			bitsPad.close();
+			valuePad.close();
+			circuit.markChanged();
+			if (!creating && !valueFits(tname)) {
+				nameChanged = true;
+			}
+			else {
+				nameChanged = false;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * React to radix buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == nameField ||
-					event.getSource() == bitsField || event.getSource() == valueField) {
-				String tname = nameField.getText().trim();
-				if (tname.equals("") || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				int tbits = bits;
-				BigInteger tinitialValue = BigInteger.ZERO;
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				try {
-					if (creating) {
-						tbits = Integer.parseInt(bitsField.getText());
-					}
-					tinitialValue = new BigInteger(valueField.getText(),base);
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (tbits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (tinitialValue.bitLength() > tbits) {
-					JOptionPane.showMessageDialog(this,
-							"Value too large for number of bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (!creating) {
-					circuit.removeName(name);
-				}
-				if (!circuit.addName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Duplicate name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				name = tname;
-				bits = tbits;
-				initialValue = tinitialValue.add(BigInteger.ZERO);
-				currentValue = BitSetUtils.Create(initialValue);
-				if (latch.isSelected())
-					type = Register.Type.Latch;
-				else if (negFF.isSelected())
-					type = Register.Type.NegFF;
-				else
-					type = Register.Type.PosFF;
-				bitsPad.close();
-				valuePad.close();
-				circuit.markChanged();
-				if (!creating && !valueFits(tname)) {
-					nameChanged = true;
-				}
-				else {
-					nameChanged = false;
-				}
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			else if (event.getSource() == base2) {
+
+			if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
 				if (!valueField.getText().equals(""))
 					val = new BigInteger(valueField.getText(),base);
@@ -1171,16 +1062,16 @@ public class Register extends LogicElement {
 				valueField.setText(val.toString(16));
 			}
 		} // end of actionPerformed method
-		
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of RegisterEdit class
 	
 	/**

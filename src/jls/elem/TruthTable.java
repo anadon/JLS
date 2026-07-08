@@ -246,10 +246,6 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		output.println("ELEMENT TruthTable");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int delay " + propDelay);
-		output.println(" int rows " + rows);
-		output.println(" int cols " + cols);
 		for (String in : inputNames) {
 			output.println(" String input \"" + in + "\"");
 		}
@@ -264,43 +260,71 @@ public final class TruthTable extends LogicElement implements Printable {
 		output.println("END");
 	} // end of save method
 
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's simple attributes. The
+	// repeated " String input"/" String output" and " pair" lines are
+	// list-valued and stay handwritten in save(), setValue and setPair.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((TruthTable)el).name; }
+			protected void set(Element el, String v) {
+				// loading a name registers it with the circuit
+				((TruthTable)el).name = v;
+				el.getCircuit().addName(v);
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy assigned the field without
+				// registering the name
+				((TruthTable)to).name = ((TruthTable)from).name;
+			}
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((TruthTable)el).propDelay; }
+			protected void set(Element el, int v) { ((TruthTable)el).propDelay = v; }
+		},
+		new Attribute.IntAttribute("rows") {
+			protected int get(Element el) { return ((TruthTable)el).rows; }
+			protected void set(Element el, int v) { ((TruthTable)el).rows = v; }
+		},
+		new Attribute.IntAttribute("cols") {
+			protected int get(Element el) { return ((TruthTable)el).cols; }
+			protected void set(Element el, int v) {
+				// setting cols allocates the table (rows is loaded and
+				// copied first, in save order)
+				TruthTable tt = (TruthTable)el;
+				tt.cols = v;
+				tt.table = new int[tt.rows][tt.cols];
+			}
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setValue(String name, String value) {
 
-		if (name.equals("name")) {
-			this.name = value;
-			circuit.addName(value);
-		}
-		else if (name.equals("input")) {
+		if (name.equals("input")) {
 			inputNames.add(value);
 		}
 		else if (name.equals("output")) {
 			outputNames.add(value);
 		}
 		else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The name of the variable.
-	 * @param value The value of the variable.
-	 */
-	public void setValue(String name, int value) {
-
-		if (name.equals("rows")) {
-			rows = value;
-		} else if (name.equals("cols")) {
-			cols = value;
-			table = new int[rows][cols];
-		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
@@ -326,20 +350,16 @@ public final class TruthTable extends LogicElement implements Printable {
 	 */
 	public Element copy() {
 
-		// create new element
+		// create new element; the attribute registry copies name, delay,
+		// rows and cols (allocating the copy's table)
 		TruthTable it = new TruthTable(circuit);
-
-		// set basic info
-		it.name = new String(name);
+		super.copy(it);
 
 		// copy input and output names
 		it.inputNames = new Vector<String>(inputNames);
 		it.outputNames = new Vector<String>(outputNames);
 
-		// copy table
-		it.rows = table.length;
-		it.cols = table[0].length;
-		it.table = new int[rows][cols];
+		// copy table contents
 		for (int r=0; r<rows; r+=1) {
 			for (int c=0; c<cols; c+=1) {
 				it.table[r][c] = table[r][c];
@@ -353,9 +373,6 @@ public final class TruthTable extends LogicElement implements Printable {
 		for (Output output : outputs) {
 			it.outputs.add(output.copy(it));
 		}
-
-		// finish up
-		super.copy(it);
 		return it;
 	} // end of copy method
 

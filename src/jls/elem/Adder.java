@@ -91,56 +91,48 @@ public class Adder extends LogicElement {
 	 * @param g The Graphics object to use.
 	 */
 	public void init(Graphics g) {
-		
+
+		// canonical geometry (RIGHT), transformed to the current
+		// orientation (#24)
 		int s = JLSInfo.spacing;
 		height = 4*s;
 		width = 4*s;
-		
-		if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			// create inputs
-			inputs.add(new Input("A",this,0,s,bits));
-			inputs.add(new Input("B",this,0,3*s,bits));
-			inputs.add(new Input("Cin",this,width/2,0,1));
-		
-			// create output
-			outputs.add(new Output("S",this,width,2*s,bits));
-			outputs.add(new Output("Cout",this,width/2,height,1));
-		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			// create inputs
-			inputs.add(new Input("A",this,width,s,bits));
-			inputs.add(new Input("B",this,width,3*s,bits));
-			inputs.add(new Input("Cin",this,width/2,0,1));
-		
-			// create output
-			outputs.add(new Output("S",this,0,2*s,bits));
-			outputs.add(new Output("Cout",this,width/2,height,1));
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			// create inputs
-			inputs.add(new Input("A",this,s,0,bits));
-			inputs.add(new Input("B",this,3*s,0,bits));
-			inputs.add(new Input("Cin",this,0,height/2,1));
-		
-			// create output
-			outputs.add(new Output("S",this,2*s,height,bits));
-			outputs.add(new Output("Cout",this,width,height/2,1));
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			// create inputs
-			inputs.add(new Input("A",this,s,height,bits));
-			inputs.add(new Input("B",this,3*s,height,bits));
-			inputs.add(new Input("Cin",this,0,height/2,1));
-		
-			// create output
-			outputs.add(new Output("S",this,2*s,0,bits));
-			outputs.add(new Output("Cout",this,width,height/2,1));
-		}
+		GridTransform.Chain t = placement();
+		Point a = t.map(0,s);
+		Point b = t.map(0,3*s);
+		Point cin = t.map(2*s,0);
+		Point sum = t.map(4*s,2*s);
+		Point cout = t.map(2*s,4*s);
+		inputs.add(new Input("A",this,a.x,a.y,bits));
+		inputs.add(new Input("B",this,b.x,b.y,bits));
+		inputs.add(new Input("Cin",this,cin.x,cin.y,1));
+		outputs.add(new Output("S",this,sum.x,sum.y,bits));
+		outputs.add(new Output("Cout",this,cout.x,cout.y,1));
 	} // end of init method
+
+	/**
+	 * The transform from canonical geometry (RIGHT) to the current
+	 * orientation.
+	 */
+	private GridTransform.Chain placement() {
+
+		int s = JLSInfo.spacing;
+		GridTransform.Chain t = GridTransform.chain(4*s, 4*s);
+		switch (orientation) {
+		case RIGHT:
+			break;
+		case LEFT:
+			t.mirrorX();
+			break;
+		case DOWN:
+			t.rotateCW().mirrorX();
+			break;
+		default: // UP
+			t.rotateCW().mirrorX().mirrorY();
+			break;
+		}
+		return t;
+	} // end of placement method
 	
 	/**
 	 * Draw this gate.
@@ -282,60 +274,48 @@ public class Adder extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Adder)el).bits; }
+			protected void set(Element el, int v) { ((Adder)el).bits = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((Adder)el).propDelay; }
+			protected void set(Element el, int v) { ((Adder)el).propDelay = v; }
+		},
+		new Attribute.OrientationAttribute("orient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Adder)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Adder)el).orientation = o;
+			}
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set a String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT Adder");
 		super.save(output);
-		output.println(" int bits " + bits);
-		output.println(" int delay " + propDelay);
-		output.println(" String orient \"" + orientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
 	
@@ -345,9 +325,6 @@ public class Adder extends LogicElement {
 	public Element copy() {
 		
 		Adder it = new Adder(circuit);
-		it.bits = bits;
-		it.propDelay = propDelay;
-		it.orientation = orientation;
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -426,42 +403,11 @@ public class Adder extends LogicElement {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			
+			orientation = orientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
@@ -485,22 +431,7 @@ public class Adder extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		outputs.clear();
 		inputs.clear();
 		width = 0;

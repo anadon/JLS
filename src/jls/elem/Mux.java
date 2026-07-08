@@ -86,24 +86,20 @@ public class Mux extends LogicElement {
 	 * @param g The Graphics object to use.
 	 */
 	public void init(Graphics g) {
-		
-		// set up size
+
+		// canonical geometry (output RIGHT), transformed to the current
+		// output orientation (#24); the selector side is independent of
+		// that transform (input order never mirrors with the selector),
+		// so its put is placed directly from its own orientation
 		int s = JLSInfo.spacing;
-		
-		if(outputOrientation == JLSInfo.Orientation.LEFT || outputOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			height = (numInputs+1)*s;
-			width = 2*s;
-		}
-		else
-		{
-			width = (numInputs+1)*s;
-			height = 2*s;
-		}
-		
+		GridTransform.Chain t = placement();
+		Dimension d = t.size();
+		width = d.width;
+		height = d.height;
+
 		// determine number of select bits
 		int sbits = 32 - Integer.numberOfLeadingZeros(numInputs-1);
-		
+
 		// create select input
 		if(selectorOrientation == JLSInfo.Orientation.DOWN)
 		{
@@ -121,51 +117,40 @@ public class Mux extends LogicElement {
 		{
 			inputs.add(new Input("select",this,width,s,sbits));
 		}
-		
-		
-		int ypos = s;
-		if(outputOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			// create inputs
-			for (int i=0; i<numInputs; i+=1) {
-				inputs.add(new Input("input"+i,this,0,ypos,bits));
-				ypos += s;
-			}
-			// create output
-			outputs.add(new Output("output",this,width,(numInputs+1)/2*s,bits));
+
+		// create inputs and output
+		for (int i=0; i<numInputs; i+=1) {
+			Point p = t.map(0,(i+1)*s);
+			inputs.add(new Input("input"+i,this,p.x,p.y,bits));
 		}
-		else if(outputOrientation == JLSInfo.Orientation.LEFT)
-		{
-			// create inputs
-			for (int i=0; i<numInputs; i+=1) {
-				inputs.add(new Input("input"+i,this,width,ypos,bits));
-				ypos += s;
-			}
-			// create output
-			outputs.add(new Output("output",this,0,(numInputs+1)/2*s,bits));
-		}
-		else if(outputOrientation == JLSInfo.Orientation.DOWN)
-		{
-			// create inputs
-			for (int i=0; i<numInputs; i+=1) {
-				inputs.add(new Input("input"+i,this,ypos,0,bits));
-				ypos += s;
-			}
-			// create output
-			outputs.add(new Output("output",this,(numInputs+1)/2*s,height,bits));
-		}
-		else if(outputOrientation == JLSInfo.Orientation.UP)
-		{
-			// create inputs
-			for (int i=0; i<numInputs; i+=1) {
-				inputs.add(new Input("input"+i,this,ypos,height,bits));
-				ypos += s;
-			}
-			// create output
-			outputs.add(new Output("output",this,(numInputs+1)/2*s,0,bits));
-		}
-		
+		Point p = t.map(2*s,(numInputs+1)/2*s);
+		outputs.add(new Output("output",this,p.x,p.y,bits));
+
 	} // end of init method
+
+	/**
+	 * The transform from canonical geometry (output RIGHT) to the current
+	 * output orientation.
+	 */
+	private GridTransform.Chain placement() {
+
+		int s = JLSInfo.spacing;
+		GridTransform.Chain t = GridTransform.chain(2*s,(numInputs+1)*s);
+		switch (outputOrientation) {
+		case RIGHT:
+			break;
+		case LEFT:
+			t.mirrorX();
+			break;
+		case UP:
+			t.rotateCCW();
+			break;
+		default: // DOWN
+			t.rotateCCW().mirrorY();
+			break;
+		}
+		return t;
+	} // end of placement method
 	
 	/**
 	 * Draw this mux.
@@ -263,106 +248,71 @@ public class Mux extends LogicElement {
 		
 	} // end of draw method
 
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("inputs") {
+			protected int get(Element el) { return ((Mux)el).numInputs; }
+			protected void set(Element el, int v) { ((Mux)el).numInputs = v; }
+		},
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Mux)el).bits; }
+			protected void set(Element el, int v) { ((Mux)el).bits = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((Mux)el).propDelay; }
+			protected void set(Element el, int v) { ((Mux)el).propDelay = v; }
+		},
+		new Attribute.OrientationAttribute("iOrient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Mux)el).outputOrientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Mux)el).outputOrientation = o;
+			}
+		},
+		new Attribute.OrientationAttribute("sOrient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Mux)el).selectorOrientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Mux)el).selectorOrientation = o;
+			}
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("inputs")) {
-			numInputs = value;
-		} else if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("iOrient")) {
-			if(value.equals("LEFT"))
-			{
-				outputOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				outputOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				outputOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				outputOrientation = JLSInfo.Orientation.DOWN;
-			}
-		} 
-		else if(name.equals("sOrient"))
-		{
-			if(value.equals("LEFT"))
-			{
-				selectorOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				selectorOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				selectorOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				selectorOrientation = JLSInfo.Orientation.DOWN;
-			}
-		}
-		else 
-		{
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Mux");
 		super.save(output);
-		output.println(" int inputs " + numInputs);
-		output.println(" int bits " + bits);
-		output.println(" int delay " + propDelay);
-		output.println(" String iOrient \"" + outputOrientation.toString() + "\"");
-		output.println(" String sOrient \"" + selectorOrientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
 
 	/**
 	 * Copy this element.
-	 * 
+	 *
 	 * @return a copy of this element.
 	 */
 	public Element copy() {
-		
+
 		Mux it = new Mux(circuit);
-		it.numInputs = numInputs;
-		it.bits = bits;
-		it.propDelay = propDelay;
-		it.outputOrientation = outputOrientation;
-		it.selectorOrientation = selectorOrientation;
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -453,22 +403,7 @@ public class Mux extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(selectorOrientation == JLSInfo.Orientation.LEFT)
-		{
-			selectorOrientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(selectorOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			selectorOrientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(selectorOrientation == JLSInfo.Orientation.UP)
-		{
-			selectorOrientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(selectorOrientation == JLSInfo.Orientation.DOWN)
-		{
-			selectorOrientation = JLSInfo.Orientation.UP;
-		}
+		selectorOrientation = selectorOrientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;
@@ -485,76 +420,13 @@ public class Mux extends LogicElement {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(selectorOrientation == JLSInfo.Orientation.LEFT)
-			{
-				selectorOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.DOWN)
-			{
-				selectorOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				selectorOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.UP)
-			{
-				selectorOrientation = JLSInfo.Orientation.LEFT;
-			}
-			
-			if(outputOrientation == JLSInfo.Orientation.LEFT)
-			{
-				outputOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.DOWN)
-			{
-				outputOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				outputOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.UP)
-			{
-				outputOrientation = JLSInfo.Orientation.LEFT;
-			}
-			
+			selectorOrientation = selectorOrientation.ccw();
+			outputOrientation = outputOrientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(selectorOrientation == JLSInfo.Orientation.LEFT)
-			{
-				selectorOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.DOWN)
-			{
-				selectorOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				selectorOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(selectorOrientation == JLSInfo.Orientation.UP)
-			{
-				selectorOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			
-			if(outputOrientation == JLSInfo.Orientation.LEFT)
-			{
-				outputOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.DOWN)
-			{
-				outputOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				outputOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(outputOrientation == JLSInfo.Orientation.UP)
-			{
-				outputOrientation = JLSInfo.Orientation.RIGHT;
-			}
+			selectorOrientation = selectorOrientation.cw();
+			outputOrientation = outputOrientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
@@ -592,11 +464,9 @@ public class Mux extends LogicElement {
 	/**
 	 * Dialog box to set inputs and bits.
 	 */
-	protected class MuxCreate extends JDialog implements ActionListener {
-		
+	protected class MuxCreate extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField inputsField = new JTextField(defaultInputs+"",5);
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
 		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
@@ -620,15 +490,14 @@ public class Mux extends LogicElement {
 		protected MuxCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Multiplexor",true);
-			
+			super("Create Multiplexor","mux");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up input panel
 			JPanel info = null;
 			info = new JPanel(new GridLayout(2,2));
@@ -692,53 +561,24 @@ public class Mux extends LogicElement {
 			
 			sLeft.setVisible(false);
 			sRight.setVisible(false);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "mux");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			inputsField.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			oLeft.addActionListener(this);
 			oRight.addActionListener(this);
 			oUp.addActionListener(this);
 			oDown.addActionListener(this);
-			
-			// set up window close listener to cancel mux
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(inputsField);
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok and cancel buttons.
-		 * 
+		 * React to output orientation buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
+
 			if(event.getSource() == oLeft || event.getSource() == oRight)
 			{
 				olbl2.setVisible(true);
@@ -747,7 +587,6 @@ public class Mux extends LogicElement {
 				sDown.setSelected(true);
 				sLeft.setVisible(false);
 				sRight.setVisible(false);
-				return;
 			}
 			else if(event.getSource() == oUp || event.getSource() == oDown)
 			{
@@ -757,107 +596,97 @@ public class Mux extends LogicElement {
 				sRight.setVisible(true);
 				sUp.setVisible(false);
 				sDown.setVisible(false);
+			}
+		} // end of actionPerformed method
+
+		/**
+		 * Validate the form and create the mux.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				numInputs = Integer.parseInt(inputsField.getText());
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				numInputs = -1;
 				return;
 			}
-			
-			// if ok button, check values for validity
-			if (event.getSource() == ok || event.getSource() == inputsField || event.getSource() == bitsField) {
-				try {
-					numInputs = Integer.parseInt(inputsField.getText());
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if (numInputs < 2) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 2 inputs", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least one bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if(this.oLeft.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.LEFT;
-					if(this.sUp.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oRight.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.RIGHT;
-					if(this.sUp.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oDown.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.DOWN;
-					if(this.sLeft.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(this.sRight.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.RIGHT;
-					}
-				}
-				else if(this.oUp.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.UP;
-					if(this.sLeft.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(this.sRight.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.RIGHT;
-					}
-				}
-				inputsPad.close();
-				bitsPad.close();
-				dispose();
+			if (numInputs < 2) {
+				reject("Must have at least 2 inputs");
+				numInputs = -1;
+				return;
 			}
-			
-			// if cancel button, cancel mux creation
-			else if (event.getSource() == cancel) {
-				cancel();
+			if (bits < 1) {
+				reject("Must be at least one bit");
+				numInputs = -1;
+				return;
 			}
-			
-		} // end of actionPerformed method
-		
+			if(this.oLeft.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.LEFT;
+				if(this.sUp.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.UP;
+				}
+				else if(this.sDown.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.DOWN;
+				}
+			}
+			else if(this.oRight.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.RIGHT;
+				if(this.sUp.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.UP;
+				}
+				else if(this.sDown.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.DOWN;
+				}
+			}
+			else if(this.oDown.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.DOWN;
+				if(this.sLeft.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(this.sRight.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.RIGHT;
+				}
+			}
+			else if(this.oUp.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.UP;
+				if(this.sLeft.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(this.sRight.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.RIGHT;
+				}
+			}
+			inputsPad.close();
+			bitsPad.close();
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this mux.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			inputsPad.close();
 			bitsPad.close();
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of MuxCreate class
 	
 

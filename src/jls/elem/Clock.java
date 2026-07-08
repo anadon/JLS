@@ -82,26 +82,28 @@ public class Clock extends LogicElement {
 	 * @param g Unused.
 	 */
 	public void init(Graphics g) {
-		
+
+		// canonical geometry (RIGHT), transformed to the current
+		// orientation (#24)
 		int s = JLSInfo.spacing;
 		width = 2*s;
 		height = 2*s;
-		if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			outputs.add(new Output("output",this,width,height/2,1));
+		GridTransform.Chain t = GridTransform.chain(2*s, 2*s);
+		switch (orientation) {
+		case RIGHT:
+			break;
+		case LEFT:
+			t.mirrorX();
+			break;
+		case UP:
+			t.rotateCCW();
+			break;
+		default: // DOWN
+			t.rotateCW();
+			break;
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			outputs.add(new Output("output",this,0,height/2,1));
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			outputs.add(new Output("output",this,width/2,0,1));
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			outputs.add(new Output("output",this,s,height,1));
-		}
+		Point p = t.map(2*s, s);
+		outputs.add(new Output("output",this,p.x,p.y,1));
 
 	} // end of init method
 	
@@ -149,72 +151,51 @@ public class Clock extends LogicElement {
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Clock");
 		super.save(output);
-		output.println(" int cycle " + cycleTime);
-		output.println(" int one " + oneTime);
-		output.println(" String orient \"" + orientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
-	
-	/**
-	 * Set a String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
+
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("cycle") {
+			protected int get(Element el) { return ((Clock)el).cycleTime; }
+			protected void set(Element el, int v) { ((Clock)el).cycleTime = v; }
+		},
+		new Attribute.IntAttribute("one") {
+			protected int get(Element el) { return ((Clock)el).oneTime; }
+			protected void set(Element el, int v) { ((Clock)el).oneTime = v; }
+		},
+		new Attribute.OrientationAttribute("orient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Clock)el).orientation;
 			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Clock)el).orientation = o;
 			}
-			else if(value.equals("UP"))
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			
-		} else {
-			super.setValue(name,value);
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("cycle")) {
-			cycleTime = value;
-		} else if (name.equals("one")) {
-			oneTime = value;
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		Clock it = new Clock(circuit);
-		it.cycleTime = cycleTime;
-		it.oneTime = oneTime;
-		it.orientation = orientation;
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -259,42 +240,11 @@ public class Clock extends LogicElement {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			
+			orientation = orientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		outputs.remove(0);
 		init(g);
@@ -315,22 +265,7 @@ public class Clock extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		outputs.clear();
 		width = 0;
 		height = 0;
@@ -370,11 +305,9 @@ public class Clock extends LogicElement {
 	 * Used by all simple gates (nand, and, nor, or, xor, not).
 	 */
 	@SuppressWarnings("serial")
-	private class ClockCreate extends JDialog implements ActionListener {
-		
+	private class ClockCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField cycleTimeField = new JTextField(cycleTime+"",10);
 		private JTextField oneTimeField = new JTextField(oneTime+"",10);
 		private KeyPad cycleTimePad = new KeyPad(cycleTimeField,10,defaultCycleTime,this);
@@ -393,15 +326,14 @@ public class Clock extends LogicElement {
 		private ClockCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Clock",true);
-			
+			super("Create Clock","clock");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			
@@ -448,102 +380,60 @@ public class Clock extends LogicElement {
 			gr.add(down);
 			gr.add(up);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "clock");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			cycleTimeField.addActionListener(this);
-			oneTimeField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(cycleTimeField);
+			confirmOnEnter(oneTimeField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and set the clock parameters.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == cycleTimeField || event.getSource() == oneTimeField) {
-				try {
-					int newCycleTime = Integer.parseInt(cycleTimeField.getText());
-					int newOneTime = Integer.parseInt(oneTimeField.getText());
-					
-					cycleTime = newCycleTime;
-					oneTime = newOneTime;
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (oneTime >= cycleTime) {
-					JOptionPane.showMessageDialog(this,
-							"One time must be less than cycle time", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			try {
+				int newCycleTime = Integer.parseInt(cycleTimeField.getText());
+				int newOneTime = Integer.parseInt(oneTimeField.getText());
+
+				cycleTime = newCycleTime;
+				oneTime = newOneTime;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-			
-		} // end of actionPerformed method
-		
+			if (oneTime >= cycleTime) {
+				reject("One time must be less than cycle time");
+				return;
+			}
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of ClockCreate class
 	
 //	-------------------------------------------------------------------------------

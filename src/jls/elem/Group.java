@@ -276,11 +276,9 @@ public abstract class Group extends LogicElement {
 	 * Dialog box to set bits.
 	 */
 	@SuppressWarnings("serial")
-	protected class GroupCreate extends JDialog implements ActionListener {
-		
+	protected class GroupCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
 		private JRadioButton single = new JRadioButton("Single Bits");
@@ -296,20 +294,20 @@ public abstract class Group extends LogicElement {
 		 * @param y The y-coordinate of the position of the dialog.
 		 */
 		protected GroupCreate(int x, int y, String type) {
-			
+
 			// set up window title
-			super(JLSInfo.frame,"Create " + type,true);
-			
+			super("Create " + type,
+					type.equals("Unbundler") ? "unbundle" : "bundle");
+
 			// save type
 			this.type = type;
-			
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits;
@@ -349,113 +347,67 @@ public abstract class Group extends LogicElement {
 			gr.add(left);
 			gr.add(right);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("help");
-			if (type.equals("Unbundler")) {
-				Help.enableHelpOnButton(help, "unbundle");
+
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
+		} // end of constructor
+
+		/**
+		 * Validate the form and create the bundler/unbundler.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
+			}
+			if (bits < 2) {
+				reject("Must be at least 2 bits");
+				return;
+			}
+
+			// set up ranges
+			if (single.isSelected()) {
+				for (int b=0; b<bits; b+=1) {
+					ranges.add(new Entry(b, b));
+				}
 			}
 			else {
-				Help.enableHelpOnButton(help, "bundle");
-			}
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			ok.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
-		} // end of constructor
-		
-		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
-		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == bitsField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 2) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least 2 bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// set up ranges
-				if (single.isSelected()) {
-					for (int b=0; b<bits; b+=1) {
-						ranges.add(new Entry(b, b));
-					}
-				}
-				else {
-					Point here = getLocation();
-					dispose();
-					new GetRanges(here,type);
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
+				Point here = getLocation();
 				dispose();
+				new GetRanges(here,type);
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
 			}
-			
-		} // end of actionPerformed method
-		
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of GroupCreate class
 	
 	/**
 	 * Get bit group info.
 	 */
 	@SuppressWarnings("serial")
-	protected class GetRanges extends JDialog implements ActionListener {
-		
+	protected class GetRanges extends ElementDialog implements ActionListener {
+
 		// properties
 		private DefaultListModel<Entry> pick = new DefaultListModel<Entry>();
 		private JList<Entry> choose = new JList<Entry>(pick); // LeftList?
@@ -467,8 +419,6 @@ public abstract class Group extends LogicElement {
 		private JButton upshifter = new JButton("Move bundle up");
 		private JButton downshifter = new JButton("Move bundle down");
 		private JButton downjumper = new JButton("Move bundle to bottom");
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private String type;
 		
 		/**
@@ -483,6 +433,7 @@ public abstract class Group extends LogicElement {
 		 */
 		protected GetRanges() {
 			// No-op. This object will get garbage collected.
+			super("Pick Bit Groups",null);
 		}
 		
 		/**
@@ -492,15 +443,15 @@ public abstract class Group extends LogicElement {
 		 * @param type Either "Bundler" or "Unbundler".
 		 */
 		public GetRanges(Point where, String type) {
-			
-			super(JLSInfo.frame,"Pick Bit Groups",true);
-			
+
+			super("Pick Bit Groups",
+					type.equals("unbundle") ? "unbundle" : "bundle");
+
 			this.type = type;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up selections
 			for (int b=0; b<bits; b+=1) {
 				pick.addElement(new Entry(new int[]{b}));
@@ -552,51 +503,36 @@ public abstract class Group extends LogicElement {
 			lists.add(shifters);
 			
 			window.add(lists);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("help");
-			if (type.equals("unbundle")) {
-				Help.enableHelpOnButton(help, "unbundle");
-			}
-			else {
-				Help.enableHelpOnButton(help, "bundle");
-			}
-			
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
+
 			// set up listeners
 			add.addActionListener(this);
 			remove.addActionListener(this);
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
 			upjumper.addActionListener(this);
 			upshifter.addActionListener(this);
 			downshifter.addActionListener(this);
 			downjumper.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			setLocation(where.x,where.y);
-			setVisible(true);
+
+			finishDialog(where.x,where.y);
 		} // end of constructor
+
+		/**
+		 * Validate the chosen groups and create the range entries.
+		 */
+		protected void validateAndAccept() {
+
+			// cancel if there are no ranges
+			if (picked.size() == 0) {
+				reject("No groups chosen");
+				return;
+			}
+
+			// generate range entries
+			for (int i=0; i<picked.size(); i+=1) {
+				Entry e = (Entry)(picked.elementAt(i));
+				ranges.add(new Entry(e.getValues()));
+			}
+			dispose();
+		} // end of validateAndAccept method
 		
 		/**
 		 * React to ok, reset and cancel buttons.
@@ -668,26 +604,6 @@ public abstract class Group extends LogicElement {
 					pick.setElementAt(e, i);
 				}
 			}
-			else if (event.getSource() == ok) {
-				
-				// cancel if there are no ranges
-				if (picked.size() == 0) {
-					JOptionPane.showMessageDialog(this,
-							"No groups chosen", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// generate range entries
-				for (int i=0; i<picked.size(); i+=1) {
-					Entry e = (Entry)(picked.elementAt(i));
-					ranges.add(new Entry(e.getValues()));
-				}
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
 			else if (event.getSource() == upjumper) {
 				int selected = chosen.getSelectedIndex();
 				Entry a = (Entry) picked.getElementAt(selected);
@@ -731,16 +647,16 @@ public abstract class Group extends LogicElement {
 				chosen.setSelectedIndex(picked.getSize() - 1);
 			}
 		} // end of actionPerformed method
-		
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of GetRanges class
 	
 	/**

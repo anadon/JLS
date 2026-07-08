@@ -293,42 +293,12 @@ public class Constant extends LogicElement implements ActionListener {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
+			orientation = orientation.ccw();
 			
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		outputs.clear();
 		width = 0;
@@ -351,22 +321,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		outputs.clear();
 		width = 0;
 		height = 0;
@@ -378,12 +333,10 @@ public class Constant extends LogicElement implements ActionListener {
 	 * Used by all simple gates (nand, and, nor, or, xor, not).
 	 */
 	@SuppressWarnings("serial")
-	private class ConstantCreate extends JDialog implements ActionListener {
-		
+	private class ConstantCreate extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
 		private JButton repeat;
-		private JButton cancel = new JButton("Cancel");
 		private JTextField valueField = new JTextField(defaultValue+"",defaultBase);
 		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
 		private JRadioButton base2 = new JRadioButton("2");
@@ -403,15 +356,14 @@ public class Constant extends LogicElement implements ActionListener {
 		private ConstantCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Constant",true);
-			
+			super("Create Constant","const");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel inputs = new JLabel("Value: ",SwingConstants.RIGHT);
@@ -472,83 +424,57 @@ public class Constant extends LogicElement implements ActionListener {
 			gr.add(down);
 			gr.add(up);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "const");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			valueField.addActionListener(this);
+
 			repeat.addActionListener(this);
-			cancel.addActionListener(this);
 			base2.addActionListener(this);
 			base10.addActionListener(this);
 			base16.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(valueField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
+		 * Validate the form and set the constant's value.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				value = new BigInteger(valueField.getText(),base);
+				//bits = Integer.parseInt(bitsField.getText());
+				if(left.isSelected())
+				{
+					orientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(right.isSelected())
+				{
+					orientation = JLSInfo.Orientation.RIGHT;
+				}
+				else if(up.isSelected())
+				{
+					orientation = JLSInfo.Orientation.UP;
+				}
+				else if(down.isSelected())
+				{
+					orientation = JLSInfo.Orientation.DOWN;
+				}
+
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * React to repeat and radix buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == valueField) {
-				try {
-					value = new BigInteger(valueField.getText(),base);
-					//bits = Integer.parseInt(bitsField.getText());
-					if(left.isSelected())
-					{
-						orientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(right.isSelected())
-					{
-						orientation = JLSInfo.Orientation.RIGHT;
-					}
-					else if(up.isSelected())
-					{
-						orientation = JLSInfo.Orientation.UP;
-					}
-					else if(down.isSelected())
-					{
-						orientation = JLSInfo.Orientation.DOWN;
-					}
-						
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				dispose();
-			}
-			else if (event.getSource() == repeat) {
+
+			if (event.getSource() == repeat) {
 				setToPrevious();
 				base2.setSelected(false);
 				base10.setSelected(false);
@@ -572,9 +498,6 @@ public class Constant extends LogicElement implements ActionListener {
 					up.setSelected(true);
 				else
 					down.setSelected(true);
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
 			}
 			else if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
@@ -601,16 +524,16 @@ public class Constant extends LogicElement implements ActionListener {
 				valueField.setText(val.toString(16));
 			}
 		} // end of actionPerformed method
-		
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of ConstantCreate class
 	
 	/**
@@ -693,11 +616,9 @@ public class Constant extends LogicElement implements ActionListener {
 	 * New value must fit in current element.
 	 */
 	@SuppressWarnings("serial")
-	private class ConstantChange extends JDialog implements ActionListener {
-		
+	private class ConstantChange extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField valueField = new JTextField(Util.convert(value,base,false),10);
 		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
 		private JRadioButton base2 = new JRadioButton("2");
@@ -713,15 +634,14 @@ public class Constant extends LogicElement implements ActionListener {
 		private ConstantChange(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Change Constant",true);
-			
+			super("Change Constant","const");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel inputs = new JLabel("Value: ",SwingConstants.RIGHT);
@@ -753,93 +673,62 @@ public class Constant extends LogicElement implements ActionListener {
 			group.add(base10);
 			group.add(base16);
 			window.add(bases);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "const");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			valueField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			base2.addActionListener(this);
 			base10.addActionListener(this);
 			base16.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(valueField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
+		 * Validate the form and change the constant's value.
+		 */
+		protected void validateAndAccept() {
+
+			// get base
+			if (base2.isSelected())
+				base = 2;
+			else if (base10.isSelected())
+				base = 10;
+			else
+				base = 16;
+
+			// get value
+			BigInteger temp = BigInteger.ZERO;
+			try {
+				temp = new BigInteger(valueField.getText(),base);
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
+			}
+
+			// cancel if the new value is the same as the old value
+			if (temp == value) {
+				cancelDialog();
+			}
+			value = temp;
+
+			// decide if the element must be redrawn
+			if (!valueFits(Util.convert(temp,base,true))) {
+				changed = true;
+			}
+			else {
+				changed = false;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * React to radix buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
-			// if ok, check new value and set
-			if (event.getSource() == ok || event.getSource() == valueField) {
-				
-				// get base
-				if (base2.isSelected())
-					base = 2;
-				else if (base10.isSelected())
-					base = 10;
-				else
-					base = 16;
-				
-				// get value
-				BigInteger temp = BigInteger.ZERO;
-				try {
-					temp = new BigInteger(valueField.getText(),base);
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// cancel if the new value is the same as the old value
-				if (temp == value) {
-					cancel();
-				}
-				value = temp;
-				
-				// decide if the element must be redrawn
-				if (!valueFits(Util.convert(temp,base,true))) {
-					changed = true;
-				}
-				else {
-					changed = false;
-				}
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			else if (event.getSource() == base2) {
+
+			if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
 				if (!valueField.getText().equals(""))
 					val = new BigInteger(valueField.getText(),base);
@@ -868,12 +757,12 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of ConstantChange class
 	
 	/**

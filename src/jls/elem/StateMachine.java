@@ -352,17 +352,46 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param output The PrintWriter to write to.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT StateMachine");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int delay " + propDelay);
-		output.println(" int trig " + trigger);
 		for (State state : states) {
 			state.save(output);
 		}
 		output.println("END");
 	} // end of save method
+
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's simple attributes. The state
+	// list (state/output/trans/next/pair lines) is structured data and
+	// stays handwritten in save(), the setValue load state machine and
+	// copy().
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((StateMachine)el).name; }
+			protected void set(Element el, String v) { ((StateMachine)el).name = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((StateMachine)el).propDelay; }
+			protected void set(Element el, int v) { ((StateMachine)el).propDelay = v; }
+		},
+		new Attribute.IntAttribute("trig") {
+			protected int get(Element el) { return ((StateMachine)el).trigger; }
+			protected void set(Element el, int v) { ((StateMachine)el).trigger = v; }
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
 
 	/**
 	 * Set a String instance variable value (during a load).
@@ -374,14 +403,13 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		switch (loadState) {
 		case machine:
-			if (name.equals("name")) {
-				this.name = value;
-			} else if (name.equals("state")) {
+			if (name.equals("state")) {
 				loadState = LoadState.newState;
 				buildState = new State(this,value,null);
 				states.add(buildState);
 				buildState.fixTrans();
 			} else {
+				// the attribute registry handles "name"
 				super.setValue(name,value);
 			}
 			break;
@@ -446,13 +474,8 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		switch (loadState) {
 		case machine:
-			if (name.equals("trig")) {
-				trigger = value;
-			} else if (name.equals("delay")) {
-				propDelay = value;
-			} else {
-				super.setValue(name,value);
-			}
+			// the attribute registry handles "trig" and "delay"
+			super.setValue(name,value);
 			break;
 		case newState:
 			buildState.setValue(name,value);
@@ -509,14 +532,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	 */
 	public Element copy() {
 		
-		// create new element
+		// create new element; the attribute registry copies name, delay
+		// and trigger in super.copy below
 		StateMachine it = new StateMachine(circuit);
-		
-		// set basic info
-		it.name = new String(name);
-		it.propDelay = propDelay;
-		it.trigger = trigger;
-		
+
 		// copy all the states
 		Map<String,State> stateMap = new HashMap<String,State>();
 		for (State state : states) {
@@ -1720,17 +1739,15 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Create a new state with a name.
 	 */
-	private class CreateState extends JDialog implements ActionListener {
-		
+	private class CreateState extends ElementDialog {
+
 		private String name;
 		private JTextField nameField = new JTextField(10);
-		private JButton ok = new JButton("ok");
-		private JButton cancel = new JButton("cancel");
 		private boolean stateCancelled;
-		
+
 		/**
 		 * Create a new state.
-		 * 
+		 *
 		 * @param xp The x-coordinate of where to show this dialog.
 		 * @param yp The y-coordinate of where to show this dialog.
 		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
@@ -1738,80 +1755,52 @@ public final class StateMachine extends LogicElement implements Printable {
 		public CreateState(int xp, int yp, String title, String currentName) {
 
 			// set up window title
-			super(JLSInfo.frame,title + " State",true);
-			
+			super(title + " State",null);
+
 			// set not cancelled
 			stateCancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
-			
+
 			// set up name field
 			JPanel name = new JPanel(new BorderLayout());
 			name.add(new JLabel("Name: ",SwingConstants.RIGHT),BorderLayout.WEST);
 			name.add(nameField,BorderLayout.CENTER);
 			nameField.setText(currentName);
-			window.add(name,BorderLayout.NORTH);
-			
-			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			nameField.addActionListener(this);
+			window.add(name);
 
-			// set up ok and cancel buttons
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			window.add(okCancel,BorderLayout.SOUTH);
-			getRootPane().setDefaultButton(ok);
-
-			// set up window close listener to cancel mux
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							stateCancelled = true;
-							dispose();
-						}
-					}
-			);
-			
-			// finish up
-			pack();
-			setLocation(xp,yp);
-			setVisible(true);
-			
+			confirmOnEnter(nameField);
+			finishDialog(xp,yp);
 		} // end of constructor
-		
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				name = nameField.getText().trim();
-				if (name.equals("")) {
-					JOptionPane.showMessageDialog(this,
-							"Missing name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+
+		/**
+		 * Validate the name and accept it.
+		 */
+		protected void validateAndAccept() {
+
+			name = nameField.getText().trim();
+			if (name.equals("")) {
+				reject("Missing name");
+				return;
+			}
+			for (State state : states) {
+				if (state.getName().equals(name)) {
+					reject("Duplicate name");
 					return;
 				}
-				for (State state : states) {
-					if (state.getName().equals(name)) {
-						JOptionPane.showMessageDialog(this,
-								"Duplicate name", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-				dispose();
 			}
-			else if (event.getSource() == cancel) {
-				stateCancelled = true;
-				dispose();
-			}
-			
-		} // end of actionPerformed
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * Cancel state creation.
+		 */
+		protected void cancelDialog() {
+
+			stateCancelled = true;
+			dispose();
+		} // end of cancelDialog method
 		
 		/**
 		 * Get the name given to the state.

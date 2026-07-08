@@ -249,80 +249,59 @@ public class Decoder extends LogicElement {
 		
 	} // end of draw method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Decoder)el).bits; }
+			protected void set(Element el, int v) { ((Decoder)el).bits = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((Decoder)el).propDelay; }
+			protected void set(Element el, int v) { ((Decoder)el).propDelay = v; }
+		},
+		new Attribute.OrientationAttribute("orient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((Decoder)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((Decoder)el).orientation = o;
+			}
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set a String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Decoder");
 		super.save(output);
-		output.println(" int bits " + bits);
-		output.println(" int delay " + propDelay);
-		output.println(" String orient \"" + orientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		Decoder it = new Decoder(circuit);
-		it.bits = bits;
-		it.propDelay = propDelay;
 		it.inout = new String(inout);
 		it.dec = new String(dec);
-		it.orientation = orientation;
 		it.inputs.add(inputs.get(0).copy(it));
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
@@ -396,42 +375,12 @@ public class Decoder extends LogicElement {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
+			orientation = orientation.ccw();
 			
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
@@ -446,22 +395,7 @@ public class Decoder extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;
@@ -482,11 +416,9 @@ public class Decoder extends LogicElement {
 	 * Dialog box to set bits.
 	 */
 	@SuppressWarnings("serial")
-	private class DecoderCreate extends JDialog implements ActionListener {
-		
+	private class DecoderCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
 		private JRadioButton left = new JRadioButton("Left", true);
@@ -503,15 +435,14 @@ public class Decoder extends LogicElement {
 		private DecoderCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Decoder",true);
-			
+			super("Create Decoder","decoder");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Input Bits: ",SwingConstants.RIGHT);
@@ -538,104 +469,59 @@ public class Decoder extends LogicElement {
 			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 			window.add(olbl);
 			window.add(orient);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "decoder");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the decoder.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == bitsField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits >= 32) {
-					JOptionPane.showMessageDialog(this,
-							"Must be less than 32 bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-			
-			
-		} // end of actionPerformed method
-		
+			if (bits < 1) {
+				reject("Must be at least 1 bit");
+				return;
+			}
+			if (bits >= 32) {
+				reject("Must be less than 32 bits");
+				return;
+			}
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of DecoderCreate class
 	
 //	-------------------------------------------------------------------------------

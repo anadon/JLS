@@ -1,8 +1,9 @@
 # JLS Maintenance Audit — July 2026
 
 This document records the findings of a full maintenance audit of the JLS
-(Java Logic Simulator) repository. The actionable items are tracked on GitHub:
-see the roadmap in issue #16, which links every item below as a sub-issue.
+(Java Logic Simulator) repository, plus a follow-up performance/memory/file-size
+audit. The actionable items are tracked on GitHub: see the roadmap in issue
+#16, which links every item below as a sub-issue.
 
 ## Headline findings
 
@@ -59,7 +60,56 @@ see the roadmap in issue #16, which links every item below as a sub-issue.
   zip bugs — no `getNextEntry()`/`putNextEntry()`). Unify behind one
   `FileAbstractor` with real error propagation.
 
-### Phase 3 — Modernization
+### Phase 3 — Performance & efficiency
+
+Prompted by the report that selections with many elements are unworkably slow.
+All findings verified against the source; line references are to the current
+`master`.
+
+- **#17 Editor interaction scales badly**. Every mouse event does
+  full-circuit work:
+  - Hover (`SimpleEditor.mouseMoved`, line 2140): loops all elements and
+    triggers a full-canvas `repaint()` on every pixel of motion.
+  - Rubber-band selection (`mouseDragged`, line 2066): O(n) scan + full
+    repaint per event.
+  - Moving a selection (`overlap()`, line 2794): nested loop over
+    selected × all elements per drag event — **O(S×N) per event** — with
+    `untouchAll()` (line 3198) full scans on failure paths. This is the
+    reported "large selection" case. A commented-out optimization draft
+    already sits inside `overlap()` (relates to pre-existing issue #3).
+  - Repaint (`Circuit.draw`, line 640): iterates the element list four
+    times and draws everything; no clip-rect, dirty regions, or cached
+    static layer. Every wire segment and wire end is a separate Element,
+    so N is much larger than the visible component count.
+  - `Element.getRect()` allocates a new `Rectangle` per hit test → GC churn.
+  - Remedies: uniform-grid spatial index on the 12px snap spacing,
+    selection bounding-box broad phase, `repaint(Rectangle)` dirty regions,
+    offscreen static layer, hover short-circuit.
+- **#18 Undo deep-copies the whole circuit on every change**
+  (`markChanged` → `pushCopy` → `Util.copy`, SimpleEditor lines 3745/3793):
+  O(circuit) time per edit on the EDT and up to 11 live full copies in
+  memory. Remedy: command-pattern undo (deltas), or compact serialized
+  snapshots as an interim.
+- **#19 Checkpoints are written synchronously on the Swing event thread**
+  (every 10th change in `markChanged`): visible UI freezes on large
+  circuits; also non-atomic (truncated `.jls~` on crash) and zip-format
+  while saves are XZ. Remedy: background write, temp-file + rename, unify
+  format with #15.
+- **#3 Collision checking** (pre-existing): subsumed by the spatial index
+  in #17.
+- **#20 Memory efficiency**: the `Memory` element stores words as
+  `HashMap<Integer, BitSet>` (~100 bytes per word vs 8 in a `long[]`), and
+  its `activity` write history grows unbounded during a simulation with two
+  `BitSet` clones per write. Remedy: dense `long[]` for `bits <= 64` with
+  sparse fallback; bounded history; audit simulator-wide `BitSet` cloning.
+- **#21 Saved file size**: saves already write XZ (default preset 6) into
+  files named `.jls`, while checkpoints use zip; the text format is
+  dominated by per-wire-end `ELEMENT` blocks and saves recomputable
+  attributes; `Memory` initial contents are escaped decimal text. Remedy:
+  measure real circuits first, then preset 9, attribute pruning, hex+RLE
+  memory encoding — keeping the loader backward compatible (#14 guards).
+
+### Phase 4 — Modernization
 - **#9 Remove applet support**: `JLSApplet` extends `JApplet`, which is
   deprecated for removal and being dropped from the JDK; browsers removed
   applet support years ago. Remove the class and the `JLSInfo.isApplet` paths.
@@ -71,19 +121,13 @@ see the roadmap in issue #16, which links every item below as a sub-issue.
   either way remove the checked-in `lib/jhall.jar`, the stale absolute path
   in `.project`, and the binary `JavaHelpSearch` index files.
 
-### Phase 4 — Ship it
+### Phase 5 — Ship it
 - **#8 Release infrastructure**: version scheme decision, shaded runnable
   jar (`Main-Class: jls.JLS`), tag-triggered release workflow, optional
   `jpackage` installers.
 - **#13 README**: what JLS is, screenshot, run/build instructions, provenance
   and licensing (explain `pop_GPLv3.pdf`), file-format notes, contribution
   pointers.
-
-### Later / performance
-- **#3 Faster collision checking** (pre-existing issue): skeleton started in
-  commit f3e3b1c; a uniform grid keyed on the 12px snap spacing or a quadtree
-  over element bounding boxes would replace the current linear scans. Do after
-  tests exist.
 
 ## Items investigated and considered fine for now
 

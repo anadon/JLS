@@ -98,6 +98,11 @@ class CircuitRoundTripTest {
 		StringBuilder current = null;
 		StringBuilder header = new StringBuilder();
 		for (String line : saved.split("\n")) {
+			if (line.startsWith("FORMAT ")) {
+				// the version header (issue #79) is byte-pinned by
+				// FormatHeaderTest; this suite compares circuit content
+				continue;
+			}
 			if (line.startsWith("ELEMENT")) {
 				current = new StringBuilder();
 			}

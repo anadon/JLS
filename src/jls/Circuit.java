@@ -78,6 +78,15 @@ public class Circuit implements Printable {
 	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
+	 * The save-format version this JLS writes and the newest it can read
+	 * (issue #79). Headerless legacy files are implicitly version 0;
+	 * version 1 files begin with a "FORMAT 1" line ahead of the top-level
+	 * CIRCUIT line. Nested subcircuit blocks never carry a header - a
+	 * file states its format version exactly once, at the top.
+	 */
+	public static final int FORMAT_VERSION = 1;
+
+	/**
 	 * Create a new, empty circuit.
 	 * 
 	 * @param name
@@ -343,7 +352,7 @@ public class Circuit implements Printable {
 		// a fresh load must not report a previous load's failure (#58)
 		JLSInfo.setLoadError(null);
 		lineNumber = 1;
-		boolean ok = load(input, 0);
+		boolean ok = readFormatHeader(input) && load(input, 0);
 		if (!ok) {
 			// Scanner swallows IOException and presents it as end of
 			// input; distinguish a truncated/corrupted stream from a
@@ -360,6 +369,70 @@ public class Circuit implements Printable {
 		}
 		return ok;
 	} // end of load method
+
+	/**
+	 * Consume the optional FORMAT version header at the top of a file
+	 * (issue #79). Legacy files have no header and are implicitly format
+	 * version 0; current saves begin with "FORMAT 1". A version newer
+	 * than {@link #FORMAT_VERSION} is refused with an explicit
+	 * needs-a-newer-JLS error (#58 taxonomy) rather than a misparse.
+	 * Only the true top of a file may carry the header - nested
+	 * subcircuit CIRCUIT blocks are read elsewhere and never see one.
+	 *
+	 * @param input The scanner to read with.
+	 *
+	 * @return true if there is no header or a usable one was consumed,
+	 *         false (with the load error set) if the header is present
+	 *         but truncated, malformed, or declares a newer version.
+	 */
+	private static boolean readFormatHeader(Scanner input) {
+
+		if (!input.hasNext("FORMAT")) {
+			return true; // headerless legacy file (implicit version 0)
+		}
+		input.next();
+		if (!input.hasNext()) {
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header has no version number after it",
+					TRUNCATED_HINT);
+		}
+		if (!input.hasNextInt()) {
+			if (input.hasNextBigInteger()) {
+				// a numeric version too large for an int is certainly
+				// newer than anything this JLS knows
+				return failLoad(LoadError.Category.NEWER_FORMAT,
+						"this file is save-format version " + input.next()
+								+ ", but this version of JLS only reads up "
+								+ "to version " + FORMAT_VERSION,
+						NEWER_FORMAT_HINT);
+			}
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header version '" + input.next()
+							+ "' is not a number",
+					NOT_JLS_HINT);
+		}
+		int version = input.nextInt();
+		if (version < 0) {
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header version " + version
+							+ " is not a valid format version",
+					NOT_JLS_HINT);
+		}
+		if (version > FORMAT_VERSION) {
+			return failLoad(LoadError.Category.NEWER_FORMAT,
+					"this file is save-format version " + version
+							+ ", but this version of JLS only reads up to "
+							+ "version " + FORMAT_VERSION,
+					NEWER_FORMAT_HINT);
+		}
+		lineNumber += 1;
+		return true;
+	} // end of readFormatHeader method
+
+	/** Next-step hint when the file declares a newer format version. */
+	private static final String NEWER_FORMAT_HINT =
+			"The circuit was saved by a newer version of JLS - upgrade "
+					+ "JLS to open this file.";
 
 	/** Next-step hint for failures that smell like a cut-off file. */
 	private static final String TRUNCATED_HINT =
@@ -975,10 +1048,13 @@ public class Circuit implements Printable {
 	 */
 	public void save(PrintWriter output) {
 
-		// write header
+		// write header; a file-level save states the format version once
+		// at the top (issue #79) - nested subcircuit blocks, which are
+		// always saved through their imported circuit, never repeat it
 		if (isImported()) {
 			output.println("CIRCUIT " + subElement.getName());
 		} else {
+			output.println("FORMAT " + FORMAT_VERSION);
 			output.println("CIRCUIT " + name);
 		}
 

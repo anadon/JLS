@@ -31,6 +31,13 @@ public final class LoadError {
 		MALFORMED("malformed file"),
 
 		/**
+		 * The file's FORMAT header declares a save-format version newer
+		 * than this JLS understands (issue #79) - the file itself is
+		 * fine, the reader is too old.
+		 */
+		NEWER_FORMAT("file needs a newer JLS"),
+
+		/**
 		 * An element type this version of JLS does not know
 		 * (version/format mismatch in the issue's terms).
 		 */

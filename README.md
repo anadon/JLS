@@ -58,6 +58,10 @@ sniffing the actual content:
   `JLSCircuit` entry with the same text description.
 - **Plain text** — the uncompressed circuit description itself.
 
+Inside whichever container, circuit text written by current JLS begins with
+a `FORMAT 1` version line ahead of the top-level `CIRCUIT` line; files from
+older versions have no such line and still load.
+
 **Forward-compatibility caveat:** current JLS saves Memory initial contents
 run-length encoded. The upstream JLS 4.1 loader does not understand that
 encoding and **silently drops initial memory contents** when opening such a

@@ -49,19 +49,28 @@ class OrientationGeometryTest {
 				+ attrs + "END\nENDCIRCUIT\n";
 	}
 
+	/**
+	 * The failure category, not the full message: the baseline must not
+	 * break when diagnostic wording improves (issues #58/#24 P5).
+	 */
+	private static String errorCategory() {
+		return JLSInfo.lastLoadError == null ? JLSInfo.loadError
+				: JLSInfo.lastLoadError.getCategory().label();
+	}
+
 	/** Load one element headlessly and describe its geometry. */
 	private static String describe(String label, String type, String attrs) {
 		Circuit circuit = new Circuit("geo");
 		try {
 			if (!circuit.load(new Scanner(elementBlock(type, attrs)))) {
-				return label + " loadError=" + JLSInfo.loadError;
+				return label + " loadError=" + errorCategory();
 			}
 			BufferedImage img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = img.createGraphics();
 			boolean finished = circuit.finishLoad(g);
 			g.dispose();
 			if (!finished) {
-				return label + " finishLoadError=" + JLSInfo.loadError;
+				return label + " finishLoadError=" + errorCategory();
 			}
 		} catch (Exception ex) {
 			return label + " exception=" + ex.getClass().getSimpleName();

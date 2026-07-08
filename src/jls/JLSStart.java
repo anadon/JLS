@@ -137,8 +137,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 			// read circuit from file
 			boolean loadOK = circ.load(input);
-			if (input.hasNext())
-				loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+			if (loadOK && input.hasNext()) {
+				// file shouldn't have anything after ENDCIRCUIT; without
+				// a message the failure would be reported blank (#58)
+				loadOK = false;
+				JLSInfo.setLoadError(LoadError.of(
+						LoadError.Category.MALFORMED,
+						"there is extra content after the ENDCIRCUIT trailer",
+						"The file may contain more than one circuit or "
+								+ "trailing garbage; re-save it from JLS."));
+			}
 			input.close();
 			if (!loadOK) {
 				System.err.println("jls: error: " + startFile
@@ -224,8 +232,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 			// read circuit from file
 			boolean loadOK = circ.load(input);
-			if (input.hasNext())
-				loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+			if (loadOK && input.hasNext()) {
+				// file shouldn't have anything after ENDCIRCUIT; without
+				// a message the failure would be reported blank (#58)
+				loadOK = false;
+				JLSInfo.setLoadError(LoadError.of(
+						LoadError.Category.MALFORMED,
+						"there is extra content after the ENDCIRCUIT trailer",
+						"The file may contain more than one circuit or "
+								+ "trailing garbage; re-save it from JLS."));
+			}
 			input.close();
 			if (!loadOK) {
 				System.err.println("jls: error: " + startFile
@@ -1192,12 +1208,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
 			JOptionPane.showMessageDialog(this,
-					filePath + " is not a valid circuit file (line " + circ.getLineNumber() + "): " + JLSInfo.loadError, "Error",
+					// the message carries the line number itself (#58)
+					filePath + " is not a valid circuit file: " + JLSInfo.loadError, "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1371,12 +1396,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
 			JOptionPane.showMessageDialog(this,
-					circ.getName() + " is not a valid circuit file", "Error",
+					circ.getName() + " is not a valid circuit file: "
+							+ JLSInfo.loadError, "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1740,8 +1774,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		Circuit circ = new Circuit(name);
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
 			System.err.println(startFile + " is not a valid circuit file: "

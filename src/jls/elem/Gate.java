@@ -591,12 +591,10 @@ public abstract class Gate extends LogicElement {
 	 * Used by all simple gates (nand, and, nor, or, xor).
 	 */
 	@SuppressWarnings("serial")
-	protected class GateCreate extends JDialog implements ActionListener {
+	protected class GateCreate extends ElementDialog implements ActionListener {
 		
 		// properties
-		private JButton ok = new JButton("OK");
 		private JButton repeat;
-		private JButton cancel = new JButton("Cancel");
 		private JTextField inputsField = new JTextField(defaultInputs+"",5);
 		private JTextField gatesField = new JTextField(defaultBits+"",5);
 		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
@@ -617,14 +615,13 @@ public abstract class Gate extends LogicElement {
 		protected GateCreate(int x, int y, String type) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create " + type + " Gate",true);
+			super("Create " + type + " Gate",type);
 			
 			// set not canceled
 			cancelled = false;
 			
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 			
 			// set up input panel
 			this.type = type;
@@ -696,92 +693,58 @@ public abstract class Gate extends LogicElement {
 				repeat.addActionListener(this);
 			}
 			
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, type);
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			inputsField.addActionListener(this);
-			gatesField.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			confirmOnEnter(inputsField);
+			confirmOnEnter(gatesField);
+			finishDialog(x,y);
 		} // end of constructor
 		
 		/**
-		 * React to ok, reset and cancel buttons.
+		 * Validate the form and create the gate.
+		 */
+		protected void validateAndAccept() {
+			
+			try {
+				numInputs = Integer.parseInt(inputsField.getText());
+				bits = Integer.parseInt(gatesField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric");
+				return;
+			}
+			if (numInputs < 2) {
+				reject("Must have at least 2 inputs");
+				return;
+			}
+			if (bits < 1 && type != "Extend") {
+				reject("Must have at least 1 gate (bit)");
+				return;
+			}
+			if (left.isSelected()) {
+				orientation = Orientation.left;
+			}
+			else if (right.isSelected()) {
+				orientation = Orientation.right;
+			}
+			else if (up.isSelected()) {
+				orientation = Orientation.up;
+			}
+			else {
+				orientation = Orientation.down;
+			}
+			inputsPad.close();
+			gatesPad.close();
+			dispose();
+		} // end of validateAndAccept method
+		
+		/**
+		 * React to the repeat previous button.
 		 * 
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
 			
-			// if ok button, check values for validity
-			if (event.getSource() == ok || event.getSource() == inputsField || event.getSource() == gatesField) {
-				try {
-					numInputs = Integer.parseInt(inputsField.getText());
-					bits = Integer.parseInt(gatesField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (numInputs < 2) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 2 inputs", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1 && type != "Extend") {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 gate (bit)", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (left.isSelected()) {
-					orientation = Orientation.left;
-				}
-				else if (right.isSelected()) {
-					orientation = Orientation.right;
-				}
-				else if (up.isSelected()) {
-					orientation = Orientation.up;
-				}
-				else {
-					orientation = Orientation.down;
-				}
-				inputsPad.close();
-				gatesPad.close();
-				dispose();
-			}
-			
 			// if repeat previous button, set previous values
-			else if (event.getSource() == repeat) {
+			if (event.getSource() == repeat) {
 				setToPrevious();
 				inputsField.setText(""+numInputs);
 				gatesField.setText(""+bits);
@@ -798,23 +761,18 @@ public abstract class Gate extends LogicElement {
 				else 
 					down.setSelected(true);
 			}
-			
-			// if cancel button, cancel gate creation
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
 		} // end of actionPerformed method
 		
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
+		protected void cancelDialog() {
 			
 			cancelled = true;
 			inputsPad.close();
 			gatesPad.close();
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 		
 		/**
 		 * Get number of gates.

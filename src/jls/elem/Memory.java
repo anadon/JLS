@@ -632,11 +632,9 @@ public class Memory extends LogicElement {
 	/**
 	 * Dialog box to create/modify register characteristics.
 	 */
-	private class MemoryEdit extends JDialog implements ActionListener {
+	private class MemoryEdit extends ElementDialog implements ActionListener {
 		
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField(name);
 		private JTextField bitsField = new JTextField(bits+"",10);
 		private JTextField capacityField = new JTextField(defaultCapacity+"",10);
@@ -659,7 +657,7 @@ public class Memory extends LogicElement {
 		private MemoryEdit(int x, int y, boolean create) {
 			
 			// set up window title
-			super(JLSInfo.frame,create ? "Create Memory" : "Change Memory",true);
+			super(create ? "Create Memory" : "Change Memory","memory");
 			
 			// save create
 			this.create = create;
@@ -669,7 +667,6 @@ public class Memory extends LogicElement {
 			
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 			
 			// set up types
 			if (create) {
@@ -738,45 +735,14 @@ public class Memory extends LogicElement {
 			fromFile.setToolTipText("open dialog to set file name");
 			window.add(inits);
 			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "memory");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
 			// set up listeners
-			ok.addActionListener(this);
-			nameField.addActionListener(this);
-			bitsField.addActionListener(this);
-			capacityField.addActionListener(this);
-			cancel.addActionListener(this);
-			ram.addActionListener(this);
-			rom.addActionListener(this);
+			confirmOnEnter(nameField);
+			confirmOnEnter(bitsField);
+			confirmOnEnter(capacityField);
 			fromFile.addActionListener(this);
 			builtIn.addActionListener(this);
 			
-			// set up window close listener to cancel memory
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			finishDialog(x,y);
 		} // end of constructor
 		
 		/**
@@ -784,90 +750,83 @@ public class Memory extends LogicElement {
 		 * 
 		 * @param event The event object for this action.
 		 */
-		public void actionPerformed(ActionEvent event) {
+		protected void validateAndAccept() {
 			
-			if (event.getSource() == ok || event.getSource() == nameField ||
-					event.getSource() == bitsField || event.getSource() == capacityField) {
-				String tname = nameField.getText().trim();
-				if (tname.equals("") || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+			String tname = nameField.getText().trim();
+			if (tname.equals("") || !Util.isValidName(tname)) {
+				reject("Missing or invalid name");
+				return;
+			}
+			int tbits = bits;
+			int tcapacity = capacity;
+			Memory.Type ttype = null;
+			if (create) {
+				try {
+					tbits = Integer.parseInt(bitsField.getText());
+					tcapacity = Integer.parseInt(capacityField.getText(),10);
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric");
 					return;
 				}
-				int tbits = bits;
-				int tcapacity = capacity;
-				Memory.Type ttype = null;
-				if (create) {
-					try {
-						tbits = Integer.parseInt(bitsField.getText());
-						tcapacity = Integer.parseInt(capacityField.getText(),10);
-					}
-					catch (NumberFormatException ex) {
-						JOptionPane.showMessageDialog(this,
-								"Value not numeric", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (tbits < 1) {
-						JOptionPane.showMessageDialog(this,
-								"Must have at least 1 bit", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (ram.isSelected()) {
-						ttype = Memory.Type.RAM;
-					}
-					else if (rom.isSelected()) {
-						ttype = Memory.Type.ROM;
-					}
-					else {
-						JOptionPane.showMessageDialog(this,
-								"Pick RAM or ROM", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-				if (!tname.equals(name) && circuit.hasName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Duplicate name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+				if (tbits < 1) {
+					reject("Must have at least 1 bit");
 					return;
 				}
-				String msg = initOK(tempInit,tcapacity,tbits,false);
-				if (msg != null) {
-					JOptionPane.showMessageDialog(getParent(),
-							msg + " in built in initialization",
-							"Error", JOptionPane.ERROR_MESSAGE);
-					return;
+				if (ram.isSelected()) {
+					ttype = Memory.Type.RAM;
 				}
-
-				// everything is ok, so make it permanent
-				if (!name.equals(""))
-					circuit.removeName(name);
-				circuit.addName(tname);
-				name = tname;
-				initialValue = tempInit;
-				if (create) {
-					type = ttype;
-					bits = tbits;
-					capacity = tcapacity;
-					bitsPad.close();
-					capacityPad.close();
-				}
-				circuit.markChanged();
-				if (!create && !nameFits(tname)) {
-					changed = true;
+				else if (rom.isSelected()) {
+					ttype = Memory.Type.ROM;
 				}
 				else {
-					changed = false;
+					reject("Pick RAM or ROM");
+					return;
 				}
-				dispose();
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			if (!tname.equals(name) && circuit.hasName(tname)) {
+				reject("Duplicate name");
+				return;
 			}
-			else if (event.getSource() == fromFile) {
+			String msg = initOK(tempInit,tcapacity,tbits,false);
+			if (msg != null) {
+				JOptionPane.showMessageDialog(getParent(),
+						msg + " in built in initialization",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			// everything is ok, so make it permanent
+			if (!name.equals(""))
+				circuit.removeName(name);
+			circuit.addName(tname);
+			name = tname;
+			initialValue = tempInit;
+			if (create) {
+				type = ttype;
+				bits = tbits;
+				capacity = tcapacity;
+				bitsPad.close();
+				capacityPad.close();
+			}
+			circuit.markChanged();
+			if (!create && !nameFits(tname)) {
+				changed = true;
+			}
+			else {
+				changed = false;
+			}
+			dispose();
+		} // end of validateAndAccept method
+		
+		/**
+		 * React to the initial-contents buttons.
+		 * 
+		 * @param event The event object for this action.
+		 */
+		public void actionPerformed(ActionEvent event) {
+			
+			if (event.getSource() == fromFile) {
 				
 				// get file name
 				String file  = JOptionPane.showInputDialog(this,
@@ -932,11 +891,11 @@ public class Memory extends LogicElement {
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
+		protected void cancelDialog() {
 			
 			cancelled = true;
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 		
 		/**
 		 * See if the given name fits in the box on the screen.

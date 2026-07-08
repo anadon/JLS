@@ -625,11 +625,9 @@ public class Element {
 	 * Display dialog letting user change the propagation delay or access time.
 	 */
 	@SuppressWarnings("serial")
-	private class DelayChange extends JDialog implements ActionListener {
+	private class DelayChange extends ElementDialog {
 
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField delayField = new JTextField(10);
 		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
 
@@ -643,11 +641,10 @@ public class Element {
 		private DelayChange(int x, int y, boolean isMemory) {
 
 			// set up window title
-			super(JLSInfo.frame,"Change Timing",true);
+			super("Change Timing",null);
 
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
@@ -664,69 +661,30 @@ public class Element {
 			info.add(delayPad,BorderLayout.EAST);
 			window.add(info);
 
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			delayField.addActionListener(this);
-
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							dispose();
-						}
-					}
-			);
-
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			confirmOnEnter(delayField);
+			finishDialog(x,y);
 		} // end of constructor
 
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate and apply the new delay.
 		 */
-		public void actionPerformed(ActionEvent event) {
+		protected void validateAndAccept() {
 
-			if (event.getSource() == ok || event.getSource() == delayField) {
-				int temp = 0;
-				try {
-					temp = Integer.parseInt(delayField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (temp <= 0) {
-					JOptionPane.showMessageDialog(this,
-							"Propagation delay must be greater than 0", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				setDelay(temp);
-				dispose();
+			int temp = 0;
+			try {
+				temp = Integer.parseInt(delayField.getText());
 			}
-			else if (event.getSource() == cancel) {
-				dispose();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-
-		} // end of actionPerformed method
+			if (temp <= 0) {
+				reject("Propagation delay must be greater than 0");
+				return;
+			}
+			setDelay(temp);
+			dispose();
+		} // end of validateAndAccept method
 
 	} // end of DelayChange class
 

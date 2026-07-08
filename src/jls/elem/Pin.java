@@ -242,11 +242,9 @@ public abstract class Pin extends LogicElement {
 	/**
 	 * Dialog box to set input pin characteristics.
 	 */
-	private class PinCreate extends JDialog implements ActionListener {
+	private class PinCreate extends ElementDialog {
 		
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField("",12);
 		private JTextField bitsField = new JTextField("1",5);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
@@ -265,14 +263,13 @@ public abstract class Pin extends LogicElement {
 		private PinCreate(int x, int y, String type) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create " + type + " Pin",true);
+			super("Create " + type + " Pin",type);
 			
 			// set not cancelled
 			cancelled = false;
 			
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 			
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
@@ -317,110 +314,63 @@ public abstract class Pin extends LogicElement {
 			gr.add(up);
 			window.add(orients);
 			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, type);
-			okCancel.add(help);
-			window.add(okCancel);
-			
-			nameField.addActionListener(this);
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			confirmOnEnter(nameField);
+			finishDialog(x,y);
 		} // end of constructor
 		
 		/**
-		 * React to events.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the pin.
 		 */
-		public void actionPerformed(ActionEvent event) {
+		protected void validateAndAccept() {
 			
-			// if ok button pushed or enter(return) typed in name field,
-			// then check name for validity
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Bits not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				String tname = nameField.getText().trim();
-				if (tname.length() < 1 || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid name, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (!circuit.addName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Name already used, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				name = tname;
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				dispose();
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Bits not numeric, try again");
+				return;
 			}
-			
-		} // end of actionPerformed method
+			if (bits < 1) {
+				reject("Must have at least 1 bit");
+				return;
+			}
+			String tname = nameField.getText().trim();
+			if (tname.length() < 1 || !Util.isValidName(tname)) {
+				reject("Missing or invalid name, try again");
+				return;
+			}
+			if (!circuit.addName(tname)) {
+				reject("Name already used, try again");
+				return;
+			}
+			name = tname;
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			dispose();
+		} // end of validateAndAccept method
 		
 		/**
 		 * Cancel this pin.
 		 */
-		private void cancel() {
+		protected void cancelDialog() {
 			
 			cancelled = true;
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 		
 	} // end of PinCreate class
 	

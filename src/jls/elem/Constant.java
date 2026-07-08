@@ -293,42 +293,12 @@ public class Constant extends LogicElement implements ActionListener {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
+			orientation = orientation.ccw();
 			
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		outputs.clear();
 		width = 0;
@@ -351,22 +321,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		outputs.clear();
 		width = 0;
 		height = 0;

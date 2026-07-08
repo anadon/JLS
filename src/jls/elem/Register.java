@@ -721,32 +721,10 @@ public class Register extends LogicElement {
 	public void rotate(JLSInfo.Orientation direction, Graphics g) {
 		
 		if(direction == JLSInfo.Orientation.LEFT) {
-			if(orientation == JLSInfo.Orientation.LEFT) {
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN) {
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT) {
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP) {
-				orientation = JLSInfo.Orientation.LEFT;
-			}
+			orientation = orientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT) {
-			if(orientation == JLSInfo.Orientation.LEFT) {
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN) {
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT) {
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP) {
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			orientation = orientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
@@ -781,18 +759,7 @@ public class Register extends LogicElement {
 	 */
 	public void flip(Graphics g) {
 		
-		if(orientation == JLSInfo.Orientation.LEFT) {
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP) {
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN) {
-			orientation = JLSInfo.Orientation.UP;
-		}
+		orientation = orientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;

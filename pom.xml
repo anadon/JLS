@@ -110,6 +110,8 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <!-- JLS is not consumed as a library; skip the reduced POM -->
+              <createDependencyReducedPom>false</createDependencyReducedPom>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>

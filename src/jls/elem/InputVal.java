@@ -1,18 +1,14 @@
 package jls.elem;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 
 /**
- * Draw an input signal value and react to value being clicked on in the truth table.
+ * An input signal value in a truth table; drawing and sizing live in
+ * ValEntry (#27 S4).
  * 
  * @author David A. Poplawski
  */
-public final class InputVal extends Entry {
-	
-	// properties
-	int value = 0;  // 0 or 1, 2 = don't care
+public final class InputVal extends ValEntry {
 
 	/**
 	 * Create a new entry.
@@ -23,40 +19,8 @@ public final class InputVal extends Entry {
 	 */
 	public InputVal(TruthTable ttelem, int value, Graphics g) {
 		
-		super(ttelem);
-		this.value = value;
-		FontMetrics fm = g.getFontMetrics();
-		minHeight = fm.getAscent()+fm.getDescent();
-		minWidth = fm.stringWidth(" " + value + " ");
+		super(ttelem,value,g);
 	} // end of constructor
-	
-	/**
-	 * Get the value of this entry.
-	 * 
-	 * @return the value.
-	 */
-	public int getValue() {
-		
-		return value;
-	} // end of getValue method
-
-	/**
-	 * Draw this entry.
-	 * 
-	 * @param g The Graphics object to draw with.
-	 */
-	public void draw(Graphics g) {
-
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int height = ascent + fm.getDescent();
-		String str = "" + value;
-		if (value == 2)
-			str = "x";
-		int width = fm.stringWidth(str);
-		g.setColor(Color.BLACK);
-		g.drawString(str,x+(this.width-width)/2,y+(this.height-height)/2+ascent);
-	} // end of draw method
 
 	/**
 	 * Change value when selected.

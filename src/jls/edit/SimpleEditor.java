@@ -33,7 +33,9 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -170,6 +172,31 @@ public abstract class SimpleEditor extends JPanel {
 			}
 		});
 	} // end of writeCheckpointInBackground method
+
+	/**
+	 * Supersede any pending checkpoint for a file and delete the checkpoint
+	 * file itself. The delete runs on the writer thread, so it is ordered
+	 * after any write already in flight — a checkpoint queued before a save
+	 * can never resurrect the file afterwards. Waits briefly for the delete
+	 * so quitting right after a save cannot leave a stale checkpoint behind.
+	 *
+	 * @param fileName Absolute path of the .jls~ checkpoint file.
+	 */
+	static void cancelCheckpoint(final String fileName) {
+
+		pendingCheckpoints.remove(fileName);
+		Future<?> deleted = checkpointWriter.submit(new Runnable() {
+			public void run() {
+				new File(fileName).delete();
+			}
+		});
+		try {
+			deleted.get(5, TimeUnit.SECONDS);
+		}
+		catch (Exception ex) {
+			// best-effort: the pending entry is already superseded
+		}
+	} // end of cancelCheckpoint method
 
 	/**
 	 * Create new editor.
@@ -3930,14 +3957,9 @@ public abstract class SimpleEditor extends JPanel {
 							// it is written to: saving a subcircuit under the
 							// top-level name would leave an unrecoverable checkpoint
 							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-							boolean changed = circ.hasChanged();
 							StringWriter text = new StringWriter();
 							try (PrintWriter output = new PrintWriter(text)) {
 								circ.save(output);
-							}
-							finally {
-								if (changed)
-									circ.markChanged();
 							}
 							writeCheckpointInBackground(fileName, text.toString());
 						}

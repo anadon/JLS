@@ -155,6 +155,16 @@ public class Circuit implements Printable {
 	} // end of markChanged method
 
 	/**
+	 * Mark this circuit as saved. Called only after its serialized form has
+	 * actually been written to disk, so a failed write keeps the
+	 * unsaved-changes protection alive.
+	 */
+	public void clearChanged() {
+
+		changed = false;
+	} // end of clearChanged method
+
+	/**
 	 * Remove all elements from this circuit.
 	 */
 	public void clear() {
@@ -741,9 +751,6 @@ public class Circuit implements Printable {
 
 		// write trailer
 		output.println("ENDCIRCUIT");
-
-		// no need to save again until more changes made
-		changed = false;
 	} // end of save method
 
 	/**

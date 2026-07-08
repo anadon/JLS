@@ -1,6 +1,7 @@
 package jls.edit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -72,5 +73,33 @@ class CheckpointWriterTest {
 		// converge on the newest content
 		awaitWritten(file, last);
 		assertTrue(file.isFile());
+	}
+
+	@Test
+	void cancelSupersedesQueuedCheckpointAndDeletesFile() throws Exception {
+		// issue #45 (audit finding M7): a checkpoint queued before a save
+		// must not resurrect the .jls~ after the save deletes it
+		File file = tmp.resolve("resurrect.jls~").toFile();
+		for (int i = 0; i < 50; i++) {
+			SimpleEditor.writeCheckpointInBackground(file.getAbsolutePath(),
+					"CIRCUIT stale" + i + "\nENDCIRCUIT\n");
+		}
+		SimpleEditor.cancelCheckpoint(file.getAbsolutePath());
+		// cancel waits for the writer thread, so this is deterministic
+		assertFalse(file.isFile(),
+				"a queued pre-save checkpoint must not reappear after cancel");
+	}
+
+	@Test
+	void checkpointAfterCancelIsStillWritten() throws Exception {
+		File file = tmp.resolve("postsave.jls~").toFile();
+		SimpleEditor.writeCheckpointInBackground(file.getAbsolutePath(),
+				"CIRCUIT presave\nENDCIRCUIT\n");
+		SimpleEditor.cancelCheckpoint(file.getAbsolutePath());
+
+		// an edit made after the save still gets checkpoint protection
+		String fresh = "CIRCUIT postsave\nENDCIRCUIT\n";
+		SimpleEditor.writeCheckpointInBackground(file.getAbsolutePath(), fresh);
+		awaitWritten(file, fresh);
 	}
 }

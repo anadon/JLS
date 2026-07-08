@@ -1032,12 +1032,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (filePath == null || filePath.equals(""))
 				return;
 			prevOpenDir = chooser.getCurrentDirectory().toString();
+			dir = prevOpenDir;
 		}else {
 			file = new File(filePath);
 			// a bare relative filename has no parent
 			String parent = file.getParent();
 			prevOpenDir = (parent == null || parent.equals(""))
 					? System.getProperty("user.dir") : parent;
+			dir = prevOpenDir;
 		}
 		
 		Scanner input = FileAbstractor.openCircuit(filePath);
@@ -1054,7 +1056,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// create new circuit
 		Circuit circ = new Circuit(cname);
-		//circ.setDirectory(dir);
+		circ.setDirectory(dir);
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
@@ -1068,8 +1070,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 			return;
 		}
 
-		// delete checkpoint file if there is one
-		new File(cname + ".jls~").delete();
+		// delete checkpoint file if there is one (beside the opened file)
+		new File(dir, cname + ".jls~").delete();
 
 		// create editor
 		exHandler.setCircuit(circ);

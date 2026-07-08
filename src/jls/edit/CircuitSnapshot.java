@@ -43,16 +43,9 @@ public final class CircuitSnapshot {
 	 */
 	public static CircuitSnapshot capture(Circuit circuit) {
 
-		// Circuit.save clears the changed flag as a side effect; a
-		// snapshot must observe, not modify
-		boolean changed = circuit.hasChanged();
 		StringWriter text = new StringWriter();
 		try (PrintWriter output = new PrintWriter(text)) {
 			circuit.save(output);
-		} finally {
-			if (changed) {
-				circuit.markChanged();
-			}
 		}
 		return new CircuitSnapshot(deflate(
 				text.toString().getBytes(StandardCharsets.UTF_8)));

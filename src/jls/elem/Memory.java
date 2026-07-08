@@ -306,6 +306,8 @@ public class Memory extends LogicElement {
 			fileName = value;
 		} else if (name.equals("init")) {
 			initialValue = value;
+		} else if (name.equals("initrle")) {
+			initialValue = decodeInitRLE(value);
 		} else {
 			super.setValue(name,value);
 		}
@@ -327,12 +329,157 @@ public class Memory extends LogicElement {
 		output.println(" int time " + accessTime);
 		output.println(" int watch " + (watched ? 1 : 0));
 		output.println(" String file \"" + fileName + "\"");
-		String str = initialValue.replace("\\","\\\\");
-		str = str.replace("\"","\\\"");
-		str = str.replace("\n","\\n");
-		output.println(" String init \"" + str + "\"");
+
+		// large memory images are usually plain "addr value" dumps with
+		// long runs of identical words; save those run-length encoded
+		// (#21). Text with comments or hand formatting keeps the raw
+		// encoding so it round-trips exactly. The loader accepts both.
+		String rle = encodeInitRLE(initialValue);
+		if (rle != null && rle.length() < initialValue.length()) {
+			output.println(" String initrle \"" + rle + "\"");
+		} else {
+			String str = initialValue.replace("\\","\\\\");
+			str = str.replace("\"","\\\"");
+			str = str.replace("\n","\\n");
+			output.println(" String init \"" + str + "\"");
+		}
 		output.println("END");
 	} // end of save method
+
+	/**
+	 * Encode initial-memory text as run-length-encoded tokens, or return
+	 * null when the text is not a canonical dump (comments, extra tokens,
+	 * unusual formatting, duplicate addresses) and must be saved raw.
+	 *
+	 * Canonical dump: one "addr value" pair per line, lowercase hex, no
+	 * leading zeros, ascending addresses. Encoding: space-separated
+	 * "addr:value" tokens, with ":count" appended for a run of count
+	 * consecutive addresses holding the same value.
+	 *
+	 * @param text The initial-memory text.
+	 *
+	 * @return the encoded form, or null to use the raw encoding.
+	 */
+	static String encodeInitRLE(String text) {
+
+		if (text.isEmpty()) {
+			return null;
+		}
+
+		// parse strictly: exactly "addr value" per line
+		java.util.List<Integer> addrs = new java.util.ArrayList<Integer>();
+		java.util.List<BigInteger> values = new java.util.ArrayList<BigInteger>();
+		for (String line : text.split("\n", -1)) {
+			if (line.isEmpty()) {
+				continue;
+			}
+			String[] tokens = line.split(" ");
+			if (tokens.length != 2) {
+				return null;
+			}
+			int addr;
+			BigInteger value;
+			try {
+				addr = Integer.parseInt(tokens[0], 16);
+				value = new BigInteger(tokens[1], 16);
+			} catch (NumberFormatException ex) {
+				return null;
+			}
+			if (addr < 0) {
+				return null;
+			}
+			addrs.add(addr);
+			values.add(value);
+		}
+		if (addrs.isEmpty()) {
+			return null;
+		}
+
+		// must reproduce the text exactly (modulo a missing final newline)
+		StringBuilder canonical = new StringBuilder();
+		for (int i = 0; i < addrs.size(); i += 1) {
+			canonical.append(Integer.toHexString(addrs.get(i))).append(' ')
+					.append(values.get(i).toString(16)).append('\n');
+		}
+		String canon = canonical.toString();
+		if (!text.equals(canon) && !canon.equals(text + "\n")) {
+			return null;
+		}
+
+		// ascending addresses, no duplicates (otherwise decode would
+		// reorder relative to the original last-value-wins semantics)
+		for (int i = 1; i < addrs.size(); i += 1) {
+			if (addrs.get(i) <= addrs.get(i - 1)) {
+				return null;
+			}
+		}
+
+		// run-length encode consecutive addresses with identical values
+		StringBuilder out = new StringBuilder();
+		int i = 0;
+		while (i < addrs.size()) {
+			int run = 1;
+			while (i + run < addrs.size()
+					&& addrs.get(i + run) == addrs.get(i) + run
+					&& values.get(i + run).equals(values.get(i))) {
+				run += 1;
+			}
+			if (out.length() > 0) {
+				out.append(' ');
+			}
+			out.append(Integer.toHexString(addrs.get(i))).append(':')
+					.append(values.get(i).toString(16));
+			if (run > 1) {
+				out.append(':').append(Integer.toHexString(run));
+			}
+			i += run;
+		}
+		return out.toString();
+	} // end of encodeInitRLE method
+
+	/**
+	 * Decode a run-length-encoded initial-memory attribute back to the
+	 * canonical "addr value" text the dialog and simulator use.
+	 *
+	 * @param rle The encoded form.
+	 *
+	 * @return the canonical text.
+	 *
+	 * @throws IllegalArgumentException if the encoding is malformed (the
+	 *             loader reports a load error).
+	 */
+	static String decodeInitRLE(String rle) {
+
+		StringBuilder text = new StringBuilder();
+		for (String token : rle.trim().split(" ")) {
+			if (token.isEmpty()) {
+				continue;
+			}
+			String[] parts = token.split(":");
+			if (parts.length != 2 && parts.length != 3) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			int addr;
+			BigInteger value;
+			int run;
+			try {
+				addr = Integer.parseInt(parts[0], 16);
+				value = new BigInteger(parts[1], 16);
+				run = parts.length == 3 ? Integer.parseInt(parts[2], 16) : 1;
+			} catch (NumberFormatException ex) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			if (addr < 0 || run < 1) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			String valueHex = value.toString(16);
+			for (int i = 0; i < run; i += 1) {
+				text.append(Integer.toHexString(addr + i)).append(' ')
+						.append(valueHex).append('\n');
+			}
+		}
+		return text.toString();
+	} // end of decodeInitRLE method
 
 	/**
 	 * Copy this element.

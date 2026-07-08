@@ -15,7 +15,6 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -950,7 +949,7 @@ public final class StateMachine extends LogicElement implements Printable {
 					createNewState();
 				}
 			};
-			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_DOWN_MASK),"new state");
+			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"new state");
 			editArea.getActionMap().put("new state", newState);
 
 			// set up window close listener to cancel element

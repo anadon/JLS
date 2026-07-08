@@ -1,9 +1,8 @@
+# build output
+target/
+bin/
+*.class
+
+# JLS runtime artifacts
 JLSerror
 *.jls
-bin/
-bin
-bin*
-*.class
-bin*
-.class
-target/

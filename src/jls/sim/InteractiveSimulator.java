@@ -16,7 +16,7 @@ import java.util.*;
  *
  * @author David A. Poplawski
  */
-public final class InterractiveSimulator extends Simulator {
+public final class InteractiveSimulator extends Simulator {
 
 	// minimum size for trace window
 	private final int SWIDTH = 1000;
@@ -63,7 +63,7 @@ public final class InterractiveSimulator extends Simulator {
 	/**
 	 * Create a new Simulator object.
 	 */
-	public InterractiveSimulator() {
+	public InteractiveSimulator() {
 
 		// save a reference to itself
 		me = this;
@@ -475,24 +475,6 @@ public final class InterractiveSimulator extends Simulator {
 	} // end of setMaxTime method
 
 	/**
-	 * Enqueue an event.
-	 *
-	 * @param event The event to enqueue.
-	 */
-	public void post(SimEvent event) {
-
-		/*
-		 System.out.print(now + ": post called for element " +
-		 ((LogicElement)(event.getCallBack())).getName());
-		 */
-		if (dupCheck.add(event)) {
-			// System.out.print(" - added to queue");
-			eventQueue.add(event);
-		}
-		// System.out.println();
-	} // end of post method
-
-	/**
 	 * Run the simulator in interactive mode.
 	 */
 	public void runSim() {
@@ -506,13 +488,6 @@ public final class InterractiveSimulator extends Simulator {
 			return;
 		}
 
-		// reset clock and empty eventQueue
-		now = 0;
-		stopping = false;
-		paused = false;
-		eventQueue.clear();
-		dupCheck.clear();
-
 		// create test signal element
 		TestGen gen = null;
 		if (testFileName != null) {
@@ -520,16 +495,9 @@ public final class InterractiveSimulator extends Simulator {
 			gen.setFile(testFileName);
 		}
 
-		// initialize all input points
-		initInputs(circuit);
-
-		// initialize all elements
-		for (Element el : circuit.getElements()) {
-			if (el instanceof LogicElement) {
-				LogicElement lel = (LogicElement)el;
-				lel.initSim(me);
-			}
-		}
+		// reset clock/queues and initialize all elements
+		paused = false;
+		initSimulation();
 
 		// initialize test generator, if there is one
 		if (gen != null) {
@@ -561,99 +529,10 @@ public final class InterractiveSimulator extends Simulator {
 				if (ed != null)
 					ed.enableEditor(false); // turn off listeners
 
-				// event loop
-				while (!stopping && !eventQueue.isEmpty() && now <= maxTime) {
+				// run the shared event loop; pausing, stepping, and
+				// tracing happen in the hooks below (#25)
+				runEventLoop();
 
-					// check for being paused
-					if (paused) {
-						stepEnd = now;
-						traces.draw();
-						for (MemTrace mtr : memTraces) {
-							mtr.update();
-						}
-						msg.setText("Simulation Paused");
-						if (ed != null)
-							ed.enableEditor(true);
-						try {
-							pauseSem.acquire();
-						}
-						catch (InterruptedException ex) {}
-						if (ed != null)
-							ed.enableEditor(false);
-						continue;
-					}
-
-					// check for stepping
-					// peek at next event
-					SimEvent event = eventQueue.peek();
-					long when = event.getTime();
-
-					// if after step end time ... (can't happen in JLSInfo.batch mode)
-					if (stepEnd != -1 && when > stepEnd) {
-
-						// update current time
-						now = stepEnd;
-						showClock.setText("Time: "+now);
-
-						// update traces
-						traces.draw();
-						for (MemTrace mtr : memTraces) {
-							mtr.update();
-						}
-
-						// redraw circuit
-						if (ed != null)
-							ed.repaint();
-
-						paused = true;
-						continue;
-					}
-
-					if (!JLSInfo.batch)
-						msg.setText("Simulation Running");
-
-					// get the next event
-					event = eventQueue.poll();
-					dupCheck.remove(event);
-
-					// update clock
-					now = event.getTime();
-
-					// quit if after time limit
-					if (now > maxTime) {
-						now = maxTime;
-						break;
-					}
-
-					// update clock display
-					if (!JLSInfo.batch) {
-						showClock.setText("Time: "+now);
-						window.validate();
-					}
-
-					// make the event happen
-					event.getCallBack().react(now,me,event.getTodo());
-
-					// trace it (interactive)
-					if (!JLSInfo.batch) {
-
-						// handle watched elements
-						LogicElement el = (LogicElement)event.getCallBack();
-						Trace tr = traceMap.get(el);
-						if (tr != null) {
-							tr.addValue(el.getCurrentValue(),now);
-						}
-
-						// handle probes
-						for (Wire wire : wireMap.keySet()) {
-							tr = wireMap.get(wire);
-							tr.addValue(wire.getValue(),now);
-						}
-					}
-
-					updateStatusBar();
-				} // end of event loop
-				
 				// kill timer if there is one
 				if (timer != null) {
 					timer.cancel();
@@ -728,6 +607,105 @@ public final class InterractiveSimulator extends Simulator {
 		}
 
 	} // end of runSim method
+
+	/**
+	 * Handle pausing and stepping before the next event is dequeued.
+	 *
+	 * @return true to proceed with the next event, false to re-check the
+	 *         loop conditions.
+	 */
+	protected boolean beforeEvent() {
+
+		Editor ed = circuit.getEditor();
+
+		// check for being paused
+		if (paused) {
+			stepEnd = now;
+			traces.draw();
+			for (MemTrace mtr : memTraces) {
+				mtr.update();
+			}
+			msg.setText("Simulation Paused");
+			if (ed != null)
+				ed.enableEditor(true);
+			try {
+				pauseSem.acquire();
+			}
+			catch (InterruptedException ex) {}
+			if (ed != null)
+				ed.enableEditor(false);
+			return false;
+		}
+
+		// check for stepping
+		// peek at next event
+		SimEvent event = eventQueue.peek();
+		long when = event.getTime();
+
+		// if after step end time ... (can't happen in JLSInfo.batch mode)
+		if (stepEnd != -1 && when > stepEnd) {
+
+			// update current time
+			now = stepEnd;
+			showClock.setText("Time: "+now);
+
+			// update traces
+			traces.draw();
+			for (MemTrace mtr : memTraces) {
+				mtr.update();
+			}
+
+			// redraw circuit
+			if (ed != null)
+				ed.repaint();
+
+			paused = true;
+			return false;
+		}
+
+		if (!JLSInfo.batch)
+			msg.setText("Simulation Running");
+		return true;
+	} // end of beforeEvent method
+
+	/**
+	 * Update the clock display before the event reacts.
+	 *
+	 * @param event The event about to react.
+	 */
+	protected void beforeReact(SimEvent event) {
+
+		if (!JLSInfo.batch) {
+			showClock.setText("Time: "+now);
+			window.validate();
+		}
+	} // end of beforeReact method
+
+	/**
+	 * Record traces and probes after the event has reacted.
+	 *
+	 * @param event The event that just reacted.
+	 */
+	protected void afterEvent(SimEvent event) {
+
+		if (!JLSInfo.batch) {
+
+			// handle watched elements
+			LogicElement el = (LogicElement)event.getCallBack();
+			Trace tr = traceMap.get(el);
+			if (tr != null) {
+				tr.addValue(el.getCurrentValue(),now);
+			}
+
+			// handle probes
+			for (Wire wire : wireMap.keySet()) {
+				tr = wireMap.get(wire);
+				tr.addValue(wire.getValue(),now);
+			}
+		}
+
+		updateStatusBar();
+	} // end of afterEvent method
 
 	/**
 	 * Pause or resume the simulation, if there is one.
@@ -1146,7 +1124,7 @@ public final class InterractiveSimulator extends Simulator {
 		/**
 		 * Call superclass constructor, supply null name.
 		 */
-		public Header(int width, Element el, InterractiveSimulator.Traces parent) {
+		public Header(int width, Element el, InteractiveSimulator.Traces parent) {
 
 			super("",el,0,width,parent);
 		} // end of constructor
@@ -1172,5 +1150,5 @@ public final class InterractiveSimulator extends Simulator {
 
 	} // end of Header class
 
-} // end of InterractiveSimulator class
+} // end of InteractiveSimulator class
 

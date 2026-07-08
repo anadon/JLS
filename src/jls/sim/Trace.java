@@ -26,7 +26,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	// properties
 	private String name;
 	private Element element;
-	protected InterractiveSimulator.Traces parent;
+	protected InteractiveSimulator.Traces parent;
 	private LinkedList<Change> pendingChanges = new LinkedList<Change>();
 	private LinkedList<Change> changes = new LinkedList<Change>();
 	protected long now = 0;
@@ -50,7 +50,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @param parent The parent object of this one.
 	 */
 	public Trace(String name, Element el, int bits, int width,
-			InterractiveSimulator.Traces parent) {
+			InteractiveSimulator.Traces parent) {
 		
 		this.name = name;
 		element = el;

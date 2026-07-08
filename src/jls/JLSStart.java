@@ -58,7 +58,7 @@ import jls.elem.OutputPin;
 import jls.elem.Register;
 import jls.elem.SubCircuit;
 import jls.sim.BatchSimulator;
-import jls.sim.InterractiveSimulator;
+import jls.sim.InteractiveSimulator;
 
 
 @SuppressWarnings("serial")
@@ -72,7 +72,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static boolean printCircuit = false;
 	private static boolean printCircuitTop;
 	private static String printer = null;
-	private InterractiveSimulator interSim;
+	private InteractiveSimulator interSim;
 	private static DefaultExceptionHandler exHandler = null;
 
 	private Container window;
@@ -554,7 +554,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		setVisible(true);
 
 		// set up simulator
-		interSim = new InterractiveSimulator();
+		interSim = new InteractiveSimulator();
 		JLSInfo.sim = interSim;
 		interSim.setTestFile(testFile);
 

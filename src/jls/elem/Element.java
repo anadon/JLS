@@ -285,16 +285,9 @@ public class Element {
 
 	/**
 	 * See if this element intersects another.
-	 * 
-<<<<<<< HEAD
-	 * TODO major point of optimization
-	 * 
-	 * @param other
-	 *            The other element.
-=======
+	 *
 	 * @param other The other element.
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
-	 * 
+	 *
 	 * @return true if this element intersects the other, false if not.
 	 */
 	public boolean intersects(Element other) {
@@ -341,6 +334,9 @@ public class Element {
 	public void setHighlight(boolean light) {
 
 		highlight = light;
+		if (circuit != null) {
+			circuit.noteHighlight(this, light);
+		}
 	} // end of setHightlight method
 
 	/**
@@ -463,6 +459,20 @@ public class Element {
 
 		return new Rectangle(x,y,width,height);
 	} // end of getRect method
+
+	/**
+	 * The bounds this element occupies in the spatial index (#3, #17).
+	 * Must contain every point for which contains() can be true and every
+	 * rectangle this element can intersect. The default is the bounding
+	 * rectangle; wires override it since their extent comes from their
+	 * ends, not from x/y/width/height.
+	 *
+	 * @return the index bounds.
+	 */
+	public Rectangle getIndexBounds() {
+
+		return getRect();
+	} // end of getIndexBounds method
 
 	/**
 	 * Set/reset touching flag(s) for this element.

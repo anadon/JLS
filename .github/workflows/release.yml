@@ -1,0 +1,33 @@
+name: Release
+
+# Pushing a tag like v4.2.0 builds the self-contained jar and publishes
+# it as a GitHub Release (#8).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build and test
+        run: mvn -B verify
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/jls-*.jar
+          generate_release_notes: true
+          fail_on_unmatched_files: true

@@ -128,7 +128,7 @@ public final class JLS  {
 		else {
 			try {
 				URL [] url = new URL[1];
-				url[0] = new URL("file:" + urlName);
+				url[0] = new File(urlName).toURI().toURL();
 				@SuppressWarnings({ "resource", "unchecked" })
 				Class<Element> newElement = (Class<Element>) new URLClassLoader(url).loadClass(cl);
 				Method[] methods = newElement.getMethods();

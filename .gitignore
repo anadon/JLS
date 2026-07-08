@@ -6,3 +6,4 @@ bin*
 *.class
 bin*
 .class
+target/

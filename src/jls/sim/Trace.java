@@ -115,14 +115,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			return;
 			
 		Change ch = new Change();
-		if (value == null) {
-			ch.value = off;
-			previousValue = off;
-		}
-		else {
-			ch.value = (BitSet)value.clone();
-			previousValue = (BitSet)value.clone();
-		}
+		ch.value = (BitSet)value.clone();
+		previousValue = (BitSet)value.clone();
 		ch.when = when;
 		pendingChanges.add(0,ch);
 		

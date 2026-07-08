@@ -320,9 +320,9 @@ public class Text extends DisplayElement {
 	private class TextEdit extends JDialog implements ActionListener {
 
 		// GUI elements
-		private JComboBox fonts;
+		private JComboBox<String> fonts;
 		private String [] fontSizes = {"8","9","10","11","12","13","14","15","16","17","18","19","20","24","28","32","36","40","48","56","64","72"};
-		private JComboBox fontSz = new JComboBox(fontSizes);
+		private JComboBox<String> fontSz = new JComboBox<String>(fontSizes);
 		private JRadioButton bold = new JRadioButton("Bold");
 		private JRadioButton italic = new JRadioButton("Italic");
 		private JButton colorButton = new JButton("Color");
@@ -366,7 +366,7 @@ public class Text extends DisplayElement {
 			else {
 				fn = new String(fontName);
 			}
-			fonts = new JComboBox(names);
+			fonts = new JComboBox<String>(names);
 			fonts.setSelectedItem(fn);
 			details.add(new JLabel("Font:"));
 			details.add(fonts);

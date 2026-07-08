@@ -19,6 +19,9 @@ import javax.help.*;
  * 
  * @author David A. Poplawski
  */
+// The Applet API is deprecated for removal from the JDK and applets no longer
+// run in browsers; removing this class entirely is tracked in issue #9.
+@SuppressWarnings("removal")
 public final class JLSApplet extends JApplet implements ActionListener, ChangeListener {
 
 	// properties

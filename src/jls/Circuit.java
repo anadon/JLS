@@ -1041,17 +1041,19 @@ public class Circuit implements Printable {
 		g.fill(rect);
 		draw(g, new HashSet<Element>(), null);
 
-		// write the image
+		// write the image, the format following the file extension
+		// (issue #71): .png produces PNG, anything else the legacy JPEG
 		try {
-			ImageIO.write(image, "JPEG", new File(file));
-		} catch (Exception ex) {
-			System.out.println("image write exception");
+			String format = file.toLowerCase(java.util.Locale.ROOT)
+					.endsWith(".png") ? "png" : "jpg";
+			if (!ImageIO.write(image, format, new File(file))) {
+				throw new IOException("no " + format + " image writer available");
+			}
+		} finally {
+			// clean up
+			g.dispose();
+			image.flush();
 		}
-
-		// clean up
-		g.dispose();
-		image.flush();
-		image = null;
 
 	} // end of print method
 

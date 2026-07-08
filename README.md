@@ -25,7 +25,9 @@ newer).
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
-  limits (`-d`), image export (`-i`), and printing (`-p`/`-v`/`-r`).
+  limits (`-d`), image export (`-i`, PNG named after the circuit file by
+  default, or pass an output path such as `-i out.jpg` for JPEG), and
+  printing (`-p`/`-v`/`-r`).
   Diagnostics go to stderr as one `jls: error: ...` line; exit status is
   0 on success, 1 on runtime failure, and 2 on a usage error.
 

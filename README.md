@@ -1,5 +1,7 @@
 # JLS — Java Logic Simulator
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/anadon/JLS/badge)](https://scorecard.dev/viewer/?uri=github.com/anadon/JLS)
+
 JLS is an educational digital logic circuit editor and simulator. Students
 draw circuits from gates, wires, registers, memories, state machines, and
 other elements, then simulate them interactively (with a signal-trace window)

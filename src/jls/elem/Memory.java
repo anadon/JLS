@@ -1058,7 +1058,7 @@ public class Memory extends LogicElement {
 				input.close();
 				String msg = initOK(new String(info),capacity,bits,true);
 				if (msg != null) {
-					if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet) {
+					if (JLSInfo.batch && JLSInfo.frame == null) {
 						System.out.println(msg + " in memory file " +
 								name + ", all zeros assumed");
 					}
@@ -1073,7 +1073,7 @@ public class Memory extends LogicElement {
 			}
 			catch (IOException ex) {
 				
-				if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet) {
+				if (JLSInfo.batch && JLSInfo.frame == null) {
 					System.out.println("Initialization file for memory " +
 							name + " cannot be read, all zeros assumed");
 				}
@@ -1091,7 +1091,7 @@ public class Memory extends LogicElement {
 			// parse built-in values
 			String msg = initOK(new String(initialValue),capacity,bits,true);
 			if (msg != null) {
-				if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet) {
+				if (JLSInfo.batch && JLSInfo.frame == null) {
 					System.out.println(msg + " in memory file " +
 							name + ", all zeros assumed");
 				}

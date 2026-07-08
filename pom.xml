@@ -40,11 +40,20 @@
       <artifactId>javahelp</artifactId>
       <version>2.0.05</version>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
-    <!-- historical layout: sources in src/, not src/main/java -->
+    <!-- historical layout: sources in src/, not src/main/java;
+         tests live in a sibling test/ tree so they are not swept up
+         by the src/ source and resource roots -->
     <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
     <resources>
       <!-- images and other non-Java files that live inside the source tree -->
       <resource>
@@ -82,11 +91,50 @@
         <configuration>
           <archive>
             <manifest>
+              <!-- dependencies are bundled by the shade plugin below -->
               <mainClass>jls.JLS</mainClass>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
             </manifest>
           </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- self-contained runnable jar: bundles xz and javahelp so users
+             need only `java -jar` (#8) -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!-- JLS is not consumed as a library; skip the reduced POM -->
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>module-info.class</exclude>
+                    <exclude>META-INF/versions/*/module-info.class</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <!-- tests exercise load/save and element construction without a display -->
+          <argLine>-Djava.awt.headless=true</argLine>
         </configuration>
       </plugin>
       <plugin>

@@ -89,7 +89,7 @@ public class TestGen extends SigSim {
 	 */
 	protected void specError(String msg) {
 		
-		if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet) {
+		if (JLSInfo.batch && JLSInfo.frame == null) {
 			System.out.println("error in test file");
 			System.out.println(msg);
 			System.exit(1);

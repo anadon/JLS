@@ -108,9 +108,7 @@ public final class InterractiveSimulator extends Simulator {
 		print.setBackground(Color.white);
 		print.setToolTipText("print trace window");
 
-		if (!JLSInfo.isApplet) {
-			action.add(print);
-		}
+		action.add(print);
 
 		if (JLSInfo.hb != null) {
 			JLSInfo.hb.enableHelpOnButton(help,"inter.sim",null);
@@ -698,7 +696,7 @@ public final class InterractiveSimulator extends Simulator {
 					reason = "Simulation Complete";
 				stopping = true;
 
-				if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet)
+				if (JLSInfo.batch && JLSInfo.frame == null)
 					System.out.println(reason + " at " + now);
 				else
 					msg.setText(reason);
@@ -719,10 +717,10 @@ public final class InterractiveSimulator extends Simulator {
 		}; // end of sim Thread class
 
 		// start up the simulator
-		if (!JLSInfo.batch || JLSInfo.frame != null || JLSInfo.isApplet)
+		if (!JLSInfo.batch || JLSInfo.frame != null)
 			msg.setText("Simulation Running");
 		sim.start();
-		if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet) {
+		if (JLSInfo.batch && JLSInfo.frame == null) {
 			try {
 				sim.join();
 			}
@@ -865,7 +863,7 @@ public final class InterractiveSimulator extends Simulator {
 	 */
 	private void updateStatusBar() {
 
-		if (JLSInfo.batch && JLSInfo.frame == null && !JLSInfo.isApplet)
+		if (JLSInfo.batch && JLSInfo.frame == null)
 			return;
 		statusMsg.setText(msg.getText());
 		statusClock.setText(showClock.getText());

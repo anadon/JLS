@@ -46,7 +46,6 @@ public final class JLSInfo {
 	public static final long defaultTimeLimit = 100000000;		// default simulation time
 	public static Frame frame = null;					// for dialog boxes
 	public static Simulator sim = null;					// for undo/redo
-	public static boolean isApplet = false;				// set to true by applet
 	public static boolean batch = false;				// batch mode
 	public static boolean printTrace = false;			// print signal trace
 	public static boolean imgexport = false;			// export image from command line

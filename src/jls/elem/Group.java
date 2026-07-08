@@ -463,9 +463,9 @@ public abstract class Group extends LogicElement {
 		
 		// properties
 		private DefaultListModel<Entry> pick = new DefaultListModel<Entry>();
-		private JList choose = new JList(pick); // LeftList?
+		private JList<Entry> choose = new JList<Entry>(pick); // LeftList?
 		private DefaultListModel<Entry> picked = new DefaultListModel<Entry>();
-		private JList chosen = new JList(picked);
+		private JList<Entry> chosen = new JList<Entry>(picked);
 		private JButton add = new JButton(">>");
 		private JButton remove = new JButton("<<");
 		private JButton upjumper = new JButton("Move bundle to top");
@@ -515,7 +515,7 @@ public abstract class Group extends LogicElement {
 			// set up automatic disabling of already-bundled bits
 			choose.setCellRenderer(new DefaultListCellRenderer() {
 				@Override
-				public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 					boolean allow = true;
 					Entry e = (Entry) pick.get(index);
 					if(e.isPicked()) {

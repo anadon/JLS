@@ -950,7 +950,7 @@ public final class StateMachine extends LogicElement implements Printable {
 					createNewState();
 				}
 			};
-			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_MASK),"new state");
+			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_DOWN_MASK),"new state");
 			editArea.getActionMap().put("new state", newState);
 
 			// set up window close listener to cancel element
@@ -1975,7 +1975,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			BitSet cval = getInput("clock").getValue();
 			if (cval == null)
 				cval = new BitSet();
-			int newClock = (int)(BitSetUtils.ToLong(getInput("clock").getValue()));
+			int newClock = (int)(BitSetUtils.ToLong(cval));
 			
 			// if still doing a transition, don't start another
 			if (busy) {

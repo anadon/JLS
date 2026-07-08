@@ -1,5 +1,9 @@
 package jls;
 
+import java.nio.charset.StandardCharsets;
+
+import java.nio.charset.Charset;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -27,7 +31,7 @@ public final class Eula extends JDialog implements ActionListener {
 		String home = System.getProperty("user.home");
 		File f = new File(home + "/.jls" + JLSInfo.vers);
 		try {
-			Scanner input = new Scanner(new FileInputStream(f));
+			Scanner input = new Scanner(new FileInputStream(f), StandardCharsets.UTF_8);
 			if (input.hasNextLong()) {
 				long code = input.nextLong();
 				if (code%17==0 && code%97==0)
@@ -40,7 +44,7 @@ public final class Eula extends JDialog implements ActionListener {
 		presentEula();
 		if (ok) {
 			try {
-				PrintWriter output = new PrintWriter(new FileOutputStream(f));
+				PrintWriter output = new PrintWriter(new FileOutputStream(f), true, StandardCharsets.UTF_8);
 				int start = 1000000000;
 				int stop = Integer.MAX_VALUE;
 				long code = System.currentTimeMillis() % (stop-start) + start;
@@ -79,7 +83,7 @@ public final class Eula extends JDialog implements ActionListener {
 			System.out.println(line);
 		}
 		System.out.print("\nDo you accept the terms of the license agreement [Y/n]? ");
-		Scanner s = new Scanner(System.in);
+		Scanner s = new Scanner(System.in, Charset.defaultCharset());
 		String in = s.nextLine();
 		if(in.equalsIgnoreCase("y") || in.length() == 0) ok = true;
 	}

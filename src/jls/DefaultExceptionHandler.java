@@ -1,5 +1,7 @@
 package jls;
 
+import java.nio.charset.StandardCharsets;
+
 import javax.swing.JOptionPane;
 import java.io.*;
 import java.util.*;
@@ -115,7 +117,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 		
 		//th.printStackTrace(); // remove this when not debugging
 		try {
-			PrintWriter out = new PrintWriter("JLSerror");
+			PrintWriter out = new PrintWriter("JLSerror", StandardCharsets.UTF_8);
 			out.println("Please email this file to pop@mtu.edu");
 			out.println("along with a short description of what");
 			out.println("you were doing when the error occured.");
@@ -129,7 +131,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 				circuit.save(out);
 			out.close();
 		}
-		catch (FileNotFoundException ex) {
+		catch (IOException ex) {
 			System.out.println("Can't create JLSerror file");
 		}
 	} // end of saveTrace method

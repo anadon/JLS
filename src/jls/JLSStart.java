@@ -1,5 +1,7 @@
 package jls;
 
+import java.nio.charset.StandardCharsets;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -231,7 +233,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.out.println("Can't read from " + startFile);
 				System.exit(1);
 			}
-			Scanner input = new Scanner(in);
+			Scanner input = new Scanner(in, StandardCharsets.UTF_8);
 
 			// create new circuit
 			Circuit circ = new Circuit(cname);
@@ -1237,7 +1239,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	
 	private static Scanner getXZScanner(String filePath){
 		try{
-			return testScanner(new Scanner(new SeekableXZInputStream(new SeekableFileInputStream(new File(filePath)))));
+			return testScanner(new Scanner(new SeekableXZInputStream(new SeekableFileInputStream(new File(filePath))), StandardCharsets.UTF_8));
 		}catch(Throwable e){
 			return null;
 		}
@@ -1246,7 +1248,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static Scanner getZipScanner(String filePath){
 		try{
 			ZipFile target = new ZipFile(new File(filePath));
-			Scanner toReturn = testScanner(new Scanner(target.getInputStream(target.getEntry("JLSCircuit"))));
+			Scanner toReturn = testScanner(new Scanner(target.getInputStream(target.getEntry("JLSCircuit")), StandardCharsets.UTF_8));
 			target.close();
 			return toReturn;
 		}catch(Throwable e){
@@ -1256,7 +1258,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	
 	private static Scanner getTextScanner(String filePath){
 		try{
-			return testScanner(new Scanner(new File(filePath)));
+			return testScanner(new Scanner(new File(filePath), StandardCharsets.UTF_8));
 		}catch(Throwable e){
 			return null;
 		}
@@ -1355,7 +1357,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 			// open file, set up miscellaneous stuff
 			FileInputStream input = new FileInputStream(paramFile);
-			Scanner scan = new Scanner(input);
+			Scanner scan = new Scanner(input, StandardCharsets.UTF_8);
 
 			// read info
 			while (scan.hasNext()) {

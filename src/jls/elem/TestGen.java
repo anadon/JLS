@@ -1,5 +1,7 @@
 package jls.elem;
 
+import java.nio.charset.StandardCharsets;
+
 import jls.*;
 import jls.sim.*;
 
@@ -76,7 +78,7 @@ public class TestGen extends SigSim {
 				return;
 			}
 		}
-		Scanner input = new Scanner(in);
+		Scanner input = new Scanner(in, StandardCharsets.UTF_8);
 		super.initSim(sim,input);
 	} // end of initSim method
 	

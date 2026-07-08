@@ -617,7 +617,7 @@ public abstract class Gate extends LogicElement {
 			// set up input panel
 			this.type = type;
 			JPanel info = null;
-			if (type.equals("NOT") || type.equals("XOR") || type == "Extend") {
+			if (type.equals("NOT") || type.equals("XOR") || type.equals("Extend")) {
 				info = new JPanel(new GridLayout(1,2));
 			}
 			else {

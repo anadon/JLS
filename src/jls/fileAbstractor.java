@@ -1,5 +1,7 @@
 package jls;
 
+import java.nio.charset.StandardCharsets;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,11 +38,11 @@ public class fileAbstractor {
 		Scanner textInput = null;
 		
 		if(filePath.endsWith(".jls_xz")){
-			textInput = new Scanner(new XZInputStream(new FileInputStream(filePath)));
+			textInput = new Scanner(new XZInputStream(new FileInputStream(filePath)), StandardCharsets.UTF_8);
 		}else if(filePath.endsWith(".jls_txt")){
-			textInput = new Scanner(new FileInputStream(filePath));
+			textInput = new Scanner(new FileInputStream(filePath), StandardCharsets.UTF_8);
 		}else if(filePath.endsWith(".jls")){
-			textInput = new Scanner(new ZipInputStream(new FileInputStream(filePath)));
+			textInput = new Scanner(new ZipInputStream(new FileInputStream(filePath)), StandardCharsets.UTF_8);
 		}else{
 			throw new IllegalArgumentException();
 		}
@@ -77,7 +79,7 @@ public class fileAbstractor {
 		}
 		
 		while(!toWrite.isEmpty()){
-			textOutput.write(toWrite.pop().concat(" ").getBytes());
+			textOutput.write(toWrite.pop().concat(" ").getBytes(StandardCharsets.UTF_8));
 		}
 		
 		textOutput.close();

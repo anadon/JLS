@@ -1,5 +1,9 @@
 package jls.edit;
 
+import java.nio.charset.StandardCharsets;
+
+import java.io.OutputStreamWriter;
+
 import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -69,7 +73,7 @@ public final class Editor extends SimpleEditor {
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		PrintWriter output = new PrintWriter(out);
+		PrintWriter output = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 
 		// save the circuit
 		circuit.save(output);

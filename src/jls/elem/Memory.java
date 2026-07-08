@@ -1,5 +1,7 @@
 package jls.elem;
 
+import java.nio.charset.StandardCharsets;
+
 import jls.*;
 import jls.sim.*;
 import java.awt.*;
@@ -1050,7 +1052,7 @@ public class Memory extends LogicElement {
 				File file = new File(fileName);
 				int length = (int)file.length();
 				FileInputStream in = new FileInputStream(file);
-				InputStreamReader input = new InputStreamReader(in);
+				InputStreamReader input = new InputStreamReader(in, StandardCharsets.UTF_8);
 				char [] info = new char[length];
 				input.read(info,0,length);
 				input.close();

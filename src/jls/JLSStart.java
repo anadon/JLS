@@ -18,12 +18,10 @@ import java.awt.print.Book;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.file.FileSystems;
@@ -32,9 +30,6 @@ import java.util.Enumeration;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import javax.help.CSH;
 import javax.help.HelpSet;
@@ -65,8 +60,6 @@ import jls.elem.SubCircuit;
 import jls.sim.BatchSimulator;
 import jls.sim.InterractiveSimulator;
 
-import org.tukaani.xz.SeekableFileInputStream;
-import org.tukaani.xz.SeekableXZInputStream;
 
 @SuppressWarnings("serial")
 public class JLSStart extends JFrame implements ChangeListener {
@@ -132,7 +125,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.exit(1);
 			}
 			
-			Scanner input = getScannerForFile(startFile);
+			Scanner input = FileAbstractor.openCircuit(startFile);
+			if (input == null) {
+				System.out.println("can't open " + startFile);
+				System.out.println("    reason: " + JLSInfo.loadError);
+				System.exit(1);
+			}
 
 			// create new circuit
 			Circuit circ = new Circuit(cname);
@@ -214,27 +212,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.out.println(startFile + " is not a valid circuit file name");
 				System.exit(1);
 			}
-			InputStream in = null;
-			try {
-
-				// see if the .jls file is in zip format
-				FileInputStream temp = new FileInputStream(startFile);
-				ZipInputStream inz = new ZipInputStream(temp);
-				if (inz.getNextEntry() == null) {
-
-					// if not, open as an ordinary file
-					temp.close();
-					in = new FileInputStream(startFile);
-				}
-				else {
-					in = inz;
-				}
-			}
-			catch (IOException ex) {
+			Scanner input = FileAbstractor.openCircuit(startFile);
+			if (input == null) {
 				System.out.println("Can't read from " + startFile);
+				System.out.println("    reason: " + JLSInfo.loadError);
 				System.exit(1);
 			}
-			Scanner input = new Scanner(in, StandardCharsets.UTF_8);
 
 			// create new circuit
 			Circuit circ = new Circuit(cname);
@@ -1079,7 +1062,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 			prevOpenDir = file.getParent().equals("") ? System.getProperty("user.dir") : file.getParent();
 		}
 		
-		Scanner input = getScannerForFile(filePath);
+		Scanner input = FileAbstractor.openCircuit(filePath);
+		if (input == null) {
+			JOptionPane.showMessageDialog(this,
+					"can't open " + filePath + ": " + JLSInfo.loadError, "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		String cname;
 		cname = file.getName().replaceAll("\\.jls~$", "");
@@ -1230,81 +1219,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of duplicateName method
 
 	
-	private static Scanner testScanner(Scanner toTest){
-		if (toTest.hasNext() == false) {
-			toTest.close();
-			toTest = null;
-		}
-		return toTest;
-	}
-	
-	private static Scanner getXZScanner(String filePath){
-		try{
-			return testScanner(new Scanner(new SeekableXZInputStream(new SeekableFileInputStream(new File(filePath))), StandardCharsets.UTF_8));
-		}catch(Throwable e){
-			return null;
-		}
-	}
-	
-	private static Scanner getZipScanner(String filePath){
-		// Closing the ZipFile closes every stream obtained from it, so the
-		// entry must be read completely before the file is closed (issue #2:
-		// closing early truncated any circuit larger than the Scanner's
-		// internal buffer).
-		try (ZipFile target = new ZipFile(new File(filePath))) {
-			ZipEntry entry = target.getEntry("JLSCircuit");
-			if (entry == null)
-				entry = target.getEntry("JLSCheckpoint"); // legacy checkpoint files
-			if (entry == null)
-				return null;
-			byte[] contents = target.getInputStream(entry).readAllBytes();
-			return testScanner(new Scanner(new ByteArrayInputStream(contents), StandardCharsets.UTF_8));
-		}catch(Throwable e){
-			return null;
-		}
-	}
-	
-	private static Scanner getTextScanner(String filePath){
-		try{
-			return testScanner(new Scanner(new File(filePath), StandardCharsets.UTF_8));
-		}catch(Throwable e){
-			return null;
-		}
-	}
-	
-	private static Scanner getScannerForFile(String filePath){
-		
-		String name;
-		
-		name = filePath.replaceAll("\\.jls~$", "");
-		name = name.replaceAll("\\.jls$", "");
-
-		if (Util.isValidFileName(name) == null) {
-			TellUser.err(name + " is not a valid circuit file name.\n"
-					+ "It must start with a letter and contain letters, "
-					+"digits and underscores.", true);
-			return null;
-		}
-		
-		Scanner toReturn = null;
-		System.out.println(filePath);
-		
-		//See if the .jls file is in xz format
-		if((toReturn = getXZScanner(filePath)) != null) return toReturn;
-		
-		System.out.println("Not a XZ compressed file, trying to open as zip");
-		if((toReturn = getZipScanner(filePath)) != null) return toReturn;
-		
-			
-		System.out.println("Not a zip compressed file, trying to open as plain text");
-		if((toReturn = getTextScanner(filePath)) != null) return toReturn;
-					
-		
-		System.out.println("Unable to open specified file.");		
-		return null;
-	}
-	
-	
 	/**
 	 * Import a circuit from a file into this circuit.
 	 * @throws Exception 
@@ -1332,7 +1246,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 		if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) 
 			return;
 		
-		Scanner input = getScannerForFile(chooser.getSelectedFile().getAbsolutePath());
+		Scanner input = FileAbstractor.openCircuit(chooser.getSelectedFile().getAbsolutePath());
+		if (input == null) {
+			JOptionPane.showMessageDialog(this,
+					"can't open " + chooser.getSelectedFile().getName() + ": " + JLSInfo.loadError, "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		// create new circuit
 		Circuit circ = new Circuit(chooser.getSelectedFile().getName().trim().replaceAll("\\.jls$",""));

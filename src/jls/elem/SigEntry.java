@@ -73,10 +73,14 @@ public abstract class SigEntry extends Entry implements ActionListener {
 		menu.add(rename);
 		menu.add(moveLeft);
 		menu.add(moveRight);
-		remove.addActionListener(this);
-		rename.addActionListener(this);
-		moveLeft.addActionListener(this);
-		moveRight.addActionListener(this);
+		// re-adding listeners on every popup made each menu action fire
+		// once per prior popup (issue #51)
+		if (remove.getActionListeners().length == 0) {
+			remove.addActionListener(this);
+			rename.addActionListener(this);
+			moveLeft.addActionListener(this);
+			moveRight.addActionListener(this);
+		}
 		menu.show(ttelem.getDisplay(),x,y);
 	} // end of selected method
 

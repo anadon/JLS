@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -754,6 +755,9 @@ public class Circuit implements Printable {
 			}
 
 			loadedElements.clear();
+			// the id map is only needed while wire ends resolve their
+			// refs above; keeping it pinned every loaded element (#51)
+			elementMap.clear();
 		} catch (Exception ex) {
 			JLSInfo.loadError = "finishLoad Exception " + ex.getMessage();
 			return false;
@@ -822,9 +826,7 @@ public class Circuit implements Printable {
 	 * Draw the circuit by drawing every element. First the set of elements not
 	 * in the second set are drawn, then the ones in the second set are drawn.
 	 * Wires are drawn first in each set.
-	 * 
-	 * <<<<<<< HEAD
-	 * 
+	 *
 	 * @param g
 	 *            The graphics object to draw with.
 	 * @param second
@@ -832,14 +834,6 @@ public class Circuit implements Printable {
 	 * @param ed
 	 *            The editor window doing the drawing.
 	 * @throws Exception
-	 *             =======
-	 * @param g
-	 *            The graphics object to draw with.
-	 * @param second
-	 *            The second set of elements to draw.
-	 * @param ed
-	 *            The editor window doing the drawing. >>>>>>>
-	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
 	public void draw(Graphics g, Set<Element> second, SimpleEditor ed)
 			throws Exception {
@@ -1019,16 +1013,10 @@ public class Circuit implements Printable {
 
 	/**
 	 * Export an image of the circuit.
-	 * 
-	 * <<<<<<< HEAD
-	 * 
+	 *
 	 * @param file
 	 *            The name of the file to write to.
 	 * @throws Exception
-	 *             =======
-	 * @param file
-	 *            The name of the file to write to. >>>>>>>
-	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
 	public void exportImage(String file) throws Exception {
 
@@ -1253,7 +1241,9 @@ public class Circuit implements Printable {
 	 */
 	public Set<String> getJumpStartNames() {
 
-		return starts.keySet();
+		// a copy: handing out the live keySet let callers (or their
+		// iteration) corrupt the jump-start map (issue #51)
+		return new TreeSet<String>(starts.keySet());
 	} // end of getJumpStartNames method
 
 	/**

@@ -36,6 +36,14 @@ import org.tukaani.xz.XZOutputStream;
  */
 public final class FileAbstractor {
 
+	/**
+	 * Upper bound on the circuit text a container may expand to. Circuit
+	 * files are shared between students and instructors by design, so a
+	 * tiny archive inflating to gigabytes is treated as hostile, not as
+	 * a big circuit (issue #38; SECURITY.md documents live attacks).
+	 */
+	static final long MAX_CIRCUIT_TEXT_BYTES = 64L << 20;
+
 	private FileAbstractor() {
 	}
 
@@ -125,8 +133,23 @@ public final class FileAbstractor {
 	 */
 	static Scanner readXZ(File file) throws IOException {
 
-		return nonEmpty(new Scanner(
-				new SeekableXZInputStream(new SeekableFileInputStream(file)),
+		// the XZ constructor throws by design for every legacy zip or
+		// plain-text file in the sniffing cascade; the raw stream must
+		// not leak a file descriptor each time (issue #38)
+		SeekableFileInputStream raw = new SeekableFileInputStream(file);
+		SeekableXZInputStream xz;
+		try {
+			xz = new SeekableXZInputStream(raw);
+		}
+		catch (IOException ex) {
+			raw.close();
+			throw ex;
+		}
+		catch (RuntimeException ex) {
+			raw.close();
+			throw ex;
+		}
+		return nonEmpty(new Scanner(new BoundedInputStream(xz),
 				StandardCharsets.UTF_8));
 	}
 
@@ -147,7 +170,15 @@ public final class FileAbstractor {
 				entry = archive.getEntry("JLSCheckpoint");
 			if (entry == null)
 				throw new IOException("zip archive has no JLSCircuit entry");
-			byte[] contents = archive.getInputStream(entry).readAllBytes();
+			// bound the expansion: the declared entry size is
+			// attacker-controlled and readAllBytes trusted it (issue #38)
+			byte[] contents = archive.getInputStream(entry)
+					.readNBytes((int) MAX_CIRCUIT_TEXT_BYTES + 1);
+			if (contents.length > MAX_CIRCUIT_TEXT_BYTES) {
+				throw new IOException("zip entry expands past the "
+						+ (MAX_CIRCUIT_TEXT_BYTES >> 20)
+						+ " MiB circuit size limit");
+			}
 			return nonEmpty(new Scanner(new ByteArrayInputStream(contents), StandardCharsets.UTF_8));
 		}
 	}
@@ -159,7 +190,51 @@ public final class FileAbstractor {
 	 */
 	static Scanner readText(File file) throws IOException {
 
+		if (file.length() > MAX_CIRCUIT_TEXT_BYTES) {
+			throw new IOException("file exceeds the "
+					+ (MAX_CIRCUIT_TEXT_BYTES >> 20)
+					+ " MiB circuit size limit");
+		}
 		return nonEmpty(new Scanner(file, StandardCharsets.UTF_8));
+	}
+
+	/**
+	 * An input stream that refuses to hand out more than
+	 * MAX_CIRCUIT_TEXT_BYTES in total, so a hostile XZ stream cannot
+	 * decompress without bound (issue #38).
+	 */
+	private static final class BoundedInputStream extends java.io.FilterInputStream {
+
+		private long remaining = MAX_CIRCUIT_TEXT_BYTES;
+
+		BoundedInputStream(java.io.InputStream in) {
+			super(in);
+		}
+
+		public int read() throws IOException {
+			int b = super.read();
+			if (b >= 0 && --remaining < 0) {
+				throw new IOException(overrun());
+			}
+			return b;
+		}
+
+		public int read(byte[] buf, int off, int len) throws IOException {
+			int n = super.read(buf, off, len);
+			if (n > 0) {
+				remaining -= n;
+				if (remaining < 0) {
+					throw new IOException(overrun());
+				}
+			}
+			return n;
+		}
+
+		private static String overrun() {
+			return "compressed stream expands past the "
+					+ (MAX_CIRCUIT_TEXT_BYTES >> 20)
+					+ " MiB circuit size limit";
+		}
 	}
 
 	private static Scanner nonEmpty(Scanner scanner) throws IOException {

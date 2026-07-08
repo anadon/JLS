@@ -131,7 +131,7 @@ public class Decoder extends LogicElement {
 		}
 		else if(orientation == JLSInfo.Orientation.DOWN)
 		{
-			inout = outs + "/n | /n" + bits;
+			inout = outs + "\n | \n" + bits;
 		}
 		else if(orientation == JLSInfo.Orientation.RIGHT)
 		{

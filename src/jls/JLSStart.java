@@ -1294,6 +1294,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 						System.out.println(" got \"" + type + "\"");
 						System.exit(1);
 					}
+					if (!LogicElement.class.isAssignableFrom(cl)) {
+						// e.g. TYPE Wire used to crash on an unguarded
+						// cast in setPropDelays (issue #38)
+						System.out.print(paramFile + ": " + type);
+						System.out.println(" is not a simulated element type");
+						System.exit(1);
+					}
 
 					// get PROPDELAY
 					if (!scan.hasNext()) {
@@ -1564,7 +1571,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				Circuit c = sub.getSubCircuit();
 				setPropDelays(c,cl,delay);
 			}
-			else if (el.getClass() == cl) {
+			else if (el.getClass() == cl && el instanceof LogicElement) {
 				LogicElement lel = (LogicElement)el;
 				lel.setDelay(delay);
 			}

@@ -87,7 +87,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 				saveTrace(th);
 				System.out.println("UNEXPECTED INTERNAL ERROR!");
 				System.out.println("JLS will create a file called JLSerror in the current folder/directory.");
-				System.out.println("Please email it to pop@mtu.edu to report the error so it can be fixed.");
+				System.out.println("Please attach it to a bug report at https://github.com/anadon/JLS/issues so it can be fixed.");
 				System.exit(1);
 			}
 			
@@ -98,7 +98,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 					"UNEXPECTED INTERNAL ERROR! Try to save circuit(s)." + 
 					"<p>" + 
 					"JLS will create a file called JLSerror in the current folder/directory." +
-					"<br>Please email it to pop@mtu.edu to report the error so it can be fixed." +
+					"<br>Please attach it to a bug report at https://github.com/anadon/JLS/issues so it can be fixed." +
 					"<br><br>Try restarting JLS using checkpoints of open circuits" +
 					"<br>(i.e., <i>file</i>.jls~, where <i>file</i> is the name of the open circuit)" +
 					"</html>";
@@ -118,14 +118,19 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 		//th.printStackTrace(); // remove this when not debugging
 		try {
 			PrintWriter out = new PrintWriter("JLSerror", StandardCharsets.UTF_8);
-			out.println("Please email this file to pop@mtu.edu");
-			out.println("along with a short description of what");
-			out.println("you were doing when the error occured.");
-			out.println("Thanks.");
+			out.println("Please attach this file to a bug report at");
+			out.println("https://github.com/anadon/JLS/issues along with a");
+			out.println("short description of what you were doing when the");
+			out.println("error occurred. Thanks.");
 			out.printf("JLS %d.%d.%d %s\n", JLSInfo.vers, JLSInfo.release, JLSInfo.buildNum,
 					JLSInfo.build);
-			Properties prop = System.getProperties();
-			prop.list(out);
+			// only environment facts that help diagnose a crash: the full
+			// System.getProperties() dump leaked user/host details into a
+			// file users are told to share (issue #51)
+			for (String key : new String[] { "java.version", "java.vendor",
+					"java.vm.name", "os.name", "os.version", "os.arch" }) {
+				out.println(key + "=" + System.getProperty(key));
+			}
 			th.printStackTrace(out);
 			if (circuit != null)
 				circuit.save(out);

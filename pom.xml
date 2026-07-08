@@ -138,7 +138,9 @@
         <configuration>
           <effort>Max</effort>
           <!-- fail the build only on the highest-confidence findings;
-               the full backlog is tracked via the exclude baseline -->
+               the exclude baseline therefore covers HIGH-confidence
+               findings only - medium/low-confidence findings neither
+               fail the build nor appear in the baseline (issue #54) -->
           <threshold>High</threshold>
           <excludeFilterFile>config/spotbugs-exclude.xml</excludeFilterFile>
         </configuration>

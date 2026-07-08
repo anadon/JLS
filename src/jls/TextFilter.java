@@ -30,13 +30,15 @@ public final class TextFilter extends DocumentFilter {
 
 	/**
 	 * Set the maximum value for numbers allowed in this text field.
-	 * Make sure base is set first.
-	 * 
+	 *
 	 * @param max The maximum value.
 	 */
 	public void setMax(long max) {
 
-		this.max = new BigInteger(Long.toString(max),base);
+		// the max is a value, not digits: parsing its decimal rendering
+		// in the field's base made a hex field's setMax(255) mean 0x255
+		// and a binary field's setMax(5) throw on the EDT (issue #51)
+		this.max = BigInteger.valueOf(max);
 	} // end of setMax method
 
 	/**

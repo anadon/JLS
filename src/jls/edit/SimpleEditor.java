@@ -2907,7 +2907,7 @@ public abstract class SimpleEditor extends JPanel {
 				// create other end of wire
 				WireEnd end2 = new WireEnd(circuit);
 				end2.setXY(x,y);
-				end1.init(circuit);
+				end2.init(circuit);
 				end2.setPut(p2);
 				end2.setNet(net);
 				net.add(end2);
@@ -4217,12 +4217,14 @@ public abstract class SimpleEditor extends JPanel {
 								String name = el.getName();
 								circ.addName(name);
 							}
-							else if (el instanceof SubCircuit) {
+							// not an else: subcircuits are named, so the
+							// recursion never ran as an else-if (#51)
+							if (el instanceof SubCircuit) {
 								SubCircuit sc = (SubCircuit)el;
 								updateNamesUsed(sc.getSubCircuit());
 							}
 						}
-					} // end of updateJumpStarts method
+					} // end of updateNamesUsed method
 
 				} // end of EditWindow class
 

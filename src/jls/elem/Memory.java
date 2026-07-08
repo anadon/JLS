@@ -35,6 +35,9 @@ public class Memory extends LogicElement {
 	// one constraint string, two surfaces: dialog and loader (issue #52)
 	static final String CAPACITY_CONSTRAINT = "Capacity must be at least 1";
 
+	// absolute cap on RLE-decoded initial-memory words (issue #38)
+	static final long MAX_INIT_WORDS = 1L << 24;
+
 	// saved properties
 	private String name = defaultName;
 	private Type type = defaultType;
@@ -315,7 +318,10 @@ public class Memory extends LogicElement {
 		} else if (name.equals("init")) {
 			initialValue = value;
 		} else if (name.equals("initrle")) {
-			initialValue = decodeInitRLE(value);
+			// the writer emits cap before initrle, so the declared
+			// capacity bounds the expansion here (issue #38)
+			initialValue = decodeInitRLE(value,
+					Math.min(capacity, MAX_INIT_WORDS));
 		} else {
 			super.setValue(name,value);
 		}
@@ -458,6 +464,21 @@ public class Memory extends LogicElement {
 	 */
 	static String decodeInitRLE(String rle) {
 
+		return decodeInitRLE(rle, MAX_INIT_WORDS);
+	} // end of decodeInitRLE method
+
+	/**
+	 * Decode with an explicit address bound. A hostile run length used to
+	 * expand ~2^31 lines into a StringBuilder (issue #38); every decoded
+	 * address must be below the declared memory capacity.
+	 *
+	 * @param rle The encoded form.
+	 * @param maxWords Upper bound on decoded addresses (exclusive).
+	 *
+	 * @return the canonical text.
+	 */
+	static String decodeInitRLE(String rle, long maxWords) {
+
 		StringBuilder text = new StringBuilder();
 		for (String token : rle.trim().split(" ")) {
 			if (token.isEmpty()) {
@@ -477,8 +498,9 @@ public class Memory extends LogicElement {
 			} catch (NumberFormatException ex) {
 				throw new IllegalArgumentException("bad initrle token: " + token);
 			}
-			if (addr < 0 || run < 1) {
-				throw new IllegalArgumentException("bad initrle token: " + token);
+			if (addr < 0 || run < 1 || (long) addr + run > maxWords) {
+				throw new IllegalArgumentException("bad initrle token: " + token
+						+ " (addresses must stay below the memory capacity)");
 			}
 			String valueHex = value.toString(16);
 			for (int i = 0; i < run; i += 1) {

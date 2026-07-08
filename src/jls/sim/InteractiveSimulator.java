@@ -807,13 +807,6 @@ public final class InteractiveSimulator extends Simulator {
 					el.setTracePosition(-1);
 				}
 			}
-
-			// if a subcircuit, recursively find all traces in it
-			else if (element instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)element;
-				Circuit c = sub.getSubCircuit();
-				findTraces(c);
-			}
 		}
 	} // end of findTraces method
 

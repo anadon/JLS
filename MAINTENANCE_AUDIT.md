@@ -1,5 +1,13 @@
 # JLS Maintenance Audit — July 2026
 
+> **Historical snapshot.** This document describes the repository as it was
+> *before* the modernization program it proposed. That program is complete —
+> all 25 roadmap issues (#2–#27) are closed, and statements below such as
+> "no build system", "no tests", and "no CI" no longer describe the tree.
+> For the current state of the project, see the follow-up audit in
+> [AUDIT-2026-07.md](AUDIT-2026-07.md). This file is kept unedited below as
+> the record of the program's starting point and rationale.
+
 This document records the findings of a full maintenance audit of the JLS
 (Java Logic Simulator) repository, plus a follow-up performance/memory/file-size
 audit. The actionable items are tracked on GitHub: see the roadmap in issue

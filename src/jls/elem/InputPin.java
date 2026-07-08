@@ -17,9 +17,6 @@ import java.util.*;
  */
 public class InputPin extends Pin implements TriProp {
 	
-	// properties
-	private boolean loadTriState = false;
-	
 	/**
 	 * Create a new input pin.
 	 * 
@@ -44,6 +41,14 @@ public class InputPin extends Pin implements TriProp {
 		
 		return super.setup(g,editWindow,x,y,"Input");
 	} // end of setup method
+
+	/**
+	 * The pin kind for user-facing messages.
+	 */
+	protected String pinKind() {
+
+		return "Input";
+	} // end of pinKind method
 	
 	/**
 	 * Initialize internal info for this element.
@@ -90,96 +95,6 @@ public class InputPin extends Pin implements TriProp {
 	} // end of init method
 
 	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	public void draw(Graphics g) {
-		
-		// set up shape
-		int s = JLSInfo.spacing;
-		Polygon p = new Polygon();
-		if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			p.addPoint(x,y);
-			p.addPoint(x+width-s,y);
-			p.addPoint(x+width,y+height/2);
-			p.addPoint(x+width-s,y+height);
-			p.addPoint(x,y+height);
-		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			p.addPoint(x+s, y);
-			p.addPoint(x, y+height/2);
-			p.addPoint(x+s, y+height);
-			p.addPoint(x+width, y+height);
-			p.addPoint(x+width, y);
-			
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			p.addPoint(x, y);
-			p.addPoint(x+width, y);
-			p.addPoint(x+width, y+height-s);
-			p.addPoint(x+width/2, y+height);
-			p.addPoint(x, y+height-s);	
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			p.addPoint(x+width/2, y);
-			p.addPoint(x+width, y+s);
-			p.addPoint(x+width, y+height);
-			p.addPoint(x, y+height);
-			p.addPoint(x, y+s);
-		}
-		// draw watched background
-		if (watched) {
-			g.setColor(JLSInfo.watchColor);
-			g.fillPolygon(p);
-		}
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		//Rectangle original = getRect();
-		//Rectangle r = new Rectangle(original.x,original.y,original.width-s,original.height);
-		g.setColor(Color.BLACK);
-		g.drawPolygon(p);
-		
-		// draw name inside box
-		FontMetrics fm = g.getFontMetrics();
-		Rectangle2D t = fm.getStringBounds(name,g);
-		double tw = t.getWidth();
-		double th = t.getHeight();
-		int bx = x;
-		int by = y;
-		int bwidth = width;
-		int bheight = height;
-		if (orientation == JLSInfo.Orientation.LEFT) {
-			bx = x + s;
-			bwidth = width - s;
-		}
-		else if (orientation == JLSInfo.Orientation.RIGHT) {
-			bwidth = width - s;
-		}
-		else if (orientation == JLSInfo.Orientation.UP) {
-			by = y + s;
-			bheight = height - s;
-		}
-		else { // DOWN
-			bheight = height - s;
-		}
-		int dx = (int) ((bwidth - tw) / 2);
-		int dy = (int) ((bheight - th) / 2 + fm.getAscent());
-
-		g.drawString(name, bx + dx, by + dy);
-		// draw output
-		outputs.get(0).draw(g);
-		
-	} // end of draw method
-	
-	/**
 	 * Save this element.
 	 * 
 	 * @param output The output writer.
@@ -193,21 +108,6 @@ public class InputPin extends Pin implements TriProp {
 		super.save(output);
 	} // end of save method
 
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("tristate")) {
-			loadTriState = true;
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
 	/**
 	 * Copy this element.
 	 */
@@ -234,22 +134,6 @@ public class InputPin extends Pin implements TriProp {
 	} // end of showInfo method
 
 	/**
-	 * Print current value to stdout.
-	 * 
-	 * @param qual Qualified subcircuit name.
-	 */
-	public void printValue(String qual) {
-		
-		if (qual.equals("")) {
-			System.out.printf("Input Pin %s: %s\n", name, BitSetUtils.toDisplay(currentValue,bits));
-		}
-		else {
-			System.out.printf("Input Pin %s.%s: %s\n", qual, name, BitSetUtils.toDisplay(currentValue,bits));
-		}
-		
-	} // end of printValue method
-	
-	/**
 	 * Set this element to tri-state or not and propagate to output(s).
 	 * 
 	 * @param which True to set to tri-state, false otherwise.
@@ -260,119 +144,6 @@ public class InputPin extends Pin implements TriProp {
 			output.setTriState(which);
 		}
 	} // end of setTriState method
-	
-	/**
-	 * Remove this element, but only if it is not part of a subcircuit.
-	 * 
-	 * @param circuit The circuit this element is in.
-	 */
-	public void remove(Circuit circ) {
-		
-		if (circ.isImported()) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,
-					"Can't remove input pin " + name + " from a subcircuit");
-			return;
-		}
-		super.remove(circ);
-	} // end of remove method
-	
-	/**
-	 * Tells if a InputPin is capable of rotatating, can only rotate when output has no attachment.
-	 * @return False if output has a wire attached, True otherwise
-	 */
-	public boolean canRotate()
-	{
-		return !outputs.get(0).isAttached();
-	}
-	
-	/**
-	 *  This method will rotate the InputPin if it is rotateable.
-	 * @param direction The direction to rotate
-	 * @param g The current graphics context for use in recalculating size
-	 */
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
-	{
-		if(direction == JLSInfo.Orientation.LEFT)
-		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			
-		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
-		{
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(orientation == JLSInfo.Orientation.UP)
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-		}
-		outputs.clear();
-		width = 0;
-		height = 0;
-		init(g);
-	}
-	
-	/**
-	 * Tells if a InputPin is capable of flipping, can only flip when output has no attachment.
-	 * @return False if output has a wire attached, True otherwise
-	 */
-	public boolean canFlip()
-	{
-		return !outputs.get(0).isAttached();
-	}
-	
-	/**
-	 * This method will flip an InputPin
-	 * @param g The current graphics context to facilitate recalculation of size when flipping
-	 */
-	public void flip(Graphics g)
-	{
-		if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			orientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			orientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			orientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			orientation = JLSInfo.Orientation.UP;
-		}
-		outputs.clear();
-		width = 0;
-		height = 0;
-		init(g);
-	} // end of flip method
 	
 	/**
 	 * Return a string representation of this InputPin.
@@ -386,21 +157,6 @@ public class InputPin extends Pin implements TriProp {
 // Simulation
 //-------------------------------------------------------------------------------
 
-	private BitSet currentValue = new BitSet();
-
-	/**
-	 * Get the current value.
-	 * 
-	 * @return the current value.
-	 */
-	public BitSet getCurrentValue() {
-		
-		if (currentValue == null)
-			return null;
-		else
-			return (BitSet)currentValue.clone();
-	} // end of getCurrentValue method
-	
 	/**
 	 * Initialize output to 0 or null.
 	 * 

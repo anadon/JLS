@@ -44,18 +44,6 @@ public class JumpEnd extends LogicElement {
 	} // end of constructor
 	
 	/**
-	 * Create a new wire jump end, skipping the dialog.
-	 * 
-	 * @param circuit The circuit this element is part of.
-	 * @param name The name of the wire jump start this end should match.
-	 *//*
-	public JumpEnd(Circuit circuit, String name) {
-		
-		super(circuit);
-		this.name = name;
-	}*/
-	
-	/**
 	 * Display dialog to get characteristics.
 	 * 
 	 * @param g The Graphics object to use to initialize sizes

@@ -1248,7 +1248,20 @@ public class JLSStart extends JFrame implements ChangeListener {
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		circ.finishLoad(null);
+		try {
+			if (!circ.finishLoad(null)) {
+				JOptionPane.showMessageDialog(this,
+						"can't import " + circ.getName() + ": "
+								+ JLSInfo.loadError, "Error",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+		} catch (Exception ex) {
+			JOptionPane.showMessageDialog(this,
+					"can't import " + circ.getName() + ": " + ex.getMessage(),
+					"Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		ed.finishImport(circ);
 	} // end of fileImport method

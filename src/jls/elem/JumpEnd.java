@@ -227,68 +227,87 @@ public class JumpEnd extends LogicElement {
 		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
 	} // end of getRect method
 	
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes. The
+	// " int tristate 1" line reflects derived output state, not a plain
+	// field, so it stays hand-printed in save() and hand-loaded in
+	// setValue below.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((JumpEnd)el).name; }
+			protected void set(Element el, String v) {
+				// loading a name registers it with the circuit
+				((JumpEnd)el).name = v;
+				el.getCircuit().addName(v);
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy assigned the field without
+				// registering the name
+				((JumpEnd)to).name = ((JumpEnd)from).name;
+			}
+		},
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((JumpEnd)el).bits; }
+			protected void set(Element el, int v) { ((JumpEnd)el).bits = v; }
+		},
+		new Attribute.OrientationAttribute("orientation") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((JumpEnd)el).orientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((JumpEnd)el).orientation = o;
+			}
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("tristate")) {
+
+		if (name.equals("tristate")) {
 			loadTriState = true;
 		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
-	/**
-	 * Set a string instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("name")) {
-			this.name = value;
-			circuit.addName(value);
-		} else if(name.equals("orientation")) {
-			orientation = JLSInfo.Orientation.valueOf(value);
-		}else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT JumpEnd");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int bits " + bits);
-		output.println(" String orientation \"" + orientation + "\"");
 		if (outputs.get(0).isTriState())
 			output.println(" int tristate 1");
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
-		
+
 		JumpEnd it = new JumpEnd(circuit);
-		it.name = name;
-		it.bits = bits;
 		it.outputs.add(outputs.get(0).copy(it));
-		it.orientation = orientation;
 		super.copy(it);
 		return it;
 	} // end of copy method

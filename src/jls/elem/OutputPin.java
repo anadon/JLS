@@ -205,10 +205,6 @@ public class OutputPin extends Pin implements TriProp {
 	public Element copy() {
 
 		OutputPin it = new OutputPin(circuit);
-		it.name = name;
-		it.orientation = orientation;
-		it.bits = bits;
-		it.watched = watched;
 		it.inputs.add(inputs.get(0).copy(it));
 		super.copy(it);
 		return it;

@@ -352,17 +352,46 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param output The PrintWriter to write to.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT StateMachine");
 		super.save(output);
-		output.println(" String name \"" + name + "\"");
-		output.println(" int delay " + propDelay);
-		output.println(" int trig " + trigger);
 		for (State state : states) {
 			state.save(output);
 		}
 		output.println("END");
 	} // end of save method
+
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's simple attributes. The state
+	// list (state/output/trans/next/pair lines) is structured data and
+	// stays handwritten in save(), the setValue load state machine and
+	// copy().
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("name") {
+			protected String get(Element el) { return ((StateMachine)el).name; }
+			protected void set(Element el, String v) { ((StateMachine)el).name = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((StateMachine)el).propDelay; }
+			protected void set(Element el, int v) { ((StateMachine)el).propDelay = v; }
+		},
+		new Attribute.IntAttribute("trig") {
+			protected int get(Element el) { return ((StateMachine)el).trigger; }
+			protected void set(Element el, int v) { ((StateMachine)el).trigger = v; }
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
 
 	/**
 	 * Set a String instance variable value (during a load).
@@ -374,14 +403,13 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		switch (loadState) {
 		case machine:
-			if (name.equals("name")) {
-				this.name = value;
-			} else if (name.equals("state")) {
+			if (name.equals("state")) {
 				loadState = LoadState.newState;
 				buildState = new State(this,value,null);
 				states.add(buildState);
 				buildState.fixTrans();
 			} else {
+				// the attribute registry handles "name"
 				super.setValue(name,value);
 			}
 			break;
@@ -446,13 +474,8 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		switch (loadState) {
 		case machine:
-			if (name.equals("trig")) {
-				trigger = value;
-			} else if (name.equals("delay")) {
-				propDelay = value;
-			} else {
-				super.setValue(name,value);
-			}
+			// the attribute registry handles "trig" and "delay"
+			super.setValue(name,value);
 			break;
 		case newState:
 			buildState.setValue(name,value);
@@ -509,14 +532,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	 */
 	public Element copy() {
 		
-		// create new element
+		// create new element; the attribute registry copies name, delay
+		// and trigger in super.copy below
 		StateMachine it = new StateMachine(circuit);
-		
-		// set basic info
-		it.name = new String(name);
-		it.propDelay = propDelay;
-		it.trigger = trigger;
-		
+
 		// copy all the states
 		Map<String,State> stateMap = new HashMap<String,State>();
 		for (State state : states) {

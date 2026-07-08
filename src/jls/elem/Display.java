@@ -239,44 +239,58 @@ public class Display extends LogicElement {
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Display");
 		super.save(output);
-		output.println(" int bits " + bits);
-		output.println(" int base " + base);
-		if(orient > 0) output.println(" int orient " + orient);
 		output.println("END");
 	} // end of save method
 
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("base")) {
-			base = value;
-		} else if (name.equals("orient")) {
-			orient = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((Display)el).bits; }
+			protected void set(Element el, int v) { ((Display)el).bits = v; }
+		},
+		new Attribute.IntAttribute("base") {
+			protected int get(Element el) { return ((Display)el).base; }
+			protected void set(Element el, int v) { ((Display)el).base = v; }
+		},
+		new Attribute.IntAttribute("orient") {
+			// legacy single-input save format marker; only saved when
+			// present in the loaded file
+			protected int get(Element el) { return ((Display)el).orient; }
+			protected void set(Element el, int v) { ((Display)el).orient = v; }
+			protected boolean omitted(Element el) {
+				return ((Display)el).orient <= 0;
+			}
+			public void copy(Element from, Element to) {
+				// the handwritten copy never carried the legacy marker
+				// to the copy
+			}
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Copy this element.
-	 * 
+	 *
 	 * @return a copy of this element.
 	 */
 	public Element copy() {
-		
+
 		Display it = new Display(circuit);
-		it.bits = bits;
-		it.base = base;
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}

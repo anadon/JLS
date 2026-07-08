@@ -214,10 +214,6 @@ public class InputPin extends Pin implements TriProp {
 	public Element copy() {
 		
 		InputPin it = new InputPin(circuit);
-		it.name = name;
-		it.bits = bits;
-		it.orientation = orientation;
-		it.watched = watched;
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;

@@ -144,61 +144,56 @@ public class Text extends DisplayElement {
 
 	} // end of init method
 
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("text") {
+			protected String get(Element el) { return ((Text)el).text; }
+			protected void set(Element el, String v) { ((Text)el).text = v; }
+		},
+		new Attribute.StringAttribute("fn") {
+			protected String get(Element el) { return ((Text)el).fontName; }
+			protected void set(Element el, String v) { ((Text)el).fontName = v; }
+		},
+		new Attribute.IntAttribute("fs") {
+			protected int get(Element el) { return ((Text)el).fontSize; }
+			protected void set(Element el, int v) { ((Text)el).fontSize = v; }
+		},
+		new Attribute.IntAttribute("bold") {
+			protected int get(Element el) { return ((Text)el).isBold ? 1 : 0; }
+			protected void set(Element el, int v) { ((Text)el).isBold = v == 1; }
+		},
+		new Attribute.IntAttribute("ital") {
+			protected int get(Element el) { return ((Text)el).isItalic ? 1 : 0; }
+			protected void set(Element el, int v) { ((Text)el).isItalic = v == 1; }
+		},
+		new Attribute.IntAttribute("color") {
+			protected int get(Element el) { return ((Text)el).color.getRGB(); }
+			protected void set(Element el, int v) { ((Text)el).color = new Color(v); }
+		}
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
 	/**
-	 * Set a string instance variable value (during a load).
-	 * 
-	 * @param name The name of the instance variable.
-	 * @param value The value to set it to.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, String value) {
+	protected java.util.List<Attribute> savedAttributes() {
 
-		if (name.equals("text")) {
-			text = value;
-		}
-		else if (name.equals("fn")) {
-			fontName = value;
-		}
-		super.setValue(name,value);
-	} // end of setValue method
-
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The name of the instance variable.
-	 * @param value The value to set it to.
-	 */
-	public void setValue(String name, int value) {
-
-		if (name.equals("fs")) {
-			fontSize = value;
-		}
-		else if (name.equals("bold")) {
-			isBold = value == 1;
-		}
-		else if (name.equals("ital")) {
-			isItalic = value == 1;
-		}
-		else if (name.equals("color")) {
-			color = new Color(value);
-		}
-		super.setValue(name,value);
-	} // end of setValue method
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
 
 	/**
 	 * Make a copy of this element.
-	 * 
+	 *
 	 * @return an exact copy of this element.
 	 */
 	public Text copy() {
 
 		Text it = new Text(circuit);
 		super.copy(it);
-		it.text = text;
-		it.fontName = fontName;
-		it.fontSize = fontSize;
-		it.isBold = isBold;
-		it.isItalic = isItalic;
-		it.color = color;
 		for (String line : lines) {
 			it.lines.add(line);
 		}
@@ -207,22 +202,13 @@ public class Text extends DisplayElement {
 
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output A print writer to write to.
 	 */
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Text");
 		super.save(output);
-		String str = text.replace("\\","\\\\");
-		str = str.replace("\"","\\\"");
-		str = str.replace("\n","\\n");
-		output.println(" String text \"" + str + "\"");
-		output.println(" String fn \"" + fontName + "\"");
-		output.println(" int fs " + fontSize);
-		output.println(" int bold " + (isBold ? 1 : 0));
-		output.println(" int ital " + (isItalic ? 1 : 0));
-		output.println(" int color " + color.getRGB());
 		output.println("END");
 	} // end of save method
 

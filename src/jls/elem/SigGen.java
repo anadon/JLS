@@ -137,40 +137,44 @@ public class SigGen extends SigSim {
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT SigGen");
 		super.save(output);
-		String str = signals.replace("\\","\\\\");
-		str = str.replace("\"","\\\"");
-		str = str.replace("\n","\\n");
-		output.println(" String signals \"" + str + "\"");
 		output.println("END");
 	} // end of save method
 
-	/**
-	 * Set a string instance variable value (during a load).
-	 * 
-	 * @param name The name of the instance variable.
-	 * @param value The value to set it to.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("signals")) {
-			signals = value;
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes. The
+	// handwritten save escaped backslash, quote and newline exactly as
+	// Attribute.StringAttribute does.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.StringAttribute("signals") {
+			protected String get(Element el) { return ((SigGen)el).signals; }
+			protected void set(Element el, String v) { ((SigGen)el).signals = v; }
 		}
-		super.setValue(name,value);
-	} // end of setValue method
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
 
 	/**
 	 * Make a copy of this element.
-	 * 
+	 *
 	 * @return an exact copy of this element.
 	 */
 	public SigGen copy() {
-		
+
 		SigGen it = new SigGen(circuit);
 		super.copy(it);
-		it.signals = signals;
 		return it;
 	} // end of copy method
 

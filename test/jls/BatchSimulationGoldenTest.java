@@ -206,6 +206,19 @@ class BatchSimulationGoldenTest {
 	}
 
 	@Test
+	void delayGatePassesValueThrough() throws Exception {
+		for (long a = 0; a <= 1; a++) {
+			CircuitBuilder cb = new CircuitBuilder();
+			int constA = cb.constant(a);
+			int gate = cb.gate("DelayGate", 1, 1);
+			int pin = cb.outputPin("out", 1);
+			cb.wire(constA, "output", gate, "input0");
+			cb.wire(gate, "output", pin, "input");
+			assertEquals(a, simulate(cb.build(), "out"), "DELAY(" + a + ")");
+		}
+	}
+
+	@Test
 	void multiBitAndGate() throws Exception {
 		// 4-bit AND: 0b1100 & 0b1010 = 0b1000
 		CircuitBuilder cb = new CircuitBuilder();

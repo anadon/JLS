@@ -304,66 +304,20 @@ public class DelayGate extends Gate {
 			
 		} // end of DelayCreate class
 
-//	-------------------------------------------------------------------------------
-//	Simulation
-//	-------------------------------------------------------------------------------
-	
-	private BitSet toBeValue;
-	
+//-------------------------------------------------------------------------------
+// Simulation
+//-------------------------------------------------------------------------------
+
 	/**
-	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
-	 * @param sim Unused.
+	 * A delay gate outputs its input unchanged (after the propagation delay).
 	 */
-	public void initSim(Simulator sim) {
-		
-		// set output pin
-		Output out = (Output)(outputs.toArray()[0]);
-		BitSet bitval = new BitSet(1);
-		out.setValue(bitval);
-		
-		// set to-be value
-		toBeValue = new BitSet(1);
-	} // end of initSim method
-	
-	/**
-	 * React to an event.
-	 * 
-	 * @param now The current simulation time.
-	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
-	 */
-	public void react(long now, Simulator sim, Object todo) {
-		
-		// if the input has changed ...
-		if (todo == null) {
-			
-			// get the input bits
-			BitSet value = ((Input)(inputs.toArray()[0])).getValue();
-			if (value == null) {
-				value = new BitSet();
-			}
-			else {
-				value = (BitSet)value.clone();
-			}
-			
-			// if new value is different from the value propagating through
-			// this gate, then post an event
-			if (!value.equals(toBeValue)) {
-				toBeValue = (BitSet)value.clone();
-				sim.post(new SimEvent(now+propDelay,this,value));
-			}
-		}
-		else {
-			
-			// get the new output value
-			BitSet newValue = (BitSet)todo;
-			
-			// send to output
-			Output out = (Output)(outputs.toArray()[0]);
-			out.propagate(newValue,now,sim);
-		}
-		
-	} // end of react method
-	
+	protected BitSet computeOutput() {
+
+		BitSet value = inputs.get(0).getValue();
+		if (value == null)
+			return new BitSet();
+		return (BitSet)value.clone();
+	} // end of computeOutput method
+
+
 } // end of DelayGate class

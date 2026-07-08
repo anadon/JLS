@@ -123,73 +123,26 @@ public class NandGate extends Gate {
 		return defaultDelay;
 	} // end of getDefaultDelay method
 	
-//	-------------------------------------------------------------------------------
-//	Simulation
-//	-------------------------------------------------------------------------------
-	
-	private BitSet toBeValue;
-	
+//-------------------------------------------------------------------------------
+// Simulation
+//-------------------------------------------------------------------------------
+
 	/**
-	 * Initialize this element by setting its output pin and to-be value to 1.
-	 * 
-	 * @param sim Unused.
+	 * NAND the input bits (absent inputs count as 0).
 	 */
-	public void initSim(Simulator sim) {
-		
-		// set output pin to 0
-		Output out = (Output)(outputs.toArray()[0]);
-		BitSet bitval = new BitSet(1);
-		out.setValue(bitval);
-		
-		// post event to make output become 1 at time 0
-		BitSet one = new BitSet(1);
-		one.set(0,bits);
-		sim.post(new SimEvent(0,this,one));
-		
-		// set to-be value
-		toBeValue = (BitSet)one.clone();
-	} // end of initSim method
-	
-	/**
-	 * React to an event.
-	 * 
-	 * @param now The current simulation time.
-	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
-	 */
-	public void react(long now, Simulator sim, Object todo) {
-		
-		// if the input has changed ...
-		if (todo == null) {
-			
-			// NAND the input bits
-			BitSet value = new BitSet(bits);
-			value.set(0,bits);
-			for (Input input : inputs) {
-				BitSet inVal = input.getValue();
-				if (inVal ==  null)
-					inVal = new BitSet();
-				value.and(inVal);
-			}
-			value.flip(0,bits);
-			
-			// if new value is different from the value propagating through
-			// this gate, then post an event
-			if (!value.equals(toBeValue)) {
-				toBeValue = (BitSet)value.clone();
-				sim.post(new SimEvent(now+propDelay,this,value));
-			}
+	protected BitSet computeOutput() {
+
+		BitSet value = new BitSet(bits);
+		value.set(0,bits);
+		for (Input input : inputs) {
+			BitSet inVal = input.getValue();
+			if (inVal == null)
+				inVal = new BitSet();
+			value.and(inVal);
 		}
-		else {
-			
-			// get the new output value
-			BitSet newValue = (BitSet)todo;
-			
-			// send to output
-			Output out = (Output)(outputs.toArray()[0]);
-			out.propagate(newValue,now,sim);
-		}
-		
-	} // end of react method
-	
+		value.flip(0,bits);
+		return value;
+	} // end of computeOutput method
+
+
 } // end of NandGate class

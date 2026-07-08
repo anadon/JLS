@@ -5,7 +5,18 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
-## [Unreleased] — 4.3.0-SNAPSHOT
+## [Unreleased] — 5.0.0-SNAPSHOT
+
+*(Renumbered from 4.3.0-SNAPSHOT: the plugin-mechanism removal below is a
+feature removal, which is a MAJOR version event under semantic versioning.)*
+
+### Removed
+- The XML plugin loader (#80). It activated only when a literal `JLS.jar`
+  was on the classpath — a name no artifact of this project ever shipped
+  under — so it has been unreachable in every build; no plugin, manifest,
+  or plugin documentation is known to exist anywhere. Anyone affected is
+  invited to open an issue; a ServiceLoader-based extension registry is
+  the recorded design direction if demand appears.
 
 ### Fixed
 - Opening a circuit from disk records its directory again, so Save writes

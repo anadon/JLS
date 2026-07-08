@@ -784,30 +784,50 @@ public class Circuit implements Printable {
 			ed.setCircuitSize(rect.getSize());
 		}
 
-		// draw all wires not in the second set first
+		// partition into draw layers in one pass instead of four full
+		// scans (#27 S3): wires under non-wires, the second (selected)
+		// set on top of both. Elements far outside the clip cannot be
+		// visible and are skipped, so a scrolled view pays for what it
+		// shows, not for the whole circuit (#17).
+		Rectangle clip = g.getClipBounds();
+		java.util.List<Element> wires = new java.util.ArrayList<Element>();
+		java.util.List<Element> parts = new java.util.ArrayList<Element>();
+		java.util.List<Element> secondWires = new java.util.ArrayList<Element>();
+		java.util.List<Element> secondParts = new java.util.ArrayList<Element>();
 		for (Element el : elements) {
-			if (el instanceof Wire && !second.contains(el))
-				el.draw(g);
+			if (clip != null && !mayBeVisible(el, clip)) {
+				continue;
+			}
+			if (el instanceof Wire) {
+				(second.contains(el) ? secondWires : wires).add(el);
+			} else {
+				(second.contains(el) ? secondParts : parts).add(el);
+			}
 		}
-
-		// draw all non-wires not in the second set next
-		for (Element el : elements) {
-			if (!(el instanceof Wire) && !second.contains(el))
-				el.draw(g);
+		for (Element el : wires) {
+			el.draw(g);
 		}
-
-		// draw all wires in the second set next
-		for (Element el : elements) {
-			if (el instanceof Wire && second.contains(el))
-				el.draw(g);
+		for (Element el : parts) {
+			el.draw(g);
 		}
-
-		// draw all non-wires in the second set next
-		for (Element el : elements) {
-			if (!(el instanceof Wire) && second.contains(el))
-				el.draw(g);
+		for (Element el : secondWires) {
+			el.draw(g);
+		}
+		for (Element el : secondParts) {
+			el.draw(g);
 		}
 	} // end of draw method
+
+	/**
+	 * Whether an element could draw inside the clip. The margin generously
+	 * covers labels drawn near (but outside) an element's bounds.
+	 */
+	private static boolean mayBeVisible(Element el, Rectangle clip) {
+
+		Rectangle b = el.getIndexBounds();
+		b.grow(8 * JLSInfo.spacing, 8 * JLSInfo.spacing);
+		return b.intersects(clip);
+	} // end of mayBeVisible method
 
 	/**
 	 * Print the circuit.

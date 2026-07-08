@@ -803,11 +803,9 @@ public class Register extends LogicElement {
 	/**
 	 * Dialog box to create/modify register characteristics.
 	 */
-	private class RegisterEdit extends JDialog implements ActionListener {
-		
+	private class RegisterEdit extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField(name);
 		private JTextField bitsField = new JTextField(bits+"");
 		private JTextField valueField = new JTextField("");
@@ -835,18 +833,17 @@ public class Register extends LogicElement {
 		private RegisterEdit(int x, int y, boolean creating) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Register",true);
-			
+			super("Create Register","register");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// save create/modify
 			this.creating = creating;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up types
 			JLabel tlbl = new JLabel("Trigger");
 			tlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -980,138 +977,100 @@ public class Register extends LogicElement {
 				break;
 			}
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "register");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			nameField.addActionListener(this);
-			bitsField.addActionListener(this);
-			valueField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			base2.addActionListener(this);
 			base10.addActionListener(this);
 			base16.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(nameField);
+			confirmOnEnter(bitsField);
+			confirmOnEnter(valueField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to buttons.
-		 * 
+		 * Validate the form and apply it to the register.
+		 */
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText().trim();
+			if (tname.equals("") || !Util.isValidName(tname)) {
+				reject("Missing or invalid name");
+				return;
+			}
+			int tbits = bits;
+			BigInteger tinitialValue = BigInteger.ZERO;
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			try {
+				if (creating) {
+					tbits = Integer.parseInt(bitsField.getText());
+				}
+				tinitialValue = new BigInteger(valueField.getText(),base);
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric");
+				return;
+			}
+			if (tbits < 1) {
+				reject("Must have at least 1 bit");
+				return;
+			}
+			if (tinitialValue.bitLength() > tbits) {
+				reject("Value too large for number of bits");
+				return;
+			}
+			if (!creating) {
+				circuit.removeName(name);
+			}
+			if (!circuit.addName(tname)) {
+				reject("Duplicate name");
+				return;
+			}
+			name = tname;
+			bits = tbits;
+			initialValue = tinitialValue.add(BigInteger.ZERO);
+			currentValue = BitSetUtils.Create(initialValue);
+			if (latch.isSelected())
+				type = Register.Type.Latch;
+			else if (negFF.isSelected())
+				type = Register.Type.NegFF;
+			else
+				type = Register.Type.PosFF;
+			bitsPad.close();
+			valuePad.close();
+			circuit.markChanged();
+			if (!creating && !valueFits(tname)) {
+				nameChanged = true;
+			}
+			else {
+				nameChanged = false;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * React to radix buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == nameField ||
-					event.getSource() == bitsField || event.getSource() == valueField) {
-				String tname = nameField.getText().trim();
-				if (tname.equals("") || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				int tbits = bits;
-				BigInteger tinitialValue = BigInteger.ZERO;
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				try {
-					if (creating) {
-						tbits = Integer.parseInt(bitsField.getText());
-					}
-					tinitialValue = new BigInteger(valueField.getText(),base);
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (tbits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (tinitialValue.bitLength() > tbits) {
-					JOptionPane.showMessageDialog(this,
-							"Value too large for number of bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (!creating) {
-					circuit.removeName(name);
-				}
-				if (!circuit.addName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Duplicate name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				name = tname;
-				bits = tbits;
-				initialValue = tinitialValue.add(BigInteger.ZERO);
-				currentValue = BitSetUtils.Create(initialValue);
-				if (latch.isSelected())
-					type = Register.Type.Latch;
-				else if (negFF.isSelected())
-					type = Register.Type.NegFF;
-				else
-					type = Register.Type.PosFF;
-				bitsPad.close();
-				valuePad.close();
-				circuit.markChanged();
-				if (!creating && !valueFits(tname)) {
-					nameChanged = true;
-				}
-				else {
-					nameChanged = false;
-				}
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			else if (event.getSource() == base2) {
+
+			if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
 				if (!valueField.getText().equals(""))
 					val = new BigInteger(valueField.getText(),base);
@@ -1136,16 +1095,16 @@ public class Register extends LogicElement {
 				valueField.setText(val.toString(16));
 			}
 		} // end of actionPerformed method
-		
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of RegisterEdit class
 	
 	/**

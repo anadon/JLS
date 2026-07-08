@@ -461,11 +461,9 @@ public class Decoder extends LogicElement {
 	 * Dialog box to set bits.
 	 */
 	@SuppressWarnings("serial")
-	private class DecoderCreate extends JDialog implements ActionListener {
-		
+	private class DecoderCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
 		private JRadioButton left = new JRadioButton("Left", true);
@@ -482,15 +480,14 @@ public class Decoder extends LogicElement {
 		private DecoderCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Decoder",true);
-			
+			super("Create Decoder","decoder");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Input Bits: ",SwingConstants.RIGHT);
@@ -517,104 +514,59 @@ public class Decoder extends LogicElement {
 			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 			window.add(olbl);
 			window.add(orient);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "decoder");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the decoder.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == bitsField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits >= 32) {
-					JOptionPane.showMessageDialog(this,
-							"Must be less than 32 bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-			
-			
-		} // end of actionPerformed method
-		
+			if (bits < 1) {
+				reject("Must be at least 1 bit");
+				return;
+			}
+			if (bits >= 32) {
+				reject("Must be less than 32 bits");
+				return;
+			}
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of DecoderCreate class
 	
 //	-------------------------------------------------------------------------------

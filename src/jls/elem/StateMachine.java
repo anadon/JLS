@@ -1739,17 +1739,15 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Create a new state with a name.
 	 */
-	private class CreateState extends JDialog implements ActionListener {
-		
+	private class CreateState extends ElementDialog {
+
 		private String name;
 		private JTextField nameField = new JTextField(10);
-		private JButton ok = new JButton("ok");
-		private JButton cancel = new JButton("cancel");
 		private boolean stateCancelled;
-		
+
 		/**
 		 * Create a new state.
-		 * 
+		 *
 		 * @param xp The x-coordinate of where to show this dialog.
 		 * @param yp The y-coordinate of where to show this dialog.
 		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
@@ -1757,80 +1755,52 @@ public final class StateMachine extends LogicElement implements Printable {
 		public CreateState(int xp, int yp, String title, String currentName) {
 
 			// set up window title
-			super(JLSInfo.frame,title + " State",true);
-			
+			super(title + " State",null);
+
 			// set not cancelled
 			stateCancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
-			
+
 			// set up name field
 			JPanel name = new JPanel(new BorderLayout());
 			name.add(new JLabel("Name: ",SwingConstants.RIGHT),BorderLayout.WEST);
 			name.add(nameField,BorderLayout.CENTER);
 			nameField.setText(currentName);
-			window.add(name,BorderLayout.NORTH);
-			
-			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			nameField.addActionListener(this);
+			window.add(name);
 
-			// set up ok and cancel buttons
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			window.add(okCancel,BorderLayout.SOUTH);
-			getRootPane().setDefaultButton(ok);
-
-			// set up window close listener to cancel mux
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							stateCancelled = true;
-							dispose();
-						}
-					}
-			);
-			
-			// finish up
-			pack();
-			setLocation(xp,yp);
-			setVisible(true);
-			
+			confirmOnEnter(nameField);
+			finishDialog(xp,yp);
 		} // end of constructor
-		
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				name = nameField.getText().trim();
-				if (name.equals("")) {
-					JOptionPane.showMessageDialog(this,
-							"Missing name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+
+		/**
+		 * Validate the name and accept it.
+		 */
+		protected void validateAndAccept() {
+
+			name = nameField.getText().trim();
+			if (name.equals("")) {
+				reject("Missing name");
+				return;
+			}
+			for (State state : states) {
+				if (state.getName().equals(name)) {
+					reject("Duplicate name");
 					return;
 				}
-				for (State state : states) {
-					if (state.getName().equals(name)) {
-						JOptionPane.showMessageDialog(this,
-								"Duplicate name", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-				dispose();
 			}
-			else if (event.getSource() == cancel) {
-				stateCancelled = true;
-				dispose();
-			}
-			
-		} // end of actionPerformed
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * Cancel state creation.
+		 */
+		protected void cancelDialog() {
+
+			stateCancelled = true;
+			dispose();
+		} // end of cancelDialog method
 		
 		/**
 		 * Get the name given to the state.

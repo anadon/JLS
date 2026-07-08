@@ -219,74 +219,56 @@ public class SigGen extends SigSim {
 	/**
 	 * Dialog to get text information from user.
 	 */
-	private class EditSignals extends JDialog implements ActionListener {
-		
+	private class EditSignals extends ElementDialog {
+
 		// properties
 		private JTextArea textArea = new JTextArea();
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 
 		/**
 		 * Initialize the dialog at a given position.
-		 * 
+		 *
 		 * @param x The x-coordinate of the upper left of the dialog box.
 		 * @param y The y-coordinate of the upper left of the dialog box.
 		 * @param creating True if creating, false if changing.
 		 */
 		public EditSignals(int x, int y, boolean creating) {
 
-			super(JLSInfo.frame,"Create Signal Specification",true);
-			
+			super("Create Signal Specification","siggen");
+
 			// set up GUI
 			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
 			if (!creating) {
 				textArea.setText(signals);
 			}
 			JScrollPane pane = new JScrollPane(textArea);
-			window.add(pane, BorderLayout.CENTER);
-			JPanel buttons = new JPanel();
-			buttons.setLayout(new GridLayout(1,3));
-			buttons.add(ok);
-			buttons.add(cancel);
-			ok.setBackground(Color.green);
-			cancel.setBackground(Color.pink);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "siggen");
-			buttons.add(help);
-			window.add(buttons, BorderLayout.SOUTH);
-			getRootPane().setDefaultButton(ok);
-			
-			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// make it visible
-			setSize(size,size);
-			setLocation(x-size/2,y-size/2);
-			setVisible(true);
+			pane.setPreferredSize(new Dimension(size,size));
+			window.add(pane);
+
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to buttons.
-		 * 
-		 * @param event The event object for this event.
+		 * Accept the signal specification.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok) {
-				String newSignals = textArea.getText();
-				if (newSignals.equals(signals)) {
-					cancelled = true;
-				}
-				signals = newSignals;
-			}
-			else if (event.getSource() == cancel) {
+		protected void validateAndAccept() {
+
+			String newSignals = textArea.getText();
+			if (newSignals.equals(signals)) {
 				cancelled = true;
 			}
+			signals = newSignals;
 			dispose();
-		} // end of actionPerformed method
-		
+		} // end of validateAndAccept method
+
+		/**
+		 * Cancel this edit.
+		 */
+		protected void cancelDialog() {
+
+			cancelled = true;
+			dispose();
+		} // end of cancelDialog method
+
 	} // end of EditSignals class
 	
 //	-------------------------------------------------------------------------------

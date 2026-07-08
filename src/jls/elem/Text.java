@@ -303,7 +303,7 @@ public class Text extends DisplayElement {
 	/**
 	 * Dialog to get text information from user.
 	 */
-	private class TextEdit extends JDialog implements ActionListener {
+	private class TextEdit extends ElementDialog implements ActionListener {
 
 		// GUI elements
 		private JComboBox<String> fonts;
@@ -313,8 +313,6 @@ public class Text extends DisplayElement {
 		private JRadioButton italic = new JRadioButton("Italic");
 		private JButton colorButton = new JButton("Color");
 		private JTextArea textArea = new JTextArea();
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 
 		// properties
 		private String result = "";
@@ -333,11 +331,10 @@ public class Text extends DisplayElement {
 		 */
 		public TextEdit(int x, int y, boolean creating) {
 
-			super(JLSInfo.frame,"Create/Modify Text Element",true);
+			super("Create/Modify Text Element","text");
 
 			// set up GUI
 			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
 
 			// set up font inputs
 			JPanel details = new JPanel(new FlowLayout());
@@ -387,7 +384,7 @@ public class Text extends DisplayElement {
 			bold.addActionListener(this);
 			italic.addActionListener(this);
 			colorButton.addActionListener(this);
-			window.add(details,BorderLayout.NORTH);
+			window.add(details);
 			if (!creating) {
 				textArea.setText(text);
 				int bi = 0;
@@ -398,22 +395,8 @@ public class Text extends DisplayElement {
 			}
 			JScrollPane pane = new JScrollPane(textArea);
 			pane.setPreferredSize(new Dimension(size,size));
-			window.add(pane, BorderLayout.CENTER);
-			JPanel buttons = new JPanel();
-			buttons.setLayout(new GridLayout(1,3));
-			buttons.add(ok);
-			buttons.add(cancel);
-			ok.setBackground(Color.green);
-			cancel.setBackground(Color.pink);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "text");
-			buttons.add(help);
-			window.add(buttons, BorderLayout.SOUTH);
+			window.add(pane);
 
-			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
 			// make the text area get the focus
 			this.addWindowFocusListener(new WindowAdapter() {
 			    public void windowGainedFocus(WindowEvent e) {
@@ -421,11 +404,33 @@ public class Text extends DisplayElement {
 			    }
 			});
 
-			// make it visible
-			pack();
-			setLocation(x-size/2,y-size/2);
-			setVisible(true);
+			finishDialog(x,y);
 		} // end of constructor
+
+		/**
+		 * Accept the entered text.
+		 */
+		protected void validateAndAccept() {
+
+			result = textArea.getText();
+			if (changed) {
+				fontName = new String(fn);
+				fontSize = fs;
+				isBold = isB;
+				isItalic = isI;
+				color = col;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * Cancel this text element.
+		 */
+		protected void cancelDialog() {
+
+			cancelled = true;
+			dispose();
+		} // end of cancelDialog method
 
 		/**
 		 * React to buttons.
@@ -491,22 +496,7 @@ public class Text extends DisplayElement {
 				JDialog cl = JColorChooser.createDialog(this, "pick", true, ch, ok, null);
 				cl.setVisible(true);
 				cl.dispose();
-				return;
 			}
-			else if (event.getSource() == ok) {
-				result = textArea.getText();
-				if (changed) {
-					fontName = new String(fn);
-					fontSize = fs;
-					isBold = isB;
-					isItalic = isI;
-					color = col;
-				}
-			}
-			else if (event.getSource() == cancel) {
-				cancelled = true;
-			}
-			dispose();
 		} // end of actionPerformed method
 
 		/**

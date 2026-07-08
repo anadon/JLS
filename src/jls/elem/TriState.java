@@ -402,11 +402,9 @@ public class TriState extends LogicElement {
 	/**
 	 * Dialog box to set bits.
 	 */
-	private class TriStateCreate extends JDialog implements ActionListener {
-		
+	private class TriStateCreate extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
 		private JRadioButton oLeft = new JRadioButton("Left");
@@ -428,15 +426,14 @@ public class TriState extends LogicElement {
 		private TriStateCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create TriState",true);
-			
+			super("Create TriState","TRISTATE");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Gates (bits): ",SwingConstants.RIGHT);
@@ -489,51 +486,23 @@ public class TriState extends LogicElement {
 		
 			sLeft.setVisible(false);
 			sRight.setVisible(false);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "TRISTATE");
-			okCancel.add(help);
-			window.add(okCancel);
-			
-			ok.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			oLeft.addActionListener(this);
 			oRight.addActionListener(this);
 			oUp.addActionListener(this);
 			oDown.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
+		 * React to output orientation buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
+
 			if(event.getSource() == oLeft || event.getSource() == oRight)
 			{
 				olbl2.setVisible(true);
@@ -542,7 +511,6 @@ public class TriState extends LogicElement {
 				sDown.setSelected(true);
 				sLeft.setVisible(false);
 				sRight.setVisible(false);
-				return;
 			}
 			else if(event.getSource() == oUp || event.getSource() == oDown)
 			{
@@ -552,25 +520,26 @@ public class TriState extends LogicElement {
 				sRight.setVisible(true);
 				sUp.setVisible(false);
 				sDown.setVisible(false);
+			}
+		} // end of actionPerformed method
+
+		/**
+		 * Validate the form and create the tri-state gate.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
 				return;
 			}
-			if (event.getSource() == ok || event.getSource() == bitsField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if(this.oLeft.isSelected())
+			if (bits < 1) {
+				reject("Must be at least 1 bit");
+				return;
+			}
+			if(this.oLeft.isSelected())
 				{
 					gateOrientation = JLSInfo.Orientation.LEFT;
 					if(this.sUp.isSelected())
@@ -613,29 +582,23 @@ public class TriState extends LogicElement {
 					{
 						controlOrientation = JLSInfo.Orientation.LEFT;
 					}
-					else if(this.sRight.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.RIGHT;
-					}
+				else if(this.sRight.isSelected())
+				{
+					controlOrientation = JLSInfo.Orientation.RIGHT;
 				}
-				dispose();
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			
-			
-		} // end of actionPerformed method
-		
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this gate.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of TriStateCreate class
 	
 //	-------------------------------------------------------------------------------

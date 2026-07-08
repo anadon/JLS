@@ -120,11 +120,9 @@ public class DelayGate extends Gate {
 	 * Dialog box to set delay gate parameters.
 	 */
 	@SuppressWarnings("serial")
-	private class DelayCreate extends JDialog implements ActionListener {
-			
+	private class DelayCreate extends ElementDialog {
+
 			// properties
-			private JButton ok = new JButton("OK");
-			private JButton cancel = new JButton("Cancel");
 			private JTextField delayField = new JTextField(defaultPropDelay+"",5);
 			private JTextField gatesField = new JTextField(defaultBits+"",5);
 			private KeyPad delayPad = new KeyPad(delayField,10,defaultPropDelay,this);
@@ -143,15 +141,14 @@ public class DelayGate extends Gate {
 			public DelayCreate(int x, int y) {
 
 				// set up window title
-				super(JLSInfo.frame,"Create DELAY Gate",true);
-				
+				super("Create DELAY Gate","DELAY");
+
 				// set not cancelled
 				cancelled = false;
-				
+
 				// set up window
 				Container window = getContentPane();
-				window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-				
+
 				// set up input panel
 				JPanel info = new JPanel(new GridLayout(2,2));
 				JLabel inputs = new JLabel("Propagation Delay: ",SwingConstants.RIGHT);
@@ -195,103 +192,59 @@ public class DelayGate extends Gate {
 				group.add(down);
 				right.setSelected(true);
 				window.add(orients);
-				
-				// set up ok and cancel buttons
-				window.add(new JLabel(" "));
-				JPanel okCancel = new JPanel(new GridLayout(1,2));
-				ok.setBackground(Color.green);
-				okCancel.add(ok);
-				cancel.setBackground(Color.pink);
-				okCancel.add(cancel);
-				JButton help = new JButton("Help");
-				Help.enableHelpOnButton(help, "DELAY");
-				okCancel.add(help);
-				window.add(okCancel);
-				getRootPane().setDefaultButton(ok);
-				
-				ok.addActionListener(this);
-				cancel.addActionListener(this);
-				delayField.addActionListener(this);
-				gatesField.addActionListener(this);
-				
-				// set up window close listener to cancel gate
-				setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				addWindowListener (
-			            new WindowAdapter() {
-			                public void windowClosing(WindowEvent e) {
-			                    cancel();
-			                	}
-			            	}
-			        	);
-				
-				// finish up GUI
-				pack();
-				Dimension d = getSize();
-				setLocation(x-d.width/2,y-d.height/2);
-				setVisible(true);
+
+				confirmOnEnter(delayField);
+				confirmOnEnter(gatesField);
+				finishDialog(x,y);
 			} // end of constructor
-			
+
 			/**
-			 * React to ok, reset and cancel buttons.
-			 * 
-			 * @param event The event object for this action.
+			 * Validate the form and create the delay gate.
 			 */
-			public void actionPerformed(ActionEvent event) {
-				
-				// if ok button, check values for validity
-				if (event.getSource() == ok || event.getSource() == delayField || event.getSource() == gatesField) {
-					try {
-						propDelay = Integer.parseInt(delayField.getText());
-						bits = Integer.parseInt(gatesField.getText());
-					}
-					catch (NumberFormatException ex) {
-						JOptionPane.showMessageDialog(this,
-								 "Value not numeric, try again", "Error",
-								 JOptionPane.ERROR_MESSAGE);
-						propDelay = 0;
-						return;
-					}
-					if (bits < 1) {
-						JOptionPane.showMessageDialog(this,
-								 "Must have at least 1 gate", "Error",
-								 JOptionPane.ERROR_MESSAGE);
-						propDelay = 0;
-						return;
-					}
-					if (left.isSelected()) {
-						orientation = Orientation.left;
-					}
-					else if (right.isSelected()) {
-						orientation = Orientation.right;
-					}
-					else if (up.isSelected()) {
-						orientation = Orientation.up;
-					}
-					else {
-						orientation = Orientation.down;
-					}
-					delayPad.close();
-					gatesPad.close();
-					dispose();
+			protected void validateAndAccept() {
+
+				try {
+					propDelay = Integer.parseInt(delayField.getText());
+					bits = Integer.parseInt(gatesField.getText());
 				}
-				
-				// if cancel button, cancel gate creation
-				else if (event.getSource() == cancel) {
-					cancel();
+				catch (NumberFormatException ex) {
+					reject("Value not numeric, try again");
+					propDelay = 0;
+					return;
 				}
-			} // end of actionPerformed method
-			
+				if (bits < 1) {
+					reject("Must have at least 1 gate");
+					propDelay = 0;
+					return;
+				}
+				if (left.isSelected()) {
+					orientation = Orientation.left;
+				}
+				else if (right.isSelected()) {
+					orientation = Orientation.right;
+				}
+				else if (up.isSelected()) {
+					orientation = Orientation.up;
+				}
+				else {
+					orientation = Orientation.down;
+				}
+				delayPad.close();
+				gatesPad.close();
+				dispose();
+			} // end of validateAndAccept method
+
 			/**
 			 * Cancel this gate.
 			 */
-			private void cancel() {
-				
+			protected void cancelDialog() {
+
 				cancelled = true;
 				delayPad.close();
 				gatesPad.close();
 				dispose();
-			} // end of cancel method
-			
+			} // end of cancelDialog method
+
 		} // end of DelayCreate class
 
 //-------------------------------------------------------------------------------

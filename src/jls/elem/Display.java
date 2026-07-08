@@ -352,11 +352,9 @@ public class Display extends LogicElement {
 	 * Dialog box to set inputs and bits.
 	 */
 	@SuppressWarnings("serial")
-	protected class DispCreate extends JDialog implements ActionListener {
-		
+	protected class DispCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
 		private JRadioButton b2 = new JRadioButton("2");
@@ -372,15 +370,14 @@ public class Display extends LogicElement {
 		protected DispCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Display",true);
-			
+			super("Create Display","display");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up bits panel
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
@@ -404,93 +401,48 @@ public class Display extends LogicElement {
 			rgroup.add(b16);
 			b10.setSelected(true);
 			window.add(radix);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "display");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel mux
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
-		} // end of constructor
-		
-		/**
-		 * React to ok and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
-		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			// if ok button, check values for validity
-			if (event.getSource() == ok || event.getSource() == bitsField) {
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least one bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
 
-				if (b2.isSelected())
-					base = 2;
-				else if (b10.isSelected())
-					base = 10;
-				else
-					base = 16;
-				bitsPad.close();
-				dispose();
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
+		} // end of constructor
+
+		/**
+		 * Validate the form and create the display.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			
-			// if cancel button, cancel mux creation
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-			
-		} // end of actionPerformed method
-		
+			if (bits < 1) {
+				reject("Must be at least one bit");
+				return;
+			}
+
+			if (b2.isSelected())
+				base = 2;
+			else if (b10.isSelected())
+				base = 10;
+			else
+				base = 16;
+			bitsPad.close();
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this mux.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			bitsPad.close();
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of DispCreate class
 
 //	-------------------------------------------------------------------------------

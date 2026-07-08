@@ -1286,13 +1286,11 @@ public class State {
 	/**
 	 * Dialog to create info about a transition.
 	 */
-	private class CreateTrans extends JDialog implements ActionListener {
+	private class CreateTrans extends ElementDialog implements ActionListener {
 
 		// properties
 		private Transition trans;
 		private State myState;
-		private JButton ok = new JButton("ok");
-		private JButton cancel = new JButton("cancel");
 		private JTextField signalField = new JTextField(10);
 		private JButton equalOrNot = new JButton("=");
 		private JTextField valueField = new JTextField(10);
@@ -1312,7 +1310,7 @@ public class State {
 		public CreateTrans(Transition tr, State st, JDialog theDialog) {
 
 			// set up
-			super(theDialog,"Create Transition",true);
+			super("Create Transition",null);
 			cancelled = false;
 
 			// save working transition and its state
@@ -1321,7 +1319,6 @@ public class State {
 
 			// get window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up signal/value
 			JPanel sigval = new JPanel(new BorderLayout());
@@ -1362,15 +1359,6 @@ public class State {
 			g.add(unconditional);
 			g.add(otherwise);
 
-			// add ok/cancel
-			window.add(new JLabel(" "));
-			JPanel okcancel = new JPanel(new GridLayout(1,2));
-			okcancel.add(ok);
-			ok.setBackground(Color.GREEN);
-			okcancel.add(cancel);
-			cancel.setBackground(Color.PINK);
-			window.add(okcancel);
-
 			// give initial values
 			signalField.setText(tr.signal);
 			if (tr.equal) {
@@ -1402,149 +1390,125 @@ public class State {
 			}
 
 			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
 			equalOrNot.addActionListener(this);
 			conditional.addActionListener(this);
 			unconditional.addActionListener(this);
 			otherwise.addActionListener(this);
 
-			// set up window close listener to cancel element
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancelled = true;
-							dispose();
-						}
-					}
-			);
-
-			// finish up
-			pack();
-			setLocation(100,100);
-			setVisible(true);
+			finishDialog(100,100);
 		} // end of constructor
 
 		/**
+		 * Validate the form and set up the transition.
+		 */
+		protected void validateAndAccept() {
+
+			// handle unconditional transition
+			if (unconditional.isSelected()) {
+				trans.unconditional = true;
+				trans.other = false;
+				dispose();
+				return;
+			}
+
+			// handle else transition
+			if (otherwise.isSelected()) {
+				trans.unconditional = false;
+				trans.other = true;
+				dispose();
+				return;
+			}
+
+			// check for missing signal name
+			if (signalField.getText().equals("")) {
+				reject("Missing signal name");
+				return;
+			}
+
+			// check for invalid signal names
+			if (signalField.getText().equals("else")) {
+				reject("Invalid signal name");
+				return;
+			}
+			if (signalField.getText().equals("clock")) {
+				reject("Invalid signal name");
+				return;
+			}
+
+			// if input signal already exists, get bit count for it
+			int hasBits = -1;
+			for (State st : machine.getStates()) {
+				for (Transition tr : st.trans) {
+					if (tr.signal.equals(signalField.getText())) {
+						hasBits = tr.bits;
+					}
+				}
+			}
+
+			// get value and bits from dialog
+			int tempValue = 0;
+			int tempBits = 0;
+			try {
+				tempValue = Integer.parseInt(valueField.getText());
+				tempBits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Invalid numeric value");
+				return;
+			}
+
+			// make sure bits match with existing input
+			if (hasBits > 0 && tempBits != hasBits) {
+				reject("Bits don't match with previous signal specification of " +
+						hasBits + " bits");
+				return;
+			}
+			int newbits = Integer.parseInt(bitsField.getText());
+			if (trans.bits != -1 && trans.bits != newbits) {
+				reject("Bits don't match with previous signal specification of " +
+						trans.bits + " bits");
+				return;
+			}
+
+			// make sure value will fit
+			if (Math.log(tempValue+1)/Math.log(2) > tempBits) {
+				reject("Value too large for number of bits");
+				return;
+			}
+
+			// finish conditional transition
+			trans.unconditional = false;
+			trans.other = false;
+			trans.signal = signalField.getText();
+			if (equalOrNot.getText().equals("=")) {
+				trans.equal = true;
+			}
+			else {
+				trans.equal = false;
+			}
+			trans.value = Integer.parseInt(valueField.getText());
+			trans.bits = newbits;
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
+		 * Cancel the new transition.
+		 */
+		protected void cancelDialog() {
+
+			cancelled = true;
+			dispose();
+		} // end of cancelDialog method
+
+		/**
 		 * React to events.
-		 * 
+		 *
 		 * @param event The event object.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
-			// handle ok button
-			if (event.getSource() == ok) {
-
-				// handle unconditional transition
-				if (unconditional.isSelected()) {
-					trans.unconditional = true;
-					trans.other = false;
-					dispose();
-					return;
-				}
-
-				// handle else transition
-				if (otherwise.isSelected()) {
-					trans.unconditional = false;
-					trans.other = true;
-					dispose();
-					return;
-				}
-
-				// check for missing signal name
-				if (signalField.getText().equals("")) {
-					JOptionPane.showMessageDialog(this,
-							"Missing signal name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-				// check for invalid signal names
-				if (signalField.getText().equals("else")) {
-					JOptionPane.showMessageDialog(this,
-							"Invalid signal name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (signalField.getText().equals("clock")) {
-					JOptionPane.showMessageDialog(this,
-							"Invalid signal name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-
-				// if input signal already exists, get bit count for it
-				int hasBits = -1;
-				for (State st : machine.getStates()) {
-					for (Transition tr : st.trans) {
-						if (tr.signal.equals(signalField.getText())) {
-							hasBits = tr.bits;
-						}
-					}
-				}
-				
-				// get value and bits from dialog
-				int tempValue = 0;
-				int tempBits = 0;
-				try {
-					tempValue = Integer.parseInt(valueField.getText());
-					tempBits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Invalid numeric value", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// make sure bits match with existing input
-				if (hasBits > 0 && tempBits != hasBits) {
-					JOptionPane.showMessageDialog(this,
-							"Bits don't match with previous signal specification of " +
-							hasBits + " bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				int newbits = Integer.parseInt(bitsField.getText());
-				if (trans.bits != -1 && trans.bits != newbits) {
-					JOptionPane.showMessageDialog(this,
-							"Bits don't match with previous signal specification of " +
-							trans.bits + " bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// make sure value will fit
-				if (Math.log(tempValue+1)/Math.log(2) > tempBits) {
-					JOptionPane.showMessageDialog(this,
-							"Value too large for number of bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				
-				// finish conditional transition
-				trans.unconditional = false;
-				trans.other = false;
-				trans.signal = signalField.getText();
-				if (equalOrNot.getText().equals("=")) {
-					trans.equal = true;
-				}
-				else {
-					trans.equal = false;
-				}
-				trans.value = Integer.parseInt(valueField.getText());
-				trans.bits = newbits;
-				dispose();
-			}
-			
-			// cancel new transition
-			else if (event.getSource() == cancel) {
-				cancelled = true;
-				dispose();
-			}
-			
 			// save equality type check
-			else if (event.getSource() == equalOrNot) {
+			if (event.getSource() == equalOrNot) {
 				if (equalOrNot.getText().equals("=")) {
 					equalOrNot.setText("!=");
 				}
@@ -1669,10 +1633,9 @@ public class State {
 	/**
 	 * Dialog to create outputs for a state.
 	 */
-	private class EditOutputs extends JDialog implements ActionListener {
+	private class EditOutputs extends ElementDialog implements ActionListener {
 
 		// properties
-		private JButton close = new JButton("close window");
 		private JList<Out> outList;
 		DefaultListModel<Out> model;
 		private JButton add = new JButton("add new output");
@@ -1690,12 +1653,11 @@ public class State {
 		public EditOutputs(JDialog theDialog) {
 
 			// set up
-			super(theDialog,"Edit Outputs",true);
+			super("Edit Outputs",null);
 			cancelled = false;
 
 			// get window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up output list
 			model = new DefaultListModel<Out>();
@@ -1741,44 +1703,29 @@ public class State {
 			sigval.add(other,BorderLayout.CENTER);
 			window.add(sigval);
 
-			// add close window button
-			window.add(new JLabel(" "));
-			JPanel cl = new JPanel(new GridLayout(1,1));
-			close.setBackground(Color.GREEN);
-			cl.add(close);
-			window.add(cl);
-
 			// add listeners
-			close.addActionListener(this);
 			add.addActionListener(this);
 			delete.addActionListener(this);
 
-			// set up window close listener to close window
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							dispose();
-						}
-					}
-			);
-
-			// finish up
-			pack();
-			setLocation(100,100);
-			setVisible(true);
+			finishDialog(100,100);
 		} // end of constructor
 
 		/**
+		 * Close the dialog (outputs are edited in place).
+		 */
+		protected void validateAndAccept() {
+
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
 		 * React to events.
-		 * 
+		 *
 		 * @param event The event object.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
-			if (event.getSource() == close) {
-				dispose();
-			}
-			else if (event.getSource() == add) {
+			if (event.getSource() == add) {
 				Out newOut = new Out();
 				newOut.signal = signalField.getText().trim();
 				if (newOut.signal.equals("")) {

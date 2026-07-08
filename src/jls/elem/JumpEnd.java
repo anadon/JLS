@@ -387,11 +387,9 @@ public class JumpEnd extends LogicElement {
 	 * Dialog box to set jump end characteristics.
 	 */
 	@SuppressWarnings("serial")
-	private class EndCreate extends JDialog implements ActionListener {
-		
+	private class EndCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JList starts;
 		private JRadioButton left = new JRadioButton("left");
 		private JRadioButton right = new JRadioButton("right");
@@ -406,15 +404,14 @@ public class JumpEnd extends LogicElement {
 		private EndCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Wire End",true);
-			
+			super("Create Wire End","end");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up jumpstart name list
 			JLabel heading = new JLabel("Select Wire Name",SwingConstants.CENTER);
 			heading.setAlignmentX((float)0.5);
@@ -448,80 +445,39 @@ public class JumpEnd extends LogicElement {
 			group.add(right);
 			right.setSelected(true);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "end");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to events.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the jump end.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			// if ok button pushed...
-			if (event.getSource() == ok) {
-				if (starts.getSelectedIndex() < 0) {
-					JOptionPane.showMessageDialog(this,
-							"Nothing selected", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				name = (String)starts.getSelectedValue();
-				bits = circuit.getJumpStart(name).getBits();
-				if (right.isSelected()) {
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else {
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			if (starts.getSelectedIndex() < 0) {
+				reject("Nothing selected");
+				return;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			name = (String)starts.getSelectedValue();
+			bits = circuit.getJumpStart(name).getBits();
+			if (right.isSelected()) {
+				orientation = JLSInfo.Orientation.RIGHT;
 			}
-			
-		} // end of actionPerformed method
-		
+			else {
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this jump end.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of EndCreate class
 	
 //	-------------------------------------------------------------------------------

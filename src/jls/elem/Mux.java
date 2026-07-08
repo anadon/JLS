@@ -248,12 +248,6 @@ public class Mux extends LogicElement {
 		
 	} // end of draw method
 
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
@@ -470,11 +464,9 @@ public class Mux extends LogicElement {
 	/**
 	 * Dialog box to set inputs and bits.
 	 */
-	protected class MuxCreate extends JDialog implements ActionListener {
-		
+	protected class MuxCreate extends ElementDialog implements ActionListener {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField inputsField = new JTextField(defaultInputs+"",5);
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
 		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
@@ -498,15 +490,14 @@ public class Mux extends LogicElement {
 		protected MuxCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Multiplexor",true);
-			
+			super("Create Multiplexor","mux");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up input panel
 			JPanel info = null;
 			info = new JPanel(new GridLayout(2,2));
@@ -570,53 +561,24 @@ public class Mux extends LogicElement {
 			
 			sLeft.setVisible(false);
 			sRight.setVisible(false);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "mux");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			inputsField.addActionListener(this);
-			bitsField.addActionListener(this);
-			cancel.addActionListener(this);
+
 			oLeft.addActionListener(this);
 			oRight.addActionListener(this);
 			oUp.addActionListener(this);
 			oDown.addActionListener(this);
-			
-			// set up window close listener to cancel mux
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(inputsField);
+			confirmOnEnter(bitsField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok and cancel buttons.
-		 * 
+		 * React to output orientation buttons.
+		 *
 		 * @param event The event object for this action.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
+
 			if(event.getSource() == oLeft || event.getSource() == oRight)
 			{
 				olbl2.setVisible(true);
@@ -625,7 +587,6 @@ public class Mux extends LogicElement {
 				sDown.setSelected(true);
 				sLeft.setVisible(false);
 				sRight.setVisible(false);
-				return;
 			}
 			else if(event.getSource() == oUp || event.getSource() == oDown)
 			{
@@ -635,107 +596,97 @@ public class Mux extends LogicElement {
 				sRight.setVisible(true);
 				sUp.setVisible(false);
 				sDown.setVisible(false);
+			}
+		} // end of actionPerformed method
+
+		/**
+		 * Validate the form and create the mux.
+		 */
+		protected void validateAndAccept() {
+
+			try {
+				numInputs = Integer.parseInt(inputsField.getText());
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				numInputs = -1;
 				return;
 			}
-			
-			// if ok button, check values for validity
-			if (event.getSource() == ok || event.getSource() == inputsField || event.getSource() == bitsField) {
-				try {
-					numInputs = Integer.parseInt(inputsField.getText());
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if (numInputs < 2) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 2 inputs", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must be at least one bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					numInputs = -1;
-					return;
-				}
-				if(this.oLeft.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.LEFT;
-					if(this.sUp.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oRight.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.RIGHT;
-					if(this.sUp.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oDown.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.DOWN;
-					if(this.sLeft.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(this.sRight.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.RIGHT;
-					}
-				}
-				else if(this.oUp.isSelected())
-				{
-					outputOrientation = JLSInfo.Orientation.UP;
-					if(this.sLeft.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(this.sRight.isSelected())
-					{
-						selectorOrientation = JLSInfo.Orientation.RIGHT;
-					}
-				}
-				inputsPad.close();
-				bitsPad.close();
-				dispose();
+			if (numInputs < 2) {
+				reject("Must have at least 2 inputs");
+				numInputs = -1;
+				return;
 			}
-			
-			// if cancel button, cancel mux creation
-			else if (event.getSource() == cancel) {
-				cancel();
+			if (bits < 1) {
+				reject("Must be at least one bit");
+				numInputs = -1;
+				return;
 			}
-			
-		} // end of actionPerformed method
-		
+			if(this.oLeft.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.LEFT;
+				if(this.sUp.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.UP;
+				}
+				else if(this.sDown.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.DOWN;
+				}
+			}
+			else if(this.oRight.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.RIGHT;
+				if(this.sUp.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.UP;
+				}
+				else if(this.sDown.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.DOWN;
+				}
+			}
+			else if(this.oDown.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.DOWN;
+				if(this.sLeft.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(this.sRight.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.RIGHT;
+				}
+			}
+			else if(this.oUp.isSelected())
+			{
+				outputOrientation = JLSInfo.Orientation.UP;
+				if(this.sLeft.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(this.sRight.isSelected())
+				{
+					selectorOrientation = JLSInfo.Orientation.RIGHT;
+				}
+			}
+			inputsPad.close();
+			bitsPad.close();
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this mux.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			inputsPad.close();
 			bitsPad.close();
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of MuxCreate class
 	
 

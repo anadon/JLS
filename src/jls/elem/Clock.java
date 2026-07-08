@@ -305,11 +305,9 @@ public class Clock extends LogicElement {
 	 * Used by all simple gates (nand, and, nor, or, xor, not).
 	 */
 	@SuppressWarnings("serial")
-	private class ClockCreate extends JDialog implements ActionListener {
-		
+	private class ClockCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField cycleTimeField = new JTextField(cycleTime+"",10);
 		private JTextField oneTimeField = new JTextField(oneTime+"",10);
 		private KeyPad cycleTimePad = new KeyPad(cycleTimeField,10,defaultCycleTime,this);
@@ -328,15 +326,14 @@ public class Clock extends LogicElement {
 		private ClockCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Clock",true);
-			
+			super("Create Clock","clock");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			
@@ -383,102 +380,60 @@ public class Clock extends LogicElement {
 			gr.add(down);
 			gr.add(up);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "clock");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			ok.addActionListener(this);
-			cycleTimeField.addActionListener(this);
-			oneTimeField.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(cycleTimeField);
+			confirmOnEnter(oneTimeField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and set the clock parameters.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok || event.getSource() == cycleTimeField || event.getSource() == oneTimeField) {
-				try {
-					int newCycleTime = Integer.parseInt(cycleTimeField.getText());
-					int newOneTime = Integer.parseInt(oneTimeField.getText());
-					
-					cycleTime = newCycleTime;
-					oneTime = newOneTime;
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (oneTime >= cycleTime) {
-					JOptionPane.showMessageDialog(this,
-							"One time must be less than cycle time", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = JLSInfo.Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = JLSInfo.Orientation.DOWN;
-				}
-				dispose();
+		protected void validateAndAccept() {
+
+			try {
+				int newCycleTime = Integer.parseInt(cycleTimeField.getText());
+				int newOneTime = Integer.parseInt(oneTimeField.getText());
+
+				cycleTime = newCycleTime;
+				oneTime = newOneTime;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-			
-		} // end of actionPerformed method
-		
+			if (oneTime >= cycleTime) {
+				reject("One time must be less than cycle time");
+				return;
+			}
+			if(left.isSelected())
+			{
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			else if(right.isSelected())
+			{
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of ClockCreate class
 	
 //	-------------------------------------------------------------------------------

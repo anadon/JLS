@@ -408,11 +408,9 @@ public class JumpStart extends LogicElement implements TriProp {
 	/**
 	 * Dialog box to set input pin characteristics.
 	 */
-	private class StartCreate extends JDialog implements ActionListener {
-		
+	private class StartCreate extends ElementDialog {
+
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField("",12);
 		private JTextField bitsField = new JTextField("1",5);
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
@@ -428,15 +426,14 @@ public class JumpStart extends LogicElement implements TriProp {
 		private StartCreate(int x, int y) {
 			
 			// set up window title
-			super(JLSInfo.frame,"Create Wire Start",true);
-			
+			super("Create Wire Start","start");
+
 			// set not cancelled
 			cancelled = false;
-			
+
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-			
+
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JPanel labels = new JPanel(new GridLayout(2,1,1,5));
@@ -472,105 +469,57 @@ public class JumpStart extends LogicElement implements TriProp {
 			group.add(right);
 			left.setSelected(true);
 			window.add(orients);
-			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "start");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
-			nameField.addActionListener(this);
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+
+			confirmOnEnter(nameField);
+			finishDialog(x,y);
 		} // end of constructor
-		
+
 		/**
-		 * React to events.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate the form and create the jump start.
 		 */
-		public void actionPerformed(ActionEvent event) {
-			
-			// if ok button pushed or enter(return) typed in name field,
-			// then check name for validity
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				String tname = nameField.getText();
-				if (!Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				try {
-					bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Bits not numeric", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (bits < 1) {
-					JOptionPane.showMessageDialog(this,
-							"Must have at least 1 bit", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (!circuit.addName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Name already used", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (right.isSelected()) {
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				else {
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				circuit.addJumpStart(tname,me);
-				name = tname;
-				bitsPad.close();
-				dispose();
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText();
+			if (!Util.isValidName(tname)) {
+				reject("Invalid name");
+				return;
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			try {
+				bits = Integer.parseInt(bitsField.getText());
 			}
-			
-		} // end of actionPerformed method
-		
+			catch (NumberFormatException ex) {
+				reject("Bits not numeric");
+				return;
+			}
+			if (bits < 1) {
+				reject("Must have at least 1 bit");
+				return;
+			}
+			if (!circuit.addName(tname)) {
+				reject("Name already used");
+				return;
+			}
+			if (right.isSelected()) {
+				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else {
+				orientation = JLSInfo.Orientation.LEFT;
+			}
+			circuit.addJumpStart(tname,me);
+			name = tname;
+			bitsPad.close();
+			dispose();
+		} // end of validateAndAccept method
+
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			cancelled = true;
 			dispose();
-		} // end of cancel method
-		
+		} // end of cancelDialog method
+
 	} // end of StartCreate class
 
 	/**

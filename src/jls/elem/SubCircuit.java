@@ -600,10 +600,8 @@ public class SubCircuit extends LogicElement implements TriProp {
 	/**
 	 * Dialog box to give the subcircuit a name within this circuit.
 	 */
-	private class SubCreate extends JDialog implements ActionListener {
+	private class SubCreate extends ElementDialog {
 			// properties
-			private JButton ok = new JButton("OK");
-			private JButton cancel = new JButton("Cancel");
 			private JTextField nameField = new JTextField("",12);
 			private JRadioButton left = new JRadioButton("Left");
 			private JRadioButton right = new JRadioButton("Right",true);
@@ -617,15 +615,14 @@ public class SubCircuit extends LogicElement implements TriProp {
 			private SubCreate(int x, int y) {
 
 				// set up window title
-				super(JLSInfo.frame,"Create Subcircuit",true);
-				
+				super("Create Subcircuit","import");
+
 				// set not cancelled
 				cancelled = false;
-				
+
 				// set up window
 				Container window = getContentPane();
-				window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-				
+
 				// set up input
 				JPanel info = new JPanel(new BorderLayout());
 				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
@@ -654,91 +651,46 @@ public class SubCircuit extends LogicElement implements TriProp {
 				gr.add(right);
 				window.add(orients);
 
-				// set up ok and cancel buttons
-				window.add(new JLabel(" "));
-				JPanel okCancel = new JPanel(new GridLayout(1,3));
-				ok.setBackground(Color.green);
-				okCancel.add(ok);
-				cancel.setBackground(Color.pink);
-				okCancel.add(cancel);
-				JButton help = new JButton("Help");
-				Help.enableHelpOnButton(help, "import");
-				okCancel.add(help);
-				window.add(okCancel);
-				getRootPane().setDefaultButton(ok);
-				
-				// add listeners
-				nameField.addActionListener(this);
-				ok.addActionListener(this);
-				cancel.addActionListener(this);
-				
-				// set up window close listener to cancel gate
-				setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				addWindowListener (
-			            new WindowAdapter() {
-			                public void windowClosing(WindowEvent e) {
-			                    cancel();
-			                	}
-			            	}
-			        	);
-				
-				// finish up GUI
-				pack();
-				Dimension d = getSize();
-				setLocation(x-d.width/2,y-d.height/2);
-				setVisible(true);
+				confirmOnEnter(nameField);
+				finishDialog(x,y);
 			} // end of constructor
-			
+
 			/**
-			 * React to events.
-			 * 
-			 * @param event The event object for this action.
+			 * Validate the form and name the subcircuit.
 			 */
-			public void actionPerformed(ActionEvent event) {
-				
-				// if ok button pushed or enter(return) typed in name field,
-				// then check name for validity
-				if (event.getSource() == ok || event.getSource() == nameField) {
-					String tname = nameField.getText().trim();
-					if (tname.length() < 1 || !Util.isValidName(tname)) {
-						JOptionPane.showMessageDialog(this,
-								 "Invalid name", "Error",
-								 JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (!circuit.addName(tname)) {
-						JOptionPane.showMessageDialog(this,
-								 "Name already used", "Error",
-								 JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if(left.isSelected())
-					{
-						orientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(right.isSelected())
-					{
-						orientation = JLSInfo.Orientation.RIGHT;
-					}
-					name = tname;
-					subCircuit.setName(name);
-					dispose();
+			protected void validateAndAccept() {
+
+				String tname = nameField.getText().trim();
+				if (tname.length() < 1 || !Util.isValidName(tname)) {
+					reject("Invalid name");
+					return;
 				}
-				else if (event.getSource() == cancel) {
-					cancel();
+				if (!circuit.addName(tname)) {
+					reject("Name already used");
+					return;
 				}
-				
-			} // end of actionPerformed method
-			
+				if(left.isSelected())
+				{
+					orientation = JLSInfo.Orientation.LEFT;
+				}
+				else if(right.isSelected())
+				{
+					orientation = JLSInfo.Orientation.RIGHT;
+				}
+				name = tname;
+				subCircuit.setName(name);
+				dispose();
+			} // end of validateAndAccept method
+
 			/**
 			 * Cancel this pin.
 			 */
-			private void cancel() {
-				
+			protected void cancelDialog() {
+
 				cancelled = true;
 				dispose();
-			} // end of cancel method
-			
+			} // end of cancelDialog method
+
 		} // end of SubCreate class
 	
 //	-------------------------------------------------------------------------------

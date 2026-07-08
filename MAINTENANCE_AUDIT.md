@@ -12,6 +12,16 @@ audit. The actionable items are tracked on GitHub: see the roadmap in issue
 > latent NPE in `StateMachine`, and platform-default-encoding file I/O at 15
 > sites. Details in commit 1f67a7b.
 
+> **Issue format:** every GitHub issue in this program is structured as a
+> compact scientific paper — Abstract, Background, Observations, Research
+> Question, falsifiable Hypothesis, Predictions, Materials, Method/
+> Experimental Design (task checklists live here), Data Collection &
+> Analysis, Falsification Criteria, Threats to Validity, Related Work,
+> Conclusion — following the canonical scientific-method sequence
+> (observation → question → hypothesis → prediction → controlled test →
+> analysis → replication/review). Roadmap #16 is the umbrella research
+> program tying the studies together.
+
 ## Headline findings
 
 - **The code still compiles.** All 80 `.java` files under `src/` plus the

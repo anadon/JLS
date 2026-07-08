@@ -1,0 +1,48 @@
+AndGate left rect=0,-6,48,36 puts=input0@48,0;input1@48,24;output@0,12
+NotGate left rect=0,-6,48,36 puts=input0@48,12;output@0,12
+AndGate right rect=0,-6,48,36 puts=input0@0,0;input1@0,24;output@48,12
+NotGate right rect=0,-6,48,36 puts=input0@0,12;output@48,12
+AndGate up rect=-6,0,36,48 puts=input0@0,48;input1@24,48;output@12,0
+NotGate up rect=-6,0,36,48 puts=input0@12,48;output@12,0
+AndGate down rect=-6,0,36,48 puts=input0@0,0;input1@24,0;output@12,48
+NotGate down rect=-6,0,36,48 puts=input0@12,0;output@12,48
+Adder LEFT rect=0,0,48,48 puts=A@48,12;B@48,36;Cin@24,0;Cout@24,48;S@0,24
+Clock LEFT rect=0,0,24,24 puts=output@0,12
+Adder RIGHT rect=0,0,48,48 puts=A@0,12;B@0,36;Cin@24,0;Cout@24,48;S@48,24
+Clock RIGHT rect=0,0,24,24 puts=output@24,12
+Adder UP rect=0,0,48,48 puts=A@12,48;B@36,48;Cin@0,24;Cout@48,24;S@24,0
+Clock UP rect=0,0,24,24 puts=output@12,0
+Adder DOWN rect=0,0,48,48 puts=A@12,0;B@36,0;Cin@0,24;Cout@48,24;S@24,48
+Clock DOWN rect=0,0,24,24 puts=output@12,24
+TriState G=LEFT C=LEFT finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=LEFT S=LEFT rect=0,0,24,60 puts=input0@24,12;input1@24,24;input2@24,36;input3@24,48;output@0,24;select@0,12
+TriState G=LEFT C=RIGHT finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=LEFT S=RIGHT rect=0,0,24,60 puts=input0@24,12;input1@24,24;input2@24,36;input3@24,48;output@0,24;select@24,12
+TriState G=LEFT C=UP rect=0,0,48,36 puts=control@24,0;input@48,24;output@0,24
+Mux I=LEFT S=UP rect=0,0,24,60 puts=input0@24,12;input1@24,24;input2@24,36;input3@24,48;output@0,24;select@12,0
+TriState G=LEFT C=DOWN rect=0,0,48,36 puts=control@24,36;input@48,12;output@0,12
+Mux I=LEFT S=DOWN rect=0,0,24,60 puts=input0@24,12;input1@24,24;input2@24,36;input3@24,48;output@0,24;select@12,60
+TriState G=RIGHT C=LEFT finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=RIGHT S=LEFT rect=0,0,24,60 puts=input0@0,12;input1@0,24;input2@0,36;input3@0,48;output@24,24;select@0,12
+TriState G=RIGHT C=RIGHT finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=RIGHT S=RIGHT rect=0,0,24,60 puts=input0@0,12;input1@0,24;input2@0,36;input3@0,48;output@24,24;select@24,12
+TriState G=RIGHT C=UP rect=0,0,48,36 puts=control@24,0;input@0,24;output@48,24
+Mux I=RIGHT S=UP rect=0,0,24,60 puts=input0@0,12;input1@0,24;input2@0,36;input3@0,48;output@24,24;select@12,0
+TriState G=RIGHT C=DOWN rect=0,0,48,36 puts=control@24,36;input@0,12;output@48,12
+Mux I=RIGHT S=DOWN rect=0,0,24,60 puts=input0@0,12;input1@0,24;input2@0,36;input3@0,48;output@24,24;select@12,60
+TriState G=UP C=LEFT rect=0,0,36,48 puts=control@0,24;input@24,48;output@24,0
+Mux I=UP S=LEFT rect=0,0,60,24 puts=input0@12,24;input1@24,24;input2@36,24;input3@48,24;output@24,0;select@0,12
+TriState G=UP C=RIGHT rect=0,0,36,48 puts=control@36,24;input@12,48;output@12,0
+Mux I=UP S=RIGHT rect=0,0,60,24 puts=input0@12,24;input1@24,24;input2@36,24;input3@48,24;output@24,0;select@60,12
+TriState G=UP C=UP finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=UP S=UP rect=0,0,60,24 puts=input0@12,24;input1@24,24;input2@36,24;input3@48,24;output@24,0;select@12,0
+TriState G=UP C=DOWN finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=UP S=DOWN rect=0,0,60,24 puts=input0@12,24;input1@24,24;input2@36,24;input3@48,24;output@24,0;select@12,24
+TriState G=DOWN C=LEFT rect=0,0,36,48 puts=control@0,24;input@24,0;output@24,48
+Mux I=DOWN S=LEFT rect=0,0,60,24 puts=input0@12,0;input1@24,0;input2@36,0;input3@48,0;output@24,24;select@0,12
+TriState G=DOWN C=RIGHT rect=0,0,36,48 puts=control@36,24;input@12,0;output@12,48
+Mux I=DOWN S=RIGHT rect=0,0,60,24 puts=input0@12,0;input1@24,0;input2@36,0;input3@48,0;output@24,24;select@60,12
+TriState G=DOWN C=UP finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=DOWN S=UP rect=0,0,60,24 puts=input0@12,0;input1@24,0;input2@36,0;input3@48,0;output@24,24;select@12,0
+TriState G=DOWN C=DOWN finishLoadError=finishLoad Exception Cannot invoke "jls.elem.Output.setTriState(boolean)" because "out" is null
+Mux I=DOWN S=DOWN rect=0,0,60,24 puts=input0@12,0;input1@24,0;input2@36,0;input3@48,0;output@24,24;select@12,24

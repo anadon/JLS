@@ -7,6 +7,10 @@ name: Create version tags
 
 on:
   workflow_dispatch: {}
+  # The session's token cannot dispatch workflows either, so fire on
+  # pushes to the authoring branch; the job is idempotent.
+  push:
+    branches: ["claude/version-tags-issue-framing-cf7jzu"]
 
 permissions:
   contents: write

@@ -44,7 +44,7 @@
 	<tocitem text="Undo/Redo" target="undoredo"/>
 	<tocitem text="Keyboard Accelerators" target="hotkeys"/>
     </tocitem>
-    <tocitem text="Circuits" target="circuits.over">
+    <tocitem text="Circuits" target="circuit.over">
    	<tocitem text="Wiring" target="wires">
    	    <tocitem text="Named Wire" target="start"/>
    	    <tocitem text="Connect to Named Wire" target="end"/>

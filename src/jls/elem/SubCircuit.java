@@ -662,10 +662,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 				cancel.setBackground(Color.pink);
 				okCancel.add(cancel);
 				JButton help = new JButton("Help");
-				if (JLSInfo.hb == null)
-					Util.noHelp(help);
-				else
-					JLSInfo.hb.enableHelpOnButton(help,"import",null);
+				Help.enableHelpOnButton(help, "import");
 				okCancel.add(help);
 				window.add(okCancel);
 				getRootPane().setDefaultButton(ok);

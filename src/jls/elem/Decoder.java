@@ -32,6 +32,7 @@ import javax.swing.WindowConstants;
 
 import jls.BitSetUtils;
 import jls.Circuit;
+import jls.Help;
 import jls.JLSInfo;
 import jls.KeyPad;
 import jls.Util;
@@ -546,10 +547,7 @@ public class Decoder extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"decoder",null);
+			Help.enableHelpOnButton(help, "decoder");
 			okCancel.add(help);
 			window.add(okCancel);
 			getRootPane().setDefaultButton(ok);

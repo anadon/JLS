@@ -31,8 +31,6 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Vector;
 
-import javax.help.CSH;
-import javax.help.HelpSet;
 import javax.print.PrintService;
 import javax.swing.Box;
 import javax.swing.JColorChooser;
@@ -959,37 +957,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		});
 
-		// set up javahelp
+		// set up help contents viewer
 		JMenuItem contents = new JMenuItem("Contents");
 		help.add(contents);
-		String helpHS = "help/JLSHelp.hs";
-		ClassLoader cl = JLS.class.getClassLoader();
-		HelpSet mainHS = null;
-		try {
-			URL url = HelpSet.findHelpSet(cl, helpHS);
-			mainHS = new HelpSet(cl, url);
-		}
-		catch (Exception ex) {
-			contents.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent event) {
-					JOptionPane.showMessageDialog(null,
-					"No help - something bad happened during initialization.");
-				}
-			});
-			return help;
-		}
-		catch (NoClassDefFoundError er) {
-			contents.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent event) {
-					JOptionPane.showMessageDialog(null,
-					"No help - jh.jar appears to be missing");
-				}
-			});
-			return help;
-		}
-
-		JLSInfo.hb = mainHS.createHelpBroker();
-		contents.addActionListener(new CSH.DisplayHelpFromSource(JLSInfo.hb));
+		contents.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				Help.showTopic("top");
+			}
+		});
 		return help;
 	} // end of helpMenu method
 

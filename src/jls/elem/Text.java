@@ -420,10 +420,7 @@ public class Text extends DisplayElement {
 			ok.setBackground(Color.green);
 			cancel.setBackground(Color.pink);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"text",null);
+			Help.enableHelpOnButton(help, "text");
 			buttons.add(help);
 			window.add(buttons, BorderLayout.SOUTH);
 

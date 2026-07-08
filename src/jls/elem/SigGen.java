@@ -248,10 +248,7 @@ public class SigGen extends SigSim {
 			ok.setBackground(Color.green);
 			cancel.setBackground(Color.pink);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"siggen",null);
+			Help.enableHelpOnButton(help, "siggen");
 			buttons.add(help);
 			window.add(buttons, BorderLayout.SOUTH);
 			getRootPane().setDefaultButton(ok);

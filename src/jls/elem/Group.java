@@ -358,16 +358,11 @@ public abstract class Group extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("help");
-			if (JLSInfo.hb == null) {
-				Util.noHelp(help);
+			if (type.equals("Unbundler")) {
+				Help.enableHelpOnButton(help, "unbundle");
 			}
 			else {
-				if (type.equals("Unbundler")) {
-					JLSInfo.hb.enableHelpOnButton(help,"unbundle",null);
-				}
-				else {
-					JLSInfo.hb.enableHelpOnButton(help,"bundle",null);
-				}
+				Help.enableHelpOnButton(help, "bundle");
 			}
 			okCancel.add(help);
 			window.add(okCancel);
@@ -566,15 +561,11 @@ public abstract class Group extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
+			if (type.equals("unbundle")) {
+				Help.enableHelpOnButton(help, "unbundle");
+			}
 			else {
-				if (type.equals("unbundle")) {
-					JLSInfo.hb.enableHelpOnButton(help,"unbundle",null);
-				}
-				else {
-					JLSInfo.hb.enableHelpOnButton(help,"bundle",null);
-				}
+				Help.enableHelpOnButton(help, "bundle");
 			}
 			
 			okCancel.add(help);

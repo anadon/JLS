@@ -701,10 +701,7 @@ public class Mux extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"mux",null);
+			Help.enableHelpOnButton(help, "mux");
 			okCancel.add(help);
 			window.add(okCancel);
 			getRootPane().setDefaultButton(ok);

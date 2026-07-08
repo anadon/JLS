@@ -110,12 +110,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		action.add(print);
 
-		if (JLSInfo.hb != null) {
-			JLSInfo.hb.enableHelpOnButton(help,"inter.sim",null);
-		}
-		else {
-			Util.noHelp(help);
-		}
+		Help.enableHelpOnButton(help, "inter.sim");
 		action.add(help);
 		toolBar.add(action,BorderLayout.WEST);
 

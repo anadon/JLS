@@ -7,6 +7,10 @@ on:
     branches: ["master"]
   pull_request:
 
+# least-privilege token: the build only reads the repo (issue #68)
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build (JDK ${{ matrix.java }})

@@ -135,9 +135,46 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
-          <!-- tests exercise load/save and element construction without a display -->
-          <argLine>-Djava.awt.headless=true</argLine>
+          <!-- tests exercise load/save and element construction without a
+               display; @{argLine} lets the JaCoCo agent attach (#66) -->
+          <argLine>@{argLine} -Djava.awt.headless=true</argLine>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- coverage report on every test run: target/site/jacoco
+             (issue #66; the CI ratchet is tracked separately) -->
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- CycloneDX SBOM with every build: target/bom.json/.xml
+             (issue #65; publishing with releases rides #44) -->
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>makeBom</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>com.github.spotbugs</groupId>

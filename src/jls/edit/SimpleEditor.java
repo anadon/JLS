@@ -122,8 +122,8 @@ public abstract class SimpleEditor extends JPanel {
 	private JPopupMenu importMenu = 
 			new JPopupMenu();				// to display importable circuits
 	private SimpleEditor me;
-	private Stack<Circuit> undos = new Stack<Circuit>();
-	private Stack<Circuit> redos = new Stack<Circuit>();
+	private Stack<CircuitSnapshot> undos = new Stack<CircuitSnapshot>();
+	private Stack<CircuitSnapshot> redos = new Stack<CircuitSnapshot>();
 	private int check = JLSInfo.checkPointFreq+1;				// number of changes, used for checkpointing
 	private Map<String,JMenuItem> menuMap = new HashMap<String,JMenuItem>();
 	private Map<String,Circuit> circMap = new HashMap<String,Circuit>();
@@ -3885,15 +3885,18 @@ public abstract class SimpleEditor extends JPanel {
 							// Serialize in memory here (cheap relative to disk
 							// I/O), then hand the text to the background checkpoint
 							// writer so the write never stalls the event thread (#19).
+							// checkpoint the top-level circuit, matching the file
+							// it is written to: saving a subcircuit under the
+							// top-level name would leave an unrecoverable checkpoint
 							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-							boolean changed = circuit.hasChanged();
+							boolean changed = circ.hasChanged();
 							StringWriter text = new StringWriter();
 							try (PrintWriter output = new PrintWriter(text)) {
-								circuit.save(output);
+								circ.save(output);
 							}
 							finally {
 								if (changed)
-									circuit.markChanged();
+									circ.markChanged();
 							}
 							writeCheckpointInBackground(fileName, text.toString());
 						}
@@ -3905,6 +3908,14 @@ public abstract class SimpleEditor extends JPanel {
 					 */
 					public void pushCopy() {
 
+						// snapshot the circuit in the save format (#18);
+						// an aborted or no-op change serializes identically
+						// to the top of the stack and is not pushed again
+						CircuitSnapshot snap = CircuitSnapshot.capture(circuit);
+						if (!undos.isEmpty() && undos.peek().sameAs(snap)) {
+							return;
+						}
+
 						// see if undo stack is full
 						if (undos.size() > JLSInfo.undoStackDepth) {
 
@@ -3912,24 +3923,8 @@ public abstract class SimpleEditor extends JPanel {
 							undos.remove(0);
 						}
 
-						// make a set of all elements except attached wire ends
-						Set<Element> elements = new HashSet<Element>();
-						for (Element el : circuit.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
-								if (end.isAttached())
-									continue;
-							}
-							elements.add(el);
-						}
-
-						// copy elements to new circuit
-						Circuit newCopy = new Circuit(circuit.getName());
-						Util.copy(elements,newCopy);
-						newCopy.setDirectory(circuit.getDirectory());
-
 						// save for undo
-						undos.push(newCopy);
+						undos.push(snap);
 					} // end of pushCopy method
 
 					/**
@@ -3938,24 +3933,19 @@ public abstract class SimpleEditor extends JPanel {
 					public void undo() {
 
 						// no undo left if stack only has a copy of the original circuit
-						if (undos.size() == 1) {
+						if (undos.size() <= 1) {
 							return;
 						}
 
-						// pop copy of current circuit and put on redo stack
-						Circuit temp = undos.pop();
-						redos.push(temp);
-
-						// if nothing left, quit
-						if (undos.isEmpty()) {
+						// restore the previous snapshot first; only a
+						// successful restore may touch the stacks
+						CircuitSnapshot current = undos.get(undos.size() - 1);
+						CircuitSnapshot previous = undos.get(undos.size() - 2);
+						if (!finishDo(previous)) {
 							return;
 						}
-
-						// make a copy of the pushed circuit
-						Editor ed = circuit.getEditor();
-						temp = undos.peek();
-						finishDo(temp);
-						circuit.setEditor(ed);
+						undos.pop();
+						redos.push(current);
 					} // end of undo method
 
 					/**
@@ -3968,48 +3958,35 @@ public abstract class SimpleEditor extends JPanel {
 							return;
 						}
 
-						// pop circuit from redo stack and push on undo stack
-						Circuit temp = redos.pop();
-						undos.push(temp);
-
-						// make a copy of the circuit
-						Editor ed = circuit.getEditor();
-						finishDo(temp);
-						circuit.setEditor(ed);
+						// restore the snapshot first; only a successful
+						// restore may touch the stacks
+						CircuitSnapshot next = redos.peek();
+						if (!finishDo(next)) {
+							return;
+						}
+						redos.pop();
+						undos.push(next);
 					} // end of redo method
 
 					/**
-					 * Finish up undo or redo.
-					 * Used by undo and redo to make a copy of the circuit.
-					 * 
-					 * @param temp The circuit being copied.
+					 * Finish up undo or redo: restore a snapshot and install
+					 * it as the edited circuit (#18).
+					 *
+					 * @param snap The snapshot to restore.
+					 *
+					 * @return true if the snapshot was restored and
+					 *         installed, false if it failed to load (the
+					 *         current circuit is untouched).
 					 */
-					private void finishDo(Circuit temp) {
+					private boolean finishDo(CircuitSnapshot snap) {
 
-						// start a new copy of the circuit
-						Circuit newCopy = new Circuit(circuit.getName());
-
-						// create set of all elements except attached wire ends
-						Set<Element> elements = new HashSet<Element>();
-						for (Element el : temp.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
-								if (end.isAttached())
-									continue;
-							}
-							elements.add(el);
+						// rebuild the circuit through the ordinary load path
+						Circuit newCopy = snap.restore(circuit.getName(), graphics);
+						if (newCopy == null) {
+							return false;
 						}
-
-						// copy them to the new circuit
-						Util.copy(elements,newCopy);
-
-						// partition wires and wire ends into wire nets
-						Util.partition(newCopy);
-
-						// set their circuit to the new circuit
-						for (Element el : newCopy.getElements()) {
-							el.setCircuit(newCopy);
-						}
+						Editor ed = circuit.getEditor();
+						newCopy.setDirectory(circuit.getDirectory());
 
 						// link into subcircuit if it is imported
 						SubCircuit sub = circuit.getSubElement();
@@ -4021,7 +3998,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// make it be the current circuit
 						circuit = newCopy;
-						circuit.setDirectory(temp.getDirectory());
+						circuit.setEditor(ed);
 						circuit.markChanged();
 
 						// update jump start list
@@ -4053,6 +4030,7 @@ public abstract class SimpleEditor extends JPanel {
 								}
 							}
 						}
+						return true;
 					} // end of finishDo method
 
 					/**

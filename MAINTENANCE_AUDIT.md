@@ -5,6 +5,13 @@ This document records the findings of a full maintenance audit of the JLS
 audit. The actionable items are tracked on GitHub: see the roadmap in issue
 #16, which links every item below as a sub-issue.
 
+> **Status update (this branch):** a Maven build (`mvn verify`) now exists with
+> lint (`-Xlint` + `-Werror`) and SpotBugs gates plus a GitHub Actions workflow
+> (progress on #6/#7/#10). The lint-and-correctness pass fixed 19 findings,
+> including a guaranteed `ClassCastException` in the JumpEnd name dialog, a
+> latent NPE in `StateMachine`, and platform-default-encoding file I/O at 15
+> sites. Details in commit 1f67a7b.
+
 ## Headline findings
 
 - **The code still compiles.** All 80 `.java` files under `src/` plus the

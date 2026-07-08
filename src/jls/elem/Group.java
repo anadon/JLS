@@ -198,6 +198,17 @@ public abstract class Group extends LogicElement {
 	 * @param v1 The second value.
 	 */
 	public void setPair(int v1, int v2) {
+		// a malformed file used to NPE/AIOOBE here; reject with a real
+		// message and bound the sparse-list growth (issue #52)
+		if (v1 < 0 || v2 < 0) {
+			throw new IllegalArgumentException(
+					"group wire indices must be non-negative ("
+							+ v1 + "," + v2 + ")");
+		}
+		if (noncontig && v1 > 4096) {
+			throw new IllegalArgumentException(
+					"group wire index " + v1 + " is implausibly large");
+		}
 		if(noncontig) {
 			// Newer save file: more complex, but more features
 			Entry e;

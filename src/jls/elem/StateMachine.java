@@ -1930,16 +1930,28 @@ public final class StateMachine extends LogicElement implements Printable {
 		oldClock = 0;
 		
 		// find the initial state
+		currentState = null;
 		for (State state : states) {
 			if (state.isInitial()) {
 				currentState = state;
 				break;
 			}
 		}
-		
+
+		// the editor never guaranteed an initial state exists (deleting
+		// the initial state, or a zero-state machine); fall back to an
+		// arbitrary state rather than NPE the simulator (issue #52, M13)
+		if (currentState == null) {
+			if (states.isEmpty()) {
+				busy = false;
+				return;
+			}
+			currentState = states.iterator().next();
+		}
+
 		// send all initial state output values
 		currentState.sendOutputs(this,0,sim);
-		
+
 		// make not busy
 		busy = false;
 		

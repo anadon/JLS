@@ -21,6 +21,13 @@ public class Clock extends LogicElement {
 	private static int defaultCycleTime = 2;
 	private static int defaultOneTime = defaultCycleTime/2;
 	
+	// one constraint string, two surfaces: dialog and loader (issue #52);
+	// non-positive times cause a zero-delay repost livelock at t=0
+	static final String CYCLE_CONSTRAINT =
+			"Cycle time must be a positive number of time units";
+	static final String ONE_CONSTRAINT =
+			"One time must be positive and less than the cycle time";
+
 	// properties
 	private int cycleTime = defaultCycleTime;
 	private int oneTime = defaultOneTime;
@@ -163,11 +170,21 @@ public class Clock extends LogicElement {
 			java.util.List.of(
 		new Attribute.IntAttribute("cycle") {
 			protected int get(Element el) { return ((Clock)el).cycleTime; }
-			protected void set(Element el, int v) { ((Clock)el).cycleTime = v; }
+			protected void set(Element el, int v) {
+				if (v < 1) {
+					throw new IllegalArgumentException(CYCLE_CONSTRAINT);
+				}
+				((Clock)el).cycleTime = v;
+			}
 		},
 		new Attribute.IntAttribute("one") {
 			protected int get(Element el) { return ((Clock)el).oneTime; }
-			protected void set(Element el, int v) { ((Clock)el).oneTime = v; }
+			protected void set(Element el, int v) {
+				if (v < 1) {
+					throw new IllegalArgumentException(ONE_CONSTRAINT);
+				}
+				((Clock)el).oneTime = v;
+			}
 		},
 		new Attribute.OrientationAttribute("orient") {
 			protected JLSInfo.Orientation getOrientation(Element el) {
@@ -391,21 +408,28 @@ public class Clock extends LogicElement {
 		 */
 		protected void validateAndAccept() {
 
+			// validate before mutating the element: a rejected dialog
+			// must leave the clock unchanged (issue #52)
+			int newCycleTime;
+			int newOneTime;
 			try {
-				int newCycleTime = Integer.parseInt(cycleTimeField.getText());
-				int newOneTime = Integer.parseInt(oneTimeField.getText());
-
-				cycleTime = newCycleTime;
-				oneTime = newOneTime;
+				newCycleTime = Integer.parseInt(cycleTimeField.getText());
+				newOneTime = Integer.parseInt(oneTimeField.getText());
 			}
 			catch (NumberFormatException ex) {
 				reject("Value not numeric, try again");
 				return;
 			}
-			if (oneTime >= cycleTime) {
-				reject("One time must be less than cycle time");
+			if (newCycleTime < 1) {
+				reject(CYCLE_CONSTRAINT);
 				return;
 			}
+			if (newOneTime < 1 || newOneTime >= newCycleTime) {
+				reject(ONE_CONSTRAINT);
+				return;
+			}
+			cycleTime = newCycleTime;
+			oneTime = newOneTime;
 			if(left.isSelected())
 			{
 				orientation = JLSInfo.Orientation.LEFT;

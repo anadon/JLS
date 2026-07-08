@@ -313,6 +313,21 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param oldname The current name.
 	 * @param newname The new name.
 	 */
+	/**
+	 * Point this editor's import map at a replacement circuit instance
+	 * with the same name. Undo/redo installs a freshly loaded Circuit;
+	 * without this refresh a sibling editor's Import silently copies the
+	 * discarded instance's content (issue #39, audit finding M8).
+	 *
+	 * @param circ The replacement circuit.
+	 */
+	public void refreshInImportMenu(Circuit circ) {
+
+		if (circMap.containsKey(circ.getName())) {
+			circMap.put(circ.getName(), circ);
+		}
+	} // end of refreshInImportMenu method
+
 	public void changeInImportMenu(String oldname, String newname) {
 
 		JMenuItem item = menuMap.get(oldname);
@@ -1690,10 +1705,12 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// cursor is not on an element, so start selecting
+						// cursor is not on an element, so start selecting;
+						// repaint so cleared hover highlights disappear (#35)
 						selRect = new Rectangle(x,y,0,0);
 						clearSelected();
 						setState(State.selecting);
+						repaint();
 					}
 
 					// if right button show menu
@@ -3989,9 +4006,13 @@ public abstract class SimpleEditor extends JPanel {
 					} // end of pushCopy method
 
 					/**
-					 * Do undo.
+					 * Do undo. An in-flight gesture is cancelled first,
+					 * exactly as Esc would, so the restore always runs
+					 * against an idle editor (issue #39: cancel-then-apply).
 					 */
 					public void undo() {
+
+						cancelGesture();
 
 						// no undo left if stack only has a copy of the original circuit
 						if (undos.size() <= 1) {
@@ -4010,9 +4031,12 @@ public abstract class SimpleEditor extends JPanel {
 					} // end of undo method
 
 					/**
-					 * Do redo.
+					 * Do redo. Cancels any in-flight gesture first, like
+					 * undo (issue #39).
 					 */
 					public void redo() {
+
+						cancelGesture();
 
 						// if nothing on the redo stack, then there is nothing to do
 						if (redos.isEmpty()) {
@@ -4028,6 +4052,59 @@ public abstract class SimpleEditor extends JPanel {
 						redos.pop();
 						undos.push(next);
 					} // end of redo method
+
+					/**
+					 * Cancel any in-flight gesture, exactly as Esc or a
+					 * right-click cancel would, without touching the
+					 * undo/redo stacks (issue #39, audit finding H6). A
+					 * gesture left in flight across an undo made the next
+					 * mouse event operate on elements of the discarded
+					 * circuit instance; a half-drawn wire could bridge an
+					 * orphaned WireNet into the restored circuit.
+					 */
+					private void cancelGesture() {
+
+						if (currentState == State.idle) {
+							return;
+						}
+
+						// discard a partially drawn wire
+						if (currentState == State.startwire
+								|| currentState == State.drawire) {
+							circuit.remove(wireEnd);
+							if (wire != null) {
+								circuit.remove(wire);
+								wire.getOtherEnd(wireEnd).remove(wire,circuit);
+							}
+							net.remove(wireEnd);
+							net.remove(wire);
+							removeCoLinear();
+							wireEnd = null;
+							wire = null;
+							prev = null;
+						}
+
+						// a drag returns to its origin
+						else if (currentState == State.moving) {
+							for (Element sel : selected) {
+								sel.restorePosition();
+							}
+						}
+
+						// elements not yet placed are removed
+						else if (currentState == State.placing) {
+							for (Element el : selected) {
+								el.remove(circuit);
+							}
+						}
+
+						// common cleanup back to the idle state
+						selRect = null;
+						clearSelected();
+						untouchAll();
+						setState(State.idle);
+						repaint();
+					} // end of cancelGesture method
 
 					/**
 					 * Finish up undo or redo: restore a snapshot and install
@@ -4061,6 +4138,19 @@ public abstract class SimpleEditor extends JPanel {
 						circuit = newCopy;
 						circuit.setEditor(ed);
 						circuit.markChanged();
+
+						// point sibling editors' import maps at the new
+						// instance so Import copies restored content, not
+						// the discarded circuit (issue #39, finding M8)
+						if (tabbedParent != null) {
+							for (Component tab : tabbedParent.getComponents()) {
+								if (tab instanceof SimpleEditor
+										&& tab != SimpleEditor.this) {
+									((SimpleEditor)tab)
+											.refreshInImportMenu(circuit);
+								}
+							}
+						}
 
 						// update jump start list
 						updateJumpStarts(circuit);

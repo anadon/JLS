@@ -32,6 +32,9 @@ public class Memory extends LogicElement {
 	private static final int defaultAccessTime = 100; 
 	private static final String defaultInitialValue = "";
 	
+	// one constraint string, two surfaces: dialog and loader (issue #52)
+	static final String CAPACITY_CONSTRAINT = "Capacity must be at least 1";
+
 	// saved properties
 	private String name = defaultName;
 	private Type type = defaultType;
@@ -267,10 +270,15 @@ public class Memory extends LogicElement {
 	 * @param value The instance variable value.
 	 */
 	public void setValue(String name, int value) {
-		
+
 		if (name.equals("bits")) {
 			bits = value;
 		} else if (name.equals("cap")) {
+			// an invalid capacity crashes DenseWordStore at simulation
+			// start; reject it at load like the dialog does (issue #52)
+			if (value < 1) {
+				throw new IllegalArgumentException(CAPACITY_CONSTRAINT);
+			}
 			capacity = value;
 		} else if (name.equals("time")) {
 			accessTime = value;
@@ -771,6 +779,10 @@ public class Memory extends LogicElement {
 				}
 				if (tbits < 1) {
 					reject("Must have at least 1 bit");
+					return;
+				}
+				if (tcapacity < 1) {
+					reject(CAPACITY_CONSTRAINT);
 					return;
 				}
 				if (ram.isSelected()) {

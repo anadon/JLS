@@ -211,6 +211,19 @@ public class Wire extends Element {
 	} // end of getIndexBounds method
 
 	/**
+	 * The rectangle this wire occupies on screen. A wire's x/y/width/height
+	 * fields are unused, so the inherited getRect() returned a degenerate
+	 * rectangle at the wire's nominal position - which broke hover and
+	 * rubber-band dirty-region repaints (issue #35).
+	 *
+	 * @return the wire's real bounding rectangle.
+	 */
+	public Rectangle getRect() {
+
+		return getIndexBounds();
+	} // end of getRect method
+
+	/**
 	 * See if the given point is close to the wire.
 	 *
 	 * @param x The x-coordinate of the given point.

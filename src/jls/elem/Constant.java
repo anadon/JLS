@@ -706,8 +706,10 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 
 			// cancel if the new value is the same as the old value
-			if (temp == value) {
+			// (value comparison: == on BigInteger never fired, #51)
+			if (temp.equals(value)) {
 				cancelDialog();
+				return;
 			}
 			value = temp;
 

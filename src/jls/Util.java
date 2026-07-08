@@ -233,9 +233,10 @@ public final class Util {
 	 * @return the base name (minus directory prefix) if valid, or null if not valid.
 	 */
 	public static String isValidFileName(String str) {
-		
-		String slash = System.getProperty("file.separator");
-		int last = str.lastIndexOf(slash);
+
+		// accept both separators regardless of platform: splitting only
+		// on the platform one rejected C:/work/foo.jls on Windows (#51)
+		int last = Math.max(str.lastIndexOf('/'), str.lastIndexOf('\\'));
 		String circuitName = str;
 		if (last != -1) {
 			circuitName = str.substring(last+1);

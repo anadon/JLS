@@ -8,12 +8,22 @@
 -->
 <FindBugsFilter>
 
-  <!-- Deliberate global state, pervasive in the original design:
-       JLSInfo.* globals, Circuit.lineNumber load cursor, and Eula.ok.
-       (The per-gate-class previous-settings statics this once covered
-       were consolidated into Gate.Kind by #22.)
-       Untangling the rest is an architectural refactor, not a point fix. -->
+  <!-- Deliberate global state in the load path: JLSInfo.loadError and the
+       Circuit.lineNumber load cursor are written by instance loaders, and
+       Constant remembers previous dialog settings in statics. Scoped to
+       exactly the classes that trip the detector today (issue #54) so any
+       NEW static-write-from-instance-method elsewhere fails the build.
+       Every new entry in this file MUST carry a Class scope. -->
   <Match>
+    <Class name="jls.Circuit"/>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+  </Match>
+  <Match>
+    <Class name="jls.edit.CircuitSnapshot"/>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+  </Match>
+  <Match>
+    <Class name="jls.elem.Constant"/>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
   </Match>
 

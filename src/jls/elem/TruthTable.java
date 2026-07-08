@@ -341,6 +341,14 @@ public final class TruthTable extends LogicElement implements Printable {
 			irow = v1;
 			icol = 0;
 		}
+		// a malformed file used to die on the raw array access with a
+		// message-free AIOOBE; reject with the real constraint (issue #52)
+		if (v1 < 0 || v1 >= table.length
+				|| icol >= table[v1].length) {
+			throw new IllegalArgumentException(
+					"truth table entry (" + v1 + "," + icol
+							+ ") is outside the declared table size");
+		}
 		table[v1][icol] = v2;
 		icol += 1;
 	} // end of setPair method
@@ -1579,7 +1587,11 @@ public final class TruthTable extends LogicElement implements Printable {
 				}
 			}
 
-			//System.out.println("matched row " + matchingRow);
+			// no matching row: leave the outputs unchanged instead of
+			// killing the simulation thread with table[-1] (issue #52)
+			if (matchingRow < 0) {
+				return;
+			}
 
 			// for each output value...
 			int offset = inputNames.size();

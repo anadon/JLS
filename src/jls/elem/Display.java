@@ -263,7 +263,9 @@ public class Display extends LogicElement {
 			protected int get(Element el) { return ((Display)el).orient; }
 			protected void set(Element el, int v) { ((Display)el).orient = v; }
 			protected boolean omitted(Element el) {
-				return ((Display)el).orient <= 0;
+				// -1 is the "no marker" sentinel; 0 (Top) is a valid
+				// legacy value and must be re-saved (issue #57)
+				return ((Display)el).orient < 0;
 			}
 			public void copy(Element from, Element to) {
 				// the handwritten copy never carried the legacy marker

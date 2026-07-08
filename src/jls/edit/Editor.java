@@ -71,8 +71,12 @@ public final class Editor extends SimpleEditor {
 			return false;
 		}
 
-		// delete checkpoint file if there is one
-		new File(fileName + "~").delete();
+		// the write succeeded, so unsaved-changes protection can stand down
+		circuit.clearChanged();
+
+		// delete checkpoint file if there is one, superseding any
+		// checkpoint still queued with pre-save content
+		cancelCheckpoint(fileName + "~");
 
 		return true;
 
@@ -156,7 +160,7 @@ public final class Editor extends SimpleEditor {
 		if (save()) {
 
 			// delete checkpoint file if there is one
-			new File(oldName).delete();
+			cancelCheckpoint(oldName);
 		}
 	} // end of saveAs method
 
@@ -271,7 +275,7 @@ public final class Editor extends SimpleEditor {
 
 				// get rid of checkpoint file
 				String fileName = circuit.getDirectory() + "/" + circuit.getName() + ".jls";
-				new File(fileName + "~").delete();
+				cancelCheckpoint(fileName + "~");
 			}
 		}
 		return true;

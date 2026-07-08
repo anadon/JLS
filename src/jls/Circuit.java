@@ -11,8 +11,8 @@ import java.awt.print.Book;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Collections;
@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -68,6 +69,7 @@ public class Circuit implements Printable {
 																		// highlighted
 
 	private Set<Element> loadedElements = new HashSet<Element>(); // for loading
+	private boolean deferredFinishReported = false; // draw-time finishLoad failure (#58)
 																	// from file
 	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for
 																				// loading
@@ -153,6 +155,16 @@ public class Circuit implements Printable {
 			JLSInfo.sim.stop();
 		}
 	} // end of markChanged method
+
+	/**
+	 * Mark this circuit as saved. Called only after its serialized form has
+	 * actually been written to disk, so a failed write keeps the
+	 * unsaved-changes protection alive.
+	 */
+	public void clearChanged() {
+
+		changed = false;
+	} // end of clearChanged method
 
 	/**
 	 * Remove all elements from this circuit.
@@ -328,8 +340,21 @@ public class Circuit implements Printable {
 	 */
 	public boolean load(Scanner input) {
 
+		// a fresh load must not report a previous load's failure (#58)
+		JLSInfo.loadError = "";
 		lineNumber = 1;
-		return load(input, 0);
+		boolean ok = load(input, 0);
+		if (!ok) {
+			// Scanner swallows IOException and presents it as end of
+			// input; distinguish a truncated/corrupted stream from a
+			// short-but-well-formed file (#58)
+			IOException ioex = input.ioException();
+			if (ioex != null) {
+				JLSInfo.loadError = "I/O error while reading: "
+						+ ioex.getMessage();
+			}
+		}
+		return ok;
 	} // end of load method
 
 	/**
@@ -392,16 +417,30 @@ public class Circuit implements Printable {
 					return false;
 				}
 
-				// get element type and create element
+				// get element type and create element; select the
+				// (Circuit) constructor explicitly - getConstructors()
+				// returns constructors in no specified order (issue #55)
 				String elementType = input.next();
-				Object obj = null;
+				Element newElement = null;
 				try {
-					Class<?> c = Class.forName("jls.elem." + elementType);
-					Constructor<?>[] cn = c.getConstructors();
-					obj = cn[0].newInstance(this);
+					Class<? extends Element> c =
+							Class.forName("jls.elem." + elementType)
+									.asSubclass(Element.class);
+					newElement = c.getConstructor(Circuit.class)
+							.newInstance(this);
 				} catch (ClassNotFoundException ex) {
-					return false; // Element class not found
+					JLSInfo.loadError = "unknown element type " + elementType;
+					return false;
+				} catch (ClassCastException ex) {
+					JLSInfo.loadError = "non-Element subclass";
+					return false;
+				} catch (NoSuchMethodException ex) {
+					JLSInfo.loadError = elementType
+							+ " has no (Circuit) constructor";
+					return false;
 				} catch (InstantiationException ex) {
+					JLSInfo.loadError = "cannot instantiate element type "
+							+ elementType;
 					return false;
 				} catch (IllegalAccessException ex) {
 					JLSInfo.loadError = "illegal access exception";
@@ -410,15 +449,6 @@ public class Circuit implements Printable {
 					JLSInfo.loadError = "invocation target exception";
 					return false;
 				}
-
-				// make sure it isn't from some non-Element subclass
-				if (!(obj instanceof Element)) {
-					JLSInfo.loadError = "non-Element subclass";
-					return false;
-				}
-
-				// load the element
-				Element newElement = (Element) obj;
 				lineNumber += 1;
 				boolean loadOK = loadElement(newElement, input);
 				if (loadOK) {
@@ -474,7 +504,12 @@ public class Circuit implements Printable {
 						return false;
 					}
 				} catch (Exception e) {
+					// a broken subcircuit must fail the parent load, not
+					// report success with a stack trace on stderr (#58)
 					e.printStackTrace();
+					JLSInfo.loadError = "subcircuit " + subCirc.getName()
+							+ " failed to finish loading: " + e.getMessage();
+					return false;
 				}
 				continue;
 			}
@@ -532,16 +567,16 @@ public class Circuit implements Printable {
 				}
 				String name = input.next();
 				String pattern = ".*";
-				String value = input.findInLine(pattern);
-				if (value == null) {
+				String raw = input.findInLine(pattern);
+				if (raw == null) {
 					JLSInfo.loadError = "null findInLine";
 					return false;
 				}
-				value = value.replace("\\\\", "\\");
-				value = value.replace("\\\"", "\"");
-				value = value.replace("\\n", "\n");
-				value = value.substring(value.indexOf('"') + 1,
-						value.lastIndexOf('"'));
+				String value = unquoteAndUnescape(raw);
+				if (value == null) {
+					JLSInfo.loadError = "expecting quoted string value";
+					return false;
+				}
 				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("ref")) {
@@ -577,16 +612,16 @@ public class Circuit implements Printable {
 				}
 				int id = input.nextInt();
 				String pattern = ".*";
-				String value = input.findInLine(pattern);
-				if (value == null) {
+				String raw = input.findInLine(pattern);
+				if (raw == null) {
 					JLSInfo.loadError = "null findInLine";
 					return false;
 				}
-				value = value.replace("\\\\", "\\");
-				value = value.replace("\\\"", "\"");
-				value = value.replace("\\n", "\n");
-				value = value.substring(value.indexOf('"') + 1,
-						value.lastIndexOf('"'));
+				String value = unquoteAndUnescape(raw);
+				if (value == null) {
+					JLSInfo.loadError = "expecting quoted string value";
+					return false;
+				}
 				if (!(el instanceof WireEnd)) {
 					JLSInfo.loadError = "expecting WireEnd";
 					return false;
@@ -602,6 +637,47 @@ public class Circuit implements Printable {
 		JLSInfo.loadError = "abnormal loadElement termination";
 		return false;
 	} // end of loadElement method
+
+	/**
+	 * Extract and decode a quoted string value from the rest of a saved
+	 * line. The writer (Attribute.StringAttribute.save) escapes backslash,
+	 * quote and newline as two-character sequences; a single left-to-right
+	 * scan is its exact inverse. Sequential replace() passes were not (issue
+	 * #53): they collapsed a literal backslash-n into a real newline and
+	 * corrupted trailing backslashes.
+	 *
+	 * @param raw The rest of the line, including the surrounding quotes.
+	 *
+	 * @return the decoded string, or null if no quoted value is present.
+	 */
+	private static String unquoteAndUnescape(String raw) {
+
+		int start = raw.indexOf('"');
+		int end = raw.lastIndexOf('"');
+		if (start < 0 || end <= start)
+			return null;
+		String escaped = raw.substring(start + 1, end);
+		StringBuilder value = new StringBuilder(escaped.length());
+		for (int i = 0; i < escaped.length(); i += 1) {
+			char ch = escaped.charAt(i);
+			if (ch == '\\' && i + 1 < escaped.length()) {
+				char next = escaped.charAt(i + 1);
+				if (next == 'n') {
+					value.append('\n');
+					i += 1;
+				} else if (next == '\\' || next == '"') {
+					value.append(next);
+					i += 1;
+				} else {
+					// not a writer-produced escape; keep it verbatim
+					value.append(ch);
+				}
+			} else {
+				value.append(ch);
+			}
+		}
+		return value.toString();
+	} // end of unquoteAndUnescape method
 
 	/**
 	 * Finish load of circuit.
@@ -679,6 +755,9 @@ public class Circuit implements Printable {
 			}
 
 			loadedElements.clear();
+			// the id map is only needed while wire ends resolve their
+			// refs above; keeping it pinned every loaded element (#51)
+			elementMap.clear();
 		} catch (Exception ex) {
 			JLSInfo.loadError = "finishLoad Exception " + ex.getMessage();
 			return false;
@@ -741,18 +820,13 @@ public class Circuit implements Printable {
 
 		// write trailer
 		output.println("ENDCIRCUIT");
-
-		// no need to save again until more changes made
-		changed = false;
 	} // end of save method
 
 	/**
 	 * Draw the circuit by drawing every element. First the set of elements not
 	 * in the second set are drawn, then the ones in the second set are drawn.
 	 * Wires are drawn first in each set.
-	 * 
-	 * <<<<<<< HEAD
-	 * 
+	 *
 	 * @param g
 	 *            The graphics object to draw with.
 	 * @param second
@@ -760,21 +834,21 @@ public class Circuit implements Printable {
 	 * @param ed
 	 *            The editor window doing the drawing.
 	 * @throws Exception
-	 *             =======
-	 * @param g
-	 *            The graphics object to draw with.
-	 * @param second
-	 *            The second set of elements to draw.
-	 * @param ed
-	 *            The editor window doing the drawing. >>>>>>>
-	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
 	public void draw(Graphics g, Set<Element> second, SimpleEditor ed)
 			throws Exception {
 
 		// finish up loading process if necessary
 		if (loadedElements.size() > 0) {
-			finishLoad(g);
+			if (!finishLoad(g)) {
+				// report once instead of silently re-failing on every
+				// repaint (#58)
+				if (!deferredFinishReported) {
+					deferredFinishReported = true;
+					System.err.println("deferred finishLoad of circuit "
+							+ name + " failed: " + JLSInfo.loadError);
+				}
+			}
 
 			// set circuit size to the largest of the default area or the needed
 			// area
@@ -939,16 +1013,10 @@ public class Circuit implements Printable {
 
 	/**
 	 * Export an image of the circuit.
-	 * 
-	 * <<<<<<< HEAD
-	 * 
+	 *
 	 * @param file
 	 *            The name of the file to write to.
 	 * @throws Exception
-	 *             =======
-	 * @param file
-	 *            The name of the file to write to. >>>>>>>
-	 *            6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
 	 */
 	public void exportImage(String file) throws Exception {
 
@@ -1173,7 +1241,9 @@ public class Circuit implements Printable {
 	 */
 	public Set<String> getJumpStartNames() {
 
-		return starts.keySet();
+		// a copy: handing out the live keySet let callers (or their
+		// iteration) corrupt the jump-start map (issue #51)
+		return new TreeSet<String>(starts.keySet());
 	} // end of getJumpStartNames method
 
 	/**

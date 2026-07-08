@@ -33,7 +33,9 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -108,7 +110,9 @@ public abstract class SimpleEditor extends JPanel {
 	// properties
 	protected Circuit circuit;			// the circuit being edited
 	protected EditWindow ew;			// the editor window
-	protected boolean enabled = true;	// disabled when editting a subcircuit
+	// volatile: written from the sim thread (enableEditor around a run),
+	// read by EDT mouse/key handlers (issue #49, finding H7)
+	protected volatile boolean enabled = true;	// disabled when editting a subcircuit
 	protected JTabbedPane tabbedParent;	// the tabbed pane it is in
 	private JScrollPane pane;			// the scroll page it is in
 	protected JPanel top;				// here so Editor class can display file menu
@@ -170,6 +174,32 @@ public abstract class SimpleEditor extends JPanel {
 			}
 		});
 	} // end of writeCheckpointInBackground method
+
+	/**
+	 * Supersede any pending checkpoint for a file and delete the checkpoint
+	 * file itself. The delete runs on the writer thread, so it is ordered
+	 * after any write already in flight — a checkpoint queued before a save
+	 * can never resurrect the file afterwards. Waits briefly for the delete
+	 * so quitting right after a save cannot leave a stale checkpoint behind.
+	 *
+	 * @param fileName Absolute path of the .jls~ checkpoint file.
+	 */
+	static void cancelCheckpoint(final String fileName) {
+
+		pendingCheckpoints.remove(fileName);
+		Future<?> deleted = checkpointWriter.submit(new Runnable() {
+			@Override
+			public void run() {
+				new File(fileName).delete();
+			}
+		});
+		try {
+			deleted.get(5, TimeUnit.SECONDS);
+		}
+		catch (Exception ex) {
+			// best-effort: the pending entry is already superseded
+		}
+	} // end of cancelCheckpoint method
 
 	/**
 	 * Create new editor.
@@ -286,6 +316,21 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param oldname The current name.
 	 * @param newname The new name.
 	 */
+	/**
+	 * Point this editor's import map at a replacement circuit instance
+	 * with the same name. Undo/redo installs a freshly loaded Circuit;
+	 * without this refresh a sibling editor's Import silently copies the
+	 * discarded instance's content (issue #39, audit finding M8).
+	 *
+	 * @param circ The replacement circuit.
+	 */
+	public void refreshInImportMenu(Circuit circ) {
+
+		if (circMap.containsKey(circ.getName())) {
+			circMap.put(circ.getName(), circ);
+		}
+	} // end of refreshInImportMenu method
+
 	public void changeInImportMenu(String oldname, String newname) {
 
 		JMenuItem item = menuMap.get(oldname);
@@ -1297,305 +1342,303 @@ public abstract class SimpleEditor extends JPanel {
 				info.setForeground(Color.BLACK);
 				info.setText("");
 
-				// if probe option selected
+				// if probe option selected: attach or remove a probe.
+				// This branch used to swallow every handler below it - a
+				// merge-conflict brace error left them nested inside and
+				// unreachable, and dropped the doProbe() call (issue #37)
 				if (event.getSource() == probe) {
 
 					// do nothing if editor is disabled
 					if (!enabled)
 						return;
 
-					//			// draw all elements, selected ones last
-					//			try {
-					//				circuit.draw(g, selected, me);
-					//			} catch (Exception e) {
-					//				e.printStackTrace();
-					//			}
-
-					// if watch option selected, ...
-					if (event.getSource() == watch) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// get the single item in the selected set
-						Element el = (Element)(selected.toArray()[0]);
-
-						// if its locked, don't change it
-						if (el.isUneditable())
-							return;
-
-						// remove if watched, add if not
-						if (el.isWatched()) {
-							el.setWatched(false);
-						}
-						else {
-							el.setWatched(true);
-						}
-						markChanged();
-
-						// clean up
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// if view option selected, ...
-					if (event.getSource() == modify) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-						doModify();
-					}
-
-					// if change timing, then it must have timing info
-					if (event.getSource() == timing) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						doTiming();
-					}
-
-					// if view, then it must be a watchable element
-					if (event.getSource() == view) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// get the single item in the selected set
-						Element el = (Element)(selected.toArray()[0]);
-
-						// ask element to display its current value
-						el.showCurrentValue(new Point(x,y));
-
-						// clean up
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// if cut option selected, copy selected elements to clipboard,
-					// then delete those elements
-					if (event.getSource() == cut) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// copy, then remove
-						copy();
-						remove();
-
-						// clean up
-						removeCoLinear();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// if copy option, copy selected elements to clipboard
-					if (event.getSource() == copy) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						copy();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// if delete option, delete selected elements
-					if (event.getSource() == delete) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// remove
-						remove();
-						removeCoLinear();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// if lock, set all selected elements to uneditable
-					if (event.getSource() == lock) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// warn user first
-						int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
-								"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-								"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-						// if user still ok with it ...
-						if (opt == JOptionPane.OK_OPTION) {
-
-							// make selected elements uneditable
-							for (Element el : selected) {
-								el.makeUneditable();
-							}
-						}
-
-						// finish up
-						clearSelected();
-						setState(State.idle);
-						repaint();
-						return;
-					}
-
-					// paste contents of clipboard
-					if (event.getSource() == paste) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// paste
-						if (clipboard.getElements().size() == 0)
-							return;
-						if (paste(clipboard)) {
-							setState(State.placing);
-						}
-						repaint();
-						return;
-					}
-
-					// if select all option, select everything
-					if (event.getSource() == selAll) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						doSelectAll();
-					}
-
-					// if close, close this circuit (or subcircuit)
-					if (event.getSource() == close) {
-						close();
-					}
-
-					// if undo, restore prevous copy of circuit
-					if (event.getSource() == undo) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						undo();
-						repaint();
-					}
-
-					// if redo, restore future copy of circuit
-					if (event.getSource() == redo) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						redo();
-					}
-
-					if(event.getSource() == Crotate)
-					{
-						if(!enabled)
-							return;
-						Element el = (Element)(selected.toArray()[0]);
-						el.rotate(JLSInfo.Orientation.RIGHT, this.getGraphics());
-						markChanged();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-
-
-					}
-
-					if(event.getSource() == CCrotate)
-					{
-						if(!enabled)
-							return;
-						Element el = (Element)(selected.toArray()[0]);
-						el.rotate(JLSInfo.Orientation.LEFT, this.getGraphics());
-						markChanged();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-					}
-
-					if(event.getSource() == matchJump) {
-						if(!enabled)
-							return;
-
-						JumpStart el = (JumpStart)(selected.toArray()[0]);
-						JumpEnd nel = new JumpEnd(circuit);
-						nel.setName(el.getName());
-						Point p = getMousePosition();
-						if(p == null) { // If the context menu wasn't within JLS
-							p = MouseInfo.getPointerInfo().getLocation();
-							p.x -= getLocationOnScreen().x;
-							p.y -= getLocationOnScreen().y;
-						}
-						x = p.x;
-						y = p.y;
-						nel.setup(graphics, this, p.x, p.y);
-
-						clearSelected();
-						circuit.addElement(nel);
-						nel.setHighlight(true);
-						selected.add(nel);
-
-						setState(State.chosen);
-						markChanged();
-						repaint();
-					}
-
-					if(event.getSource() == flip)
-					{
-						if(!enabled)
-							return;
-						Element el = (Element)(selected.toArray()[0]);
-						el.flip(this.getGraphics());
-						markChanged();
-						clearSelected();
-						setState(State.idle);
-						repaint();
-					}
-					// if connection, start drawing wires
-					else if (event.getSource() == connect) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						setState(State.startwire);
-						wireEnd = new WireEnd(circuit);
-						wireEnd.setXY(x,y);
-						wireEnd.init(circuit);
-						circuit.addElement(wireEnd);
-						selected.add(wireEnd);
-						wire = null;
-						net = new WireNet();
-						net.add(wireEnd);
-						wireEnd.setNet(net);
-						repaint();
-					}
+					doProbe();
+					return;
 				}
 
+				// if watch option selected, ...
+				if (event.getSource() == watch) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// get the single item in the selected set
+					Element el = (Element)(selected.toArray()[0]);
+
+					// if its locked, don't change it
+					if (el.isUneditable())
+						return;
+
+					// remove if watched, add if not
+					if (el.isWatched()) {
+						el.setWatched(false);
+					}
+					else {
+						el.setWatched(true);
+					}
+					markChanged();
+
+					// clean up
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// if view option selected, ...
+				if (event.getSource() == modify) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+					doModify();
+				}
+
+				// if change timing, then it must have timing info
+				if (event.getSource() == timing) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					doTiming();
+				}
+
+				// if view, then it must be a watchable element
+				if (event.getSource() == view) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// get the single item in the selected set
+					Element el = (Element)(selected.toArray()[0]);
+
+					// ask element to display its current value
+					el.showCurrentValue(new Point(x,y));
+
+					// clean up
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// if cut option selected, copy selected elements to clipboard,
+				// then delete those elements
+				if (event.getSource() == cut) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// copy, then remove
+					copy();
+					remove();
+
+					// clean up
+					removeCoLinear();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// if copy option, copy selected elements to clipboard
+				if (event.getSource() == copy) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					copy();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// if delete option, delete selected elements
+				if (event.getSource() == delete) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// remove
+					remove();
+					removeCoLinear();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// if lock, set all selected elements to uneditable
+				if (event.getSource() == lock) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// warn user first
+					int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
+							"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
+							"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+					// if user still ok with it ...
+					if (opt == JOptionPane.OK_OPTION) {
+
+						// make selected elements uneditable
+						for (Element el : selected) {
+							el.makeUneditable();
+						}
+					}
+
+					// finish up
+					clearSelected();
+					setState(State.idle);
+					repaint();
+					return;
+				}
+
+				// paste contents of clipboard
+				if (event.getSource() == paste) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					// paste
+					if (clipboard.getElements().size() == 0)
+						return;
+					if (paste(clipboard)) {
+						setState(State.placing);
+					}
+					repaint();
+					return;
+				}
+
+				// if select all option, select everything
+				if (event.getSource() == selAll) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					doSelectAll();
+				}
+
+				// if close, close this circuit (or subcircuit)
+				if (event.getSource() == close) {
+					close();
+				}
+
+				// if undo, restore prevous copy of circuit
+				if (event.getSource() == undo) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					undo();
+					repaint();
+				}
+
+				// if redo, restore future copy of circuit
+				if (event.getSource() == redo) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					redo();
+				}
+
+				if(event.getSource() == Crotate)
+				{
+					if(!enabled)
+						return;
+					Element el = (Element)(selected.toArray()[0]);
+					el.rotate(JLSInfo.Orientation.RIGHT, this.getGraphics());
+					markChanged();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+
+
+				}
+
+				if(event.getSource() == CCrotate)
+				{
+					if(!enabled)
+						return;
+					Element el = (Element)(selected.toArray()[0]);
+					el.rotate(JLSInfo.Orientation.LEFT, this.getGraphics());
+					markChanged();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+				}
+
+				if(event.getSource() == matchJump) {
+					if(!enabled)
+						return;
+
+					JumpStart el = (JumpStart)(selected.toArray()[0]);
+					JumpEnd nel = new JumpEnd(circuit);
+					nel.setName(el.getName());
+					Point p = getMousePosition();
+					if(p == null) { // If the context menu wasn't within JLS
+						p = MouseInfo.getPointerInfo().getLocation();
+						p.x -= getLocationOnScreen().x;
+						p.y -= getLocationOnScreen().y;
+					}
+					x = p.x;
+					y = p.y;
+					nel.setup(graphics, this, p.x, p.y);
+
+					clearSelected();
+					circuit.addElement(nel);
+					nel.setHighlight(true);
+					selected.add(nel);
+
+					setState(State.chosen);
+					markChanged();
+					repaint();
+				}
+
+				if(event.getSource() == flip)
+				{
+					if(!enabled)
+						return;
+					Element el = (Element)(selected.toArray()[0]);
+					el.flip(this.getGraphics());
+					markChanged();
+					clearSelected();
+					setState(State.idle);
+					repaint();
+				}
+				// if connection, start drawing wires
+				else if (event.getSource() == connect) {
+
+					// do nothing if editor is disabled
+					if (!enabled)
+						return;
+
+					setState(State.startwire);
+					wireEnd = new WireEnd(circuit);
+					wireEnd.setXY(x,y);
+					wireEnd.init(circuit);
+					circuit.addElement(wireEnd);
+					selected.add(wireEnd);
+					wire = null;
+					net = new WireNet();
+					net.add(wireEnd);
+					wireEnd.setNet(net);
+					repaint();
+				}
 
 			} // end of actionPerformed method
 
@@ -1665,10 +1708,12 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// cursor is not on an element, so start selecting
+						// cursor is not on an element, so start selecting;
+						// repaint so cleared hover highlights disappear (#35)
 						selRect = new Rectangle(x,y,0,0);
 						clearSelected();
 						setState(State.selecting);
+						repaint();
 					}
 
 					// if right button show menu
@@ -2865,7 +2910,7 @@ public abstract class SimpleEditor extends JPanel {
 				// create other end of wire
 				WireEnd end2 = new WireEnd(circuit);
 				end2.setXY(x,y);
-				end1.init(circuit);
+				end2.init(circuit);
 				end2.setPut(p2);
 				end2.setNet(net);
 				net.add(end2);
@@ -3930,14 +3975,9 @@ public abstract class SimpleEditor extends JPanel {
 							// it is written to: saving a subcircuit under the
 							// top-level name would leave an unrecoverable checkpoint
 							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-							boolean changed = circ.hasChanged();
 							StringWriter text = new StringWriter();
 							try (PrintWriter output = new PrintWriter(text)) {
 								circ.save(output);
-							}
-							finally {
-								if (changed)
-									circ.markChanged();
 							}
 							writeCheckpointInBackground(fileName, text.toString());
 						}
@@ -3969,9 +4009,13 @@ public abstract class SimpleEditor extends JPanel {
 					} // end of pushCopy method
 
 					/**
-					 * Do undo.
+					 * Do undo. An in-flight gesture is cancelled first,
+					 * exactly as Esc would, so the restore always runs
+					 * against an idle editor (issue #39: cancel-then-apply).
 					 */
 					public void undo() {
+
+						cancelGesture();
 
 						// no undo left if stack only has a copy of the original circuit
 						if (undos.size() <= 1) {
@@ -3990,9 +4034,12 @@ public abstract class SimpleEditor extends JPanel {
 					} // end of undo method
 
 					/**
-					 * Do redo.
+					 * Do redo. Cancels any in-flight gesture first, like
+					 * undo (issue #39).
 					 */
 					public void redo() {
+
+						cancelGesture();
 
 						// if nothing on the redo stack, then there is nothing to do
 						if (redos.isEmpty()) {
@@ -4008,6 +4055,59 @@ public abstract class SimpleEditor extends JPanel {
 						redos.pop();
 						undos.push(next);
 					} // end of redo method
+
+					/**
+					 * Cancel any in-flight gesture, exactly as Esc or a
+					 * right-click cancel would, without touching the
+					 * undo/redo stacks (issue #39, audit finding H6). A
+					 * gesture left in flight across an undo made the next
+					 * mouse event operate on elements of the discarded
+					 * circuit instance; a half-drawn wire could bridge an
+					 * orphaned WireNet into the restored circuit.
+					 */
+					private void cancelGesture() {
+
+						if (currentState == State.idle) {
+							return;
+						}
+
+						// discard a partially drawn wire
+						if (currentState == State.startwire
+								|| currentState == State.drawire) {
+							circuit.remove(wireEnd);
+							if (wire != null) {
+								circuit.remove(wire);
+								wire.getOtherEnd(wireEnd).remove(wire,circuit);
+							}
+							net.remove(wireEnd);
+							net.remove(wire);
+							removeCoLinear();
+							wireEnd = null;
+							wire = null;
+							prev = null;
+						}
+
+						// a drag returns to its origin
+						else if (currentState == State.moving) {
+							for (Element sel : selected) {
+								sel.restorePosition();
+							}
+						}
+
+						// elements not yet placed are removed
+						else if (currentState == State.placing) {
+							for (Element el : selected) {
+								el.remove(circuit);
+							}
+						}
+
+						// common cleanup back to the idle state
+						selRect = null;
+						clearSelected();
+						untouchAll();
+						setState(State.idle);
+						repaint();
+					} // end of cancelGesture method
 
 					/**
 					 * Finish up undo or redo: restore a snapshot and install
@@ -4041,6 +4141,19 @@ public abstract class SimpleEditor extends JPanel {
 						circuit = newCopy;
 						circuit.setEditor(ed);
 						circuit.markChanged();
+
+						// point sibling editors' import maps at the new
+						// instance so Import copies restored content, not
+						// the discarded circuit (issue #39, finding M8)
+						if (tabbedParent != null) {
+							for (Component tab : tabbedParent.getComponents()) {
+								if (tab instanceof SimpleEditor
+										&& tab != SimpleEditor.this) {
+									((SimpleEditor)tab)
+											.refreshInImportMenu(circuit);
+								}
+							}
+						}
 
 						// update jump start list
 						updateJumpStarts(circuit);
@@ -4107,12 +4220,14 @@ public abstract class SimpleEditor extends JPanel {
 								String name = el.getName();
 								circ.addName(name);
 							}
-							else if (el instanceof SubCircuit) {
+							// not an else: subcircuits are named, so the
+							// recursion never ran as an else-if (#51)
+							if (el instanceof SubCircuit) {
 								SubCircuit sc = (SubCircuit)el;
 								updateNamesUsed(sc.getSubCircuit());
 							}
 						}
-					} // end of updateJumpStarts method
+					} // end of updateNamesUsed method
 
 				} // end of EditWindow class
 

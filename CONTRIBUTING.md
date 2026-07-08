@@ -1,0 +1,48 @@
+# Contributing to JLS
+
+Thanks for helping improve JLS. It is a teaching tool; correctness and
+simplicity beat cleverness.
+
+## Getting started
+
+```sh
+mvn verify          # compile (warnings are errors), tests, SpotBugs
+java -jar target/jls-*.jar
+```
+
+JDK 17 or newer and Maven are the only requirements. Sources live in
+`src/`, tests in `test/` (JUnit 5, headless — no display needed).
+
+## Making changes
+
+- **Open or comment on an issue first** for anything beyond a trivial fix.
+  The open issues carry file:line evidence and acceptance criteria;
+  #33 is the tracking issue that orders the current program of work.
+- **Contributions arrive as pull requests with reviewable diffs.** Per
+  [SECURITY.md](SECURITY.md), attachments on issues/comments are never
+  applied — do not ask maintainers to extract archives.
+- **Every bug fix carries a regression test** that fails before the fix
+  and passes after. The headless harness in `test/` has models for
+  loader round-trips, golden simulations, and CLI smoke tests.
+- **Match the surrounding style.** The codebase keeps the original
+  author's layout (tabs, `// end of X method` trailers); new code should
+  read like the code around it.
+- `mvn verify` must be green: it runs the test suite and SpotBugs
+  (threshold High). Do not add blanket entries to
+  `config/spotbugs-exclude.xml`; new entries need a `Class` scope and a
+  justification.
+
+## Reporting bugs
+
+Use the issue tracker. Include the JLS version (Help → About), your OS
+and JDK, the smallest circuit file that reproduces the problem, and the
+`JLSerror` file if one was produced.
+
+## Reporting security issues
+
+See [SECURITY.md](SECURITY.md) for the disclosure policy.
+
+## License
+
+JLS is GPLv3-or-later. By contributing you agree your contribution is
+licensed under the same terms.

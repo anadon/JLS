@@ -27,8 +27,15 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	private String name;
 	private Element element;
 	protected InteractiveSimulator.Traces parent;
+	// pendingChanges is written by the sim thread and copied by the EDT
+	// at commit; both methods are synchronized and the committed list is
+	// replaced, never mutated, so drawing iterates a stable snapshot
+	// (issue #49, finding M9)
 	private LinkedList<Change> pendingChanges = new LinkedList<Change>();
-	private LinkedList<Change> changes = new LinkedList<Change>();
+	// ArrayList: paintComponent indexes into this list per change, which
+	// was O(n^2) on a LinkedList (issue #43)
+	private volatile java.util.ArrayList<Change> changes =
+			new java.util.ArrayList<Change>();
 	protected long now = 0;
 	private int scaleFactor = 1;
 	protected int width;
@@ -105,7 +112,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @param value The value to add to the list.
 	 * @param when The time at which the value occurred.
 	 */
-	public void addValue(BitSet value, long when) {
+	public synchronized void addValue(BitSet value, long when) {
 		
 		// don't add if no change
 		if (value == null) {
@@ -131,10 +138,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @param time The current time.
 	 */
-	public void commit(long time) {
-		
+	public synchronized void commit(long time) {
+
 		now = time;
-		changes = new LinkedList<Change>(pendingChanges);
+		changes = new java.util.ArrayList<Change>(pendingChanges);
 	} // end of commit method
 	
 	/**

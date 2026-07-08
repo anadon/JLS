@@ -1,0 +1,18 @@
+# Keep the build's dependencies and the workflows' actions current
+# (issue #47). Grouped weekly updates keep the PR volume low.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      maven:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

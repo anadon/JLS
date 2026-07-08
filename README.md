@@ -23,7 +23,9 @@ newer).
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
-  limits (`-d`), and printing.
+  limits (`-d`), image export (`-i`), and printing (`-p`/`-v`/`-r`).
+  Diagnostics go to stderr as one `jls: error: ...` line; exit status is
+  0 on success, 1 on runtime failure, and 2 on a usage error.
 
 ## Building from source
 

@@ -22,12 +22,17 @@ public final class InteractiveSimulator extends Simulator {
 	private final int SWIDTH = 1000;
 	private final int SHEIGHT = 70;
 
-	// properties
-	private int stepAmount = 1;
-	private long stepEnd = -1;
-	private boolean paused = false;
+	// control state shared between the EDT, the animation timer thread,
+	// and the sim thread: volatile so Stop/Pause/Step cannot be missed
+	// under JIT hoisting (issue #49, finding H7)
+	private volatile int stepAmount = 1;
+	private volatile long stepEnd = -1;
+	private volatile boolean paused = false;
 	private Semaphore pauseSem = new Semaphore(0);
-	private Thread sim = null;
+	private volatile Thread sim = null;
+	// suppress UI updates for this run only ("run in background");
+	// replaces the racy JLSInfo.batch toggle (issue #49, finding M15)
+	private volatile boolean quiet = false;
 
 	// GUI stuff
 	private JPanel action = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -49,7 +54,7 @@ public final class InteractiveSimulator extends Simulator {
 	private JLabel statusClock = new JLabel();
 
 	// for animation
-	java.util.Timer timer;
+	volatile java.util.Timer timer;
 
 	// for showing traces in interactive mode
 	private Traces traces = new Traces();
@@ -301,12 +306,15 @@ public final class InteractiveSimulator extends Simulator {
 							if (!paused) {
 								return;
 							}
-							paused = false;
-							pauseSem.release();
+							// set the step target BEFORE waking the sim
+							// thread, or a Step can advance zero time
+							// (issue #49, finding M9)
 							if (stepEnd < 0)
 								stepEnd = stepAmount;
 							else
 								stepEnd += stepAmount;
+							paused = false;
+							pauseSem.release();
 						}
 					}
 				}
@@ -354,12 +362,13 @@ public final class InteractiveSimulator extends Simulator {
 									if (!paused) {
 										return;
 									}
-									paused = false;
-									pauseSem.release();
+									// step target before the wakeup (#49)
 									if (stepEnd < 0)
 										stepEnd = stepAmount;
 									else
 										stepEnd += stepAmount;
+									paused = false;
+									pauseSem.release();
 								}
 							}
 						}; // end of TimerTask class
@@ -474,9 +483,24 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	public void runSim() {
 
+		runSim(false);
+	} // end of runSim method
+
+	/**
+	 * Run the simulator, optionally suppressing UI updates for this run
+	 * only ("run in background"). Replaces the JLSInfo.batch toggle the
+	 * menu used, which the sim thread almost never observed (issue #49,
+	 * finding M15).
+	 *
+	 * @param background True to suppress trace/clock UI updates.
+	 */
+	public void runSim(boolean background) {
+
 		// do nothing if no circuit
 		if (circuit == null)
 			return;
+
+		quiet = background;
 
 		// if simulator is already running, ignore
 		if (sim != null) {
@@ -490,8 +514,12 @@ public final class InteractiveSimulator extends Simulator {
 			gen.setFile(testFileName);
 		}
 
-		// reset clock/queues and initialize all elements
+		// reset clock/queues and initialize all elements; stale permits
+		// from a previous run's stop() made the first Pause fall
+		// through once (issue #49, finding M9)
 		paused = false;
+		runningMsgShown = false;
+		pauseSem.drainPermits();
 		initSimulation();
 
 		// initialize test generator, if there is one
@@ -499,9 +527,9 @@ public final class InteractiveSimulator extends Simulator {
 			gen.initSim(me);
 		}
 
-		// find all probes and watched elements (if not JLSInfo.batch mode)
+		// find all probes and watched elements (if not batch/background)
 		// and set up trace window
-		if (!JLSInfo.batch) {
+		if (!isQuiet()) {
 			traces.clear();
 			traceMap.clear();
 			wireMap.clear();
@@ -533,33 +561,11 @@ public final class InteractiveSimulator extends Simulator {
 					timer.cancel();
 				}
 
-				// update clock display
-				if (!JLSInfo.batch) {
-					showClock.setText("Time: "+now);
-					window.validate();
-				}
-
-				// leave a little extra room at the end
-				now += 10*scaleFactor;
-
-				// turn on listeners
-				if (ed != null)
-					ed.enableEditor(true);
-
-				// draw the traces
-				if (!JLSInfo.batch) {
-					traces.draw();
-					for (MemTrace mtr : memTraces) {
-						mtr.update();
-					}
-				}
-
-				// redraw the circuit
-				if (ed != null)
-					ed.repaint();
-
-				// display reason for stopping
+				// determine reason for stopping BEFORE padding the clock,
+				// or a completed run can misreport as a time-limit stop
+				// (issue #51 low item)
 				String reason;
+				final long stopTime = now;
 				if (stopping)
 					reason = "Simulation Stopped";
 				else if (now >= maxTime)
@@ -570,19 +576,46 @@ public final class InteractiveSimulator extends Simulator {
 					reason = "Simulation Complete";
 				stopping = true;
 
-				if (JLSInfo.batch && JLSInfo.frame == null)
-					System.out.println(reason + " at " + now);
-				else
-					msg.setText(reason);
+				// leave a little extra room at the end
+				now += 10L * scaleFactor;
 
-				updateStatusBar();
-				action.removeAll();
-				action.add(start);
-				action.add(step);
-				action.add(animate);
-				action.add(print);
-				action.add(help);
-				action.validate();
+				// turn on listeners
+				if (ed != null)
+					ed.enableEditor(true);
+
+				if (JLSInfo.batch && JLSInfo.frame == null) {
+					System.out.println(reason + " at " + stopTime);
+				}
+
+				// UI epilogue on the EDT, not the sim thread (issue #49,
+				// finding H8)
+				final String reasonText = reason;
+				final Editor edRef = ed;
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						if (!isQuiet()) {
+							showClock.setText("Time: "+stopTime);
+							window.validate();
+							traces.draw();
+							for (MemTrace mtr : memTraces) {
+								mtr.update();
+							}
+						}
+						if (edRef != null)
+							edRef.repaint();
+						if (!(JLSInfo.batch && JLSInfo.frame == null))
+							msg.setText(reasonText);
+						updateStatusBar();
+						action.removeAll();
+						action.add(start);
+						action.add(step);
+						action.add(animate);
+						action.add(print);
+						action.add(help);
+						action.validate();
+					}
+				});
 
 				// clear up for next simulation
 				sim = null;
@@ -616,11 +649,22 @@ public final class InteractiveSimulator extends Simulator {
 		// check for being paused
 		if (paused) {
 			stepEnd = now;
-			traces.draw();
-			for (MemTrace mtr : memTraces) {
-				mtr.update();
-			}
-			msg.setText("Simulation Paused");
+			final long pausedAt = now;
+			// UI updates on the EDT, not the sim thread (#49, H8)
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					if (!isQuiet()) {
+						showClock.setText("Time: "+pausedAt);
+						traces.draw();
+						for (MemTrace mtr : memTraces) {
+							mtr.update();
+						}
+						msg.setText("Simulation Paused");
+						updateStatusBar();
+					}
+				}
+			});
 			if (ed != null)
 				ed.enableEditor(true);
 			try {
@@ -637,43 +681,78 @@ public final class InteractiveSimulator extends Simulator {
 		SimEvent event = eventQueue.peek();
 		long when = event.getTime();
 
-		// if after step end time ... (can't happen in JLSInfo.batch mode)
+		// if after step end time ... (can't happen in quiet mode)
 		if (stepEnd != -1 && when > stepEnd) {
 
 			// update current time
 			now = stepEnd;
-			showClock.setText("Time: "+now);
-
-			// update traces
-			traces.draw();
-			for (MemTrace mtr : memTraces) {
-				mtr.update();
-			}
-
-			// redraw circuit
-			if (ed != null)
-				ed.repaint();
+			final long steppedTo = now;
+			final Editor edRef = ed;
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					showClock.setText("Time: "+steppedTo);
+					traces.draw();
+					for (MemTrace mtr : memTraces) {
+						mtr.update();
+					}
+					if (edRef != null)
+						edRef.repaint();
+				}
+			});
 
 			paused = true;
 			return false;
 		}
 
-		if (!JLSInfo.batch)
-			msg.setText("Simulation Running");
+		if (!isQuiet())
+			setMsgOnceRunning();
 		return true;
 	} // end of beforeEvent method
 
+	// "Simulation Running" only needs to be set once per run, not per
+	// event from the sim thread (#49, H8)
+	private volatile boolean runningMsgShown = false;
+
+	private void setMsgOnceRunning() {
+
+		if (runningMsgShown)
+			return;
+		runningMsgShown = true;
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				msg.setText("Simulation Running");
+			}
+		});
+	} // end of setMsgOnceRunning method
+
 	/**
-	 * Update the clock display before the event reacts.
+	 * Update the clock display before the event reacts, at a bounded
+	 * rate: the per-event setText+validate was both an EDT violation and
+	 * a real slowdown (issue #49, finding H8).
 	 *
 	 * @param event The event about to react.
 	 */
+	private volatile long lastClockUpdate = 0;
+
 	protected void beforeReact(SimEvent event) {
 
-		if (!JLSInfo.batch) {
-			showClock.setText("Time: "+now);
-			window.validate();
-		}
+		if (JLSInfo.batch && JLSInfo.frame == null)
+			return;
+		long nowMillis = System.currentTimeMillis();
+		if (nowMillis - lastClockUpdate < 50)
+			return;
+		lastClockUpdate = nowMillis;
+		final long simTime = now;
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				showClock.setText("Time: "+simTime);
+				// keeps the status bar live for background runs too
+				updateStatusBar();
+			}
+		});
 	} // end of beforeReact method
 
 	/**
@@ -683,7 +762,7 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	protected void afterEvent(SimEvent event) {
 
-		if (!JLSInfo.batch) {
+		if (!isQuiet()) {
 
 			// handle watched elements
 			LogicElement el = (LogicElement)event.getCallBack();
@@ -698,9 +777,18 @@ public final class InteractiveSimulator extends Simulator {
 				tr.addValue(wire.getValue(),now);
 			}
 		}
-
-		updateStatusBar();
 	} // end of afterEvent method
+
+	/**
+	 * Whether UI updates are suppressed: global batch mode or a
+	 * background run (issue #49, finding M15).
+	 *
+	 * @return true if no UI should be touched.
+	 */
+	private boolean isQuiet() {
+
+		return JLSInfo.batch || quiet;
+	} // end of isQuiet method
 
 	/**
 	 * Pause or resume the simulation, if there is one.
@@ -711,14 +799,21 @@ public final class InteractiveSimulator extends Simulator {
 	public void pause(boolean which) {
 
 		if (sim != null) {
-			action.removeAll();
-			action.add(resume);
-			action.add(step);
-			action.add(animate);
-			action.add(stop);
-			action.add(print);
-			action.add(help);
-			action.validate();
+			// called from inside react() on the sim thread (the Pause
+			// element); route the button swap to the EDT (#49, H8)
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					action.removeAll();
+					action.add(resume);
+					action.add(step);
+					action.add(animate);
+					action.add(stop);
+					action.add(print);
+					action.add(help);
+					action.validate();
+				}
+			});
 			if (timer != null)
 				timer.cancel();
 			paused = which;
@@ -806,13 +901,6 @@ public final class InteractiveSimulator extends Simulator {
 				else {
 					el.setTracePosition(-1);
 				}
-			}
-
-			// if a subcircuit, recursively find all traces in it
-			else if (element instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)element;
-				Circuit c = sub.getSubCircuit();
-				findTraces(c);
 			}
 		}
 	} // end of findTraces method

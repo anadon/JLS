@@ -6,7 +6,7 @@
 
   <groupId>io.github.anadon</groupId>
   <artifactId>jls</artifactId>
-  <version>4.2.0-SNAPSHOT</version>
+  <version>4.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>JLS - Java Logic Simulator</name>
@@ -64,6 +64,12 @@
           <exclude>**/CVS/**</exclude>
         </excludes>
       </resource>
+      <!-- single-source version identity: the pom version is filtered
+           into jls/version.properties and read by JLSInfo (issue #36) -->
+      <resource>
+        <directory>src-filtered</directory>
+        <filtering>true</filtering>
+      </resource>
     </resources>
 
     <plugins>
@@ -87,6 +93,8 @@
             <manifest>
               <!-- dependencies are bundled by the shade plugin below -->
               <mainClass>jls.JLS</mainClass>
+              <!-- Implementation-Title/-Version in the manifest (#36) -->
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
         </configuration>
@@ -127,9 +135,46 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
-          <!-- tests exercise load/save and element construction without a display -->
-          <argLine>-Djava.awt.headless=true</argLine>
+          <!-- tests exercise load/save and element construction without a
+               display; @{argLine} lets the JaCoCo agent attach (#66) -->
+          <argLine>@{argLine} -Djava.awt.headless=true</argLine>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- coverage report on every test run: target/site/jacoco
+             (issue #66; the CI ratchet is tracked separately) -->
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- CycloneDX SBOM with every build: target/bom.json/.xml
+             (issue #65; publishing with releases rides #44) -->
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>makeBom</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -138,7 +183,9 @@
         <configuration>
           <effort>Max</effort>
           <!-- fail the build only on the highest-confidence findings;
-               the full backlog is tracked via the exclude baseline -->
+               the exclude baseline therefore covers HIGH-confidence
+               findings only - medium/low-confidence findings neither
+               fail the build nor appear in the baseline (issue #54) -->
           <threshold>High</threshold>
           <excludeFilterFile>config/spotbugs-exclude.xml</excludeFilterFile>
         </configuration>

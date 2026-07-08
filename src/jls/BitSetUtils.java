@@ -30,10 +30,12 @@ public final class BitSetUtils {
 			throw new
 			IllegalArgumentException("value must be greater than zero (" + value + ")");
 		BitSet newBS = new BitSet();
-		int highBit = (int) Math.ceil(Math.log(value + 1) / Math.log(2));
+		// exact integer bit count: the previous Math.log/Math.ceil version
+		// under-counted for values wider than ~48 bits and silently
+		// returned an empty BitSet (issue #50)
+		int highBit = 64 - Long.numberOfLeadingZeros(value);
 		for (int index = 0; index < highBit; index += 1) {
-			long bit = (long) Math.pow(2, index);
-			newBS.set(index, (bit & value) == bit);
+			newBS.set(index, ((value >> index) & 1L) == 1L);
 		}
 		return newBS;
 	} // end of Create method

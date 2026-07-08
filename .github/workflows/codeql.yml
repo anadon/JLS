@@ -1,0 +1,41 @@
+name: CodeQL
+
+# Static analysis for security issues on every push/PR and weekly
+# (issue #67). Alerts appear under the repository's Security tab.
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+          queries: security-and-quality
+
+      - name: Build
+        run: mvn -B -DskipTests package
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

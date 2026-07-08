@@ -6,3 +6,4 @@ bin/
 # JLS runtime artifacts
 JLSerror
 *.jls
+Thumbs.db

@@ -30,12 +30,11 @@ public final class JLS  {
 		DefaultExceptionHandler exHandler = new DefaultExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler(exHandler);
 
-		// check for EULA agreement
+		// JLS is GPLv3 (see LICENSE and pop_GPLv3.pdf); the superseded
+		// MTU EULA acceptance gate is gone (issue #40)
 		JLSStart.parseCommandLine(args);
-		if (!Eula.accepted()) {
-			System.exit(1);
-		}
-		
+
+
 		// look for JLS.jar...
 		// first, get all paths in classpath
 		String fsep = System.getProperty("file.separator");
@@ -85,19 +84,32 @@ public final class JLS  {
 		File dirFile = new File(base);
 		String urlName = null;
 		String cl = null;
-		for (String entry : dirFile.list()) {
+		String[] entries = dirFile.list();
+		if (entries == null) {
+			// unreadable/nonexistent base directory: no plugins (#46)
+			entries = new String[0];
+		}
+		for (String entry : entries) {
 			String fullEntry = base + entry;
 			if (entry.endsWith(".xml") && new File(fullEntry).isFile()) {
 
-				// read xml file
+				// read xml file (by its real path, not CWD-relative, #46)
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				Document doc = null;
 				try {
+					// manifests need no DTDs or external entities;
+					// disallow them (#46)
+					dbf.setFeature(
+							"http://apache.org/xml/features/disallow-doctype-decl",
+							true);
+					dbf.setXIncludeAware(false);
+					dbf.setExpandEntityReferences(false);
 					DocumentBuilder db = dbf.newDocumentBuilder();
-					doc = db.parse(entry);
+					doc = db.parse(new File(fullEntry));
 				}
 				catch(Exception ex) {
-					System.out.println(ex);
+					System.err.println("jls: error: cannot read plugin manifest "
+							+ fullEntry + ": " + ex);
 					System.exit(1);
 				}
 				Element docEle = doc.getDocumentElement();

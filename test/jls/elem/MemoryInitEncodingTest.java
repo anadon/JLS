@@ -70,6 +70,19 @@ class MemoryInitEncodingTest {
 	}
 
 	@Test
+	void decodeRejectsHostileRuns() {
+		// a ~2^31 run used to expand into a StringBuilder (issue #38)
+		assertThrows(IllegalArgumentException.class,
+				() -> Memory.decodeInitRLE("0:0:7fffffff"));
+		// addr + run int overflow
+		assertThrows(IllegalArgumentException.class,
+				() -> Memory.decodeInitRLE("7fffffff:0:2"));
+		// explicit capacity bound
+		assertThrows(IllegalArgumentException.class,
+				() -> Memory.decodeInitRLE("4:1", 4));
+	}
+
+	@Test
 	void bigValuesSurvive() {
 		String text = "0 ffffffffffffffffffff\n"; // wider than a long
 		String rle = Memory.encodeInitRLE(text);

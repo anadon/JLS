@@ -26,7 +26,9 @@ public abstract class Simulator {
 	protected Circuit circuit = null;
 	protected long now = 0;
 	protected long maxTime = JLSInfo.defaultTimeLimit;
-	protected boolean stopping = false;
+	// volatile: set from the EDT (Stop button), read in the sim thread's
+	// event loop (issue #49, finding H7)
+	protected volatile boolean stopping = false;
 	protected Simulator me = null;
 	protected String testFileName = null;
 

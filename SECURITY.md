@@ -40,3 +40,17 @@ code or archive contents into the repository or the build environment.
 Maintainers: the comments above should be reported (Report content →
 spam/malicious) and deleted, and the accounts blocked from the
 repository.
+
+## Reporting a vulnerability
+
+Report suspected vulnerabilities privately via
+[GitHub security advisories](https://github.com/anadon/JLS/security/advisories/new)
+rather than public issues. Include the JLS version, a reproduction
+(circuit file or command line), and the impact you believe it has.
+You should receive an acknowledgement within two weeks; coordinated
+disclosure is preferred and credit is given unless you ask otherwise.
+
+Threat model note: circuit files (`.jls`/`.jls~`) are routinely shared
+between students and instructors and are treated as untrusted input —
+parser crashes, resource exhaustion, or code execution reachable from a
+hostile circuit file are all in scope.

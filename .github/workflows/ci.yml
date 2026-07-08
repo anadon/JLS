@@ -1,9 +1,15 @@
 name: CI
 
+# push is limited to master so a branch with an open PR builds once,
+# not twice (issue #47)
 on:
   push:
-    branches: ["**"]
+    branches: ["master"]
   pull_request:
+
+# least-privilege token: the build only reads the repo (issue #68)
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -23,9 +29,9 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
-      # Compiles with -Xlint:deprecation,removal,unchecked -Werror and runs
-      # the SpotBugs check goal (threshold High, baseline in
-      # config/spotbugs-exclude.xml). Tests run here too once they exist.
+      # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
+      # the headless test suite, and runs the SpotBugs check goal
+      # (threshold High, baseline in config/spotbugs-exclude.xml).
       - name: Build, lint, and analyze
         run: mvn -B verify
 

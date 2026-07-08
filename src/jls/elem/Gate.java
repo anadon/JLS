@@ -48,6 +48,89 @@ public abstract class Gate extends LogicElement {
 	} // end of constructor
 	
 	/**
+	 * Identity and shared "remember previous settings" state for one gate
+	 * kind (#22). Each subclass holds a single static Kind, replacing the
+	 * per-class copies of the display name, save name, default delay, and
+	 * previous-settings statics. What remains in a gate subclass is its
+	 * genuine content: the outline shape and computeOutput().
+	 */
+	protected static final class Kind {
+		
+		private final String displayName;	// e.g. "AND"
+		private final String saveName;		// e.g. "AndGate" (must match the
+											// class name Circuit.load resolves)
+		private final int fixedInputs;		// forced input count, or -1 if the
+											// user chooses
+		private final int defaultDelay;
+		private int previousInputs = defaultInputs;
+		private int previousBits = defaultBits;
+		private Orientation previousOrientation = defaultOrientation;
+		
+		protected Kind(String displayName, String saveName, int fixedInputs,
+				int defaultDelay) {
+			
+			this.displayName = displayName;
+			this.saveName = saveName;
+			this.fixedInputs = fixedInputs;
+			this.defaultDelay = defaultDelay;
+		} // end of constructor
+		
+	} // end of Kind class
+	
+	/**
+	 * The kind descriptor for this gate.
+	 * 
+	 * @return the (static, per-class) kind.
+	 */
+	protected abstract Kind kind();
+	
+	/**
+	 * Initialize this element in a GUI context: show the creation dialog
+	 * for this kind and remember the accepted settings for the next gate
+	 * of the same kind.
+	 * 
+	 * @param g The graphics object to use.
+	 * @param editWindow The editor window this circuit is displayed in.
+	 * @param x The x-coordinate of the last known mouse position.
+	 * @param y The y-coordinate of the last known mouse position.
+	 * 
+	 * @return false if cancelled, true otherwise.
+	 */
+	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
+		
+		Kind k = kind();
+		boolean ok = setup(g,editWindow,x,y,k.displayName);
+		if (ok) {
+			if (k.fixedInputs < 0) {
+				k.previousInputs = numInputs;
+			}
+			k.previousBits = bits;
+			k.previousOrientation = orientation;
+		}
+		return ok;
+	} // end of setup method
+	
+	/**
+	 * Save this element in a file, under its kind's save name.
+	 * 
+	 * @param output The output writer.
+	 */
+	public void save(PrintWriter output) {
+		
+		save(output,kind().saveName,false);
+	} // end of save method
+	
+	/**
+	 * Display info about this gate.
+	 * 
+	 * @param info The JLabel to display with.
+	 */
+	public void showInfo(JLabel info) {
+		
+		showInfo(info,kind().displayName);
+	} // end of showInfo method
+	
+	/**
 	 * Initialize this element in a GUI context.
 	 * 
 	 * @param g The graphics object to use.
@@ -314,7 +397,16 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return A copy of this gate.
 	 */
-	public abstract Element copy();
+	public Element copy() {
+		
+		try {
+			Gate it = getClass().getConstructor(Circuit.class).newInstance(circuit);
+			copy(it);
+			return it;
+		} catch (ReflectiveOperationException ex) {
+			throw new IllegalStateException("gate copy failed", ex);
+		}
+	} // end of copy method
 	
 	/**
 	 * Copy info in this element to another element.
@@ -397,16 +489,26 @@ public abstract class Gate extends LogicElement {
 	} // end of getRect method
 	
 	/**
-	 * Overridden.
+	 * Set characteristics to the values of the previously created gate of
+	 * this kind. Gates with a fixed input count keep their current count,
+	 * matching the historical per-gate behavior.
 	 */
-	public void setToPrevious() {}
+	public void setToPrevious() {
+		
+		Kind k = kind();
+		if (k.fixedInputs < 0) {
+			numInputs = k.previousInputs;
+		}
+		bits = k.previousBits;
+		orientation = k.previousOrientation;
+	} // end of setToPrevious method
 	
 	/**
-	 * Overridden.
+	 * Get default propagation delay for this gate kind.
 	 */
 	public int getDefaultDelay() {
 		
-		return 0;
+		return kind().defaultDelay;
 	} // end of getDefaultDelay method
 	
 	/**

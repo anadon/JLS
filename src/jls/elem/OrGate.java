@@ -15,13 +15,9 @@ import javax.swing.*;
  */
 public class OrGate extends Gate {
 
-	// default properties
-	private static int defaultDelay = 10;
-	
-	// info from previously created OR gate
-	private static int previousInputs = defaultInputs;
-	private static int previousBits = defaultBits;
-	private static Orientation previousOrientation = defaultOrientation;
+	// identity and shared previous-settings state (#22)
+	private static final Kind KIND =
+			new Kind("OR","OrGate",-1,10);
 	
 	/**
 	 * Create OR gate.
@@ -61,78 +57,12 @@ public class OrGate extends Gate {
 	} // end of constructor
 	
 	/**
-	 * Initialize this element in a GUI context.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The kind descriptor for this gate.
 	 */
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		boolean ok = super.setup(g,editWindow,x,y,"OR");
+	protected Kind kind() {
 		
-		// finish up initialization
-		if (ok) {
-			previousInputs = numInputs;
-			previousBits = bits;
-			previousOrientation = orientation;
-		}
-		return ok;
-		
-	} // end of init method
-
-	/**
-	 * Copy this element.
-	 * 
-	 * @return A copy of this OR gate.
-	 */
-	public Element copy() {
-		
-		OrGate it = new OrGate(circuit);
-		super.copy(it);
-		return it;
-	} // end of copy method
-	
-	/**
-	 * Save this element in a file.
-	 * 
-	 * @param output The output writer.
-	 */
-	public void save(PrintWriter output) {
-		
-		super.save(output,"OrGate",false);
-	} // end of save method
-	
-	/**
-	 * Display info about this OR gate.
-	 * 
-	 * @param info The JLabel to display with.
-	 */
-	public void showInfo(JLabel info) {
-		
-		super.showInfo(info,"OR");
-	} // end of showInfo method
-	
-	/**
-	 * Set characteristics to previous values.
-	 */
-	public void setToPrevious() {
-		
-		numInputs = previousInputs;
-		bits = previousBits;
-		orientation = previousOrientation;
-	} // end of setToPrevious method
-
-	/**
-	 * Get default propagation delay.
-	 */
-	public int getDefaultDelay() {
-		
-		return defaultDelay;
-	} // end of getDefaultDelay method
+		return KIND;
+	} // end of kind method
 
 //-------------------------------------------------------------------------------
 // Simulation

@@ -15,6 +15,18 @@ import java.util.*;
  */
 public class Extend extends Gate implements TriProp {
 	
+	// identity (#22); previous-settings unused: Extend has no repeat button
+	private static final Kind KIND =
+			new Kind("Extend","Extend",1,0);
+	
+	/**
+	 * The kind descriptor for this gate.
+	 */
+	protected Kind kind() {
+		
+		return KIND;
+	} // end of kind method
+	
 	// properties
 	private boolean loadTriState = false;
 
@@ -121,18 +133,6 @@ public class Extend extends Gate implements TriProp {
 			outputs.get(0).loadSetTriState();
 		}
 	} // end of init method
-	
-	/**
-	 * Copy this element.
-	 * 
-	 * @return A copy of this extend.
-	 */
-	public Element copy() {
-		
-		Extend it = new Extend(circuit);
-		super.copy(it);
-		return it;
-	} // end of copy method
 	
 	/**
 	 * Save this element in a file.

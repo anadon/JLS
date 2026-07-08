@@ -21,9 +21,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -3768,25 +3772,36 @@ public abstract class SimpleEditor extends JPanel {
 								circ = circ.getSubElement().getCircuit();
 							}
 
-							// create checkpoint file
-
+							// create checkpoint file: write to a temp file and
+							// atomically rename over the old checkpoint, so a
+							// crash mid-write cannot destroy the previous one
+							// (#19). The entry is named JLSCircuit so the
+							// normal format-sniffing loader can recover it.
 							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-							ZipOutputStream out = null;
+							File tempFile = new File(fileName + ".tmp");
+							boolean changed = circuit.hasChanged();
 							try {
-								out = new ZipOutputStream(new FileOutputStream(fileName));
-								out.putNextEntry(new ZipEntry("JLSCheckpoint"));
+								ZipOutputStream out = new ZipOutputStream(new FileOutputStream(tempFile));
+								out.putNextEntry(new ZipEntry("JLSCircuit"));
+								PrintWriter output = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+								circuit.save(output);
+								output.close();
+								try {
+									Files.move(tempFile.toPath(), new File(fileName).toPath(),
+											StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+								}
+								catch (AtomicMoveNotSupportedException ex) {
+									Files.move(tempFile.toPath(), new File(fileName).toPath(),
+											StandardCopyOption.REPLACE_EXISTING);
+								}
 							}
 							catch (IOException ex) {
-								return;
+								tempFile.delete();
 							}
-							PrintWriter output = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-
-							// save the circuit
-							boolean changed = circuit.hasChanged();
-							circuit.save(output);
-							output.close();
-							if (changed)
-								circuit.markChanged();
+							finally {
+								if (changed)
+									circuit.markChanged();
+							}
 						}
 
 					} // end of markChanged method

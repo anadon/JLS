@@ -1254,6 +1254,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		try (ZipFile target = new ZipFile(new File(filePath))) {
 			ZipEntry entry = target.getEntry("JLSCircuit");
 			if (entry == null)
+				entry = target.getEntry("JLSCheckpoint"); // legacy checkpoint files
+			if (entry == null)
 				return null;
 			byte[] contents = target.getInputStream(entry).readAllBytes();
 			return testScanner(new Scanner(new ByteArrayInputStream(contents), StandardCharsets.UTF_8));

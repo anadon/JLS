@@ -45,6 +45,24 @@ class ZipLoadingTest {
 	}
 
 	@Test
+	void legacyCheckpointEntryNameIsAccepted() throws Exception {
+		// Old checkpoint files (.jls~) were written with a JLSCheckpoint
+		// entry, which the loader (which only knew JLSCircuit) could never
+		// recover. The reader must accept both names.
+		String content = "CIRCUIT recovered\nENDCIRCUIT\n";
+		File file = tmp.resolve("crashme.jls~").toFile();
+		try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(file))) {
+			zip.putNextEntry(new ZipEntry("JLSCheckpoint"));
+			zip.write(content.getBytes());
+			zip.closeEntry();
+		}
+
+		Scanner scanner = FileFormatSupport.openAsZip(file);
+		assertNotNull(scanner, "legacy checkpoint zip must be readable");
+		assertEquals(content, FileFormatSupport.drain(scanner));
+	}
+
+	@Test
 	void zipWithoutCircuitEntryIsRejectedNotCrashed() throws Exception {
 		File file = tmp.resolve("nocircuit.jls").toFile();
 		try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(file))) {

@@ -178,93 +178,51 @@ public class Constant extends LogicElement implements ActionListener {
 		
 	} // end of draw method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("base")) {
-			base = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.BigIntAttribute("value") {
+			protected BigInteger get(Element el) { return ((Constant)el).value; }
+			protected void set(Element el, BigInteger v) { ((Constant)el).value = v; }
+		},
+		new Attribute.IntAttribute("base") {
+			protected int get(Element el) { return ((Constant)el).base; }
+			protected void set(Element el, int v) { ((Constant)el).base = v; }
+		},
+		new Attribute.StringAttribute("orient") {
+			protected String get(Element el) {
+				return ((Constant)el).orientation.toString();
+			}
+			protected void set(Element el, String v) {
+				// unknown strings leave the orientation unchanged,
+				// as the handwritten loader always did
+				for (JLSInfo.Orientation o : JLSInfo.Orientation.values()) {
+					if (o.toString().equals(v)) {
+						((Constant)el).orientation = o;
+					}
+				}
+			}
 		}
-	} // end of setValue method
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
 
 	/**
-	 * Set a long instance variable value (during a load).
-	 * This is here for compatibility with old versions of JLS that saved the value
-	 * of the constant as a long, not as a String (i.e., BigInteger).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
+	 * Base attributes plus this element's own, in save order (#23).
 	 */
-	public void setValue(String name, long value) {
-		
-		if (name.equals("value")) {
-			this.value = BigInteger.valueOf(value);
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
+	protected java.util.List<Attribute> savedAttributes() {
 
-	/**
-	 * Set a BigInteger instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, BigInteger value) {
-		
-		if (name.equals("value")) {
-			this.value = value;
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
-	/**
-	 * Set a String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			
-		} else {
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Copy this element.
 	 */
 	public Element copy() {
 		
 		Constant it = new Constant(circuit);
-		it.value = value.add(BigInteger.ZERO);
-		it.base = base;
-		it.orientation = orientation;
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -279,9 +237,6 @@ public class Constant extends LogicElement implements ActionListener {
 		
 		output.println("ELEMENT Constant");
 		super.save(output);
-		output.println(" Int value " + value.toString());
-		output.println(" int base " + base);
-		output.println(" String orient \"" + orientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
 	

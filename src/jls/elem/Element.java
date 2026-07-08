@@ -135,6 +135,88 @@ public class Element {
 		tracePosition = position;
 	} // end of setTracePosition method
 
+	// The attributes every element saves, in their historical save order
+	// (#23). One declaration drives save, copy, and load dispatch.
+	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("id") {
+			protected int get(Element el) { return el.id; }
+			protected void set(Element el, int value) { el.id = value; }
+			public void copy(Element from, Element to) {
+				// ids are assigned at save time, never copied
+			}
+		},
+		new Attribute.IntAttribute("x") {
+			protected int get(Element el) { return el.x; }
+			protected void set(Element el, int value) { el.x = value; }
+		},
+		new Attribute.IntAttribute("y") {
+			protected int get(Element el) { return el.y; }
+			protected void set(Element el, int value) { el.y = value; }
+		},
+		new Attribute.IntAttribute("width") {
+			protected int get(Element el) { return el.width; }
+			protected void set(Element el, int value) { el.width = value; }
+			protected boolean omitted(Element el) {
+				// recomputed by init() on load for some elements (#21)
+				return el.sizeIsRecomputedOnLoad();
+			}
+		},
+		new Attribute.IntAttribute("height") {
+			protected int get(Element el) { return el.height; }
+			protected void set(Element el, int value) { el.height = value; }
+			protected boolean omitted(Element el) {
+				return el.sizeIsRecomputedOnLoad();
+			}
+		},
+		new Attribute.IntAttribute("fixed") {
+			protected int get(Element el) { return el.uneditable ? 1 : 0; }
+			protected void set(Element el, int value) {
+				// any saved value means uneditable, as the loader always did
+				el.uneditable = true;
+			}
+			protected boolean omitted(Element el) { return !el.uneditable; }
+			public void copy(Element from, Element to) {
+				to.uneditable = from.uneditable;
+			}
+		},
+		new Attribute.IntAttribute("trpos") {
+			protected int get(Element el) { return el.tracePosition; }
+			protected void set(Element el, int value) { el.tracePosition = value; }
+			protected boolean omitted(Element el) { return el.tracePosition == -1; }
+		}
+	);
+
+	/**
+	 * The attributes this element saves, in save order (#23). Subclasses
+	 * that declare their own attributes return the base list plus their
+	 * own; unconverted subclasses keep their handwritten save/copy/
+	 * setValue methods and only inherit the base list.
+	 *
+	 * @return the attribute list.
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return BASE_ATTRIBUTES;
+	} // end of savedAttributes method
+
+	/**
+	 * Build a full attribute list for a subclass: the base attributes
+	 * followed by the subclass's own, preserving save order (#23).
+	 *
+	 * @param own The subclass's own attributes.
+	 *
+	 * @return an immutable combined list.
+	 */
+	protected static java.util.List<Attribute> concatAttributes(
+			java.util.List<Attribute> own) {
+
+		java.util.List<Attribute> all =
+				new java.util.ArrayList<Attribute>(BASE_ATTRIBUTES);
+		all.addAll(own);
+		return java.util.Collections.unmodifiableList(all);
+	} // end of concatAttributes method
+
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
@@ -143,20 +225,10 @@ public class Element {
 	 */
 	public void setValue(String name, int value) {
 
-		if (name.equals("id")) {
-			id = value;
-		} else if (name.equals("x")) {
-			x = value;
-		} else if (name.equals("y")) {
-			y = value;
-		} else if (name.equals("width")) {
-			width = value;
-		} else if (name.equals("height")) {
-			height = value;
-		} else if (name.equals("fixed")) {
-			uneditable = true;
-		} else if (name.equals("trpos")) {
-			tracePosition = value;
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setInt(this, name, value)) {
+				return;
+			}
 		}
 	} // end of setValue method
 
@@ -168,6 +240,11 @@ public class Element {
 	 */
 	public void setValue(String name, long value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setLong(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -178,6 +255,11 @@ public class Element {
 	 */
 	public void setValue(String name, BigInteger value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setBigInt(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -188,6 +270,11 @@ public class Element {
 	 */
 	public void setValue(String name, String value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setString(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -224,12 +311,9 @@ public class Element {
 	 */
 	public void copy(Element it) {
 
-		it.x = x;
-		it.y = y;
-		it.width = width;
-		it.height = height;
-		it.uneditable = uneditable;
-		it.tracePosition = tracePosition;
+		for (Attribute attr : savedAttributes()) {
+			attr.copy(this, it);
+		}
 	} // end of copy method
 
 	/**
@@ -285,16 +369,9 @@ public class Element {
 
 	/**
 	 * See if this element intersects another.
-	 * 
-<<<<<<< HEAD
-	 * TODO major point of optimization
-	 * 
-	 * @param other
-	 *            The other element.
-=======
+	 *
 	 * @param other The other element.
->>>>>>> 6fff4f8d5651621bfd72b14010a8a3fdd3ba837a
-	 * 
+	 *
 	 * @return true if this element intersects the other, false if not.
 	 */
 	public boolean intersects(Element other) {
@@ -341,6 +418,9 @@ public class Element {
 	public void setHighlight(boolean light) {
 
 		highlight = light;
+		if (circuit != null) {
+			circuit.noteHighlight(this, light);
+		}
 	} // end of setHightlight method
 
 	/**
@@ -360,18 +440,8 @@ public class Element {
 	 */
 	public void save(PrintWriter output) {
 
-		output.println(" int id " + id);
-		output.println(" int x " + x);
-		output.println(" int y " + y);
-		if (!sizeIsRecomputedOnLoad()) {
-			output.println(" int width " + width);
-			output.println(" int height " + height);
-		}
-		if (uneditable) {
-			output.println(" int fixed 1");
-		}
-		if (tracePosition != -1) {
-			output.println(" int trpos " + tracePosition);
+		for (Attribute attr : savedAttributes()) {
+			attr.save(this, output);
 		}
 	} // end of save method
 
@@ -463,6 +533,20 @@ public class Element {
 
 		return new Rectangle(x,y,width,height);
 	} // end of getRect method
+
+	/**
+	 * The bounds this element occupies in the spatial index (#3, #17).
+	 * Must contain every point for which contains() can be true and every
+	 * rectangle this element can intersect. The default is the bounding
+	 * rectangle; wires override it since their extent comes from their
+	 * ends, not from x/y/width/height.
+	 *
+	 * @return the index bounds.
+	 */
+	public Rectangle getIndexBounds() {
+
+		return getRect();
+	} // end of getIndexBounds method
 
 	/**
 	 * Set/reset touching flag(s) for this element.
@@ -615,11 +699,9 @@ public class Element {
 	 * Display dialog letting user change the propagation delay or access time.
 	 */
 	@SuppressWarnings("serial")
-	private class DelayChange extends JDialog implements ActionListener {
+	private class DelayChange extends ElementDialog {
 
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField delayField = new JTextField(10);
 		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
 
@@ -633,11 +715,10 @@ public class Element {
 		private DelayChange(int x, int y, boolean isMemory) {
 
 			// set up window title
-			super(JLSInfo.frame,"Change Timing",true);
+			super("Change Timing",null);
 
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
@@ -654,69 +735,30 @@ public class Element {
 			info.add(delayPad,BorderLayout.EAST);
 			window.add(info);
 
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
-			delayField.addActionListener(this);
-
-			// set up window close listener to cancel gate
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							dispose();
-						}
-					}
-			);
-
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			confirmOnEnter(delayField);
+			finishDialog(x,y);
 		} // end of constructor
 
 		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Validate and apply the new delay.
 		 */
-		public void actionPerformed(ActionEvent event) {
+		protected void validateAndAccept() {
 
-			if (event.getSource() == ok || event.getSource() == delayField) {
-				int temp = 0;
-				try {
-					temp = Integer.parseInt(delayField.getText());
-				}
-				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value not numeric, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (temp <= 0) {
-					JOptionPane.showMessageDialog(this,
-							"Propagation delay must be greater than 0", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				setDelay(temp);
-				dispose();
+			int temp = 0;
+			try {
+				temp = Integer.parseInt(delayField.getText());
 			}
-			else if (event.getSource() == cancel) {
-				dispose();
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again");
+				return;
 			}
-
-		} // end of actionPerformed method
+			if (temp <= 0) {
+				reject("Propagation delay must be greater than 0");
+				return;
+			}
+			setDelay(temp);
+			dispose();
+		} // end of validateAndAccept method
 
 	} // end of DelayChange class
 

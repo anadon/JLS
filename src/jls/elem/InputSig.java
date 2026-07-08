@@ -1,97 +1,45 @@
 package jls.elem;
 
-import java.awt.*;
-import java.awt.event.*;
-
-import javax.swing.*;
+import java.awt.Graphics;
 
 /**
- * Draw an input signal name, display menu when one is clicked on, and react
- * to menu choices.
- * 
+ * An input signal name in a truth table; the shared drawing and menu
+ * behavior lives in SigEntry (#27 S4).
+ *
  * @author David A. Poplawski
  */
-public final class InputSig extends Entry implements ActionListener {
-	
-	// properties
-	private String signal;
+public final class InputSig extends SigEntry {
 
-	// menu items
-	private JMenuItem remove = new JMenuItem("delete");
-	private JMenuItem rename = new JMenuItem("rename");
-	private JMenuItem moveLeft = new JMenuItem("move left");
-	private JMenuItem moveRight = new JMenuItem("move right");
-	
 	/**
 	 * Create a new entry.
-	 * 
+	 *
 	 * @param ttelem A reference to the TruthTable object this is a part of.
 	 * @param signal The name of this signal.
 	 * @param g A Graphics object to size the name with.
 	 */
 	public InputSig(TruthTable ttelem, String signal, Graphics g) {
-		
-		super(ttelem);
-		this.signal = signal;
-		FontMetrics fm = g.getFontMetrics();
-		minHeight = fm.getAscent()+fm.getDescent();
-		minWidth = fm.stringWidth(" " + signal + " ");
+
+		super(ttelem,signal,g);
 	} // end of constructor
 
-	/**
-	 * Draw this entry.
-	 * 
-	 * @param g The Graphics object to draw with.
-	 */
-	public void draw(Graphics g) {
-		
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int height = ascent + fm.getDescent();
-		int width = fm.stringWidth(signal);
-		g.setColor(Color.BLACK);
-		g.drawString(signal,x+(this.width-width)/2,y+(this.height-height)/2+ascent);
-	} // end of draw method
+	protected void doRemove() {
 
-	/**
-	 * Display menu when selected.
-	 * 
-	 * @param row Unused.
-	 * @param col Unused.
-	 */
-	public void selected(int row, int col) {
-		
-		JPopupMenu menu = new JPopupMenu();
-		menu.add(remove);
-		menu.add(rename);
-		menu.add(moveLeft);
-		menu.add(moveRight);
-		remove.addActionListener(this);
-		rename.addActionListener(this);
-		moveLeft.addActionListener(this);
-		moveRight.addActionListener(this);
-		menu.show(ttelem.getDisplay(),x,y);
-	} // end of selected method
+		ttelem.removeInput(signal);
+	} // end of doRemove method
 
-	/**
-	 * React to menu selections.
-	 * 
-	 * @param event The event object.
-	 */
-	public void actionPerformed(ActionEvent event) {
-		
-		if (event.getSource() == remove) {
-			ttelem.removeInput(signal);
-		}
-		else if (event.getSource() == rename) {
-			ttelem.renameInput(signal);
-		}
-		else if (event.getSource() == moveLeft) {
-			ttelem.moveInputLeft(signal);
-		}
-		else if (event.getSource() == moveRight) {
-			ttelem.moveInputRight(signal);
-		}
-	} // end of actionPerformed method
+	protected void doRename() {
+
+		ttelem.renameInput(signal);
+	} // end of doRename method
+
+	protected void doMoveLeft() {
+
+		ttelem.moveInputLeft(signal);
+	} // end of doMoveLeft method
+
+	protected void doMoveRight() {
+
+		ttelem.moveInputRight(signal);
+	} // end of doMoveRight method
 
 } // end of InputSig class

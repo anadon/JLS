@@ -20,6 +20,18 @@ import java.util.*;
  */
 public class DelayGate extends Gate {
 	
+	// identity (#22); previous-settings unused: DELAY has its own dialog
+	private static final Kind KIND =
+			new Kind("DELAY","DelayGate",1,0);
+	
+	/**
+	 * The kind descriptor for this gate.
+	 */
+	protected Kind kind() {
+		
+		return KIND;
+	} // end of kind method
+	
 	// default values
 	private static final int defaultPropDelay = 1;
 	
@@ -81,28 +93,6 @@ public class DelayGate extends Gate {
 		return true;
 		
 	} // end of setup method
-	
-	/**
-	 * Copy this element.
-	 * 
-	 * @return A copy of this DELAY gate.
-	 */
-	public Element copy() {
-		
-		DelayGate it = new DelayGate(circuit);
-		super.copy(it);
-		return it;
-	} // end of copy method
-	
-	/**
-	 * Save this element in a file.
-	 * 
-	 * @param output The output writer.
-	 */
-	public void save(PrintWriter output) {
-		
-		super.save(output,"DelayGate",false);
-	} // end of save method
 	
 	/**
 	 * Display info about this DELAY gate.

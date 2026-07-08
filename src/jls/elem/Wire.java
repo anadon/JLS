@@ -189,12 +189,34 @@ public class Wire extends Element {
 	} // end of getBits method
 	
 	/**
+	 * The bounds this wire occupies in the spatial index (#3, #17): the
+	 * bounding box of its two ends, grown by the snap spacing so the
+	 * half-spacing tolerance of contains() and the point-diameter
+	 * tolerance of touches() stay inside it. A wire's x/y/width/height
+	 * fields are unused, so the default getRect()-based bounds would be
+	 * wrong.
+	 *
+	 * @return the index bounds.
+	 */
+	public Rectangle getIndexBounds() {
+
+		int x1 = end1.getX();
+		int y1 = end1.getY();
+		int x2 = end2.getX();
+		int y2 = end2.getY();
+		Rectangle bounds = new Rectangle(Math.min(x1, x2), Math.min(y1, y2),
+				Math.abs(x2 - x1), Math.abs(y2 - y1));
+		bounds.grow(JLSInfo.spacing, JLSInfo.spacing);
+		return bounds;
+	} // end of getIndexBounds method
+
+	/**
 	 * See if the given point is close to the wire.
-	 * 
+	 *
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 * 
-	 * @return true if the point is within 1/2 spacing of the wire and not within 
+	 *
+	 * @return true if the point is within 1/2 spacing of the wire and not within
 	 * pointDiameter pixels of either end, false if not.
 	 */
 	public boolean contains(int x, int y) {

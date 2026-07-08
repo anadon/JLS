@@ -9,10 +9,10 @@
 <FindBugsFilter>
 
   <!-- Deliberate global state, pervasive in the original design:
-       JLSInfo.* globals, Circuit.lineNumber load cursor, Eula.ok, and the
-       per-gate-class "remember last dialog settings" statics
-       (previousBits/previousInputs/previousOrientation and similar).
-       Untangling this is an architectural refactor, not a point fix. -->
+       JLSInfo.* globals, Circuit.lineNumber load cursor, and Eula.ok.
+       (The per-gate-class previous-settings statics this once covered
+       were consolidated into Gate.Kind by #22.)
+       Untangling the rest is an architectural refactor, not a point fix. -->
   <Match>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
   </Match>

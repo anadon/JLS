@@ -122,8 +122,8 @@ public abstract class SimpleEditor extends JPanel {
 	private JPopupMenu importMenu = 
 			new JPopupMenu();				// to display importable circuits
 	private SimpleEditor me;
-	private Stack<Circuit> undos = new Stack<Circuit>();
-	private Stack<Circuit> redos = new Stack<Circuit>();
+	private Stack<CircuitSnapshot> undos = new Stack<CircuitSnapshot>();
+	private Stack<CircuitSnapshot> redos = new Stack<CircuitSnapshot>();
 	private int check = JLSInfo.checkPointFreq+1;				// number of changes, used for checkpointing
 	private Map<String,JMenuItem> menuMap = new HashMap<String,JMenuItem>();
 	private Map<String,Circuit> circMap = new HashMap<String,Circuit>();
@@ -442,6 +442,10 @@ public abstract class SimpleEditor extends JPanel {
 			private Set<Element>subs =
 					new HashSet<Element>();			// for removing elements during a connect
 			private String overlapMessage = "";
+			private Set<Element>touchedElements =
+					new HashSet<Element>();			// elements marked touching by overlap/connect
+			private Set<Put>touchedPuts =
+					new HashSet<Put>();				// puts marked touching by overlap/connect
 
 			/**
 			 * Create a new edit window.
@@ -2132,6 +2136,7 @@ public abstract class SimpleEditor extends JPanel {
 					for (Element el : selected) {
 						el.move(nx-x,ny-y);
 					}
+					circuit.reindexAfterMove(selected);
 					x = nx;
 					y = ny;
 
@@ -2158,22 +2163,35 @@ public abstract class SimpleEditor extends JPanel {
 					int height = Math.abs(ny-y);
 					selRect = new Rectangle(xc,yc,width,height);
 
-					// select elements completely inside bounding rectangle
-					for (Element el : circuit.getElements()) {
+					// select elements completely inside bounding rectangle,
+					// querying the spatial index instead of scanning the
+					// whole circuit (#17); attached wire ends inside the
+					// rectangle are left untouched, exactly as before
+					Set<Element> inside = new HashSet<Element>();
+					Set<Element> attachedInside = new HashSet<Element>();
+					for (Element el : circuit.elementsNear(selRect)) {
 						if (el.isInside(selRect)) {
-
-							// can't select an attached wire end
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+								attachedInside.add(el);
 								continue;
-							el.setHighlight(true);
-							selected.add(el);
+							}
+							inside.add(el);
 						}
-						else {
+					}
 
-							// and unselect those not inside
+					// unselect anything highlighted or selected that fell
+					// outside the rectangle
+					Set<Element> toClear = circuit.getHighlighted();
+					toClear.addAll(selected);
+					for (Element el : toClear) {
+						if (!inside.contains(el) && !attachedInside.contains(el)) {
 							el.setHighlight(false);
 							selected.remove(el);
 						}
+					}
+					for (Element el : inside) {
+						el.setHighlight(true);
+						selected.add(el);
 					}
 					repaint();
 					return;
@@ -2202,23 +2220,36 @@ public abstract class SimpleEditor extends JPanel {
 				info.setText(" ");
 				if (currentState == State.idle) {
 
-					// select elements when cursor moves over them
+					// select elements when cursor moves over them, asking
+					// the spatial index for the few elements near the
+					// cursor instead of scanning the whole circuit (#17);
+					// attached wire ends under the cursor are left
+					// untouched, exactly as before
 					selected.clear();
-					for (Element el : circuit.getElements()) {
+					Set<Element> under = new HashSet<Element>();
+					Set<Element> attachedUnder = new HashSet<Element>();
+					for (Element el : circuit.elementsAt(nx,ny)) {
 						if (el.contains(nx,ny)) {
-
-							// can't highlight an attached wire end
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+								attachedUnder.add(el);
 								continue;
-
-							// highlight and display info
-							selected.add(el);
-							el.setHighlight(true);
-							el.showInfo(info);
+							}
+							under.add(el);
 						}
-						else {
+					}
+
+					// unhighlight whatever the cursor left
+					for (Element el : circuit.getHighlighted()) {
+						if (!under.contains(el) && !attachedUnder.contains(el)) {
 							el.setHighlight(false);
 						}
+					}
+
+					// highlight and display info
+					for (Element el : under) {
+						selected.add(el);
+						el.setHighlight(true);
+						el.showInfo(info);
 					}
 					repaint();
 					return;
@@ -2247,6 +2278,7 @@ public abstract class SimpleEditor extends JPanel {
 					for (Element el : selected) {
 						el.move(nx-x,ny-y);
 					}
+					circuit.reindexAfterMove(selected);
 					x = nx;
 					y = ny;
 
@@ -2297,10 +2329,10 @@ public abstract class SimpleEditor extends JPanel {
 			public void mouseExited(MouseEvent event) {
 
 				if (currentState == State.idle) {
-					for (Element el : circuit.getElements()) {
+					for (Element el : circuit.getHighlighted()) {
 						el.setHighlight(false);
-						repaint();
 					}
+					repaint();
 				}
 			} // end of mouseExited method
 
@@ -2311,6 +2343,10 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			private void setState(State newState) {
 
+				// gesture transitions are where uncovered geometry changes
+				// (snap, aborted move, rotate) land; one lazy index rebuild
+				// per transition keeps the spatial index honest (#17)
+				circuit.invalidateIndex();
 				currentState = newState;
 				switch (currentState) {
 				case idle:
@@ -2835,46 +2871,52 @@ public abstract class SimpleEditor extends JPanel {
 				/**
 				 * See if the selected elements overlap non-selected elements.
 				 * Highlights possible connections when there is no overlap.
-				 * 
-				 * TODO major point of optimization
-				 * 
+				 *
+				 * Candidates come from the circuit's spatial index instead
+				 * of a scan of every element, so per-drag-event cost follows
+				 * the selection size, not the circuit size (#3, #17). The
+				 * accept/reject predicates themselves are unchanged.
+				 *
 				 * @return true if there is overlap, false if not.
 				 */
 				private boolean overlap() {
 
 					overlapMessage = "";
 
-					// check every element in the selected set
-					//TODO radix sort when done, then check for collisions using bin search
-					/*ArrayDeque<Element> selE = new ArrayDeque<Element>();
-			ArrayDeque<Element> other = new ArrayDeque<Element>();
-
-			for(Element el : circuit.getElements()){
-				if(selected.contains(el))
-					selE.add(el);
-				else
-					other.add(el);
-			}
-
-			for(Element test1 : selE){
-				for(Element test2 : other){
-					if(!test1.intersects(test2)) continue;
-					if(!(test1 instanceof Wire || test1 instanceof WireEnd) &&
-						!(test2 instanceof Wire || test2 instanceof WireEnd)){
-						return true;
-					}
-
-					//TODO fringe cases
-
-				}
-			}*/
-
-
 						// check every element in the selected set
 						for (Element sel : selected) {
 
-							// check against every element in the circuit
-							for (Element el : circuit.getElements()) {
+							// wires hanging off a moved wire end, or off a
+							// wire end attached to one of sel's puts, must
+							// not land on other wire ends anywhere along
+							// their span; these checks depend only on sel
+							if (sel instanceof WireEnd) {
+								WireEnd end = (WireEnd)sel;
+								for (Wire wire : end.getWires()) {
+									if (wireLandsOnWireEnd(sel,wire)) {
+										overlapMessage = "overlap";
+										untouchAll();
+										return true;
+									}
+								}
+							}
+							for (Put p : sel.getAllPuts()) {
+								if (p.isAttached()) {
+									Wire wire = p.getWireEnd().getOnlyWire();
+									if (wireLandsOnWireEnd(sel,wire)) {
+										overlapMessage = "overlap";
+										untouchAll();
+										return true;
+									}
+								}
+							}
+
+							// check against every element near the selection
+							// (grown so edge-touching put alignments are
+							// included)
+							Rectangle near = sel.getIndexBounds();
+							near.grow(JLSInfo.spacing,JLSInfo.spacing);
+							for (Element el : circuit.elementsNear(near)) {
 
 								// ignore elements in the selected set
 								if (selected.contains(el))
@@ -2899,8 +2941,8 @@ public abstract class SimpleEditor extends JPanel {
 												untouchAll();
 												return true;
 											}
-											end.setTouching(true);
-											otherEnd.setTouching(true);
+											touch(end);
+											touch(otherEnd);
 											ok = true;
 										}
 										else if (el instanceof Wire) {
@@ -2911,8 +2953,8 @@ public abstract class SimpleEditor extends JPanel {
 												untouchAll();
 												return true;
 											}
-											end.setTouching(true);
-											wire.setTouching(true);
+											touch(end);
+											touch(wire);
 											ok = true;
 										}
 										else {
@@ -2950,8 +2992,8 @@ public abstract class SimpleEditor extends JPanel {
 											}
 
 											// no overlap if we get this far
-											end.setTouching(true);
-											put.setTouching(true);
+											touch(end);
+											touch(put);
 											ok = true;
 										}
 									}
@@ -2992,8 +3034,8 @@ public abstract class SimpleEditor extends JPanel {
 												return true;
 											}
 
-											end.setTouching(true);
-											put.setTouching(true);
+											touch(end);
+											touch(put);
 											ok = true;
 										}
 									}
@@ -3004,49 +3046,8 @@ public abstract class SimpleEditor extends JPanel {
 									}
 								}
 
-								// no intersection, but wires may be overlapping wire ends
-								// or puts might line up
+								// no intersection, but puts might line up
 								else {
-
-									// see if wires connected to a wire end dragged onto wire ends
-									if (sel instanceof WireEnd) {
-										WireEnd end = (WireEnd)sel;
-										for (Wire wire : end.getWires()) {
-											for (Element elm : circuit.getElements()) {
-												if (sel == elm)
-													continue;
-												if (!(elm instanceof WireEnd)) {
-													continue;
-												}
-												WireEnd otherEnd = (WireEnd)elm;
-												if (wire.touches(otherEnd)) {
-													overlapMessage = "overlap";
-													untouchAll();
-													return true;
-												}
-											}
-										}
-									}
-
-									// see if wires connected to puts dragged onto wire ends
-									for (Put p : sel.getAllPuts()) {
-										if (p.isAttached()) {
-											Wire wire = p.getWireEnd().getOnlyWire();
-											for (Element elm : circuit.getElements()) {
-												if (sel == elm)
-													continue;
-												if (!(elm instanceof WireEnd)) {
-													continue;
-												}
-												WireEnd otherEnd = (WireEnd)elm;
-												if (wire.touches(otherEnd)) {
-													overlapMessage = "overlap";
-													untouchAll();
-													return true;
-												}
-											}
-										}
-									}
 
 									// check all put combinations
 									for (Put p1 : sel.getAllPuts()) {
@@ -3071,8 +3072,8 @@ public abstract class SimpleEditor extends JPanel {
 												return true;
 											}
 											else {
-												p1.setTouching(true);
-												p2.setTouching(true);
+												touch(p1);
+												touch(p2);
 											}
 										}
 									}
@@ -3099,8 +3100,12 @@ public abstract class SimpleEditor extends JPanel {
 						// check every element in the selected set
 						for (Element sel : selected) {
 
-							// check against every element in the circuit
-							for (Element el : circuit.getElements()) {
+							// check against every element near the selection
+							// (grown so edge-touching put alignments are
+							// included), as in overlap() (#3, #17)
+							Rectangle near = sel.getIndexBounds();
+							near.grow(JLSInfo.spacing,JLSInfo.spacing);
+							for (Element el : circuit.elementsNear(near)) {
 
 								// ignore elements in the selected set
 								if (selected.contains(el))
@@ -3227,6 +3232,11 @@ public abstract class SimpleEditor extends JPanel {
 									}
 								}
 							}
+
+							// connections made for this element may have
+							// moved wires and merged ends; rebuild before
+							// the next element queries the index
+							circuit.invalidateIndex();
 						}
 
 						// add any new wires created by connecting puts to puts
@@ -3242,14 +3252,73 @@ public abstract class SimpleEditor extends JPanel {
 					} // end of connect method
 
 					/**
-					 * Untouch all wire ends and puts.
+					 * Untouch all wire ends and puts. Only elements and puts
+					 * recorded by touch() can be touching, so this is
+					 * O(touched) instead of a full-circuit scan (#17).
 					 */
 					private void untouchAll() {
 
-						for (Element el : circuit.getElements()) {
+						for (Element el : touchedElements) {
 							el.setTouching(false);
 						}
+						touchedElements.clear();
+						for (Put put : touchedPuts) {
+							put.setTouching(false);
+						}
+						touchedPuts.clear();
 					} // end of untouchAll method
+
+					/**
+					 * Mark an element as touching and remember it so
+					 * untouchAll can clear exactly what was set.
+					 *
+					 * @param el The element now touching.
+					 */
+					private void touch(Element el) {
+
+						el.setTouching(true);
+						touchedElements.add(el);
+					} // end of touch method
+
+					/**
+					 * Mark a put as touching and remember it so untouchAll
+					 * can clear exactly what was set.
+					 *
+					 * @param put The put now touching.
+					 */
+					private void touch(Put put) {
+
+						put.setTouching(true);
+						touchedPuts.add(put);
+					} // end of touch method
+
+					/**
+					 * See if a wire attached to a selected element has been
+					 * dragged onto some wire end along its span. Queries the
+					 * spatial index around the wire's own bounds (#3, #17).
+					 *
+					 * @param sel The selected element the wire hangs off.
+					 * @param wire The wire to check.
+					 *
+					 * @return true if the wire lands on a wire end.
+					 */
+					private boolean wireLandsOnWireEnd(Element sel, Wire wire) {
+
+						Rectangle span = wire.getIndexBounds();
+						span.grow(JLSInfo.pointDiameter,JLSInfo.pointDiameter);
+						for (Element elm : circuit.elementsNear(span)) {
+							if (sel == elm)
+								continue;
+							if (!(elm instanceof WireEnd)) {
+								continue;
+							}
+							WireEnd otherEnd = (WireEnd)elm;
+							if (wire.touches(otherEnd)) {
+								return true;
+							}
+						}
+						return false;
+					} // end of wireLandsOnWireEnd method
 
 					/**
 					 * Copy all selected elements to the clipboard.
@@ -3816,15 +3885,18 @@ public abstract class SimpleEditor extends JPanel {
 							// Serialize in memory here (cheap relative to disk
 							// I/O), then hand the text to the background checkpoint
 							// writer so the write never stalls the event thread (#19).
+							// checkpoint the top-level circuit, matching the file
+							// it is written to: saving a subcircuit under the
+							// top-level name would leave an unrecoverable checkpoint
 							String fileName = circ.getDirectory() + "/" + circ.getName() + ".jls~";
-							boolean changed = circuit.hasChanged();
+							boolean changed = circ.hasChanged();
 							StringWriter text = new StringWriter();
 							try (PrintWriter output = new PrintWriter(text)) {
-								circuit.save(output);
+								circ.save(output);
 							}
 							finally {
 								if (changed)
-									circuit.markChanged();
+									circ.markChanged();
 							}
 							writeCheckpointInBackground(fileName, text.toString());
 						}
@@ -3836,6 +3908,14 @@ public abstract class SimpleEditor extends JPanel {
 					 */
 					public void pushCopy() {
 
+						// snapshot the circuit in the save format (#18);
+						// an aborted or no-op change serializes identically
+						// to the top of the stack and is not pushed again
+						CircuitSnapshot snap = CircuitSnapshot.capture(circuit);
+						if (!undos.isEmpty() && undos.peek().sameAs(snap)) {
+							return;
+						}
+
 						// see if undo stack is full
 						if (undos.size() > JLSInfo.undoStackDepth) {
 
@@ -3843,24 +3923,8 @@ public abstract class SimpleEditor extends JPanel {
 							undos.remove(0);
 						}
 
-						// make a set of all elements except attached wire ends
-						Set<Element> elements = new HashSet<Element>();
-						for (Element el : circuit.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
-								if (end.isAttached())
-									continue;
-							}
-							elements.add(el);
-						}
-
-						// copy elements to new circuit
-						Circuit newCopy = new Circuit(circuit.getName());
-						Util.copy(elements,newCopy);
-						newCopy.setDirectory(circuit.getDirectory());
-
 						// save for undo
-						undos.push(newCopy);
+						undos.push(snap);
 					} // end of pushCopy method
 
 					/**
@@ -3869,24 +3933,19 @@ public abstract class SimpleEditor extends JPanel {
 					public void undo() {
 
 						// no undo left if stack only has a copy of the original circuit
-						if (undos.size() == 1) {
+						if (undos.size() <= 1) {
 							return;
 						}
 
-						// pop copy of current circuit and put on redo stack
-						Circuit temp = undos.pop();
-						redos.push(temp);
-
-						// if nothing left, quit
-						if (undos.isEmpty()) {
+						// restore the previous snapshot first; only a
+						// successful restore may touch the stacks
+						CircuitSnapshot current = undos.get(undos.size() - 1);
+						CircuitSnapshot previous = undos.get(undos.size() - 2);
+						if (!finishDo(previous)) {
 							return;
 						}
-
-						// make a copy of the pushed circuit
-						Editor ed = circuit.getEditor();
-						temp = undos.peek();
-						finishDo(temp);
-						circuit.setEditor(ed);
+						undos.pop();
+						redos.push(current);
 					} // end of undo method
 
 					/**
@@ -3899,48 +3958,35 @@ public abstract class SimpleEditor extends JPanel {
 							return;
 						}
 
-						// pop circuit from redo stack and push on undo stack
-						Circuit temp = redos.pop();
-						undos.push(temp);
-
-						// make a copy of the circuit
-						Editor ed = circuit.getEditor();
-						finishDo(temp);
-						circuit.setEditor(ed);
+						// restore the snapshot first; only a successful
+						// restore may touch the stacks
+						CircuitSnapshot next = redos.peek();
+						if (!finishDo(next)) {
+							return;
+						}
+						redos.pop();
+						undos.push(next);
 					} // end of redo method
 
 					/**
-					 * Finish up undo or redo.
-					 * Used by undo and redo to make a copy of the circuit.
-					 * 
-					 * @param temp The circuit being copied.
+					 * Finish up undo or redo: restore a snapshot and install
+					 * it as the edited circuit (#18).
+					 *
+					 * @param snap The snapshot to restore.
+					 *
+					 * @return true if the snapshot was restored and
+					 *         installed, false if it failed to load (the
+					 *         current circuit is untouched).
 					 */
-					private void finishDo(Circuit temp) {
+					private boolean finishDo(CircuitSnapshot snap) {
 
-						// start a new copy of the circuit
-						Circuit newCopy = new Circuit(circuit.getName());
-
-						// create set of all elements except attached wire ends
-						Set<Element> elements = new HashSet<Element>();
-						for (Element el : temp.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
-								if (end.isAttached())
-									continue;
-							}
-							elements.add(el);
+						// rebuild the circuit through the ordinary load path
+						Circuit newCopy = snap.restore(circuit.getName(), graphics);
+						if (newCopy == null) {
+							return false;
 						}
-
-						// copy them to the new circuit
-						Util.copy(elements,newCopy);
-
-						// partition wires and wire ends into wire nets
-						Util.partition(newCopy);
-
-						// set their circuit to the new circuit
-						for (Element el : newCopy.getElements()) {
-							el.setCircuit(newCopy);
-						}
+						Editor ed = circuit.getEditor();
+						newCopy.setDirectory(circuit.getDirectory());
 
 						// link into subcircuit if it is imported
 						SubCircuit sub = circuit.getSubElement();
@@ -3952,7 +3998,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// make it be the current circuit
 						circuit = newCopy;
-						circuit.setDirectory(temp.getDirectory());
+						circuit.setEditor(ed);
 						circuit.markChanged();
 
 						// update jump start list
@@ -3984,6 +4030,7 @@ public abstract class SimpleEditor extends JPanel {
 								}
 							}
 						}
+						return true;
 					} // end of finishDo method
 
 					/**

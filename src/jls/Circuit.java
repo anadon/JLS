@@ -59,6 +59,14 @@ public class Circuit implements Printable {
 	private SortedMap<String, JumpStart> starts = new TreeMap<String, JumpStart>(); // jumpstarts
 	private boolean changed = false;
 
+	private final SpatialIndex index = new SpatialIndex(); // grid index over
+															// element bounds
+															// (#3, #17)
+	private final Set<Element> highlighted = new HashSet<Element>(); // elements
+																		// currently
+																		// drawn
+																		// highlighted
+
 	private Set<Element> loadedElements = new HashSet<Element>(); // for loading
 																	// from file
 	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for
@@ -137,6 +145,7 @@ public class Circuit implements Printable {
 	public void markChanged() {
 
 		changed = true;
+		index.invalidate();
 		if (subElement != null) {
 			subElement.getCircuit().markChanged();
 		}
@@ -153,6 +162,8 @@ public class Circuit implements Printable {
 		elements.clear();
 		namesUsed.clear();
 		starts.clear();
+		highlighted.clear();
+		index.invalidate();
 	} // end of clear method
 
 	/**
@@ -165,6 +176,7 @@ public class Circuit implements Printable {
 
 		elements.add(el);
 		el.setCircuit(this);
+		index.invalidate();
 	} // end of addElement method
 
 	/**
@@ -177,6 +189,8 @@ public class Circuit implements Printable {
 	public void remove(Element el) {
 
 		elements.remove(el);
+		highlighted.remove(el);
+		index.invalidate();
 	} // end of remove method
 
 	/**
@@ -188,6 +202,121 @@ public class Circuit implements Printable {
 
 		return Collections.unmodifiableSet(elements);
 	} // end of getElements method
+
+	/**
+	 * Mark the spatial index stale after a geometry change the incremental
+	 * paths don't cover (rotate, flip, size change, aborted move). The next
+	 * spatial query rebuilds it in one pass.
+	 */
+	public void invalidateIndex() {
+
+		index.invalidate();
+	} // end of invalidateIndex method
+
+	/**
+	 * Keep the spatial index current for elements just moved by a drag,
+	 * including wires whose bounds follow a moved wire end. No-op when a
+	 * rebuild is already pending. O(moved), which is what makes drag events
+	 * independent of circuit size (#17).
+	 *
+	 * @param moved The elements the editor just moved.
+	 */
+	public void reindexAfterMove(Set<Element> moved) {
+
+		if (index.isDirty()) {
+			return;
+		}
+		for (Element el : moved) {
+			reindexMoved(el);
+
+			// moving a logic element drags its attached wire ends along
+			// (LogicElement.move), so their bounds changed too
+			for (jls.elem.Put put : el.getAllPuts()) {
+				WireEnd end = put.getWireEnd();
+				if (end != null) {
+					reindexMoved(end);
+				}
+			}
+		}
+	} // end of reindexAfterMove method
+
+	/**
+	 * Refresh one moved element in the index, along with the wires whose
+	 * bounds follow it if it is a wire end.
+	 */
+	private void reindexMoved(Element el) {
+
+		if (elements.contains(el)) {
+			index.update(el);
+		}
+		if (el instanceof WireEnd) {
+			for (Wire wire : ((WireEnd) el).getWires()) {
+				if (elements.contains(wire)) {
+					index.update(wire);
+				}
+			}
+		}
+	} // end of reindexMoved method
+
+	/**
+	 * All elements whose bounds may intersect or touch the given rectangle
+	 * (a superset: callers apply their exact predicates). Replaces
+	 * full-circuit scans in per-mouse-event paths (#3, #17).
+	 *
+	 * @param rect The query rectangle.
+	 *
+	 * @return the candidate elements.
+	 */
+	public Set<Element> elementsNear(Rectangle rect) {
+
+		if (index.isDirty()) {
+			index.rebuild(elements);
+		}
+		return index.query(rect);
+	} // end of elementsNear method
+
+	/**
+	 * All elements whose bounds come within the snap spacing of a point —
+	 * a superset of every element whose contains(x,y) can be true,
+	 * including wires' half-spacing tolerance around their segment.
+	 *
+	 * @param x The x-coordinate of the point.
+	 * @param y The y-coordinate of the point.
+	 *
+	 * @return the candidate elements.
+	 */
+	public Set<Element> elementsAt(int x, int y) {
+
+		int pad = JLSInfo.spacing;
+		return elementsNear(new Rectangle(x - pad, y - pad, 2 * pad, 2 * pad));
+	} // end of elementsAt method
+
+	/**
+	 * Track highlight state so "unhighlight everything" is O(highlighted),
+	 * not O(circuit). Called by Element.setHighlight.
+	 *
+	 * @param el The element whose highlight changed.
+	 * @param light The new highlight state.
+	 */
+	public void noteHighlight(Element el, boolean light) {
+
+		if (light) {
+			highlighted.add(el);
+		} else {
+			highlighted.remove(el);
+		}
+	} // end of noteHighlight method
+
+	/**
+	 * A snapshot of the currently highlighted elements (safe to unhighlight
+	 * while iterating).
+	 *
+	 * @return the highlighted elements at this moment.
+	 */
+	public Set<Element> getHighlighted() {
+
+		return new HashSet<Element>(highlighted);
+	} // end of getHighlighted method
 
 	/**
 	 * Load circuit from file.
@@ -655,30 +784,50 @@ public class Circuit implements Printable {
 			ed.setCircuitSize(rect.getSize());
 		}
 
-		// draw all wires not in the second set first
+		// partition into draw layers in one pass instead of four full
+		// scans (#27 S3): wires under non-wires, the second (selected)
+		// set on top of both. Elements far outside the clip cannot be
+		// visible and are skipped, so a scrolled view pays for what it
+		// shows, not for the whole circuit (#17).
+		Rectangle clip = g.getClipBounds();
+		java.util.List<Element> wires = new java.util.ArrayList<Element>();
+		java.util.List<Element> parts = new java.util.ArrayList<Element>();
+		java.util.List<Element> secondWires = new java.util.ArrayList<Element>();
+		java.util.List<Element> secondParts = new java.util.ArrayList<Element>();
 		for (Element el : elements) {
-			if (el instanceof Wire && !second.contains(el))
-				el.draw(g);
+			if (clip != null && !mayBeVisible(el, clip)) {
+				continue;
+			}
+			if (el instanceof Wire) {
+				(second.contains(el) ? secondWires : wires).add(el);
+			} else {
+				(second.contains(el) ? secondParts : parts).add(el);
+			}
 		}
-
-		// draw all non-wires not in the second set next
-		for (Element el : elements) {
-			if (!(el instanceof Wire) && !second.contains(el))
-				el.draw(g);
+		for (Element el : wires) {
+			el.draw(g);
 		}
-
-		// draw all wires in the second set next
-		for (Element el : elements) {
-			if (el instanceof Wire && second.contains(el))
-				el.draw(g);
+		for (Element el : parts) {
+			el.draw(g);
 		}
-
-		// draw all non-wires in the second set next
-		for (Element el : elements) {
-			if (!(el instanceof Wire) && second.contains(el))
-				el.draw(g);
+		for (Element el : secondWires) {
+			el.draw(g);
+		}
+		for (Element el : secondParts) {
+			el.draw(g);
 		}
 	} // end of draw method
+
+	/**
+	 * Whether an element could draw inside the clip. The margin generously
+	 * covers labels drawn near (but outside) an element's bounds.
+	 */
+	private static boolean mayBeVisible(Element el, Rectangle clip) {
+
+		Rectangle b = el.getIndexBounds();
+		b.grow(8 * JLSInfo.spacing, 8 * JLSInfo.spacing);
+		return b.intersects(clip);
+	} // end of mayBeVisible method
 
 	/**
 	 * Print the circuit.

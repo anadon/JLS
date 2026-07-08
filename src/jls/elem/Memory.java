@@ -306,6 +306,8 @@ public class Memory extends LogicElement {
 			fileName = value;
 		} else if (name.equals("init")) {
 			initialValue = value;
+		} else if (name.equals("initrle")) {
+			initialValue = decodeInitRLE(value);
 		} else {
 			super.setValue(name,value);
 		}
@@ -327,12 +329,157 @@ public class Memory extends LogicElement {
 		output.println(" int time " + accessTime);
 		output.println(" int watch " + (watched ? 1 : 0));
 		output.println(" String file \"" + fileName + "\"");
-		String str = initialValue.replace("\\","\\\\");
-		str = str.replace("\"","\\\"");
-		str = str.replace("\n","\\n");
-		output.println(" String init \"" + str + "\"");
+
+		// large memory images are usually plain "addr value" dumps with
+		// long runs of identical words; save those run-length encoded
+		// (#21). Text with comments or hand formatting keeps the raw
+		// encoding so it round-trips exactly. The loader accepts both.
+		String rle = encodeInitRLE(initialValue);
+		if (rle != null && rle.length() < initialValue.length()) {
+			output.println(" String initrle \"" + rle + "\"");
+		} else {
+			String str = initialValue.replace("\\","\\\\");
+			str = str.replace("\"","\\\"");
+			str = str.replace("\n","\\n");
+			output.println(" String init \"" + str + "\"");
+		}
 		output.println("END");
 	} // end of save method
+
+	/**
+	 * Encode initial-memory text as run-length-encoded tokens, or return
+	 * null when the text is not a canonical dump (comments, extra tokens,
+	 * unusual formatting, duplicate addresses) and must be saved raw.
+	 *
+	 * Canonical dump: one "addr value" pair per line, lowercase hex, no
+	 * leading zeros, ascending addresses. Encoding: space-separated
+	 * "addr:value" tokens, with ":count" appended for a run of count
+	 * consecutive addresses holding the same value.
+	 *
+	 * @param text The initial-memory text.
+	 *
+	 * @return the encoded form, or null to use the raw encoding.
+	 */
+	static String encodeInitRLE(String text) {
+
+		if (text.isEmpty()) {
+			return null;
+		}
+
+		// parse strictly: exactly "addr value" per line
+		java.util.List<Integer> addrs = new java.util.ArrayList<Integer>();
+		java.util.List<BigInteger> values = new java.util.ArrayList<BigInteger>();
+		for (String line : text.split("\n", -1)) {
+			if (line.isEmpty()) {
+				continue;
+			}
+			String[] tokens = line.split(" ");
+			if (tokens.length != 2) {
+				return null;
+			}
+			int addr;
+			BigInteger value;
+			try {
+				addr = Integer.parseInt(tokens[0], 16);
+				value = new BigInteger(tokens[1], 16);
+			} catch (NumberFormatException ex) {
+				return null;
+			}
+			if (addr < 0) {
+				return null;
+			}
+			addrs.add(addr);
+			values.add(value);
+		}
+		if (addrs.isEmpty()) {
+			return null;
+		}
+
+		// must reproduce the text exactly (modulo a missing final newline)
+		StringBuilder canonical = new StringBuilder();
+		for (int i = 0; i < addrs.size(); i += 1) {
+			canonical.append(Integer.toHexString(addrs.get(i))).append(' ')
+					.append(values.get(i).toString(16)).append('\n');
+		}
+		String canon = canonical.toString();
+		if (!text.equals(canon) && !canon.equals(text + "\n")) {
+			return null;
+		}
+
+		// ascending addresses, no duplicates (otherwise decode would
+		// reorder relative to the original last-value-wins semantics)
+		for (int i = 1; i < addrs.size(); i += 1) {
+			if (addrs.get(i) <= addrs.get(i - 1)) {
+				return null;
+			}
+		}
+
+		// run-length encode consecutive addresses with identical values
+		StringBuilder out = new StringBuilder();
+		int i = 0;
+		while (i < addrs.size()) {
+			int run = 1;
+			while (i + run < addrs.size()
+					&& addrs.get(i + run) == addrs.get(i) + run
+					&& values.get(i + run).equals(values.get(i))) {
+				run += 1;
+			}
+			if (out.length() > 0) {
+				out.append(' ');
+			}
+			out.append(Integer.toHexString(addrs.get(i))).append(':')
+					.append(values.get(i).toString(16));
+			if (run > 1) {
+				out.append(':').append(Integer.toHexString(run));
+			}
+			i += run;
+		}
+		return out.toString();
+	} // end of encodeInitRLE method
+
+	/**
+	 * Decode a run-length-encoded initial-memory attribute back to the
+	 * canonical "addr value" text the dialog and simulator use.
+	 *
+	 * @param rle The encoded form.
+	 *
+	 * @return the canonical text.
+	 *
+	 * @throws IllegalArgumentException if the encoding is malformed (the
+	 *             loader reports a load error).
+	 */
+	static String decodeInitRLE(String rle) {
+
+		StringBuilder text = new StringBuilder();
+		for (String token : rle.trim().split(" ")) {
+			if (token.isEmpty()) {
+				continue;
+			}
+			String[] parts = token.split(":");
+			if (parts.length != 2 && parts.length != 3) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			int addr;
+			BigInteger value;
+			int run;
+			try {
+				addr = Integer.parseInt(parts[0], 16);
+				value = new BigInteger(parts[1], 16);
+				run = parts.length == 3 ? Integer.parseInt(parts[2], 16) : 1;
+			} catch (NumberFormatException ex) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			if (addr < 0 || run < 1) {
+				throw new IllegalArgumentException("bad initrle token: " + token);
+			}
+			String valueHex = value.toString(16);
+			for (int i = 0; i < run; i += 1) {
+				text.append(Integer.toHexString(addr + i)).append(' ')
+						.append(valueHex).append('\n');
+			}
+		}
+		return text.toString();
+	} // end of decodeInitRLE method
 
 	/**
 	 * Copy this element.
@@ -485,11 +632,9 @@ public class Memory extends LogicElement {
 	/**
 	 * Dialog box to create/modify register characteristics.
 	 */
-	private class MemoryEdit extends JDialog implements ActionListener {
+	private class MemoryEdit extends ElementDialog implements ActionListener {
 		
 		// properties
-		private JButton ok = new JButton("OK");
-		private JButton cancel = new JButton("Cancel");
 		private JTextField nameField = new JTextField(name);
 		private JTextField bitsField = new JTextField(bits+"",10);
 		private JTextField capacityField = new JTextField(defaultCapacity+"",10);
@@ -512,7 +657,7 @@ public class Memory extends LogicElement {
 		private MemoryEdit(int x, int y, boolean create) {
 			
 			// set up window title
-			super(JLSInfo.frame,create ? "Create Memory" : "Change Memory",true);
+			super(create ? "Create Memory" : "Change Memory","memory");
 			
 			// save create
 			this.create = create;
@@ -522,7 +667,6 @@ public class Memory extends LogicElement {
 			
 			// set up window
 			Container window = getContentPane();
-			window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 			
 			// set up types
 			if (create) {
@@ -591,45 +735,14 @@ public class Memory extends LogicElement {
 			fromFile.setToolTipText("open dialog to set file name");
 			window.add(inits);
 			
-			// set up ok and cancel buttons
-			window.add(new JLabel(" "));
-			JPanel okCancel = new JPanel(new GridLayout(1,2));
-			ok.setBackground(Color.green);
-			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "memory");
-			okCancel.add(help);
-			window.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
 			// set up listeners
-			ok.addActionListener(this);
-			nameField.addActionListener(this);
-			bitsField.addActionListener(this);
-			capacityField.addActionListener(this);
-			cancel.addActionListener(this);
-			ram.addActionListener(this);
-			rom.addActionListener(this);
+			confirmOnEnter(nameField);
+			confirmOnEnter(bitsField);
+			confirmOnEnter(capacityField);
 			fromFile.addActionListener(this);
 			builtIn.addActionListener(this);
 			
-			// set up window close listener to cancel memory
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			pack();
-			Dimension d = getSize();
-			setLocation(x-d.width/2,y-d.height/2);
-			setVisible(true);
+			finishDialog(x,y);
 		} // end of constructor
 		
 		/**
@@ -637,90 +750,83 @@ public class Memory extends LogicElement {
 		 * 
 		 * @param event The event object for this action.
 		 */
-		public void actionPerformed(ActionEvent event) {
+		protected void validateAndAccept() {
 			
-			if (event.getSource() == ok || event.getSource() == nameField ||
-					event.getSource() == bitsField || event.getSource() == capacityField) {
-				String tname = nameField.getText().trim();
-				if (tname.equals("") || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+			String tname = nameField.getText().trim();
+			if (tname.equals("") || !Util.isValidName(tname)) {
+				reject("Missing or invalid name");
+				return;
+			}
+			int tbits = bits;
+			int tcapacity = capacity;
+			Memory.Type ttype = null;
+			if (create) {
+				try {
+					tbits = Integer.parseInt(bitsField.getText());
+					tcapacity = Integer.parseInt(capacityField.getText(),10);
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric");
 					return;
 				}
-				int tbits = bits;
-				int tcapacity = capacity;
-				Memory.Type ttype = null;
-				if (create) {
-					try {
-						tbits = Integer.parseInt(bitsField.getText());
-						tcapacity = Integer.parseInt(capacityField.getText(),10);
-					}
-					catch (NumberFormatException ex) {
-						JOptionPane.showMessageDialog(this,
-								"Value not numeric", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (tbits < 1) {
-						JOptionPane.showMessageDialog(this,
-								"Must have at least 1 bit", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					if (ram.isSelected()) {
-						ttype = Memory.Type.RAM;
-					}
-					else if (rom.isSelected()) {
-						ttype = Memory.Type.ROM;
-					}
-					else {
-						JOptionPane.showMessageDialog(this,
-								"Pick RAM or ROM", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-				if (!tname.equals(name) && circuit.hasName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Duplicate name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+				if (tbits < 1) {
+					reject("Must have at least 1 bit");
 					return;
 				}
-				String msg = initOK(tempInit,tcapacity,tbits,false);
-				if (msg != null) {
-					JOptionPane.showMessageDialog(getParent(),
-							msg + " in built in initialization",
-							"Error", JOptionPane.ERROR_MESSAGE);
-					return;
+				if (ram.isSelected()) {
+					ttype = Memory.Type.RAM;
 				}
-
-				// everything is ok, so make it permanent
-				if (!name.equals(""))
-					circuit.removeName(name);
-				circuit.addName(tname);
-				name = tname;
-				initialValue = tempInit;
-				if (create) {
-					type = ttype;
-					bits = tbits;
-					capacity = tcapacity;
-					bitsPad.close();
-					capacityPad.close();
-				}
-				circuit.markChanged();
-				if (!create && !nameFits(tname)) {
-					changed = true;
+				else if (rom.isSelected()) {
+					ttype = Memory.Type.ROM;
 				}
 				else {
-					changed = false;
+					reject("Pick RAM or ROM");
+					return;
 				}
-				dispose();
 			}
-			else if (event.getSource() == cancel) {
-				cancel();
+			if (!tname.equals(name) && circuit.hasName(tname)) {
+				reject("Duplicate name");
+				return;
 			}
-			else if (event.getSource() == fromFile) {
+			String msg = initOK(tempInit,tcapacity,tbits,false);
+			if (msg != null) {
+				JOptionPane.showMessageDialog(getParent(),
+						msg + " in built in initialization",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			// everything is ok, so make it permanent
+			if (!name.equals(""))
+				circuit.removeName(name);
+			circuit.addName(tname);
+			name = tname;
+			initialValue = tempInit;
+			if (create) {
+				type = ttype;
+				bits = tbits;
+				capacity = tcapacity;
+				bitsPad.close();
+				capacityPad.close();
+			}
+			circuit.markChanged();
+			if (!create && !nameFits(tname)) {
+				changed = true;
+			}
+			else {
+				changed = false;
+			}
+			dispose();
+		} // end of validateAndAccept method
+		
+		/**
+		 * React to the initial-contents buttons.
+		 * 
+		 * @param event The event object for this action.
+		 */
+		public void actionPerformed(ActionEvent event) {
+			
+			if (event.getSource() == fromFile) {
 				
 				// get file name
 				String file  = JOptionPane.showInputDialog(this,
@@ -785,11 +891,11 @@ public class Memory extends LogicElement {
 		/**
 		 * Cancel this element.
 		 */
-		private void cancel() {
+		protected void cancelDialog() {
 			
 			cancelled = true;
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 		
 		/**
 		 * See if the given name fits in the box on the screen.

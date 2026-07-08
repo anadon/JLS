@@ -577,7 +577,7 @@ public final class InteractiveSimulator extends Simulator {
 				stopping = true;
 
 				// leave a little extra room at the end
-				now += 10*scaleFactor;
+				now += 10L * scaleFactor;
 
 				// turn on listeners
 				if (ed != null)

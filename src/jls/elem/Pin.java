@@ -325,10 +325,7 @@ public abstract class Pin extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,type,null);
+			Help.enableHelpOnButton(help, type);
 			okCancel.add(help);
 			window.add(okCancel);
 			

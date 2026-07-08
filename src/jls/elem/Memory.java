@@ -599,10 +599,7 @@ public class Memory extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"memory",null);
+			Help.enableHelpOnButton(help, "memory");
 			okCancel.add(help);
 			window.add(okCancel);
 			getRootPane().setDefaultButton(ok);
@@ -958,12 +955,7 @@ public class Memory extends LogicElement {
 		
 		// check all locations
 		boolean firstTime = true;
-		SortedSet<Integer> addrs = new TreeSet<Integer>();
-		Set<Integer> temp = new HashSet<Integer>(mem.keySet());
-		for (int addr : temp) {
-			addrs.add(addr);
-		}
-		for (int addr : addrs) {
+		for (int addr : mem.addresses()) {
 			
 			// get initial value
 			BitSet initial;
@@ -1023,16 +1015,133 @@ public class Memory extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	private Map<Integer,BitSet> mem;
-	private Map<Integer,BitSet> initMem;
+	private WordStore mem;
+	private WordStore initMem;
 	private BitSet currentValue;
 	private class WriteRecord {
 		BitSet what;
 		int where;
 		long when;
 	};
-	private java.util.List<WriteRecord> activity =
+
+	// The write history exists to feed the activity dialog; letting it
+	// grow with every write made long simulations leak (#20), so it is
+	// bounded to the newest records.
+	private static final int ACTIVITY_LIMIT = 10_000;
+	private LinkedList<WriteRecord> activity =
 		new LinkedList<WriteRecord>();
+
+	/**
+	 * Storage for simulated memory words (#20). Only addresses that have
+	 * been explicitly initialized or written count as present; get()
+	 * returns null for the rest, exactly like the Map storage this
+	 * replaces (the contents dialog and printChangedValues list only
+	 * present addresses).
+	 */
+	private interface WordStore {
+
+		/** The stored word, or null if this address was never set. */
+		BitSet get(int addr);
+
+		/** Store a word at an address. */
+		void put(int addr, BitSet value);
+
+		/** Addresses that have been set, in ascending order. */
+		SortedSet<Integer> addresses();
+
+		/** An independent copy (the running memory starts as a copy of the initial image). */
+		WordStore copy();
+	}
+
+	/**
+	 * Dense storage: one long per word plus one presence bit, about 8
+	 * bytes per word. The Map storage it replaces cost ~100 bytes per
+	 * word (entry + boxed Integer + BitSet with internal long[]).
+	 */
+	private static final class DenseWordStore implements WordStore {
+
+		private final long[] words;
+		private final BitSet present;
+
+		DenseWordStore(int capacity) {
+			words = new long[capacity];
+			present = new BitSet(capacity);
+		}
+
+		private DenseWordStore(DenseWordStore from) {
+			words = from.words.clone();
+			present = (BitSet)from.present.clone();
+		}
+
+		public BitSet get(int addr) {
+			if (!present.get(addr))
+				return null;
+			return BitSet.valueOf(new long[] { words[addr] });
+		}
+
+		public void put(int addr, BitSet value) {
+			long[] asLongs = value.toLongArray();
+			words[addr] = asLongs.length == 0 ? 0 : asLongs[0];
+			present.set(addr);
+		}
+
+		public SortedSet<Integer> addresses() {
+			SortedSet<Integer> addrs = new TreeSet<Integer>();
+			for (int a = present.nextSetBit(0); a >= 0; a = present.nextSetBit(a+1)) {
+				addrs.add(a);
+			}
+			return addrs;
+		}
+
+		public WordStore copy() {
+			return new DenseWordStore(this);
+		}
+	}
+
+	/**
+	 * Map fallback for words wider than 64 bits and for huge memories,
+	 * which are typically sparse (dense storage would eagerly allocate
+	 * the full capacity).
+	 */
+	private static final class SparseWordStore implements WordStore {
+
+		private final Map<Integer,BitSet> map;
+
+		SparseWordStore() {
+			map = new HashMap<Integer,BitSet>();
+		}
+
+		private SparseWordStore(SparseWordStore from) {
+			map = new HashMap<Integer,BitSet>(from.map);
+		}
+
+		public BitSet get(int addr) {
+			return map.get(addr);
+		}
+
+		public void put(int addr, BitSet value) {
+			map.put(addr, value);
+		}
+
+		public SortedSet<Integer> addresses() {
+			return new TreeSet<Integer>(map.keySet());
+		}
+
+		public WordStore copy() {
+			return new SparseWordStore(this);
+		}
+	}
+
+	// dense storage allocates the full capacity eagerly; past this many
+	// words (32 MB of longs) assume sparse use and fall back to the map
+	private static final int DENSE_CAPACITY_LIMIT = 1 << 22;
+
+	private WordStore newWordStore() {
+
+		if (bits <= 64 && capacity <= DENSE_CAPACITY_LIMIT)
+			return new DenseWordStore(capacity);
+		return new SparseWordStore();
+	}
 	
 	/**
 	 * Initialize this element.
@@ -1042,7 +1151,7 @@ public class Memory extends LogicElement {
 	public void initSim(Simulator sim) {
 		
 		// create initial memory array
-		initMem = new HashMap<Integer,BitSet>();
+		initMem = newWordStore();
 		
 		// if there is an initialization file specified
 		if (!fileName.equals("")) {
@@ -1105,7 +1214,7 @@ public class Memory extends LogicElement {
 		}
 		
 		// copy initial memory values to running memory
-		mem = new HashMap<Integer,BitSet>(initMem);
+		mem = initMem.copy();
 		
 		// set output value to null
 		getOutput("output").setValue(null);
@@ -1206,12 +1315,14 @@ public class Memory extends LogicElement {
 				if (act.addr >= capacity)
 					return;
 				
-				// save in activity history
+				// save in activity history (newest first, bounded)
 				WriteRecord rec = new WriteRecord();
 				rec.what = (BitSet)(act.data.clone());
 				rec.where = act.addr;
 				rec.when = now;
-				activity.add(0,rec);
+				activity.addFirst(rec);
+				if (activity.size() > ACTIVITY_LIMIT)
+					activity.removeLast();
 				
 				// store in memory
 				mem.put(act.addr, value);
@@ -1305,12 +1416,11 @@ public class Memory extends LogicElement {
 		
 		// if simulator not run yet, make a dummy mem array
 		if (mem == null) {
-			mem = new HashMap<Integer,BitSet>();
+			mem = newWordStore();
 		}
-		
+
 		// create addr/data display
-		Set<Integer> unsorted = mem.keySet();
-		SortedSet<Integer> addrs = new TreeSet<Integer>(unsorted);
+		SortedSet<Integer> addrs = mem.addresses();
 		JPanel display = new JPanel(new GridLayout(addrs.size(),2,10,3));
 		for (int addr : addrs) {
 			

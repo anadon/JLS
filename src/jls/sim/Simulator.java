@@ -83,16 +83,105 @@ public abstract class Simulator {
 	 */
 	public void post(SimEvent event) {
 
-		/*
-		 System.out.print(now + ": post called for element " +
-		 ((LogicElement)(event.getCallBack())).getName());
-		 */
 		if (dupCheck.add(event)) {
-			// System.out.print(" - added to queue");
 			eventQueue.add(event);
 		}
-		// System.out.println();
 	} // end of post method
+
+	/**
+	 * Reset the simulation state and initialize every element:
+	 * clock to 0, queues emptied, all input points and logic elements
+	 * (re)initialized. The common preamble of every simulation run.
+	 */
+	protected void initSimulation() {
+
+		stopping = false;
+		now = 0;
+		eventQueue.clear();
+		dupCheck.clear();
+
+		// initialize all input points
+		initInputs(circuit);
+
+		// initialize all elements
+		for (Element el : circuit.getElements()) {
+			if (el instanceof LogicElement) {
+				LogicElement lel = (LogicElement)el;
+				lel.initSim(me);
+			}
+		}
+	} // end of initSimulation method
+
+	/**
+	 * The event loop, shared by every simulation mode (#25): dequeue the
+	 * next event, advance the clock, enforce the time limit, and let the
+	 * event react. Mode-specific behavior (pausing, stepping, tracing,
+	 * display updates) is expressed through the hooks below; the loop
+	 * itself must stay mode-agnostic.
+	 *
+	 * The head event is polled only after beforeEvent() approves; a hook
+	 * that needs the upcoming event's time (e.g. stepping) may peek. The
+	 * queue is only modified on this thread, so peek-then-poll returns
+	 * the same event.
+	 */
+	protected void runEventLoop() {
+
+		while (!stopping && !eventQueue.isEmpty() && now <= maxTime) {
+
+			// let the mode pause/step; re-check loop conditions if it did
+			if (!beforeEvent())
+				continue;
+
+			// get the next event
+			SimEvent event = eventQueue.poll();
+			dupCheck.remove(event);
+
+			// update clock
+			now = event.getTime();
+
+			// quit if after time limit
+			if (now > maxTime) {
+				now = maxTime;
+				break;
+			}
+
+			beforeReact(event);
+
+			// make the event happen
+			event.getCallBack().react(now,me,event.getTodo());
+
+			afterEvent(event);
+		}
+	} // end of runEventLoop method
+
+	/**
+	 * Hook called before the next event is dequeued. A mode can block
+	 * (pause), or set state and decline this iteration.
+	 *
+	 * @return true to proceed with the next event, false to re-check the
+	 *         loop conditions from the top.
+	 */
+	protected boolean beforeEvent() {
+
+		return true;
+	} // end of beforeEvent method
+
+	/**
+	 * Hook called after the clock has advanced to the event's time but
+	 * before the event reacts (e.g. to update a clock display).
+	 *
+	 * @param event The event about to react.
+	 */
+	protected void beforeReact(SimEvent event) {
+	} // end of beforeReact method
+
+	/**
+	 * Hook called after the event has reacted (e.g. to record traces).
+	 *
+	 * @param event The event that just reacted.
+	 */
+	protected void afterEvent(SimEvent event) {
+	} // end of afterEvent method
 
 	/**
 	 * Stop the simulation.

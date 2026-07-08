@@ -20,22 +20,6 @@ public final class Util {
 	private Util() {}
 	
 	/**
-	 * Set up an action listener for help buttons when help isn't working.
-	 * Listener pops up an error dialog saying help is not available.
-	 * 
-	 * @param button The button to put the listener on.
-	 */
-	public static void noHelp(JButton button) {
-		
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				JOptionPane.showMessageDialog(JLSInfo.frame,
-						"No help available - perhaps jh.jar is not in the right place.");
-			}
-		});
-	} // end of noHelp method
-
-	/**
 	 * Copy elements from one set to another circuit.
 	 * 
 	 * @param from A set of elements.

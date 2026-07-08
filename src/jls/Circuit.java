@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -179,11 +180,13 @@ public class Circuit implements Printable {
 	} // end of remove method
 
 	/**
-	 * Get element set.
+	 * Get the element set, as an unmodifiable view (#27): every caller
+	 * iterates; mutation goes through addElement/remove so the circuit
+	 * controls its own membership (and future indexes stay coherent).
 	 */
 	public Set<Element> getElements() {
 
-		return elements;
+		return Collections.unmodifiableSet(elements);
 	} // end of getElements method
 
 	/**

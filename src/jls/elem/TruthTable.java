@@ -36,6 +36,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import jls.Circuit;
+import jls.Help;
 import jls.JLSInfo;
 import jls.Util;
 import jls.sim.SimEvent;
@@ -613,10 +614,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"truth",null);
+			Help.enableHelpOnButton(help, "truth");
 			okCancel.add(help);
 			other.add(okCancel,BorderLayout.SOUTH);
 			window.add(other,BorderLayout.SOUTH);

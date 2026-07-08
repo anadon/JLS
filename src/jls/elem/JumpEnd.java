@@ -438,10 +438,7 @@ public class JumpEnd extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,"end",null);
+			Help.enableHelpOnButton(help, "end");
 			okCancel.add(help);
 			window.add(okCancel);
 			getRootPane().setDefaultButton(ok);

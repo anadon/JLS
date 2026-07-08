@@ -194,10 +194,26 @@ public class Extend extends Gate implements TriProp {
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-	
+
+	/**
+	 * The extended value: all output bits copy the single input bit.
+	 * Extend overrides initSim/react below because, unlike the other
+	 * gates, it propagates immediately (no delay) and passes tri-state
+	 * (null) values through.
+	 */
+	protected BitSet computeOutput() {
+
+		BitSet value = inputs.get(0).getValue();
+		BitSet newValue = new BitSet(bits);
+		if (value != null && value.cardinality() != 0) {
+			newValue.flip(0,bits);
+		}
+		return newValue;
+	} // end of computeOutput method
+
 	/**
 	 * Initialize this element by setting its output pin to 0 or null.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	public void initSim(Simulator sim) {

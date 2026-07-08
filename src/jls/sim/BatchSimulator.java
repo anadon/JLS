@@ -61,79 +61,55 @@ public class BatchSimulator extends Simulator {
 	 */
 	public void runSim() {
 
-		// reset clock and empty eventQueue
-		stopping = false;
-		now = 0;
-		eventQueue.clear();
-		dupCheck.clear();
-
-		// initialize all input points
-		initInputs(circuit);
-
-		// initialize all elements
-		for (Element el : circuit.getElements()) {
-			if (el instanceof LogicElement) {
-				LogicElement lel = (LogicElement)el;
-				lel.initSim(me);
-			}
-		}
+		// reset clock/queues and initialize all elements
+		initSimulation();
 
 		// find watched elements and set up trace map
 		findWatched(circuit);
 
-		// event loop
-		while (!stopping && !eventQueue.isEmpty() && now <= maxTime) {
-
-			// get the next event
-			SimEvent event = eventQueue.poll();
-			dupCheck.remove(event);
-
-			// update clock
-			now = event.getTime();
-			
-			// quit if after time limit
-			if (now > maxTime) {
-				now = maxTime;
-				break;
-			}
-
-			// make the event happen
-			event.getCallBack().react(now,me,event.getTodo());
-
-			// trace it
-			if (JLSInfo.printTrace) {
-
-				// see if changing element is watched
-				LogicElement el = (LogicElement)event.getCallBack();
-				if (el.isWatched()) {
-
-					// get the event trace for this element, 
-					// or create one if none yet
-					LinkedList<TrEvent> events = eventTrace.get(el);
-
-					// create bitset for HiZ
-					BitSet off = new BitSet(el.getBits()+1);
-					off.set(el.getBits());
-
-					// add an event to the end of the event list
-					// (but not if the same value)
-					TrEvent prev = events.getLast();
-					if (!prev.value.equals(el.getCurrentValue())) {
-
-						// add only if different
-						TrEvent p = new TrEvent();
-						p.time = event.getTime();
-						p.value = el.getCurrentValue();
-						if (p.value == null)
-							p.value = off;
-						events.add(p);
-					}
-				}
-			}
-
-		} // end of event loop
+		// run the shared event loop (tracing happens in afterEvent)
+		runEventLoop();
 
 	} // end of runSim
+
+	/**
+	 * Record a trace entry for the element that just reacted, if traces
+	 * were requested and the element is watched.
+	 *
+	 * @param event The event that just reacted.
+	 */
+	protected void afterEvent(SimEvent event) {
+
+		if (!JLSInfo.printTrace)
+			return;
+
+		// see if changing element is watched
+		LogicElement el = (LogicElement)event.getCallBack();
+		if (el.isWatched()) {
+
+			// get the event trace for this element,
+			// or create one if none yet
+			LinkedList<TrEvent> events = eventTrace.get(el);
+
+			// create bitset for HiZ
+			BitSet off = new BitSet(el.getBits()+1);
+			off.set(el.getBits());
+
+			// add an event to the end of the event list
+			// (but not if the same value)
+			TrEvent prev = events.getLast();
+			if (!prev.value.equals(el.getCurrentValue())) {
+
+				// add only if different
+				TrEvent p = new TrEvent();
+				p.time = event.getTime();
+				p.value = el.getCurrentValue();
+				if (p.value == null)
+					p.value = off;
+				events.add(p);
+			}
+		}
+	} // end of afterEvent method
 	
 	/**
 	 * Create and add TestGen element to circuit.

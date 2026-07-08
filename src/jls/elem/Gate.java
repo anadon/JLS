@@ -1,6 +1,9 @@
 package jls.elem;
 
 import jls.*;
+import jls.sim.*;
+
+import java.util.BitSet;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -333,8 +336,17 @@ public abstract class Gate extends LogicElement {
 	} // end of copy method
 	
 	/**
+	 * Gate sizes are a pure function of input count and orientation,
+	 * recomputed by init() on every load, so they are not saved (#21).
+	 */
+	protected boolean sizeIsRecomputedOnLoad() {
+
+		return true;
+	} // end of sizeIsRecomputedOnLoad method
+
+	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The output writer.
 	 * @param type The type of gate (e.g., "AND"), all capitals.
 	 * @param triState If true, save that this element has a tri-state output.
@@ -693,10 +705,7 @@ public abstract class Gate extends LogicElement {
 			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
-			if (JLSInfo.hb == null)
-				Util.noHelp(help);
-			else
-				JLSInfo.hb.enableHelpOnButton(help,type,null);
+			Help.enableHelpOnButton(help, type);
 			okCancel.add(help);
 			window.add(okCancel);
 			getRootPane().setDefaultButton(ok);
@@ -839,4 +848,71 @@ public abstract class Gate extends LogicElement {
 		
 	} // end of GateCreate class
 	
+
+//-------------------------------------------------------------------------------
+// Simulation
+//-------------------------------------------------------------------------------
+
+	private BitSet toBeValue;
+
+	/**
+	 * Compute this gate's output value from its current input values,
+	 * with absent (null) values counting as zero. This is the only
+	 * simulation behavior that differs between the gate kinds (#22);
+	 * the event handling below is shared.
+	 *
+	 * @return the output value.
+	 */
+	protected abstract BitSet computeOutput();
+
+	/**
+	 * Initialize this element: the output pin starts at 0, and a gate
+	 * whose output for all-zero inputs is not 0 (NAND, NOR, NOT) posts
+	 * an event to drive that value at time 0.
+	 *
+	 * @param sim The simulator to post events to.
+	 */
+	public void initSim(Simulator sim) {
+
+		// set output pin
+		Output out = outputs.get(0);
+		out.setValue(new BitSet(1));
+
+		// drive the all-zero-inputs output value
+		BitSet initial = computeOutput();
+		if (!initial.isEmpty()) {
+			sim.post(new SimEvent(0,this,initial));
+		}
+		toBeValue = (BitSet)initial.clone();
+	} // end of initSim method
+
+	/**
+	 * React to an event.
+	 *
+	 * @param now The current simulation time.
+	 * @param sim The simulator to post events to.
+	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 */
+	public void react(long now, Simulator sim, Object todo) {
+
+		// if the input has changed ...
+		if (todo == null) {
+
+			BitSet value = computeOutput();
+
+			// if new value is different from the value propagating through
+			// this gate, then post an event
+			if (!value.equals(toBeValue)) {
+				toBeValue = (BitSet)value.clone();
+				sim.post(new SimEvent(now+propDelay,this,value));
+			}
+		}
+		else {
+
+			// send the new output value to the output
+			BitSet newValue = (BitSet)todo;
+			outputs.get(0).propagate(newValue,now,sim);
+		}
+	} // end of react method
+
 } // end of Gate class

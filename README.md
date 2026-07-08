@@ -52,9 +52,11 @@ sniffing the actual content:
   `JLSCircuit` entry with the same text description.
 - **Plain text** — the uncompressed circuit description itself.
 
-Editor checkpoint files (`.jls~`) are zip-format and are used for crash
-recovery. If you process `.jls` files with external tools, sniff the content
-rather than trusting the extension.
+Editor checkpoint files (`.jls~`) are used for crash recovery. They are
+written in the same XZ format as regular saves (older versions wrote them
+as zip archives; the loader still accepts those). If you process `.jls`
+files with external tools, sniff the content rather than trusting the
+extension.
 
 ## License and provenance
 

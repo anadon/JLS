@@ -123,64 +123,22 @@ public class AndGate extends Gate {
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-			
-	private BitSet toBeValue;
-	
+
 	/**
-	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
-	 * @param sim Unused.
+	 * AND the input bits (absent inputs count as 0).
 	 */
-	public void initSim(Simulator sim) {
-		
-		// set output pin
-		Output out = outputs.get(0);
-		BitSet bitval = new BitSet(1);
-		out.setValue(bitval);
-		
-		// set to-be value
-		toBeValue = new BitSet(1);
-	} // end of initSim method
-	
-	/**
-	 * React to an event.
-	 * 
-	 * @param now The current simulation time.
-	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
-	 */
-	public void react(long now, Simulator sim, Object todo) {
-		
-		// if the input has changed ...
-		if (todo == null) {
-			
-			// AND the input bits
-			BitSet value = new BitSet(bits);
-			value.set(0,bits);
-			for (Input input : inputs) {
-				BitSet inVal = input.getValue();
-				if (inVal == null)
-					inVal = new BitSet();
-				value.and(inVal);
-			}
-			
-			// if new value is different from the value propagating through
-			// this gate, then post an event
-			if (!value.equals(toBeValue)) {
-				toBeValue = (BitSet)value.clone();
-				sim.post(new SimEvent(now+propDelay,this,value));
-			}
+	protected BitSet computeOutput() {
+
+		BitSet value = new BitSet(bits);
+		value.set(0,bits);
+		for (Input input : inputs) {
+			BitSet inVal = input.getValue();
+			if (inVal == null)
+				inVal = new BitSet();
+			value.and(inVal);
 		}
-		else {
-			
-			// get the new output value
-			BitSet newValue = (BitSet)todo;
-			
-			// send to output
-			Output out = outputs.get(0);
-			out.propagate(newValue,now,sim);
-		}
-		
-	} // end of react method
+		return value;
+	} // end of computeOutput method
+
 
 } // end of AndGate class

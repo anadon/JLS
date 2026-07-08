@@ -2,7 +2,6 @@ package jls;
 
 import jls.sim.*;
 import java.awt.*;
-import javax.help.*;
 
 /**
  * Constants for JLS.
@@ -49,7 +48,6 @@ public final class JLSInfo {
 	public static boolean batch = false;				// batch mode
 	public static boolean printTrace = false;			// print signal trace
 	public static boolean imgexport = false;			// export image from command line
-	public static HelpBroker hb = null;
 	public enum Orientation { UP, DOWN, LEFT, RIGHT; }
 	public static Color gridColor = 
 		new Color(240,240,240);							// editor window grid

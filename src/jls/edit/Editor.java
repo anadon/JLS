@@ -1,26 +1,21 @@
 package jls.edit;
 
-import java.nio.charset.StandardCharsets;
-
-import java.io.OutputStreamWriter;
-
 import java.awt.Component;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 import jls.Circuit;
+import jls.FileAbstractor;
 import jls.JLSInfo;
 import jls.Util;
 import jls.elem.Element;
 import jls.elem.SubCircuit;
-
-import org.tukaani.xz.LZMA2Options;
-import org.tukaani.xz.XZOutputStream;
 
 /**
  * Adds naming and file save/saveas/close capability to an edited circuit.
@@ -60,24 +55,21 @@ public final class Editor extends SimpleEditor {
 			return false;
 		}
 
-		// create output file
+		// serialize the circuit, then write it atomically
 		String dir = circuit.getDirectory() + "/";
 		String fileName = dir + circuit.getName() + ".jls";
-		XZOutputStream out = null;
+		StringWriter text = new StringWriter();
+		try (PrintWriter output = new PrintWriter(text)) {
+			circuit.save(output);
+		}
 		try {
-			out = new XZOutputStream(new FileOutputStream(fileName), new LZMA2Options());
-			//out.putNextEntry(new ZipEntry("JLSCircuit"));
-		} catch (Exception ex) {
+			FileAbstractor.writeCircuit(new File(fileName), text.toString());
+		} catch (IOException ex) {
 			JOptionPane.showMessageDialog(getTopLevelAncestor(),
-					"Can't write to " + fileName, "Error",
+					"Can't write to " + fileName + ": " + ex.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		PrintWriter output = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-
-		// save the circuit
-		circuit.save(output);
-		output.close();
 
 		// delete checkpoint file if there is one
 		new File(fileName + "~").delete();

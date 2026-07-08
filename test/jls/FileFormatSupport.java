@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Scanner;
@@ -16,8 +15,8 @@ import org.tukaani.xz.XZOutputStream;
 
 /**
  * Helpers for writing circuit files in the three on-disk container formats
- * JLS accepts (plain text, zip with a JLSCircuit entry, XZ) and for invoking
- * the private format-sniffing loader in JLSStart.
+ * JLS accepts (plain text, zip with a JLSCircuit entry, XZ) and for opening
+ * them through the FileAbstractor format-sniffing loader.
  */
 final class FileFormatSupport {
 
@@ -47,20 +46,18 @@ final class FileFormatSupport {
 		}
 	}
 
-	/** Invoke the private JLSStart.getScannerForFile format-sniffing chain. */
+	/** Open through the FileAbstractor format-sniffing chain. */
 	static Scanner openWithFormatSniffer(File file) throws Exception {
-		return invokeScannerMethod("getScannerForFile", file);
+		return FileAbstractor.openCircuit(file.getAbsolutePath());
 	}
 
-	/** Invoke the private JLSStart.getZipScanner directly. */
+	/** Probe the file as a zip circuit archive; null if it isn't one. */
 	static Scanner openAsZip(File file) throws Exception {
-		return invokeScannerMethod("getZipScanner", file);
-	}
-
-	private static Scanner invokeScannerMethod(String name, File file) throws Exception {
-		Method m = JLSStart.class.getDeclaredMethod(name, String.class);
-		m.setAccessible(true);
-		return (Scanner) m.invoke(null, file.getAbsolutePath());
+		try {
+			return FileAbstractor.readZip(file);
+		} catch (java.io.IOException rejected) {
+			return null;
+		}
 	}
 
 	/** Drain a scanner into a string, preserving line structure. */

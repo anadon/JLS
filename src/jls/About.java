@@ -24,11 +24,14 @@ public final class About extends JDialog implements ActionListener {
 		// set up labels
 		Container window = getContentPane();
 		window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-		String line1 = "<h1>&nbsp;JLS Version " + JLSInfo.vers + "." + 
+		String line1 = "<h1>&nbsp;JLS Version " + JLSInfo.vers + "." +
 		JLSInfo.release + "." + JLSInfo.buildNum + "&nbsp;</h1>";
-		String line2 = "<p>Copyright " + JLSInfo.year;
-		String line3 = "<p>David A. Poplawski & Michigan Technological University";
-		String line4 = "<p>All Rights Reserved";
+		String line2 = "<p>Copyright " + JLSInfo.year
+				+ " David A. Poplawski";
+		String line3 = "<p>Free software under the GNU GPL v3 or later";
+		String line4 = "<p>Originally developed at Michigan Technological"
+				+ " University;<br>relicensed under the GPLv3 by the author"
+				+ " (see pop_GPLv3.pdf)";
 		String html = "<html><center>" + line1 + line2 + line3 + line4 +
 			JLSInfo.build + "</center></html>";
 		JLabel info = new JLabel(html);

@@ -165,6 +165,37 @@
               <goal>report</goal>
             </goals>
           </execution>
+          <!-- coverage ratchet: the floor only ever moves UP. It is set
+               slightly below measured coverage to absorb JDK jitter;
+               a PR that raises coverage should also raise the floor to
+               just below the new measurement (issue #66).
+               Baseline 2026-07-08: INSTRUCTION 18.04%, LINE 18.44%. -->
+          <execution>
+            <id>coverage-ratchet</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.175</minimum>
+                    </limit>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.180</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>

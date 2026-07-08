@@ -110,7 +110,9 @@ public abstract class SimpleEditor extends JPanel {
 	// properties
 	protected Circuit circuit;			// the circuit being edited
 	protected EditWindow ew;			// the editor window
-	protected boolean enabled = true;	// disabled when editting a subcircuit
+	// volatile: written from the sim thread (enableEditor around a run),
+	// read by EDT mouse/key handlers (issue #49, finding H7)
+	protected volatile boolean enabled = true;	// disabled when editting a subcircuit
 	protected JTabbedPane tabbedParent;	// the tabbed pane it is in
 	private JScrollPane pane;			// the scroll page it is in
 	protected JPanel top;				// here so Editor class can display file menu

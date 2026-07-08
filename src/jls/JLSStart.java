@@ -765,10 +765,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			public void actionPerformed(ActionEvent event) {
 				both.setBottomComponent(interSim.getStatusBar());
 				both.setDividerLocation(0.9);
-				JLSInfo.batch = true;
+				// per-run flag: the old JLSInfo.batch toggle was reset
+				// before the sim thread ever read it (issue #49, M15)
 				interSim.setMaxTime();
-				interSim.runSim();
-				JLSInfo.batch = false;
+				interSim.runSim(true);
 			}
 		});
 

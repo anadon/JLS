@@ -26,6 +26,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
+    <!-- reproducible builds: archives get this fixed timestamp instead of
+         wall-clock time, so the same commit rebuilds byte-identically;
+         bump it alongside the version when cutting a release (#44) -->
+    <project.build.outputTimestamp>2026-07-08T00:00:00Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>

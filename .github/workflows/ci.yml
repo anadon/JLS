@@ -26,10 +26,12 @@ jobs:
       matrix:
         java: [17, 21]
     steps:
-      - uses: actions/checkout@v4
+      # actions are pinned to full commit SHAs (supply-chain posture,
+      # #44/#68); Dependabot keeps the pins fresh via the version comments
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
@@ -43,7 +45,7 @@ jobs:
 
       - name: Upload jar
         if: matrix.java == 21
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: jls-jar
           path: target/jls-*.jar

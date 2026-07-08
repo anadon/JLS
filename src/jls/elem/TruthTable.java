@@ -344,7 +344,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// a malformed file used to die on the raw array access with a
 		// message-free AIOOBE; reject with the real constraint (issue #52)
 		if (v1 < 0 || v1 >= table.length
-				|| icol >= (table.length == 0 ? 0 : table[v1].length)) {
+				|| icol >= table[v1].length) {
 			throw new IllegalArgumentException(
 					"truth table entry (" + v1 + "," + icol
 							+ ") is outside the declared table size");

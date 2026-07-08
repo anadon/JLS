@@ -11,6 +11,12 @@ on:
 permissions:
   contents: read
 
+# a new push to the same branch/PR cancels the still-running build of the
+# old head; release.yml deliberately has no concurrency group (issue #47)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build (JDK ${{ matrix.java }})

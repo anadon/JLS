@@ -27,8 +27,8 @@
   </properties>
 
   <dependencies>
-    <!-- replaces the vendored sources in xz/ (kept in-tree until #6 removes them;
-         they are not part of this build) -->
+    <!-- XZ codec for .jls compression (the formerly-vendored xz/ source
+         tree is gone; #6 removed it) -->
     <dependency>
       <groupId>org.tukaani</groupId>
       <artifactId>xz</artifactId>

@@ -54,6 +54,13 @@ sniffing the actual content:
   `JLSCircuit` entry with the same text description.
 - **Plain text** — the uncompressed circuit description itself.
 
+**Forward-compatibility caveat:** current JLS saves Memory initial contents
+run-length encoded. The upstream JLS 4.1 loader does not understand that
+encoding and **silently drops initial memory contents** when opening such a
+file — the circuit loads, but memories start empty. If a file must
+round-trip through JLS 4.1, avoid Memory initial values or re-enter them
+there.
+
 Editor checkpoint files (`.jls~`) are used for crash recovery. They are
 written in the same XZ format as regular saves (older versions wrote them
 as zip archives; the loader still accepts those). If you process `.jls`

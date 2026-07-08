@@ -2156,12 +2156,17 @@ public abstract class SimpleEditor extends JPanel {
 				// if selecting elements...
 				if (currentState == State.selecting) {
 
-					// create bounding rectangle
+					// create bounding rectangle; anything that changes
+					// visually (the outline, every highlight change) lies
+					// within the union of the old and new rectangles, so
+					// only that region needs repainting (#17)
+					Rectangle dirty = selRect == null ? null : new Rectangle(selRect);
 					int xc = Math.min(x,nx);
 					int yc = Math.min(y,ny);
 					int width = Math.abs(nx-x);
 					int height = Math.abs(ny-y);
 					selRect = new Rectangle(xc,yc,width,height);
+					dirty = union(dirty, selRect);
 
 					// select elements completely inside bounding rectangle,
 					// querying the spatial index instead of scanning the
@@ -2180,28 +2185,52 @@ public abstract class SimpleEditor extends JPanel {
 					}
 
 					// unselect anything highlighted or selected that fell
-					// outside the rectangle
-					Set<Element> toClear = circuit.getHighlighted();
+					// outside the rectangle; highlight changes on elements
+					// larger than the rectangle union (e.g. a hover
+					// highlight from before the drag) widen the dirty
+					// region by their own bounds
+					Set<Element> wasHighlighted = circuit.getHighlighted();
+					Set<Element> toClear = new HashSet<Element>(wasHighlighted);
 					toClear.addAll(selected);
 					for (Element el : toClear) {
 						if (!inside.contains(el) && !attachedInside.contains(el)) {
 							el.setHighlight(false);
 							selected.remove(el);
+							dirty = union(dirty, el.getRect());
 						}
 					}
 					for (Element el : inside) {
+						if (!wasHighlighted.contains(el)) {
+							dirty = union(dirty, el.getRect());
+						}
 						el.setHighlight(true);
 						selected.add(el);
 					}
-					repaint();
+					dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
+					repaint(dirty);
 					return;
 				}
 
 			} // end of mouseDragged method
 
 			/**
+			 * Accumulate a dirty-region rectangle (#17): the union of the
+			 * given rectangles, either of which may be null.
+			 */
+			private Rectangle union(Rectangle acc, Rectangle add) {
+
+				if (acc == null) {
+					return add == null ? null : new Rectangle(add);
+				}
+				if (add != null) {
+					acc.add(add);
+				}
+				return acc;
+			} // end of union method
+
+			/**
 			 * React to mouse movements.
-			 * 
+			 *
 			 * @param event The event object for moves.
 			 */
 			public void mouseMoved(MouseEvent event) {
@@ -2238,20 +2267,32 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 
+					// repaint only where highlights change (#17): idle
+					// motion over unchanged content costs no drawing
+					Set<Element> wasHighlighted = circuit.getHighlighted();
+					Rectangle dirty = null;
+
 					// unhighlight whatever the cursor left
-					for (Element el : circuit.getHighlighted()) {
+					for (Element el : wasHighlighted) {
 						if (!under.contains(el) && !attachedUnder.contains(el)) {
 							el.setHighlight(false);
+							dirty = union(dirty, el.getRect());
 						}
 					}
 
 					// highlight and display info
 					for (Element el : under) {
 						selected.add(el);
+						if (!wasHighlighted.contains(el)) {
+							dirty = union(dirty, el.getRect());
+						}
 						el.setHighlight(true);
 						el.showInfo(info);
 					}
-					repaint();
+					if (dirty != null) {
+						dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
+						repaint(dirty);
+					}
 					return;
 				}
 

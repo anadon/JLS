@@ -131,6 +131,10 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 				out.println(key + "=" + System.getProperty(key));
 			}
 			th.printStackTrace(out);
+			// Circuit.save's only mutation is the per-pass element-ID
+			// renumbering every ordinary save also performs; it does not
+			// touch the changed flag, so dumping the circuit here does
+			// not alter user-visible state (issue #51)
 			if (circuit != null)
 				circuit.save(out);
 			out.close();

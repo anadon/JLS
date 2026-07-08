@@ -472,8 +472,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			// properties
 			private State currentState = State.idle;
-			private boolean firstDraw = true;	// used to save ref to Graphics object
-			private Graphics graphics;
+			private boolean firstDraw = true;	// first paint pushes the undo base copy
 			private int x, y;					// latest actual cursor coordinates
 			private Rectangle selRect = null;	// selection rectangle
 			private Set<Element>selected =
@@ -1321,13 +1320,13 @@ public abstract class SimpleEditor extends JPanel {
 						gg.draw(selRect);
 				}
 
-				// save graphics object for setting up elements and
-				// save circuit for undo (since finishLoad must have been
-				// done by now)
+				// save circuit for undo on first draw (finishLoad must
+				// have been done by now); the paint-pass Graphics is NOT
+				// cached - Swing may dispose it after this call, so later
+				// element setup asks the component for a fresh one (#51)
 				if (firstDraw) {
 					this.pushCopy();
 					firstDraw = false;
-					graphics = g;
 				}
 
 			} // end of paintComponent method
@@ -1597,7 +1596,7 @@ public abstract class SimpleEditor extends JPanel {
 					}
 					x = p.x;
 					y = p.y;
-					nel.setup(graphics, this, p.x, p.y);
+					nel.setup(this.getGraphics(), this, p.x, p.y);
 
 					clearSelected();
 					circuit.addElement(nel);
@@ -3877,7 +3876,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// if not cancelled...
 						Point view = pane.getViewport().getViewPosition();
-						if (item.setup(graphics,this,dx+view.x,dy+view.y)) {
+						if (item.setup(this.getGraphics(),this,dx+view.x,dy+view.y)) {
 
 							// put into circuit
 							Point pos = getMousePosition();
@@ -4122,7 +4121,7 @@ public abstract class SimpleEditor extends JPanel {
 					private boolean finishDo(CircuitSnapshot snap) {
 
 						// rebuild the circuit through the ordinary load path
-						Circuit newCopy = snap.restore(circuit.getName(), graphics);
+						Circuit newCopy = snap.restore(circuit.getName(), this.getGraphics());
 						if (newCopy == null) {
 							return false;
 						}

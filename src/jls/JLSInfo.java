@@ -8,19 +8,32 @@ import java.awt.*;
  * 
  * @author David A. Poplawski
  */
-public final class JLSInfo { 
-	
-	// version info
+public final class JLSInfo {
 
+	// version identity, single-sourced from the pom: the build filters
+	// the project version into jls/version.properties (issue #36); the
+	// "dev" fallback covers IDE/exploded runs without the resource
+	public static final String versionString = loadVersion();
 
-	public static final String build = "<p>[built on March 18, 2014 at 11:30 AM]";
-	public static final int vers = 4;
-	public static final int release = 1;
-	public static final int buildNum = 5;
-	public static final int year = 2014;
-	
-	public static final String version = "JLS " + vers + "." + release + 
-		" (Michigan Technological University)";
+	public static final String version = "JLS " + versionString;
+
+	private static String loadVersion() {
+
+		try (java.io.InputStream in =
+				JLSInfo.class.getResourceAsStream("/jls/version.properties")) {
+			if (in != null) {
+				java.util.Properties props = new java.util.Properties();
+				props.load(in);
+				String v = props.getProperty("version");
+				if (v != null && !v.isEmpty() && !v.startsWith("${")) {
+					return v;
+				}
+			}
+		}
+		catch (java.io.IOException ignored) {
+		}
+		return "dev";
+	} // end of loadVersion method
 	
 	// miscellaneous parameters
 	public static final int windowsize = 600;

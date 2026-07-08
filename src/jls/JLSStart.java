@@ -468,15 +468,22 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private static void usage() {
 
-		System.err.println("usage: jls [ flags ] [ circuit_name ]");
-		System.err.println("  -h : print this message");
-		System.err.println("  -b : run in batch mode");
-		System.err.println("  -sname : startup parameter file");
-		System.err.println("  -tname : test input file");
-		System.err.println("  -dtime : set simulation time limit (a positive integer)");
-		System.err.println("  -pprinter : print circuit to named printer (all other flags ignored");
-		System.err.println("  -rprinter : print signal trace to named printer (all other flags ignored)");
-		System.err.println("example: jls -b -sstartup -d10000 counter");
+		// keep this in sync with parseCommandLine (issue #71): every
+		// flag the parser accepts is documented here, and operands may
+		// be attached (-tfile) or separate (-t file)
+		System.err.println("usage: jls [ flags ] [ circuit_file ]");
+		System.err.println("  -h : print this message and exit");
+		System.err.println("  -b : run in batch (headless) mode");
+		System.err.println("  -i : export an image of the circuit (circuit_file.jpg)");
+		System.err.println("  -s file : startup parameter file");
+		System.err.println("  -t file : test input file");
+		System.err.println("  -d time : set simulation time limit (a positive integer)");
+		System.err.println("  -p printer : print the whole circuit (subcircuits too) to the named printer");
+		System.err.println("  -v printer : print only the top level of the circuit to the named printer");
+		System.err.println("  -r printer : print the signal trace to the named printer");
+		System.err.println("operands may also be attached to the flag: -tfile, -d10000");
+		System.err.println("exit status: 0 success, 1 runtime failure, 2 usage error");
+		System.err.println("example: jls -b -sstartup -d10000 counter.jls");
 	} // end of usage method
 
 	/**

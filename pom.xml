@@ -6,7 +6,7 @@
 
   <groupId>io.github.anadon</groupId>
   <artifactId>jls</artifactId>
-  <version>4.2.0-SNAPSHOT</version>
+  <version>4.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>JLS - Java Logic Simulator</name>
@@ -64,6 +64,12 @@
           <exclude>**/CVS/**</exclude>
         </excludes>
       </resource>
+      <!-- single-source version identity: the pom version is filtered
+           into jls/version.properties and read by JLSInfo (issue #36) -->
+      <resource>
+        <directory>src-filtered</directory>
+        <filtering>true</filtering>
+      </resource>
     </resources>
 
     <plugins>
@@ -87,6 +93,8 @@
             <manifest>
               <!-- dependencies are bundled by the shade plugin below -->
               <mainClass>jls.JLS</mainClass>
+              <!-- Implementation-Title/-Version in the manifest (#36) -->
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
         </configuration>

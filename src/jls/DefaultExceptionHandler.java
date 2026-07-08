@@ -122,8 +122,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 			out.println("https://github.com/anadon/JLS/issues along with a");
 			out.println("short description of what you were doing when the");
 			out.println("error occurred. Thanks.");
-			out.printf("JLS %d.%d.%d %s\n", JLSInfo.vers, JLSInfo.release, JLSInfo.buildNum,
-					JLSInfo.build);
+			out.println("JLS " + JLSInfo.versionString);
 			// only environment facts that help diagnose a crash: the full
 			// System.getProperties() dump leaked user/host details into a
 			// file users are told to share (issue #51)

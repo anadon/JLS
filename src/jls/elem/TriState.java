@@ -90,71 +90,76 @@ public class TriState extends LogicElement {
 	 * @param g Unused.
 	 */
 	public void init(Graphics g) {
-		
-		// set up size
+
+		// canonical geometry (gate RIGHT, control DOWN), transformed to
+		// the current orientation pair (#24)
 		int s = JLSInfo.spacing;
-	
-		// set up inputs and outputs
-		Output out = null;
-		if(gateOrientation == JLSInfo.Orientation.RIGHT) {
-			width = 4*s;
-			height = 3*s;
-			if(controlOrientation == JLSInfo.Orientation.DOWN) {
-				inputs.add(new Input("input",this,0,s,bits));
-				inputs.add(new Input("control",this,2*s,3*s,1));
-				out = new Output("output",this,4*s,s,bits);
-			}
-			else if(controlOrientation == JLSInfo.Orientation.UP) {
-				inputs.add(new Input("input",this,0,2*s,bits));
-				inputs.add(new Input("control",this,2*s,0,1));
-				out = new Output("output",this,4*s,2*s,bits);
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.LEFT) {
-			width = 4*s;
-			height = 3*s;
-			if(controlOrientation == JLSInfo.Orientation.DOWN) {
-				inputs.add(new Input("input",this,4*s,s,bits));
-				inputs.add(new Input("control",this,2*s,3*s,1));
-				out = new Output("output",this,0,s,bits);
-			}
-			else if(controlOrientation == JLSInfo.Orientation.UP) {
-				inputs.add(new Input("input",this,4*s,2*s,bits));
-				inputs.add(new Input("control",this,2*s,0,1));
-				out = new Output("output",this,0,2*s,bits);
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.UP) {
-			width = 3*s;
-			height = 4*s;
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				inputs.add(new Input("input",this,2*s,4*s,bits));
-				inputs.add(new Input("control",this,0,2*s,1));
-				out = new Output("output",this,2*s,0,bits);
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT) {
-				inputs.add(new Input("input",this,s,4*s,bits));
-				inputs.add(new Input("control",this,3*s,2*s,1));
-				out = new Output("output",this,s,0,bits);
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.DOWN) {
-			width = 3*s;
-			height = 4*s;
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				inputs.add(new Input("input",this,2*s,0,bits));
-				inputs.add(new Input("control",this,0,2*s,1));
-				out  = new Output("output",this,2*s,4*s,bits);
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT) {
-				inputs.add(new Input("input",this,s,0,bits));
-				inputs.add(new Input("control",this,3*s,2*s,1));
-				out  = new Output("output",this,s,4*s,bits);
-			}
-		}
+		GridTransform.Chain t = placement();
+		Dimension d = t.size();
+		width = d.width;
+		height = d.height;
+		Point in = t.map(0, s);
+		Point ctl = t.map(2*s, 3*s);
+		Point outAt = t.map(4*s, s);
+		inputs.add(new Input("input",this,in.x,in.y,bits));
+		inputs.add(new Input("control",this,ctl.x,ctl.y,1));
+		Output out = new Output("output",this,outAt.x,outAt.y,bits);
 		outputs.add(out);
 		out.setTriState(true);
 	} // end of init method
+
+	/**
+	 * The transform from canonical geometry (gate RIGHT, control DOWN)
+	 * to the current orientation pair.
+	 */
+	private GridTransform.Chain placement() {
+
+		// the control must be perpendicular to the gate; loads with an
+		// invalid pair have always failed, so keep rejecting them
+		boolean gateHorizontal =
+				gateOrientation == JLSInfo.Orientation.LEFT
+				|| gateOrientation == JLSInfo.Orientation.RIGHT;
+		boolean controlHorizontal =
+				controlOrientation == JLSInfo.Orientation.LEFT
+				|| controlOrientation == JLSInfo.Orientation.RIGHT;
+		if (gateHorizontal == controlHorizontal) {
+			throw new IllegalStateException(
+					"invalid TriState orientation combination: gate "
+					+ gateOrientation + ", control " + controlOrientation);
+		}
+		int s = JLSInfo.spacing;
+		GridTransform.Chain t = GridTransform.chain(4*s, 3*s);
+		switch (gateOrientation) {
+		case RIGHT:
+			if (controlOrientation == JLSInfo.Orientation.UP) {
+				t.mirrorY();
+			}
+			break;
+		case LEFT:
+			if (controlOrientation == JLSInfo.Orientation.UP) {
+				t.rotate180();
+			}
+			else {
+				t.mirrorX();
+			}
+			break;
+		case UP:
+			t.rotateCCW();
+			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+				t.mirrorX();
+			}
+			break;
+		default: // DOWN
+			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+				t.rotateCW();
+			}
+			else {
+				t.rotateCCW().mirrorY();
+			}
+			break;
+		}
+		return t;
+	} // end of placement method
 	
 	/**
 	 * Draw this gate.
@@ -166,77 +171,17 @@ public class TriState extends LogicElement {
 		// draw context
 		super.draw(g);
 		
-		// draw gate
+		// draw gate: canonical segments (gate RIGHT, control DOWN)
+		// mapped through the orientation transform (#24)
 		int s = JLSInfo.spacing;
 		g.setColor(Color.black);
-		if(gateOrientation == JLSInfo.Orientation.RIGHT) {
-			int offset = 0;
-			if(controlOrientation == JLSInfo.Orientation.UP) {
-				offset = s;
-			}
-			g.drawLine(x,y+s+offset,x+s,y+s+offset);	// input wire
-			g.drawLine(x+s,y+offset,x+s,y+2*s+offset);	// back
-			g.drawLine(x+s,y+offset,x+3*s,y+s+offset);	// top
-			g.drawLine(x+s,y+2*s+offset,x+3*s,y+s+offset);	// bottom
-			g.drawLine(x+3*s,y+s+offset,x+4*s,y+s+offset);	// output wire
-			if(controlOrientation == JLSInfo.Orientation.DOWN) {
-				g.drawLine(x+2*s,(int)(y+2*s-.5*s),x+2*s,y+3*s);  // control wire
-			}
-			else {
-				g.drawLine(x+2*s,(int)(y+s+.5*s),x+2*s,y);	// control wire
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.LEFT) {
-			int offset = 0;
-			if(controlOrientation == JLSInfo.Orientation.UP) {
-				offset = s;
-			}
-			g.drawLine(x,y+s+offset,x+s,y+s+offset);	// output wire
-			g.drawLine(x+3*s,y+offset,x+3*s,y+2*s+offset);	// back
-			g.drawLine(x+3*s,y+offset,x+s,y+s+offset);	// top
-			g.drawLine(x+3*s,y+2*s+offset,x+s,y+s+offset);	// bottom
-			g.drawLine(x+3*s,y+s+offset,x+4*s,y+s+offset);	// input wire
-			if(controlOrientation == JLSInfo.Orientation.DOWN) {
-				g.drawLine(x+2*s,(int)(y+2*s-.5*s),x+2*s,y+3*s);  // control wire
-			}
-			else {
-				g.drawLine(x+2*s,(int)(y+s+.5*s),x+2*s,y);	// control wire
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.UP) {
-			int offset = 0;
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				offset = s;
-			}
-			g.drawLine(x+s+offset,y+3*s,x+s+offset,y+4*s);	// output wire
-			g.drawLine(x+offset,y+3*s,x+2*s+offset,y+3*s);	// back
-			g.drawLine(x+s+offset,y+s,x+2*s+offset,y+3*s);	// top
-			g.drawLine(x+s+offset,y+s,x+offset,y+3*s);	// bottom
-			g.drawLine(x+s+offset,y+s,x+s+offset,y);	// input wire
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				g.drawLine(x,y+2*s,(int)(x+s+.5*s),y+2*s);	// control wire
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT) {
-				g.drawLine((int)(x+s+.5*s),y+2*s,x+3*s,y+2*s);	// control wire
-			}
-		}
-		else if(gateOrientation == JLSInfo.Orientation.DOWN) {
-			int offset = 0;
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				offset = s;
-			}
-			g.drawLine(x+s+offset,y+3*s,x+s+offset,y+4*s);	// input wire
-			g.drawLine(x+offset,y+s,x+2*s+offset,y+s);	// back
-			g.drawLine(x+offset,y+s,x+s+offset,y+3*s);	// top
-			g.drawLine(x+s+offset,y+3*s,x+2*s+offset,y+s);	// bottom
-			g.drawLine(x+s+offset,y+s,x+s+offset,y);	// output wire
-			if(controlOrientation == JLSInfo.Orientation.LEFT) {
-				g.drawLine(x,y+2*s,(int)(x+s+.5*s),y+2*s);	// control wire
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT) {
-				g.drawLine((int)(x+s+.5*s),y+2*s,x+3*s,y+2*s);	// control wire
-			}
-		}
+		GridTransform.Chain t = placement();
+		t.drawLine(g,x,y,0,s,s,s);				// input wire
+		t.drawLine(g,x,y,s,0,s,2*s);			// back
+		t.drawLine(g,x,y,s,0,3*s,s);			// top
+		t.drawLine(g,x,y,s,2*s,3*s,s);			// bottom
+		t.drawLine(g,x,y,3*s,s,4*s,s);			// output wire
+		t.drawLine(g,x,y,2*s,3*s/2,2*s,3*s);	// control wire
 		// draw inputs and outputs
 		inputs.get(0).draw(g);
 		inputs.get(1).draw(g);
@@ -244,102 +189,67 @@ public class TriState extends LogicElement {
 		
 	} // end of draw method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, int value) {
-		
-		if (name.equals("bits")) {
-			bits = value;
-		} else if (name.equals("delay")) {
-			propDelay = value;
-		} else {
-			super.setValue(name,value);
+	// Declarative persistence (#23): one declaration drives save, load
+	// dispatch, and copy for this element's own attributes.
+	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("bits") {
+			protected int get(Element el) { return ((TriState)el).bits; }
+			protected void set(Element el, int v) { ((TriState)el).bits = v; }
+		},
+		new Attribute.IntAttribute("delay") {
+			protected int get(Element el) { return ((TriState)el).propDelay; }
+			protected void set(Element el, int v) { ((TriState)el).propDelay = v; }
+		},
+		new Attribute.OrientationAttribute("Gorient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((TriState)el).gateOrientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((TriState)el).gateOrientation = o;
+			}
+		},
+		new Attribute.OrientationAttribute("Corient") {
+			protected JLSInfo.Orientation getOrientation(Element el) {
+				return ((TriState)el).controlOrientation;
+			}
+			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+				((TriState)el).controlOrientation = o;
+			}
 		}
-	} // end of setValue method
-	
+	);
+
+	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
+			concatAttributes(OWN_ATTRIBUTES);
+
+	/**
+	 * Base attributes plus this element's own, in save order (#23).
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return ALL_ATTRIBUTES;
+	} // end of savedAttributes method
+
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT TriState");
 		super.save(output);
-		output.println(" int bits " + bits);
-		output.println(" int delay " + propDelay);
-		output.println(" String Gorient \"" + gateOrientation.toString() + "\"");
-		output.println(" String Corient \"" + controlOrientation.toString() + "\"");
 		output.println("END");
 	} // end of save method
-	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
-	public void setValue(String name, String value) {
-		
-		if (name.equals("Gorient")) {
-			if(value.equals("LEFT"))
-			{
-				gateOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				gateOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				gateOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				gateOrientation = JLSInfo.Orientation.DOWN;
-			}
-		} 
-		else if(name.equals("Corient"))
-		{
-			if(value.equals("LEFT"))
-			{
-				controlOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				controlOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(value.equals("UP"))
-			{
-				controlOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(value.equals("DOWN"))
-			{
-				controlOrientation = JLSInfo.Orientation.DOWN;
-			}
-		}
-		else 
-		{
-			super.setValue(name,value);
-		}
-	} // end of setValue method
-	
+
 	/**
 	 * Copy this element.
-	 * 
+	 *
 	 * @return a copy of this tri-state.
 	 */
 	public Element copy() {
-		
+
 		TriState it = new TriState(circuit);
-		it.bits = bits;
-		it.gateOrientation = gateOrientation;
-		it.controlOrientation = controlOrientation;
-		it.propDelay = propDelay;
 		it.inputs.add(inputs.get(0).copy(it));
 		it.inputs.add(inputs.get(1).copy(it));
 		it.outputs.add(outputs.get(0).copy(it));
@@ -431,22 +341,7 @@ public class TriState extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(controlOrientation == JLSInfo.Orientation.LEFT)
-		{
-			controlOrientation = JLSInfo.Orientation.RIGHT;
-		}
-		else if(controlOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			controlOrientation = JLSInfo.Orientation.LEFT;
-		}
-		else if(controlOrientation == JLSInfo.Orientation.UP)
-		{
-			controlOrientation = JLSInfo.Orientation.DOWN;
-		}
-		else if(controlOrientation == JLSInfo.Orientation.DOWN)
-		{
-			controlOrientation = JLSInfo.Orientation.UP;
-		}
+		controlOrientation = controlOrientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;
@@ -489,76 +384,13 @@ public class TriState extends LogicElement {
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			if(controlOrientation == JLSInfo.Orientation.LEFT)
-			{
-				controlOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.DOWN)
-			{
-				controlOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				controlOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.UP)
-			{
-				controlOrientation = JLSInfo.Orientation.LEFT;
-			}
-			
-			if(gateOrientation == JLSInfo.Orientation.LEFT)
-			{
-				gateOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.DOWN)
-			{
-				gateOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				gateOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.UP)
-			{
-				gateOrientation = JLSInfo.Orientation.LEFT;
-			}
-			
+			controlOrientation = controlOrientation.ccw();
+			gateOrientation = gateOrientation.ccw();
 		}
 		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			if(controlOrientation == JLSInfo.Orientation.LEFT)
-			{
-				controlOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.DOWN)
-			{
-				controlOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				controlOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(controlOrientation == JLSInfo.Orientation.UP)
-			{
-				controlOrientation = JLSInfo.Orientation.RIGHT;
-			}
-			
-			if(gateOrientation == JLSInfo.Orientation.LEFT)
-			{
-				gateOrientation = JLSInfo.Orientation.UP;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.DOWN)
-			{
-				gateOrientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.RIGHT)
-			{
-				gateOrientation = JLSInfo.Orientation.DOWN;
-			}
-			else if(gateOrientation == JLSInfo.Orientation.UP)
-			{
-				gateOrientation = JLSInfo.Orientation.RIGHT;
-			}
+			controlOrientation = controlOrientation.cw();
+			gateOrientation = gateOrientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();

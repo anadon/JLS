@@ -212,4 +212,34 @@ public abstract class Attribute {
 
 	} // end of StringAttribute class
 
+	/**
+	 * A String-typed attribute holding a JLSInfo.Orientation. Saves the
+	 * enum name; loading an unknown string leaves the orientation
+	 * unchanged, as every handwritten loader did.
+	 */
+	public abstract static class OrientationAttribute extends StringAttribute {
+
+		protected OrientationAttribute(String name) {
+
+			super(name);
+		} // end of constructor
+
+		protected abstract jls.JLSInfo.Orientation getOrientation(Element el);
+
+		protected abstract void setOrientation(Element el,
+				jls.JLSInfo.Orientation value);
+
+		protected String get(Element el) {
+
+			return getOrientation(el).toString();
+		} // end of get method
+
+		protected void set(Element el, String value) {
+
+			setOrientation(el, jls.JLSInfo.Orientation.parse(value,
+					getOrientation(el)));
+		} // end of set method
+
+	} // end of OrientationAttribute class
+
 } // end of Attribute class

@@ -72,4 +72,127 @@ public final class GridTransform {
 		return new Dimension(height, width);
 	} // end of rotatedSize method
 
+	/**
+	 * Start a composed transform from a canonical box of the given size.
+	 * Operations are applied in the order they are chained.
+	 */
+	public static Chain chain(int width, int height) {
+
+		return new Chain(width, height);
+	} // end of chain method
+
+	/**
+	 * A composed sequence of grid transforms over a canonical box. An
+	 * element declares its geometry once, in one canonical orientation,
+	 * builds the chain for its current orientation, and maps every put
+	 * offset and drawing coordinate through it (issue #24).
+	 */
+	public static final class Chain {
+
+		private static final int CW = 0, CCW = 1, R180 = 2, MX = 3, MY = 4;
+
+		private final int canonicalWidth;
+		private final int canonicalHeight;
+		private final java.util.List<Integer> ops =
+				new java.util.ArrayList<Integer>();
+
+		private Chain(int width, int height) {
+
+			canonicalWidth = width;
+			canonicalHeight = height;
+		} // end of constructor
+
+		public Chain rotateCW() {
+
+			ops.add(CW);
+			return this;
+		} // end of rotateCW method
+
+		public Chain rotateCCW() {
+
+			ops.add(CCW);
+			return this;
+		} // end of rotateCCW method
+
+		public Chain rotate180() {
+
+			ops.add(R180);
+			return this;
+		} // end of rotate180 method
+
+		public Chain mirrorX() {
+
+			ops.add(MX);
+			return this;
+		} // end of mirrorX method
+
+		public Chain mirrorY() {
+
+			ops.add(MY);
+			return this;
+		} // end of mirrorY method
+
+		/**
+		 * Map a point from canonical coordinates through every chained
+		 * transform.
+		 */
+		public Point map(int px, int py) {
+
+			int w = canonicalWidth;
+			int h = canonicalHeight;
+			Point p = new Point(px, py);
+			for (int op : ops) {
+				switch (op) {
+				case CW:
+					p = GridTransform.rotateCW(p.x, p.y, w, h);
+					int t = w; w = h; h = t;
+					break;
+				case CCW:
+					p = GridTransform.rotateCCW(p.x, p.y, w, h);
+					t = w; w = h; h = t;
+					break;
+				case R180:
+					p = GridTransform.rotate180(p.x, p.y, w, h);
+					break;
+				case MX:
+					p = GridTransform.mirrorX(p.x, p.y, w, h);
+					break;
+				default:
+					p = GridTransform.mirrorY(p.x, p.y, w, h);
+					break;
+				}
+			}
+			return p;
+		} // end of map method
+
+		/**
+		 * The box dimensions after every chained transform.
+		 */
+		public Dimension size() {
+
+			int w = canonicalWidth;
+			int h = canonicalHeight;
+			for (int op : ops) {
+				if (op == CW || op == CCW) {
+					int t = w; w = h; h = t;
+				}
+			}
+			return new Dimension(w, h);
+		} // end of size method
+
+		/**
+		 * Draw a line whose endpoints are canonical coordinates, mapped
+		 * through the chain and offset by the element position.
+		 */
+		public void drawLine(java.awt.Graphics g, int originX, int originY,
+				int x1, int y1, int x2, int y2) {
+
+			Point p1 = map(x1, y1);
+			Point p2 = map(x2, y2);
+			g.drawLine(originX + p1.x, originY + p1.y,
+					originX + p2.x, originY + p2.y);
+		} // end of drawLine method
+
+	} // end of Chain class
+
 } // end of GridTransform class

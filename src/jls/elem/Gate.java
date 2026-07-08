@@ -333,8 +333,17 @@ public abstract class Gate extends LogicElement {
 	} // end of copy method
 	
 	/**
+	 * Gate sizes are a pure function of input count and orientation,
+	 * recomputed by init() on every load, so they are not saved (#21).
+	 */
+	protected boolean sizeIsRecomputedOnLoad() {
+
+		return true;
+	} // end of sizeIsRecomputedOnLoad method
+
+	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The output writer.
 	 * @param type The type of gate (e.g., "AND"), all capitals.
 	 * @param triState If true, save that this element has a tri-state output.

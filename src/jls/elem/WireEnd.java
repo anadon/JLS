@@ -506,8 +506,18 @@ public class WireEnd extends LogicElement {
 	} // end of getCopy method
 	
 	/**
+	 * Wire ends are always JLSInfo.pointDiameter squares, set by init()
+	 * on every load, so their size is not saved (#21). They dominate
+	 * saved files: every wire segment endpoint is one of these blocks.
+	 */
+	protected boolean sizeIsRecomputedOnLoad() {
+
+		return true;
+	} // end of sizeIsRecomputedOnLoad method
+
+	/**
 	 * Save this wire end in a file.
-	 * 
+	 *
 	 * @param output A PrintWriter to write to.
 	 */
 	public void save(PrintWriter output) {

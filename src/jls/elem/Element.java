@@ -363,8 +363,10 @@ public class Element {
 		output.println(" int id " + id);
 		output.println(" int x " + x);
 		output.println(" int y " + y);
-		output.println(" int width " + width);
-		output.println(" int height " + height);
+		if (!sizeIsRecomputedOnLoad()) {
+			output.println(" int width " + width);
+			output.println(" int height " + height);
+		}
 		if (uneditable) {
 			output.println(" int fixed 1");
 		}
@@ -372,6 +374,20 @@ public class Element {
 			output.println(" int trpos " + tracePosition);
 		}
 	} // end of save method
+
+	/**
+	 * Whether this element's init() recomputes width/height
+	 * unconditionally on load. If so, saving them is redundant and they
+	 * are omitted to shrink saved files (#21); the loader has always
+	 * tolerated absent attributes, so older JLS versions still read the
+	 * files.
+	 *
+	 * @return false unless a subclass overrides.
+	 */
+	protected boolean sizeIsRecomputedOnLoad() {
+
+		return false;
+	} // end of sizeIsRecomputedOnLoad method
 
 	/**
 	 * Highlight this element on the screen.

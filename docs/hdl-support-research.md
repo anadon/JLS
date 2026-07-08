@@ -10,6 +10,14 @@ independently verified and are orientation only. All claims current as of
 2026-07-08; supported-board lists, parser coverage, and release states are
 moving targets.*
 
+*Follow-up, same month: the report's open questions 1–3 were finalized by a
+second, targeted research pass (Logisim-evolution source read; Yosys cell
+library, pass, and yosys2digitaljs source read plus JLS element-model
+analysis; ANTLR grammar issue-tracker and Maven-ecosystem survey). The
+resolved answers are in §7, and §§2–3 and the staged path in §6 are updated
+where the answers changed them. Implementation issues for the staged path
+are filed as sub-issues of #59.*
+
 ## Executive summary
 
 HDL "support" is three different problems with very different feasibility for
@@ -140,19 +148,58 @@ no in-house HDL semantics; the synthesizer defines the accepted subset. This
 is a working, maintained proof of the exact pipeline JLS would need for
 import.
 
+### Logisim-evolution — the other Java reference point **[verified follow-up]**
+
+Resolved by a source-level read of `github.com/logisim-evolution/logisim-evolution`
+(`main` branch, 2026-07-08); every claim below is backed by fetched source
+files (see §7.1 for the detailed evidence trail):
+
+- **Direction: export both VHDL and Verilog; no general HDL import.** The
+  output language is a global preference defaulting to VHDL
+  (`AppPreferences.java`, `hdlType`); the `HdlGeneratorFactory` interface
+  declares both languages.
+- **Implementation: its own HDL generator framework, one Java generator
+  class per library component** (`com.cburch.logisim.fpga.hdlgenerator` +
+  e.g. `MultiplexerHdlGeneratorFactory`, `AbstractGateHdlGenerator`) — the
+  opposite build-vs-delegate choice from the Yosys-netlist pattern, and a
+  maintenance burden JLS should note: every new component needs a matching
+  generator.
+- **FPGA flow drives four external toolchains via generated scripts**:
+  Quartus, Xilinx ISE, Vivado, and an open-source flow (GHDL→Yosys→
+  nextpnr-ecp5→ecppack→openFPGALoader — currently Lattice ECP5 only).
+  The download pipeline is DRC → fits-board check → interactive pin-mapping
+  GUI (click on a photo of the board) → HDL generation → vendor script →
+  tool invocation.
+- **Board database: 29 built-in XML board files** (BASYS3, DE0/DE10, Zybo,
+  Alchitry Au, …), each with FPGA part, pin assignments, and an embedded
+  board photo; users can add up to 20 external board files and there is a
+  full board-editor GUI.
+- **Its embedded-HDL component is VHDL-only and needs a commercial
+  simulator**: the `VhdlEntity` component parses the entity header for
+  ports, but in-simulator behavior requires **Questa/ModelSim** over a
+  TCP/Tcl socket bridge; without it the component outputs UNKNOWN. An open
+  issue (#84) has sought GHDL co-simulation for years; a fork did it but was
+  never merged. This validates the report's Stage 3 shape (external
+  co-simulation) while warning against a commercial-tool dependency —
+  Digital's GHDL/Icarus choice is the better model.
+- **Test vectors and autograder machinery are strong**: a documented
+  test-vector file format (don't-cares, high-Z, sequential mode), a GUI
+  runner, and a headless CLI (`--test-vector` with exit codes, `--tty`
+  with csv/table outputs, `--substitute` for grading against reference
+  implementations, `--test-fpga … HDLONLY` for scripted HDL generation).
+  This is the concrete catch-up bar for JLS's batch mode (§4).
+- **Pedagogical framing is thin**: the FPGA/HDL flow is presented
+  operationally (generated files + board-mapping GUI), with no first-party
+  "how your schematic maps to HDL" material — consistent with Digital's
+  "deployment vehicle" philosophy arrived at independently.
+
 ### Other free and proprietary tools **[unverified survey]**
 
-The harness's claims about the tools below did **not** survive adversarial
-verification (mostly for lack of independently fetchable primary sources
-within the run), so research question 2 is only partially answered with
-verified material. The following is orientation from general knowledge —
-treat as leads to confirm, not facts:
+The harness's claims about the remaining tools did **not** survive
+adversarial verification (mostly for lack of independently fetchable primary
+sources within the run). The following is orientation from general
+knowledge — treat as leads to confirm, not facts:
 
-- **Logisim-evolution** (Java, the most widely used Logisim fork): has an
-  FPGA-synthesis flow that generates VHDL/Verilog for supported boards —
-  export-direction, like Digital. How its HDL generation and board database
-  are implemented, and its test-vector/autograder features, is the top open
-  question left by this research (§7).
 - **DEEDS** (Genoa): exports VHDL for FPGA use; schematic-first teaching tool.
 - **TkGate**: its own Verilog-*like* save format; not standard-Verilog
   interoperable.
@@ -182,11 +229,58 @@ treat as leads to confirm, not facts:
 | Yosys | External synthesizer; `read_verilog` → `write_json` netlist | ISC | ✔ (subprocess — no linking question at all) | Defines the accepted synthesizable subset for you; VHDL possible via the GHDL Yosys plugin. |
 | GHDL, Icarus Verilog | External simulators for co-simulation and CI validation | GPLv2+ | ✔ as subprocesses | The Digital-proven pattern. |
 
-Bottom line: for **Verilog**, JLS can have a native-Java parser today (ANTLR,
-MIT) if it ever wants one — but the recommended import path doesn't need it.
-For **VHDL**, there is *no* good maintained Java parsing option; VHDL import
-would route through Yosys+GHDL-plugin the same way as Verilog. External
-subprocess integration sidesteps license-linking questions entirely.
+**Follow-up findings that sharpen this table** (§7.3 for full evidence):
+
+- The ANTLR grammars are weaker in practice than their existence suggests.
+  Their preprocessor grammars only *recognize* backtick directives on a side
+  token channel — macros are **never expanded**, includes never resolved
+  (grammars-v4 is action-free by policy), so `input [\`WIDTH-1:0] x` parses
+  wrongly unless the caller preprocesses first. The Verilog-2005
+  lexer+pre-parser combination has an open, unfixed "produces an empty tree"
+  CI-coverage bug (grammars-v4 #3348); the SystemVerilog grammar reportedly
+  rejects non-ANSI module headers (#3082), behaves differently across
+  targets (#2401), and is ~23× slower than the Verilog grammar on the
+  repo's own performance table (independent reports: 131 s / 1.3 GB for a
+  1.3 MB design). Test corpora are smoke-test sized (9 real files for
+  Verilog; ~120 spec snippets for SV). Neither grammar is published to
+  Maven Central.
+- **No maintained Java semantic layer exists.** Maven Central's only
+  Verilog artifact is a tree-sitter CST binding (no semantics); Verible and
+  slang are C++ with Python bindings only; the closest JVM prior art
+  (xprova/netlist-graph, Java+ANTLR, MIT) is dormant since ~2018.
+  vMAGIC is additionally **not on Maven Central** (repo1 returns 404).
+- **For the black-box use case (parse a module/entity header for ports),
+  the pragmatic ranking is therefore inverted**: a small hand-written
+  header scanner (comments, a minimal `` `define/`ifdef `` subset, ANSI and
+  non-ANSI port styles — a few hundred dependency-free lines) beats
+  carrying the ANTLR runtime plus an under-tested grammar *plus* a macro
+  expander you'd still have to write. For robust real-world files, external
+  Yosys already emits exactly the needed data (`write_json`: port
+  directions, exact bit offsets/widths, evaluated parameter defaults);
+  Verilator `-E`/`--json-only` is an alternative; Icarus has no JSON
+  output. VHDL has no preprocessor, so an `entity … end` header scanner is
+  even simpler; GHDL's `--file-to-xml` exists but its format is
+  version-unstable.
+
+**Auto-layout licensing (needed for import, §6 Stage 2):** ELK (Eclipse
+Layout Kernel) is the proven algorithm family for schematic layout — pure
+Java, on Maven Central, and DigitalJS ships on elkjs (`layered` +
+orthogonal routing). But ELK is plain **EPL-2.0 with no GPL secondary-license
+designation** (Exhibit A unfilled, NOTICE declares none), which the FSF
+classifies as GPL-incompatible — **GPLv3 JLS cannot link ELK in-process and
+distribute the result**. Clean options: run ELK out-of-process (separate
+JVM, JSON over pipes — mere aggregation), or hand-roll a heuristic layered
+layout. JGraphX (BSD-3, has a Sugiyama layout) is archived/EOL since 2020;
+JUNG has no layered layout; yFiles is proprietary.
+
+Bottom line: for **Verilog**, the recommended import path needs no Java
+parser at all (Yosys does the parsing), and the black-box feature needs
+only a header scanner — the ANTLR grammars are a last resort, not a
+foundation. For **VHDL**, there is *no* good maintained Java parsing
+option; VHDL routes through Yosys+GHDL-plugin (import) or a trivial
+entity-header scanner (black-box). External subprocess integration
+sidesteps license-linking questions entirely — which matters twice over
+now that ELK's license rules out in-process linking too.
 
 ---
 
@@ -253,23 +347,65 @@ Memory/StateMachine templates dominating the effort.
 
 **Stage 2 — synthesizable-Verilog import via external Yosys (separate
 milestone, decide after Stage 1 ships).**
-`yosys -p "read_verilog …; prep; write_json"` → parse JSON (one small,
-well-documented format) → map Yosys cells to JLS elements. The key open
-technical question is the **cell-mapping cost**: JLS's element set (gates,
-mux, decoder, adder, register, memory) covers the common cells (`$and`,
-`$mux`, `$dff`, `$mem`, …) but Yosys emits a wider family (`$adffe`,
-`$sdffce`, width-parameterized cells); either run a `techmap` pass to a
-restricted cell library first (recommended) or grow JLS's element set.
-Auto-placement of the imported netlist is a real sub-project (DigitalJS uses
-an auto-layouter; JLS would need one). Yosys is an external user-installed
+The mapping-cost question (§7.2) resolved **favorably**: with the pipeline
+
+```
+read_verilog design.v
+setattr -mod -unset top; hierarchy -auto-top
+proc; opt_clean
+memory -nomap; wreduce -memx; opt    # keep $mem_v2 for the ROM case
+dffunmap                             # clock-enable + sync-reset → $dff + $mux (exact)
+pmuxtree                             # $pmux → $mux trees
+techmap -map jls_map.v               # ~6-10 rules: $sub,$neg,$xnor,$eq/$ne,
+                                     # comparators, variable shifts, $demux
+opt_clean; write_json out.json
+```
+
+the surviving cell set is ~15 types, every one with a direct or ≤4-element
+JLS realization — JLS's N-input gates, true-parity XOR, latch-capable
+Register with initial values, tri-state nets, Mux (which is exactly
+`$bmux`), Adder with carry in/out, and Splitter/Binder line up unusually
+well with Yosys's model. Because the importer writes JLS's *text save
+format* directly (the loader accepts plain text; wires attach by
+element-id + port-name references, not geometry), no GUI automation is
+needed and connectivity is correct independent of layout quality.
+
+The importer must **reject loudly and precisely** (residual named cells
+make this easy) the genuine gaps: **async-reset flip-flops** (`$adff`
+family — the idiomatic `always @(posedge clk or posedge rst)` pattern;
+either teach sync reset, which `dffunmap` handles exactly, or grow Register
+with an async-clear pin as a contained element change), **clocked or
+multi-port memories** (JLS Memory is an async single-port SRAM/ROM; only
+the async-read ROM maps faithfully — offer `memory_map` for small RAMs),
+**wide arithmetic** (`$mul/$div/$mod/$pow`), latches with set/reset, and
+x/z semantics (JLS is 2-state; coerce and document). Signedness is compiled
+away in the techmap rules.
+
+**Auto-placement is the larger half and its own workstream**: layer 1,
+the mechanical netlist-to-JLS-graph conversion (bit-vector connections →
+Splitter/Binder mesh, Constants, WireEnd chains on the 12-px grid) is the
+bulk of the importer; layer 2, placement proper, should start as a
+hand-rolled heuristic layered layout (longest-path layering, barycenter
+ordering, greedy orthogonal routing — adequate at classroom scale) behind
+an interface, because the proven layouter (ELK Layered, which DigitalJS
+uses) is EPL-2.0-only and **cannot be linked into GPLv3 JLS**; an
+out-of-process ELK runner can slot in later. Treat layout quality as a
+ratchet, not a launch gate. Yosys is an external user-installed
 dependency — document it, detect it, degrade gracefully.
 
 **Stage 3 (optional) — HDL black-box components co-simulated externally.**
-Digital-style: an "HDL component" element whose ports come from parsing the
-module header (the one place the ANTLR grammar earns its keep) and whose
-behavior runs in a GHDL/Icarus subprocess stepped in lockstep with JLS's
-event loop. Highest plumbing cost, biggest didactic payoff (mixed
-schematic/HDL labs). Decide only after Stages 1–2 see classroom use.
+Digital-style: an "HDL component" element whose ports come from a **small
+hand-written module/entity header scanner** (comments + minimal
+`` `define/`ifdef `` + ANSI and non-ANSI port styles; a few hundred
+dependency-free lines — §7.3 found this strictly better than the ANTLR
+route, whose grammars never expand macros and carry open correctness/
+performance bugs), with external Yosys `write_json` as the robust fallback
+for gnarly files. Behavior runs in a GHDL/Icarus subprocess stepped in
+lockstep with JLS's event loop — Digital's choice; Logisim-evolution's
+Questa/ModelSim socket bridge shows why a *commercial* simulator dependency
+is the mistake to avoid (its own issue tracker has sought GHDL for years).
+Highest plumbing cost, biggest didactic payoff (mixed schematic/HDL labs).
+Decide only after Stages 1–2 see classroom use.
 
 **Stage 4 — SystemC:** structural C++ netlist printer on the Stage 1 walk,
 *if and only if* user demand appears. Otherwise explicitly out of scope.
@@ -281,20 +417,90 @@ dependency, a mapping layer, and a layout problem; Stage 3 adds process
 lifecycle and simulation-synchronization complexity. Size each stage against
 the actual codebase before committing (see open questions).
 
-## 7. Open questions for follow-up
+## 7. Open questions — resolved (July 2026 follow-up)
 
-1. **Logisim-evolution's actual HDL/FPGA implementation** (direction, subset,
-   parser vs. toolchain, board database, test vectors, autograders) — the
-   biggest verified-coverage gap in this report; worth a focused code-level
-   read of its repo before Stage 1 design freezes.
-2. **Yosys cell ↔ JLS element mapping cost** — can JLS's element model
-   represent a `techmap`-restricted Yosys cell library without lossy
-   transformation, and what does auto-placement require?
-3. **ANTLR Verilog grammar completeness on real student code** (preprocessor,
-   elaboration) and whether any maintained Java semantic layer exists on top.
-4. **A maintained GPLv3-compatible VHDL-2008 path usable from Java** —
-   subprocess wrapper around hdlConvertor or GHDL's libghdl, a revived
-   vMAGIC fork, or the Yosys+GHDL-plugin route as the only VHDL door.
+Questions 1–3 were finalized by a targeted second research pass; question 4
+was largely answered in passing.
+
+### 7.1 Logisim-evolution's HDL/FPGA implementation — RESOLVED
+
+Source-level read of the repo (`main`, 2026-07-08); summary in §2. Key
+facts, each verified against fetched source files: export-only for VHDL
+**and** Verilog via its own per-component Java generator framework
+(`com.cburch.logisim.fpga.hdlgenerator`; output language is a global
+preference, `AppPreferences.java` `hdlType`, default VHDL); no general HDL
+import; the FPGA download flow scripts four external toolchains
+(`VendorSoftware.java`: Quartus `quartus_sh/…`, Xilinx ISE `xst/…`, Vivado,
+and open-source `ghdl`→`yosys -m ghdl`→`nextpnr-ecp5`→`ecppack`→
+`openFPGALoader`, ECP5-only per issue #84); 29 built-in XML board files
+with embedded photos, user-extensible (20 external slots) plus a board
+editor GUI; the `VhdlEntity` embedded-HDL component parses entity headers
+in Java (`VhdlParser.java`) but co-simulates only via **Questa/ModelSim**
+over a Tcl/TCP socket (`VhdlSimulatorTclBinder.java`) — outputs UNKNOWN
+without it, GHDL support requested for years (#84) but never merged;
+test-vector engine with documented format plus headless CLI
+(`--test-vector` exit codes, `--tty` csv/table, `--substitute`,
+`--test-fpga … HDLONLY`). Consequences adopted in §6: per-component
+generator frameworks are viable but costly (Digital's approach remains the
+model for JLS); avoid commercial-simulator co-simulation dependencies; the
+CLI/test-vector feature set is the §4 catch-up bar. Evidence URLs: repo
+paths cited above under
+`github.com/logisim-evolution/logisim-evolution/…` (README,
+`src/main/java/com/cburch/logisim/{fpga,vhdl,prefs}/…`,
+`src/main/resources/resources/logisim/boards/`, `docs/test_vector.md`,
+discussions #859, issue #84).
+
+### 7.2 Yosys cell ↔ JLS element mapping cost — RESOLVED, favorable
+
+Full analysis from JLS source (element capabilities at file:line level) plus
+Yosys cell-library/pass sources (`techlibs/common/simlib.v`, `simcells.v`,
+`passes/techmap/{techmap,dffunmap,dfflegalize,pmuxtree,simplemap}.cc`,
+`passes/memory/memory_map.cc`, `backends/json/json.cc`) and the
+yosys2digitaljs pipeline (`src/core.ts`). Verdict: **tractable and small.**
+`dffunmap` eliminates clock-enable/sync-reset FF variants *exactly* at word
+level; `pmuxtree` eliminates `$pmux`; one custom `jls_map.v` (~6–10 rules)
+covers `$sub/$neg/$xnor/$eq/$ne`/comparators/variable-shifts/`$demux`; the
+surviving ~15 cell types all map directly or in ≤4 JLS elements (details
+and the full mapping table are reflected in §6 Stage 2). Genuine,
+loudly-rejectable gaps: async-reset FFs (`$adff` family — JLS Register has
+no reset pin; sync-reset teaching idiom works exactly), clocked/multi-port
+memories (JLS Memory is async single-port with tri-state output; async-read
+ROM maps faithfully), `$mul/$div/$mod/$pow`, set/reset latches, and x/z
+bits (JLS BitSet is 2-state). The importer generates JLS's plain-text save
+format directly (loader accepts it; wires attach by id+port-name refs), so
+correctness is layout-independent. Auto-placement: ELK Layered is the
+proven algorithm (DigitalJS ships elkjs) but ELK is EPL-2.0 **without** the
+GPL secondary-license designation — per the FSF, GPL-incompatible for
+linking; start with a hand-rolled heuristic layered layout behind an
+interface, optionally an out-of-process ELK runner later.
+
+### 7.3 ANTLR Verilog grammars on real code — RESOLVED, negative
+
+The grammars-v4 Verilog/SystemVerilog grammars *recognize* preprocessor
+directives on a side token channel but **never expand macros or resolve
+includes** (action-free by policy) — `input [\`WIDTH-1:0] x` fails without
+external preprocessing; the Verilog lexer+pre-parser combination has an
+open "empty tree on any input" bug (#3348); the SV grammar is reported
+ANSI-header-only (#3082), target-inconsistent (#2401), and ~23× slower
+than the Verilog grammar (repo performance table; independent report:
+131 s/1.3 GB for 1.3 MB of SV). Test corpora: 9 real Verilog files, ~120 SV
+spec snippets; not on Maven Central. **No maintained Java semantic layer
+exists** (Central's only Verilog artifact is a tree-sitter CST binding;
+Verible/slang are C++/Python-facing; nearest JVM prior art dormant since
+~2018). Recommendation adopted in §6 Stage 3: hand-written header scanner
+as the built-in path; external Yosys `write_json` (directions, exact bit
+widths, evaluated parameter defaults) as the robust path; ANTLR demoted to
+last resort.
+
+### 7.4 VHDL-from-Java path — largely answered in passing
+
+vMAGIC is dead *and* absent from Maven Central (repo1 404s); GHDL's
+`--file-to-xml` can dump an analyzed AST for entity/port extraction via
+subprocess but its format is version-unstable and huge. Since VHDL has no
+preprocessor, a hand-written `entity … end` header scanner covers the
+black-box case, and Yosys+GHDL-plugin remains the only credible VHDL
+*import* door. No further research needed unless Stage 3 VHDL support is
+prioritized.
 
 ## 8. Refuted during verification (for the record)
 
@@ -317,3 +523,11 @@ the actual codebase before committing (see open questions).
 - https://github.com/Nic30/hdlConvertor (VHDL parser capabilities and limits)
 - https://sourceforge.net/projects/vmagic/ + Pohl et al., Int. J. Reconfigurable Computing 2009, doi:10.1155/2009/205149 (vMAGIC)
 - https://ghdl.github.io/ghdl/using/Synthesis.html (GHDL synthesis/Yosys plugin)
+
+Added by the July 2026 follow-up pass (§7):
+
+- Logisim-evolution sources: https://github.com/logisim-evolution/logisim-evolution — README; `src/main/java/com/cburch/logisim/fpga/hdlgenerator/HdlGeneratorFactory.java`; `fpga/download/Download.java`; `fpga/settings/VendorSoftware.java`; `prefs/AppPreferences.java`, `prefs/FpgaBoards.java`; `vhdl/base/VhdlEntity.java`, `vhdl/sim/VhdlSimulatorTclBinder.java`; `src/main/resources/resources/logisim/boards/` (29 board XMLs, e.g. BASYS3.xml); `docs/test_vector.md`; `gui/start/Startup.java`; issue #84, discussion #859
+- Yosys cell library & passes: https://github.com/YosysHQ/yosys — `techlibs/common/simlib.v`, `techlibs/common/simcells.v`, `docs/source/cell/*.rst`, `passes/techmap/{techmap,simplemap,dffunmap,dfflegalize,pmuxtree}.cc`, `passes/memory/memory_map.cc`, `backends/json/json.cc` (readthedocs renderings were proxy-blocked; the generating sources were read instead)
+- yosys2digitaljs pipeline: https://github.com/tilk/yosys2digitaljs (`src/core.ts` `prepare_yosys_script`, `src/index.ts`); DigitalJS layout: https://github.com/tilk/digitaljs (`package.json` elkjs ^0.11.0, `src/elkjs.mjs`)
+- ELK licensing: https://github.com/eclipse-elk/elk (LICENSE.md, NOTICE.md, `Layered.melk`); https://repo1.maven.org/maven2/org/eclipse/elk/; https://www.gnu.org/licenses/license-list.html#EPL2; https://www.gnu.org/licenses/gpl-faq.html#MereAggregation; alternatives https://github.com/jgraph/jgraphx (archived), https://github.com/jrtom/jung
+- ANTLR grammar practicalities: https://github.com/antlr/grammars-v4 issues #3348, #3082, #2401, #2363, #1438, #3632; performance table (repo `performance.html`); https://groups.google.com/g/antlr-discussion/c/ynvgmjjsZTw; https://central.sonatype.com/artifact/io.github.bonede/tree-sitter-verilog; https://github.com/chipsalliance/verible; https://github.com/MikePopoloski/slang; https://github.com/xprova/netlist-graph; Verilator `--json-only`/`-E`: https://github.com/verilator/verilator/blob/master/docs/guide/exe_verilator.rst; Icarus targets: https://steveicarus.github.io/iverilog/usage/command_line_flags.html; GHDL `--file-to-xml`: https://github.com/ghdl/ghdl/blob/master/doc/using/CommandReference.rst

@@ -1034,7 +1034,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			prevOpenDir = chooser.getCurrentDirectory().toString();
 		}else {
 			file = new File(filePath);
-			prevOpenDir = file.getParent().equals("") ? System.getProperty("user.dir") : file.getParent();
+			// a bare relative filename has no parent
+			String parent = file.getParent();
+			prevOpenDir = (parent == null || parent.equals(""))
+					? System.getProperty("user.dir") : parent;
 		}
 		
 		Scanner input = FileAbstractor.openCircuit(filePath);

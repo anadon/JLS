@@ -18,6 +18,7 @@ import java.awt.print.Book;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -1246,11 +1247,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 	}
 	
 	private static Scanner getZipScanner(String filePath){
-		try{
-			ZipFile target = new ZipFile(new File(filePath));
-			Scanner toReturn = testScanner(new Scanner(target.getInputStream(target.getEntry("JLSCircuit")), StandardCharsets.UTF_8));
-			target.close();
-			return toReturn;
+		// Closing the ZipFile closes every stream obtained from it, so the
+		// entry must be read completely before the file is closed (issue #2:
+		// closing early truncated any circuit larger than the Scanner's
+		// internal buffer).
+		try (ZipFile target = new ZipFile(new File(filePath))) {
+			ZipEntry entry = target.getEntry("JLSCircuit");
+			if (entry == null)
+				return null;
+			byte[] contents = target.getInputStream(entry).readAllBytes();
+			return testScanner(new Scanner(new ByteArrayInputStream(contents), StandardCharsets.UTF_8));
 		}catch(Throwable e){
 			return null;
 		}

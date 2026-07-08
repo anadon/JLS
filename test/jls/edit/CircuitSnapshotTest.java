@@ -123,6 +123,11 @@ class CircuitSnapshotTest {
 		Circuit circuit = load(CIRCUIT_TEXT);
 		CircuitSnapshot first = CircuitSnapshot.capture(circuit);
 		for (Element el : circuit.getElements()) {
+			// move something that persists: Wire.move is a no-op by design
+			// (wires follow their ends) and wires don't save
+			if (el instanceof jls.elem.Wire) {
+				continue;
+			}
 			el.move(JLSInfo.spacing, 0);
 			break;
 		}

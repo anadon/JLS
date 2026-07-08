@@ -135,6 +135,88 @@ public class Element {
 		tracePosition = position;
 	} // end of setTracePosition method
 
+	// The attributes every element saves, in their historical save order
+	// (#23). One declaration drives save, copy, and load dispatch.
+	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
+			java.util.List.of(
+		new Attribute.IntAttribute("id") {
+			protected int get(Element el) { return el.id; }
+			protected void set(Element el, int value) { el.id = value; }
+			public void copy(Element from, Element to) {
+				// ids are assigned at save time, never copied
+			}
+		},
+		new Attribute.IntAttribute("x") {
+			protected int get(Element el) { return el.x; }
+			protected void set(Element el, int value) { el.x = value; }
+		},
+		new Attribute.IntAttribute("y") {
+			protected int get(Element el) { return el.y; }
+			protected void set(Element el, int value) { el.y = value; }
+		},
+		new Attribute.IntAttribute("width") {
+			protected int get(Element el) { return el.width; }
+			protected void set(Element el, int value) { el.width = value; }
+			protected boolean omitted(Element el) {
+				// recomputed by init() on load for some elements (#21)
+				return el.sizeIsRecomputedOnLoad();
+			}
+		},
+		new Attribute.IntAttribute("height") {
+			protected int get(Element el) { return el.height; }
+			protected void set(Element el, int value) { el.height = value; }
+			protected boolean omitted(Element el) {
+				return el.sizeIsRecomputedOnLoad();
+			}
+		},
+		new Attribute.IntAttribute("fixed") {
+			protected int get(Element el) { return el.uneditable ? 1 : 0; }
+			protected void set(Element el, int value) {
+				// any saved value means uneditable, as the loader always did
+				el.uneditable = true;
+			}
+			protected boolean omitted(Element el) { return !el.uneditable; }
+			public void copy(Element from, Element to) {
+				to.uneditable = from.uneditable;
+			}
+		},
+		new Attribute.IntAttribute("trpos") {
+			protected int get(Element el) { return el.tracePosition; }
+			protected void set(Element el, int value) { el.tracePosition = value; }
+			protected boolean omitted(Element el) { return el.tracePosition == -1; }
+		}
+	);
+
+	/**
+	 * The attributes this element saves, in save order (#23). Subclasses
+	 * that declare their own attributes return the base list plus their
+	 * own; unconverted subclasses keep their handwritten save/copy/
+	 * setValue methods and only inherit the base list.
+	 *
+	 * @return the attribute list.
+	 */
+	protected java.util.List<Attribute> savedAttributes() {
+
+		return BASE_ATTRIBUTES;
+	} // end of savedAttributes method
+
+	/**
+	 * Build a full attribute list for a subclass: the base attributes
+	 * followed by the subclass's own, preserving save order (#23).
+	 *
+	 * @param own The subclass's own attributes.
+	 *
+	 * @return an immutable combined list.
+	 */
+	protected static java.util.List<Attribute> concatAttributes(
+			java.util.List<Attribute> own) {
+
+		java.util.List<Attribute> all =
+				new java.util.ArrayList<Attribute>(BASE_ATTRIBUTES);
+		all.addAll(own);
+		return java.util.Collections.unmodifiableList(all);
+	} // end of concatAttributes method
+
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
@@ -143,20 +225,10 @@ public class Element {
 	 */
 	public void setValue(String name, int value) {
 
-		if (name.equals("id")) {
-			id = value;
-		} else if (name.equals("x")) {
-			x = value;
-		} else if (name.equals("y")) {
-			y = value;
-		} else if (name.equals("width")) {
-			width = value;
-		} else if (name.equals("height")) {
-			height = value;
-		} else if (name.equals("fixed")) {
-			uneditable = true;
-		} else if (name.equals("trpos")) {
-			tracePosition = value;
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setInt(this, name, value)) {
+				return;
+			}
 		}
 	} // end of setValue method
 
@@ -168,6 +240,11 @@ public class Element {
 	 */
 	public void setValue(String name, long value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setLong(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -178,6 +255,11 @@ public class Element {
 	 */
 	public void setValue(String name, BigInteger value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setBigInt(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -188,6 +270,11 @@ public class Element {
 	 */
 	public void setValue(String name, String value) {
 
+		for (Attribute attr : savedAttributes()) {
+			if (attr.setString(this, name, value)) {
+				return;
+			}
+		}
 	} // end of setValue method
 
 	/**
@@ -224,12 +311,9 @@ public class Element {
 	 */
 	public void copy(Element it) {
 
-		it.x = x;
-		it.y = y;
-		it.width = width;
-		it.height = height;
-		it.uneditable = uneditable;
-		it.tracePosition = tracePosition;
+		for (Attribute attr : savedAttributes()) {
+			attr.copy(this, it);
+		}
 	} // end of copy method
 
 	/**
@@ -356,18 +440,8 @@ public class Element {
 	 */
 	public void save(PrintWriter output) {
 
-		output.println(" int id " + id);
-		output.println(" int x " + x);
-		output.println(" int y " + y);
-		if (!sizeIsRecomputedOnLoad()) {
-			output.println(" int width " + width);
-			output.println(" int height " + height);
-		}
-		if (uneditable) {
-			output.println(" int fixed 1");
-		}
-		if (tracePosition != -1) {
-			output.println(" int trpos " + tracePosition);
+		for (Attribute attr : savedAttributes()) {
+			attr.save(this, output);
 		}
 	} // end of save method
 

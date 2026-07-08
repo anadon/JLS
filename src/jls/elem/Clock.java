@@ -170,6 +170,7 @@ public class Clock extends LogicElement {
 			java.util.List.of(
 		new Attribute.IntAttribute("cycle") {
 			protected int get(Element el) { return ((Clock)el).cycleTime; }
+			@Override
 			protected void set(Element el, int v) {
 				if (v < 1) {
 					throw new IllegalArgumentException(CYCLE_CONSTRAINT);
@@ -179,6 +180,7 @@ public class Clock extends LogicElement {
 		},
 		new Attribute.IntAttribute("one") {
 			protected int get(Element el) { return ((Clock)el).oneTime; }
+			@Override
 			protected void set(Element el, int v) {
 				if (v < 1) {
 					throw new IllegalArgumentException(ONE_CONSTRAINT);

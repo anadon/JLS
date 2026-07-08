@@ -211,6 +211,7 @@ public final class FileAbstractor {
 			super(in);
 		}
 
+		@Override
 		public int read() throws IOException {
 			int b = super.read();
 			if (b >= 0 && --remaining < 0) {
@@ -219,6 +220,7 @@ public final class FileAbstractor {
 			return b;
 		}
 
+		@Override
 		public int read(byte[] buf, int off, int len) throws IOException {
 			int n = super.read(buf, off, len);
 			if (n > 0) {

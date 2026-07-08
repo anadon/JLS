@@ -188,6 +188,7 @@ public abstract class SimpleEditor extends JPanel {
 
 		pendingCheckpoints.remove(fileName);
 		Future<?> deleted = checkpointWriter.submit(new Runnable() {
+			@Override
 			public void run() {
 				new File(fileName).delete();
 			}

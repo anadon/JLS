@@ -592,6 +592,7 @@ public final class InteractiveSimulator extends Simulator {
 				final String reasonText = reason;
 				final Editor edRef = ed;
 				SwingUtilities.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						if (!isQuiet()) {
 							showClock.setText("Time: "+stopTime);
@@ -651,6 +652,7 @@ public final class InteractiveSimulator extends Simulator {
 			final long pausedAt = now;
 			// UI updates on the EDT, not the sim thread (#49, H8)
 			SwingUtilities.invokeLater(new Runnable() {
+				@Override
 				public void run() {
 					if (!isQuiet()) {
 						showClock.setText("Time: "+pausedAt);
@@ -687,6 +689,7 @@ public final class InteractiveSimulator extends Simulator {
 			final long steppedTo = now;
 			final Editor edRef = ed;
 			SwingUtilities.invokeLater(new Runnable() {
+				@Override
 				public void run() {
 					showClock.setText("Time: "+steppedTo);
 					traces.draw();
@@ -717,6 +720,7 @@ public final class InteractiveSimulator extends Simulator {
 			return;
 		runningMsgShown = true;
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				msg.setText("Simulation Running");
 			}
@@ -742,6 +746,7 @@ public final class InteractiveSimulator extends Simulator {
 		lastClockUpdate = nowMillis;
 		final long simTime = now;
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				showClock.setText("Time: "+simTime);
 				// keeps the status bar live for background runs too
@@ -797,6 +802,7 @@ public final class InteractiveSimulator extends Simulator {
 			// called from inside react() on the sim thread (the Pause
 			// element); route the button swap to the EDT (#49, H8)
 			SwingUtilities.invokeLater(new Runnable() {
+				@Override
 				public void run() {
 					action.removeAll();
 					action.add(resume);

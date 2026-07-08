@@ -58,6 +58,7 @@ class LoadErrorReportingTest {
 					new StringReader("CIRCUIT broken\nELEMENT ");
 			private int handedOut = 0;
 
+			@Override
 			public int read(char[] cbuf, int off, int len) throws IOException {
 				int n = head.read(cbuf, off, len);
 				if (n < 0) {
@@ -67,6 +68,7 @@ class LoadErrorReportingTest {
 				return n;
 			}
 
+			@Override
 			public void close() {
 			}
 		};

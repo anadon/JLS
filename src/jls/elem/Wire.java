@@ -218,6 +218,7 @@ public class Wire extends Element {
 	 *
 	 * @return the wire's real bounding rectangle.
 	 */
+	@Override
 	public Rectangle getRect() {
 
 		return getIndexBounds();

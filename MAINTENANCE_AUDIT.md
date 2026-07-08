@@ -116,7 +116,45 @@ All findings verified against the source; line references are to the current
   measure real circuits first, then preset 9, attribute pruning, hex+RLE
   memory encoding — keeping the loader backward compatible (#14 guards).
 
-### Phase 4 — Modernization
+### Phase 4 — Code health: de-duplication, simplification, generalization
+
+Findings from a dedicated duplication/simplification pass; counts verified
+against the source.
+
+- **#22 Gate subclasses**: `And/Or/Nand/Nor/Xor/Not/DelayGate` (~1,550 lines
+  over the 842-line `Gate` base) each duplicate the `previous*` settings
+  statics, `setup()`, `copy()`, and save plumbing; only the outline path and
+  the boolean reduction differ. Make `Gate` data-driven (name + shape +
+  reduction + inversion flag); this also removes 15 of the 25 baselined
+  SpotBugs static-write findings.
+- **#23 Element persistence**: loading is already generic
+  (`Circuit.java:350–441` typed-attribute parser + reflective instantiation)
+  but every element hand-writes `save()` and `copy()`, duplicating attribute
+  names as string literals in both directions. Declare attributes once per
+  element; derive save/load/copy from the declaration.
+- **#24 Orientation geometry**: rotation-aware elements enumerate coordinates
+  per orientation in `if/else` ladders (orientation-conditional references:
+  `TriState` 92, `Mux` 84, `Decoder` 49, `Register` 48, `Gate` 46,
+  `Constant` 46, `Adder` 45, `Clock` 39). Define canonical geometry once and
+  rotate on the 12px grid; verify with the existing headless image export as
+  a visual-regression tool.
+- **#25 Simulator merge**: `BatchSimulator.runSim` and `InterractiveSimulator`
+  duplicate the init + event-loop skeleton (and the interactive class
+  re-implements `Simulator.post()`); template-method the loop in the
+  `Simulator` base with pacing/UI hooks. Fix the `InterractiveSimulator`
+  typo while touching it.
+- **#26 Dialog framework**: 29 hand-rolled `extends JDialog` inner classes
+  across 25 files, with 73 `ok`/`cancel`/`help` button declarations in
+  `jls/elem` alone, each re-wiring the same skeleton and drifting in
+  Enter/Escape behavior. Extract a shared `ElementDialog` base.
+- **#27 Grab-bag**: dead `Circuit.load_JLS2` path referencing the nonexistent
+  `jls.elem2` package (would throw `ClassNotFoundException` if called);
+  `Circuit.getElements()` leaking its live mutable set; 88 `instanceof`
+  checks in `SimpleEditor` (plus the 4-pass `instanceof Wire` draw) to fold
+  into polymorphism or split collections; parallel `InputPin`/`OutputPin` and
+  `JumpStart`/`JumpEnd` structure to hoist into common bases.
+
+### Phase 5 — Modernization
 - **#9 Remove applet support**: `JLSApplet` extends `JApplet`, which is
   deprecated for removal and being dropped from the JDK; browsers removed
   applet support years ago. Remove the class and the `JLSInfo.isApplet` paths.
@@ -128,7 +166,7 @@ All findings verified against the source; line references are to the current
   either way remove the checked-in `lib/jhall.jar`, the stale absolute path
   in `.project`, and the binary `JavaHelpSearch` index files.
 
-### Phase 5 — Ship it
+### Phase 6 — Ship it
 - **#8 Release infrastructure**: version scheme decision, shaded runnable
   jar (`Main-Class: jls.JLS`), tag-triggered release workflow, optional
   `jpackage` installers.

@@ -52,9 +52,8 @@ public class SigGen extends SigSim {
 		// make sure there isn't a signal generator in the circuit already
 		for (Element el : circuit.getElements()) {
 			if (el instanceof SigGen) {
-				JOptionPane.showMessageDialog(JLSInfo.frame,
-						"Only one signal generator per circuit", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(JLSInfo.frame,
+						"Only one signal generator per circuit", "Error");
 				return false;
 			}
 		}
@@ -305,7 +304,7 @@ public class SigGen extends SigSim {
 			System.exit(1);
 		}
 		else {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"error in test file: " + msg);
+			TellUser.error(JLSInfo.frame,"error in test file: " + msg, "Error");
 			return;
 		}
 	} // end of specError method

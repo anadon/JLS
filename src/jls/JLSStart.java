@@ -26,8 +26,11 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -39,7 +42,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
@@ -50,6 +52,9 @@ import javax.swing.event.ChangeListener;
 
 import jls.edit.Editor;
 import jls.elem.Element;
+import jls.hdl.HdlExportException;
+import jls.hdl.HdlExporter;
+import jls.hdl.VerilogEmitter;
 import jls.elem.LogicElement;
 import jls.elem.Memory;
 import jls.elem.OutputPin;
@@ -67,6 +72,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static String paramFile = null;
 	private static String testFile = null;
 	private static String startFile = null;
+	private static String imageFile = null;
+	private static String vcdFile = null;
+	private static String exportFile = null;
 	private static boolean printCircuit = false;
 	private static boolean printCircuitTop;
 	private static String printer = null;
@@ -136,8 +144,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 			// read circuit from file
 			boolean loadOK = circ.load(input);
-			if (input.hasNext())
-				loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+			if (loadOK && input.hasNext()) {
+				// file shouldn't have anything after ENDCIRCUIT; without
+				// a message the failure would be reported blank (#58)
+				loadOK = false;
+				JLSInfo.setLoadError(LoadError.of(
+						LoadError.Category.MALFORMED,
+						"there is extra content after the ENDCIRCUIT trailer",
+						"The file may contain more than one circuit or "
+								+ "trailing garbage; re-save it from JLS."));
+			}
 			input.close();
 			if (!loadOK) {
 				System.err.println("jls: error: " + startFile
@@ -174,6 +190,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 			batchSim.setTimeLimit(timeLimit);
 			batchSim.setTestFile(testFile);
 			batchSim.addTestGen();
+			// enable trace accumulation for VCD export before the run
+			// (issue #72)
+			batchSim.setVcdFile(vcdFile);
 
 			// run simulator
 			batchSim.runSim();
@@ -186,6 +205,17 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (JLSInfo.printTrace) {
 				batchSim.printTrace(printer);
 			}
+
+			// write VCD waveform file if requested (issue #72)
+			if (vcdFile != null) {
+				try {
+					batchSim.writeVcd();
+				} catch (IOException e) {
+					System.err.println("jls: error: can't write VCD file "
+							+ vcdFile + ": " + e.getMessage());
+					System.exit(1);
+				}
+			}
 		}
 		
 		else if (JLSInfo.imgexport) {
@@ -193,7 +223,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			System.setProperty("java.awt.headless", "true");
 
 			if (startFile == null) {
-				System.err.println("image export requires circuit file");
+				System.err.println("jls: error: image export requires a circuit file");
 				System.exit(1);
 			}
 
@@ -207,13 +237,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			String cname = Util.isValidFileName(name);
 			if (cname == null) {
-				System.out.println(startFile + " is not a valid circuit file name");
+				System.err.println("jls: error: " + startFile
+						+ " is not a valid circuit file name");
 				System.exit(1);
 			}
 			Scanner input = FileAbstractor.openCircuit(startFile);
 			if (input == null) {
-				System.out.println("Can't read from " + startFile);
-				System.out.println("    reason: " + JLSInfo.loadError);
+				System.err.println("jls: error: can't open " + startFile
+						+ ": " + JLSInfo.loadError);
 				System.exit(1);
 			}
 
@@ -222,8 +253,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 			// read circuit from file
 			boolean loadOK = circ.load(input);
-			if (input.hasNext())
-				loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+			if (loadOK && input.hasNext()) {
+				// file shouldn't have anything after ENDCIRCUIT; without
+				// a message the failure would be reported blank (#58)
+				loadOK = false;
+				JLSInfo.setLoadError(LoadError.of(
+						LoadError.Category.MALFORMED,
+						"there is extra content after the ENDCIRCUIT trailer",
+						"The file may contain more than one circuit or "
+								+ "trailing garbage; re-save it from JLS."));
+			}
 			input.close();
 			if (!loadOK) {
 				System.err.println("jls: error: " + startFile
@@ -245,11 +284,68 @@ public class JLSStart extends JFrame implements ChangeListener {
 						+ " is not a valid circuit file: " + JLSInfo.loadError);
 				System.exit(1);
 			}
+			// export to the caller-chosen path, or PNG named after the
+			// circuit by default; the format follows the file extension
+			// (issue #71)
+			String outFile = (imageFile != null) ? imageFile : name + ".png";
 			try {
-				circ.exportImage(name + ".jpg");
+				circ.exportImage(outFile);
 			} catch (Exception e) {
-				TellUser.err("Failed to export image for an undetermined reason", true);
-				e.printStackTrace();
+				System.err.println("jls: error: can't export image to "
+						+ outFile + ": " + e);
+				System.exit(1);
+			}
+		}
+
+		else if (JLSInfo.hdlexport) {
+
+			// HDL export (issue #60) is headless like batch mode
+			System.setProperty("java.awt.headless", "true");
+
+			if (startFile == null) {
+				System.err.println("jls: error: HDL export requires a circuit file");
+				System.exit(1);
+			}
+			Circuit circ = loadCircuitHeadless(startFile);
+
+			// walk and render; a rejection lists every offending
+			// element and writes nothing
+			HdlExporter.Result result;
+			try {
+				result = HdlExporter.export(circ, new VerilogEmitter());
+			} catch (HdlExportException e) {
+				System.err.println("jls: error: " + e.getMessage());
+				System.exit(1);
+				return; // unreachable; keeps result definitely assigned
+			}
+			for (String warning : result.warnings) {
+				System.err.println("jls: warning: " + warning);
+			}
+
+			// write to a temp file and rename so a partial export can
+			// never reach the target path (same pattern as circuit save)
+			Path target = Path.of(exportFile);
+			Path temp = Path.of(exportFile + ".tmp");
+			try {
+				java.nio.file.Files.writeString(temp, result.text,
+						StandardCharsets.UTF_8);
+				try {
+					java.nio.file.Files.move(temp, target,
+							java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+							java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+				} catch (java.nio.file.AtomicMoveNotSupportedException ex) {
+					java.nio.file.Files.move(temp, target,
+							java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				}
+			} catch (IOException e) {
+				try {
+					java.nio.file.Files.deleteIfExists(temp);
+				} catch (IOException ignored) {
+					// the error below already covers it
+				}
+				System.err.println("jls: error: can't write " + exportFile
+						+ ": " + e.getMessage());
+				System.exit(1);
 			}
 		}
 
@@ -274,15 +370,94 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of start method
 
 	/**
+	 * Load a circuit file for a headless one-shot mode, exactly as the
+	 * batch and image-export paths do: sniffing loader, trailing-content
+	 * check, finishLoad with no graphics. Any failure prints one
+	 * "jls: error:" line and exits 1; on return the circuit is fully
+	 * assembled (wire nets built).
+	 *
+	 * @param file The circuit file path.
+	 *
+	 * @return the loaded circuit.
+	 */
+	private static Circuit loadCircuitHeadless(String file) {
+
+		String name;
+		if (file.endsWith(".jls~")) {
+			name = file.replaceAll("\\.jls~$","");
+		}
+		else {
+			name = file.replaceAll("\\.jls$","");
+		}
+		String cname = Util.isValidFileName(name);
+		if (cname == null) {
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file name");
+			System.exit(1);
+		}
+
+		Scanner input = FileAbstractor.openCircuit(file);
+		if (input == null) {
+			System.err.println("jls: error: can't open " + file
+					+ ": " + JLSInfo.loadError);
+			System.exit(1);
+		}
+
+		Circuit circ = new Circuit(cname);
+		boolean loadOK = circ.load(input);
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
+		input.close();
+		if (!loadOK) {
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file: " + JLSInfo.loadError);
+			System.exit(1);
+		}
+
+		try {
+			if (!circ.finishLoad(null)) {
+				System.err.println("jls: error: " + file
+						+ " is not a valid circuit file: " + JLSInfo.loadError);
+				System.exit(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file: " + JLSInfo.loadError);
+			System.exit(1);
+		}
+		return circ;
+	} // end of loadCircuitHeadless method
+
+	/**
 	 * Display values of watched elements to stdout.
 	 * Descends into subcircuits recursively.
-	 * 
+	 *
+	 * The elements of each circuit level are visited in element-name
+	 * order (Unicode code point order). Circuit.getElements() is backed
+	 * by a HashSet, so plain iteration used to print watched elements
+	 * that live at the same level in hash order, which is not stable
+	 * across JVMs or code changes; batch output is a text contract
+	 * (docs/batch-interface.md), so the order is pinned here at the
+	 * display site (issue #72).
+	 *
 	 * @param circ The circuit to find watched elements in.
 	 * @param qual Qualified name of subcircuit.
 	 */
 	public static void displayResults(Circuit circ, String qual) {
 
-		for (Element el : circ.getElements()) {
+		List<Element> ordered = new ArrayList<Element>(circ.getElements());
+		ordered.sort(Comparator.comparing(
+				(Element el) -> el.getName() == null ? "" : el.getName()));
+		for (Element el : ordered) {
 			if (el.isWatched()) {
 				if (el instanceof Register) {
 					Register reg = (Register)el;
@@ -314,107 +489,168 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of displayResults method
 
 	/**
+	 * Operand arity of a command-line flag (issue #71).
+	 */
+	private enum Arity { NONE, REQUIRED, OPTIONAL }
+
+	/**
+	 * One row of the command-line flag table: the flag name (one or
+	 * more characters, e.g. "t" or "vcd"), its operand arity, the
+	 * operand's name for the usage text, the phrase for "requires ..."
+	 * errors, and the usage description.
+	 */
+	private static final class FlagSpec {
+
+		final String flag;
+		final Arity arity;
+		final String operandName;
+		final String operandWhat;
+		final String description;
+
+		FlagSpec(String flag, Arity arity, String operandName,
+				String operandWhat, String description) {
+			this.flag = flag;
+			this.arity = arity;
+			this.operandName = operandName;
+			this.operandWhat = operandWhat;
+			this.description = description;
+		}
+	} // end of FlagSpec class
+
+	/**
+	 * The single authoritative flag specification (issue #71): both
+	 * parseCommandLine and usage() are driven by this table, so the
+	 * parser and its documentation cannot drift apart. When one flag
+	 * name is a prefix of another (-v / -vcd), the longest match wins,
+	 * so "-vcd" is the VCD flag, never "-v" with the attached operand
+	 * "cd" (issue #72).
+	 */
+	private static final FlagSpec[] FLAGS = {
+		new FlagSpec("h", Arity.NONE, null, null,
+				"print this message and exit"),
+		new FlagSpec("b", Arity.NONE, null, null,
+				"run in batch (headless) mode"),
+		new FlagSpec("i", Arity.OPTIONAL, "imagefile", "an image file",
+				"export an image of the circuit (default circuit_file.png; use .jpg/.jpeg for JPEG)"),
+		new FlagSpec("s", Arity.REQUIRED, "file", "a startup file",
+				"startup parameter file"),
+		new FlagSpec("t", Arity.REQUIRED, "file", "a test file",
+				"test input file"),
+		new FlagSpec("d", Arity.REQUIRED, "time", "a time limit",
+				"set simulation time limit (a positive integer)"),
+		new FlagSpec("p", Arity.REQUIRED, "printer", "a printer name",
+				"print the whole circuit (subcircuits too) to the named printer"),
+		new FlagSpec("v", Arity.REQUIRED, "printer", "a printer name",
+				"print only the top level of the circuit to the named printer"),
+		new FlagSpec("r", Arity.REQUIRED, "printer", "a printer name",
+				"print the signal trace to the named printer"),
+		new FlagSpec("vcd", Arity.REQUIRED, "file", "a VCD output file",
+				"write watched-signal waveforms to the named VCD file (batch mode)"),
+		new FlagSpec("export", Arity.REQUIRED, "file.v", "an output file",
+				"export the circuit as Verilog-2005 to the named .v file"),
+	};
+
+	/**
+	 * The flag names the parser accepts, from the flag table.
+	 * Package-visible for the documentation drift test (issue #71).
+	 *
+	 * @return a fresh array of the accepted flag names.
+	 */
+	static String[] commandLineFlags() {
+
+		String[] flags = new String[FLAGS.length];
+		for (int f = 0; f < FLAGS.length; f += 1) {
+			flags[f] = FLAGS[f].flag;
+		}
+		return flags;
+	} // end of commandLineFlags method
+
+	/**
+	 * Whether a file name names a supported image output format:
+	 * .png, .jpg or .jpeg, case-insensitive (issue #71).
+	 *
+	 * @param name The file name to check.
+	 *
+	 * @return true if the name ends in a supported image extension.
+	 */
+	private static boolean isImageFileName(String name) {
+
+		String lower = name.toLowerCase(java.util.Locale.ROOT);
+		return lower.endsWith(".png") || lower.endsWith(".jpg")
+				|| lower.endsWith(".jpeg");
+	} // end of isImageFileName method
+
+	/**
 	 * Parse command line.
-	 * 
+	 *
 	 * @param args The command line arguments.
 	 */
 	public static void parseCommandLine(String [] args) {
 
+		boolean endOfFlags = false;
 		int pos = 0;
 		while (pos < args.length) {
 			String arg = args[pos];
 			if (arg.isEmpty()) {
 				usageError("empty argument");
 			}
-			if (arg.charAt(0) == '-') {
+			if (!endOfFlags && arg.equals("--")) {
+				// end-of-flags marker: everything after it is an
+				// operand, so circuit files may begin with '-'
+				endOfFlags = true;
+				pos += 1;
+				continue;
+			}
+			if (!endOfFlags && arg.charAt(0) == '-') {
 				if (arg.length() < 2) {
 					usageError("bare '-' is not a valid option");
 				}
-				char flag = arg.charAt(1);
-				if (flag == 'h') {
-					usage();
-					System.exit(0);
-				}
-				else if (flag == 'b') {
-					if (arg.length() > 2) {
-						usageError("unknown option " + arg);
-					}
-					JLSInfo.batch = true;
-				}
-
-				else if (flag == 'i') {
-					JLSInfo.imgexport = true;
-				}
-
-				else if (flag == 'r') {
-					if (arg.length() > 2) {
-						printer = arg.substring(2);
-					}
-					else {
-						printer = operand(args, pos, "-r", "a printer name");
-						pos += 1;
-					}
-					JLSInfo.printTrace = true;
-				}
-				else if (flag == 'p') {
-					if (arg.length() > 2) {
-						printer = arg.substring(2);
-					}
-					else {
-						printer = operand(args, pos, "-p", "a printer name");
-						pos += 1;
-					}
-					printCircuit = true;
-					printCircuitTop = false;
-				}
-				else if (flag == 'v') {
-					if (arg.length() > 2) {
-						printer = arg.substring(2);
-					}
-					else {
-						printer = operand(args, pos, "-v", "a printer name");
-						pos += 1;
-					}
-					printCircuit = true;
-					printCircuitTop = true;
-				}
-				else if (flag == 's') {
-					if (arg.length() > 2) {
-						paramFile = arg.substring(2);
-					}
-					else {
-						paramFile = operand(args, pos, "-s", "a startup file");
-						pos += 1;
+				// longest flag-name match, so -vcd beats -v (issue #72)
+				String body = arg.substring(1);
+				FlagSpec spec = null;
+				for (FlagSpec s : FLAGS) {
+					if (body.startsWith(s.flag)
+							&& (spec == null
+									|| s.flag.length() > spec.flag.length())) {
+						spec = s;
 					}
 				}
-				else if (flag == 'd') {
-					String tmp = null;
-					if (arg.length() > 2) {
-						tmp = arg.substring(2);
-					}
-					else {
-						tmp = operand(args, pos, "-d", "a time limit");
-						pos += 1;
-					}
-					try {
-						timeLimit = Long.parseLong(tmp);
-					}
-					catch (NumberFormatException ex) {
-						usageError("time limit not an integer: " + tmp);
-					}
-				}
-				else if (flag == 't') {
-					if (arg.length() > 2) {
-						testFile = arg.substring(2);
-					}
-					else {
-						testFile = operand(args, pos, "-t", "a test file");
-						pos += 1;
-					}
-				}
-				else {
+				if (spec == null) {
 					usageError("unknown option " + arg);
 				}
+				String attached = body.substring(spec.flag.length());
+				String opnd = null;
+				switch (spec.arity) {
+				case NONE:
+					if (!attached.isEmpty()) {
+						usageError("unknown option " + arg);
+					}
+					break;
+				case REQUIRED:
+					if (!attached.isEmpty()) {
+						opnd = attached;
+					}
+					else {
+						opnd = operand(args, pos, "-" + spec.flag,
+								spec.operandWhat);
+						pos += 1;
+					}
+					break;
+				case OPTIONAL:
+					// only -i is OPTIONAL; a separated operand is only
+					// consumed when it names an image file, so that
+					// "jls -i circuit.jls" still exports to the default
+					if (!attached.isEmpty()) {
+						opnd = attached;
+					}
+					else if (pos + 1 < args.length
+							&& isImageFileName(args[pos + 1])) {
+						opnd = args[pos + 1];
+						pos += 1;
+					}
+					break;
+				}
+				apply(spec.flag, opnd);
 			}
 			else {
 				if (startFile == null) {
@@ -427,6 +663,89 @@ public class JLSStart extends JFrame implements ChangeListener {
 			pos += 1;
 		}
 	} // end of parseCommandLine method
+
+	/**
+	 * Act on one parsed flag.
+	 *
+	 * @param flag The flag name (guaranteed present in the flag table).
+	 * @param opnd Its operand, or null for flags without one.
+	 */
+	private static void apply(String flag, String opnd) {
+
+		switch (flag) {
+		case "h":
+			usage();
+			System.exit(0);
+			break;
+		case "b":
+			JLSInfo.batch = true;
+			break;
+		case "i":
+			JLSInfo.imgexport = true;
+			if (opnd != null) {
+				if (!isImageFileName(opnd)) {
+					usageError("option -i output file must end in .png, .jpg or .jpeg: "
+							+ opnd);
+				}
+				imageFile = opnd;
+			}
+			break;
+		case "r":
+			printer = opnd;
+			JLSInfo.printTrace = true;
+			break;
+		case "p":
+			printer = opnd;
+			printCircuit = true;
+			printCircuitTop = false;
+			break;
+		case "v":
+			printer = opnd;
+			printCircuit = true;
+			printCircuitTop = true;
+			break;
+		case "s":
+			paramFile = opnd;
+			break;
+		case "d":
+			long limit = 0;
+			try {
+				limit = Long.parseLong(opnd);
+			}
+			catch (NumberFormatException ex) {
+				usageError("time limit not an integer: " + opnd);
+			}
+			if (limit <= 0) {
+				usageError("option -d requires a positive integer time limit, got "
+						+ opnd);
+			}
+			timeLimit = limit;
+			break;
+		case "t":
+			testFile = opnd;
+			break;
+		case "vcd":
+			vcdFile = opnd;
+			break;
+		case "export":
+			// .v selects the Verilog emitter; other languages (VHDL)
+			// will hang off other extensions when they land (#60).
+			// -export is Arity.REQUIRED so opnd cannot be null here; the
+			// guard keeps that invariant locally checkable
+			if (opnd == null
+					|| !opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
+				usageError("option -export output file must end in .v: "
+						+ opnd);
+			}
+			JLSInfo.hdlexport = true;
+			exportFile = opnd;
+			break;
+		default:
+			// unreachable: parseCommandLine only passes table flags
+			usageError("unknown option -" + flag);
+			break;
+		}
+	} // end of apply method
 
 	/**
 	 * Report a usage error per the CLI contract (#42) and exit 2:
@@ -468,23 +787,36 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private static void usage() {
 
-		// keep this in sync with parseCommandLine (issue #71): every
-		// flag the parser accepts is documented here, and operands may
-		// be attached (-tfile) or separate (-t file)
-		System.err.println("usage: jls [ flags ] [ circuit_file ]");
-		System.err.println("  -h : print this message and exit");
-		System.err.println("  -b : run in batch (headless) mode");
-		System.err.println("  -i : export an image of the circuit (circuit_file.jpg)");
-		System.err.println("  -s file : startup parameter file");
-		System.err.println("  -t file : test input file");
-		System.err.println("  -d time : set simulation time limit (a positive integer)");
-		System.err.println("  -p printer : print the whole circuit (subcircuits too) to the named printer");
-		System.err.println("  -v printer : print only the top level of the circuit to the named printer");
-		System.err.println("  -r printer : print the signal trace to the named printer");
-		System.err.println("operands may also be attached to the flag: -tfile, -d10000");
-		System.err.println("exit status: 0 success, 1 runtime failure, 2 usage error");
-		System.err.println("example: jls -b -sstartup -d10000 counter.jls");
+		System.err.print(usageText());
 	} // end of usage method
+
+	/**
+	 * The usage text, generated from the flag table so it cannot
+	 * drift from what the parser accepts (issue #71).
+	 * Package-visible for the documentation drift test.
+	 *
+	 * @return the complete usage message.
+	 */
+	static String usageText() {
+
+		StringBuilder text = new StringBuilder();
+		text.append("usage: jls [ flags ] [ -- ] [ circuit_file ]\n");
+		for (FlagSpec spec : FLAGS) {
+			text.append("  -").append(spec.flag);
+			if (spec.arity == Arity.REQUIRED) {
+				text.append(' ').append(spec.operandName);
+			}
+			else if (spec.arity == Arity.OPTIONAL) {
+				text.append(" [").append(spec.operandName).append(']');
+			}
+			text.append(" : ").append(spec.description).append('\n');
+		}
+		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
+		text.append("'--' ends flag processing so operands may begin with '-'\n");
+		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
+		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
+		return text.toString();
+	} // end of usageText method
 
 	/**
 	 * Set up main window.
@@ -497,7 +829,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		catch (Exception ex) {
 
-			JOptionPane.showMessageDialog(this, "Can't set cross platform look and feel");
+			TellUser.error(this, "Can't set cross platform look and feel", "Error");
 			System.exit(1);
 		}
 
@@ -970,11 +1302,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private void newCircuit() {
 
-		String name = JOptionPane.showInputDialog("Enter circuit name (without .jls)");
+		String name = TellUser.prompt(this, "Enter circuit name (without .jls)");
 		if (name == null || name.equals(""))
 			return;
 		if (!Util.isValidName(name)) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"Invalid circuit name - must have only letters, digits & _");
+			TellUser.error(JLSInfo.frame,"Invalid circuit name - must have only letters, digits & _", "Error");
 			return;
 		}
 
@@ -1041,9 +1373,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		
 		Scanner input = FileAbstractor.openCircuit(filePath);
 		if (input == null) {
-			JOptionPane.showMessageDialog(this,
-					"can't open " + filePath + ": " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"can't open " + filePath + ": " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1057,13 +1388,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
-			JOptionPane.showMessageDialog(this,
-					filePath + " is not a valid circuit file (line " + circ.getLineNumber() + "): " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					// the message carries the line number itself (#58)
+					filePath + " is not a valid circuit file: " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1186,9 +1525,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		for (int e=0; e<edits.getTabCount(); e+=1) {
 			if (name.equals(edits.getTitleAt(e))) {
-				JOptionPane.showMessageDialog(this,
-						name + " is already being editted", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(this,
+						name + " is already being editted", "Error");
 				return true;
 			}
 		}
@@ -1204,9 +1542,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		Editor ed = (Editor)edits.getSelectedComponent();
 		if (ed == null) {
-			JOptionPane.showMessageDialog(this,
-					"no circuit to import into", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"no circuit to import into", "Error");
 			return;
 		}
 		JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
@@ -1225,9 +1562,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		
 		Scanner input = FileAbstractor.openCircuit(chooser.getSelectedFile().getAbsolutePath());
 		if (input == null) {
-			JOptionPane.showMessageDialog(this,
-					"can't open " + chooser.getSelectedFile().getName() + ": " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"can't open " + chooser.getSelectedFile().getName() + ": " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1236,27 +1572,34 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// read circuit from file
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
-			JOptionPane.showMessageDialog(this,
-					circ.getName() + " is not a valid circuit file", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					circ.getName() + " is not a valid circuit file: "
+							+ JLSInfo.loadError, "Error");
 			return;
 		}
 		try {
 			if (!circ.finishLoad(null)) {
-				JOptionPane.showMessageDialog(this,
+				TellUser.error(this,
 						"can't import " + circ.getName() + ": "
-								+ JLSInfo.loadError, "Error",
-						JOptionPane.ERROR_MESSAGE);
+								+ JLSInfo.loadError, "Error");
 				return;
 			}
 		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this,
+			TellUser.error(this,
 					"can't import " + circ.getName() + ": " + ex.getMessage(),
-					"Error", JOptionPane.ERROR_MESSAGE);
+					"Error");
 			return;
 		}
 
@@ -1605,8 +1948,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		Circuit circ = new Circuit(name);
 		boolean loadOK = circ.load(input);
-		if (input.hasNext())
-			loadOK = false;		// file shouldn't have anything after ENDCIRCUIT
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
 		input.close();
 		if (!loadOK) {
 			System.err.println(startFile + " is not a valid circuit file: "
@@ -1698,7 +2049,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			return;
 		String tempName = fileName.replaceAll("\\.jpg$","");
 		if (!Util.isValidName(tempName)) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"Invalid file name - must contain only letters, digits & _");
+			TellUser.error(JLSInfo.frame,"Invalid file name - must contain only letters, digits & _", "Error");
 			return;
 		}
 		if (!fileName.endsWith(".jpg")) {

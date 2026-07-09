@@ -164,6 +164,28 @@ public class Clock extends LogicElement {
 		output.println("END");
 	} // end of save method
 
+	/**
+	 * Get the cycle time (period) of this clock, in simulated time
+	 * units (for consumers of the circuit model, e.g. the HDL exporter,
+	 * issue #60).
+	 *
+	 * @return the cycle time.
+	 */
+	public int getCycleTime() {
+
+		return cycleTime;
+	} // end of getCycleTime method
+
+	/**
+	 * Get the number of time units per cycle this clock's output is 1.
+	 *
+	 * @return the one time.
+	 */
+	public int getOneTime() {
+
+		return oneTime;
+	} // end of getOneTime method
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =

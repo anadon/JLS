@@ -455,11 +455,11 @@ public class Wire extends Element {
 		}
 		
 		// get a name for this probe
-		name = JOptionPane.showInputDialog("Name?");
+		name = TellUser.prompt(null, "Name?");
 		if (name == null)
 			return;
 		while (name.equals("")) {
-			name = JOptionPane.showInputDialog("Invalid name, try again");
+			name = TellUser.prompt(null, "Invalid name, try again");
 			if (name == null)
 				return;
 		}

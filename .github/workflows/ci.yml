@@ -11,6 +11,12 @@ on:
 permissions:
   contents: read
 
+# a new push to the same branch/PR cancels the still-running build of the
+# old head; release.yml deliberately has no concurrency group (issue #47)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build (JDK ${{ matrix.java }})
@@ -20,14 +26,22 @@ jobs:
       matrix:
         java: [17, 21]
     steps:
-      - uses: actions/checkout@v7
+      # actions are pinned to full commit SHAs (supply-chain posture,
+      # #44/#68); Dependabot keeps the pins fresh via the version comments
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
+
+      # External HDL simulators activate the otherwise-skipped
+      # Verilog/VHDL validation tests (issue #60); best-effort so a
+      # transient apt failure doesn't block the build
+      - name: Install HDL simulators
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl || echo "HDL simulators unavailable; validation tests will skip"
 
       # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
       # the headless test suite, and runs the SpotBugs check goal
@@ -37,7 +51,51 @@ jobs:
 
       - name: Upload jar
         if: matrix.java == 21
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jls-jar
           path: target/jls-*.jar
+
+      - name: Upload coverage report
+        if: matrix.java == 21
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+      # per-PR coverage visibility with no external service: the summary
+      # table comes straight from the JaCoCo XML report (issue #66)
+      - name: Coverage summary
+        if: matrix.java == 21
+        run: |
+          python3 - << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET
+          r = ET.parse('target/site/jacoco/jacoco.xml').getroot()
+          print('## Coverage (JaCoCo, JDK 21)\n')
+          print('| Counter | Covered | Missed | % |')
+          print('|---|---|---|---|')
+          for c in r.findall('counter'):
+              cov, mis = int(c.get('covered')), int(c.get('missed'))
+              pct = 100.0 * cov / (cov + mis) if cov + mis else 0.0
+              print(f"| {c.get('type')} | {cov} | {mis} | {pct:.1f}% |")
+          EOF
+
+  # feed GitHub's dependency graph the resolved transitive tree so
+  # Dependabot alerts cover what the build actually uses (issue #65)
+  dependency-submission:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Submit dependency graph
+        uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0

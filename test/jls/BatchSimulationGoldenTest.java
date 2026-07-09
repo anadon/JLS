@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.Scanner;
 
@@ -318,6 +321,47 @@ class BatchSimulationGoldenTest {
 		BitSet stored = memory.getCurrentValue(2);
 		assertNotNull(stored, "the write must have stored a word at address 2");
 		assertEquals(7, BitSetUtils.ToLong(stored));
+	}
+
+	@Test
+	void watchedElementsPrintInNameOrder() throws Exception {
+		// Two watched output pins at the same circuit level, declared in
+		// anti-alphabetical order. Circuit.elements is a HashSet, so
+		// before the issue #72 fix displayResults printed them in hash
+		// order; the batch output contract (docs/batch-interface.md)
+		// pins name order, byte for byte.
+		CircuitBuilder cb = new CircuitBuilder();
+		int one = cb.constant(1);
+		int zero = cb.constant(0);
+		int pinZ = cb.outputPin("zz", 1);
+		int pinA = cb.outputPin("aa", 1);
+		cb.wire(one, "output", pinZ, "input");
+		cb.wire(zero, "output", pinA, "input");
+
+		Circuit circuit = new Circuit("golden");
+		assertTrue(circuit.load(new Scanner(cb.build())),
+				() -> "load failed: " + JLSInfo.loadError);
+		assertTrue(circuit.finishLoad(null),
+				() -> "finishLoad failed: " + JLSInfo.loadError);
+
+		BatchSimulator sim = new BatchSimulator();
+		sim.setCircuit(circuit);
+		sim.setTimeLimit(1_000_000);
+		sim.runSim();
+
+		PrintStream saved = System.out;
+		ByteArrayOutputStream captured = new ByteArrayOutputStream();
+		try {
+			System.setOut(new PrintStream(captured, true,
+					StandardCharsets.UTF_8));
+			JLSStart.displayResults(circuit, "");
+		} finally {
+			System.setOut(saved);
+		}
+		assertEquals("Output Pin aa: 0x0 (0 unsigned, 0 signed)\n"
+				+ "Output Pin zz: 0x1 (1 unsigned, -1 signed)\n",
+				captured.toString(StandardCharsets.UTF_8),
+				"watched elements must print in name order, byte-exactly");
 	}
 
 	@Test

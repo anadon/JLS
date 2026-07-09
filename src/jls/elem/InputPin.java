@@ -220,8 +220,7 @@ public class InputPin extends Pin implements TriProp {
 			String signed = BitSetUtils.ToStringSigned(currentValue,bits);
 			value = "0x" + hex + " (" + unsigned + " unsigned, " + signed + " signed)";
 		}
-		JOptionPane.showMessageDialog(JLSInfo.frame, value, "Information",
-				JOptionPane.INFORMATION_MESSAGE);
+		TellUser.info(JLSInfo.frame, value, "Information");
 	} // end of showCurrentValue method
 
 } // end of InputPin class

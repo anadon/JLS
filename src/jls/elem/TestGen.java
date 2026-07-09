@@ -74,7 +74,7 @@ public class TestGen extends SigSim {
 				System.exit(1);
 			}
 			else {
-				JOptionPane.showMessageDialog(JLSInfo.frame,"Can't open test file: " + file);
+				TellUser.error(JLSInfo.frame,"Can't open test file: " + file, "Error");
 				return;
 			}
 		}
@@ -95,7 +95,7 @@ public class TestGen extends SigSim {
 			System.exit(1);
 		}
 		else {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"error in test file: " + msg);
+			TellUser.error(JLSInfo.frame,"error in test file: " + msg, "Error");
 			return;
 		}
 	} // end of specError method

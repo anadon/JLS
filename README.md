@@ -1,5 +1,7 @@
 # JLS — Java Logic Simulator
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/anadon/JLS/badge)](https://scorecard.dev/viewer/?uri=github.com/anadon/JLS)
+
 JLS is an educational digital logic circuit editor and simulator. Students
 draw circuits from gates, wires, registers, memories, state machines, and
 other elements, then simulate them interactively (with a signal-trace window)
@@ -23,9 +25,18 @@ newer).
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
-  limits (`-d`), image export (`-i`), and printing (`-p`/`-v`/`-r`).
+  limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and
+  autograders), image export (`-i`, PNG named after the circuit file by
+  default, or pass an output path such as `-i out.jpg` for JPEG),
+  Verilog export (`-export out.v circuit.jls` writes the drawn circuit
+  as a structural Verilog-2005 module — a deployment bridge, not an HDL
+  tutorial; note JLS's two-state-plus-HiZ semantics), and
+  printing (`-p`/`-v`/`-r`).
   Diagnostics go to stderr as one `jls: error: ...` line; exit status is
   0 on success, 1 on runtime failure, and 2 on a usage error.
+  The batch interface — the `-t` test-vector grammar, the watched-element
+  output format, and the VCD profile — is a documented stability contract:
+  see [`docs/batch-interface.md`](docs/batch-interface.md).
 
 ## Building from source
 
@@ -58,13 +69,17 @@ development container image (below) installs:
 - **fontconfig, fonts-dejavu-core** — text rendering needs at least one
   installed font (even fully headless batch image export); minimal container
   images often have none.
-- **ImageMagick** — inspect and compare the JPEG images written by batch
+- **ImageMagick** — inspect and compare the images written by batch
   image export (`-i`) and screenshots taken with `grim`.
-- **Icarus Verilog (`iverilog`), GHDL, Yosys** — external HDL toolchain for
-  the HDL export/import roadmap
+- **[Icarus Verilog](https://steveicarus.github.io/iverilog/)
+  (`iverilog`), GHDL, Yosys** — external HDL toolchain for the HDL
+  export/import roadmap
   ([docs/hdl-support-research.md](docs/hdl-support-research.md), issues #33
-  and #59): compile and simulate exported Verilog, analyze exported VHDL,
-  and synthesize Verilog to the JSON netlists used for import.
+  and #59). The HDL-export validation tests compile the generated Verilog
+  with `iverilog` when it is installed and skip cleanly when it is not
+  (CI installs it on its runners); `ghdl` will play the same role for the
+  future VHDL emitter; Yosys synthesizes Verilog to the JSON netlists
+  planned for import.
 
 All of these are stock packages on Debian/Ubuntu
 (`apt install xz-utils zip unzip sway grim wtype wayland-utils fontconfig
@@ -117,11 +132,37 @@ sniffing the actual content:
   `JLSCircuit` entry with the same text description.
 - **Plain text** — the uncompressed circuit description itself.
 
+Inside whichever container, circuit text written by current JLS begins with
+a `FORMAT 1` version line ahead of the top-level `CIRCUIT` line; files from
+older versions have no such line and still load.
+
+**Forward-compatibility caveat:** current JLS saves Memory initial contents
+run-length encoded. The upstream JLS 4.1 loader does not understand that
+encoding and **silently drops initial memory contents** when opening such a
+file — the circuit loads, but memories start empty. If a file must
+round-trip through JLS 4.1, avoid Memory initial values or re-enter them
+there.
+
 Editor checkpoint files (`.jls~`) are used for crash recovery. They are
 written in the same XZ format as regular saves (older versions wrote them
 as zip archives; the loader still accepts those). If you process `.jls`
 files with external tools, sniff the content rather than trusting the
 extension.
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — contributor's map: module
+  layout, save/load pipeline, editor and threading model, error
+  contracts, test layout, and recorded scope decisions.
+- [docs/simulation-semantics.md](docs/simulation-semantics.md) —
+  normative spec of the simulation model: time, events, delays, edge
+  triggering, tri-state/HiZ.
+- [docs/batch-interface.md](docs/batch-interface.md) — normative spec
+  of the batch/grading interface: `-t` grammar, output format, VCD.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit
+  changes.
+- [SECURITY.md](SECURITY.md) — threat model and reporting.
+- [CHANGELOG.md](CHANGELOG.md) — user-visible changes per release.
 
 ## License and provenance
 

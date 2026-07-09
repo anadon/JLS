@@ -114,6 +114,43 @@ class CliSmokeTest {
 	}
 
 	@Test
+	void doubleDashEndsFlagProcessing() throws Exception {
+		// after '--' an operand beginning with '-' must be taken as the
+		// circuit file (a later runtime error, exit 1), never rejected
+		// by the parser as an unknown option (exit 2) - issue #71
+		Result r = run("-b", "--", "-nosuch.jls");
+		assertEquals(1, r.exit, r.stderr);
+		assertFalse(r.stderr.contains("unknown option"), r.stderr);
+		assertTrue(r.stderr.contains("-nosuch.jls"), r.stderr);
+		assertNoCrashFile();
+	}
+
+	@Test
+	void zeroTimeLimitIsAUsageError() throws Exception {
+		Result r = run("-d0");
+		assertEquals(2, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("jls: error:"), r.stderr);
+		assertTrue(r.stderr.contains("positive"), r.stderr);
+		assertNoCrashFile();
+	}
+
+	@Test
+	void negativeTimeLimitIsAUsageError() throws Exception {
+		Result r = run("-d-5");
+		assertEquals(2, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("positive"), r.stderr);
+		assertNoCrashFile();
+	}
+
+	@Test
+	void separatedZeroTimeLimitIsAUsageError() throws Exception {
+		Result r = run("-d", "0");
+		assertEquals(2, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("positive"), r.stderr);
+		assertNoCrashFile();
+	}
+
+	@Test
 	void batchWithInvalidFileIsARuntimeError() throws Exception {
 		File bad = new File(tmp.toFile(), "bad.jls");
 		java.nio.file.Files.writeString(bad.toPath(), "this is not a circuit");

@@ -78,6 +78,15 @@ public class Circuit implements Printable {
 	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
+	 * The save-format version this JLS writes and the newest it can read
+	 * (issue #79). Headerless legacy files are implicitly version 0;
+	 * version 1 files begin with a "FORMAT 1" line ahead of the top-level
+	 * CIRCUIT line. Nested subcircuit blocks never carry a header - a
+	 * file states its format version exactly once, at the top.
+	 */
+	public static final int FORMAT_VERSION = 1;
+
+	/**
 	 * Create a new, empty circuit.
 	 * 
 	 * @param name
@@ -341,21 +350,153 @@ public class Circuit implements Printable {
 	public boolean load(Scanner input) {
 
 		// a fresh load must not report a previous load's failure (#58)
-		JLSInfo.loadError = "";
+		JLSInfo.setLoadError(null);
 		lineNumber = 1;
-		boolean ok = load(input, 0);
+		boolean ok = readFormatHeader(input) && load(input, 0);
 		if (!ok) {
 			// Scanner swallows IOException and presents it as end of
 			// input; distinguish a truncated/corrupted stream from a
 			// short-but-well-formed file (#58)
 			IOException ioex = input.ioException();
 			if (ioex != null) {
-				JLSInfo.loadError = "I/O error while reading: "
-						+ ioex.getMessage();
+				failLoad(LoadError.Category.IO_ERROR,
+						"reading was interrupted by an I/O error ("
+								+ ioex.getMessage() + ")",
+						"The file or disk may be damaged - try copying "
+								+ "the file again, or recover from the "
+								+ ".jls~ checkpoint or a backup.");
 			}
 		}
 		return ok;
 	} // end of load method
+
+	/**
+	 * Consume the optional FORMAT version header at the top of a file
+	 * (issue #79). Legacy files have no header and are implicitly format
+	 * version 0; current saves begin with "FORMAT 1". A version newer
+	 * than {@link #FORMAT_VERSION} is refused with an explicit
+	 * needs-a-newer-JLS error (#58 taxonomy) rather than a misparse.
+	 * Only the true top of a file may carry the header - nested
+	 * subcircuit CIRCUIT blocks are read elsewhere and never see one.
+	 *
+	 * @param input The scanner to read with.
+	 *
+	 * @return true if there is no header or a usable one was consumed,
+	 *         false (with the load error set) if the header is present
+	 *         but truncated, malformed, or declares a newer version.
+	 */
+	private static boolean readFormatHeader(Scanner input) {
+
+		if (!input.hasNext("FORMAT")) {
+			return true; // headerless legacy file (implicit version 0)
+		}
+		input.next();
+		if (!input.hasNext()) {
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header has no version number after it",
+					TRUNCATED_HINT);
+		}
+		if (!input.hasNextInt()) {
+			if (input.hasNextBigInteger()) {
+				// a numeric version too large for an int is certainly
+				// newer than anything this JLS knows
+				return failLoad(LoadError.Category.NEWER_FORMAT,
+						"this file is save-format version " + input.next()
+								+ ", but this version of JLS only reads up "
+								+ "to version " + FORMAT_VERSION,
+						NEWER_FORMAT_HINT);
+			}
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header version '" + input.next()
+							+ "' is not a number",
+					NOT_JLS_HINT);
+		}
+		int version = input.nextInt();
+		if (version < 0) {
+			return failLoad(LoadError.Category.MALFORMED,
+					"the FORMAT header version " + version
+							+ " is not a valid format version",
+					NOT_JLS_HINT);
+		}
+		if (version > FORMAT_VERSION) {
+			return failLoad(LoadError.Category.NEWER_FORMAT,
+					"this file is save-format version " + version
+							+ ", but this version of JLS only reads up to "
+							+ "version " + FORMAT_VERSION,
+					NEWER_FORMAT_HINT);
+		}
+		lineNumber += 1;
+		return true;
+	} // end of readFormatHeader method
+
+	/** Next-step hint when the file declares a newer format version. */
+	private static final String NEWER_FORMAT_HINT =
+			"The circuit was saved by a newer version of JLS - upgrade "
+					+ "JLS to open this file.";
+
+	/** Next-step hint for failures that smell like a cut-off file. */
+	private static final String TRUNCATED_HINT =
+			"The file may be truncated - recover from the .jls~ "
+					+ "checkpoint or a backup, or re-save the circuit "
+					+ "from a working copy.";
+
+	/** Next-step hint for content that was never a JLS save. */
+	private static final String NOT_JLS_HINT =
+			"Make sure you opened a .jls circuit file saved by JLS, "
+					+ "not some other kind of file.";
+
+	/**
+	 * Report a load failure at the current line, with no element context
+	 * (issue #58 addendum: category + location + detail + next step).
+	 *
+	 * @param category Which kind of failure this is.
+	 * @param detail   What went wrong, in words.
+	 * @param hint     One actionable next-step sentence, or null.
+	 *
+	 * @return false, so callers can 'return failLoad(...)'.
+	 */
+	private static boolean failLoad(LoadError.Category category,
+			String detail, String hint) {
+
+		JLSInfo.setLoadError(
+				new LoadError(category, detail, lineNumber, null, hint));
+		return false;
+	} // end of failLoad method
+
+	/**
+	 * Report a load failure at the current line inside a specific element.
+	 *
+	 * @param category Which kind of failure this is.
+	 * @param el       The element being read.
+	 * @param detail   What went wrong, in words.
+	 * @param hint     One actionable next-step sentence, or null.
+	 *
+	 * @return false, so callers can 'return failLoad(...)'.
+	 */
+	private static boolean failLoad(LoadError.Category category, Element el,
+			String detail, String hint) {
+
+		JLSInfo.setLoadError(new LoadError(category, detail, lineNumber,
+				describe(el), hint));
+		return false;
+	} // end of failLoad method
+
+	/**
+	 * Describe an element for an error message: "'name' (Type)" when the
+	 * element is named, otherwise just its type.
+	 *
+	 * @param el The element.
+	 *
+	 * @return the description.
+	 */
+	private static String describe(Element el) {
+
+		String type = el.getClass().getSimpleName();
+		String elName = el.getName();
+		if (elName == null || elName.isEmpty())
+			return type;
+		return "'" + elName + "' (" + type + ")";
+	} // end of describe method
 
 	/**
 	 * Load circuit from file.
@@ -375,17 +516,21 @@ public class Circuit implements Printable {
 
 			// read header
 			if (!input.hasNext()) {
-				JLSInfo.loadError = "no header info";
-				return false;
+				return failLoad(LoadError.Category.NOT_A_CIRCUIT,
+						"the file is empty - there is no header to read",
+						NOT_JLS_HINT);
 			}
 			String str = input.next();
 			if (!str.equals("CIRCUIT")) {
-				JLSInfo.loadError = "file does not start with CIRCUIT";
-				return false;
+				return failLoad(LoadError.Category.NOT_A_CIRCUIT,
+						"the file does not start with CIRCUIT, so it is "
+								+ "not a JLS circuit save",
+						NOT_JLS_HINT);
 			}
 			if (!input.hasNext()) {
-				JLSInfo.loadError = "no name for CIRCUIT";
-				return false;
+				return failLoad(LoadError.Category.MALFORMED,
+						"the CIRCUIT header has no circuit name after it",
+						TRUNCATED_HINT);
 			}
 
 			// ignore name if not a subcircuit
@@ -407,14 +552,18 @@ public class Circuit implements Printable {
 
 				// should be the beginning of an(other) element
 				if (!str.equals("ELEMENT")) {
-					JLSInfo.loadError = "expecting ELEMENT";
-					return false;
+					return failLoad(LoadError.Category.MALFORMED,
+							"expected ELEMENT or ENDCIRCUIT here, but "
+									+ "found '" + str + "'",
+							TRUNCATED_HINT);
 				}
 
 				// the next input should exist (element type)
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "expecting ELEMENT type";
-					return false;
+					return failLoad(LoadError.Category.MALFORMED,
+							"the file ends where an element type name "
+									+ "should be",
+							TRUNCATED_HINT);
 				}
 
 				// get element type and create element; select the
@@ -429,47 +578,73 @@ public class Circuit implements Printable {
 					newElement = c.getConstructor(Circuit.class)
 							.newInstance(this);
 				} catch (ClassNotFoundException ex) {
-					JLSInfo.loadError = "unknown element type " + elementType;
-					return false;
+					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
+							"this version of JLS has no element type "
+									+ "named '" + elementType + "'",
+							"The circuit may have been saved by a newer "
+									+ "version of JLS - upgrade JLS, or "
+									+ "remove the unrecognized element "
+									+ "from the file.");
 				} catch (ClassCastException ex) {
-					JLSInfo.loadError = "non-Element subclass";
-					return false;
+					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
+							"'" + elementType + "' is not a circuit "
+									+ "element type",
+							NOT_JLS_HINT);
 				} catch (NoSuchMethodException ex) {
-					JLSInfo.loadError = elementType
-							+ " has no (Circuit) constructor";
-					return false;
+					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
+							"'" + elementType + "' cannot be created "
+									+ "from a save file",
+							NOT_JLS_HINT);
 				} catch (InstantiationException ex) {
-					JLSInfo.loadError = "cannot instantiate element type "
-							+ elementType;
-					return false;
+					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
+							"element type '" + elementType
+									+ "' could not be created",
+							NOT_JLS_HINT);
 				} catch (IllegalAccessException ex) {
-					JLSInfo.loadError = "illegal access exception";
-					return false;
+					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
+							"element type '" + elementType
+									+ "' could not be created",
+							NOT_JLS_HINT);
 				} catch (InvocationTargetException ex) {
-					JLSInfo.loadError = "invocation target exception";
-					return false;
+					// the element's own constructor threw; its message
+					// (never its class name or stack, #58 P6) is the why
+					Throwable cause = ex.getCause() == null ? ex
+							: ex.getCause();
+					return failLoad(LoadError.Category.ELEMENT_ERROR,
+							"creating an element of type '" + elementType
+									+ "' failed"
+									+ (cause.getMessage() == null ? ""
+											: ": " + cause.getMessage()),
+							"Fix that element's values in the file, or "
+									+ "re-save the circuit from JLS.");
 				}
 				lineNumber += 1;
 				boolean loadOK = loadElement(newElement, input);
 				if (loadOK) {
 					loadedElements.add(newElement);
 				} else {
-					JLSInfo.loadError += "; false from loadElement";
+					// loadElement already reported the specific failure
 					return false;
 				}
 			}
-			JLSInfo.loadError = "no trailer";
-			return false; // no trailer
+			return failLoad(LoadError.Category.MALFORMED,
+					"the file ends before the ENDCIRCUIT trailer",
+					TRUNCATED_HINT);
 		} catch (Exception ex) {
-			JLSInfo.loadError = "load exception: " + ex.getMessage();
-			for (int i = 0; i < ex.getStackTrace().length; i += 1) {
-				JLSInfo.loadError += "\n" + ex.getStackTrace()[i].getFileName()
-						+ ex.getStackTrace()[i].getLineNumber();
-			}
-			return false;
+			// the stack trace goes to stderr for debugging; the user
+			// message must never show one (#58 P6)
+			ex.printStackTrace();
+			return failLoad(LoadError.Category.MALFORMED,
+					"an unexpected problem stopped the load"
+							+ (ex.getMessage() == null ? ""
+									: ": " + ex.getMessage()),
+					TRUNCATED_HINT);
 		} catch (Error er) {
-			JLSInfo.loadError = "load error: " + er.getMessage();
-			return false;
+			return failLoad(LoadError.Category.MALFORMED,
+					"an unexpected problem stopped the load"
+							+ (er.getMessage() == null ? ""
+									: ": " + er.getMessage()),
+					TRUNCATED_HINT);
 		}
 	} // end of load method
 
@@ -482,15 +657,42 @@ public class Circuit implements Printable {
 	 * @return false if the file is not in the right format, true if it is.
 	 */
 	public boolean loadElement(Element el, Scanner input) {
+		try {
+			return loadElementItems(el, input);
+		} catch (IllegalArgumentException ex) {
+			// a parameter failed the element's own validation (issue
+			// #52); the constraint text is the why, and the element and
+			// line say where (#58)
+			return failLoad(LoadError.Category.ELEMENT_ERROR, el,
+					ex.getMessage() == null
+							? "an attribute value was rejected"
+							: ex.getMessage(),
+					"Fix that value in the file, or re-create the "
+							+ "element in JLS and save again.");
+		}
+	} // end of loadElement method
+
+	/**
+	 * Read the attribute items of one element until its END line.
+	 *
+	 * @param el    The element being loaded.
+	 * @param input The scanner to read with.
+	 *
+	 * @return false if the file is not in the right format, true if it is.
+	 */
+	private boolean loadElementItems(Element el, Scanner input) {
 		while (input.hasNext()) {
 			if (input.hasNext("CIRCUIT")) {
 				if (!(el instanceof SubCircuit)) {
-					JLSInfo.loadError = "expected SubCircuit";
-					return false;
+					return failLoad(LoadError.Category.MALFORMED, el,
+							"a nested CIRCUIT appears here, but only a "
+									+ "SubCircuit element may contain one",
+							NOT_JLS_HINT);
 				}
 				Circuit subCirc = new Circuit("");
 				if (!subCirc.load(input, 0)) {
-					JLSInfo.loadError = "false from subCirc.load(input,0)";
+					// the subcircuit's load already reported the
+					// specific failure - keep it (#58)
 					return false;
 				}
 				SubCircuit sub = (SubCircuit) el;
@@ -500,16 +702,26 @@ public class Circuit implements Printable {
 				addName(subCirc.getName());
 				try {
 					if (!subCirc.finishLoad(null)) {
-						JLSInfo.loadError = "false from subCir.finishLoad(null)";
+						// finishLoad reported the failure; add which
+						// subcircuit it was in if it did not say
+						if (JLSInfo.lastLoadError == null) {
+							failLoad(LoadError.Category.ELEMENT_ERROR, el,
+									"subcircuit " + subCirc.getName()
+											+ " failed to finish loading",
+									TRUNCATED_HINT);
+						}
 						return false;
 					}
 				} catch (Exception e) {
 					// a broken subcircuit must fail the parent load, not
 					// report success with a stack trace on stderr (#58)
 					e.printStackTrace();
-					JLSInfo.loadError = "subcircuit " + subCirc.getName()
-							+ " failed to finish loading: " + e.getMessage();
-					return false;
+					return failLoad(LoadError.Category.ELEMENT_ERROR, el,
+							"subcircuit " + subCirc.getName()
+									+ " failed to finish loading"
+									+ (e.getMessage() == null ? ""
+											: ": " + e.getMessage()),
+							TRUNCATED_HINT);
 				}
 				continue;
 			}
@@ -520,13 +732,11 @@ public class Circuit implements Printable {
 			}
 			if (type.equals("int")) {
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "unexpected end";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String name = input.next();
 				if (!input.hasNextInt()) {
-					JLSInfo.loadError = "expecting int value";
-					return false;
+					return badValueInElement(el, name, "an integer");
 				}
 				int value = input.nextInt();
 				if (name.equals("id")) {
@@ -536,107 +746,134 @@ public class Circuit implements Printable {
 				lineNumber += 1;
 			} else if (type.equals("long")) {
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "unexpected end";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String name = input.next();
 				if (!input.hasNextLong()) {
-					JLSInfo.loadError = "expecting long value";
-					return false;
+					return badValueInElement(el, name, "an integer");
 				}
 				long value = input.nextLong();
 				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("Int")) { // BigInteger
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "unexpected end";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String name = input.next();
 				if (!input.hasNextBigInteger()) {
-					JLSInfo.loadError = "expecting BigInteger value";
-					return false;
+					return badValueInElement(el, name, "an integer");
 				}
 				BigInteger value = input.nextBigInteger();
 				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("String")) {
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "unexpected end";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String name = input.next();
 				String pattern = ".*";
 				String raw = input.findInLine(pattern);
 				if (raw == null) {
-					JLSInfo.loadError = "null findInLine";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String value = unquoteAndUnescape(raw);
 				if (value == null) {
-					JLSInfo.loadError = "expecting quoted string value";
-					return false;
+					return badValueInElement(el, name, "a quoted string");
 				}
 				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("ref")) {
 				if (!input.hasNext()) {
-					JLSInfo.loadError = "unexpected end";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String name = input.next();
 				if (!input.hasNextInt()) {
-					JLSInfo.loadError = "expecting int value";
-					return false;
+					return badValueInElement(el, name, "an integer");
 				}
 				int value = input.nextInt();
 				el.setValue(name, value);
 				lineNumber += 1;
 			} else if (type.equals("pair")) {
 				if (!input.hasNextInt()) {
-					JLSInfo.loadError = "expecting int value";
-					return false;
+					return badValueInElement(el, type, "two integers");
 				}
 				int v1 = input.nextInt();
 				if (!input.hasNextInt()) {
-					JLSInfo.loadError = "expecting int value";
-					return false;
+					return badValueInElement(el, type, "two integers");
 				}
 				int v2 = input.nextInt();
 				el.setPair(v1, v2);
 				lineNumber += 1;
 			} else if (type.equals("probe")) {
 				if (!input.hasNextInt()) {
-					JLSInfo.loadError = "expecting int value";
-					return false;
+					return badValueInElement(el, type, "an integer");
 				}
 				int id = input.nextInt();
 				String pattern = ".*";
 				String raw = input.findInLine(pattern);
 				if (raw == null) {
-					JLSInfo.loadError = "null findInLine";
-					return false;
+					return truncatedInElement(el, type);
 				}
 				String value = unquoteAndUnescape(raw);
 				if (value == null) {
-					JLSInfo.loadError = "expecting quoted string value";
-					return false;
+					return badValueInElement(el, type, "a quoted string");
 				}
 				if (!(el instanceof WireEnd)) {
-					JLSInfo.loadError = "expecting WireEnd";
-					return false;
+					return failLoad(LoadError.Category.MALFORMED, el,
+							"a probe entry appears here, but probes can "
+									+ "only be attached to wire ends",
+							NOT_JLS_HINT);
 				}
 				WireEnd end = (WireEnd) el;
 				end.setProbe(id, value);
 				lineNumber += 1;
 			} else {
-				JLSInfo.loadError = "expecting item type";
-				return false;
+				return failLoad(LoadError.Category.MALFORMED, el,
+						"'" + type + "' is not a kind of attribute JLS "
+								+ "knows how to read",
+						TRUNCATED_HINT);
 			}
 		}
-		JLSInfo.loadError = "abnormal loadElement termination";
-		return false;
-	} // end of loadElement method
+		return failLoad(LoadError.Category.MALFORMED, el,
+				"the file ends in the middle of this element (its END "
+						+ "line is missing)",
+				TRUNCATED_HINT);
+	} // end of loadElementItems method
+
+	/**
+	 * Report a file that stops in the middle of an element attribute.
+	 *
+	 * @param el   The element being read.
+	 * @param item The attribute kind being read when input ran out.
+	 *
+	 * @return false, so callers can 'return truncatedInElement(...)'.
+	 */
+	private static boolean truncatedInElement(Element el, String item) {
+
+		return failLoad(LoadError.Category.MALFORMED, el,
+				"the file ends in the middle of "
+						+ (item == null || item.isEmpty() ? "an attribute"
+								: "a '" + item + "' attribute"),
+				TRUNCATED_HINT);
+	} // end of truncatedInElement method
+
+	/**
+	 * Report an attribute whose value is not of the required kind.
+	 *
+	 * @param el       The element being read.
+	 * @param name     The attribute (or item kind) with the bad value.
+	 * @param expected What the value should have been, e.g. "an integer".
+	 *
+	 * @return false, so callers can 'return badValueInElement(...)'.
+	 */
+	private static boolean badValueInElement(Element el, String name,
+			String expected) {
+
+		return failLoad(LoadError.Category.MALFORMED, el,
+				"the value of '" + name + "' should be " + expected
+						+ ", but what follows is not",
+				TRUNCATED_HINT);
+	} // end of badValueInElement method
 
 	/**
 	 * Extract and decode a quoted string value from the rest of a saved
@@ -759,10 +996,22 @@ public class Circuit implements Printable {
 			// refs above; keeping it pinned every loaded element (#51)
 			elementMap.clear();
 		} catch (Exception ex) {
-			JLSInfo.loadError = "finishLoad Exception " + ex.getMessage();
+			// stack trace to stderr only; never in the user message (#58 P6)
+			ex.printStackTrace();
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.ELEMENT_ERROR,
+					"the circuit could not be assembled after reading"
+							+ (ex.getMessage() == null ? ""
+									: ": " + ex.getMessage()),
+					TRUNCATED_HINT));
 			return false;
 		} catch (Error er) {
-			JLSInfo.loadError = "finishLoad Error " + er.getMessage();
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.ELEMENT_ERROR,
+					"the circuit could not be assembled after reading"
+							+ (er.getMessage() == null ? ""
+									: ": " + er.getMessage()),
+					TRUNCATED_HINT));
 			return false;
 		}
 		return true;
@@ -799,10 +1048,13 @@ public class Circuit implements Printable {
 	 */
 	public void save(PrintWriter output) {
 
-		// write header
+		// write header; a file-level save states the format version once
+		// at the top (issue #79) - nested subcircuit blocks, which are
+		// always saved through their imported circuit, never repeat it
 		if (isImported()) {
 			output.println("CIRCUIT " + subElement.getName());
 		} else {
+			output.println("FORMAT " + FORMAT_VERSION);
 			output.println("CIRCUIT " + name);
 		}
 
@@ -1041,17 +1293,19 @@ public class Circuit implements Printable {
 		g.fill(rect);
 		draw(g, new HashSet<Element>(), null);
 
-		// write the image
+		// write the image, the format following the file extension
+		// (issue #71): .png produces PNG, anything else the legacy JPEG
 		try {
-			ImageIO.write(image, "JPEG", new File(file));
-		} catch (Exception ex) {
-			System.out.println("image write exception");
+			String format = file.toLowerCase(java.util.Locale.ROOT)
+					.endsWith(".png") ? "png" : "jpg";
+			if (!ImageIO.write(image, format, new File(file))) {
+				throw new IOException("no " + format + " image writer available");
+			}
+		} finally {
+			// clean up
+			g.dispose();
+			image.flush();
 		}
-
-		// clean up
-		g.dispose();
-		image.flush();
-		image = null;
 
 	} // end of print method
 

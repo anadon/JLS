@@ -352,9 +352,9 @@ public abstract class Pin extends LogicElement {
 	public void remove(Circuit circ) {
 
 		if (circ.isImported()) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,
+			TellUser.error(JLSInfo.frame,
 					"Can't remove " + pinKind().toLowerCase() + " pin "
-					+ name + " from a subcircuit");
+					+ name + " from a subcircuit", "Error");
 			return;
 		}
 		circ.removeName(name);

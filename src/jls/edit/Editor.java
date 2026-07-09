@@ -7,12 +7,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
+import jls.TellUser;
 import jls.Util;
 import jls.elem.Element;
 import jls.elem.SubCircuit;
@@ -49,9 +49,8 @@ public final class Editor extends SimpleEditor {
 
 		// if imported, can't save
 		if (circuit.isImported()) {
-			JOptionPane.showMessageDialog(getTopLevelAncestor(),
-					"Can't save an imported circuit", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(getTopLevelAncestor(),
+					"Can't save an imported circuit", "Error");
 			return false;
 		}
 
@@ -65,9 +64,8 @@ public final class Editor extends SimpleEditor {
 		try {
 			FileAbstractor.writeCircuit(new File(fileName), text.toString());
 		} catch (IOException ex) {
-			JOptionPane.showMessageDialog(getTopLevelAncestor(),
-					"Can't write to " + fileName + ": " + ex.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(getTopLevelAncestor(),
+					"Can't write to " + fileName + ": " + ex.getMessage(), "Error");
 			return false;
 		}
 
@@ -89,9 +87,8 @@ public final class Editor extends SimpleEditor {
 
 		// if imported, can't save
 		if (circuit.isImported()) {
-			JOptionPane.showMessageDialog(null,
-					"Can't save an imported circuit", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(null,
+					"Can't save an imported circuit", "Error");
 			return;
 		}
 
@@ -115,7 +112,7 @@ public final class Editor extends SimpleEditor {
 			return;
 		String tempName = fileName.replaceAll("\\.jls$","");
 		if (!Util.isValidName(tempName)) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"Invalid file name - must have only letters, digits & _");
+			TellUser.error(JLSInfo.frame,"Invalid file name - must have only letters, digits & _", "Error");
 			return;
 		}
 		if (!fileName.endsWith(".jls")) {
@@ -131,8 +128,8 @@ public final class Editor extends SimpleEditor {
 			if (otherEditor.getCircuit().isImported())
 				continue;
 			if (name.equals(otherEditor.getCircuit().getName())) {
-				JOptionPane.showMessageDialog(JLSInfo.frame,
-				"Circuit with this name already being edited");
+				TellUser.error(JLSInfo.frame,
+				"Circuit with this name already being edited", "Error");
 				return;
 			}
 		}
@@ -217,12 +214,13 @@ public final class Editor extends SimpleEditor {
 		if (!circuit.isImported() && circuit.hasChanged()) {
 
 			// see if user wants to save it
-			int result = JOptionPane.showConfirmDialog(this, "Save this circuit?", "Option", JOptionPane.YES_NO_CANCEL_OPTION);
-			if (result == JOptionPane.YES_OPTION) {
+			TellUser.Answer result = TellUser.confirmOrCancel(this,
+					"Save this circuit?", "Option");
+			if (result == TellUser.Answer.YES) {
 				if (!save())
 					return;
 			}
-			else if (result == JOptionPane.CANCEL_OPTION) {
+			else if (result == TellUser.Answer.CANCEL) {
 				return;
 			}
 		}
@@ -262,14 +260,13 @@ public final class Editor extends SimpleEditor {
 		if (circuit.hasChanged()) {
 
 			// check with user before saving
-			int options = JOptionPane.YES_NO_CANCEL_OPTION;
-			int result = JOptionPane.showConfirmDialog(null,
-					"Save " + circuit.getName() + "?","Save circuit?",options);
-			if (result == JOptionPane.OK_OPTION){
+			TellUser.Answer result = TellUser.confirmOrCancel(null,
+					"Save " + circuit.getName() + "?","Save circuit?");
+			if (result == TellUser.Answer.YES){
 				if (!save())
 					return false;
 			}
-			else if (result == JOptionPane.CANCEL_OPTION)
+			else if (result == TellUser.Answer.CANCEL)
 				return false;
 			else { // no save
 

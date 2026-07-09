@@ -37,6 +37,12 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
+      # External HDL simulators activate the otherwise-skipped
+      # Verilog/VHDL validation tests (issue #60); best-effort so a
+      # transient apt failure doesn't block the build
+      - name: Install HDL simulators
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl || echo "HDL simulators unavailable; validation tests will skip"
+
       # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
       # the headless test suite, and runs the SpotBugs check goal
       # (threshold High, baseline in config/spotbugs-exclude.xml).

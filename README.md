@@ -51,6 +51,13 @@ Sources live in the historical `src/` layout (not `src/main/java`); tests are
 under `test/`. Continuous integration builds every push on JDK 17 and 21.
 Pushing a `v*` tag publishes a GitHub Release with the runnable jar.
 
+**Optional development tools:** the HDL-export validation tests compile the
+generated Verilog with [Icarus Verilog](https://steveicarus.github.io/iverilog/)
+(`iverilog`) when it is installed and skip cleanly when it is not; `ghdl`
+will play the same role for the future VHDL emitter. Install both for full
+coverage (`apt-get install iverilog ghdl` on Debian/Ubuntu) — CI installs
+them on its runners.
+
 ## Circuit files
 
 JLS saves circuits as `.jls` files. **The extension has meant different

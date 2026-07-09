@@ -85,6 +85,7 @@
 	    <tocitem text="Transitions" target="transitions"/>
 	    <tocitem text="Outputs" target="outputs"/>
 	</tocitem>
+	<tocitem text="Truth Table" target="truth"/>
 	<tocitem text="Signal Generator" target="siggen"/>
 	<tocitem text="Keypad" target="keypad"/>
 	<tocitem text="Value Display" target="display"/>

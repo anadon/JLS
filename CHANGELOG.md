@@ -11,6 +11,29 @@ All notable changes to JLS are documented here. The format follows
 feature removal, which is a MAJOR version event under semantic versioning.)*
 
 ### Added
+- Normative and contributor documentation (#85):
+  `docs/simulation-semantics.md` specifies the simulation model —
+  time, event ordering, per-element delays, edge triggering,
+  initialization, tri-state/HiZ resolution — with every claim
+  anchored to code or a golden test, and an appendix filing the
+  semantic surprises found while writing it as candidate bugs;
+  `ARCHITECTURE.md` maps the codebase for contributors (modules,
+  save/load pipeline, element authoring surface, editor, threading,
+  error contracts, test layout) and records three scope decisions:
+  internationalization is a non-goal with explicit revisit triggers,
+  help stays in-jar with hosted docs as the planned future direction,
+  and the plugin mechanism stays removed (#80). The README gained a
+  Documentation section linking all project documents.
+- A help-coverage completeness test (#85): every element in the
+  editor palette must have a Map.jhm topic resolving to a bundled
+  help page (`HelpTopicsTest.everyPaletteElementTypeHasAMappedHelpTopic`,
+  static palette list until #78's registry exists). Re-counting the
+  ergonomics audit's "21 undocumented element classes" against the
+  real palette found every user-creatable element already documented
+  (the remainder are internal classes), so the test pins completeness
+  rather than repairing it; the truth-table page, previously findable
+  only from its dialog's Help button, is now also in the help table
+  of contents.
 - Batch mode is now a documented, tested grading API (#72):
   `docs/batch-interface.md` is a normative spec — and a stability
   contract — for the `-t` test-vector grammar, the watched-element

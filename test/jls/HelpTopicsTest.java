@@ -137,6 +137,88 @@ class HelpTopicsTest {
 		return !link.matches("[a-zA-Z][a-zA-Z0-9+.-]*:.*");
 	}
 
+	/**
+	 * Every element type a user can create from the editor palette
+	 * (SimpleEditor.makeElements builds the toolbar and the "elements"
+	 * menu from exactly these, plus the Import button for SubCircuit),
+	 * mapped to the Map.jhm topic that documents it. This is the
+	 * completeness contract of issue #85: every palette element has a
+	 * help topic that resolves to a bundled page. A static list because
+	 * the element registry (#78) does not exist yet; when adding a
+	 * palette element, add its row here (the test fails until the topic
+	 * and page exist).
+	 *
+	 * Inventory note (issue #85): at the time this test was added the
+	 * audit's "21 element classes without help pages" was re-counted
+	 * against the real palette; every user-creatable element already
+	 * had a mapped page (the uncovered classes are internal:
+	 * puts/wires/dialog plumbing/truth-table display internals), so
+	 * this test pins completeness rather than repairing it.
+	 */
+	private static final Map<String,String> PALETTE_ELEMENT_TOPICS = Map.ofEntries(
+			Map.entry("AndGate", "AND"),
+			Map.entry("OrGate", "OR"),
+			Map.entry("NotGate", "NOT"),
+			Map.entry("XorGate", "XOR"),
+			Map.entry("NandGate", "NAND"),
+			Map.entry("NorGate", "NOR"),
+			Map.entry("DelayGate", "DELAY"),
+			Map.entry("TriState", "TRISTATE"),
+			Map.entry("JumpStart", "start"),
+			Map.entry("JumpEnd", "end"),
+			Map.entry("InputPin", "Input"),
+			Map.entry("OutputPin", "Output"),
+			Map.entry("Splitter", "unbundle"),
+			Map.entry("Binder", "bundle"),
+			Map.entry("Constant", "const"),
+			Map.entry("Extend", "extend"),
+			Map.entry("Register", "register"),
+			Map.entry("Memory", "memory"),
+			Map.entry("Mux", "mux"),
+			Map.entry("Decoder", "decoder"),
+			Map.entry("Adder", "adder"),
+			Map.entry("Clock", "clock"),
+			Map.entry("Pause", "pause"),
+			Map.entry("Stop", "stop"),
+			Map.entry("SigGen", "siggen"),
+			Map.entry("Display", "display"),
+			Map.entry("StateMachine", "stmach"),
+			Map.entry("TruthTable", "truth"),
+			Map.entry("Text", "text"),
+			Map.entry("SubCircuit", "import"));
+
+	/** Every palette element type must have a help topic that resolves
+	 *  to a bundled page (issue #85). Also sanity-checks the static
+	 *  list itself: each type must be a real jls.elem class, so a
+	 *  renamed element cannot leave a stale row behind. */
+	@Test
+	void everyPaletteElementTypeHasAMappedHelpTopic() throws Exception {
+		Map<String,String> map = topicMap();
+		Set<String> resources = helpResources();
+		List<String> broken = new ArrayList<String>();
+		for (String type : new TreeSet<String>(PALETTE_ELEMENT_TOPICS.keySet())) {
+			String topic = PALETTE_ELEMENT_TOPICS.get(type);
+			try {
+				Class.forName("jls.elem." + type);
+			}
+			catch (ClassNotFoundException ex) {
+				broken.add(type + ": no such element class jls.elem." + type);
+				continue;
+			}
+			String url = map.get(topic);
+			if (url == null) {
+				broken.add(type + ": Map.jhm has no entry for topic '" + topic + "'");
+			}
+			else if (!resources.contains(url)) {
+				broken.add(type + ": topic '" + topic
+						+ "' points at a missing page help/" + url);
+			}
+		}
+		assertTrue(broken.isEmpty(),
+				"palette elements without a working help topic:\n  "
+						+ String.join("\n  ", broken));
+	}
+
 	/** Every topic id passed to Help.enableHelpOnButton/showTopic in the source. */
 	private static final List<String> TOPICS_USED_BY_CODE = List.of(
 			"top", "adder", "bundle", "unbundle", "clock", "const",

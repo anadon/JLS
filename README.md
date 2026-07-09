@@ -79,6 +79,21 @@ as zip archives; the loader still accepts those). If you process `.jls`
 files with external tools, sniff the content rather than trusting the
 extension.
 
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — contributor's map: module
+  layout, save/load pipeline, editor and threading model, error
+  contracts, test layout, and recorded scope decisions.
+- [docs/simulation-semantics.md](docs/simulation-semantics.md) —
+  normative spec of the simulation model: time, events, delays, edge
+  triggering, tri-state/HiZ.
+- [docs/batch-interface.md](docs/batch-interface.md) — normative spec
+  of the batch/grading interface: `-t` grammar, output format, VCD.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit
+  changes.
+- [SECURITY.md](SECURITY.md) — threat model and reporting.
+- [CHANGELOG.md](CHANGELOG.md) — user-visible changes per release.
+
 ## License and provenance
 
 JLS is free software under the **GNU General Public License v3.0** (see

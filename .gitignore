@@ -6,4 +6,6 @@ bin/
 # JLS runtime artifacts
 JLSerror
 *.jls
+# committed test fixtures are exempt from the *.jls ignore (issue #56)
+!test/fixtures/**/*.jls
 Thumbs.db

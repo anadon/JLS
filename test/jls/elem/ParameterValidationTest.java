@@ -80,6 +80,16 @@ class ParameterValidationTest {
 	}
 
 	@Test
+	void stateMachineWithoutInitialStateSurvivesSimInit() {
+		// deleting the initial state (or a zero-state machine) used to
+		// NPE the simulator thread in initSim (issue #52, M13); the fix
+		// falls back to an arbitrary state or a clean no-op
+		StateMachine machine = new StateMachine(new Circuit("invalid"));
+		org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+				() -> machine.initSim(null));
+	}
+
+	@Test
 	void validValuesStillLoad() {
 		Circuit circuit = new Circuit("valid");
 		assertTrue(circuit.load(new Scanner(element("Clock",

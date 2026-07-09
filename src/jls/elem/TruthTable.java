@@ -29,7 +29,6 @@ import java.util.Vector;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -38,6 +37,7 @@ import javax.swing.SwingConstants;
 import jls.Circuit;
 import jls.Help;
 import jls.JLSInfo;
+import jls.TellUser;
 import jls.Util;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
@@ -681,24 +681,22 @@ public final class TruthTable extends LogicElement implements Printable {
 			if (event.getSource() == ok || event.getSource() == nameField) {
 				String tname = nameField.getText().trim();
 				if (tname.equals("") || !Util.isValidName(tname)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid element name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+					TellUser.error(this,
+							"Missing or invalid element name", "Error");
 					return;
 				}
 				if (inputNames.size() == 0 || outputNames.size() == 0) {
-					JOptionPane.showMessageDialog(this,
+					TellUser.error(this,
 							"Must have at least one input signal and one output signal",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				if (tname.equals(name))
 					nameChanged = false;
 				else {
 					if (!circuit.addName(tname)) {
-						JOptionPane.showMessageDialog(this,
-								"Duplicate element name", "Error",
-								JOptionPane.ERROR_MESSAGE);
+						TellUser.error(this,
+								"Duplicate element name", "Error");
 						return;
 					}
 					nameChanged = true;
@@ -752,15 +750,13 @@ public final class TruthTable extends LogicElement implements Printable {
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return;
 			}
 		}
@@ -847,23 +843,20 @@ public final class TruthTable extends LogicElement implements Printable {
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return;
 			}
 		}
 
 		// can't add an output until there is at least one input
 		if (inputNames.size() == 0) {
-			JOptionPane.showMessageDialog(edit,"add at least one input first", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(edit,"add at least one input first", "Error");
 			return;
 		}
 
@@ -920,8 +913,8 @@ public final class TruthTable extends LogicElement implements Printable {
 			}
 			int matchingRow = findMatchingRow(r,col);
 			if (matchingRow == -1) {
-				JOptionPane.showMessageDialog(edit,"cannot remove: output conflict",
-						"Error", JOptionPane.ERROR_MESSAGE);
+				TellUser.error(edit,"cannot remove: output conflict",
+						"Error");
 				return;
 			}
 			dups.add(matchingRow);
@@ -1018,8 +1011,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// find matching row, if there is one
 		int matchingRow = findMatchingRow(row,col);
 		if (matchingRow == -1) {
-			JOptionPane.showMessageDialog(edit,"not possible", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(edit,"not possible", "Error");
 			return;
 		}
 
@@ -1272,7 +1264,7 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		// get name
 		String newSignal =
-			JOptionPane.showInputDialog(edit,"Enter new output signal name");
+			TellUser.prompt(edit,"Enter new output signal name");
 
 		if (newSignal == null)
 			return null;
@@ -1282,21 +1274,20 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		// don't allow null
 		if (newSignal.equals("")) {
-			JOptionPane.showMessageDialog(edit,"invalid name", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(edit,"invalid name", "Error");
 			return null;
 		}
 
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (newSignal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name");
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return null;
 			}
 		}
 		for (String name : outputNames) {
 			if (newSignal.equals(name)) {
-				JOptionPane.showMessageDialog(edit,"duplicate signal name");
+				TellUser.error(edit,"duplicate signal name", "Error");
 				return null;
 			}
 		}

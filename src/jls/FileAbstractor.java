@@ -60,39 +60,75 @@ public final class FileAbstractor {
 		String name = filePath.replaceAll("\\.jls~$", "");
 		name = name.replaceAll("\\.jls$", "");
 		if (Util.isValidFileName(name) == null) {
-			JLSInfo.loadError = name + " is not a valid circuit file name. "
-					+ "It must start with a letter and contain letters, "
-					+ "digits and underscores.";
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.NOT_A_CIRCUIT,
+					name + " is not a valid circuit file name",
+					"Rename the file so its name starts with a letter "
+							+ "and contains only letters, digits and "
+							+ "underscores."));
 			return null;
 		}
 
 		File file = new File(filePath);
 		if (!file.isFile()) {
-			JLSInfo.loadError = "can't read " + filePath + ": no such file";
+			JLSInfo.setLoadError(LoadError.of(LoadError.Category.IO_ERROR,
+					"can't read " + filePath + ": no such file",
+					"Check the path, and that the file has not been "
+							+ "moved or deleted."));
 			return null;
 		}
 
 		StringBuilder reasons = new StringBuilder();
+		boolean overLimit = false;
 		try {
 			return readXZ(file);
 		}
 		catch (IOException ex) {
+			overLimit |= isOverLimit(ex);
 			reasons.append("not XZ (").append(reason(ex)).append(")");
 		}
 		try {
 			return readZip(file);
 		}
 		catch (IOException ex) {
+			overLimit |= isOverLimit(ex);
 			reasons.append("; not zip (").append(reason(ex)).append(")");
 		}
 		try {
 			return readText(file);
 		}
 		catch (IOException ex) {
+			overLimit |= isOverLimit(ex);
 			reasons.append("; not readable as text (").append(reason(ex)).append(")");
 		}
-		JLSInfo.loadError = filePath + " is not in any known circuit file format: " + reasons;
+		if (overLimit) {
+			// a probe recognized the container but its contents blow
+			// past the hostile-input cap (issue #38)
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.LIMIT_EXCEEDED,
+					filePath + " could not be opened: " + reasons,
+					"JLS refuses circuit files that expand past "
+							+ (MAX_CIRCUIT_TEXT_BYTES >> 20) + " MiB; if "
+							+ "this file is really yours, re-save it "
+							+ "from a working copy of the circuit."));
+			return null;
+		}
+		JLSInfo.setLoadError(LoadError.of(LoadError.Category.NOT_A_CIRCUIT,
+				filePath + " is not in any known circuit file format: "
+						+ reasons,
+				"Make sure this is a .jls circuit file saved by JLS, "
+						+ "not some other kind of file."));
 		return null;
+	}
+
+	/**
+	 * Whether a probe failure means the hostile-input size cap was hit,
+	 * rather than a format mismatch.
+	 */
+	private static boolean isOverLimit(IOException ex) {
+
+		String message = ex.getMessage();
+		return message != null && message.contains("circuit size limit");
 	}
 
 	/**

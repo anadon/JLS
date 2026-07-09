@@ -61,6 +61,7 @@ public final class JLSInfo {
 	public static boolean batch = false;				// batch mode
 	public static boolean printTrace = false;			// print signal trace
 	public static boolean imgexport = false;			// export image from command line
+	public static boolean hdlexport = false;			// export HDL from command line (#60)
 	public enum Orientation { UP, DOWN, LEFT, RIGHT;
 
 		/**
@@ -119,7 +120,22 @@ public final class JLSInfo {
 		new Color(240,240,240);							// editor window grid
 	public static Color backgroundColor =  Color.white;	// editor window grid
 	public static String loadError = "";				// error message when loading a circuit
-	
+	public static LoadError lastLoadError = null;		// structured detail behind loadError (#58)
+
+	/**
+	 * Publish a load failure (or clear it with null). The legacy
+	 * {@link #loadError} string stays in sync as a derived view so
+	 * existing readers keep working; new code should prefer the
+	 * structured {@link #lastLoadError} (issue #58 addendum).
+	 *
+	 * @param error The load error, or null to clear the state.
+	 */
+	public static void setLoadError(LoadError error) {
+
+		lastLoadError = error;
+		loadError = error == null ? "" : error.render();
+	} // end of setLoadError method
+
 	/**
 	 * Private constructor to keep this class from being instantiated.
 	 */

@@ -36,7 +36,7 @@ class CircuitLoadErrorTest {
 	@Test
 	void missingTrailerIsRejected() {
 		String error = rejectAndGetError("CIRCUIT foo\n");
-		assertTrue(error.contains("no trailer"), "got: " + error);
+		assertTrue(error.contains("ENDCIRCUIT"), "got: " + error);
 	}
 
 	@Test

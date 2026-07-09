@@ -234,12 +234,32 @@ public abstract class Group extends LogicElement {
 	} // end of setPair method
 	
 	/**
+	 * The bit routing of this binder/splitter, one entry per bundled
+	 * put, in put order: entry k holds the bundle-side bit indices the
+	 * k-th narrow put's bits map to, in narrow-put bit order (bit 0
+	 * first). For a Binder the narrow puts are its inputs; for a
+	 * Splitter, its outputs. Exposed for consumers of the circuit
+	 * model, e.g. the HDL exporter (issue #60); the Entry class itself
+	 * stays internal.
+	 *
+	 * @return a fresh list of fresh index arrays.
+	 */
+	public ArrayList<int[]> getRangeIndices() {
+
+		ArrayList<int[]> indices = new ArrayList<int[]>(ranges.size());
+		for (Entry e : ranges) {
+			indices.add(e.getValues());
+		}
+		return indices;
+	} // end of getRangeIndices method
+
+	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	public void save(PrintWriter output) {
-		
+
 		super.save(output);
 		output.println(" int bits " + bits);
 		output.println(" String orient \"" + orientation.toString() + "\"");

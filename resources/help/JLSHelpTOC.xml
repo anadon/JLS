@@ -46,6 +46,7 @@
     </tocitem>
     <tocitem text="Circuits" target="circuit.over">
    	<tocitem text="Wiring" target="wires">
+   	    <tocitem text="Wires and Wire Bundles" target="wire.bundles"/>
    	    <tocitem text="Named Wire" target="start"/>
    	    <tocitem text="Connect to Named Wire" target="end"/>
    	    <tocitem text="Bundle Wires" target="bundle"/>
@@ -79,8 +80,14 @@
 	    <tocitem text="Stop Simulation" target="stop"/>
 	    <tocitem text="Pause Simulation" target="pause"/>
 	</tocitem>
-	<tocitem text="State Machine" target="stmach"/>
+	<tocitem text="State Machine" target="stmach">
+	    <tocitem text="States" target="states"/>
+	    <tocitem text="Transitions" target="transitions"/>
+	    <tocitem text="Outputs" target="outputs"/>
+	</tocitem>
+	<tocitem text="Truth Table" target="truth"/>
 	<tocitem text="Signal Generator" target="siggen"/>
+	<tocitem text="Keypad" target="keypad"/>
 	<tocitem text="Value Display" target="display"/>
 	<tocitem text="Text" target="text"/>
 	<tocitem text="Subcircuits" target="import"/>

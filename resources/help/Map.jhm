@@ -32,7 +32,6 @@
 	<mapID target="expand.area" url="menus/global/expand.html" />
 	<mapID target="unwatch" url="menus/global/unwatch.html" />
 	<mapID target="change.colors" url="menus/global/changecolor.html" />
-	<mapID target="circuits" url="editor/overview.html" />
 	<mapID target="create.elem" url="editor/editing/picking.html" />
 	<mapID target="subcircuits" url="editor/subcircuits/overview.html" />
 	<mapID target="sim.over" url="simulator/simulator.html" />
@@ -77,9 +76,11 @@
 	<mapID target="display" url="elements/other/display.html" />
 	<mapID target="text" url="elements/other/text.html" />
 	<mapID target="stmach" url="elements/stmach/stmach.html" />
+	<mapID target="states" url="elements/stmach/states.html" />
+	<mapID target="transitions" url="elements/stmach/transitions.html" />
+	<mapID target="outputs" url="elements/stmach/outputs.html" />
+	<mapID target="keypad" url="elements/keypad.html" />
+	<mapID target="wire.bundles" url="elements/wiring/wires.html" />
 	<mapID target="truth" url="elements/truth/truth.html" />
 	<mapID target="import" url="elements/import/import.html" />
-	<mapID target="irun" url="simulator/interactive/run.html" />
-	<mapID target="brun" url="simulator/batch/run.html" />
-</mapID>
 </map>

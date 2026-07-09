@@ -70,7 +70,14 @@ public final class CircuitSnapshot {
 				return null;
 			}
 		} catch (Exception ex) {
-			JLSInfo.loadError = "snapshot restore failed: " + ex.getMessage();
+			ex.printStackTrace();
+			JLSInfo.setLoadError(jls.LoadError.of(
+					jls.LoadError.Category.MALFORMED,
+					"snapshot restore failed"
+							+ (ex.getMessage() == null ? ""
+									: ": " + ex.getMessage()),
+					"Undo/redo state may be inconsistent - save your "
+							+ "work under a new name and reopen it."));
 			return null;
 		}
 		return restored;

@@ -15,13 +15,13 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
 import jls.Help;
 import jls.JLSInfo;
+import jls.TellUser;
 
 /**
  * Shared skeleton for element create/modify dialogs (issue #26).
@@ -144,8 +144,7 @@ public abstract class ElementDialog extends JDialog {
 	 */
 	protected void reject(String message) {
 
-		JOptionPane.showMessageDialog(this, message, "Error",
-				JOptionPane.ERROR_MESSAGE);
+		TellUser.error(this, message, "Error");
 	} // end of reject method
 
 	/**

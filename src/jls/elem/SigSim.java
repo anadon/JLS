@@ -4,7 +4,6 @@ import java.math.*;
 import java.util.BitSet;
 import java.util.Scanner;
 
-import javax.swing.JOptionPane;
 
 import jls.*;
 import jls.sim.*;

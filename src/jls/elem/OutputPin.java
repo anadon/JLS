@@ -218,9 +218,8 @@ public class OutputPin extends Pin implements TriProp {
 	 */
 	public void showCurrentValue(Point where) {
 
-		JOptionPane.showMessageDialog(JLSInfo.frame, BitSetUtils.toDisplay(
-				currentValue, bits), "Information",
-				JOptionPane.INFORMATION_MESSAGE);
+		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(
+				currentValue, bits), "Information");
 	} // end of showCurrentValue method
 
 } // end of OutputPin class

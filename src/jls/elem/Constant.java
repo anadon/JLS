@@ -239,14 +239,25 @@ public class Constant extends LogicElement implements ActionListener {
 		super.save(output);
 		output.println("END");
 	} // end of save method
-	
+
+	/**
+	 * Get the value of this constant (for consumers of the circuit
+	 * model, e.g. the HDL exporter, issue #60).
+	 *
+	 * @return the value.
+	 */
+	public BigInteger getValue() {
+
+		return value;
+	} // end of getValue method
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @param info The JLabel to display with.
 	 */
 	public void showInfo(JLabel info) {
-		
+
 		info.setText("a constant value");
 	} // end of showInfo method
 	

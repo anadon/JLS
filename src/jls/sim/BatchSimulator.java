@@ -25,8 +25,13 @@ public class BatchSimulator extends Simulator {
 		public long time;
 		public BitSet value;
 	}
-	private Map<LogicElement,LinkedList<TrEvent>> eventTrace = 
+	private Map<LogicElement,LinkedList<TrEvent>> eventTrace =
 		new HashMap<LogicElement,LinkedList<TrEvent>>();
+
+	// VCD export (issue #72): the file to write, or null for no export.
+	// A non-null value enables trace accumulation in afterEvent even
+	// when the -r printer flag (JLSInfo.printTrace) is off.
+	private String vcdFileName = null;
 
 	/**
 	 * Create a new Simulator object.
@@ -80,7 +85,9 @@ public class BatchSimulator extends Simulator {
 	 */
 	protected void afterEvent(SimEvent event) {
 
-		if (!JLSInfo.printTrace)
+		// accumulate when any trace consumer is active: the -r printer
+		// or the -vcd exporter (issue #72)
+		if (!JLSInfo.printTrace && vcdFileName == null)
 			return;
 
 		// see if changing element is watched
@@ -95,17 +102,22 @@ public class BatchSimulator extends Simulator {
 			BitSet off = new BitSet(el.getBits()+1);
 			off.set(el.getBits());
 
+			// normalize a HiZ (null) value to the marker BitSet before
+			// comparing, so a value that stays HiZ is not recorded as a
+			// change on every react (issue #72)
+			BitSet current = el.getCurrentValue();
+			if (current == null)
+				current = off;
+
 			// add an event to the end of the event list
 			// (but not if the same value)
 			TrEvent prev = events.getLast();
-			if (!prev.value.equals(el.getCurrentValue())) {
+			if (!prev.value.equals(current)) {
 
 				// add only if different
 				TrEvent p = new TrEvent();
 				p.time = event.getTime();
-				p.value = el.getCurrentValue();
-				if (p.value == null)
-					p.value = off;
+				p.value = current;
 				events.add(p);
 			}
 		}
@@ -401,7 +413,185 @@ public class BatchSimulator extends Simulator {
 			System.out.println("printing error: " + ex.getMessage());
 		}
 	} // end of printTrace method
-	
+
+	/**
+	 * Set the VCD output file name, or null for no VCD export.
+	 * Must be called before runSim so that afterEvent accumulates the
+	 * trace (issue #72).
+	 *
+	 * @param fileName The VCD file to write, or null.
+	 */
+	public void setVcdFile(String fileName) {
+
+		vcdFileName = fileName;
+	} // end of setVcdFile method
+
+	/**
+	 * Write the accumulated trace of all watched elements to the file
+	 * given to setVcdFile, as IEEE 1364-2001 (section 18) VCD.
+	 *
+	 * @throws java.io.IOException if the file cannot be written.
+	 */
+	public void writeVcd() throws java.io.IOException {
+
+		java.nio.file.Files.write(
+				java.nio.file.Paths.get(vcdFileName),
+				toVcd().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+	} // end of writeVcd method
+
+	/**
+	 * Render the accumulated trace of all watched elements as an IEEE
+	 * 1364-2001 (section 18) Value Change Dump. The exact format is a
+	 * compatibility contract documented in docs/batch-interface.md
+	 * (issue #72). Deterministic by construction: signals are declared
+	 * and dumped in full-name order, no $date/$version headers, one
+	 * JLS simulation time unit per VCD time unit (timescale 1 ns).
+	 *
+	 * @return the complete VCD text.
+	 */
+	public String toVcd() {
+
+		StringBuilder out = new StringBuilder();
+
+		// signals in full-name order: deterministic header, identifier
+		// assignment, and per-timestamp change order
+		TreeMap<String,LogicElement> signals =
+			new TreeMap<String,LogicElement>();
+		for (LogicElement el : eventTrace.keySet()) {
+			signals.put(el.getFullName(), el);
+		}
+		Map<String,String> codes = new HashMap<String,String>();
+		int next = 0;
+		for (String name : signals.keySet()) {
+			codes.put(name, vcdId(next));
+			next += 1;
+		}
+
+		// header: no $date/$version sections (both optional in the
+		// standard) so the same run always produces the same bytes
+		out.append("$comment JLS batch simulation trace $end\n");
+		out.append("$timescale 1 ns $end\n");
+		out.append("$scope module ").append(circuit.getName())
+			.append(" $end\n");
+		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
+			int bits = e.getValue().getBits();
+			out.append("$var wire ").append(bits).append(' ')
+				.append(codes.get(e.getKey())).append(' ')
+				.append(e.getKey());
+			if (bits > 1) {
+				out.append(" [").append(bits - 1).append(":0]");
+			}
+			out.append(" $end\n");
+		}
+		out.append("$upscope $end\n");
+		out.append("$enddefinitions $end\n");
+
+		// fold each signal's event list into time -> value (the last
+		// event recorded at a given time wins) and collect the set of
+		// change times
+		Map<String,TreeMap<Long,BitSet>> folded =
+			new HashMap<String,TreeMap<Long,BitSet>>();
+		TreeSet<Long> times = new TreeSet<Long>();
+		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
+			TreeMap<Long,BitSet> byTime = new TreeMap<Long,BitSet>();
+			for (TrEvent ev : eventTrace.get(e.getValue())) {
+				byTime.put(ev.time, ev.value);
+				times.add(ev.time);
+			}
+			folded.put(e.getKey(), byTime);
+		}
+
+		// initial values (findWatched guarantees a time-0 entry for
+		// every watched element)
+		out.append("#0\n");
+		out.append("$dumpvars\n");
+		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
+			BitSet value = folded.get(e.getKey()).get(0L);
+			out.append(vcdValue(e.getValue(), value, codes.get(e.getKey())))
+				.append('\n');
+		}
+		out.append("$end\n");
+
+		// subsequent changes, grouped by ascending time, signals in
+		// name order within each timestamp
+		long last = 0;
+		for (long t : times) {
+			if (t == 0) {
+				continue;
+			}
+			out.append('#').append(t).append('\n');
+			for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
+				BitSet value = folded.get(e.getKey()).get(t);
+				if (value != null) {
+					out.append(vcdValue(e.getValue(), value,
+							codes.get(e.getKey()))).append('\n');
+				}
+			}
+			last = t;
+		}
+
+		// a final timestamp so viewers show the full simulated duration
+		if (now > last) {
+			out.append('#').append(now).append('\n');
+		}
+		return out.toString();
+	} // end of toVcd method
+
+	/**
+	 * The VCD identifier code for the n'th signal: the printable ASCII
+	 * characters '!' (33) through '~' (126), extended to multiple
+	 * characters after 94 signals, assigned in signal-name order.
+	 *
+	 * @param index The zero-based signal number.
+	 *
+	 * @return the identifier code.
+	 */
+	private static String vcdId(int index) {
+
+		StringBuilder code = new StringBuilder();
+		int n = index + 1;
+		while (n > 0) {
+			n -= 1;
+			code.insert(0, (char)('!' + n % 94));
+			n /= 94;
+		}
+		return code.toString();
+	} // end of vcdId method
+
+	/**
+	 * One VCD value-change entry. JLS values are two-state plus HiZ,
+	 * so only 0, 1 and z ever appear ('x' never does): a single-bit
+	 * signal becomes 0<code>, 1<code> or z<code>; a multi-bit signal
+	 * becomes a binary vector b<value> <code> with leading zeros
+	 * omitted, or bz <code> when the whole signal is HiZ.
+	 *
+	 * @param el The signal's element (for its bit width).
+	 * @param value The recorded value, with HiZ encoded as the trace's
+	 *        marker BitSet (only bit el.getBits() set).
+	 * @param code The signal's identifier code.
+	 *
+	 * @return the value-change line, without the newline.
+	 */
+	private static String vcdValue(LogicElement el, BitSet value,
+			String code) {
+
+		int bits = el.getBits();
+		BitSet off = new BitSet(bits + 1);
+		off.set(bits);
+		boolean hiZ = value.equals(off);
+		if (bits == 1) {
+			if (hiZ) {
+				return "z" + code;
+			}
+			return (BitSetUtils.ToLong(value) == 0 ? "0" : "1") + code;
+		}
+		if (hiZ) {
+			return "bz " + code;
+		}
+		return "b" + BitSetUtils.ToBigInteger(value).toString(2)
+				+ " " + code;
+	} // end of vcdValue method
+
 	/**
 	 * Display reason for stopping and the time at which it stopped.
 	 */

@@ -85,13 +85,19 @@ public final class Help {
 	private static void showPage(String url) {
 
 		URL resource = Help.class.getResource("/help/" + url);
-		if (resource == null)
+		if (resource == null) {
+			System.err.println("JLS help: page missing from this build: help/" + url);
+			page.setContentType("text/html");
+			page.setText("<html><body><h1>Help page not found</h1><p>The page <tt>help/"
+					+ url + "</tt> is missing from this copy of JLS."
+					+ " Please report this as a bug.</p></body></html>");
 			return;
+		}
 		try {
 			page.setPage(resource);
 		}
 		catch (IOException ex) {
-			// leave the previous page showing
+			System.err.println("JLS help: cannot display help/" + url + ": " + ex);
 		}
 	} // end of showPage method
 
@@ -181,7 +187,8 @@ public final class Help {
 						page.setPage(event.getURL());
 					}
 					catch (IOException ex) {
-						// ignore dead links
+						System.err.println("JLS help: dead link: "
+								+ event.getURL() + ": " + ex);
 					}
 				}
 			}

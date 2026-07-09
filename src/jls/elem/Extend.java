@@ -93,7 +93,7 @@ public class Extend extends Gate implements TriProp {
 		
 		// must have at least 2 output bits
 		if (ok && bits < 2) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"must have at least 2 bits of output");
+			TellUser.error(JLSInfo.frame,"must have at least 2 bits of output", "Error");
 			return false;
 		}
 		

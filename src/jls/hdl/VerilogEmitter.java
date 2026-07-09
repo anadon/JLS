@@ -16,6 +16,7 @@ import java.util.Map;
  */
 public final class VerilogEmitter implements HdlEmitter {
 
+	@Override
 	public String emit(HdlModel model) {
 
 		StringBuilder out = new StringBuilder();
@@ -30,6 +31,7 @@ public final class VerilogEmitter implements HdlEmitter {
 		return out.toString();
 	} // end of emit method
 
+	@Override
 	public String fileExtension() {
 
 		return "v";
@@ -116,31 +118,38 @@ public final class VerilogEmitter implements HdlEmitter {
 		if (statement.comment != null) {
 			out.append("\n  // ").append(statement.comment).append('\n');
 		}
-		if (statement instanceof HdlModel.GateStatement) {
-			gate(out, (HdlModel.GateStatement) statement);
-		}
-		else if (statement instanceof HdlModel.ReplicateStatement) {
-			replicate(out, (HdlModel.ReplicateStatement) statement);
-		}
-		else if (statement instanceof HdlModel.ConstantStatement) {
-			constant(out, (HdlModel.ConstantStatement) statement);
-		}
-		else if (statement instanceof HdlModel.TriStateStatement) {
-			triState(out, (HdlModel.TriStateStatement) statement);
-		}
-		else if (statement instanceof HdlModel.AdderStatement) {
-			adder(out, (HdlModel.AdderStatement) statement);
-		}
-		else if (statement instanceof HdlModel.RegisterStatement) {
-			register(out, (HdlModel.RegisterStatement) statement);
-		}
-		else if (statement instanceof HdlModel.BitMapStatement) {
-			bitMap(out, (HdlModel.BitMapStatement) statement);
-		}
-		else {
-			throw new IllegalStateException(
-					"no Verilog template for " + statement.getClass());
-		}
+		// dispatch by double-dispatch: a new statement kind fails to
+		// compile until this visitor grows a template for it
+		statement.accept(new HdlModel.StatementVisitor() {
+			@Override
+			public void visit(HdlModel.GateStatement s) {
+				gate(out, s);
+			}
+			@Override
+			public void visit(HdlModel.ReplicateStatement s) {
+				replicate(out, s);
+			}
+			@Override
+			public void visit(HdlModel.ConstantStatement s) {
+				constant(out, s);
+			}
+			@Override
+			public void visit(HdlModel.TriStateStatement s) {
+				triState(out, s);
+			}
+			@Override
+			public void visit(HdlModel.AdderStatement s) {
+				adder(out, s);
+			}
+			@Override
+			public void visit(HdlModel.RegisterStatement s) {
+				register(out, s);
+			}
+			@Override
+			public void visit(HdlModel.BitMapStatement s) {
+				bitMap(out, s);
+			}
+		});
 	} // end of statement method
 
 	private static void gate(StringBuilder out, HdlModel.GateStatement s) {

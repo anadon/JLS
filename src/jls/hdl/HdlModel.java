@@ -106,7 +106,25 @@ public final class HdlModel {
 		Statement(String comment) {
 			this.comment = comment;
 		}
+
+		/** Double-dispatch to the emitter's per-statement template. */
+		public abstract void accept(StatementVisitor visitor);
 	} // end of Statement class
+
+	/**
+	 * One visit method per statement kind; emitters implement this so
+	 * dispatch is by polymorphism, not instanceof chains, and a new
+	 * statement kind fails to compile until every emitter handles it.
+	 */
+	public interface StatementVisitor {
+		void visit(GateStatement statement);
+		void visit(ReplicateStatement statement);
+		void visit(ConstantStatement statement);
+		void visit(TriStateStatement statement);
+		void visit(AdderStatement statement);
+		void visit(RegisterStatement statement);
+		void visit(BitMapStatement statement);
+	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
 	public static final class GateStatement extends Statement {
@@ -125,6 +143,11 @@ public final class HdlModel {
 					new ArrayList<Operand>(inputs));
 			this.output = output;
 		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
 	} // end of GateStatement class
 
 	/** Extend: every output bit copies the single 1-bit input. */
@@ -141,6 +164,11 @@ public final class HdlModel {
 			this.output = output;
 			this.bits = bits;
 		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
 	} // end of ReplicateStatement class
 
 	/** A constant value driving one net. */
@@ -156,6 +184,11 @@ public final class HdlModel {
 			this.output = output;
 			this.bits = bits;
 			this.value = value;
+		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
 		}
 	} // end of ConstantStatement class
 
@@ -174,6 +207,11 @@ public final class HdlModel {
 			this.control = control;
 			this.output = output;
 			this.bits = bits;
+		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
 		}
 	} // end of TriStateStatement class
 
@@ -196,6 +234,11 @@ public final class HdlModel {
 			this.sum = sum;
 			this.carryOut = carryOut;
 			this.bits = bits;
+		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
 		}
 	} // end of AdderStatement class
 
@@ -230,6 +273,11 @@ public final class HdlModel {
 			this.bits = bits;
 			this.initial = initial;
 		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
 	} // end of RegisterStatement class
 
 	/**
@@ -261,6 +309,11 @@ public final class HdlModel {
 
 		public int[] targetIndex() {
 			return targetIndex.clone();
+		}
+
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
 		}
 	} // end of BitMapStatement class
 

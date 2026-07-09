@@ -729,8 +729,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			break;
 		case "export":
 			// .v selects the Verilog emitter; other languages (VHDL)
-			// will hang off other extensions when they land (#60)
-			if (!opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
+			// will hang off other extensions when they land (#60).
+			// -export is Arity.REQUIRED so opnd cannot be null here; the
+			// guard keeps that invariant locally checkable
+			if (opnd == null
+					|| !opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
 				usageError("option -export output file must end in .v: "
 						+ opnd);
 			}

@@ -2176,6 +2176,12 @@ public abstract class SimpleEditor extends JPanel {
 				// if moving elements...
 				if (currentState == State.moving) {
 
+					// everything that changes visually lies within the union
+					// of the selection's bounds before and after the move,
+					// plus whatever overlap() touch-marks or un-marks, so
+					// only that region needs repainting (#43)
+					Rectangle dirty = union(selectionBounds(), touchedBounds());
+
 					// move them
 					for (Element el : selected) {
 						el.move(nx-x,ny-y);
@@ -2193,7 +2199,9 @@ public abstract class SimpleEditor extends JPanel {
 						info.setText("");
 						info.setForeground(Color.black);
 					}
-					repaint();
+					dirty = union(dirty, selectionBounds());
+					dirty = union(dirty, touchedBounds());
+					repaintDirty(dirty);
 					return;
 				}
 
@@ -2271,6 +2279,84 @@ public abstract class SimpleEditor extends JPanel {
 				}
 				return acc;
 			} // end of union method
+
+			/**
+			 * The screen area the current selection can draw in: every
+			 * selected element's bounds, plus the full span of any wire
+			 * hanging off a selected wire end or off a wire end attached to
+			 * a selected element's puts (moving an element stretches those
+			 * wires, so their whole old/new span redraws). Used to build
+			 * move/place dirty regions (#43).
+			 *
+			 * @return the union of those bounds, or null if nothing is
+			 * selected.
+			 */
+			private Rectangle selectionBounds() {
+
+				Rectangle acc = null;
+				for (Element el : selected) {
+					acc = union(acc, el.getRect());
+					if (el instanceof WireEnd) {
+						for (Wire w : ((WireEnd)el).getWires()) {
+							acc = union(acc, w.getRect());
+						}
+					}
+					for (Put p : el.getAllPuts()) {
+						WireEnd end = p.getWireEnd();
+						if (end != null) {
+							acc = union(acc, end.getRect());
+							for (Wire w : end.getWires()) {
+								acc = union(acc, w.getRect());
+							}
+						}
+					}
+				}
+				return acc;
+			} // end of selectionBounds method
+
+			/**
+			 * The screen area covered by everything currently touch-marked
+			 * by overlap()/connect(): touched elements (wires redraw along
+			 * their whole span when their color changes) and touched puts.
+			 * Called before and after overlap() so both the marks it clears
+			 * and the marks it sets fall inside the dirty region (#43).
+			 *
+			 * @return the union of those bounds, or null if nothing is
+			 * touched.
+			 */
+			private Rectangle touchedBounds() {
+
+				Rectangle acc = null;
+				for (Element el : touchedElements) {
+					acc = union(acc, el.getRect());
+				}
+				int d = JLSInfo.pointDiameter;
+				for (Put put : touchedPuts) {
+					acc = union(acc, new Rectangle(put.getX()-d, put.getY()-d,
+							2*d, 2*d));
+				}
+				return acc;
+			} // end of touchedBounds method
+
+			/**
+			 * Repaint a dirty region built by the move/place paths, padded
+			 * so highlight rings, connect markers, and labels drawn near
+			 * (but outside) element bounds are covered -- the same margin
+			 * Circuit.mayBeVisible assumes when clipping the redraw (#43).
+			 * A null region (nothing known to have changed) conservatively
+			 * repaints everything.
+			 *
+			 * @param dirty The region that changed, or null.
+			 */
+			private void repaintDirty(Rectangle dirty) {
+
+				if (dirty == null) {
+					repaint();
+					return;
+				}
+				dirty.grow(8*JLSInfo.spacing, 8*JLSInfo.spacing);
+				repaint(dirty);
+			} // end of repaintDirty method
 
 			/**
 			 * React to mouse movements.
@@ -2351,7 +2437,8 @@ public abstract class SimpleEditor extends JPanel {
 					item.setXY(p.x,p.y);
 					item.savePosition();
 
-					// place it
+					// place it (a state transition, once per placement
+					// gesture, so a full repaint is fine here)
 					setState(State.placing);
 					repaint();
 					return;
@@ -2360,6 +2447,11 @@ public abstract class SimpleEditor extends JPanel {
 				// move element while initially placing it
 				if (currentState == State.placing || currentState == State.startwire ||
 						currentState == State.drawire) {
+
+					// as in the moving drag path, repaint only the union of
+					// the selection's old and new bounds plus the
+					// touch-marked elements (#43)
+					Rectangle dirty = union(selectionBounds(), touchedBounds());
 					for (Element el : selected) {
 						el.move(nx-x,ny-y);
 					}
@@ -2373,7 +2465,7 @@ public abstract class SimpleEditor extends JPanel {
 						// don't show overlap while new wire end is still
 						// close to the previously placed wire end
 						if (!(currentState == State.drawire &&
-								prev != null && prev.getX() == wireEnd.getX() && 
+								prev != null && prev.getX() == wireEnd.getX() &&
 								prev.getY() == wireEnd.getY())) {
 							info.setText(overlapMessage);
 							info.setForeground(Color.red);
@@ -2384,7 +2476,9 @@ public abstract class SimpleEditor extends JPanel {
 						info.setText("");
 						info.setForeground(Color.black);
 					}
-					repaint();
+					dirty = union(dirty, selectionBounds());
+					dirty = union(dirty, touchedBounds());
+					repaintDirty(dirty);
 					return;
 				}
 			} // end of mouseMoved method
@@ -2773,13 +2867,19 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// can't attach if multiple wire ends in the same wire net
-				// can attach to outputs, unless they are all tristates
+				// can attach to outputs, unless they are all tristates.
+				// Only elements near each net end can have a put within
+				// getPut's half-spacing tolerance of it, so ask the spatial
+				// index for those few candidates instead of scanning the
+				// whole circuit for every net end on every drag event (#43);
+				// the getPut/instanceof predicates are unchanged, so the
+				// same puts are counted as before
 				int regCount = 0;
 				int triCount = 0;
 				for (WireEnd otherEnd : end.getNet().getAllEnds()) {
 					if (end == otherEnd)
 						continue;
-					for (Element el : circuit.getElements()) {
+					for (Element el : circuit.elementsAt(otherEnd.getX(),otherEnd.getY())) {
 						Put p = el.getPut(otherEnd.getX(),otherEnd.getY());
 						if (p != null && p instanceof Output) {
 							Output out = (Output)p;
@@ -3165,7 +3265,10 @@ public abstract class SimpleEditor extends JPanel {
 								}
 							}
 						}
-					repaint();
+					// no repaint here: every caller repaints after overlap()
+					// returns false, either the full canvas (gesture ends in
+					// mousePressed/mouseReleased) or the dirty region around
+					// the moved selection (drag/place motion, #43)
 					return false;
 					} // end of overlap method
 

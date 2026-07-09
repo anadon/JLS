@@ -9,10 +9,30 @@ or in batch mode from the command line. It was written by David A. Poplawski
 (Michigan Technological University); this repository is a maintained fork of
 his JLS 4.1.
 
-## Running JLS
+## Installing JLS
 
-JLS is a desktop Swing application and needs a Java runtime (JDK/JRE 25 or
-newer).
+The [Releases page](https://github.com/anadon/JLS/releases) carries
+self-contained installers with a bundled Java runtime — no JDK needed:
+
+- **Linux:** `jls_<version>_amd64.deb` (`sudo apt install ./jls_*.deb`) or
+  `jls-<version>*.rpm`. JLS appears in the applications menu.
+- **Windows:** `JLS-<version>.msi` (per-user install, no admin rights
+  needed). SmartScreen will warn that the installer is from an unknown
+  publisher because the artifacts are unsigned — choose "More info" →
+  "Run anyway". Verify the download against `SHA256SUMS-installers-windows`
+  first if you want the assurance signing would otherwise give.
+- **macOS:** `JLS-<version>.dmg`. The app is unsigned, so Gatekeeper blocks
+  a plain double-click the first time: right-click (Control-click) the app
+  and choose "Open", then confirm — needed only once.
+
+Installing associates `.jls` circuit files with JLS: double-click a `.jls`
+file and it opens in the editor. Each installer has a sha256 entry in the
+`SHA256SUMS-installers-<os>` release asset.
+
+## Running JLS from the jar (no installer)
+
+The plain jar remains the portable path — for lab machines you cannot
+install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
 
 - **From a release:** download `jls-<version>.jar` from the
   [Releases page](https://github.com/anadon/JLS/releases) and run:
@@ -79,7 +99,9 @@ under `test/`. Continuous integration builds every push on JDK 25, plus an
 advisory (non-blocking) build on the newest GA feature release for early
 warning. The Java floor follows the current LTS at the time of each raise
 and is revisited once per LTS cycle. Pushing a `v*` tag publishes a GitHub
-Release with the runnable jar.
+Release with the runnable jar and the per-OS installers
+(`scripts/build-installer.sh` is the single recipe used both locally and
+by CI).
 
 ### Optional development tools
 

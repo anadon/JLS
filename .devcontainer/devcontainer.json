@@ -1,0 +1,10 @@
+{
+  "name": "JLS development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  // warm the local Maven repository so the first `mvn verify` is fast;
+  // best-effort only, so container creation never fails on a network hiccup
+  "postCreateCommand": "mvn -B -q dependency:go-offline || true"
+}

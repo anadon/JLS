@@ -48,6 +48,13 @@ All notable changes to JLS are documented here. The format follows
   in the truth-table signal editor, crash reports no longer dump all
   system properties, Windows path handling, and more (#51).
 
+### Added
+- A development container image (`.devcontainer/`) with Maven, Temurin
+  JDK 21, and the optional development tools now documented in the README:
+  XZ/zip utilities for `.jls` files, Xvfb/xdotool/ImageMagick for headless
+  GUI work, and the Icarus Verilog/GHDL/Yosys toolchain for the HDL
+  roadmap (#33, #59).
+
 ### Changed
 - The proprietary MTU license acceptance gate at startup is removed; JLS
   is GPLv3 (see `LICENSE` and `pop_GPLv3.pdf`) and the About dialog now

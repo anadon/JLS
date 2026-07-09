@@ -40,6 +40,47 @@ Sources live in the historical `src/` layout (not `src/main/java`); tests are
 under `test/`. Continuous integration builds every push on JDK 17 and 21.
 Pushing a `v*` tag publishes a GitHub Release with the runnable jar.
 
+### Optional development tools
+
+Nothing beyond Maven and a JDK is required to build, test, or run JLS.
+The following tools are useful when working *on* JLS, and are what the
+development container image (below) installs:
+
+- **xz-utils, zip, unzip** — unpack and repack `.jls` circuit files by hand.
+  Current saves are XZ data (`xzcat circuit.jls`); legacy saves are zip
+  archives with a single `JLSCircuit` entry (see "Circuit files" below).
+- **Xvfb, xauth, x11-utils, xdotool** — run and script the Swing GUI on a
+  machine with no display (`xvfb-run java -jar target/jls-*.jar`), check the
+  virtual display (`xdpyinfo`), take screenshots (`xwd`), and send synthetic
+  keyboard/mouse input (`xdotool`). The Maven test suite itself runs
+  headless (`java.awt.headless=true`) and does not need these.
+- **fontconfig, fonts-dejavu-core** — Swing text rendering needs at least one
+  installed font; minimal container images often have none.
+- **ImageMagick** — inspect and compare the JPEG images written by batch
+  image export (`-i`) and screenshots taken under Xvfb.
+- **Icarus Verilog (`iverilog`), GHDL, Yosys** — external HDL toolchain for
+  the HDL export/import roadmap
+  ([docs/hdl-support-research.md](docs/hdl-support-research.md), issues #33
+  and #59): compile and simulate exported Verilog, analyze exported VHDL,
+  and synthesize Verilog to the JSON netlists used for import.
+
+All of these are stock packages on Debian/Ubuntu
+(`apt install xz-utils zip unzip xvfb xauth x11-utils xdotool fontconfig
+fonts-dejavu-core imagemagick iverilog ghdl yosys`).
+
+### Development container
+
+[`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with
+Maven, Temurin JDK 21, and all of the optional tools above. VS Code and
+GitHub Codespaces pick it up automatically via
+[`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json); to use
+it directly:
+
+```sh
+docker build -f .devcontainer/Dockerfile -t jls-dev .
+docker run --rm -it -v "$PWD":/workspace jls-dev
+```
+
 ## Circuit files
 
 JLS saves circuits as `.jls` files. **The extension has meant different

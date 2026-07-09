@@ -29,6 +29,33 @@ public class Clock extends LogicElement {
 	static final String ONE_CONSTRAINT =
 			"One time must be positive and less than the cycle time";
 
+	/**
+	 * The cycle-time rule, shared by the dialog and the loader.
+	 *
+	 * @param cycleTime The proposed cycle time.
+	 *
+	 * @return the violated constraint message, or null if valid.
+	 */
+	static String checkCycleTime(int cycleTime) {
+
+		return cycleTime < 1 ? CYCLE_CONSTRAINT : null;
+	} // end of checkCycleTime method
+
+	/**
+	 * The one-time rule as the dialog enforces it. The loader checks only
+	 * positivity (it cannot see both fields at once for legacy files) but
+	 * rejects with the same constraint string.
+	 *
+	 * @param cycleTime The proposed cycle time.
+	 * @param oneTime The proposed one time.
+	 *
+	 * @return the violated constraint message, or null if valid.
+	 */
+	static String checkOneTime(int cycleTime, int oneTime) {
+
+		return (oneTime < 1 || oneTime >= cycleTime) ? ONE_CONSTRAINT : null;
+	} // end of checkOneTime method
+
 	// properties
 	private int cycleTime = defaultCycleTime;
 	private int oneTime = defaultOneTime;
@@ -184,8 +211,9 @@ public class Clock extends LogicElement {
 			protected int get(Element el) { return ((Clock)el).cycleTime; }
 			@Override
 			protected void set(Element el, int v) {
-				if (v < 1) {
-					throw new IllegalArgumentException(CYCLE_CONSTRAINT);
+				String violated = checkCycleTime(v);
+				if (violated != null) {
+					throw new IllegalArgumentException(violated);
 				}
 				((Clock)el).cycleTime = v;
 			}
@@ -409,32 +437,45 @@ public class Clock extends LogicElement {
 		} // end of constructor
 
 		/**
-		 * Validate the form and set the clock parameters.
+		 * Check the times against the shared clock constraints (issue
+		 * #52): a rejected dialog must leave the clock unchanged.
 		 */
-		protected void validateAndAccept() {
+		protected java.util.List<Violation> validateInputs() {
 
-			// validate before mutating the element: a rejected dialog
-			// must leave the clock unchanged (issue #52)
 			int newCycleTime;
 			int newOneTime;
 			try {
 				newCycleTime = Integer.parseInt(cycleTimeField.getText());
+			}
+			catch (NumberFormatException ex) {
+				return java.util.List.of(new Violation(
+						"Value not numeric, try again", cycleTimeField));
+			}
+			try {
 				newOneTime = Integer.parseInt(oneTimeField.getText());
 			}
 			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
+				return java.util.List.of(new Violation(
+						"Value not numeric, try again", oneTimeField));
 			}
-			if (newCycleTime < 1) {
-				reject(CYCLE_CONSTRAINT);
-				return;
+			String violated = checkCycleTime(newCycleTime);
+			if (violated != null) {
+				return java.util.List.of(new Violation(violated, cycleTimeField));
 			}
-			if (newOneTime < 1 || newOneTime >= newCycleTime) {
-				reject(ONE_CONSTRAINT);
-				return;
+			violated = checkOneTime(newCycleTime, newOneTime);
+			if (violated != null) {
+				return java.util.List.of(new Violation(violated, oneTimeField));
 			}
-			cycleTime = newCycleTime;
-			oneTime = newOneTime;
+			return java.util.List.of();
+		} // end of validateInputs method
+
+		/**
+		 * Set the clock parameters from the validated form.
+		 */
+		protected void validateAndAccept() {
+
+			cycleTime = Integer.parseInt(cycleTimeField.getText());
+			oneTime = Integer.parseInt(oneTimeField.getText());
 			if(left.isSelected())
 			{
 				orientation = JLSInfo.Orientation.LEFT;

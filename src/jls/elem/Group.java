@@ -20,7 +20,24 @@ public abstract class Group extends LogicElement {
 	
 	// default values
 	private static final int defaultBits = 2;
-	
+
+	// one constraint string, two surfaces: dialog and loader (issue #52)
+	static final String BITS_CONSTRAINT = "Must be at least 2 bits";
+	static final String INDEX_CONSTRAINT =
+			"group wire indices must be non-negative";
+
+	/**
+	 * The bundle-width rule, shared by the dialog and the loader.
+	 *
+	 * @param bits The proposed number of bundled bits.
+	 *
+	 * @return the violated constraint message, or null if valid.
+	 */
+	static String checkBits(int bits) {
+
+		return bits < 2 ? BITS_CONSTRAINT : null;
+	} // end of checkBits method
+
 	// saved properties
 	protected int bits = defaultBits;
 	//protected SortedSet<GetRanges.Entry> ranges;
@@ -111,6 +128,10 @@ public abstract class Group extends LogicElement {
 	public void setValue(String name, int value) {
 		
 		if (name.equals("bits")) {
+			String violated = checkBits(value);
+			if (violated != null) {
+				throw new IllegalArgumentException(violated);
+			}
 			bits = value;
 		} else if (name.equals("tristate")) {
 			if (value == 1)
@@ -202,8 +223,7 @@ public abstract class Group extends LogicElement {
 		// message and bound the sparse-list growth (issue #52)
 		if (v1 < 0 || v2 < 0) {
 			throw new IllegalArgumentException(
-					"group wire indices must be non-negative ("
-							+ v1 + "," + v2 + ")");
+					INDEX_CONSTRAINT + " (" + v1 + "," + v2 + ")");
 		}
 		if (noncontig && v1 > 4096) {
 			throw new IllegalArgumentException(
@@ -382,21 +402,32 @@ public abstract class Group extends LogicElement {
 		} // end of constructor
 
 		/**
-		 * Validate the form and create the bundler/unbundler.
+		 * Check the bit count against the shared group constraint (issue
+		 * #52): a rejected dialog must leave the element unchanged.
+		 */
+		protected java.util.List<Violation> validateInputs() {
+
+			int newBits;
+			try {
+				newBits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				return java.util.List.of(new Violation(
+						"Value not numeric, try again", bitsField));
+			}
+			String violated = checkBits(newBits);
+			if (violated != null) {
+				return java.util.List.of(new Violation(violated, bitsField));
+			}
+			return java.util.List.of();
+		} // end of validateInputs method
+
+		/**
+		 * Create the bundler/unbundler from the validated form.
 		 */
 		protected void validateAndAccept() {
 
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (bits < 2) {
-				reject("Must be at least 2 bits");
-				return;
-			}
+			bits = Integer.parseInt(bitsField.getText());
 
 			// set up ranges
 			if (single.isSelected()) {
@@ -543,15 +574,21 @@ public abstract class Group extends LogicElement {
 		} // end of constructor
 
 		/**
-		 * Validate the chosen groups and create the range entries.
+		 * There must be at least one chosen group.
+		 */
+		protected java.util.List<Violation> validateInputs() {
+
+			if (picked.size() == 0) {
+				return java.util.List.of(new Violation("No groups chosen",
+						chosen));
+			}
+			return java.util.List.of();
+		} // end of validateInputs method
+
+		/**
+		 * Create the range entries from the validated choices.
 		 */
 		protected void validateAndAccept() {
-
-			// cancel if there are no ranges
-			if (picked.size() == 0) {
-				reject("No groups chosen");
-				return;
-			}
 
 			// generate range entries
 			for (int i=0; i<picked.size(); i+=1) {

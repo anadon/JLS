@@ -88,6 +88,43 @@ class SequentialGoldenTest {
 			return id;
 		}
 
+		/**
+		 * A three-state machine (issue #56: more than one self-loop
+		 * state): S0 -> S1 -> S2 -> S0, advancing on a rising clock edge
+		 * while input "en" is 1 and holding the current state via an
+		 * "else" self-loop while en is 0, with a distinct 2-bit output
+		 * per state: S0 drives z=3, S1 drives z=1, S2 drives z=2 (S0's
+		 * value is deliberately nonzero so "never left the initial
+		 * state" and "output never driven" are distinguishable).
+		 */
+		int threeStateMachine() {
+			int id = nextId++;
+			text.append("ELEMENT StateMachine\n int id ").append(id)
+				.append("\n int x 240\n int y 360\n int width 96\n int height 96\n")
+				.append(" String name \"sm").append(id)
+				.append("\"\n int delay 5\n int trig 1\n");
+			appendState("S0", 3, "S1", 40);
+			appendState("S1", 1, "S2", 140);
+			appendState("S2", 2, "S0", 240);
+			text.append("END\n");
+			return id;
+		}
+
+		/** One state of the three-state machine (S0 is initial). */
+		private void appendState(String name, long zValue, String next, int x) {
+			text.append(" String state \"").append(name).append("\"\n")
+				.append("  int x ").append(x).append("\n  int y 40\n")
+				.append("  int diameter 40\n  int init ")
+				.append(name.equals("S0") ? 1 : 0).append('\n')
+				.append("  String output \"z\"\n   long value ").append(zValue)
+				.append("\n   int bits 2\n")
+				.append("  String trans \"en\"\n   int eq 0\n   int value 1\n")
+				.append("   int bits 1\n   String next \"").append(next)
+				.append("\"\n")
+				.append("  String trans \"else\"\n   String next \"")
+				.append(name).append("\"\n");
+		}
+
 		int outputPin(String name, int bits) {
 			int id = nextId++;
 			text.append("ELEMENT OutputPin\n int id ").append(id)
@@ -272,6 +309,63 @@ class SequentialGoldenTest {
 		cb.wire(reg, "Q", q, "input");
 		assertEquals(6, simulate(cb.build(), "q", 10 * CLOCK_CYCLE),
 				"a transparent latch must pass the driven data");
+	}
+
+	/** Build the three-state machine with vector-driven clk and en pins. */
+	private static String threeStateCircuit() {
+		CircuitBuilder cb = new CircuitBuilder();
+		int clk = cb.inputPin("clk", 1);
+		int en = cb.inputPin("en", 1);
+		int sm = cb.threeStateMachine();
+		int z = cb.outputPin("z", 2);
+		cb.wire(clk, "output", sm, "clock");
+		cb.wire(en, "output", sm, "en");
+		cb.wire(sm, "z", z, "input");
+		return cb.build();
+	}
+
+	/** Rising edges at t = 10, 30, 50, then the clock stays high. */
+	private static final String THREE_EDGES =
+			"clk 0 until 10 1 until 20 0 until 30 1 until 40 0 until 50 1 end\n";
+
+	@Test
+	void multiStateMachineDrivesInitialStateOutputBeforeAnyEdge()
+			throws Exception {
+		String vectors = "clk 0 end\nen 1 end\n";
+		assertEquals(3, simulateWithVectors(threeStateCircuit(), vectors, "z", 100),
+				"before any clock edge the machine must drive the initial"
+						+ " state's output");
+	}
+
+	@Test
+	void multiStateMachineAdvancesOneStatePerRisingEdge() throws Exception {
+		String oneEdge = "clk 0 until 10 1 end\nen 1 end\n";
+		assertEquals(1, simulateWithVectors(threeStateCircuit(), oneEdge, "z", 100),
+				"one rising edge must move S0 -> S1");
+		String twoEdges = "clk 0 until 10 1 until 20 0 until 30 1 end\nen 1 end\n";
+		assertEquals(2, simulateWithVectors(threeStateCircuit(), twoEdges, "z", 100),
+				"two rising edges must move S0 -> S1 -> S2");
+	}
+
+	@Test
+	void multiStateMachineWrapsToInitialStateAfterFullCycle() throws Exception {
+		String vectors = THREE_EDGES + "en 1 end\n";
+		assertEquals(3, simulateWithVectors(threeStateCircuit(), vectors, "z", 100),
+				"three rising edges must walk the full cycle back to S0"
+						+ " (whose output is distinct from the undriven value)");
+	}
+
+	@Test
+	void multiStateMachineHoldsStateWhileConditionIsFalse() throws Exception {
+		// en is 0 at the first edge (t=10): the else self-loop holds S0;
+		// en is 1 at the second (t=30): advance to S1; en is 0 again at
+		// the third (t=50): hold S1. The input changes between edges,
+		// so a machine sampling anywhere but the edge fails this.
+		String vectors = THREE_EDGES + "en 0 until 25 1 until 45 0 end\n";
+		assertEquals(1, simulateWithVectors(threeStateCircuit(), vectors, "z", 100),
+				"the else self-loop must hold the state while en is 0 and"
+						+ " the conditional transition must fire only on"
+						+ " edges where en is 1");
 	}
 
 	@Test

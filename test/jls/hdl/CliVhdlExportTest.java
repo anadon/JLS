@@ -17,13 +17,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * End-to-end tests of the -export CLI flag (issue #60), subprocess
- * style like CliImageExportTest: {@code jls -export out.v circuit.jls}
- * loads headlessly, writes Verilog and exits 0; warnings go to stderr;
- * a rejection is one {@code jls: error:} line, exit 1, and no file -
- * not even a temp file - reaches disk.
+ * End-to-end tests of the -export CLI flag's VHDL leg (issue #60),
+ * mirroring {@link CliVerilogExportTest}: a .vhdl (or .vhd) output
+ * extension selects the VHDL emitter over the same headless load and
+ * atomic temp-file-plus-rename write; a rejection is one
+ * {@code jls: error:} line, exit 1, and no file reaches disk.
  */
-class CliVerilogExportTest {
+class CliVhdlExportTest {
 
 	@TempDir
 	Path tmp;
@@ -83,27 +83,38 @@ class CliVerilogExportTest {
 	}
 
 	@Test
-	void exportWritesVerilogAndExitsZero() throws Exception {
+	void dotVhdlWritesVhdlAndExitsZero() throws Exception {
 		write("export.jls", inverter());
-		Result r = run("-export", "out.v", "export.jls");
+		Result r = run("-export", "out.vhdl", "export.jls");
 		assertEquals(0, r.exit, r.stderr);
 		assertEquals("", r.stderr, "no warnings expected");
-		String text = Files.readString(tmp.resolve("out.v"),
+		String text = Files.readString(tmp.resolve("out.vhdl"),
 				StandardCharsets.UTF_8);
-		assertTrue(text.startsWith("// export - Verilog-2005 export"),
-				text);
-		assertTrue(text.contains("module export (a, y);"), text);
-		assertTrue(text.contains("endmodule"), text);
-		assertFalse(Files.exists(tmp.resolve("out.v.tmp")),
+		assertTrue(text.startsWith("-- export - VHDL export"), text);
+		assertTrue(text.contains("entity export is"), text);
+		assertTrue(text.contains("end architecture structural;"), text);
+		assertFalse(Files.exists(tmp.resolve("out.vhdl.tmp")),
 				"the temp file must be renamed away");
 	}
 
 	@Test
-	void attachedOperandIsAcceptedLikeOtherFlags() throws Exception {
+	void dotVhdSelectsVhdlToo() throws Exception {
 		write("export.jls", inverter());
-		Result r = run("-exportout.v", "export.jls");
+		Result r = run("-export", "out.vhd", "export.jls");
 		assertEquals(0, r.exit, r.stderr);
-		assertTrue(Files.exists(tmp.resolve("out.v")));
+		String text = Files.readString(tmp.resolve("out.vhd"),
+				StandardCharsets.UTF_8);
+		assertTrue(text.contains("entity export is"), text);
+	}
+
+	@Test
+	void extensionCaseIsIgnored() throws Exception {
+		write("export.jls", inverter());
+		Result r = run("-export", "out.VHDL", "export.jls");
+		assertEquals(0, r.exit, r.stderr);
+		assertTrue(Files.readString(tmp.resolve("out.VHDL"),
+						StandardCharsets.UTF_8)
+				.contains("entity export is"));
 	}
 
 	@Test
@@ -115,11 +126,11 @@ class CliVerilogExportTest {
 		cb.wire3(a, "output", display, "input0", y, "input");
 		write("export.jls", cb);
 
-		Result r = run("-export", "out.v", "export.jls");
+		Result r = run("-export", "out.vhdl", "export.jls");
 		assertEquals(0, r.exit, r.stderr);
 		assertTrue(r.stderr.contains("jls: warning:"), r.stderr);
 		assertTrue(r.stderr.contains("Display"), r.stderr);
-		assertTrue(Files.exists(tmp.resolve("out.v")));
+		assertTrue(Files.exists(tmp.resolve("out.vhdl")));
 	}
 
 	@Test
@@ -129,44 +140,46 @@ class CliVerilogExportTest {
 		cb.subCircuit("sub1");
 		write("export.jls", cb);
 
-		Result r = run("-export", "out.v", "export.jls");
+		Result r = run("-export", "out.vhdl", "export.jls");
 		assertEquals(1, r.exit, r.stderr);
 		assertTrue(r.stderr.contains("jls: error:"), r.stderr);
 		assertTrue(r.stderr.contains("Memory"), r.stderr);
 		assertTrue(r.stderr.contains("SubCircuit"), r.stderr);
-		assertFalse(Files.exists(tmp.resolve("out.v")),
+		assertFalse(Files.exists(tmp.resolve("out.vhdl")),
 				"a rejected export must write nothing");
-		assertFalse(Files.exists(tmp.resolve("out.v.tmp")),
+		assertFalse(Files.exists(tmp.resolve("out.vhdl.tmp")),
 				"a rejected export must leave no temp file");
 	}
 
 	@Test
-	void unknownHdlExtensionIsAUsageError() throws Exception {
-		// .vhdl/.vhd select the VHDL emitter (CliVhdlExportTest); an
-		// extension that is neither language is still a usage error
+	void unknownExtensionIsAUsageError() throws Exception {
 		write("export.jls", inverter());
-		Result r = run("-export", "out.txt", "export.jls");
+		Result r = run("-export", "out.vh", "export.jls");
 		assertEquals(2, r.exit, r.stderr);
 		assertTrue(r.stderr.contains("jls: error:"), r.stderr);
 		assertTrue(r.stderr.contains("-export"), r.stderr);
-		assertFalse(Files.exists(tmp.resolve("out.txt")));
+		assertFalse(Files.exists(tmp.resolve("out.vh")));
 	}
 
 	@Test
-	void exportWithoutACircuitFileIsARuntimeError() throws Exception {
-		Result r = run("-export", "out.v");
-		assertEquals(1, r.exit, r.stderr);
-		assertTrue(r.stderr.contains("jls: error:"), r.stderr);
+	void verilogAndVhdlExportsOfOneCircuitBothSucceed() throws Exception {
+		write("export.jls", inverter());
+		assertEquals(0, run("-export", "out.v", "export.jls").exit);
+		assertEquals(0, run("-export", "out.vhdl", "export.jls").exit);
+		assertTrue(Files.readString(tmp.resolve("out.v"),
+				StandardCharsets.UTF_8).contains("module export"));
+		assertTrue(Files.readString(tmp.resolve("out.vhdl"),
+				StandardCharsets.UTF_8).contains("entity export is"));
 	}
 
 	@Test
 	void deterministicAcrossRuns() throws Exception {
 		write("export.jls", inverter());
-		assertEquals(0, run("-export", "one.v", "export.jls").exit);
-		assertEquals(0, run("-export", "two.v", "export.jls").exit);
-		assertEquals(Files.readString(tmp.resolve("one.v")),
-				Files.readString(tmp.resolve("two.v")),
+		assertEquals(0, run("-export", "one.vhdl", "export.jls").exit);
+		assertEquals(0, run("-export", "two.vhdl", "export.jls").exit);
+		assertEquals(Files.readString(tmp.resolve("one.vhdl")),
+				Files.readString(tmp.resolve("two.vhdl")),
 				"same circuit, same bytes");
 	}
 
-} // end of CliVerilogExportTest class
+} // end of CliVhdlExportTest class

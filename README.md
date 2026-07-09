@@ -169,6 +169,8 @@ extension.
   triggering, tri-state/HiZ.
 - [docs/batch-interface.md](docs/batch-interface.md) — normative spec
   of the batch/grading interface: `-t` grammar, output format, VCD.
+- [docs/file-format.md](docs/file-format.md) — normative spec of the
+  `.jls` save format: containers, grammar, element tags, versioning.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit
   changes.
 - [SECURITY.md](SECURITY.md) — threat model and reporting.

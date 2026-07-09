@@ -52,9 +52,11 @@ import javax.swing.event.ChangeListener;
 
 import jls.edit.Editor;
 import jls.elem.Element;
+import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
 import jls.hdl.HdlExporter;
 import jls.hdl.VerilogEmitter;
+import jls.hdl.VhdlEmitter;
 import jls.elem.LogicElement;
 import jls.elem.Memory;
 import jls.elem.OutputPin;
@@ -308,11 +310,18 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			Circuit circ = loadCircuitHeadless(startFile);
 
+			// the output extension picked the language at parse time:
+			// .v is Verilog-2005, .vhd/.vhdl is VHDL (#60)
+			HdlEmitter emitter =
+					exportFile.toLowerCase(java.util.Locale.ROOT)
+							.endsWith(".v")
+					? new VerilogEmitter() : new VhdlEmitter();
+
 			// walk and render; a rejection lists every offending
 			// element and writes nothing
 			HdlExporter.Result result;
 			try {
-				result = HdlExporter.export(circ, new VerilogEmitter());
+				result = HdlExporter.export(circ, emitter);
 			} catch (HdlExportException e) {
 				System.err.println("jls: error: " + e.getMessage());
 				System.exit(1);
@@ -546,8 +555,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"print the signal trace to the named printer"),
 		new FlagSpec("vcd", Arity.REQUIRED, "file", "a VCD output file",
 				"write watched-signal waveforms to the named VCD file (batch mode)"),
-		new FlagSpec("export", Arity.REQUIRED, "file.v", "an output file",
-				"export the circuit as Verilog-2005 to the named .v file"),
+		new FlagSpec("export", Arity.REQUIRED, "file", "an output file",
+				"export the circuit as Verilog-2005 (.v) or VHDL (.vhd/.vhdl), chosen by the file extension"),
 	};
 
 	/**
@@ -728,14 +737,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 			vcdFile = opnd;
 			break;
 		case "export":
-			// .v selects the Verilog emitter; other languages (VHDL)
-			// will hang off other extensions when they land (#60).
+			// the extension selects the emitter: .v is Verilog-2005,
+			// .vhd/.vhdl is VHDL (#60).
 			// -export is Arity.REQUIRED so opnd cannot be null here; the
 			// guard keeps that invariant locally checkable
-			if (opnd == null
-					|| !opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
-				usageError("option -export output file must end in .v: "
-						+ opnd);
+			String hdlName = opnd == null ? ""
+					: opnd.toLowerCase(java.util.Locale.ROOT);
+			if (!hdlName.endsWith(".v") && !hdlName.endsWith(".vhd")
+					&& !hdlName.endsWith(".vhdl")) {
+				usageError("option -export output file must end in .v, "
+						+ ".vhd or .vhdl: " + opnd);
 			}
 			JLSInfo.hdlexport = true;
 			exportFile = opnd;

@@ -51,9 +51,10 @@ All notable changes to JLS are documented here. The format follows
 ### Added
 - A development container image (`.devcontainer/`) with Maven, Temurin
   JDK 21, and the optional development tools now documented in the README:
-  XZ/zip utilities for `.jls` files, Xvfb/xdotool/ImageMagick for headless
-  GUI work, and the Icarus Verilog/GHDL/Yosys toolchain for the HDL
-  roadmap (#33, #59).
+  XZ/zip utilities for `.jls` files, a Wayland-only display stack
+  (sway/grim/wtype — X11 is excluded by project policy), ImageMagick,
+  and the Icarus Verilog/GHDL/Yosys toolchain for the HDL roadmap
+  (#33, #59).
 
 ### Changed
 - The proprietary MTU license acceptance gate at startup is removed; JLS

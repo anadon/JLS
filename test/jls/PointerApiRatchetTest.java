@@ -55,24 +55,13 @@ class PointerApiRatchetTest {
 						+ "with setLocationRelativeTo(owner) instead");
 	}
 
-	/**
-	 * The only file still allowed to mention getScreenSize. JLSStart's
-	 * main-frame sizing is owned by issue #105 (toolkit policy); when
-	 * that lands, delete this exemption so the baseline reaches zero.
-	 * NEVER add a line.
-	 */
-	private static final Set<String> GET_SCREEN_SIZE_BASELINE = Set.of(
-			"src/jls/JLSStart.java");
-
 	@Test
-	void getScreenSizeOnlyInBaseline() throws IOException {
+	void getScreenSizeNeverUsed() throws IOException {
 
 		Set<String> found = offenders(text -> text.contains("getScreenSize"));
-		found.removeAll(GET_SCREEN_SIZE_BASELINE);
 		assertEquals(Set.of(), found,
-				"whole-screen sizing found outside the shrinking baseline; "
-						+ "size from the owner's GraphicsConfiguration "
-						+ "bounds instead");
+				"whole-screen sizing is banned; size from the owner's "
+						+ "GraphicsConfiguration bounds instead");
 	}
 
 	/** Every file under src/ whose text matches the predicate. */

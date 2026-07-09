@@ -903,8 +903,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		int height = JLSInfo.windowsize;
 		setSize(width,height);
 		// centered in the screen; setLocationRelativeTo(null) asks the
-		// GraphicsEnvironment for the real center point instead of
-		// Toolkit.getScreenSize(), which is unreliable on mixed-DPI and
+		// GraphicsEnvironment for the real center point instead of the
+		// Toolkit whole-screen size, which is unreliable on mixed-DPI and
 		// Wayland setups (issue #105)
 		setLocationRelativeTo(null);
 		setVisible(true);

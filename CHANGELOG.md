@@ -10,6 +10,17 @@ All notable changes to JLS are documented here. The format follows
 *(Renumbered from 4.3.0-SNAPSHOT: the plugin-mechanism removal below is a
 feature removal, which is a MAJOR version event under semantic versioning.)*
 
+### Added
+- Batch mode is now a documented, tested grading API (#72):
+  `docs/batch-interface.md` is a normative spec — and a stability
+  contract — for the `-t` test-vector grammar, the watched-element
+  stdout format, the exit/stream contract, and the new waveform export.
+- A `-vcd file` flag: batch runs export the value-change history of all
+  watched signals as IEEE 1364-2001 VCD (readable by GTKWave/Surfer and
+  autograders). JLS's two-state-plus-HiZ values map to `0`/`1`/`z`
+  (never `x`); output is byte-deterministic and pinned by golden tests
+  (#72).
+
 ### Removed
 - The XML plugin loader (#80). It activated only when a literal `JLS.jar`
   was on the classpath — a name no artifact of this project ever shipped
@@ -58,8 +69,17 @@ feature removal, which is a MAJOR version event under semantic versioning.)*
 - Assorted small fixes: hex/binary field maximums, doubled menu actions
   in the truth-table signal editor, crash reports no longer dump all
   system properties, Windows path handling, and more (#51).
+- Batch mode prints watched elements in element-name order instead of
+  hash-set iteration order, so the output is stable across runs, JVMs,
+  and code changes; anyone diffing old batch output may see lines
+  reordered (never reworded) once (#72).
+- The batch signal trace no longer records a duplicate event on every
+  reaction of an element that stays at HiZ (#72).
 
 ### Changed
+- Command-line flags may now be longer than one letter, with
+  longest-name matching: `-vcd` is the VCD export flag, no longer
+  parsed as `-v` with the attached printer name `cd` (#72).
 - The proprietary MTU license acceptance gate at startup is removed; JLS
   is GPLv3 (see `LICENSE` and `pop_GPLv3.pdf`) and the About dialog now
   says so (#40).

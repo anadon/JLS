@@ -26,8 +26,11 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -67,6 +70,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static String testFile = null;
 	private static String startFile = null;
 	private static String imageFile = null;
+	private static String vcdFile = null;
 	private static boolean printCircuit = false;
 	private static boolean printCircuitTop;
 	private static String printer = null;
@@ -182,6 +186,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 			batchSim.setTimeLimit(timeLimit);
 			batchSim.setTestFile(testFile);
 			batchSim.addTestGen();
+			// enable trace accumulation for VCD export before the run
+			// (issue #72)
+			batchSim.setVcdFile(vcdFile);
 
 			// run simulator
 			batchSim.runSim();
@@ -193,6 +200,17 @@ public class JLSStart extends JFrame implements ChangeListener {
 			// print trace if requested
 			if (JLSInfo.printTrace) {
 				batchSim.printTrace(printer);
+			}
+
+			// write VCD waveform file if requested (issue #72)
+			if (vcdFile != null) {
+				try {
+					batchSim.writeVcd();
+				} catch (IOException e) {
+					System.err.println("jls: error: can't write VCD file "
+							+ vcdFile + ": " + e.getMessage());
+					System.exit(1);
+				}
 			}
 		}
 		
@@ -298,13 +316,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/**
 	 * Display values of watched elements to stdout.
 	 * Descends into subcircuits recursively.
-	 * 
+	 *
+	 * The elements of each circuit level are visited in element-name
+	 * order (Unicode code point order). Circuit.getElements() is backed
+	 * by a HashSet, so plain iteration used to print watched elements
+	 * that live at the same level in hash order, which is not stable
+	 * across JVMs or code changes; batch output is a text contract
+	 * (docs/batch-interface.md), so the order is pinned here at the
+	 * display site (issue #72).
+	 *
 	 * @param circ The circuit to find watched elements in.
 	 * @param qual Qualified name of subcircuit.
 	 */
 	public static void displayResults(Circuit circ, String qual) {
 
-		for (Element el : circ.getElements()) {
+		List<Element> ordered = new ArrayList<Element>(circ.getElements());
+		ordered.sort(Comparator.comparing(
+				(Element el) -> el.getName() == null ? "" : el.getName()));
+		for (Element el : ordered) {
 			if (el.isWatched()) {
 				if (el instanceof Register) {
 					Register reg = (Register)el;
@@ -341,19 +370,20 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private enum Arity { NONE, REQUIRED, OPTIONAL }
 
 	/**
-	 * One row of the command-line flag table: the flag character, its
-	 * operand arity, the operand's name for the usage text, the phrase
-	 * for "requires ..." errors, and the usage description.
+	 * One row of the command-line flag table: the flag name (one or
+	 * more characters, e.g. "t" or "vcd"), its operand arity, the
+	 * operand's name for the usage text, the phrase for "requires ..."
+	 * errors, and the usage description.
 	 */
 	private static final class FlagSpec {
 
-		final char flag;
+		final String flag;
 		final Arity arity;
 		final String operandName;
 		final String operandWhat;
 		final String description;
 
-		FlagSpec(char flag, Arity arity, String operandName,
+		FlagSpec(String flag, Arity arity, String operandName,
 				String operandWhat, String description) {
 			this.flag = flag;
 			this.arity = arity;
@@ -366,38 +396,43 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/**
 	 * The single authoritative flag specification (issue #71): both
 	 * parseCommandLine and usage() are driven by this table, so the
-	 * parser and its documentation cannot drift apart.
+	 * parser and its documentation cannot drift apart. When one flag
+	 * name is a prefix of another (-v / -vcd), the longest match wins,
+	 * so "-vcd" is the VCD flag, never "-v" with the attached operand
+	 * "cd" (issue #72).
 	 */
 	private static final FlagSpec[] FLAGS = {
-		new FlagSpec('h', Arity.NONE, null, null,
+		new FlagSpec("h", Arity.NONE, null, null,
 				"print this message and exit"),
-		new FlagSpec('b', Arity.NONE, null, null,
+		new FlagSpec("b", Arity.NONE, null, null,
 				"run in batch (headless) mode"),
-		new FlagSpec('i', Arity.OPTIONAL, "imagefile", "an image file",
+		new FlagSpec("i", Arity.OPTIONAL, "imagefile", "an image file",
 				"export an image of the circuit (default circuit_file.png; use .jpg/.jpeg for JPEG)"),
-		new FlagSpec('s', Arity.REQUIRED, "file", "a startup file",
+		new FlagSpec("s", Arity.REQUIRED, "file", "a startup file",
 				"startup parameter file"),
-		new FlagSpec('t', Arity.REQUIRED, "file", "a test file",
+		new FlagSpec("t", Arity.REQUIRED, "file", "a test file",
 				"test input file"),
-		new FlagSpec('d', Arity.REQUIRED, "time", "a time limit",
+		new FlagSpec("d", Arity.REQUIRED, "time", "a time limit",
 				"set simulation time limit (a positive integer)"),
-		new FlagSpec('p', Arity.REQUIRED, "printer", "a printer name",
+		new FlagSpec("p", Arity.REQUIRED, "printer", "a printer name",
 				"print the whole circuit (subcircuits too) to the named printer"),
-		new FlagSpec('v', Arity.REQUIRED, "printer", "a printer name",
+		new FlagSpec("v", Arity.REQUIRED, "printer", "a printer name",
 				"print only the top level of the circuit to the named printer"),
-		new FlagSpec('r', Arity.REQUIRED, "printer", "a printer name",
+		new FlagSpec("r", Arity.REQUIRED, "printer", "a printer name",
 				"print the signal trace to the named printer"),
+		new FlagSpec("vcd", Arity.REQUIRED, "file", "a VCD output file",
+				"write watched-signal waveforms to the named VCD file (batch mode)"),
 	};
 
 	/**
-	 * The flag characters the parser accepts, from the flag table.
+	 * The flag names the parser accepts, from the flag table.
 	 * Package-visible for the documentation drift test (issue #71).
 	 *
-	 * @return a fresh array of the accepted flag characters.
+	 * @return a fresh array of the accepted flag names.
 	 */
-	static char[] commandLineFlags() {
+	static String[] commandLineFlags() {
 
-		char[] flags = new char[FLAGS.length];
+		String[] flags = new String[FLAGS.length];
 		for (int f = 0; f < FLAGS.length; f += 1) {
 			flags[f] = FLAGS[f].flag;
 		}
@@ -444,29 +479,34 @@ public class JLSStart extends JFrame implements ChangeListener {
 				if (arg.length() < 2) {
 					usageError("bare '-' is not a valid option");
 				}
-				char flag = arg.charAt(1);
+				// longest flag-name match, so -vcd beats -v (issue #72)
+				String body = arg.substring(1);
 				FlagSpec spec = null;
 				for (FlagSpec s : FLAGS) {
-					if (s.flag == flag) {
+					if (body.startsWith(s.flag)
+							&& (spec == null
+									|| s.flag.length() > spec.flag.length())) {
 						spec = s;
 					}
 				}
 				if (spec == null) {
 					usageError("unknown option " + arg);
 				}
+				String attached = body.substring(spec.flag.length());
 				String opnd = null;
 				switch (spec.arity) {
 				case NONE:
-					if (arg.length() > 2) {
+					if (!attached.isEmpty()) {
 						usageError("unknown option " + arg);
 					}
 					break;
 				case REQUIRED:
-					if (arg.length() > 2) {
-						opnd = arg.substring(2);
+					if (!attached.isEmpty()) {
+						opnd = attached;
 					}
 					else {
-						opnd = operand(args, pos, "-" + flag, spec.operandWhat);
+						opnd = operand(args, pos, "-" + spec.flag,
+								spec.operandWhat);
 						pos += 1;
 					}
 					break;
@@ -474,8 +514,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 					// only -i is OPTIONAL; a separated operand is only
 					// consumed when it names an image file, so that
 					// "jls -i circuit.jls" still exports to the default
-					if (arg.length() > 2) {
-						opnd = arg.substring(2);
+					if (!attached.isEmpty()) {
+						opnd = attached;
 					}
 					else if (pos + 1 < args.length
 							&& isImageFileName(args[pos + 1])) {
@@ -484,7 +524,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 					}
 					break;
 				}
-				apply(flag, opnd);
+				apply(spec.flag, opnd);
 			}
 			else {
 				if (startFile == null) {
@@ -501,20 +541,20 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/**
 	 * Act on one parsed flag.
 	 *
-	 * @param flag The flag character (guaranteed present in the flag table).
+	 * @param flag The flag name (guaranteed present in the flag table).
 	 * @param opnd Its operand, or null for flags without one.
 	 */
-	private static void apply(char flag, String opnd) {
+	private static void apply(String flag, String opnd) {
 
 		switch (flag) {
-		case 'h':
+		case "h":
 			usage();
 			System.exit(0);
 			break;
-		case 'b':
+		case "b":
 			JLSInfo.batch = true;
 			break;
-		case 'i':
+		case "i":
 			JLSInfo.imgexport = true;
 			if (opnd != null) {
 				if (!isImageFileName(opnd)) {
@@ -524,24 +564,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 				imageFile = opnd;
 			}
 			break;
-		case 'r':
+		case "r":
 			printer = opnd;
 			JLSInfo.printTrace = true;
 			break;
-		case 'p':
+		case "p":
 			printer = opnd;
 			printCircuit = true;
 			printCircuitTop = false;
 			break;
-		case 'v':
+		case "v":
 			printer = opnd;
 			printCircuit = true;
 			printCircuitTop = true;
 			break;
-		case 's':
+		case "s":
 			paramFile = opnd;
 			break;
-		case 'd':
+		case "d":
 			long limit = 0;
 			try {
 				limit = Long.parseLong(opnd);
@@ -555,8 +595,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			timeLimit = limit;
 			break;
-		case 't':
+		case "t":
 			testFile = opnd;
+			break;
+		case "vcd":
+			vcdFile = opnd;
 			break;
 		default:
 			// unreachable: parseCommandLine only passes table flags

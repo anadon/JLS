@@ -65,9 +65,9 @@ class CliFlagTableTest {
 		return new String(in.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	private static Set<Character> tableFlags() {
-		Set<Character> flags = new TreeSet<>();
-		for (char f : JLSStart.commandLineFlags()) {
+	private static Set<String> tableFlags() {
+		Set<String> flags = new TreeSet<>();
+		for (String f : JLSStart.commandLineFlags()) {
 			flags.add(f);
 		}
 		return flags;
@@ -75,10 +75,10 @@ class CliFlagTableTest {
 
 	@Test
 	void usageDocumentsExactlyTheParserFlags() {
-		Set<Character> documented = new TreeSet<>();
+		Set<String> documented = new TreeSet<>();
 		for (String line : JLSStart.usageText().split("\n")) {
 			if (line.startsWith("  -")) {
-				documented.add(line.charAt(3));
+				documented.add(line.substring(3).split(" ")[0]);
 			}
 		}
 		assertEquals(tableFlags(), documented,
@@ -95,7 +95,7 @@ class CliFlagTableTest {
 
 	@Test
 	void everyTableFlagIsAcceptedByTheParser() throws Exception {
-		for (char flag : tableFlags()) {
+		for (String flag : tableFlags()) {
 			Result r = run("-" + flag);
 			assertFalse(r.stderr.contains("unknown option"),
 					"-" + flag + " is in the flag table but the parser "
@@ -104,16 +104,26 @@ class CliFlagTableTest {
 	}
 
 	@Test
+	void longestFlagNameWinsOverSingleLetterPrefix() throws Exception {
+		// "-vcd" must resolve to the VCD flag (here: missing its file
+		// operand, a usage error), never to "-v" with the attached
+		// printer name "cd" (issue #72)
+		Result r = run("-vcd");
+		assertEquals(2, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("option -vcd requires"), r.stderr);
+	}
+
+	@Test
 	void aFlagOutsideTheTableIsRejectedByName() throws Exception {
-		Set<Character> table = tableFlags();
-		char unknown = 0;
+		Set<String> table = tableFlags();
+		String unknown = null;
 		for (char c = 'a'; c <= 'z'; c++) {
-			if (!table.contains(c)) {
-				unknown = c;
+			if (!table.contains(String.valueOf(c))) {
+				unknown = String.valueOf(c);
 				break;
 			}
 		}
-		assertTrue(unknown != 0, "no free flag letter left to test with");
+		assertTrue(unknown != null, "no free flag letter left to test with");
 		Result r = run("-" + unknown);
 		assertEquals(2, r.exit, r.stderr);
 		assertTrue(r.stderr.contains("unknown option -" + unknown), r.stderr);

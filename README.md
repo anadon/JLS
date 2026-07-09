@@ -25,11 +25,15 @@ newer).
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
-  limits (`-d`), image export (`-i`, PNG named after the circuit file by
+  limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and
+  autograders), image export (`-i`, PNG named after the circuit file by
   default, or pass an output path such as `-i out.jpg` for JPEG), and
   printing (`-p`/`-v`/`-r`).
   Diagnostics go to stderr as one `jls: error: ...` line; exit status is
   0 on success, 1 on runtime failure, and 2 on a usage error.
+  The batch interface — the `-t` test-vector grammar, the watched-element
+  output format, and the VCD profile — is a documented stability contract:
+  see [`docs/batch-interface.md`](docs/batch-interface.md).
 
 ## Building from source
 

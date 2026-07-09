@@ -117,6 +117,14 @@ If a printer name is present, the output will be sent to it.
 <b>-rprinter</b>
 Forces batch mode, runs the simulator, and prints the signal trace to the named printer.
 
+<p>
+<b>-vcd file</b>
+When used with batch mode, writes the value-change history of all
+watched signals to the named file in industry-standard VCD format
+(IEEE 1364), viewable in waveform viewers such as GTKWave or Surfer.
+The exact format, and the rest of the batch input/output contract, is
+specified in docs/batch-interface.md in the source distribution.
+
 </body>
 
 </html>

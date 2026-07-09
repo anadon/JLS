@@ -65,6 +65,12 @@ feature removal, which is a MAJOR version event under semantic versioning.)*
   autograders). JLS's two-state-plus-HiZ values map to `0`/`1`/`z`
   (never `x`); output is byte-deterministic and pinned by golden tests
   (#72).
+- A development container image (`.devcontainer/`) with Maven, Temurin
+  JDK 21, and the optional development tools now documented in the README:
+  XZ/zip utilities for `.jls` files, a Wayland-only display stack
+  (sway/grim/wtype — X11 is excluded by project policy), ImageMagick,
+  and the Icarus Verilog/GHDL/Yosys toolchain for the HDL roadmap
+  (#33, #59).
 
 ### Removed
 - The XML plugin loader (#80). It activated only when a literal `JLS.jar`

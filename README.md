@@ -51,12 +51,72 @@ Sources live in the historical `src/` layout (not `src/main/java`); tests are
 under `test/`. Continuous integration builds every push on JDK 17 and 21.
 Pushing a `v*` tag publishes a GitHub Release with the runnable jar.
 
-**Optional development tools:** the HDL-export validation tests compile the
-generated Verilog with [Icarus Verilog](https://steveicarus.github.io/iverilog/)
-(`iverilog`) when it is installed and skip cleanly when it is not; `ghdl`
-will play the same role for the future VHDL emitter. Install both for full
-coverage (`apt-get install iverilog ghdl` on Debian/Ubuntu) — CI installs
-them on its runners.
+### Optional development tools
+
+Nothing beyond Maven and a JDK is required to build, test, or run JLS.
+The following tools are useful when working *on* JLS, and are what the
+development container image (below) installs:
+
+- **xz-utils, zip, unzip** — unpack and repack `.jls` circuit files by hand.
+  Current saves are XZ data (`xzcat circuit.jls`); legacy saves are zip
+  archives with a single `JLSCircuit` entry (see "Circuit files" below).
+- **sway, grim, wtype, wayland-utils** — a Wayland compositor that can run
+  on a machine with no display or GPU
+  (`WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman sway`),
+  plus screenshots (`grim`), synthetic keyboard input (`wtype`), and display
+  diagnostics (`wayland-info`). X11 is deliberately not part of this
+  project's tooling: no X server, no XWayland, no X11 utilities.
+- **fontconfig, fonts-dejavu-core** — text rendering needs at least one
+  installed font (even fully headless batch image export); minimal container
+  images often have none.
+- **ImageMagick** — inspect and compare the images written by batch
+  image export (`-i`) and screenshots taken with `grim`.
+- **[Icarus Verilog](https://steveicarus.github.io/iverilog/)
+  (`iverilog`), GHDL, Yosys** — external HDL toolchain for the HDL
+  export/import roadmap
+  ([docs/hdl-support-research.md](docs/hdl-support-research.md), issues #33
+  and #59). The HDL-export validation tests compile the generated Verilog
+  with `iverilog` when it is installed and skip cleanly when it is not
+  (CI installs it on its runners); `ghdl` will play the same role for the
+  future VHDL emitter; Yosys synthesizes Verilog to the JSON netlists
+  planned for import.
+
+All of these are stock packages on Debian/Ubuntu
+(`apt install xz-utils zip unzip sway grim wtype wayland-utils fontconfig
+fonts-dejavu-core imagemagick iverilog ghdl yosys`).
+
+**Displaying the GUI without X11.** The Maven test suite and batch mode run
+fully headless (`java.awt.headless=true`) and need no display server of any
+kind. The interactive GUI is another matter: stock OpenJDK's Swing toolkit
+on Linux only speaks X11, so on the Wayland compositor above it needs a JDK
+that includes OpenJDK's experimental Wayland toolkit (Project Wakefield) —
+currently shipped by [JetBrains
+Runtime](https://github.com/JetBrains/JetBrainsRuntime) — enabled with:
+
+```sh
+java -Dawt.toolkit.name=WLToolkit -jar target/jls-*.jar
+```
+
+The development container below accepts a `JBR_URL` build argument to bake
+that runtime in.
+
+### Development container
+
+[`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with
+Maven, Temurin JDK 21, and all of the optional tools above — and no X11
+components. VS Code and GitHub Codespaces pick it up automatically via
+[`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json); to use
+it directly:
+
+```sh
+docker build -f .devcontainer/Dockerfile -t jls-dev .
+docker run --rm -it -v "$PWD":/workspace jls-dev
+```
+
+To run the GUI inside the container (on the headless Wayland compositor),
+build with `--build-arg JBR_URL=<JetBrains Runtime linux-x64 tar.gz URL>`
+and use `/opt/jbr/bin/java -Dawt.toolkit.name=WLToolkit` as shown in the
+Dockerfile's comments.
 
 ## Circuit files
 

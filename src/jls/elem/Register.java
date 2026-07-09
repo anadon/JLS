@@ -1242,26 +1242,22 @@ public class Register extends LogicElement {
 	 * @param sim Unused.
 	 */
 	public void initSim(Simulator sim) {
-		
-		// create current values and to-be value
-		BitSet currentValue = BitSetUtils.Create(initialValue);
+
+		// set current value and to-be value to the initial value
+		// (assign the field, not a shadowing local - issue #98, S2)
+		currentValue = BitSetUtils.Create(initialValue);
 		toBeValue = (BitSet)currentValue.clone();
 		currentC = 0;
-		
-		// create values to output
-		BitSet qOut = (BitSet)currentValue.clone();
-		BitSet notQOut = (BitSet)currentValue.clone();
-		notQOut.flip(0,bits);
-		
+
 		// set output pins to 0
 		Output q = outputs.get(0);
 		q.setValue(new BitSet(1));
 		Output notq = outputs.get(1);
 		notq.setValue(new BitSet(1));
-		
-		// post output event at time 0
-		sim.post(new SimEvent(0,this,qOut.clone()));
-		
+
+		// post output event at time 0 to drive the initial value
+		sim.post(new SimEvent(0,this,currentValue.clone()));
+
 	} // end of initSim method
 	
 	/**

@@ -604,18 +604,23 @@ public class TriState extends LogicElement {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
+	// the value scheduled to reach the output, null meaning off (HiZ);
+	// used to suppress redundant output events (issue #98, S6)
+	private BitSet toBeValue;
+
 	/**
 	 * Initialize this element by setting its output pin to off (null).
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	public void initSim(Simulator sim) {
-		
+
 		// set output pin
 		Output out = outputs.get(0);
 		out.setValue(null);
-		
+		toBeValue = null;
+
 	} // end of initSim method
 	
 	/**
@@ -634,22 +639,30 @@ public class TriState extends LogicElement {
 			BitSet control = inputs.get(1).getValue();
 			if (control ==  null)
 				control = new BitSet();
-			
+
 			// if it is zero, turn off output
+			// (but not if it is already off or turning off - #98, S6)
 			if (!control.get(0)) {
+				if (toBeValue == null)
+					return;
+				toBeValue = null;
 				sim.post(new SimEvent(now+propDelay,this,"off"));
 			}
 			else {
 
 				// get the data input and send it to the output
+				// (but not if that value is already on the way - #98, S6)
 				BitSet value = inputs.get(0).getValue();
 				if (value == null)
 					value = new BitSet();
 				else
 					value = (BitSet)value.clone();
+				if (value.equals(toBeValue))
+					return;
+				toBeValue = (BitSet)value.clone();
 				sim.post(new SimEvent(now+propDelay,this,value));
 			}
-			
+
 		}
 		
 		// if gate is turning off, propagate null

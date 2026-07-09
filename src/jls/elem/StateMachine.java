@@ -1910,6 +1910,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	private int oldClock;
 	private boolean busy = false;	// true between edge and outputs value
 	private State currentState;
+	private boolean noMatchReported = false;	// no-matching-transition warned already? (#98, S5)
 	
 	/**
 	 * Initialize this element by setting its outputs to 0,
@@ -1926,6 +1927,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		// set latest clock input value to 0
 		oldClock = 0;
+
+		// re-arm the no-matching-transition diagnostic (#98, S5)
+		noMatchReported = false;
 		
 		// find the initial state
 		currentState = null;
@@ -1995,10 +1999,22 @@ public final class StateMachine extends LogicElement implements Printable {
 			
 			// do a transition, so figure out next state
 			State newState = currentState.getNextState();
-			
-			// if no next state, then stay busy forever
+
+			// if no transition matches, stay in the current state:
+			// remember the clock value so later edges are still
+			// recognized, and tell the user once instead of silently
+			// freezing (issue #98, S5)
 			if (newState == null) {
-				busy =  true;
+				oldClock = newClock;
+				if (!noMatchReported) {
+					noMatchReported = true;
+					TellUser.warn(JLSInfo.frame,
+							"state machine \"" + name + "\": no transition"
+							+ " matches from state \""
+							+ currentState.getName() + "\" at time " + now
+							+ "; staying in the current state",
+							"Simulation");
+				}
 				return;
 			}
 			

@@ -16,7 +16,9 @@ public class WireEnd extends LogicElement {
 	
 	// properties
 	private WireNet net;							// the net it is a part of
-	private Set<Wire> wires = new HashSet<Wire>();	// the wires it is connected to
+	// insertion order keeps wire-net construction (and so multi-driver
+	// resolution) deterministic (issue #98, S1)
+	private Set<Wire> wires = new LinkedHashSet<Wire>();	// the wires it is connected to
 	private Put put = null;							// the put it is attached to
 	private boolean touching = false;				// touching something (can connect)?
 	private boolean marked;							// used to partition wire net
@@ -25,7 +27,7 @@ public class WireEnd extends LogicElement {
 	private String loadPut = null;					// for loading circuit
 	private boolean loadTriState = false;			// for loading circuit
 	private Set<Integer> loadWires = 				// for loading circuit
-		new HashSet<Integer>();
+		new LinkedHashSet<Integer>();				// (file order - #98, S1)
 	private Map<Integer,String> probeMap =			// for loading circuit
 		new HashMap<Integer,String>();
 	

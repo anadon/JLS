@@ -24,7 +24,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17, 21]
+        # 25 (current LTS) is the required baseline (#92); the newest GA
+        # feature release runs as an advisory forward-compatibility leg —
+        # it may fail without blocking the build, and becomes the required
+        # leg when it becomes the next LTS
+        java: [25, 26]
+    # only the LTS leg is required; the feature-release leg is advisory
+    continue-on-error: ${{ matrix.java != 25 }}
     steps:
       # actions are pinned to full commit SHAs (supply-chain posture,
       # #44/#68); Dependabot keeps the pins fresh via the version comments
@@ -50,14 +56,14 @@ jobs:
         run: mvn -B verify
 
       - name: Upload jar
-        if: matrix.java == 21
+        if: matrix.java == 25
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jls-jar
           path: target/jls-*.jar
 
       - name: Upload coverage report
-        if: matrix.java == 21
+        if: matrix.java == 25
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-report
@@ -66,12 +72,12 @@ jobs:
       # per-PR coverage visibility with no external service: the summary
       # table comes straight from the JaCoCo XML report (issue #66)
       - name: Coverage summary
-        if: matrix.java == 21
+        if: matrix.java == 25
         run: |
           python3 - << 'EOF' >> "$GITHUB_STEP_SUMMARY"
           import xml.etree.ElementTree as ET
           r = ET.parse('target/site/jacoco/jacoco.xml').getroot()
-          print('## Coverage (JaCoCo, JDK 21)\n')
+          print('## Coverage (JaCoCo, JDK 25)\n')
           print('| Counter | Covered | Missed | % |')
           print('|---|---|---|---|')
           for c in r.findall('counter'):
@@ -90,12 +96,40 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       - name: Submit dependency graph
         uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
+
+  # reproducible-builds check (#44): the pom pins
+  # project.build.outputTimestamp, so building the same commit twice must
+  # produce byte-identical jars — compare SHA256 of two clean builds
+  reproducibility:
+    name: Reproducible build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build twice and compare jar checksums
+        run: |
+          mvn -B -DskipTests package
+          sha256sum target/jls-*.jar | sed 's|target/||' > first.sha256
+          rm -rf target
+          mvn -B -DskipTests package
+          ( cd target && sha256sum jls-*.jar ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 \
+            || { echo "::error::build is not reproducible: jar checksums differ between two builds of the same commit"; exit 1; }

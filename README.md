@@ -11,7 +11,7 @@ his JLS 4.1.
 
 ## Running JLS
 
-JLS is a desktop Swing application and needs a Java runtime (JDK/JRE 17 or
+JLS is a desktop Swing application and needs a Java runtime (JDK/JRE 25 or
 newer).
 
 - **From a release:** download `jls-<version>.jar` from the
@@ -22,6 +22,13 @@ newer).
   ```
 
   The jar is self-contained — no other files are needed.
+
+  Every release also ships a `SHA256SUMS` file and a CycloneDX software
+  bill of materials (`bom.json`) listing exactly what is bundled inside
+  the jar. To verify a download, put `SHA256SUMS` next to the jar and run
+  `sha256sum -c SHA256SUMS`; releases additionally carry signed build
+  provenance, checkable with
+  `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
@@ -40,7 +47,7 @@ newer).
 
 ## Building from source
 
-The build uses Maven and JDK 17+:
+The build uses Maven and JDK 25+:
 
 ```sh
 mvn verify          # compile (warnings are errors), run tests, SpotBugs
@@ -48,8 +55,11 @@ java -jar target/jls-*.jar
 ```
 
 Sources live in the historical `src/` layout (not `src/main/java`); tests are
-under `test/`. Continuous integration builds every push on JDK 17 and 21.
-Pushing a `v*` tag publishes a GitHub Release with the runnable jar.
+under `test/`. Continuous integration builds every push on JDK 25, plus an
+advisory (non-blocking) build on the newest GA feature release for early
+warning. The Java floor follows the current LTS at the time of each raise
+and is revisited once per LTS cycle. Pushing a `v*` tag publishes a GitHub
+Release with the runnable jar.
 
 ### Optional development tools
 
@@ -103,7 +113,7 @@ that runtime in.
 ### Development container
 
 [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with
-Maven, Temurin JDK 21, and all of the optional tools above — and no X11
+Maven, Temurin JDK 25, and all of the optional tools above — and no X11
 components. VS Code and GitHub Codespaces pick it up automatically via
 [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json); to use
 it directly:

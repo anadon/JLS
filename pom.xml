@@ -25,7 +25,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
+    <!-- language baseline policy (#92): the floor is the current LTS at
+         the time of each raise, revisited once per LTS cycle -->
+    <maven.compiler.release>25</maven.compiler.release>
     <!-- reproducible builds: archives get this fixed timestamp instead of
          wall-clock time, so the same commit rebuilds byte-identically;
          bump it alongside the version when cutting a release (#44) -->
@@ -61,6 +63,9 @@
         <excludes>
           <exclude>**/*.java</exclude>
           <exclude>**/CVS/**</exclude>
+          <!-- belt-and-braces: keep Windows Explorer droppings out of the
+               jar even if one gets committed again (#47) -->
+          <exclude>**/Thumbs.db</exclude>
         </excludes>
       </resource>
       <!-- bundled HTML help content -->
@@ -68,6 +73,7 @@
         <directory>resources</directory>
         <excludes>
           <exclude>**/CVS/**</exclude>
+          <exclude>**/Thumbs.db</exclude>
         </excludes>
       </resource>
       <!-- single-source version identity: the pom version is filtered
@@ -231,7 +237,7 @@
                   <version>[3.6.3,)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[17,)</version>
+                  <version>[25,)</version>
                 </requireJavaVersion>
                 <dependencyConvergence/>
                 <banDuplicatePomDependencyVersions/>

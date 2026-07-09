@@ -5,11 +5,17 @@ name: Release
 # checksums, the CycloneDX SBOM, and build-provenance attestation
 # (#8, hardened by #44; SBOM asset per #65).
 #
+# Manual runs (workflow_dispatch) are a dry-run (#44): they build, verify,
+# and produce checksums exactly like a tag push, but skip the tag↔pom guard,
+# the provenance attestation, and the GitHub Release itself — nothing is
+# published.
+#
 # All actions are pinned to full commit SHAs (supply-chain posture, #44/#68);
 # Dependabot keeps the pins fresh via the version comments.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   # create the release and upload assets
@@ -24,17 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       # A tag must name exactly the version the pom builds, and SNAPSHOTs
       # never ship: releasing means bumping the pom (e.g. 5.0.0-rc.1, then
-      # 5.0.0) and tagging v<that version> (#44).
+      # 5.0.0) and tagging v<that version> (#44). Dry-runs have no tag to
+      # check against, so the guard only runs on tag pushes.
       - name: Verify tag matches pom version
+        if: github.event_name == 'push'
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           POM_VERSION="$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)"
@@ -60,13 +68,16 @@ jobs:
           cat SHA256SUMS
 
       # Signed, verifiable statement that this exact jar was built by this
-      # workflow from this commit: verify with `gh attestation verify` (#44)
+      # workflow from this commit: verify with `gh attestation verify` (#44).
+      # Skipped on dry-runs — attestations are publications too.
       - name: Attest build provenance
+        if: github.event_name == 'push'
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: target/jls-*.jar
 
       - name: Publish GitHub Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           files: |

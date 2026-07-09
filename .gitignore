@@ -9,3 +9,6 @@ JLSerror
 # committed test fixtures are exempt from the *.jls ignore (issue #56)
 !test/fixtures/**/*.jls
 Thumbs.db
+
+# Claude Code agent worktrees (transient session infrastructure)
+.claude/worktrees/

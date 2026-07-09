@@ -9,7 +9,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -52,9 +51,11 @@ import javax.swing.event.ChangeListener;
 
 import jls.edit.Editor;
 import jls.elem.Element;
+import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
 import jls.hdl.HdlExporter;
 import jls.hdl.VerilogEmitter;
+import jls.hdl.VhdlEmitter;
 import jls.elem.LogicElement;
 import jls.elem.Memory;
 import jls.elem.OutputPin;
@@ -308,11 +309,18 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			Circuit circ = loadCircuitHeadless(startFile);
 
+			// the output extension picked the language at parse time:
+			// .v is Verilog-2005, .vhd/.vhdl is VHDL (#60)
+			HdlEmitter emitter =
+					exportFile.toLowerCase(java.util.Locale.ROOT)
+							.endsWith(".v")
+					? new VerilogEmitter() : new VhdlEmitter();
+
 			// walk and render; a rejection lists every offending
 			// element and writes nothing
 			HdlExporter.Result result;
 			try {
-				result = HdlExporter.export(circ, new VerilogEmitter());
+				result = HdlExporter.export(circ, emitter);
 			} catch (HdlExportException e) {
 				System.err.println("jls: error: " + e.getMessage());
 				System.exit(1);
@@ -546,8 +554,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"print the signal trace to the named printer"),
 		new FlagSpec("vcd", Arity.REQUIRED, "file", "a VCD output file",
 				"write watched-signal waveforms to the named VCD file (batch mode)"),
-		new FlagSpec("export", Arity.REQUIRED, "file.v", "an output file",
-				"export the circuit as Verilog-2005 to the named .v file"),
+		new FlagSpec("export", Arity.REQUIRED, "file", "an output file",
+				"export the circuit as Verilog-2005 (.v) or VHDL (.vhd/.vhdl), chosen by the file extension"),
 	};
 
 	/**
@@ -665,6 +673,23 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of parseCommandLine method
 
 	/**
+	 * Whether this invocation, as parsed, will start the interactive GUI
+	 * rather than one of the headless one-shot modes (batch, image
+	 * export, HDL export, printing a named circuit). Mirrors the mode
+	 * dispatch at the top of start(). Used by the startup toolkit policy
+	 * (issue #105), which must never touch or fail a flow that needs no
+	 * display.
+	 *
+	 * @return true if start() will launch the GUI.
+	 */
+	static boolean guiSessionRequested() {
+
+		return !(printCircuit && startFile != null)
+				&& !JLSInfo.batch && !JLSInfo.imgexport
+				&& !JLSInfo.hdlexport;
+	} // end of guiSessionRequested method
+
+	/**
 	 * Act on one parsed flag.
 	 *
 	 * @param flag The flag name (guaranteed present in the flag table).
@@ -728,14 +753,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 			vcdFile = opnd;
 			break;
 		case "export":
-			// .v selects the Verilog emitter; other languages (VHDL)
-			// will hang off other extensions when they land (#60).
+			// the extension selects the emitter: .v is Verilog-2005,
+			// .vhd/.vhdl is VHDL (#60).
 			// -export is Arity.REQUIRED so opnd cannot be null here; the
 			// guard keeps that invariant locally checkable
-			if (opnd == null
-					|| !opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
-				usageError("option -export output file must end in .v: "
-						+ opnd);
+			String hdlName = opnd == null ? ""
+					: opnd.toLowerCase(java.util.Locale.ROOT);
+			if (!hdlName.endsWith(".v") && !hdlName.endsWith(".vhd")
+					&& !hdlName.endsWith(".vhdl")) {
+				usageError("option -export output file must end in .v, "
+						+ ".vhd or .vhdl: " + opnd);
 			}
 			JLSInfo.hdlexport = true;
 			exportFile = opnd;
@@ -813,6 +840,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
+		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
@@ -871,13 +899,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// finish up GUI settings
 		setTitle(JLSInfo.version);
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int width = (int)(1.618*JLSInfo.windowsize);	// golden ratio
 		int height = JLSInfo.windowsize;
 		setSize(width,height);
-		int left = (screenSize.width - width)/2;
-		int top = (screenSize.height - height)/2;
-		setLocation(left,top);	// centered in screen
+		// centered in the screen; setLocationRelativeTo(null) asks the
+		// GraphicsEnvironment for the real center point instead of the
+		// Toolkit whole-screen size, which is unreliable on mixed-DPI and
+		// Wayland setups (issue #105)
+		setLocationRelativeTo(null);
 		setVisible(true);
 
 		// set up simulator

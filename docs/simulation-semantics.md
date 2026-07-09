@@ -14,7 +14,9 @@ disagree, one of them has a bug; the golden tests
 Behavior found while writing this spec that nobody would specify
 deliberately is **not** documented as intended: it is listed in the
 [appendix](#appendix-surprises-found-while-writing-this-spec) as
-candidate bugs, per issue #85 §9. The sibling document
+candidate bugs, per issue #85 §9 (the seven surprises found during
+the original writing were adjudicated and resolved in issue #98; the
+appendix records the verdicts). The sibling document
 [`batch-interface.md`](batch-interface.md) specifies the batch
 *interface* (test-vector grammar, stdout format, VCD profile); this
 one specifies the simulation *model* both simulators share.
@@ -124,10 +126,13 @@ every simulation:
 
 1. `now = 0`; the event queue and duplicate-suppression set are
    cleared; `stopping` is reset.
-2. `initInputs`: every input point of every top-level `LogicElement`
-   is set to the value 0 (`LogicElement.initInputs`,
-   `src/jls/elem/LogicElement.java`). This walk is *not* recursive
-   into subcircuits; see appendix S3.
+2. `initInputs`: every input point of every `LogicElement` at every
+   depth is set to the value 0 (`LogicElement.initInputs`,
+   `src/jls/elem/LogicElement.java`). `Simulator.initInputs` walks
+   only the top level, but `SubCircuit.initInputs` overrides the
+   walk and recurses into its inner circuit, so initialization is
+   depth-uniform (pinned by
+   `SimulationSemanticsRegressionTest.initInputsReachesInsideSubcircuits`).
 3. `initSim(sim)` on every top-level `LogicElement`.
    `SubCircuit.initSim` recurses into its inner circuit
    (`src/jls/elem/SubCircuit.java`), so every element at every depth
@@ -205,10 +210,25 @@ the delay. (There is no inertial-delay glitch suppression; the only
 suppression is the equal-pending-event rule of section 3 and the
 `toBeValue` change check.)
 
+The tri-state gate follows the same discipline: `TriState.react`
+tracks the value in flight (with "off" as a distinct in-flight state)
+and posts an output event only when the scheduled output actually
+changes (pinned by
+`SimulationSemanticsRegressionTest.triStateDoesNotRepostUnchangedOutputEvents`).
+
 Zero-delay elements (`Splitter.react`, `Binder.react`,
 `InputPin.react`, `OutputPin.react`, `SubCircuit.react`,
 `Constant.react`) propagate within the same timestamp, so an
 arbitrarily deep chain of wiring elements adds zero time.
+
+A `Constant` is width-agnostic: it takes its width from whatever net
+it is wired to, and the value it drives is its configured value
+truncated to that net's declared width — value mod 2^bits
+(`Constant.react` masks before propagating; pinned by
+`SimulationSemanticsRegressionTest.constantValueIsMaskedToTheNetWidth`).
+A constant wider than its net silently loses its high bits; this is
+the width-adaptation rule, consistent with §2's
+"values are interpreted at the reader's declared width".
 
 ## 7. Propagation delays per element
 
@@ -297,7 +317,13 @@ limit with `q = 5`, which is what the golden asserts.
   state's outputs (`StateMachine.initSim`); a save without a marked
   initial state falls back to an arbitrary state rather than crash
   (issue #52).
-- If no transition matches, the machine freezes; see appendix S5.
+- If no transition matches on an edge, the machine **stays in its
+  current state**, updates its remembered clock value (so later
+  edges are still recognized), and reports the unmatched edge once
+  per run through the `TellUser` reporter — a warning dialog in the
+  interactive simulator, a `jls: warning:` stderr line in batch mode
+  (issue #98 S5; pinned by
+  `SimulationSemanticsRegressionTest.stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce`).
 
 Pinned by `SequentialGoldenTest.stateMachineDrivesStateOutput`.
 
@@ -325,16 +351,25 @@ at `cycle − one`, and `Clock.react` thereafter alternates: high for
   output is likewise HiZ while not enabled (pinned by
   `VcdExportGoldenTest.testVectorStimulusVcdMatchesGoldenAndCoversHiZ`).
 - **Resolution**: when any driver on a tri-state net changes,
-  `WireNet.propagate` scans the net's attached outputs and delivers
-  the first non-null driver value it finds; if every driver is off,
-  the net is HiZ (null) (`WireNet.propagate`,
+  `WireNet.propagate` scans the net's attached outputs in **net
+  order** and delivers the first active (non-null) driver value; if
+  every driver is off, the net is HiZ (null) (`WireNet.propagate`,
   `src/jls/elem/WireNet.java`). With **at most one** active driver —
   the only configuration with defined meaning — this implements
   standard bus behavior: the active driver wins, and turning the
   active driver off re-resolves to the other drivers or to HiZ.
-  With two or more simultaneously active drivers the winner is
-  arbitrary; see appendix S1. There is no wired-AND/OR and no
-  conflict (X) state.
+- **Bus conflicts**: two or more simultaneously active drivers with
+  *different* values are a conflict. Resolution stays deterministic —
+  the first active driver in net order wins, where net order is the
+  order the wire ends were added to the net (for a loaded circuit:
+  fixed by the file, a breadth-first walk of the net from its first
+  wire end in file order; `Circuit.finishLoad` and the insertion-
+  ordered sets in `WireNet`/`WireEnd` make this stable across runs
+  and JVMs, issue #98 S1) — and the conflict is reported once through
+  the `TellUser` reporter (re-armed when the conflict clears). Active
+  drivers that agree are not a conflict. There is no wired-AND/OR and
+  no conflict (X) state. Pinned by
+  `SimulationSemanticsRegressionTest.multiDriverConflictResolvesDeterministicallyAndWarnsOnce`.
 - Readers of an HiZ net see null and, per section 2, almost all
   compute with it as zero. The distinct visible renderings of HiZ
   (`HiZ` on stdout, `z` in VCD, mid-level trace line) are specified
@@ -362,8 +397,10 @@ at `cycle − one`, and `Clock.react` thereafter alternates: high for
   changes to a non-zero value, calls `Simulator.pause(true)`. In the
   interactive simulator this pauses the run (resumable); in batch
   mode pause is meaningless and is treated as stop
-  (`BatchSimulator.pause`). Note the on-non-zero condition
-  contradicts this element's help page; see appendix S4.
+  (`BatchSimulator.pause`). A change *to zero* does not pause — the
+  same on-non-zero condition as the Stop element, and what the help
+  page says (issue #98 S4; pinned by
+  `SimulationSemanticsRegressionTest.pausePausesOnlyOnNonZeroInput`).
 
 ## 12. Validation against the goldens
 
@@ -379,59 +416,41 @@ this document alone. The mapping:
 | §8.2 state machine | `SequentialGoldenTest.stateMachineDrivesStateOutput` |
 | §8.3 clock phase | the flip-flop goldens (first edge must exist before the 10-cycle limit) |
 | §9 HiZ resolution | `VcdExportGoldenTest.testVectorStimulusVcdMatchesGoldenAndCoversHiZ` |
+| §9 bus conflicts | `SimulationSemanticsRegressionTest` (deterministic winner, one-time warning) |
 | §4 termination reasons | `CliSmokeTest` / `batch-interface.md` §3.1 |
+| §5 depth-uniform init, §6.2 constant width, §8.2 unmatched edge, §11 pause condition | `SimulationSemanticsRegressionTest` |
 
 ## Appendix: Surprises found while writing this spec
 
-Candidate bugs, per issue #85 §9: behavior the code exhibits that no
-one would specify deliberately. Listed here instead of being
-documented above as intended; none of the simulation code was changed
-in this slice. Each is worth its own issue.
+This appendix collects candidate bugs, per issue #85 §9: behavior the
+code exhibits that no one would specify deliberately. The seven
+surprises recorded here by the original spec (S1–S7) were adjudicated
+and resolved in issue #98; **nothing is currently listed**. The
+verdicts, for the record:
 
-- **S1 — Multi-driver tri-state conflicts resolve arbitrarily.**
-  `WireNet.propagate` (`src/jls/elem/WireNet.java`) takes the first
-  non-null driver produced by iterating a `HashSet` of wire ends.
-  With two simultaneously active drivers the delivered value depends
-  on hash iteration order — stable within a run, but unspecified and
-  not meaningful. A bus conflict should be reported (or at least
-  resolved by a defined rule), not silently won by an arbitrary
-  driver.
-- **S2 — `Register.initSim` shadows its `currentValue` field.**
-  `Register.initSim` (`src/jls/elem/Register.java`) declares a
-  *local* `BitSet currentValue`, so the field keeps its stale value
-  until the register's time-0 event reacts; `findWatched`
-  (`src/jls/sim/BatchSimulator.java`) samples the stale field for the
-  trace's time-0 entry. The error is masked downstream (the time-0
-  event overwrites the entry at the same timestamp, and VCD folding
-  takes the last value per timestamp), but the shadowing — and the
-  dead `notQOut` local next to it — is a latent trap.
-- **S3 — `initInputs` is not recursive.** `Simulator.initInputs`
-  initializes input points to 0 for *top-level* elements only;
-  inputs inside subcircuits start as null and are read as zero by
-  each element's null-tolerant `react`. Benign today, but the
-  null-versus-zero asymmetry between depths is an accident, and any
-  future `react` that dereferences without the null check will fail
-  only inside subcircuits.
-- **S4 — Pause element: code and help page disagree.**
-  `Pause.react` (`src/jls/elem/Pause.java`) pauses only when the
-  input changes to a **non-zero** value; the help page
-  (`resources/help/elements/timing/pause.html`) says it pauses when
-  the input "changes value". One of them is wrong (the Stop element's
-  page, by contrast, matches its code).
-- **S5 — A state machine with no matching transition freezes
-  silently.** `StateMachine.react` sets `busy = true` and returns
-  when `getNextState()` finds no transition ("stay busy forever"),
-  so the machine ignores every subsequent clock edge with no
-  warning to the user — and that branch also skips the
-  remembered-clock update, unlike every other early return in the
-  method.
-- **S6 — TriState posts an output event on every input change.**
-  Unlike `Gate.react`, `TriState.react` has no `toBeValue` change
-  check, so it schedules a (frequently redundant) event per input
-  notification. Correctness is preserved by `Output.propagate`'s
-  change detection; the cost is queue traffic only.
-- **S7 — Constant truncates to the attached net's width at
-  simulation time.** `Constant.react` masks its configured value to
-  `getWireEnd().getBits()` bits before propagating; a value wider
-  than the net it ends up attached to silently loses its high bits
-  during simulation rather than being rejected when wired.
+- **S1** (multi-driver conflicts resolved by hash order) — *bug,
+  fixed*: resolution is now deterministic (first active driver in
+  net order) and a bus conflict is reported once; spec body §9.
+- **S2** (`Register.initSim` shadowed its `currentValue` field) —
+  *bug, fixed*: the field is assigned, and the dead locals are gone.
+- **S3** (`initInputs` believed non-recursive) — *misreading of the
+  code*: `SubCircuit.initInputs` has always recursed, so input
+  initialization is depth-uniform; documented in §5 and pinned by
+  test.
+- **S4** (Pause code vs. help page) — *code intended*: pausing on
+  change-to-non-zero parallels the Stop element; the help page was
+  corrected to match.
+- **S5** (state machine froze silently on an unmatched edge) — *bug,
+  fixed*: it stays in its current state, keeps its clock history,
+  and warns once; spec body §8.2.
+- **S6** (TriState posted redundant output events) — *bug, fixed*:
+  it now follows the `Gate.react` change-check discipline; spec
+  body §6.2.
+- **S7** (Constant truncates to the net width) — *intended*: the
+  Constant element is deliberately width-agnostic, and truncation is
+  its width-adaptation rule; documented in §6.2. (Rejecting wide
+  constants at load was considered and dropped: it would refuse
+  files that load today.)
+
+All seven are pinned by
+`test/jls/SimulationSemanticsRegressionTest.java`.

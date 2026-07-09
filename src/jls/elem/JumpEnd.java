@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -56,16 +57,9 @@ public class JumpEnd extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
 		
 		if(name == null) {
-			if (pos == null) {
-				new EndCreate(x+win.x,y+win.y);
-			}
-			else {
-				new EndCreate(pos.x+win.x,pos.y+win.y);
-			}
+			new EndCreate();
 		}
 		else {
 			bits = circuit.getJumpStart(name).getBits();
@@ -94,12 +88,8 @@ public class JumpEnd extends LogicElement {
 		}
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -385,11 +375,9 @@ public class JumpEnd extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param type The type of pin ("Input" or "Output").
 		 */
-		private EndCreate(int x, int y) {
+		private EndCreate() {
 			
 			// set up window title
 			super("Create Wire End","end");
@@ -434,7 +422,7 @@ public class JumpEnd extends LogicElement {
 			right.setSelected(true);
 			window.add(orients);
 
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

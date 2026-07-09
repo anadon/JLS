@@ -1,0 +1,16 @@
+# jpackage resource-dir override of the default Linux menu-shortcut
+# template (issue #82).  Identical to the JDK's built-in template.desktop
+# except for the "%f" field code on the Exec line: without it, desktop
+# environments launch JLS but never pass the double-clicked .jls file,
+# so the file association silently opens an empty editor.  The launcher
+# receives the path as argv[1] (JLSStart.parseCommandLine: bare operand
+# = start file).  ALL-CAPS tokens are substituted by jpackage.
+[Desktop Entry]
+Name=APPLICATION_NAME
+Comment=APPLICATION_DESCRIPTION
+Exec=APPLICATION_LAUNCHER %f
+Icon=APPLICATION_ICON
+Terminal=false
+Type=Application
+Categories=DEPLOY_BUNDLE_CATEGORY
+DESKTOP_MIMES

@@ -8,7 +8,6 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,6 +36,7 @@ import jls.JLSInfo;
 import jls.KeyPad;
 import jls.Util;
 import jls.sim.Simulator;
+import jls.util.Placement;
 
 /**
  * Display an input value on the circuit editor screen.
@@ -81,14 +81,7 @@ public class Display extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new DispCreate(x+win.x,y+win.y);
-		}
-		else {
-			new DispCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new DispCreate();
 		
 		// don't do anything if user cancelled element
 		if (cancelled)
@@ -98,12 +91,8 @@ public class Display extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -365,10 +354,8 @@ public class Display extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		protected DispCreate(int x, int y) {
+		protected DispCreate() {
 			
 			// set up window title
 			super("Create Display","display");
@@ -404,7 +391,7 @@ public class Display extends LogicElement {
 			window.add(radix);
 
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

@@ -49,11 +49,9 @@ public final class About extends JDialog implements ActionListener {
 		s2.setAlignmentX(Component.CENTER_ALIGNMENT);
 		window.add(s2);
 		
-		// make visible
+		// make visible, centered on the main frame (owner-relative; #104)
 		pack();
-		Dimension winSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension aboutSize = getSize();
-		setLocation((winSize.width-aboutSize.width)/2,(winSize.height-aboutSize.height)/2);
+		setLocationRelativeTo(JLSInfo.frame);
 		setVisible(true);
 		
 	} // end of constructor

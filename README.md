@@ -9,10 +9,30 @@ or in batch mode from the command line. It was written by David A. Poplawski
 (Michigan Technological University); this repository is a maintained fork of
 his JLS 4.1.
 
-## Running JLS
+## Installing JLS
 
-JLS is a desktop Swing application and needs a Java runtime (JDK/JRE 17 or
-newer).
+The [Releases page](https://github.com/anadon/JLS/releases) carries
+self-contained installers with a bundled Java runtime — no JDK needed:
+
+- **Linux:** `jls_<version>_amd64.deb` (`sudo apt install ./jls_*.deb`) or
+  `jls-<version>*.rpm`. JLS appears in the applications menu.
+- **Windows:** `JLS-<version>.msi` (per-user install, no admin rights
+  needed). SmartScreen will warn that the installer is from an unknown
+  publisher because the artifacts are unsigned — choose "More info" →
+  "Run anyway". Verify the download against `SHA256SUMS-installers-windows`
+  first if you want the assurance signing would otherwise give.
+- **macOS:** `JLS-<version>.dmg`. The app is unsigned, so Gatekeeper blocks
+  a plain double-click the first time: right-click (Control-click) the app
+  and choose "Open", then confirm — needed only once.
+
+Installing associates `.jls` circuit files with JLS: double-click a `.jls`
+file and it opens in the editor. Each installer has a sha256 entry in the
+`SHA256SUMS-installers-<os>` release asset.
+
+## Running JLS from the jar (no installer)
+
+The plain jar remains the portable path — for lab machines you cannot
+install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
 
 - **From a release:** download `jls-<version>.jar` from the
   [Releases page](https://github.com/anadon/JLS/releases) and run:
@@ -22,6 +42,13 @@ newer).
   ```
 
   The jar is self-contained — no other files are needed.
+
+  Every release also ships a `SHA256SUMS` file and a CycloneDX software
+  bill of materials (`bom.json`) listing exactly what is bundled inside
+  the jar. To verify a download, put `SHA256SUMS` next to the jar and run
+  `sha256sum -c SHA256SUMS`; releases additionally carry signed build
+  provenance, checkable with
+  `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
@@ -38,9 +65,29 @@ newer).
   output format, and the VCD profile — is a documented stability contract:
   see [`docs/batch-interface.md`](docs/batch-interface.md).
 
+### Wayland
+
+JLS runs natively on Wayland via OpenJDK's experimental Wayland toolkit
+(`WLToolkit`, Project Wakefield), currently shipped by [JetBrains
+Runtime](https://github.com/JetBrains/JetBrainsRuntime). On a
+Wayland-only session (`WAYLAND_DISPLAY` set, `DISPLAY` unset) JLS selects
+that toolkit automatically at startup when the Java runtime provides it —
+the same `java -jar` command as everywhere else, no flags. On a runtime
+without it (stock OpenJDK today), JLS prints one `jls: error:` line naming
+the actual problem and the two ways out: run under XWayland by setting
+`DISPLAY`, or use a JBR/Wakefield build. Sessions with `DISPLAY` set
+(X11 or XWayland), Windows, macOS, and all headless modes (batch, image
+and Verilog export) are untouched.
+
+The JVM property `-Djls.toolkit=default|wayland` overrides the detection
+in either direction. CI exercises this end to end: the `gui-wayland` lane
+boots the GUI on a JBR under a headless sway compositor and screenshots
+it via [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) (issue #101),
+which also reproduces the setup locally or in the dev container.
+
 ## Building from source
 
-The build uses Maven and JDK 17+:
+The build uses Maven and JDK 25+:
 
 ```sh
 mvn verify          # compile (warnings are errors), run tests, SpotBugs
@@ -48,8 +95,13 @@ java -jar target/jls-*.jar
 ```
 
 Sources live in the historical `src/` layout (not `src/main/java`); tests are
-under `test/`. Continuous integration builds every push on JDK 17 and 21.
-Pushing a `v*` tag publishes a GitHub Release with the runnable jar.
+under `test/`. Continuous integration builds every push on JDK 25, plus an
+advisory (non-blocking) build on the newest GA feature release for early
+warning. The Java floor follows the current LTS at the time of each raise
+and is revisited once per LTS cycle. Pushing a `v*` tag publishes a GitHub
+Release with the runnable jar and the per-OS installers
+(`scripts/build-installer.sh` is the single recipe used both locally and
+by CI).
 
 ### Optional development tools
 
@@ -91,19 +143,26 @@ kind. The interactive GUI is another matter: stock OpenJDK's Swing toolkit
 on Linux only speaks X11, so on the Wayland compositor above it needs a JDK
 that includes OpenJDK's experimental Wayland toolkit (Project Wakefield) —
 currently shipped by [JetBrains
-Runtime](https://github.com/JetBrains/JetBrainsRuntime) — enabled with:
+Runtime](https://github.com/JetBrains/JetBrainsRuntime). On such a runtime
+JLS selects `WLToolkit` by itself on Wayland-only sessions (see "Wayland"
+above); the underlying JDK-level switch, useful for other Swing programs
+or to force the toolkit when `DISPLAY` is also set, is:
 
 ```sh
 java -Dawt.toolkit.name=WLToolkit -jar target/jls-*.jar
 ```
 
-The development container below accepts a `JBR_URL` build argument to bake
-that runtime in.
+[`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) automates the whole
+first-light experiment (issue #101): headless sway up, JLS launched on a
+JBR (`JBR_HOME=...`), window presence asserted via `swaymsg`, screenshot
+and logs collected into an artifacts directory. CI's `gui-wayland` lane
+runs exactly this script. The development container below accepts a
+`JBR_URL` build argument to bake that runtime in.
 
 ### Development container
 
 [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with
-Maven, Temurin JDK 21, and all of the optional tools above — and no X11
+Maven, Temurin JDK 25, and all of the optional tools above — and no X11
 components. VS Code and GitHub Codespaces pick it up automatically via
 [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json); to use
 it directly:
@@ -159,6 +218,8 @@ extension.
   triggering, tri-state/HiZ.
 - [docs/batch-interface.md](docs/batch-interface.md) — normative spec
   of the batch/grading interface: `-t` grammar, output format, VCD.
+- [docs/file-format.md](docs/file-format.md) — normative spec of the
+  `.jls` save format: containers, grammar, element tags, versioning.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit
   changes.
 - [SECURITY.md](SECURITY.md) — threat model and reporting.

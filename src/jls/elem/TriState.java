@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,14 +56,7 @@ public class TriState extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new TriStateCreate(x+win.x,y+win.y);
-		}
-		else {
-			new TriStateCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new TriStateCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -72,12 +66,8 @@ public class TriState extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 		
@@ -420,10 +410,8 @@ public class TriState extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private TriStateCreate(int x, int y) {
+		private TriStateCreate() {
 			
 			// set up window title
 			super("Create TriState","TRISTATE");
@@ -493,7 +481,7 @@ public class TriState extends LogicElement {
 			oDown.addActionListener(this);
 
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**
@@ -604,18 +592,23 @@ public class TriState extends LogicElement {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
+	// the value scheduled to reach the output, null meaning off (HiZ);
+	// used to suppress redundant output events (issue #98, S6)
+	private BitSet toBeValue;
+
 	/**
 	 * Initialize this element by setting its output pin to off (null).
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	public void initSim(Simulator sim) {
-		
+
 		// set output pin
 		Output out = outputs.get(0);
 		out.setValue(null);
-		
+		toBeValue = null;
+
 	} // end of initSim method
 	
 	/**
@@ -634,22 +627,30 @@ public class TriState extends LogicElement {
 			BitSet control = inputs.get(1).getValue();
 			if (control ==  null)
 				control = new BitSet();
-			
+
 			// if it is zero, turn off output
+			// (but not if it is already off or turning off - #98, S6)
 			if (!control.get(0)) {
+				if (toBeValue == null)
+					return;
+				toBeValue = null;
 				sim.post(new SimEvent(now+propDelay,this,"off"));
 			}
 			else {
 
 				// get the data input and send it to the output
+				// (but not if that value is already on the way - #98, S6)
 				BitSet value = inputs.get(0).getValue();
 				if (value == null)
 					value = new BitSet();
 				else
 					value = (BitSet)value.clone();
+				if (value.equals(toBeValue))
+					return;
+				toBeValue = (BitSet)value.clone();
 				sim.post(new SimEvent(now+propDelay,this,value));
 			}
-			
+
 		}
 		
 		// if gate is turning off, propagate null

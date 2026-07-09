@@ -644,14 +644,7 @@ public class Element {
 	public void changeTiming(JPanel editWindow, int x, int y) {
 
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new DelayChange(x+win.x,y+win.y,this instanceof Memory);
-		}
-		else {
-			new DelayChange(pos.x+win.x,pos.y+win.y,this instanceof Memory);
-		}
+		new DelayChange(this instanceof Memory);
 
 	} // end of changeTiming method
 
@@ -708,11 +701,9 @@ public class Element {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param isMemory True if this is a memory element, false if not.
 		 */
-		private DelayChange(int x, int y, boolean isMemory) {
+		private DelayChange(boolean isMemory) {
 
 			// set up window title
 			super("Change Timing",null);
@@ -736,7 +727,7 @@ public class Element {
 			window.add(info);
 
 			confirmOnEnter(delayField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

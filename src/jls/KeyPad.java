@@ -22,8 +22,9 @@ public final class KeyPad extends JButton implements ActionListener {
 	private int base;
 	private long defaultValue;
 	private boolean firstChange = true;
-	private JWindow win;
+	private JDialog win;
 	private boolean winVisible = false;
+	private long autoHidden = 0;
 	TextFilter filter;
 	
 	/**
@@ -60,8 +61,10 @@ public final class KeyPad extends JButton implements ActionListener {
 		digits[14] = new JButton("e");
 		digits[15] = new JButton("f");
 		
-		// set up GUI
-		win = new JWindow(f);
+		// set up GUI: an owned window, so it stays attached to the
+		// dialog it belongs to on every platform (#104)
+		win = new JDialog(f);
+		win.setUndecorated(true);
 		final Container window = win.getContentPane();
 		if (base == 16) {
 			window.setLayout(new GridLayout(6,3));
@@ -105,42 +108,37 @@ public final class KeyPad extends JButton implements ActionListener {
 		// finish keypad window
 		win.pack();
 		addActionListener(this);
-		
-		// set up to make keypad follow dialog when the dialog is moved
-		ComponentAdapter list = new ComponentAdapter() {
-			private Point then = null;
-			public void componentMoved(ComponentEvent event) {
-				if (then == null) {
-					then = f.getLocation();
-				}
-				else {
-					Point now = f.getLocation();
-					int dx = now.x - then.x;
-					int dy = now.y - then.y;
-					Point winloc = win.getLocation();
-					winloc.translate(dx,dy);
-					win.setLocation(winloc);
-					then = now;
-				}
+
+		// standard dismissal (#86): Escape closes the keypad ...
+		ActionListener hideAction = new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				hideKeyPad();
 			}
 		};
-		f.addComponentListener(list);
-		
-		// make right click anywhere close window
-		MouseAdapter hide = new MouseAdapter() {
-			public void mousePressed(MouseEvent event) {
-				if (event.getButton() == MouseEvent.BUTTON3) {
-					win.setVisible(false);
-					winVisible = false;
+		win.getRootPane().registerKeyboardAction(hideAction,
+				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),
+				JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+		// ... and so does clicking anywhere outside it (focus loss)
+		win.addWindowFocusListener(new WindowAdapter() {
+			public void windowLostFocus(WindowEvent event) {
+				if (winVisible) {
+					hideKeyPad();
+					autoHidden = System.currentTimeMillis();
 				}
 			}
-		};
-		for (int i=0; i<base; i+=1) {
-			digits[i].addMouseListener(hide);
-		}
-		reset.addMouseListener(hide);
-		
+		});
+
 	} // end of constructor
+
+	/**
+	 * Hide the keypad window.
+	 */
+	private void hideKeyPad() {
+
+		win.setVisible(false);
+		winVisible = false;
+	} // end of hideKeyPad method
 	
 	/**
 	 * React to button pushed.
@@ -150,17 +148,25 @@ public final class KeyPad extends JButton implements ActionListener {
 	public void actionPerformed(ActionEvent event) {
 		
 		if (event.getSource() == this) {
-			Point p = this.getLocationOnScreen();
-			Dimension d = this.getSize();
-			win.setLocation(p.x,p.y+d.height);
-			winVisible = !winVisible;
-			win.setVisible(winVisible);
+			if (winVisible) {
+				hideKeyPad();
+			}
+			else if (event.getWhen()-autoHidden > 250) {
+				// place just below this button (owner-relative; #104);
+				// the time check keeps a click on this button from
+				// reopening the keypad it just dismissed by focus loss
+				win.setLocationRelativeTo(this);
+				Point p = win.getLocation();
+				p.translate(0,(getHeight()+win.getHeight())/2);
+				win.setLocation(p);
+				winVisible = true;
+				win.setVisible(true);
+			}
 			return;
 		}
-		
+
 		if (event.getSource() == hide) {
-			win.setVisible(false);
-			winVisible = false;
+			hideKeyPad();
 		}
 		
 		// handle reset

@@ -9,7 +9,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -1588,15 +1587,8 @@ public abstract class SimpleEditor extends JPanel {
 					JumpStart el = (JumpStart)(selected.toArray()[0]);
 					JumpEnd nel = new JumpEnd(circuit);
 					nel.setName(el.getName());
-					Point p = getMousePosition();
-					if(p == null) { // If the context menu wasn't within JLS
-						p = MouseInfo.getPointerInfo().getLocation();
-						p.x -= getLocationOnScreen().x;
-						p.y -= getLocationOnScreen().y;
-					}
-					x = p.x;
-					y = p.y;
-					nel.setup(this.getGraphics(), this, p.x, p.y);
+					// place at the last tracked mouse position (event-local; #103)
+					nel.setup(this.getGraphics(), this, x, y);
 
 					clearSelected();
 					circuit.addElement(nel);
@@ -3968,17 +3960,19 @@ public abstract class SimpleEditor extends JPanel {
 						}
 						selected.clear();
 
-						// decide position for create dialog
+						// decide where the element will drop: the last tracked
+						// mouse position, or the center of the visible canvas
+						// when invoked from the tool bar (event-local; #103)
 						int dx = x;
 						int dy = y;
 						if (fromToolBar) {
-							dx = tabbedParent.getSize().width/2;
-							dy = tabbedParent.getSize().height/4;
+							Point view = pane.getViewport().getViewPosition();
+							dx = view.x + tabbedParent.getSize().width/2;
+							dy = view.y + tabbedParent.getSize().height/4;
 						}
 
 						// if not cancelled...
-						Point view = pane.getViewport().getViewPosition();
-						if (item.setup(this.getGraphics(),this,dx+view.x,dy+view.y)) {
+						if (item.setup(this.getGraphics(),this,dx,dy)) {
 
 							// put into circuit
 							Point pos = getMousePosition();

@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -55,14 +56,7 @@ public class Adder extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new AdderCreate(x+win.x,y+win.y);
-		}
-		else {
-			new AdderCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new AdderCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -75,12 +69,8 @@ public class Adder extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -456,10 +446,8 @@ public class Adder extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private AdderCreate(int x, int y) {
+		private AdderCreate() {
 			
 			// set up window title
 			super("Create Adder","adder");
@@ -505,7 +493,7 @@ public class Adder extends LogicElement {
 			window.add(orients);
 			
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 		
 		/**

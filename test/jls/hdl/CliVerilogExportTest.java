@@ -141,13 +141,15 @@ class CliVerilogExportTest {
 	}
 
 	@Test
-	void nonDotVOutputIsAUsageError() throws Exception {
+	void unknownHdlExtensionIsAUsageError() throws Exception {
+		// .vhdl/.vhd select the VHDL emitter (CliVhdlExportTest); an
+		// extension that is neither language is still a usage error
 		write("export.jls", inverter());
-		Result r = run("-export", "out.vhdl", "export.jls");
+		Result r = run("-export", "out.txt", "export.jls");
 		assertEquals(2, r.exit, r.stderr);
 		assertTrue(r.stderr.contains("jls: error:"), r.stderr);
 		assertTrue(r.stderr.contains("-export"), r.stderr);
-		assertFalse(Files.exists(tmp.resolve("out.vhdl")));
+		assertFalse(Files.exists(tmp.resolve("out.txt")));
 	}
 
 	@Test

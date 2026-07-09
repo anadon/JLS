@@ -1,6 +1,7 @@
 package jls.elem;
 
 import jls.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -81,14 +82,7 @@ public abstract class Pin extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y, String type) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new PinCreate(x+win.x,y+win.y,type);
-		}
-		else {
-			new PinCreate(pos.x+win.x,pos.y+win.y,type);
-		}
+		new PinCreate(type);
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -98,12 +92,8 @@ public abstract class Pin extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -473,11 +463,9 @@ public abstract class Pin extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param type The type of pin ("Input" or "Output").
 		 */
-		private PinCreate(int x, int y, String type) {
+		private PinCreate(String type) {
 			
 			// set up window title
 			super("Create " + type + " Pin",type);
@@ -532,7 +520,7 @@ public abstract class Pin extends LogicElement {
 			window.add(orients);
 			
 			confirmOnEnter(nameField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 		
 		/**

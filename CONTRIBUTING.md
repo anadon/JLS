@@ -10,7 +10,8 @@ mvn verify          # compile (warnings are errors), tests, SpotBugs
 java -jar target/jls-*.jar
 ```
 
-JDK 17 or newer and Maven are the only requirements. Sources live in
+JDK 25 or newer and Maven are the only requirements (the Java floor
+follows the current LTS and is revisited each LTS cycle). Sources live in
 `src/`, tests in `test/` (JUnit 5, headless — no display needed).
 
 ## Making changes
@@ -31,6 +32,12 @@ JDK 17 or newer and Maven are the only requirements. Sources live in
   (threshold High). Do not add blanket entries to
   `config/spotbugs-exclude.xml`; new entries need a `Class` scope and a
   justification.
+- **Pull requests must also pass CodeQL code scanning**, which runs
+  automatically on every PR. Findings appear as a check on the PR and
+  under the repository's **Security tab → Code scanning** (alert details
+  require being logged in with access to the repo's security views).
+  Fix real findings; if one is a false positive, say so in the PR so a
+  maintainer can dismiss it with a recorded reason.
 
 ## Reporting bugs
 

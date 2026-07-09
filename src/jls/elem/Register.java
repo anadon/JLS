@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
@@ -66,14 +67,7 @@ public class Register extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new RegisterEdit(x+win.x,y+win.y,true);
-		}
-		else {
-			new RegisterEdit(pos.x+win.x,pos.y+win.y,true);
-		}
+		new RegisterEdit(true);
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -83,12 +77,8 @@ public class Register extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -821,11 +811,9 @@ public class Register extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param creating True if creating, false if modifying.
 		 */
-		private RegisterEdit(int x, int y, boolean creating) {
+		private RegisterEdit(boolean creating) {
 			
 			// set up window title
 			super("Create Register","register");
@@ -980,7 +968,7 @@ public class Register extends LogicElement {
 			confirmOnEnter(nameField);
 			confirmOnEnter(bitsField);
 			confirmOnEnter(valueField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**
@@ -1130,14 +1118,7 @@ public class Register extends LogicElement {
 		saveg = g;
 		
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new RegisterEdit(x+win.x,y+win.y,false);
-		}
-		else {
-			new RegisterEdit(pos.x+win.x,pos.y+win.y,false);
-		}
+		new RegisterEdit(false);
 		
 		// if element got bigger, detach and make user re-position
 		if (nameChanged) {
@@ -1242,26 +1223,22 @@ public class Register extends LogicElement {
 	 * @param sim Unused.
 	 */
 	public void initSim(Simulator sim) {
-		
-		// create current values and to-be value
-		BitSet currentValue = BitSetUtils.Create(initialValue);
+
+		// set current value and to-be value to the initial value
+		// (assign the field, not a shadowing local - issue #98, S2)
+		currentValue = BitSetUtils.Create(initialValue);
 		toBeValue = (BitSet)currentValue.clone();
 		currentC = 0;
-		
-		// create values to output
-		BitSet qOut = (BitSet)currentValue.clone();
-		BitSet notQOut = (BitSet)currentValue.clone();
-		notQOut.flip(0,bits);
-		
+
 		// set output pins to 0
 		Output q = outputs.get(0);
 		q.setValue(new BitSet(1));
 		Output notq = outputs.get(1);
 		notq.setValue(new BitSet(1));
-		
-		// post output event at time 0
-		sim.post(new SimEvent(0,this,qOut.clone()));
-		
+
+		// post output event at time 0 to drive the initial value
+		sim.post(new SimEvent(0,this,currentValue.clone()));
+
 	} // end of initSim method
 	
 	/**

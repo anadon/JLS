@@ -62,7 +62,6 @@ public final class InteractiveSimulator extends Simulator {
 	private Map<Wire,Trace> wireMap = new HashMap<Wire,Trace>();
 	private int scaleFactor = 1;
 	private Set<MemTrace> memTraces = new HashSet<MemTrace>();
-	private Point windowLoc;
 	private int displayBase = 10;
 
 	/**
@@ -244,12 +243,6 @@ public final class InteractiveSimulator extends Simulator {
 					public void componentResized(ComponentEvent event) {
 						window.doLayout();
 						traces.resize(traces.getWidth());
-						windowLoc = window.getLocationOnScreen();
-						windowLoc.translate(0,window.getHeight());
-					}
-					public void componentMoved(ComponentEvent event) {
-						windowLoc = window.getLocationOnScreen();
-						windowLoc.translate(0,window.getHeight());
 					}
 				}
 		);
@@ -851,7 +844,6 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	private void findTraces(Circuit circ) {
 
-		Point wLoc = new Point(windowLoc);
 		for (Element element : circ.getElements()) {
 
 			// if a wire, check for a probe
@@ -891,11 +883,8 @@ public final class InteractiveSimulator extends Simulator {
 					if (el instanceof Memory) {
 						Memory mem = (Memory)el;
 						MemTrace mtr = new MemTrace(mem);
-						Point loc = new Point(wLoc);
-						loc.translate(0,-mtr.getHeight());
-						mtr.showit(loc);
+						mtr.showit(window);
 						memTraces.add(mtr);
-						wLoc.translate(mtr.getWidth(),0);
 					}
 				}
 				else {

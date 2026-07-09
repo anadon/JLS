@@ -8,7 +8,6 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,6 +36,7 @@ import jls.KeyPad;
 import jls.Util;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
+import jls.util.Placement;
 
 /**
  * n-input, 2^n-output decoder.
@@ -83,14 +83,7 @@ public class Decoder extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new DecoderCreate(x+win.x,y+win.y);
-		}
-		else {
-			new DecoderCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new DecoderCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -100,12 +93,8 @@ public class Decoder extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -428,10 +417,8 @@ public class Decoder extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private DecoderCreate(int x, int y) {
+		private DecoderCreate() {
 			
 			// set up window title
 			super("Create Decoder","decoder");
@@ -470,7 +457,7 @@ public class Decoder extends LogicElement {
 			window.add(orient);
 
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

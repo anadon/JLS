@@ -9,7 +9,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -58,6 +57,7 @@ import jls.JLSInfo;
 import jls.TellUser;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
+import jls.util.Placement;
 
 /**
  * The state machine editor and simulation code.
@@ -67,9 +67,15 @@ import jls.sim.Simulator;
 public final class StateMachine extends LogicElement implements Printable {
 
 	// default values
-	private static final int defaultPropDelay = 30; 
+	private static final int defaultPropDelay = 30;
 	private static int defaultTrigger = 1;	// 1=rising, -1=falling
-	
+
+	// the initial-state rule (issue #52, M13), stated once: the editor
+	// refuses to close without an initial state, and simulation start
+	// falls back benignly when a hand-edited file lacks one
+	static final String INITIAL_STATE_CONSTRAINT =
+			"A state machine needs an initial state - mark one before closing";
+
 	// saved properties
 	private int propDelay = defaultPropDelay;
 	private Set<State> states = new HashSet<State>();
@@ -89,13 +95,41 @@ public final class StateMachine extends LogicElement implements Printable {
 
 	/**
 	 * Create a new adder element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public StateMachine(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
+
+	/**
+	 * Find the state marked initial.
+	 *
+	 * @return the initial state, or null if none is marked.
+	 */
+	private State findInitialState() {
+
+		for (State state : states) {
+			if (state.isInitial()) {
+				return state;
+			}
+		}
+		return null;
+	} // end of findInitialState method
+
+	/**
+	 * The initial-state rule, shared by the editor dialog (which refuses
+	 * to close without one) and simulation start (which falls back
+	 * benignly), issue #52 M13.
+	 *
+	 * @return the violated constraint message, or null if an initial
+	 *         state exists.
+	 */
+	String checkInitialState() {
+
+		return findInitialState() == null ? INITIAL_STATE_CONSTRAINT : null;
+	} // end of checkInitialState method
 
 	/**
 	 * Display dialog to get characteristics.
@@ -120,13 +154,8 @@ public final class StateMachine extends LogicElement implements Printable {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		Point win = editWindow.getLocationOnScreen();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -793,9 +822,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Create dialog.
 	 */
-	private class StateEditor extends JDialog
+	@SuppressWarnings("serial")
+	private class StateEditor extends ElementDialog
 		implements ActionListener, MouseListener, MouseMotionListener {
-		
+
 		// properties
 		private JPanel editArea;
 		private JLabel msgLabel = new JLabel("");
@@ -810,8 +840,6 @@ public final class StateMachine extends LogicElement implements Printable {
 		private JRadioButton falling = new JRadioButton("falling edge");
 		private JButton enlarge = new JButton("+");
 		private JTextField nameField = new JTextField(30);
-		private JButton ok = new JButton("ok");
-		private JButton cancel = new JButton("cancel");
 		private JMenuItem changeName = new JMenuItem("change name");
 		private JMenuItem makeInit = new JMenuItem("make initial state");
 		private JMenuItem addTrans = new JMenuItem("add transition");
@@ -833,9 +861,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * @param creating True if creating a new element, false if editing an existing one.
 		 */
 		private StateEditor(StateMachine machine, boolean creating) {
-			
+
 			// set up window title
-			super(JLSInfo.frame,"Edit State Machine",true);
+			super("Edit State Machine",null);
 
 			// save reference to me
 			currentDialog = this;
@@ -878,7 +906,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				}
 			};
 			if (creating) {
-				Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+				Rectangle screen = getGraphicsConfiguration().getBounds();
 				editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
 			}
 			else {
@@ -895,7 +923,7 @@ public final class StateMachine extends LogicElement implements Printable {
 					editArea.setPreferredSize(new Dimension(w,h));
 				}
 				else {
-					Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+					Rectangle screen = getGraphicsConfiguration().getBounds();
 					editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
 				}
 			}
@@ -906,7 +934,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			window.add(pane,BorderLayout.CENTER);
 			
 			// set up bottom stuff
-			JPanel bottom = new JPanel(new GridLayout(3,1));
+			JPanel bottom = new JPanel(new GridLayout(4,1));
 			
 			JPanel stuff = new JPanel(new BorderLayout());
 			
@@ -931,24 +959,23 @@ public final class StateMachine extends LogicElement implements Printable {
 			namePanel.add(nameField);
 			nameField.setText(name);
 			bottom.add(namePanel);
-			
+
+			bottom.add(getErrorLabel());
+
 			JPanel okCancel = new JPanel(new GridLayout(1,3));
-			ok.setBackground(Color.green);
 			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
 			Help.enableHelpOnButton(help, "stmach");
 			okCancel.add(help);
 			bottom.add(okCancel);
-			getRootPane().setDefaultButton(ok);
-			
+
 			window.add(bottom,BorderLayout.SOUTH);
-			
-			// set up listeners
+
+			// set up listeners (OK, Cancel, Escape and the close box are
+			// wired by the shared dialog base, issue #26)
+			installDialogBehavior();
 			enlarge.addActionListener(this);
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
 			changeName.addActionListener(this);
 			makeInit.addActionListener(this);
 			addTrans.addActionListener(this);
@@ -969,22 +996,14 @@ public final class StateMachine extends LogicElement implements Printable {
 			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"new state");
 			editArea.getActionMap().put("new state", newState);
 
-			// set up window close listener to cancel element
-			addWindowListener (
-					new WindowAdapter() {
-						public void windowClosing(WindowEvent e) {
-							cancel();
-						}
-					}
-			);
-			
-			// finish up GUI
-			Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+			// finish up GUI: size to the monitor this dialog will appear
+			// on and place relative to the owner window (#104)
+			Rectangle screen = getGraphicsConfiguration().getBounds();
 			Dimension dialog = getPreferredSize();
 			int w = Math.min(dialog.width,screen.width-100);
 			int h = Math.min(dialog.height+100,screen.height-100);
 			setSize(w,h);
-			setLocation(50,50);
+			setLocationRelativeTo(getOwner());
 			setVisible(true);
 			
 		} // end of constructor
@@ -1051,30 +1070,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * @param event The event.
 		 */
 		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == ok) {
-				if (rising.isSelected()) {
-					trigger = 1;
-				}
-				else {
-					trigger = -1;
-				}
-				String oldName =  name;
-				name = nameField.getText().trim();
-				if (oldName.equals(name)) {
-					nameChange = false;
-				}
-				else {
-					nameChange = true;
-				}
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			else if (event.getSource() == changeName) {
-				Point win = editArea.getLocationOnScreen();
-				CreateState cs = new CreateState(x+win.x,y+win.y,"Change",on.getName());
+
+			if (event.getSource() == changeName) {
+				CreateState cs = new CreateState("Change",on.getName());
 				if (!cs.wasCancelled()) {
 					boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
 					if (!ok) {
@@ -1111,7 +1109,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				on.editOuts(currentDialog);
 			}
 			else if (event.getSource() == showOutputs) {
-				on.showOuts(getMousePosition(),currentDialog);
+				on.showOuts(currentDialog);
 			}
 			else if (event.getSource() == delete) {
 				if (on != null) {
@@ -1237,13 +1235,50 @@ public final class StateMachine extends LogicElement implements Printable {
 		} // end of stateOverlap method
 
 		/**
+		 * A machine must have an initial state before the editor closes
+		 * (issue #52, M13); the same rule simulation start repairs for
+		 * hand-edited files. The remedy is in the editor itself: right
+		 * click a state and choose "make initial state".
+		 */
+		protected java.util.List<Violation> validateInputs() {
+
+			String violated = checkInitialState();
+			if (violated != null) {
+				return java.util.List.of(new Violation(violated, null));
+			}
+			return java.util.List.of();
+		} // end of validateInputs method
+
+		/**
+		 * Apply the validated form to the state machine.
+		 */
+		protected void validateAndAccept() {
+
+			if (rising.isSelected()) {
+				trigger = 1;
+			}
+			else {
+				trigger = -1;
+			}
+			String oldName =  name;
+			name = nameField.getText().trim();
+			if (oldName.equals(name)) {
+				nameChange = false;
+			}
+			else {
+				nameChange = true;
+			}
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
 		 * Cancel this dialog.
 		 */
-		private void cancel() {
-			
+		protected void cancelDialog() {
+
 			canceled = true;
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 		
 		/**
 		 * See if the name of this element has changed.
@@ -1479,8 +1514,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 */
 		private void createNewState() {
 			
-			Point win = editArea.getLocationOnScreen();
-			CreateState cs = new CreateState(x+win.x,y+win.y,"Create","");
+			CreateState cs = new CreateState("Create","");
 			if (cs.wasCancelled()) {
 				return;
 			}
@@ -1746,11 +1780,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Create a new state.
 		 *
-		 * @param xp The x-coordinate of where to show this dialog.
-		 * @param yp The y-coordinate of where to show this dialog.
 		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
 		 */
-		public CreateState(int xp, int yp, String title, String currentName) {
+		public CreateState(String title, String currentName) {
 
 			// set up window title
 			super(title + " State",null);
@@ -1769,25 +1801,34 @@ public final class StateMachine extends LogicElement implements Printable {
 			window.add(name);
 
 			confirmOnEnter(nameField);
-			finishDialog(xp,yp);
+			finishDialog();
 		} // end of constructor
 
 		/**
-		 * Validate the name and accept it.
+		 * Check the state name: present and unique in this machine.
+		 */
+		protected java.util.List<Violation> validateInputs() {
+
+			String newName = nameField.getText().trim();
+			if (newName.equals("")) {
+				return java.util.List.of(new Violation("Missing name",
+						nameField));
+			}
+			for (State state : states) {
+				if (state.getName().equals(newName)) {
+					return java.util.List.of(new Violation("Duplicate name",
+							nameField));
+				}
+			}
+			return java.util.List.of();
+		} // end of validateInputs method
+
+		/**
+		 * Accept the validated name.
 		 */
 		protected void validateAndAccept() {
 
 			name = nameField.getText().trim();
-			if (name.equals("")) {
-				reject("Missing name");
-				return;
-			}
-			for (State state : states) {
-				if (state.getName().equals(name)) {
-					reject("Duplicate name");
-					return;
-				}
-			}
 			dispose();
 		} // end of validateAndAccept method
 
@@ -1910,6 +1951,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	private int oldClock;
 	private boolean busy = false;	// true between edge and outputs value
 	private State currentState;
+	private boolean noMatchReported = false;	// no-matching-transition warned already? (#98, S5)
 	
 	/**
 	 * Initialize this element by setting its outputs to 0,
@@ -1926,22 +1968,22 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		// set latest clock input value to 0
 		oldClock = 0;
-		
-		// find the initial state
-		currentState = null;
-		for (State state : states) {
-			if (state.isInitial()) {
-				currentState = state;
-				break;
-			}
-		}
 
-		// the editor never guaranteed an initial state exists (deleting
-		// the initial state, or a zero-state machine); fall back to an
-		// arbitrary state rather than NPE the simulator (issue #52, M13)
+		// re-arm the no-matching-transition diagnostic (#98, S5)
+		noMatchReported = false;
+		
+		// find the initial state (the same rule the editor dialog
+		// enforces at OK, issue #52 M13)
+		currentState = findInitialState();
+
+		// hand-edited files can still lack one (no initial state, or a
+		// zero-state machine); fall back to an arbitrary state rather
+		// than NPE the simulator
 		if (currentState == null) {
 			if (states.isEmpty()) {
-				busy = false;
+				// stay busy so a clock edge never asks the (nonexistent)
+				// current state for a successor
+				busy = true;
 				return;
 			}
 			currentState = states.iterator().next();
@@ -1995,10 +2037,22 @@ public final class StateMachine extends LogicElement implements Printable {
 			
 			// do a transition, so figure out next state
 			State newState = currentState.getNextState();
-			
-			// if no next state, then stay busy forever
+
+			// if no transition matches, stay in the current state:
+			// remember the clock value so later edges are still
+			// recognized, and tell the user once instead of silently
+			// freezing (issue #98, S5)
 			if (newState == null) {
-				busy =  true;
+				oldClock = newClock;
+				if (!noMatchReported) {
+					noMatchReported = true;
+					TellUser.warn(JLSInfo.frame,
+							"state machine \"" + name + "\": no transition"
+							+ " matches from state \""
+							+ currentState.getName() + "\" at time " + now
+							+ "; staying in the current state",
+							"Simulation");
+				}
 				return;
 			}
 			

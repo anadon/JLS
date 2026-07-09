@@ -3,7 +3,6 @@ package jls.elem;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -1394,7 +1393,7 @@ public class State {
 			unconditional.addActionListener(this);
 			otherwise.addActionListener(this);
 
-			finishDialog(100,100);
+			finishDialog();
 		} // end of constructor
 
 		/**
@@ -1566,8 +1565,10 @@ public class State {
 
 	/**
 	 * Show outputs, no editing possible.
+	 *
+	 * @param theDialog The state machine edit dialog this hangs off of.
 	 */
-	public void showOuts(Point mp, JDialog theDialog) {
+	public void showOuts(JDialog theDialog) {
 
 		// set up dialog
 		final JDialog show = new JDialog(theDialog,false);
@@ -1585,15 +1586,7 @@ public class State {
 		// finish up
 		show.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		show.pack();
-		Point dp = theDialog.getLocationOnScreen();
-		if (mp == null) {
-			Dimension md = theDialog.getSize();
-			Dimension sd = show.getSize();
-			show.setLocation(dp.x+(md.width-sd.width)/2,dp.y+(md.height-sd.height)/2);
-		}
-		else {
-			show.setLocation(mp.x+dp.x,mp.y+dp.y);
-		}
+		show.setLocationRelativeTo(theDialog);
 		show.setVisible(true);
 	} // end of showOuts method
 
@@ -1706,7 +1699,7 @@ public class State {
 			add.addActionListener(this);
 			delete.addActionListener(this);
 
-			finishDialog(100,100);
+			finishDialog();
 		} // end of constructor
 
 		/**

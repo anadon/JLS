@@ -11,6 +11,40 @@ All notable changes to JLS are documented here. The format follows
 feature removal, which is a MAJOR version event under semantic versioning.)*
 
 ### Added
+- VHDL export completes HDL stage 1 (#60): `jls -export out.vhdl circuit.jls`
+  (or `.vhd`) writes the same circuits the Verilog exporter handles as a
+  single structural VHDL entity, accepted by both VHDL-93 and VHDL-2002
+  analyzers, sharing the language-neutral model walk (element policy, jump
+  aliasing, name legalization) with the Verilog emitter; goldens are pinned
+  and, where `ghdl` is installed, analyzed as part of the test suite.
+- A normative save-format specification, `docs/file-format.md` (#79):
+  containers (plain text, zip, XZ), the `FORMAT` header and version
+  negotiation, the full grammar, string escaping, the per-type tag table,
+  and the evolution policy — every claim derived from code and pinned by a
+  spec-drift test (`FileFormatSpecTest`).
+- Startup toolkit policy for Wayland (#105, toward #100): on a
+  Wayland-only Linux session, JLS selects the JetBrains Runtime's
+  `WLToolkit` when the running JDK has it, and otherwise fails fast with
+  one actionable `jls: error:` line (XWayland or JBR/Wakefield hints)
+  instead of the misleading generic display error; `-Djls.toolkit=
+  default|wayland` forces either branch; batch/X11/Windows/macOS paths are
+  untouched. The decision function is pure and unit-tested across the
+  whole environment matrix.
+- A headless-Wayland GUI rig (#101, authoring slice): `scripts/wayland-rig.sh`
+  boots JLS under headless sway with a pinned JBR, asserts the window
+  appears, and captures screenshots/tree/stderr; a `gui-wayland` first-light
+  CI lane runs it (non-blocking until stable; the JBR checksum pin awaits a
+  maintainer with access to the JetBrains CDN).
+- A pointer/geometry API ratchet test and a census document
+  (`docs/pointer-geometry-census.md`) covering all 66 former global-read
+  sites and their replacements (#102).
+- jpackage installers with a bundled runtime and a `.jls` file
+  association (#82): `deb`/`rpm` on Linux (locally verified end-to-end,
+  including the `Exec=… %f` fix without which double-clicked files never
+  reached the app), `msi` on Windows and `dmg` on macOS (authored,
+  non-blocking until first verified on real runners); one build recipe,
+  `scripts/build-installer.sh`, shared by CI and local builds; app icons
+  generated programmatically and checked in with their generator.
 - Verilog export, HDL stage 1 (#60): `jls -export out.v circuit.jls`
   writes the drawn circuit as one structural Verilog-2005 module,
   deterministically (no timestamps; goldens pin the bytes). Covered
@@ -81,6 +115,35 @@ feature removal, which is a MAJOR version event under semantic versioning.)*
   the recorded design direction if demand appears.
 
 ### Fixed
+- Multi-driver nets resolve deterministically — the winning driver is
+  fixed by file order instead of hash-set iteration — and a bus conflict
+  (two active drivers disagreeing) warns once, naming the net and time;
+  single-driver behavior is unchanged (#98 S1).
+- Re-initializing a simulation restores a `Register`'s initial value
+  again: `initSim` assigned a shadowing local instead of the field, so a
+  second run started from the previous run's captured value (#98 S2).
+- A `StateMachine` that sees a clock edge with no matching transition no
+  longer freezes for the rest of the simulation; it stays in its current
+  state, keeps tracking the clock, and warns once per run (#98 S5).
+- `TriState` no longer floods the event queue re-announcing an unchanged
+  output on every input event (#98 S6). The remaining "surprises" from the
+  semantics-spec appendix were adjudicated as intended behavior and are
+  now specified in the document body: subcircuit input initialization
+  (S3, a spec misreading), Pause's pause-on-non-zero rule (S4, the help
+  page now matches the code), and Constant's width-adaptive masking (S7).
+- Element and dialog placement no longer reads the global pointer or
+  global screen coordinates (MouseInfo ×23, `getLocationOnScreen` ×38,
+  whole-screen sizing ×5 — all now zero, enforced by a ratchet test):
+  new elements drop at the editor's last event-local mouse position (or
+  the visible-canvas center from the toolbar — which also fixes a doubled
+  viewport offset), dialogs center on their owner window, and the latent
+  `MouseInfo.getPointerInfo()` null-dereference pattern is extinct. This
+  is the Wayland-correctness groundwork for #100 (#103, #104, #102).
+- The keypad popup is a well-behaved owned dialog (#104, #86): it anchors
+  to the field that opened it (no more chasing window moves by polling
+  screen coordinates), and it dismisses on Esc, on focus loss, and on a
+  click outside — the undocumented right-click-on-a-digit dismiss gesture
+  is gone (the visible hide button remains).
 - Opening a circuit from disk records its directory again, so Save writes
   back to the source file instead of the filesystem root, and checkpoints
   (`.jls~`) land beside the circuit (#34).
@@ -111,6 +174,14 @@ feature removal, which is a MAJOR version event under semantic versioning.)*
   non-positive clock times, out-of-range truth-table entries, negative
   group indices) are rejected at load instead of crashing or livelocking
   the simulator; Memory and Clock dialogs enforce the same constraints (#52).
+- Element dialogs validate input through one shared mechanism (#52
+  addendum): a `validateInputs()` hook on the dialog base rejects invalid
+  values with an inline error message — the same wording the loader uses
+  for the same rule — focuses the offending field with its text selected,
+  and exposes the message to assistive technology; StateMachine,
+  TruthTable, and Group gained dialog-side validation (StateMachine now
+  refuses OK without an initial state), and Memory's bits/word rule is
+  enforced at load as well as in the dialog.
 - Interactive simulator: Stop/Pause/Step can no longer be missed
   (volatile control state), UI updates happen on the event-dispatch
   thread at a bounded rate, Step always advances, and "Run (in
@@ -128,6 +199,16 @@ feature removal, which is a MAJOR version event under semantic versioning.)*
   reaction of an element that stays at HiZ (#72).
 
 ### Changed
+- The language baseline is Java 25, the current LTS (#92): the build, CI
+  (with an advisory build on the newest GA feature release), release and
+  CodeQL workflows, and the dev container all moved from 17/21 to 25;
+  running JLS now needs a Java 25 runtime (or an installer with the
+  bundled runtime, above). The floor follows the current LTS and is
+  revisited once per LTS cycle (#96).
+- Release engineering: manual `workflow_dispatch` runs of the release
+  workflow are dry-runs (build, verify, checksums — no publish), and CI
+  builds the jar twice and fails if the bytes differ, keeping the build
+  reproducible (#44).
 - Command-line flags may now be longer than one letter, with
   longest-name matching: `-vcd` is the VCD export flag, no longer
   parsed as `-v` with the attached printer name `cd` (#72).

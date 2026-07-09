@@ -30,6 +30,13 @@ public final class JLS  {
 		// MTU EULA acceptance gate is gone (issue #40)
 		JLSStart.parseCommandLine(args);
 
+		// startup toolkit policy (issue #105): on a Wayland-only session
+		// select the Wayland toolkit — or fail with one honest line —
+		// after parsing (so headless one-shot modes are known and
+		// untouched) but before anything can initialize AWT, because
+		// awt.toolkit.name is read exactly once, at toolkit creation
+		ToolkitPolicy.apply();
+
 		JLSStart.start(args, exHandler);
 	} // end of main method
 

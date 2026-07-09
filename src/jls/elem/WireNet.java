@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.*;
 import jls.sim.*;
 import java.awt.Rectangle;
 import java.util.*;
@@ -13,8 +14,10 @@ import java.util.*;
 public class WireNet {
 	
 	// properties
-	private Set<WireEnd>ends = new HashSet<WireEnd>();	// the wire ends in this net
-	private Set<Wire>wires = new HashSet<Wire>();		// the wires in this net
+	// insertion order (file order for a loaded circuit) makes the
+	// multi-driver resolution in propagate deterministic (issue #98, S1)
+	private Set<WireEnd>ends = new LinkedHashSet<WireEnd>();	// the wire ends in this net
+	private Set<Wire>wires = new LinkedHashSet<Wire>();	// the wires in this net
 	private int bits = 0;								// the number of bits (0=not connected)
 	private boolean hasinput = false;					// connected to an Output yet?
 	private boolean triState = false;					// true if tri-stated
@@ -383,7 +386,8 @@ public class WireNet {
 //-------------------------------------------------------------------------------
 		
 	private BitSet value = new BitSet(1);
-	
+	private boolean conflictReported = false;	// bus-conflict warned already? (#98, S1)
+
 	/**
 	 * Set the value on this net.
 	 * Should only be used by initSim.
@@ -420,10 +424,18 @@ public class WireNet {
 	 */
 	public void propagate(BitSet value, long now, Simulator sim) {
 		
-		// if tristate, check all outputs this net is connected to
-		// to see if they are all off
+		// if tristate, resolve the value actually driven: null (HiZ) if
+		// every driver is off, otherwise the first active driver in net
+		// order (the order the wire ends were added to the net - file
+		// order for a loaded circuit).  With at most one active driver -
+		// the only configuration with defined meaning - that driver wins.
+		// Two or more simultaneously active drivers with different values
+		// are a bus conflict: the resolution stays deterministic (first
+		// active driver in net order) and the user is told once, until
+		// the conflict clears (issue #98, S1).
 		if (triState) {
 			BitSet actual = null;
+			boolean conflict = false;
 			for (WireEnd end : ends) {
 				if (!end.isAttached())
 					continue;
@@ -432,9 +444,25 @@ public class WireNet {
 					continue;
 				Output out = (Output)p;
 				if (out.getValue() != null) {
-					actual = out.getValue();
-					break;
+					if (actual == null) {
+						actual = out.getValue();
+					}
+					else if (!actual.equals(out.getValue())) {
+						conflict = true;
+					}
 				}
+			}
+			if (!conflict) {
+				conflictReported = false;
+			}
+			else if (!conflictReported) {
+				conflictReported = true;
+				TellUser.warn(JLSInfo.frame,
+						"bus conflict at time " + now
+						+ ": two or more tri-state drivers are simultaneously"
+						+ " active with different values on one wire net;"
+						+ " the first active driver in net order wins",
+						"Simulation");
 			}
 			value = actual;
 		}

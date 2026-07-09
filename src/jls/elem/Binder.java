@@ -3,7 +3,6 @@ package jls.elem;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
@@ -15,6 +14,7 @@ import javax.swing.JPanel;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.sim.Simulator;
+import jls.util.Placement;
 
 /**
  * Bind multiple input wires (or bundles) into a single bundle.
@@ -47,14 +47,7 @@ public class Binder extends Group implements TriProp {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new GroupCreate(x+win.x,y+win.y,"Bundler");
-		}
-		else {
-			new GroupCreate(pos.x+win.x,pos.y+win.y,"Bundler");
-		}
+		new GroupCreate("Bundler");
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -64,11 +57,8 @@ public class Binder extends Group implements TriProp {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null)
-			setXY(p.x-width/2,p.y-height/2);
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method

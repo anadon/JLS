@@ -24,7 +24,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17, 21]
+        # 25 (current LTS) is the required baseline (#92); the newest GA
+        # feature release runs as an advisory forward-compatibility leg —
+        # it may fail without blocking the build, and becomes the required
+        # leg when it becomes the next LTS
+        java: [25, 26]
+    # only the LTS leg is required; the feature-release leg is advisory
+    continue-on-error: ${{ matrix.java != 25 }}
     steps:
       # actions are pinned to full commit SHAs (supply-chain posture,
       # #44/#68); Dependabot keeps the pins fresh via the version comments
@@ -50,14 +56,14 @@ jobs:
         run: mvn -B verify
 
       - name: Upload jar
-        if: matrix.java == 21
+        if: matrix.java == 25
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jls-jar
           path: target/jls-*.jar
 
       - name: Upload coverage report
-        if: matrix.java == 21
+        if: matrix.java == 25
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-report
@@ -66,12 +72,12 @@ jobs:
       # per-PR coverage visibility with no external service: the summary
       # table comes straight from the JaCoCo XML report (issue #66)
       - name: Coverage summary
-        if: matrix.java == 21
+        if: matrix.java == 25
         run: |
           python3 - << 'EOF' >> "$GITHUB_STEP_SUMMARY"
           import xml.etree.ElementTree as ET
           r = ET.parse('target/site/jacoco/jacoco.xml').getroot()
-          print('## Coverage (JaCoCo, JDK 21)\n')
+          print('## Coverage (JaCoCo, JDK 25)\n')
           print('| Counter | Covered | Missed | % |')
           print('|---|---|---|---|')
           for c in r.findall('counter'):
@@ -79,6 +85,83 @@ jobs:
               pct = 100.0 * cov / (cov + mis) if cov + mis else 0.0
               print(f"| {c.get('type')} | {cov} | {mis} | {pct:.1f}% |")
           EOF
+
+  # First-light Wayland GUI lane (issue #101): boots the JLS GUI on
+  # JetBrains Runtime's experimental WLToolkit (Project Wakefield)
+  # against a headless sway compositor - no X11 anywhere - and captures
+  # a screenshot, the compositor tree, and JLS's stderr as artifacts.
+  # continue-on-error while the lane stabilizes (#101 H2/P3: it becomes
+  # a required check once 20 consecutive runs show at most one failure).
+  gui-wayland:
+    name: GUI first light (Wayland, JBR)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      # ---- JBR pin (issues #101/#105) --------------------------------
+      # JetBrains Runtime 25.0.3b508.16 (tag jbr-release-25.0.3b508.16),
+      # linux-x64: the JBR release #101 names as shipping Wakefield's
+      # WLToolkit. Also reused by the dev container (README).
+      JBR_URL: https://cache-redirector.jetbrains.com/intellij-jbr/jbr-25.0.3-linux-x64-b508.16.tar.gz
+      # TODO(maintainer): replace with the tarball's real sha256. The
+      # value could not be verified from the authoring sandbox (egress
+      # to cache-redirector.jetbrains.com is proxy-blocked; #101 section
+      # 1 hit the same wall); runners have ordinary egress, so:
+      #   curl -fsSL <JBR_URL> | sha256sum
+      # Until then this placeholder fails the checksum on purpose and
+      # the job skips with a notice rather than running unverified bits.
+      JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # sway (compositor), grim (screenshots), jq (tree assertions),
+      # ImageMagick (pixel diff), and at least one font (Swing text
+      # rendering needs one; minimal runners may have none)
+      - name: Install Wayland rig tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core
+
+      - name: Download JetBrains Runtime
+        id: jbr
+        run: |
+          set -euo pipefail
+          if [[ "$JBR_SHA256" == UNVERIFIED-* ]]; then
+            echo "::notice title=gui-wayland skipped::JBR_SHA256 is still the placeholder; pin the real checksum (issue #101) to arm this lane."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! curl -fsSL --retry 3 -o "$RUNNER_TEMP/jbr.tar.gz" "$JBR_URL"; then
+            echo "::notice title=gui-wayland skipped::could not download JBR from $JBR_URL"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # a checksum mismatch is NOT a skip: fail closed (supply chain)
+          echo "$JBR_SHA256  $RUNNER_TEMP/jbr.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/jbr"
+          tar -xzf "$RUNNER_TEMP/jbr.tar.gz" -C "$RUNNER_TEMP/jbr" --strip-components=1
+          "$RUNNER_TEMP/jbr/bin/java" -version
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Build jar
+        if: steps.jbr.outputs.skip == 'false'
+        run: mvn -B -DskipTests package
+
+      - name: Run the Wayland first-light rig
+        if: steps.jbr.outputs.skip == 'false'
+        run: JBR_HOME="$RUNNER_TEMP/jbr" ARTIFACTS_DIR="$RUNNER_TEMP/wayland-artifacts" scripts/wayland-rig.sh
+
+      - name: Upload rig artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wayland-first-light
+          path: ${{ runner.temp }}/wayland-artifacts/
+          if-no-files-found: ignore
 
   # feed GitHub's dependency graph the resolved transitive tree so
   # Dependabot alerts cover what the build actually uses (issue #65)
@@ -90,12 +173,40 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
 
       - name: Submit dependency graph
         uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
+
+  # reproducible-builds check (#44): the pom pins
+  # project.build.outputTimestamp, so building the same commit twice must
+  # produce byte-identical jars — compare SHA256 of two clean builds
+  reproducibility:
+    name: Reproducible build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build twice and compare jar checksums
+        run: |
+          mvn -B -DskipTests package
+          sha256sum target/jls-*.jar | sed 's|target/||' > first.sha256
+          rm -rf target
+          mvn -B -DskipTests package
+          ( cd target && sha256sum jls-*.jar ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 \
+            || { echo "::error::build is not reproducible: jar checksums differ between two builds of the same commit"; exit 1; }

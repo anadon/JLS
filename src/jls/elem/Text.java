@@ -1,6 +1,7 @@
 package jls.elem;
 
 import jls.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.util.*;
@@ -56,14 +57,7 @@ public class Text extends DisplayElement {
 
 		// show creation dialog
 		cancelled = false;
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			text = new TextEdit(x+win.x,y+win.y,true).getText();
-		}
-		else {
-			text = new TextEdit(pos.x+win.x,pos.y+win.y,true).getText();
-		}
+		text = new TextEdit(true).getText();
 
 		// if cancelled, return
 		if (cancelled)
@@ -77,11 +71,8 @@ public class Text extends DisplayElement {
 		init(g);
 
 		// set position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null)
-			super.setXY(p.x-width/2,p.y-height/2);
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 
 		return true;
 
@@ -274,15 +265,7 @@ public class Text extends DisplayElement {
 		// show dialog
 		cancelled = false;
 		changed = false;
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		TextEdit ed = null;
-		if (pos == null) {
-			ed = new TextEdit(x+win.x,y+win.y,false);
-		}
-		else {
-			ed = new TextEdit(pos.x+win.x,pos.y+win.y,false);
-		}
+		TextEdit ed = new TextEdit(false);
 
 		// if cancelled, return
 		if (cancelled)
@@ -325,11 +308,9 @@ public class Text extends DisplayElement {
 		/**
 		 * Initialize the dialog at a given position.
 		 * 
-		 * @param x The x-coordinate of the upper left of the dialog box.
-		 * @param y The y-coordinate of the upper left of the dialog box.
 		 * @param creating True if creating, false if changing.
 		 */
-		public TextEdit(int x, int y, boolean creating) {
+		public TextEdit(boolean creating) {
 
 			super("Create/Modify Text Element","text");
 
@@ -404,7 +385,7 @@ public class Text extends DisplayElement {
 			    }
 			});
 
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

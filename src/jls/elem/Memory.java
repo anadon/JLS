@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
@@ -34,6 +35,32 @@ public class Memory extends LogicElement {
 	
 	// one constraint string, two surfaces: dialog and loader (issue #52)
 	static final String CAPACITY_CONSTRAINT = "Capacity must be at least 1";
+	static final String BITS_CONSTRAINT = "Must have at least 1 bit";
+
+	/**
+	 * The capacity rule, shared by the dialog and the loader: an invalid
+	 * capacity crashes DenseWordStore at simulation start (M12).
+	 *
+	 * @param capacity The proposed capacity in words.
+	 *
+	 * @return the violated constraint message, or null if valid.
+	 */
+	static String checkCapacity(int capacity) {
+
+		return capacity < 1 ? CAPACITY_CONSTRAINT : null;
+	} // end of checkCapacity method
+
+	/**
+	 * The word-size rule, shared by the dialog and the loader.
+	 *
+	 * @param bits The proposed bits per word.
+	 *
+	 * @return the violated constraint message, or null if valid.
+	 */
+	static String checkBits(int bits) {
+
+		return bits < 1 ? BITS_CONSTRAINT : null;
+	} // end of checkBits method
 
 	// absolute cap on RLE-decoded initial-memory words (issue #38)
 	static final long MAX_INIT_WORDS = 1L << 24;
@@ -76,14 +103,7 @@ public class Memory extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new MemoryEdit(x+win.x,y+win.y,true);
-		}
-		else {
-			new MemoryEdit(pos.x+win.x,pos.y+win.y,true);
-		}
+		new MemoryEdit(true);
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -93,12 +113,8 @@ public class Memory extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -275,12 +291,17 @@ public class Memory extends LogicElement {
 	public void setValue(String name, int value) {
 
 		if (name.equals("bits")) {
+			String violatedBits = checkBits(value);
+			if (violatedBits != null) {
+				throw new IllegalArgumentException(violatedBits);
+			}
 			bits = value;
 		} else if (name.equals("cap")) {
 			// an invalid capacity crashes DenseWordStore at simulation
 			// start; reject it at load like the dialog does (issue #52)
-			if (value < 1) {
-				throw new IllegalArgumentException(CAPACITY_CONSTRAINT);
+			String violated = checkCapacity(value);
+			if (violated != null) {
+				throw new IllegalArgumentException(violated);
 			}
 			capacity = value;
 		} else if (name.equals("time")) {
@@ -680,11 +701,9 @@ public class Memory extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param create True if creating a new memory element, false if changing one.
 		 */
-		private MemoryEdit(int x, int y, boolean create) {
+		private MemoryEdit(boolean create) {
 			
 			// set up window title
 			super(create ? "Create Memory" : "Change Memory","memory");
@@ -772,62 +791,77 @@ public class Memory extends LogicElement {
 			fromFile.addActionListener(this);
 			builtIn.addActionListener(this);
 			
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 		
 		/**
-		 * React to buttons.
-		 * 
-		 * @param event The event object for this action.
+		 * Check the form against the shared memory constraints (issue
+		 * #52): a rejected dialog must leave the memory unchanged.
 		 */
-		protected void validateAndAccept() {
-			
+		protected java.util.List<Violation> validateInputs() {
+
+			java.util.List<Violation> violations =
+					new java.util.ArrayList<Violation>();
 			String tname = nameField.getText().trim();
 			if (tname.equals("") || !Util.isValidName(tname)) {
-				reject("Missing or invalid name");
-				return;
+				violations.add(new Violation("Missing or invalid name",
+						nameField));
 			}
+			else if (!tname.equals(name) && circuit.hasName(tname)) {
+				violations.add(new Violation("Duplicate name", nameField));
+			}
+			int tbits = bits;
+			int tcapacity = capacity;
+			if (create) {
+				try {
+					tbits = Integer.parseInt(bitsField.getText());
+					String violated = checkBits(tbits);
+					if (violated != null) {
+						violations.add(new Violation(violated, bitsField));
+					}
+				}
+				catch (NumberFormatException ex) {
+					violations.add(new Violation("Value not numeric",
+							bitsField));
+				}
+				try {
+					tcapacity = Integer.parseInt(capacityField.getText(),10);
+					String violated = checkCapacity(tcapacity);
+					if (violated != null) {
+						violations.add(new Violation(violated, capacityField));
+					}
+				}
+				catch (NumberFormatException ex) {
+					violations.add(new Violation("Value not numeric",
+							capacityField));
+				}
+				if (!ram.isSelected() && !rom.isSelected()) {
+					violations.add(new Violation("Pick RAM or ROM", ram));
+				}
+			}
+			if (violations.isEmpty()) {
+				String msg = initOK(tempInit,tcapacity,tbits,false);
+				if (msg != null) {
+					violations.add(new Violation(
+							msg + " in built in initialization", null));
+				}
+			}
+			return violations;
+		} // end of validateInputs method
+
+		/**
+		 * Apply the validated form to the memory element.
+		 */
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText().trim();
 			int tbits = bits;
 			int tcapacity = capacity;
 			Memory.Type ttype = null;
 			if (create) {
-				try {
-					tbits = Integer.parseInt(bitsField.getText());
-					tcapacity = Integer.parseInt(capacityField.getText(),10);
-				}
-				catch (NumberFormatException ex) {
-					reject("Value not numeric");
-					return;
-				}
-				if (tbits < 1) {
-					reject("Must have at least 1 bit");
-					return;
-				}
-				if (tcapacity < 1) {
-					reject(CAPACITY_CONSTRAINT);
-					return;
-				}
-				if (ram.isSelected()) {
-					ttype = Memory.Type.RAM;
-				}
-				else if (rom.isSelected()) {
-					ttype = Memory.Type.ROM;
-				}
-				else {
-					reject("Pick RAM or ROM");
-					return;
-				}
-			}
-			if (!tname.equals(name) && circuit.hasName(tname)) {
-				reject("Duplicate name");
-				return;
-			}
-			String msg = initOK(tempInit,tcapacity,tbits,false);
-			if (msg != null) {
-				TellUser.error(getParent(),
-						msg + " in built in initialization",
-						"Error");
-				return;
+				tbits = Integer.parseInt(bitsField.getText());
+				tcapacity = Integer.parseInt(capacityField.getText(),10);
+				ttype = ram.isSelected() ? Memory.Type.RAM : Memory.Type.ROM;
 			}
 
 			// everything is ok, so make it permanent
@@ -975,14 +1009,7 @@ public class Memory extends LogicElement {
 		saveg = g;
 		
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new MemoryEdit(x+win.x,y+win.y,false);
-		}
-		else {
-			new MemoryEdit(pos.x+win.x,pos.y+win.y,false);
-		}
+		new MemoryEdit(false);
 		
 		// if name too big, resize and detach
 		if (changed) {

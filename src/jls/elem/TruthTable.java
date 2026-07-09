@@ -8,7 +8,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,6 +38,7 @@ import jls.Help;
 import jls.JLSInfo;
 import jls.TellUser;
 import jls.Util;
+import jls.util.Placement;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
@@ -54,6 +54,27 @@ public final class TruthTable extends LogicElement implements Printable {
 	private static final int defaultDelay = 30; 
 	private static final int dialogWidth = 300;
 	private static final int dialogHeight = 500;
+
+	// dialog-side constraint (issue #52): a table with no signals cannot
+	// compute anything
+	static final String SIGNALS_CONSTRAINT =
+			"Must have at least one input signal and one output signal";
+
+	/**
+	 * The wording of the table-bounds rule the loader rejects with (issue
+	 * #52). The dialog enforces the same rule structurally - it only ever
+	 * builds in-range entries - so the string lives here, once.
+	 *
+	 * @param row The offending row index.
+	 * @param col The offending column index.
+	 *
+	 * @return the constraint message for that entry.
+	 */
+	static String entryConstraint(int row, int col) {
+
+		return "truth table entry (" + row + "," + col
+				+ ") is outside the declared table size";
+	} // end of entryConstraint method
 
 	// properties
 	private String name = "";
@@ -109,13 +130,8 @@ public final class TruthTable extends LogicElement implements Printable {
 		init(g);
 
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		Point win = editWindow.getLocationOnScreen();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 
 		return true;
 	} // end of setup method
@@ -345,9 +361,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// message-free AIOOBE; reject with the real constraint (issue #52)
 		if (v1 < 0 || v1 >= table.length
 				|| icol >= table[v1].length) {
-			throw new IllegalArgumentException(
-					"truth table entry (" + v1 + "," + icol
-							+ ") is outside the declared table size");
+			throw new IllegalArgumentException(entryConstraint(v1, icol));
 		}
 		table[v1][icol] = v2;
 		icol += 1;
@@ -589,14 +603,13 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Dialog to create/edit a truth table.
 	 */
-	private class TTEditor extends JDialog implements ActionListener {
+	@SuppressWarnings("serial")
+	private class TTEditor extends ElementDialog implements ActionListener {
 
 		// properties
 		private JTextField inputField = new JTextField(10);
 		private JTextField outputField = new JTextField(10);
 		private JTextField nameField = new JTextField(10);
-		private JButton ok = new JButton("ok");
-		private JButton cancel = new JButton("cancel");
 
 		/**
 		 * Initialize and show dialog.
@@ -604,7 +617,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		public TTEditor(TruthTable ttelem) {
 
 			// set up window title
-			super(JLSInfo.frame,"Edit Truth Table",true);
+			super("Edit Truth Table",null);
 
 			// set up display
 			disp = new DisplayBool(ttelem);
@@ -633,31 +646,26 @@ public final class TruthTable extends LogicElement implements Printable {
 			nameField.setText(name);
 			info.add(inputs,BorderLayout.CENTER);
 			other.add(info,BorderLayout.NORTH);
+			other.add(getErrorLabel(),BorderLayout.CENTER);
 			JPanel okCancel = new JPanel(new GridLayout(1,3));
-			ok.setBackground(Color.green);
 			okCancel.add(ok);
-			cancel.setBackground(Color.pink);
 			okCancel.add(cancel);
 			JButton help = new JButton("Help");
 			Help.enableHelpOnButton(help, "truth");
 			okCancel.add(help);
 			other.add(okCancel,BorderLayout.SOUTH);
 			window.add(other,BorderLayout.SOUTH);
-			getRootPane().setDefaultButton(ok);
 
-			// add listeners
-			ok.addActionListener(this);
-			cancel.addActionListener(this);
+			// add listeners (OK, Cancel, Escape and the close box are
+			// wired by the shared dialog base, issue #26)
 			inputField.addActionListener(this);
 			outputField.addActionListener(this);
-			nameField.addActionListener(this);
+			confirmOnEnter(nameField);
+			installDialogBehavior();
 
-			// set up window close listener to cancel element
+			// lay out the table once the window exists
 			addWindowListener (
 					new WindowAdapter() {
-						public void windowClosing(WindowEvent event) {
-							cancel();
-						}
 						public void windowOpened(WindowEvent event) {
 							disp.doLayout(inputNames,outputNames,table,null);
 							disp.repaint();
@@ -665,51 +673,20 @@ public final class TruthTable extends LogicElement implements Printable {
 					}
 			);
 
-			// finish up
+			// finish up: place relative to the owner window (#104)
 			setSize(dialogWidth,dialogHeight);
-			setLocation(100,100);
+			setLocationRelativeTo(getOwner());
 			setVisible(true);
 		} // end of constructor
 
 		/**
-		 * Listen for button events.
-		 * 
+		 * Listen for the new-signal field events.
+		 *
 		 * @param event The event object.
 		 */
 		public void actionPerformed(ActionEvent event) {
 
-			if (event.getSource() == ok || event.getSource() == nameField) {
-				String tname = nameField.getText().trim();
-				if (tname.equals("") || !Util.isValidName(tname)) {
-					TellUser.error(this,
-							"Missing or invalid element name", "Error");
-					return;
-				}
-				if (inputNames.size() == 0 || outputNames.size() == 0) {
-					TellUser.error(this,
-							"Must have at least one input signal and one output signal",
-							"Error");
-					return;
-				}
-				if (tname.equals(name))
-					nameChanged = false;
-				else {
-					if (!circuit.addName(tname)) {
-						TellUser.error(this,
-								"Duplicate element name", "Error");
-						return;
-					}
-					nameChanged = true;
-					anyChanges = true;
-				}
-
-				name = tname;
-				dispose();
-			}
-			else if (event.getSource() == cancel) {
-				cancel();
-			}
-			else if (event.getSource() == inputField) {
+			if (event.getSource() == inputField) {
 				addInput(inputField.getText().trim());
 				inputField.setText("");
 			}
@@ -720,9 +697,49 @@ public final class TruthTable extends LogicElement implements Printable {
 		} // end of actionPerformed method
 
 		/**
+		 * Check the form against the truth table constraints (issue #52).
+		 */
+		protected java.util.List<Violation> validateInputs() {
+
+			java.util.List<Violation> violations =
+					new java.util.ArrayList<Violation>();
+			String tname = nameField.getText().trim();
+			if (tname.equals("") || !Util.isValidName(tname)) {
+				violations.add(new Violation("Missing or invalid element name",
+						nameField));
+			}
+			else if (!tname.equals(name) && circuit.hasName(tname)) {
+				violations.add(new Violation("Duplicate element name",
+						nameField));
+			}
+			if (inputNames.size() == 0 || outputNames.size() == 0) {
+				violations.add(new Violation(SIGNALS_CONSTRAINT, inputField));
+			}
+			return violations;
+		} // end of validateInputs method
+
+		/**
+		 * Apply the validated form to the truth table.
+		 */
+		protected void validateAndAccept() {
+
+			String tname = nameField.getText().trim();
+			if (tname.equals(name))
+				nameChanged = false;
+			else {
+				circuit.addName(tname);
+				nameChanged = true;
+				anyChanges = true;
+			}
+
+			name = tname;
+			dispose();
+		} // end of validateAndAccept method
+
+		/**
 		 * Cancel the edit.
 		 */
-		private void cancel() {
+		protected void cancelDialog() {
 
 			// restore info
 			inputNames = iNCopy;
@@ -732,7 +749,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			// tell caller what happened
 			cancelled = true;
 			dispose();
-		} // end of cancel method
+		} // end of cancelDialog method
 
 	} // end of TTEditor class
 

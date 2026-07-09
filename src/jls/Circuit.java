@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
@@ -68,7 +69,9 @@ public class Circuit implements Printable {
 																		// drawn
 																		// highlighted
 
-	private Set<Element> loadedElements = new HashSet<Element>(); // for loading
+	// insertion (file) order, so wire-net construction in finishLoad -
+	// and with it multi-driver resolution - is deterministic (#98, S1)
+	private Set<Element> loadedElements = new LinkedHashSet<Element>(); // for loading
 	private boolean deferredFinishReported = false; // draw-time finishLoad failure (#58)
 																	// from file
 	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for

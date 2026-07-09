@@ -3,6 +3,7 @@ package jls.elem;
 import jls.*;
 import jls.elem.Group.Entry;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
@@ -41,14 +42,7 @@ public class Splitter extends Group implements TriProp {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new GroupCreate(x+win.x,y+win.y,"Unbundler");
-		}
-		else {
-			new GroupCreate(pos.x+win.x,pos.y+win.y,"Unbundler");
-		}
+		new GroupCreate("Unbundler");
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -58,11 +52,8 @@ public class Splitter extends Group implements TriProp {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null)
-			setXY(p.x-width/2,p.y-height/2);
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method

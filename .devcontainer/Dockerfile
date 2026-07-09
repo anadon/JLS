@@ -1,7 +1,7 @@
 # Development container for JLS.
 #
 # None of this is needed to build or run JLS itself — `mvn verify` on any
-# JDK 17+ machine is enough (see README "Building from source"). This image
+# JDK 25+ machine is enough (see README "Building from source"). This image
 # adds the optional development tools described in the README section
 # "Optional development tools": circuit-file inspection, HDL validation
 # (roadmap issues #33/#59), and display tooling for GUI work.
@@ -16,8 +16,8 @@
 # VS Code / GitHub Codespaces pick it up automatically via
 # .devcontainer/devcontainer.json.
 
-# Maven + Temurin JDK 21 (the newer of the two JDKs CI builds on).
-FROM maven:3.9-eclipse-temurin-21
+# Maven + Temurin JDK 25 (the required CI baseline, current LTS — #92).
+FROM maven:3.9-eclipse-temurin-25
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # version control and downloads (the maven image ships neither)

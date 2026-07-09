@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.util.BitSet;
 
@@ -144,15 +145,7 @@ public abstract class Gate extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y, String type) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		GateCreate gate = null;
-		if (pos == null) {
-			gate = new GateCreate(x+win.x,y+win.y,type);
-		}
-		else {
-			gate = new GateCreate(pos.x+win.x,pos.y+win.y,type);
-		}
+		GateCreate gate = new GateCreate(type);
 		
 		// don't do anything if user canceled gate
 		if (cancelled)
@@ -173,12 +166,8 @@ public abstract class Gate extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 		
@@ -707,11 +696,9 @@ public abstract class Gate extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param type The type of gate (e.g. "AND").
 		 */
-		protected GateCreate(int x, int y, String type) {
+		protected GateCreate(String type) {
 			
 			// set up window title
 			super("Create " + type + " Gate",type);
@@ -794,7 +781,7 @@ public abstract class Gate extends LogicElement {
 			
 			confirmOnEnter(inputsField);
 			confirmOnEnter(gatesField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 		
 		/**

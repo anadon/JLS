@@ -49,6 +49,16 @@ class SequentialGoldenTest {
 			return id;
 		}
 
+		int inputPin(String name, int bits) {
+			int id = nextId++;
+			text.append("ELEMENT InputPin\n int id ").append(id)
+				.append("\n int x 60\n int y ").append(60 + 48 * id)
+				.append("\n int width 48\n int height 24\n String name \"")
+				.append(name).append("\"\n int bits ").append(bits)
+				.append("\n int watch 0\n String orient \"RIGHT\"\nEND\n");
+			return id;
+		}
+
 		int register(int bits, long init, String type) {
 			int id = nextId++;
 			text.append("ELEMENT Register\n int id ").append(id)
@@ -131,6 +141,81 @@ class SequentialGoldenTest {
 		BitSet value = pin.getCurrentValue();
 		assertNotNull(value, "output pin " + pinName + " never settled");
 		return BitSetUtils.ToLong(value);
+	}
+
+	private static long simulateWithVectors(String circuitText, String vectors,
+			String pinName, long timeLimit) throws Exception {
+		Circuit circuit = new Circuit("seqgolden");
+		assertTrue(circuit.load(new Scanner(circuitText)),
+				() -> "load failed: " + JLSInfo.loadError);
+		assertTrue(circuit.finishLoad(null),
+				() -> "finishLoad failed: " + JLSInfo.loadError);
+
+		java.nio.file.Path vectorFile =
+				java.nio.file.Files.createTempFile("seqgolden", ".txt");
+		java.nio.file.Files.writeString(vectorFile, vectors);
+		try {
+			BatchSimulator sim = new BatchSimulator();
+			sim.setCircuit(circuit);
+			sim.setTimeLimit(timeLimit);
+			sim.setTestFile(vectorFile.toString());
+			sim.addTestGen();
+			sim.runSim();
+		} finally {
+			java.nio.file.Files.deleteIfExists(vectorFile);
+		}
+
+		OutputPin pin = null;
+		for (Element el : circuit.getElements()) {
+			if (el instanceof OutputPin && pinName.equals(((OutputPin) el).getName())) {
+				pin = (OutputPin) el;
+			}
+		}
+		assertNotNull(pin, "output pin " + pinName + " not found");
+		BitSet value = pin.getCurrentValue();
+		assertNotNull(value, "output pin " + pinName + " never settled");
+		return BitSetUtils.ToLong(value);
+	}
+
+	/**
+	 * The one scenario that tells a flip-flop from a transparent latch
+	 * (issue #56): a single rising edge captures 5, then the data input
+	 * changes to 10 while the clock stays high. An edge-triggered
+	 * register must keep 5; a latch follows the input to 10.
+	 */
+	@Test
+	void flipFlopIgnoresDataChangesBetweenEdges() throws Exception {
+		CircuitBuilder cb = new CircuitBuilder();
+		int data = cb.inputPin("data", 4);
+		int clk = cb.inputPin("clk", 1);
+		int reg = cb.register(4, 0, "pff");
+		int q = cb.outputPin("q", 4);
+		cb.wire(data, "output", reg, "D");
+		cb.wire(clk, "output", reg, "C");
+		cb.wire(reg, "Q", q, "input");
+		String vectors = "clk 0 until 10 1 end\n"
+				+ "data 5 until 30 10 end\n";
+		assertEquals(5, simulateWithVectors(cb.build(), vectors, "q", 100),
+				"an edge-triggered register must hold the value captured at"
+						+ " the edge when data changes between edges");
+	}
+
+	@Test
+	void latchFollowsDataChangesWhileClockHigh() throws Exception {
+		CircuitBuilder cb = new CircuitBuilder();
+		int data = cb.inputPin("data", 4);
+		int clk = cb.inputPin("clk", 1);
+		int reg = cb.register(4, 0, "latch");
+		int q = cb.outputPin("q", 4);
+		cb.wire(data, "output", reg, "D");
+		cb.wire(clk, "output", reg, "C");
+		cb.wire(reg, "Q", q, "input");
+		String vectors = "clk 0 until 10 1 end\n"
+				+ "data 5 until 30 10 end\n";
+		assertEquals(10, simulateWithVectors(cb.build(), vectors, "q", 100),
+				"a transparent latch must follow data while the clock is high"
+						+ " - this is what discriminates it from the"
+						+ " flip-flop golden above");
 	}
 
 	@Test

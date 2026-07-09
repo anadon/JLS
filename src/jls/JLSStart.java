@@ -39,7 +39,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
@@ -648,7 +647,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		catch (Exception ex) {
 
-			JOptionPane.showMessageDialog(this, "Can't set cross platform look and feel");
+			TellUser.error(this, "Can't set cross platform look and feel", "Error");
 			System.exit(1);
 		}
 
@@ -1121,11 +1120,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private void newCircuit() {
 
-		String name = JOptionPane.showInputDialog("Enter circuit name (without .jls)");
+		String name = TellUser.prompt(this, "Enter circuit name (without .jls)");
 		if (name == null || name.equals(""))
 			return;
 		if (!Util.isValidName(name)) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"Invalid circuit name - must have only letters, digits & _");
+			TellUser.error(JLSInfo.frame,"Invalid circuit name - must have only letters, digits & _", "Error");
 			return;
 		}
 
@@ -1192,9 +1191,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		
 		Scanner input = FileAbstractor.openCircuit(filePath);
 		if (input == null) {
-			JOptionPane.showMessageDialog(this,
-					"can't open " + filePath + ": " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"can't open " + filePath + ": " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1220,10 +1218,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		input.close();
 		if (!loadOK) {
-			JOptionPane.showMessageDialog(this,
+			TellUser.error(this,
 					// the message carries the line number itself (#58)
-					filePath + " is not a valid circuit file: " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+					filePath + " is not a valid circuit file: " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1346,9 +1343,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		for (int e=0; e<edits.getTabCount(); e+=1) {
 			if (name.equals(edits.getTitleAt(e))) {
-				JOptionPane.showMessageDialog(this,
-						name + " is already being editted", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				TellUser.error(this,
+						name + " is already being editted", "Error");
 				return true;
 			}
 		}
@@ -1364,9 +1360,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		Editor ed = (Editor)edits.getSelectedComponent();
 		if (ed == null) {
-			JOptionPane.showMessageDialog(this,
-					"no circuit to import into", "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"no circuit to import into", "Error");
 			return;
 		}
 		JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
@@ -1385,9 +1380,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		
 		Scanner input = FileAbstractor.openCircuit(chooser.getSelectedFile().getAbsolutePath());
 		if (input == null) {
-			JOptionPane.showMessageDialog(this,
-					"can't open " + chooser.getSelectedFile().getName() + ": " + JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+			TellUser.error(this,
+					"can't open " + chooser.getSelectedFile().getName() + ": " + JLSInfo.loadError, "Error");
 			return;
 		}
 
@@ -1408,24 +1402,22 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		input.close();
 		if (!loadOK) {
-			JOptionPane.showMessageDialog(this,
+			TellUser.error(this,
 					circ.getName() + " is not a valid circuit file: "
-							+ JLSInfo.loadError, "Error",
-					JOptionPane.ERROR_MESSAGE);
+							+ JLSInfo.loadError, "Error");
 			return;
 		}
 		try {
 			if (!circ.finishLoad(null)) {
-				JOptionPane.showMessageDialog(this,
+				TellUser.error(this,
 						"can't import " + circ.getName() + ": "
-								+ JLSInfo.loadError, "Error",
-						JOptionPane.ERROR_MESSAGE);
+								+ JLSInfo.loadError, "Error");
 				return;
 			}
 		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this,
+			TellUser.error(this,
 					"can't import " + circ.getName() + ": " + ex.getMessage(),
-					"Error", JOptionPane.ERROR_MESSAGE);
+					"Error");
 			return;
 		}
 
@@ -1875,7 +1867,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			return;
 		String tempName = fileName.replaceAll("\\.jpg$","");
 		if (!Util.isValidName(tempName)) {
-			JOptionPane.showMessageDialog(JLSInfo.frame,"Invalid file name - must contain only letters, digits & _");
+			TellUser.error(JLSInfo.frame,"Invalid file name - must contain only letters, digits & _", "Error");
 			return;
 		}
 		if (!fileName.endsWith(".jpg")) {

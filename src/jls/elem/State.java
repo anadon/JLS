@@ -30,7 +30,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -42,6 +41,7 @@ import javax.swing.WindowConstants;
 import jls.BitSetUtils;
 import jls.JLSInfo;
 import jls.KeyPad;
+import jls.TellUser;
 import jls.sim.Simulator;
 
 /**
@@ -941,49 +941,49 @@ public class State {
 
 			// now test new transition for problems
 			if (hasUnconditional) {
-				JOptionPane.showMessageDialog(mainDialog,
+				TellUser.error(mainDialog,
 						"State already has an unconditional transition",
-						"Error", JOptionPane.ERROR_MESSAGE);
+						"Error");
 				return;
 			}
 			if (newTrans.unconditional && !trans.isEmpty()) {
-				JOptionPane.showMessageDialog(mainDialog,
+				TellUser.error(mainDialog,
 						"Can't add an unconditional transition",
-						"Error", JOptionPane.ERROR_MESSAGE);
+						"Error");
 				return;
 			}
 			if (newTrans.other) {
 				if (trans.isEmpty()) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"State can't have just an else transition",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				if (hasOther) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"State already has an else transition",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				if (tested.cardinality() == 1<<bits) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"Existing transitions cover all possible cases",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				trans.add(newTrans);
 				return;
 			}
 			if (!signal.equals("") && !signal.equals(newTrans.signal)) {
-				JOptionPane.showMessageDialog(mainDialog,
+				TellUser.error(mainDialog,
 						"Can't test different signals in same state",
-						"Error", JOptionPane.ERROR_MESSAGE);
+						"Error");
 				return;
 			}
 			if (bits > 0 && bits != newTrans.bits) {
-				JOptionPane.showMessageDialog(mainDialog,
+				TellUser.error(mainDialog,
 						"Bits differ",
-						"Error", JOptionPane.ERROR_MESSAGE);
+						"Error");
 				return;
 			}
 
@@ -1000,31 +1000,30 @@ public class State {
 			}
 			else {
 				if (!ch.isInput) {
-					JOptionPane.showMessageDialog(mainDialog,
-							"This signal is already an output", "Error",
-							JOptionPane.ERROR_MESSAGE);
+					TellUser.error(mainDialog,
+							"This signal is already an output", "Error");
 					return;
 				}
 				if (ch.bits != newTrans.bits) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"Bits not consistent with previous use of this signal",
-							"Error",JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				ch.refs += 1;
 			}
 			if (newTrans.equal) {
 				if (tested.get(newTrans.value)) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"This value already tested in an existing transition",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				tested.set(newTrans.value);
 				if (hasOther && tested.cardinality() == 1<<bits) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"New transition would make else transition impossible",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				trans.add(newTrans);
@@ -1032,18 +1031,18 @@ public class State {
 			}
 			if (!newTrans.equal) {
 				if (hasOther) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"New transition would make else transition impossible",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				BitSet temp = new BitSet();
 				temp.set(newTrans.value);
 				temp.flip(0,1<<bits);
 				if (temp.intersects(tested)) {
-					JOptionPane.showMessageDialog(mainDialog,
+					TellUser.error(mainDialog,
 							"These values already tested in existing transition(s)",
-							"Error", JOptionPane.ERROR_MESSAGE);
+							"Error");
 					return;
 				}
 				trans.add(newTrans);
@@ -1729,9 +1728,8 @@ public class State {
 				Out newOut = new Out();
 				newOut.signal = signalField.getText().trim();
 				if (newOut.signal.equals("")) {
-					JOptionPane.showMessageDialog(this,
-							"Missing signal name", "Error",
-							JOptionPane.ERROR_MESSAGE);
+					TellUser.error(this,
+							"Missing signal name", "Error");
 					return;
 				}
 				try {
@@ -1739,15 +1737,13 @@ public class State {
 					newOut.bits = Integer.parseInt(bitsField.getText());
 				}
 				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Value or bits not valid", "Error",
-							JOptionPane.ERROR_MESSAGE);
+					TellUser.error(this,
+							"Value or bits not valid", "Error");
 					return;
 				}
 				if (Math.log(newOut.value+1)/Math.log(2) > newOut.bits) {
-					JOptionPane.showMessageDialog(this,
-							"Value too large for number of bits", "Error",
-							JOptionPane.ERROR_MESSAGE);
+					TellUser.error(this,
+							"Value too large for number of bits", "Error");
 					return;
 				}
 
@@ -1755,9 +1751,8 @@ public class State {
 				// in this state
 				for (Out out : outs) {
 					if (out.signal.equals(newOut.signal)) {
-						JOptionPane.showMessageDialog(this,
-								"Already an output with this name", "Error",
-								JOptionPane.ERROR_MESSAGE);
+						TellUser.error(this,
+								"Already an output with this name", "Error");
 						return;
 					}
 				}
@@ -1773,15 +1768,14 @@ public class State {
 				}
 				else {
 					if (ch.isInput) {
-						JOptionPane.showMessageDialog(this,
-								"This signal is already an input", "Error",
-								JOptionPane.ERROR_MESSAGE);
+						TellUser.error(this,
+								"This signal is already an input", "Error");
 						return;
 					}
 					if (ch.bits != newOut.bits) {
-						JOptionPane.showMessageDialog(this,
+						TellUser.error(this,
 								"Bits not consistent with previous use of this signal",
-								"Error",JOptionPane.ERROR_MESSAGE);
+								"Error");
 						return;
 					}
 					ch.refs += 1;

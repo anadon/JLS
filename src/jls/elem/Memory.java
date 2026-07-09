@@ -824,9 +824,9 @@ public class Memory extends LogicElement {
 			}
 			String msg = initOK(tempInit,tcapacity,tbits,false);
 			if (msg != null) {
-				JOptionPane.showMessageDialog(getParent(),
+				TellUser.error(getParent(),
 						msg + " in built in initialization",
-						"Error", JOptionPane.ERROR_MESSAGE);
+						"Error");
 				return;
 			}
 
@@ -863,16 +863,15 @@ public class Memory extends LogicElement {
 			if (event.getSource() == fromFile) {
 				
 				// get file name
-				String file  = JOptionPane.showInputDialog(this,
+				String file  = TellUser.prompt(this,
 						"File name?", fileName);
 				if (file == null)
 					return;
 				file = file.trim();
 				while (!file.equals("") && !Util.isValidName(file)) {
-					JOptionPane.showMessageDialog(this,
-							"Missing or invalid file name, try again", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					file = JOptionPane.showInputDialog(this,
+					TellUser.error(this,
+							"Missing or invalid file name, try again", "Error");
+					file = TellUser.prompt(this,
 							"File name?", fileName);
 					if (file == null)
 						return;
@@ -896,8 +895,8 @@ public class Memory extends LogicElement {
 						tempInit = area.getText();
 						String msg = initOK(tempInit,Integer.MAX_VALUE,Integer.MAX_VALUE,false);
 						if (msg != null) {
-							JOptionPane.showMessageDialog(getParent(),
-									msg, "Error", JOptionPane.ERROR_MESSAGE);
+							TellUser.error(getParent(),
+									msg, "Error");
 							return;
 						}
 						fileName = "";
@@ -1312,10 +1311,9 @@ public class Memory extends LogicElement {
 								name + ", all zeros assumed");
 					}
 					else {
-						JOptionPane.showMessageDialog(JLSInfo.frame,
+						TellUser.error(JLSInfo.frame,
 								msg + "in memory file " +
-								name + ", all zeros assumed", "Error",
-								JOptionPane.ERROR_MESSAGE);
+								name + ", all zeros assumed", "Error");
 					}
 				}
 				
@@ -1327,10 +1325,9 @@ public class Memory extends LogicElement {
 							name + " cannot be read, all zeros assumed");
 				}
 				else {
-					JOptionPane.showMessageDialog(JLSInfo.frame,
+					TellUser.error(JLSInfo.frame,
 							"Initialization file for memory " +
-							name + " cannot be read, all zeros assumed", "Error",
-							JOptionPane.ERROR_MESSAGE);
+							name + " cannot be read, all zeros assumed", "Error");
 				}
 			}
 			
@@ -1345,10 +1342,9 @@ public class Memory extends LogicElement {
 							name + ", all zeros assumed");
 				}
 				else {
-					JOptionPane.showMessageDialog(JLSInfo.frame,
+					TellUser.error(JLSInfo.frame,
 							msg + " in memory file " +
-							name + ", all zeros assumed", "Error",
-							JOptionPane.ERROR_MESSAGE);
+							name + ", all zeros assumed", "Error");
 				}
 			}
 		}

@@ -2,7 +2,6 @@ package jls;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.swing.JOptionPane;
 import java.io.*;
 import java.util.*;
 
@@ -70,11 +69,10 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 			// otherwise display message and quit
 			else {
 				
-				JOptionPane.showMessageDialog(null,
-						"Not enough memory", "Error", JOptionPane.ERROR_MESSAGE);
-				JOptionPane.showMessageDialog(null,
-						"Run JLS again and give JVM more memory", "Warning",
-						JOptionPane.WARNING_MESSAGE);
+				TellUser.error(null,
+						"Not enough memory", "Error");
+				TellUser.warn(null,
+						"Run JLS again and give JVM more memory", "Warning");
 			}
 			System.exit(1);
 		}
@@ -102,7 +100,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 					"<br><br>Try restarting JLS using checkpoints of open circuits" +
 					"<br>(i.e., <i>file</i>.jls~, where <i>file</i> is the name of the open circuit)" +
 					"</html>";
-				JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
+				TellUser.error(null, msg, "Error");
 				System.exit(1);
 			}
 		}

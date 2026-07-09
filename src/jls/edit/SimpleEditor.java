@@ -47,7 +47,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -58,6 +57,7 @@ import javax.swing.SwingConstants;
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
+import jls.TellUser;
 import jls.Util;
 import jls.elem.Adder;
 import jls.elem.AndGate;
@@ -881,12 +881,12 @@ public abstract class SimpleEditor extends JPanel {
 						if (enabled) {
 
 							// warn user first
-							int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
+							boolean opt = TellUser.confirm(null,
 									"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-									"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+									"WARNING");
 
 							// if user still ok with it ...
-							if (opt == JOptionPane.OK_OPTION) {
+							if (opt) {
 
 								// make selected elements uneditable
 								for (Element el : selected) {
@@ -1482,12 +1482,12 @@ public abstract class SimpleEditor extends JPanel {
 						return;
 
 					// warn user first
-					int opt = JOptionPane.showConfirmDialog(JLSInfo.frame,
+					boolean opt = TellUser.confirm(null,
 							"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-							"WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							"WARNING");
 
 					// if user still ok with it ...
-					if (opt == JOptionPane.OK_OPTION) {
+					if (opt) {
 
 						// make selected elements uneditable
 						for (Element el : selected) {
@@ -3549,8 +3549,8 @@ public abstract class SimpleEditor extends JPanel {
 						// make sure no element is uneditable
 						for (Element el : selected) {
 							if (el.isUneditable()) {
-								JOptionPane.showMessageDialog(JLSInfo.frame,
-										"can't delete uneditable element");
+								TellUser.error(JLSInfo.frame,
+										"can't delete uneditable element", "Error");
 								return;
 							}
 						}
@@ -3761,9 +3761,8 @@ public abstract class SimpleEditor extends JPanel {
 							String tabName = sub.getName() + " in " + circuit.getName();
 							for (int e=0; e<tabbedParent.getTabCount(); e+=1) {
 								if (tabName.equals(tabbedParent.getTitleAt(e))) {
-									JOptionPane.showMessageDialog(getTopLevelAncestor(),
-											tabName + " is already being editted", "Error",
-											JOptionPane.ERROR_MESSAGE);
+									TellUser.error(getTopLevelAncestor(),
+											tabName + " is already being editted", "Error");
 									clearSelected();
 									setState(State.idle);
 									repaint();
@@ -3952,13 +3951,13 @@ public abstract class SimpleEditor extends JPanel {
 						// can't put an input or output pin in an existing subcircuit
 						if (circuit.isImported()) {
 							if (item instanceof InputPin) {
-								JOptionPane.showMessageDialog(JLSInfo.frame,
-										"Can't add an input pin to a subcircuit");
+								TellUser.error(JLSInfo.frame,
+										"Can't add an input pin to a subcircuit", "Error");
 								return;
 							}
 							else if (item instanceof OutputPin) {
-								JOptionPane.showMessageDialog(JLSInfo.frame,
-										"Can't add an output pin to a subcircuit");
+								TellUser.error(JLSInfo.frame,
+										"Can't add an output pin to a subcircuit", "Error");
 								return;
 							}
 						}

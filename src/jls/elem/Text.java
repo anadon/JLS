@@ -453,11 +453,11 @@ public class Text extends DisplayElement {
 					fs = Integer.parseInt((String)fontSz.getSelectedItem());
 				}
 				catch (NumberFormatException ex) {
-					JOptionPane.showMessageDialog(this, "Invalid Font Size");
+					TellUser.error(this, "Invalid Font Size", "Error");
 					return;
 				}
 				if (fs < 1) {
-					JOptionPane.showMessageDialog(this, "Invalid Font Size");
+					TellUser.error(this, "Invalid Font Size", "Error");
 					return;
 				}
 				int bi = 0;

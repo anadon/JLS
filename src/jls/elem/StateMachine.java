@@ -42,7 +42,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
@@ -56,6 +55,7 @@ import jls.BitSetUtils;
 import jls.Circuit;
 import jls.Help;
 import jls.JLSInfo;
+import jls.TellUser;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
@@ -1078,9 +1078,8 @@ public final class StateMachine extends LogicElement implements Printable {
 				if (!cs.wasCancelled()) {
 					boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
 					if (!ok) {
-						JOptionPane.showMessageDialog(this,
-								"Name won't fit", "Error",
-								JOptionPane.ERROR_MESSAGE);
+						TellUser.error(this,
+								"Name won't fit", "Error");
 						return;
 					}
 					editArea.repaint();
@@ -1167,7 +1166,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				
 				// check for overlaps
 				if (stateOverlap()) {
-					JOptionPane.showMessageDialog(this,"Can't do - states will overlap");
+					TellUser.error(this,"Can't do - states will overlap", "Error");
 					for (State state : selected) {
 						state.restorePosition();
 					}
@@ -1196,7 +1195,7 @@ public final class StateMachine extends LogicElement implements Printable {
 
 				// check for overlaps
 				if (stateOverlap()) {
-					JOptionPane.showMessageDialog(this,"Can't do - states overlap");
+					TellUser.error(this,"Can't do - states overlap", "Error");
 					for (State state : selected) {
 						state.restorePosition();
 					}
@@ -1316,10 +1315,9 @@ public final class StateMachine extends LogicElement implements Printable {
 					// see if over a transition
 					for (State state : states) {
 						if (state.highlightTrans(x,y)) {
-							int result = JOptionPane.showConfirmDialog(null,
-						            "delete transition?", "option",
-						            JOptionPane.YES_NO_OPTION);
-							if (result == 0) {
+							boolean result = TellUser.confirm(this,
+						            "delete transition?", "option");
+							if (result) {
 								state.deleteLastHighlighted();
 								editArea.repaint();
 							}

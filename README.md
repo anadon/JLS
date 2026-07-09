@@ -45,6 +45,26 @@ newer).
   output format, and the VCD profile — is a documented stability contract:
   see [`docs/batch-interface.md`](docs/batch-interface.md).
 
+### Wayland
+
+JLS runs natively on Wayland via OpenJDK's experimental Wayland toolkit
+(`WLToolkit`, Project Wakefield), currently shipped by [JetBrains
+Runtime](https://github.com/JetBrains/JetBrainsRuntime). On a
+Wayland-only session (`WAYLAND_DISPLAY` set, `DISPLAY` unset) JLS selects
+that toolkit automatically at startup when the Java runtime provides it —
+the same `java -jar` command as everywhere else, no flags. On a runtime
+without it (stock OpenJDK today), JLS prints one `jls: error:` line naming
+the actual problem and the two ways out: run under XWayland by setting
+`DISPLAY`, or use a JBR/Wakefield build. Sessions with `DISPLAY` set
+(X11 or XWayland), Windows, macOS, and all headless modes (batch, image
+and Verilog export) are untouched.
+
+The JVM property `-Djls.toolkit=default|wayland` overrides the detection
+in either direction. CI exercises this end to end: the `gui-wayland` lane
+boots the GUI on a JBR under a headless sway compositor and screenshots
+it via [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) (issue #101),
+which also reproduces the setup locally or in the dev container.
+
 ## Building from source
 
 The build uses Maven and JDK 25+:
@@ -101,14 +121,21 @@ kind. The interactive GUI is another matter: stock OpenJDK's Swing toolkit
 on Linux only speaks X11, so on the Wayland compositor above it needs a JDK
 that includes OpenJDK's experimental Wayland toolkit (Project Wakefield) —
 currently shipped by [JetBrains
-Runtime](https://github.com/JetBrains/JetBrainsRuntime) — enabled with:
+Runtime](https://github.com/JetBrains/JetBrainsRuntime). On such a runtime
+JLS selects `WLToolkit` by itself on Wayland-only sessions (see "Wayland"
+above); the underlying JDK-level switch, useful for other Swing programs
+or to force the toolkit when `DISPLAY` is also set, is:
 
 ```sh
 java -Dawt.toolkit.name=WLToolkit -jar target/jls-*.jar
 ```
 
-The development container below accepts a `JBR_URL` build argument to bake
-that runtime in.
+[`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) automates the whole
+first-light experiment (issue #101): headless sway up, JLS launched on a
+JBR (`JBR_HOME=...`), window presence asserted via `swaymsg`, screenshot
+and logs collected into an artifacts directory. CI's `gui-wayland` lane
+runs exactly this script. The development container below accepts a
+`JBR_URL` build argument to bake that runtime in.
 
 ### Development container
 

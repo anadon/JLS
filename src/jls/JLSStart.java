@@ -9,7 +9,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -674,6 +673,23 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of parseCommandLine method
 
 	/**
+	 * Whether this invocation, as parsed, will start the interactive GUI
+	 * rather than one of the headless one-shot modes (batch, image
+	 * export, HDL export, printing a named circuit). Mirrors the mode
+	 * dispatch at the top of start(). Used by the startup toolkit policy
+	 * (issue #105), which must never touch or fail a flow that needs no
+	 * display.
+	 *
+	 * @return true if start() will launch the GUI.
+	 */
+	static boolean guiSessionRequested() {
+
+		return !(printCircuit && startFile != null)
+				&& !JLSInfo.batch && !JLSInfo.imgexport
+				&& !JLSInfo.hdlexport;
+	} // end of guiSessionRequested method
+
+	/**
 	 * Act on one parsed flag.
 	 *
 	 * @param flag The flag name (guaranteed present in the flag table).
@@ -824,6 +840,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
+		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
@@ -882,13 +899,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// finish up GUI settings
 		setTitle(JLSInfo.version);
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int width = (int)(1.618*JLSInfo.windowsize);	// golden ratio
 		int height = JLSInfo.windowsize;
 		setSize(width,height);
-		int left = (screenSize.width - width)/2;
-		int top = (screenSize.height - height)/2;
-		setLocation(left,top);	// centered in screen
+		// centered in the screen; setLocationRelativeTo(null) asks the
+		// GraphicsEnvironment for the real center point instead of
+		// Toolkit.getScreenSize(), which is unreliable on mixed-DPI and
+		// Wayland setups (issue #105)
+		setLocationRelativeTo(null);
 		setVisible(true);
 
 		// set up simulator

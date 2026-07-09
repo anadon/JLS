@@ -52,6 +52,9 @@ import javax.swing.event.ChangeListener;
 
 import jls.edit.Editor;
 import jls.elem.Element;
+import jls.hdl.HdlExportException;
+import jls.hdl.HdlExporter;
+import jls.hdl.VerilogEmitter;
 import jls.elem.LogicElement;
 import jls.elem.Memory;
 import jls.elem.OutputPin;
@@ -71,6 +74,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static String startFile = null;
 	private static String imageFile = null;
 	private static String vcdFile = null;
+	private static String exportFile = null;
 	private static boolean printCircuit = false;
 	private static boolean printCircuitTop;
 	private static String printer = null;
@@ -293,6 +297,58 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		}
 
+		else if (JLSInfo.hdlexport) {
+
+			// HDL export (issue #60) is headless like batch mode
+			System.setProperty("java.awt.headless", "true");
+
+			if (startFile == null) {
+				System.err.println("jls: error: HDL export requires a circuit file");
+				System.exit(1);
+			}
+			Circuit circ = loadCircuitHeadless(startFile);
+
+			// walk and render; a rejection lists every offending
+			// element and writes nothing
+			HdlExporter.Result result;
+			try {
+				result = HdlExporter.export(circ, new VerilogEmitter());
+			} catch (HdlExportException e) {
+				System.err.println("jls: error: " + e.getMessage());
+				System.exit(1);
+				return; // unreachable; keeps result definitely assigned
+			}
+			for (String warning : result.warnings) {
+				System.err.println("jls: warning: " + warning);
+			}
+
+			// write to a temp file and rename so a partial export can
+			// never reach the target path (same pattern as circuit save)
+			Path target = Path.of(exportFile);
+			Path temp = Path.of(exportFile + ".tmp");
+			try {
+				java.nio.file.Files.writeString(temp, result.text,
+						StandardCharsets.UTF_8);
+				try {
+					java.nio.file.Files.move(temp, target,
+							java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+							java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+				} catch (java.nio.file.AtomicMoveNotSupportedException ex) {
+					java.nio.file.Files.move(temp, target,
+							java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+				}
+			} catch (IOException e) {
+				try {
+					java.nio.file.Files.deleteIfExists(temp);
+				} catch (IOException ignored) {
+					// the error below already covers it
+				}
+				System.err.println("jls: error: can't write " + exportFile
+						+ ": " + e.getMessage());
+				System.exit(1);
+			}
+		}
+
 		else {
 
 			// start up GUI
@@ -312,6 +368,74 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 
 	} // end of start method
+
+	/**
+	 * Load a circuit file for a headless one-shot mode, exactly as the
+	 * batch and image-export paths do: sniffing loader, trailing-content
+	 * check, finishLoad with no graphics. Any failure prints one
+	 * "jls: error:" line and exits 1; on return the circuit is fully
+	 * assembled (wire nets built).
+	 *
+	 * @param file The circuit file path.
+	 *
+	 * @return the loaded circuit.
+	 */
+	private static Circuit loadCircuitHeadless(String file) {
+
+		String name;
+		if (file.endsWith(".jls~")) {
+			name = file.replaceAll("\\.jls~$","");
+		}
+		else {
+			name = file.replaceAll("\\.jls$","");
+		}
+		String cname = Util.isValidFileName(name);
+		if (cname == null) {
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file name");
+			System.exit(1);
+		}
+
+		Scanner input = FileAbstractor.openCircuit(file);
+		if (input == null) {
+			System.err.println("jls: error: can't open " + file
+					+ ": " + JLSInfo.loadError);
+			System.exit(1);
+		}
+
+		Circuit circ = new Circuit(cname);
+		boolean loadOK = circ.load(input);
+		if (loadOK && input.hasNext()) {
+			// file shouldn't have anything after ENDCIRCUIT; without
+			// a message the failure would be reported blank (#58)
+			loadOK = false;
+			JLSInfo.setLoadError(LoadError.of(
+					LoadError.Category.MALFORMED,
+					"there is extra content after the ENDCIRCUIT trailer",
+					"The file may contain more than one circuit or "
+							+ "trailing garbage; re-save it from JLS."));
+		}
+		input.close();
+		if (!loadOK) {
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file: " + JLSInfo.loadError);
+			System.exit(1);
+		}
+
+		try {
+			if (!circ.finishLoad(null)) {
+				System.err.println("jls: error: " + file
+						+ " is not a valid circuit file: " + JLSInfo.loadError);
+				System.exit(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("jls: error: " + file
+					+ " is not a valid circuit file: " + JLSInfo.loadError);
+			System.exit(1);
+		}
+		return circ;
+	} // end of loadCircuitHeadless method
 
 	/**
 	 * Display values of watched elements to stdout.
@@ -422,6 +546,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"print the signal trace to the named printer"),
 		new FlagSpec("vcd", Arity.REQUIRED, "file", "a VCD output file",
 				"write watched-signal waveforms to the named VCD file (batch mode)"),
+		new FlagSpec("export", Arity.REQUIRED, "file.v", "an output file",
+				"export the circuit as Verilog-2005 to the named .v file"),
 	};
 
 	/**
@@ -600,6 +726,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 			break;
 		case "vcd":
 			vcdFile = opnd;
+			break;
+		case "export":
+			// .v selects the Verilog emitter; other languages (VHDL)
+			// will hang off other extensions when they land (#60)
+			if (!opnd.toLowerCase(java.util.Locale.ROOT).endsWith(".v")) {
+				usageError("option -export output file must end in .v: "
+						+ opnd);
+			}
+			JLSInfo.hdlexport = true;
+			exportFile = opnd;
 			break;
 		default:
 			// unreachable: parseCommandLine only passes table flags

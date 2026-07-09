@@ -685,13 +685,41 @@ public class Register extends LogicElement {
 	
 	/**
 	 * Set the initial value of this register.
-	 * 
+	 *
 	 * @param value The initial value.
 	 */
 	public void setInitialValue(BigInteger value) {
-		
+
 		initialValue = value.add(BigInteger.ZERO);
 	} // end of setInitialValue method
+
+	/**
+	 * Get the initial value of this register (for consumers of the
+	 * circuit model, e.g. the HDL exporter, issue #60).
+	 *
+	 * @return the initial value.
+	 */
+	public BigInteger getInitialValue() {
+
+		return initialValue;
+	} // end of getInitialValue method
+
+	/**
+	 * The register type as its save-file name: "latch" (transparent
+	 * latch), "pff" (positive-edge flip-flop) or "nff" (negative-edge
+	 * flip-flop). The Type enum itself stays private; this mirrors the
+	 * "type" attribute the file format already pins (issue #60).
+	 *
+	 * @return the type name.
+	 */
+	public String getTypeName() {
+
+		switch (type) {
+		case PosFF: return "pff";
+		case NegFF: return "nff";
+		default: return "latch";
+		}
+	} // end of getTypeName method
 	
 	/**
 	 * Tells if a register is capable of rotatating, can only rotate when inputs or outputs have no attachments.

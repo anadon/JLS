@@ -61,6 +61,7 @@ public final class JLSInfo {
 	public static boolean batch = false;				// batch mode
 	public static boolean printTrace = false;			// print signal trace
 	public static boolean imgexport = false;			// export image from command line
+	public static boolean hdlexport = false;			// export HDL from command line (#60)
 	public enum Orientation { UP, DOWN, LEFT, RIGHT;
 
 		/**

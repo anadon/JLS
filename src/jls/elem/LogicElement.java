@@ -272,15 +272,39 @@ public abstract class LogicElement extends Element implements Reacts {
 	/**
 	 * Get all inputs and outputs.
 	 * Generally overridden.
-	 * 
+	 *
 	 * @return a set of all inputs and outputs.
 	 */
 	public Set<Put> getAllPuts() {
-		
+
 		Set<Put>all = new HashSet<Put>(inputs);
 		all.addAll(outputs);
 		return all;
 	} // end of getAllPuts method
+
+	/**
+	 * Get this element's inputs in creation order (the order init()
+	 * added them, e.g. D then C for a register). Needed by consumers
+	 * that must pair puts with per-position semantics, such as the HDL
+	 * exporter (issue #60); getAllPuts() loses the order.
+	 *
+	 * @return an unmodifiable view of the inputs, in order.
+	 */
+	public java.util.List<Input> getInputList() {
+
+		return Collections.unmodifiableList(inputs);
+	} // end of getInputList method
+
+	/**
+	 * Get this element's outputs in creation order (see
+	 * {@link #getInputList()}).
+	 *
+	 * @return an unmodifiable view of the outputs, in order.
+	 */
+	public java.util.List<Output> getOutputList() {
+
+		return Collections.unmodifiableList(outputs);
+	} // end of getOutputList method
 	
 	/**
 	 * Get put by name.

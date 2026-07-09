@@ -11,6 +11,28 @@ All notable changes to JLS are documented here. The format follows
 feature removal, which is a MAJOR version event under semantic versioning.)*
 
 ### Added
+- Verilog export, HDL stage 1 (#60): `jls -export out.v circuit.jls`
+  writes the drawn circuit as one structural Verilog-2005 module,
+  deterministically (no timestamps; goldens pin the bytes). Covered
+  elements: input/output pins (module ports), constants, the gate
+  family (AND/OR/NAND/NOR/XOR/NOT/DELAY), Extend, TriState (0/1/z —
+  JLS never simulates x), Adder with carry in/out, Register (latch,
+  positive- and negative-edge flip-flop, with initial values), Clock
+  (exported as a module input port to drive from a testbench), and
+  Binder/Splitter (part-selects). Same-named jump starts/ends fold
+  into one named net; user names survive legalization, with any
+  renames documented in the generated header. Simulation-control and
+  annotation elements (Display, SigGen, Pause, Stop, Text, TestGen)
+  are skipped with a warning; circuits containing SubCircuit, Memory,
+  Mux, Decoder, StateMachine or TruthTable are rejected with one
+  message naming every offending element, and nothing is written
+  (temp-file + atomic-rename). The exporter (`jls.hdl`) is
+  headless-core clean and split into a language-neutral model plus a
+  Verilog emitter so the VHDL emitter can share the walker; when
+  `iverilog` is installed, the test suite also compiles every golden
+  export (it skips cleanly where the tool is absent). VHDL, subcircuit
+  hierarchy, Memory/Mux/Decoder/StateMachine/TruthTable templates, and
+  the GUI menu entry are deliberately follow-up slices.
 - Normative and contributor documentation (#85):
   `docs/simulation-semantics.md` specifies the simulation model —
   time, event ordering, per-element delays, edge triggering,

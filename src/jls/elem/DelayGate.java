@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -68,14 +69,7 @@ public class DelayGate extends Gate {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new DelayCreate(x+win.x,y+win.y);
-		}
-		else {
-			new DelayCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new DelayCreate();
 		
 		// don't do anything if user canceled gate
 		if (cancelled)
@@ -86,9 +80,8 @@ public class DelayGate extends Gate {
 		init(g);
 		
 		// save position
-		Point p = editWindow.getMousePosition();
-		if (p != null)
-			super.setXY(p.x-width/2,p.y-height/2);
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 		
@@ -135,10 +128,8 @@ public class DelayGate extends Gate {
 			/**
 			 * Set up dialog window.
 			 * 
-			 * @param x The x-coordinate of the position of the dialog.
-			 * @param y The y-coordinate of the position of the dialog.
 			 */
-			public DelayCreate(int x, int y) {
+			public DelayCreate() {
 
 				// set up window title
 				super("Create DELAY Gate","DELAY");
@@ -195,7 +186,7 @@ public class DelayGate extends Gate {
 
 				confirmOnEnter(delayField);
 				confirmOnEnter(gatesField);
-				finishDialog(x,y);
+				finishDialog();
 			} // end of constructor
 
 			/**

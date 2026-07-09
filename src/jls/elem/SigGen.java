@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.math.*;
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 /**
  * Signal generator.
@@ -59,14 +60,7 @@ public class SigGen extends SigSim {
 		}
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new EditSignals(x+win.x,y+win.y,true);
-		}
-		else {
-			new EditSignals(pos.x+win.x,pos.y+win.y,true);
-		}
+		new EditSignals(true);
 		
 		// don't do anything if user canceled element
 		if (cancelled)
@@ -76,12 +70,8 @@ public class SigGen extends SigSim {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -200,14 +190,7 @@ public class SigGen extends SigSim {
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new EditSignals(x+win.x,y+win.y,false);
-		}
-		else {
-			new EditSignals(pos.x+win.x,pos.y+win.y,false);
-		}
+		new EditSignals(false);
 		
 		if (!cancelled) {
 			circuit.markChanged();
@@ -226,11 +209,9 @@ public class SigGen extends SigSim {
 		/**
 		 * Initialize the dialog at a given position.
 		 *
-		 * @param x The x-coordinate of the upper left of the dialog box.
-		 * @param y The y-coordinate of the upper left of the dialog box.
 		 * @param creating True if creating, false if changing.
 		 */
-		public EditSignals(int x, int y, boolean creating) {
+		public EditSignals(boolean creating) {
 
 			super("Create Signal Specification","siggen");
 
@@ -243,7 +224,7 @@ public class SigGen extends SigSim {
 			pane.setPreferredSize(new Dimension(size,size));
 			window.add(pane);
 
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

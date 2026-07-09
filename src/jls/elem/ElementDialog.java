@@ -2,7 +2,6 @@ package jls.elem;
 
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,7 +33,7 @@ import jls.TellUser;
  * (OK is the default button), Escape cancels, closing the window cancels.
  *
  * Usage: subclass, build the form into {@link #getContentPane()} (already
- * BoxLayout, vertical), then call {@link #finishDialog(int, int)} last.
+ * BoxLayout, vertical), then call {@link #finishDialog()} last.
  * Override {@link #validateAndAccept()} with validation + acceptance
  * (call dispose() on success), and {@link #cancelDialog()} if cancelling
  * needs more than dispose().
@@ -67,13 +66,12 @@ public abstract class ElementDialog extends JDialog {
 
 	/**
 	 * Append the button row, install uniform key handling, then pack,
-	 * center on the given point, and show (modal: this blocks until the
-	 * dialog is disposed). Call last in the subclass constructor.
-	 *
-	 * @param x The x-coordinate to center on.
-	 * @param y The y-coordinate to center on.
+	 * center on the owner window (owner-relative placement, issue #104
+	 * - no absolute screen coordinates), and show (modal: this blocks
+	 * until the dialog is disposed). Call last in the subclass
+	 * constructor.
 	 */
-	protected void finishDialog(int x, int y) {
+	protected void finishDialog() {
 
 		// button row
 		Container window = getContentPane();
@@ -117,8 +115,7 @@ public abstract class ElementDialog extends JDialog {
 
 		// finish up GUI
 		pack();
-		Dimension d = getSize();
-		setLocation(x - d.width / 2, y - d.height / 2);
+		setLocationRelativeTo(getOwner());
 		setVisible(true);
 	} // end of finishDialog method
 

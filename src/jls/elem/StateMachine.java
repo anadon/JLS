@@ -9,7 +9,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -58,6 +57,7 @@ import jls.JLSInfo;
 import jls.TellUser;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
+import jls.util.Placement;
 
 /**
  * The state machine editor and simulation code.
@@ -120,13 +120,8 @@ public final class StateMachine extends LogicElement implements Printable {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		Point win = editWindow.getLocationOnScreen();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -878,7 +873,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				}
 			};
 			if (creating) {
-				Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+				Rectangle screen = getGraphicsConfiguration().getBounds();
 				editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
 			}
 			else {
@@ -895,7 +890,7 @@ public final class StateMachine extends LogicElement implements Printable {
 					editArea.setPreferredSize(new Dimension(w,h));
 				}
 				else {
-					Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+					Rectangle screen = getGraphicsConfiguration().getBounds();
 					editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
 				}
 			}
@@ -978,13 +973,14 @@ public final class StateMachine extends LogicElement implements Printable {
 					}
 			);
 			
-			// finish up GUI
-			Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+			// finish up GUI: size to the monitor this dialog will appear
+			// on and place relative to the owner window (#104)
+			Rectangle screen = getGraphicsConfiguration().getBounds();
 			Dimension dialog = getPreferredSize();
 			int w = Math.min(dialog.width,screen.width-100);
 			int h = Math.min(dialog.height+100,screen.height-100);
 			setSize(w,h);
-			setLocation(50,50);
+			setLocationRelativeTo(getOwner());
 			setVisible(true);
 			
 		} // end of constructor
@@ -1073,8 +1069,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				cancel();
 			}
 			else if (event.getSource() == changeName) {
-				Point win = editArea.getLocationOnScreen();
-				CreateState cs = new CreateState(x+win.x,y+win.y,"Change",on.getName());
+				CreateState cs = new CreateState("Change",on.getName());
 				if (!cs.wasCancelled()) {
 					boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
 					if (!ok) {
@@ -1111,7 +1106,7 @@ public final class StateMachine extends LogicElement implements Printable {
 				on.editOuts(currentDialog);
 			}
 			else if (event.getSource() == showOutputs) {
-				on.showOuts(getMousePosition(),currentDialog);
+				on.showOuts(currentDialog);
 			}
 			else if (event.getSource() == delete) {
 				if (on != null) {
@@ -1479,8 +1474,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 */
 		private void createNewState() {
 			
-			Point win = editArea.getLocationOnScreen();
-			CreateState cs = new CreateState(x+win.x,y+win.y,"Create","");
+			CreateState cs = new CreateState("Create","");
 			if (cs.wasCancelled()) {
 				return;
 			}
@@ -1746,11 +1740,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Create a new state.
 		 *
-		 * @param xp The x-coordinate of where to show this dialog.
-		 * @param yp The y-coordinate of where to show this dialog.
 		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
 		 */
-		public CreateState(int xp, int yp, String title, String currentName) {
+		public CreateState(String title, String currentName) {
 
 			// set up window title
 			super(title + " State",null);
@@ -1769,7 +1761,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			window.add(name);
 
 			confirmOnEnter(nameField);
-			finishDialog(xp,yp);
+			finishDialog();
 		} // end of constructor
 
 		/**

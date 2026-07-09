@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
@@ -76,14 +77,7 @@ public class Memory extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new MemoryEdit(x+win.x,y+win.y,true);
-		}
-		else {
-			new MemoryEdit(pos.x+win.x,pos.y+win.y,true);
-		}
+		new MemoryEdit(true);
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -93,12 +87,8 @@ public class Memory extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -680,11 +670,9 @@ public class Memory extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 * @param create True if creating a new memory element, false if changing one.
 		 */
-		private MemoryEdit(int x, int y, boolean create) {
+		private MemoryEdit(boolean create) {
 			
 			// set up window title
 			super(create ? "Create Memory" : "Change Memory","memory");
@@ -772,7 +760,7 @@ public class Memory extends LogicElement {
 			fromFile.addActionListener(this);
 			builtIn.addActionListener(this);
 			
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 		
 		/**
@@ -975,14 +963,7 @@ public class Memory extends LogicElement {
 		saveg = g;
 		
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new MemoryEdit(x+win.x,y+win.y,false);
-		}
-		else {
-			new MemoryEdit(pos.x+win.x,pos.y+win.y,false);
-		}
+		new MemoryEdit(false);
 		
 		// if name too big, resize and detach
 		if (changed) {

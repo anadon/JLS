@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -56,14 +57,7 @@ public class Clock extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new ClockCreate(x+win.x,y+win.y);
-		}
-		else {
-			new ClockCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new ClockCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -73,12 +67,8 @@ public class Clock extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -326,14 +316,7 @@ public class Clock extends LogicElement {
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new ClockCreate(x+win.x,y+win.y);
-		}
-		else {
-			new ClockCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new ClockCreate();
 		
 		if (!cancelled)
 			circuit.markChanged();
@@ -361,10 +344,8 @@ public class Clock extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private ClockCreate(int x, int y) {
+		private ClockCreate() {
 			
 			// set up window title
 			super("Create Clock","clock");
@@ -424,7 +405,7 @@ public class Clock extends LogicElement {
 
 			confirmOnEnter(cycleTimeField);
 			confirmOnEnter(oneTimeField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

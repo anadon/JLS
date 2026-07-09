@@ -2,6 +2,7 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
+import jls.util.Placement;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,14 +56,7 @@ public class TriState extends LogicElement {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new TriStateCreate(x+win.x,y+win.y);
-		}
-		else {
-			new TriStateCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new TriStateCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -72,12 +66,8 @@ public class TriState extends LogicElement {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 		
@@ -420,10 +410,8 @@ public class TriState extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private TriStateCreate(int x, int y) {
+		private TriStateCreate() {
 			
 			// set up window title
 			super("Create TriState","TRISTATE");
@@ -493,7 +481,7 @@ public class TriState extends LogicElement {
 			oDown.addActionListener(this);
 
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

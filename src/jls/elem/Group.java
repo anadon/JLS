@@ -321,10 +321,8 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		protected GroupCreate(int x, int y, String type) {
+		protected GroupCreate(String type) {
 
 			// set up window title
 			super("Create " + type,
@@ -380,7 +378,7 @@ public abstract class Group extends LogicElement {
 			window.add(orients);
 
 			confirmOnEnter(bitsField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**
@@ -407,9 +405,8 @@ public abstract class Group extends LogicElement {
 				}
 			}
 			else {
-				Point here = getLocation();
 				dispose();
-				new GetRanges(here,type);
+				new GetRanges(type);
 			}
 			if(left.isSelected())
 			{
@@ -470,10 +467,9 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Construct dialog.
 		 * 
-		 * @param where The location of the dialog.
 		 * @param type Either "Bundler" or "Unbundler".
 		 */
-		public GetRanges(Point where, String type) {
+		public GetRanges(String type) {
 
 			super("Pick Bit Groups",
 					type.equals("unbundle") ? "unbundle" : "bundle");
@@ -543,7 +539,7 @@ public abstract class Group extends LogicElement {
 			downshifter.addActionListener(this);
 			downjumper.addActionListener(this);
 
-			finishDialog(where.x,where.y);
+			finishDialog();
 		} // end of constructor
 
 		/**

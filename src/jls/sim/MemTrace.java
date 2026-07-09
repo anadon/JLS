@@ -34,13 +34,13 @@ public final class MemTrace extends JFrame {
 	} // end of constructor
 	
 	/**
-	 * Make the window visible.
+	 * Make the window visible, placed relative to its owner (#104).
 	 *
-	 * @param loc Where to put the window.
+	 * @param owner The component the simulator is displayed in.
 	 */
-	public void showit(Point loc) {
-		
-		setLocation(loc);
+	public void showit(Component owner) {
+
+		setLocationRelativeTo(owner);
 		setVisible(true);
 	} // end of showit method
 	

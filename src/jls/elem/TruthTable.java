@@ -8,7 +8,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,6 +38,7 @@ import jls.Help;
 import jls.JLSInfo;
 import jls.TellUser;
 import jls.Util;
+import jls.util.Placement;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
@@ -109,13 +109,8 @@ public final class TruthTable extends LogicElement implements Printable {
 		init(g);
 
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		Point win = editWindow.getLocationOnScreen();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 
 		return true;
 	} // end of setup method

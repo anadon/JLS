@@ -3,6 +3,7 @@ package jls.elem;
 import jls.*;
 import jls.edit.*;
 import jls.sim.*;
+import jls.util.Placement;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -60,14 +61,7 @@ public class Constant extends LogicElement implements ActionListener {
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new ConstantCreate(x+win.x,y+win.y);
-		}
-		else {
-			new ConstantCreate(pos.x+win.x,pos.y+win.y);
-		}
+		new ConstantCreate();
 		
 		// don't do anything if user cancelled gate
 		if (cancelled)
@@ -82,12 +76,8 @@ public class Constant extends LogicElement implements ActionListener {
 		init(g);
 		
 		// save position
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		p.x -= win.x;
-		p.y -= win.y;
-		if (p != null) {
-			super.setXY(p.x-width/2,p.y-height/2);
-		}
+		Point p = Placement.dropPoint(editWindow,x,y,width,height);
+		super.setXY(p.x,p.y);
 		
 		return true;
 	} // end of setup method
@@ -361,10 +351,8 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private ConstantCreate(int x, int y) {
+		private ConstantCreate() {
 			
 			// set up window title
 			super("Create Constant","const");
@@ -442,7 +430,7 @@ public class Constant extends LogicElement implements ActionListener {
 			base16.addActionListener(this);
 
 			confirmOnEnter(valueField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**
@@ -573,14 +561,7 @@ public class Constant extends LogicElement implements ActionListener {
 		saveg = g;
 		
 		// display dialog
-		Point pos = editWindow.getMousePosition();
-		Point win = editWindow.getLocationOnScreen();
-		if (pos == null) {
-			new ConstantChange(x+win.x,y+win.y);
-		}
-		else {
-			new ConstantChange(pos.x+win.x,pos.y+win.y);
-		}
+		new ConstantChange();
 		
 		// no change if cancelled
 		if (cancelled)
@@ -639,10 +620,8 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Set up create dialog window.
 		 * 
-		 * @param x The x-coordinate of the position of the dialog.
-		 * @param y The y-coordinate of the position of the dialog.
 		 */
-		private ConstantChange(int x, int y) {
+		private ConstantChange() {
 			
 			// set up window title
 			super("Change Constant","const");
@@ -690,7 +669,7 @@ public class Constant extends LogicElement implements ActionListener {
 			base16.addActionListener(this);
 
 			confirmOnEnter(valueField);
-			finishDialog(x,y);
+			finishDialog();
 		} // end of constructor
 
 		/**

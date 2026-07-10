@@ -85,6 +85,10 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
+          # A semver pre-release tag (one carrying a `-rc.1`/`-beta.1`/…
+          # suffix, i.e. containing a hyphen) publishes as a GitHub
+          # pre-release; a plain `v5.0.0` tag ships as a full release.
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             target/jls-*.jar
             target/bom.json
@@ -122,12 +126,22 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up JDK 21
+      # JDK 25: the pom's language baseline is 25 (maven-enforcer requires
+      # [25,) and the compiler targets release 25), so packaging must build
+      # on 25 -- and jlink then bundles a 25 runtime, which is what the app
+      # needs at run time.
+      - name: Set up JDK 25
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: maven
+
+      # deb needs fakeroot (preinstalled on ubuntu runners, pinned here for
+      # safety); rpm adds the --type rpm leg the recipe builds when present.
+      - name: Install Linux packaging tools (deb + rpm)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot rpm
 
       # Same guard as the release job: every leg refuses to package a
       # version the tag does not name (#44).
@@ -183,5 +197,8 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
+          # keep the pre-release flag consistent with the release job so an
+          # rc tag's installers do not flip the release to a full release
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: target/installer/dist/*
           fail_on_unmatched_files: true

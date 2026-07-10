@@ -5,12 +5,24 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
-## [Unreleased] — 5.0.0-SNAPSHOT
+## [Unreleased]
+
+## [5.0.0-rc.1] — 2026-07-10
+
+First release candidate for 5.0.0, published as a GitHub **pre-release**
+with self-contained native installers for every desktop OS (Linux
+`deb`/`rpm`, Windows `msi`, macOS `dmg`) alongside the portable jar, SBOM,
+and provenance attestation.
 
 *(Renumbered from 4.3.0-SNAPSHOT: the plugin-mechanism removal below is a
 feature removal, which is a MAJOR version event under semantic versioning.)*
 
 ### Added
+- The release workflow now ships native installers for all three desktop
+  OSs on a tag push: the installer job builds on JDK 25 (matching the
+  language baseline, so the bundled jlink runtime can run the app), and a
+  semver pre-release tag (one with a `-rc.1`/`-beta.1`/… suffix) publishes
+  as a GitHub pre-release rather than a full release (#82).
 - VHDL export completes HDL stage 1 (#60): `jls -export out.vhdl circuit.jls`
   (or `.vhd`) writes the same circuits the Verilog exporter handles as a
   single structural VHDL entity, accepted by both VHDL-93 and VHDL-2002
@@ -237,3 +249,10 @@ as a binary.
 ## [4.1.5] — 2014-03-18
 
 The last legacy-era state, self-reporting "JLS 4.1 build 5, 2014".
+
+Archival native installers (Linux `deb`/`rpm`, Windows `msi`, macOS `dmg`)
+and a portable jar were published for this version on 2026-07-10, built
+from the 2015 source tree by `scripts/build-installer-legacy.sh` and the
+`Release (legacy 4.1.5)` workflow. The binaries reproduce the authentic
+behavior, including the original Michigan Tech license-acceptance gate at
+startup.

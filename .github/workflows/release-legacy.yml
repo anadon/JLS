@@ -1,0 +1,157 @@
+name: Release (legacy 4.1.5)
+
+# The 2015-era JLS 4.1.5 -- the last pre-modernization state, tagged v4.1.5 --
+# predates the Maven build and the jpackage recipe, so it cannot ride the
+# main Release workflow.  This workflow reconstructs a native installer for
+# every desktop OS from that historical source tree (the whole recipe lives
+# in scripts/build-installer-legacy.sh) and attaches them to a GitHub Release
+# on the pre-existing v4.1.5 tag.
+#
+# Trigger: pushing a `legacy-v*` tag (e.g. legacy-v4.1.5).  A distinct tag
+# namespace keeps it clear of the main workflow's `v*` trigger; the Release
+# itself is published against tag v4.1.5 (which already points at the 2015
+# commit), so the archival binaries land on the version they belong to.
+#
+# All actions are pinned to full commit SHAs, matching release.yml.
+on:
+  push:
+    tags: ["legacy-v*"]
+  workflow_dispatch:
+
+permissions:
+  # create the release and upload assets
+  contents: write
+  # sign the provenance attestation (OIDC)
+  id-token: write
+  attestations: write
+
+jobs:
+  # Linux leg + release creation: builds the portable jar and the deb/rpm,
+  # then creates the v4.1.5 Release so the per-OS installer legs have a
+  # release to append to (avoids a create race between matrix legs).
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # the 2015 source is recovered from history (git archive v4.1.5)
+          fetch-depth: 0
+
+      # JLS 4.1.5 is Java 1.7 source; JDK 21 compiles it cleanly (the applet,
+      # the only user of the removed Applet API, is excluded by the script)
+      # and its runtime is what gets bundled into the installer.
+      - name: Set up JDK 21
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Linux packaging tools (deb + rpm)
+        run: sudo apt-get update && sudo apt-get install -y fakeroot rpm
+
+      - name: Build legacy installer (jar + deb + rpm)
+        shell: bash
+        run: bash scripts/build-installer-legacy.sh
+
+      # Offer the portable jar alongside the installers (runs on any JRE 8+).
+      - name: Stage the portable jar
+        shell: bash
+        run: cp target/installer-legacy/jar/jls-4.1.5.jar target/installer-legacy/dist/
+
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: target/installer-legacy/dist/*
+
+      - name: Generate sha256 checksums
+        shell: bash
+        run: |
+          cd target/installer-legacy/dist
+          sha256sum * > SHA256SUMS-legacy-linux
+          cat SHA256SUMS-legacy-linux
+
+      - name: Publish GitHub Release (v4.1.5)
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        with:
+          tag_name: v4.1.5
+          name: JLS 4.1.5 (2015 archival build)
+          # not the project's "latest": this is a historical snapshot, and
+          # no current stable release exists yet
+          make_latest: false
+          prerelease: false
+          body: |
+            **Archival build of JLS 4.1.5** — the last pre-modernization
+            (2015) state of JLS, reconstructed from the source tagged
+            `v4.1.5` and packaged as a self-contained native installer for
+            each desktop OS. Each installer bundles its own Java runtime, so
+            no separate JDK/JRE is needed.
+
+            - **Linux:** `jls_4.1.5_amd64.deb` (`sudo apt install ./jls_4.1.5_amd64.deb`) or `jls-4.1.5-1.x86_64.rpm`
+            - **Windows:** `JLS-4.1.5.msi` (per-user install)
+            - **macOS:** `JLS-4.1.5.dmg`
+            - **Portable jar:** `jls-4.1.5.jar` (`java -jar jls-4.1.5.jar`, any JRE 8+)
+
+            On first launch this version shows the original Michigan
+            Technological University license agreement and asks you to
+            accept it — that is the authentic 2015 behavior (later releases
+            are GPLv3 and drop the gate). The artifacts are unsigned, so
+            SmartScreen (Windows) and Gatekeeper (macOS) will warn on first
+            run; verify the download against the `SHA256SUMS-legacy-*`
+            asset for the assurance signing would otherwise give.
+
+            For the current, actively-maintained JLS see the newest release.
+          files: target/installer-legacy/dist/*
+          fail_on_unmatched_files: true
+
+  # Windows (.msi) and macOS (.dmg) legs: build the same self-contained
+  # artifact and append it to the v4.1.5 Release created above.
+  installers:
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build legacy installer
+        shell: bash
+        run: bash scripts/build-installer-legacy.sh
+
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: target/installer-legacy/dist/*
+
+      - name: Generate sha256 checksums
+        shell: bash
+        run: |
+          cd target/installer-legacy/dist
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum * > "SHA256SUMS-legacy-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+          else
+            shasum -a 256 * > "SHA256SUMS-legacy-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+          fi
+          cat SHA256SUMS-legacy-*
+
+      - name: Upload installers to the GitHub Release (v4.1.5)
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        with:
+          tag_name: v4.1.5
+          files: target/installer-legacy/dist/*
+          fail_on_unmatched_files: true

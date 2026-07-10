@@ -7,8 +7,10 @@
   <groupId>io.github.anadon</groupId>
   <artifactId>jls</artifactId>
   <!-- v5.0.0: major bump because the (never-reachable) plugin mechanism
-       was removed, a feature removal by policy (issue #80) -->
-  <version>5.0.0-SNAPSHOT</version>
+       was removed, a feature removal by policy (issue #80).
+       5.0.0-rc.1: first release candidate, cut as a GitHub pre-release
+       with native installers for every desktop OS. -->
+  <version>5.0.0-rc.1</version>
   <packaging>jar</packaging>
 
   <name>JLS - Java Logic Simulator</name>
@@ -31,7 +33,7 @@
     <!-- reproducible builds: archives get this fixed timestamp instead of
          wall-clock time, so the same commit rebuilds byte-identically;
          bump it alongside the version when cutting a release (#44) -->
-    <project.build.outputTimestamp>2026-07-08T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-07-10T00:00:00Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>

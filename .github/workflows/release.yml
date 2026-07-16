@@ -92,6 +92,40 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
 
+  # Publishes the jar to the GitHub Packages Maven registry, so the
+  # repository's Packages sidebar carries the artifact alongside the
+  # Release.  GitHub's Maven registry needs an access token even to
+  # download public packages, so this complements — never replaces — the
+  # Release assets (see the distributionManagement note in the pom).
+  maven-registry:
+    # a publication, so tag pushes only; dry runs skip it entirely
+    if: github.event_name == 'push'
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # server-id matches the pom's distributionManagement id; setup-java
+      # writes the matching settings.xml server entry, credentialed from
+      # the GITHUB_ACTOR/GITHUB_TOKEN environment
+      - name: Set up JDK 25
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+          server-id: github
+
+      # tests, coverage, and spotbugs already gated the release job's
+      # `mvn verify` on this same ref; deploy only needs the artifact
+      - name: Publish to GitHub Packages
+        run: mvn -B deploy -DskipTests -Djacoco.skip=true -Dspotbugs.skip=true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
   # Self-contained installers with a bundled jlink-trimmed runtime and the
   # .jls file association (#82).  The whole recipe lives in
   # scripts/build-installer.sh (jar -> jdeps -> jlink -> jpackage) so local

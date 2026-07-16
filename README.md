@@ -16,6 +16,14 @@ self-contained installers with a bundled Java runtime — no JDK needed:
 
 - **Linux:** `jls_<version>_amd64.deb` (`sudo apt install ./jls_*.deb`) or
   `jls-<version>*.rpm`. JLS appears in the applications menu.
+- **Linux (any distro):** `JLS-<version>-x86_64.AppImage` — no installation:
+  `chmod +x` it and run it (`--appimage-extract-and-run` if FUSE is absent).
+  The `.jls` association comes along only if your desktop integrates
+  AppImages (e.g. via AppImageLauncher).
+- **NixOS / Nix:** the repository is a flake — `nix run github:anadon/JLS`
+  runs it, `nix profile install github:anadon/JLS` installs the `jls`
+  command with menu entry and `.jls` association. (The deb/rpm/AppImage
+  assets do not fit NixOS; the flake builds from source instead.)
 - **Windows:** `JLS-<version>.msi` (per-user install, no admin rights
   needed). SmartScreen will warn that the installer is from an unknown
   publisher because the artifacts are unsigned — choose "More info" →
@@ -49,6 +57,12 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   `sha256sum -c SHA256SUMS`; releases additionally carry signed build
   provenance, checkable with
   `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
+
+- **From the Maven registry:** releases are also published to GitHub
+  Packages (`maven.pkg.github.com/anadon/JLS`, artifact
+  `io.github.anadon:jls`) for Maven tooling. GitHub requires an access
+  token even for public downloads there, so plain-download users should
+  prefer the Releases page.
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time

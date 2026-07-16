@@ -83,7 +83,7 @@ jobs:
 
       - name: Publish GitHub Release
         if: github.event_name == 'push'
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           files: |
             target/jls-*.jar
@@ -181,7 +181,7 @@ jobs:
       # stop here: the installers were built and checksummed, nothing ships)
       - name: Upload installers to the GitHub Release
         if: github.event_name == 'push'
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           files: target/installer/dist/*
           fail_on_unmatched_files: true

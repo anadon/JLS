@@ -14,6 +14,14 @@
 //                                   16/32/48/256 entries (valid since Vista)
 //     resources/packaging/jls.icns  ICNS container (macOS) with PNG-compressed
 //                                   ic07/ic08/ic09 (128/256/512) entries
+//     resources/packaging/jls-document.icns
+//                                   same content under a distinct name for the
+//                                   .jls file association: jpackage puts the
+//                                   app icon (renamed JLS.icns) and the
+//                                   association icon side by side in
+//                                   Contents/Resources, and on macOS's
+//                                   case-insensitive filesystem jls.icns
+//                                   would collide with it
 //
 // The ICO and ICNS files are written directly as PNG-bearing containers so no
 // external conversion tool (ImageMagick, icotool, iconutil) is required.
@@ -57,8 +65,12 @@ public final class GenerateIcons {
 				new String[] { "ic07", "ic08", "ic09" },
 				new byte[][] { pngBytes(scale(master, 128)),
 						pngBytes(scale(master, 256)), pngBytes(master) });
+		Files.copy(outDir.resolve("jls.icns"),
+				outDir.resolve("jls-document.icns"),
+				java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-		System.out.println("wrote jls.png, jls.ico, jls.icns to " + outDir);
+		System.out.println(
+				"wrote jls.png, jls.ico, jls.icns, jls-document.icns to " + outDir);
 	}
 
 	/** Draw the icon at the given square size. */

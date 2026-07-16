@@ -64,6 +64,18 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   token even for public downloads there, so plain-download users should
   prefer the Releases page.
 
+- **Container image (batch mode only):** for autograders and CI,
+  `ghcr.io/anadon/jls` runs the headless surface — test vectors, VCD
+  waveform export, circuit image export, HDL export — with no local
+  Java runtime:
+
+  ```sh
+  docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests circuit.jls
+  ```
+
+  The image is headless by construction (no display stack); use an
+  installer or the jar for the GUI editor.
+
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
   limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and

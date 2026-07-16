@@ -126,6 +126,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
+  # Batch-mode (headless) container image for autograders and CI:
+  # `docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests c.jls`.
+  # The recipe lives in scripts/build-container.sh + the Dockerfile under
+  # resources/packaging/ so local builds and CI cannot drift.  Dry runs
+  # build and smoke-test the image but never push.
+  container-image:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # the full test suite already gated the release job's `mvn verify`
+      # on this same ref; this leg only needs the jar
+      - name: Build jar (tests ran in the release job)
+        run: mvn -B -q package -DskipTests
+
+      - name: Build container image
+        env:
+          JLS_SKIP_BUILD: "1"
+        run: bash scripts/build-container.sh
+
+      - name: Smoke-test the image
+        run: |
+          VERSION="$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)"
+          docker run --rm "ghcr.io/anadon/jls:${VERSION}" -h
+
+      # a publication, so tag pushes only (dry runs stop at the smoke test)
+      - name: Push to ghcr.io
+        if: github.event_name == 'push'
+        run: |
+          echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push --all-tags ghcr.io/anadon/jls
+
   # Self-contained installers with a bundled jlink-trimmed runtime and the
   # .jls file association (#82).  The whole recipe lives in
   # scripts/build-installer.sh (jar -> jdeps -> jlink -> jpackage) so local

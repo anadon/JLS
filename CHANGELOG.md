@@ -5,9 +5,29 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
-## [Unreleased] — 5.0.3-SNAPSHOT
+## [5.0.3] — 2026-07-16
 
-*(Nothing yet.)*
+### Added
+- Multi-architecture distribution (ARM and RISC-V):
+  - The container image `ghcr.io/anadon/jls` is now a multi-arch
+    manifest — `linux/amd64`, `linux/arm64`, `linux/riscv64` — built on
+    `ubuntu:26.04` + OpenJDK 25, the one JDK-25-bearing base published
+    for all three architectures (eclipse-temurin has no riscv64);
+    arm64/riscv64 legs build under QEMU, and dry-runs prove every
+    platform without pushing.
+  - aarch64 Linux installers (deb, rpm, AppImage) from an
+    `ubuntu-24.04-arm` runner, with a per-architecture pinned
+    appimagetool, and an aarch64 Windows installer from a
+    `windows-11-arm` runner (both experimental until checked on real
+    hardware, like their x86_64 predecessors were).
+  - Installer names now carry the architecture
+    (`JLS-<version>-<arch>.msi`/`.dmg`; deb/rpm already did), and the
+    per-leg checksum assets became `SHA256SUMS-installers-<os>-<arch>`
+    so same-OS legs cannot overwrite each other.
+  - RISC-V gets no native installer — no GitHub runners exist and
+    jpackage cannot cross-compile its launcher — so it is served by the
+    container image and the architecture-independent jar. The macOS dmg
+    was already ARM: macos-latest runners are Apple silicon.
 
 ## [5.0.2] — 2026-07-16
 

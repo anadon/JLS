@@ -14,28 +14,35 @@ his JLS 4.1.
 The [Releases page](https://github.com/anadon/JLS/releases) carries
 self-contained installers with a bundled Java runtime — no JDK needed:
 
-- **Linux:** `jls_<version>_amd64.deb` (`sudo apt install ./jls_*.deb`) or
-  `jls-<version>*.rpm`. JLS appears in the applications menu.
-- **Linux (any distro):** `JLS-<version>-x86_64.AppImage` — no installation:
-  `chmod +x` it and run it (`--appimage-extract-and-run` if FUSE is absent).
-  The `.jls` association comes along only if your desktop integrates
-  AppImages (e.g. via AppImageLauncher).
+- **Linux:** `jls_<version>_<arch>.deb` (`sudo apt install ./jls_*.deb`) or
+  `jls-<version>*.rpm`, for x86_64 (`amd64`) and ARM (`arm64`/`aarch64`).
+  JLS appears in the applications menu.
+- **Linux (any distro):** `JLS-<version>-x86_64.AppImage` or
+  `JLS-<version>-aarch64.AppImage` — no installation: `chmod +x` it and
+  run it (`--appimage-extract-and-run` if FUSE is absent). The `.jls`
+  association comes along only if your desktop integrates AppImages
+  (e.g. via AppImageLauncher).
 - **NixOS / Nix:** the repository is a flake — `nix run github:anadon/JLS`
   runs it, `nix profile install github:anadon/JLS` installs the `jls`
   command with menu entry and `.jls` association. (The deb/rpm/AppImage
   assets do not fit NixOS; the flake builds from source instead.)
-- **Windows:** `JLS-<version>.msi` (per-user install, no admin rights
-  needed). SmartScreen will warn that the installer is from an unknown
-  publisher because the artifacts are unsigned — choose "More info" →
-  "Run anyway". Verify the download against `SHA256SUMS-installers-windows`
+- **Windows:** `JLS-<version>-x86_64.msi`, or `JLS-<version>-aarch64.msi`
+  for Windows on ARM (per-user install, no admin rights needed).
+  SmartScreen will warn that the installer is from an unknown publisher
+  because the artifacts are unsigned — choose "More info" → "Run anyway".
+  Verify the download against `SHA256SUMS-installers-windows-<arch>`
   first if you want the assurance signing would otherwise give.
-- **macOS:** `JLS-<version>.dmg`. The app is unsigned, so Gatekeeper blocks
-  a plain double-click the first time: right-click (Control-click) the app
-  and choose "Open", then confirm — needed only once.
+- **macOS:** `JLS-<version>-aarch64.dmg` (Apple silicon). The app is
+  unsigned, so Gatekeeper blocks a plain double-click the first time:
+  right-click (Control-click) the app and choose "Open", then confirm —
+  needed only once. Intel Macs: use the jar below.
+- **RISC-V:** no installer (nothing exists to build one on), but the jar
+  below runs on any riscv64 JDK 25+, and the container image ships a
+  `linux/riscv64` variant.
 
 Installing associates `.jls` circuit files with JLS: double-click a `.jls`
 file and it opens in the editor. Each installer has a sha256 entry in the
-`SHA256SUMS-installers-<os>` release asset.
+`SHA256SUMS-installers-<os>-<arch>` release asset.
 
 ## Running JLS from the jar (no installer)
 
@@ -73,8 +80,9 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests circuit.jls
   ```
 
-  The image is headless by construction (no display stack); use an
-  installer or the jar for the GUI editor.
+  Multi-arch: `linux/amd64`, `linux/arm64`, and `linux/riscv64` under
+  one tag. The image is headless by construction (no display stack);
+  use an installer or the jar for the GUI editor.
 
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time

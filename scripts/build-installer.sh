@@ -54,7 +54,18 @@ VENDOR="$(mvn -B -q help:evaluate -Dexpression=project.groupId -DforceStdout)"
 # refuses SNAPSHOT releases; local snapshot builds just get the base triple.
 APP_VERSION="$(printf '%s' "$VERSION" | sed -E 's/^([0-9]+(\.[0-9]+){0,2}).*$/\1/')"
 
-echo "==> version ${VERSION} (installer version ${APP_VERSION})"
+# normalized machine architecture for artifact names (macOS says arm64
+# where Linux says aarch64); deb/rpm carry their own arch fields, but
+# msi/dmg/AppImage names need it to keep multi-arch releases collision-free.
+# On Windows-on-ARM the git-bash uname is an emulated x64 binary and
+# reports x86_64, so the runner's own RUNNER_ARCH wins when present.
+ARCH="${RUNNER_ARCH:-$(uname -m)}"
+case "$ARCH" in
+	ARM64 | arm64) ARCH=aarch64 ;;
+	X64 | amd64) ARCH=x86_64 ;;
+esac
+
+echo "==> version ${VERSION} (installer version ${APP_VERSION}, arch ${ARCH})"
 
 # --- shaded jar -------------------------------------------------------------
 if [ "${JLS_SKIP_BUILD:-0}" != "1" ]; then
@@ -110,13 +121,19 @@ package() {
 		"$@"
 }
 
-# --- AppImage (Linux x86_64 only) -------------------------------------------
+# --- AppImage (Linux x86_64 / aarch64) --------------------------------------
 # jpackage --type app-image lays out launcher + bundled runtime; appimagetool
 # folds that tree into one self-mounting executable that runs on any distro
 # (including ones the deb/rpm cannot target).  appimagetool itself is pinned
-# by version and sha256, matching the release pipeline's supply-chain posture.
-APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
-APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+# by version and sha256 per architecture, matching the release pipeline's
+# supply-chain posture.
+APPIMAGETOOL_VERSION="1.9.1"
+case "$ARCH" in
+	x86_64) APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0" ;;
+	aarch64) APPIMAGETOOL_SHA256="f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158" ;;
+	*) APPIMAGETOOL_SHA256="" ;;
+esac
+APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-${ARCH}.AppImage"
 
 build_appimage() {
 	# app-image is the raw launcher tree: installer-only flags such as
@@ -155,7 +172,7 @@ build_appimage() {
 	local tool="${APPIMAGETOOL:-}"
 	if [ -z "$tool" ]; then
 		tool="$STAGE/appimagetool"
-		echo "==> fetching appimagetool 1.9.1"
+		echo "==> fetching appimagetool ${APPIMAGETOOL_VERSION} (${ARCH})"
 		curl -fsSL -o "$tool" "$APPIMAGETOOL_URL"
 		echo "${APPIMAGETOOL_SHA256}  ${tool}" | sha256sum -c -
 		chmod +x "$tool"
@@ -163,8 +180,8 @@ build_appimage() {
 	# --appimage-extract-and-run: appimagetool is itself an AppImage and
 	# would otherwise need FUSE, absent on CI runners and NixOS
 	echo "==> appimagetool"
-	ARCH=x86_64 "$tool" --appimage-extract-and-run \
-		"$appdir" "$DIST/JLS-${VERSION}-x86_64.AppImage"
+	ARCH="$ARCH" "$tool" --appimage-extract-and-run \
+		"$appdir" "$DIST/JLS-${VERSION}-${ARCH}.AppImage"
 }
 
 case "$(uname -s)" in
@@ -185,10 +202,10 @@ case "$(uname -s)" in
 		else
 			echo "==> rpmbuild not found; skipping --type rpm"
 		fi
-		if [ "$(uname -m)" = "x86_64" ]; then
+		if [ -n "$APPIMAGETOOL_SHA256" ]; then
 			build_appimage
 		else
-			echo "==> non-x86_64 Linux; skipping AppImage (tool pin is x86_64)"
+			echo "==> no appimagetool pin for ${ARCH}; skipping AppImage"
 		fi
 		;;
 	Darwin)
@@ -197,6 +214,9 @@ case "$(uname -s)" in
 			--icon resources/packaging/jls.icns \
 			--file-associations resources/packaging/jls-association-macos.properties \
 			--mac-package-identifier io.github.anadon.jls
+		# jpackage names the dmg JLS-<version>.dmg with no architecture;
+		# suffix it so Apple-silicon and Intel builds cannot collide
+		mv "$DIST/JLS-${APP_VERSION}.dmg" "$DIST/JLS-${APP_VERSION}-${ARCH}.dmg"
 		;;
 	MINGW* | MSYS* | CYGWIN*)
 		# Per-user install: no admin rights needed (student/lab machines);
@@ -207,6 +227,8 @@ case "$(uname -s)" in
 			--win-menu \
 			--win-shortcut \
 			--win-per-user-install
+		# same collision-proofing as the dmg
+		mv "$DIST/JLS-${APP_VERSION}.msi" "$DIST/JLS-${APP_VERSION}-${ARCH}.msi"
 		;;
 	*)
 		echo "unsupported platform: $(uname -s)" >&2

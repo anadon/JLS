@@ -129,8 +129,11 @@ jobs:
   # Batch-mode (headless) container image for autograders and CI:
   # `docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests c.jls`.
   # The recipe lives in scripts/build-container.sh + the Dockerfile under
-  # resources/packaging/ so local builds and CI cannot drift.  Dry runs
-  # build and smoke-test the image but never push.
+  # resources/packaging/ so local builds and CI cannot drift.  Multi-arch
+  # (amd64 native, arm64 + riscv64 via QEMU) — for RISC-V this image and
+  # the jar are the only channels, since no riscv64 runners exist and
+  # jpackage cannot cross-compile installers.  Dry runs build and
+  # smoke-test every platform but never push.
   container-image:
     needs: release
     runs-on: ubuntu-latest
@@ -152,7 +155,9 @@ jobs:
       - name: Build jar (tests ran in the release job)
         run: mvn -B -q package -DskipTests
 
-      - name: Build container image
+      # native single-arch build first: it is the smoke-testable one
+      # (a multi-arch buildx result cannot be --load-ed for docker run)
+      - name: Build container image (native, for the smoke test)
         env:
           JLS_SKIP_BUILD: "1"
         run: bash scripts/build-container.sh
@@ -162,12 +167,24 @@ jobs:
           VERSION="$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)"
           docker run --rm "ghcr.io/anadon/jls:${VERSION}" -h
 
-      # a publication, so tag pushes only (dry runs stop at the smoke test)
-      - name: Push to ghcr.io
+      # arm64 and riscv64 run under QEMU user-mode emulation
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to ghcr.io
         if: github.event_name == 'push'
-        run: |
-          echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker push --all-tags ghcr.io/anadon/jls
+        run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      # dry runs prove all three platforms build; tag pushes publish the
+      # multi-arch manifest (PUSH=1)
+      - name: Build multi-arch image (and push on tag)
+        env:
+          JLS_SKIP_BUILD: "1"
+          PLATFORMS: linux/amd64,linux/arm64,linux/riscv64
+          PUSH: ${{ github.event_name == 'push' && '1' || '0' }}
+        run: bash scripts/build-container.sh
 
   # Self-contained installers with a bundled jlink-trimmed runtime and the
   # .jls file association (#82).  The whole recipe lives in
@@ -175,24 +192,42 @@ jobs:
   # builds and CI cannot drift.
   #
   # Verification status:
-  #   - ubuntu-latest (deb + rpm): recipe verified end-to-end on Linux
-  #     (deb installed, launcher ran, .jls association files present).
-  #   - windows-latest (msi) and macos-latest (dmg): built successfully in
-  #     the v5.0.0 dry-run; still continue-on-error until a real msi/dmg
-  #     has been installed and checked on hardware — flip experimental to
-  #     false then.  The icons are real per-platform files (jls.ico /
-  #     jls.icns are PNG-bearing containers from scripts/GenerateIcons.java).
+  #   - ubuntu-latest (x86_64 deb + rpm + AppImage): recipe verified
+  #     end-to-end on Linux (deb installed, launcher ran, .jls
+  #     association files present).
+  #   - windows-latest (msi) and macos-latest (dmg, Apple silicon — the
+  #     macos-latest runners are arm64): built successfully in dry-runs;
+  #     still continue-on-error until a real msi/dmg has been installed
+  #     and checked on hardware — flip experimental to false then.  The
+  #     icons are real per-platform files (jls.ico / jls.icns are
+  #     PNG-bearing containers from scripts/GenerateIcons.java).
+  #   - ubuntu-24.04-arm (aarch64 deb + rpm + AppImage) and
+  #     windows-11-arm (aarch64 msi): same recipe on ARM runners;
+  #     experimental until installed and checked on hardware.
+  #   - riscv64: no GitHub runners exist and jpackage cannot
+  #     cross-compile its launcher, so RISC-V is served by the container
+  #     image (built via QEMU below) and the architecture-independent jar.
   installers:
     needs: release
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-latest # x86_64
+            jdk: temurin
             experimental: false
-          - os: windows-latest # builds; uninstalled on real hardware (#82)
+          - os: ubuntu-24.04-arm # aarch64; uninstalled on real hardware
+            jdk: temurin
             experimental: true
-          - os: macos-latest # builds; uninstalled on real hardware (#82)
+          - os: windows-latest # x86_64; uninstalled on real hardware (#82)
+            jdk: temurin
+            experimental: true
+          # zulu: Temurin publishes no Windows-aarch64 JDK 25; Azul does
+          - os: windows-11-arm # aarch64; uninstalled on real hardware
+            jdk: zulu
+            experimental: true
+          - os: macos-latest # aarch64; uninstalled on real hardware (#82)
+            jdk: temurin
             experimental: true
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
@@ -202,7 +237,7 @@ jobs:
       - name: Set up JDK 25
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
-          distribution: temurin
+          distribution: ${{ matrix.jdk }}
           java-version: 25
           cache: maven
 
@@ -225,6 +260,18 @@ jobs:
               exit 1
               ;;
           esac
+
+      # the windows-11-arm image ships without WiX (windows-latest
+      # preinstalls it), and jpackage needs candle/light for --type msi;
+      # the x86 WiX binaries run fine under Windows-on-ARM emulation.
+      # choco's PATH edit does not reach later steps, hence GITHUB_PATH.
+      - name: Install WiX Toolset (Windows on ARM)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          choco install wixtoolset -y --no-progress
+          $wix = (Resolve-Path 'C:\Program Files (x86)\WiX Toolset*\bin')[0].Path
+          Add-Content $env:GITHUB_PATH $wix
 
       # The full test suite already ran under `mvn verify` in the release
       # job; this leg only needs the jar.  Three tests fail on the Windows
@@ -252,18 +299,25 @@ jobs:
         with:
           subject-path: target/installer/dist/*
 
-      # Extends the release's SHA256SUMS with a per-OS list covering the
-      # installers built on this leg (macOS runners lack sha256sum).
+      # Extends the release's SHA256SUMS with a per-OS-and-arch list
+      # covering the installers built on this leg (macOS runners lack
+      # sha256sum; the arch suffix keeps the two Linux legs and the two
+      # Windows legs from overwriting each other's asset).
       - name: Generate sha256 checksums
         shell: bash
         run: |
           cd target/installer/dist
+          # RUNNER_ARCH first: git-bash's uname reports x86_64 under
+          # Windows-on-ARM emulation
+          ARCH="${RUNNER_ARCH:-$(uname -m)}"
+          case "$ARCH" in ARM64|arm64) ARCH=aarch64 ;; X64|amd64) ARCH=x86_64 ;; esac
+          SUMS="SHA256SUMS-installers-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')-${ARCH}"
           if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum * > "SHA256SUMS-installers-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+            sha256sum * > "$SUMS"
           else
-            shasum -a 256 * > "SHA256SUMS-installers-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+            shasum -a 256 * > "$SUMS"
           fi
-          cat SHA256SUMS-installers-*
+          cat "$SUMS"
 
       # Appends assets to the release the `release` job created (dry runs
       # stop here: the installers were built and checksummed, nothing ships)

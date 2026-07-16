@@ -7,21 +7,32 @@
 #
 #   docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests circuit.jls
 #
+# Multi-arch: linux/amd64, linux/arm64, linux/riscv64.  Both stages use
+# ubuntu:26.04 + the archive's OpenJDK 25 because it is the one
+# JDK-25-bearing base published for all three architectures
+# (eclipse-temurin and bellsoft/liberica images have no riscv64), and a
+# single FROM keeps the jlink runtime and the final stage on the same
+# glibc on every platform.
+#
 # Multi-stage: jdeps derives the module set from the shaded jar and jlink
 # trims a runtime from it (the same recipe as scripts/build-installer.sh),
 # so the final image carries ~50 MB of JVM instead of a full JDK.
 
-FROM eclipse-temurin:25 AS runtime
+# binutils: the archive's JDK carries unstripped native libraries, so
+# jlink --strip-debug shells out to objcopy (Temurin's jmods come
+# pre-stripped, which is why the old Temurin build stage never needed it)
+FROM ubuntu:26.04 AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-25-jdk-headless binutils \
+    && rm -rf /var/lib/apt/lists/*
 COPY jls.jar /build/jls.jar
 RUN set -eux; \
     MODULES="$(jdeps --print-module-deps --ignore-missing-deps /build/jls.jar)"; \
     jlink --add-modules "$MODULES" --strip-debug --no-header-files \
           --no-man-pages --compress zip-6 --output /build/runtime
 
-# ubuntu:24.04 is the same base eclipse-temurin:25 builds on, so the
-# jlink runtime meets the glibc it was linked against; fontconfig +
-# DejaVu let batch image export (-i) render text fully headlessly
-FROM ubuntu:24.04
+# fontconfig + DejaVu let batch image export (-i) render text headlessly
+FROM ubuntu:26.04
 RUN apt-get update \
     && apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*

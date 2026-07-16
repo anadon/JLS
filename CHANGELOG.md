@@ -5,9 +5,19 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
-## [Unreleased] — 5.0.2-SNAPSHOT
+## [5.0.2] — 2026-07-16
 
-*(Nothing yet.)*
+### Added
+- A batch-mode container image on the GitHub container registry:
+  `docker run --rm -v "$PWD:/work" ghcr.io/anadon/jls -b -t tests c.jls`
+  gives autograders and CI the whole headless surface (#72's batch API,
+  VCD export, image export, HDL export) without a local Java runtime.
+  Headless only — no display stack. Multi-stage build: jdeps/jlink trim
+  the runtime from the shaded jar (the installer recipe's approach)
+  onto ubuntu:24.04 with fontconfig + DejaVu so `-i` image export
+  renders text; one recipe, `scripts/build-container.sh` +
+  `resources/packaging/Dockerfile`, shared by CI and local builds;
+  `latest` tracks stable releases only.
 
 ## [5.0.1] — 2026-07-16
 

@@ -58,6 +58,12 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   provenance, checkable with
   `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
 
+- **From the Maven registry:** releases are also published to GitHub
+  Packages (`maven.pkg.github.com/anadon/JLS`, artifact
+  `io.github.anadon:jls`) for Maven tooling. GitHub requires an access
+  token even for public downloads there, so plain-download users should
+  prefer the Releases page.
+
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
   limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and

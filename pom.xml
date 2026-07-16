@@ -23,6 +23,19 @@
     </license>
   </licenses>
 
+  <!-- Where `mvn deploy` publishes: the GitHub Packages Maven registry
+       (the release workflow's maven-registry job, tag pushes only).
+       Note GitHub's Maven registry needs an access token even to
+       *download* public packages, so the Releases page stays the
+       primary distribution channel; this serves Maven tooling. -->
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages — anadon/JLS</name>
+      <url>https://maven.pkg.github.com/anadon/JLS</url>
+    </repository>
+  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- language baseline policy (#92): the floor is the current LTS at

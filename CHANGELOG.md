@@ -21,6 +21,11 @@ All notable changes to JLS are documented here. The format follows
   Maven shell. The package builds against the pinned nixpkgs JDK 25 with
   the dependency closure fingerprinted by `mvnHash` (tests remain CI's
   job — the sandbox has no fonts, the same reasoning as #111).
+- Releases also publish the jar to the GitHub Packages Maven registry
+  (`maven.pkg.github.com/anadon/JLS`), populating the repository's
+  Packages sidebar. GitHub's Maven registry requires an access token
+  even for public downloads, so the Releases page remains the primary
+  distribution channel; the registry serves Maven tooling.
 
 ## [5.0.0] — 2026-07-16
 

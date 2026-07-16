@@ -5,6 +5,10 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
+## [Unreleased] — 5.0.1-SNAPSHOT
+
+*(Nothing yet.)*
+
 ## [5.0.0] — 2026-07-16
 
 *(Renumbered from 4.3.0-SNAPSHOT: the plugin-mechanism removal below is a

@@ -261,6 +261,18 @@ jobs:
               ;;
           esac
 
+      # the windows-11-arm image ships without WiX (windows-latest
+      # preinstalls it), and jpackage needs candle/light for --type msi;
+      # the x86 WiX binaries run fine under Windows-on-ARM emulation.
+      # choco's PATH edit does not reach later steps, hence GITHUB_PATH.
+      - name: Install WiX Toolset (Windows on ARM)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          choco install wixtoolset -y --no-progress
+          $wix = (Resolve-Path 'C:\Program Files (x86)\WiX Toolset*\bin')[0].Path
+          Add-Content $env:GITHUB_PATH $wix
+
       # The full test suite already ran under `mvn verify` in the release
       # job; this leg only needs the jar.  Three tests fail on the Windows
       # runner for environmental reasons (CRLF-sensitive round-trip
@@ -295,8 +307,10 @@ jobs:
         shell: bash
         run: |
           cd target/installer/dist
-          ARCH="$(uname -m)"
-          case "$ARCH" in arm64) ARCH=aarch64 ;; amd64) ARCH=x86_64 ;; esac
+          # RUNNER_ARCH first: git-bash's uname reports x86_64 under
+          # Windows-on-ARM emulation
+          ARCH="${RUNNER_ARCH:-$(uname -m)}"
+          case "$ARCH" in ARM64|arm64) ARCH=aarch64 ;; X64|amd64) ARCH=x86_64 ;; esac
           SUMS="SHA256SUMS-installers-$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')-${ARCH}"
           if command -v sha256sum >/dev/null 2>&1; then
             sha256sum * > "$SUMS"

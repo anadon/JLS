@@ -56,11 +56,13 @@ APP_VERSION="$(printf '%s' "$VERSION" | sed -E 's/^([0-9]+(\.[0-9]+){0,2}).*$/\1
 
 # normalized machine architecture for artifact names (macOS says arm64
 # where Linux says aarch64); deb/rpm carry their own arch fields, but
-# msi/dmg/AppImage names need it to keep multi-arch releases collision-free
-ARCH="$(uname -m)"
+# msi/dmg/AppImage names need it to keep multi-arch releases collision-free.
+# On Windows-on-ARM the git-bash uname is an emulated x64 binary and
+# reports x86_64, so the runner's own RUNNER_ARCH wins when present.
+ARCH="${RUNNER_ARCH:-$(uname -m)}"
 case "$ARCH" in
-	arm64) ARCH=aarch64 ;;
-	amd64) ARCH=x86_64 ;;
+	ARM64 | arm64) ARCH=aarch64 ;;
+	X64 | amd64) ARCH=x86_64 ;;
 esac
 
 echo "==> version ${VERSION} (installer version ${APP_VERSION}, arch ${ARCH})"

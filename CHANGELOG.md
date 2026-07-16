@@ -5,9 +5,22 @@ All notable changes to JLS are documented here. The format follows
 [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`) from
 4.3.0 onward. A release is made by pushing a `v<version>` tag.
 
-## [Unreleased] — 5.0.1-SNAPSHOT
+## [5.0.1] — 2026-07-16
 
-*(Nothing yet.)*
+### Added
+- A Linux AppImage release asset, `JLS-<version>-x86_64.AppImage`: the
+  jpackage app-image tree (launcher + jlink-trimmed runtime) folded into
+  one self-mounting executable by a version- and sha256-pinned
+  appimagetool, with desktop metadata and the `.jls` MIME type inside.
+  Built by the same `scripts/build-installer.sh` recipe on the Linux leg;
+  runs on distros the deb/rpm cannot target.
+- A Nix flake, so NixOS users (whom the deb/rpm/AppImage do not serve)
+  build from source: `nix run github:anadon/JLS` runs the editor,
+  `nix profile install` gives the `jls` command plus a desktop entry,
+  icon, and `.jls` file association; `nix develop` opens a JDK 25 +
+  Maven shell. The package builds against the pinned nixpkgs JDK 25 with
+  the dependency closure fingerprinted by `mvnHash` (tests remain CI's
+  job — the sandbox has no fonts, the same reasoning as #111).
 
 ## [5.0.0] — 2026-07-16
 

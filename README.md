@@ -16,6 +16,14 @@ self-contained installers with a bundled Java runtime — no JDK needed:
 
 - **Linux:** `jls_<version>_amd64.deb` (`sudo apt install ./jls_*.deb`) or
   `jls-<version>*.rpm`. JLS appears in the applications menu.
+- **Linux (any distro):** `JLS-<version>-x86_64.AppImage` — no installation:
+  `chmod +x` it and run it (`--appimage-extract-and-run` if FUSE is absent).
+  The `.jls` association comes along only if your desktop integrates
+  AppImages (e.g. via AppImageLauncher).
+- **NixOS / Nix:** the repository is a flake — `nix run github:anadon/JLS`
+  runs it, `nix profile install github:anadon/JLS` installs the `jls`
+  command with menu entry and `.jls` association. (The deb/rpm/AppImage
+  assets do not fit NixOS; the flake builds from source instead.)
 - **Windows:** `JLS-<version>.msi` (per-user install, no admin rights
   needed). SmartScreen will warn that the installer is from an unknown
   publisher because the artifacts are unsigned — choose "More info" →

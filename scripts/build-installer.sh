@@ -7,9 +7,9 @@
 #   shaded jar (mvn package)
 #     -> jdeps --print-module-deps       derive the minimal module set
 #     -> jlink                           trim a runtime image
-#     -> jpackage --type <per OS>        deb/rpm (Linux), msi (Windows),
-#                                        dmg (macOS), with a .jls file
-#                                        association and desktop metadata
+#     -> jpackage --type <per OS>        deb/rpm + AppImage (Linux), msi
+#                                        (Windows), dmg (macOS), with a .jls
+#                                        file association and desktop metadata
 #
 # Requirements: JDK 17+ on PATH (jdeps/jlink/jpackage ship with the JDK;
 # jpackage is final since JDK 16, JEP 392), Maven, and per platform:
@@ -20,6 +20,8 @@
 # Environment:
 #   JLS_SKIP_BUILD=1   reuse an existing target/jls-*.jar instead of
 #                      running Maven (CI builds/tests in a prior step)
+#   APPIMAGETOOL=path  use this appimagetool instead of downloading the
+#                      pinned one (Linux x86_64 only)
 #
 # Outputs land in target/installer/dist/.
 
@@ -108,6 +110,63 @@ package() {
 		"$@"
 }
 
+# --- AppImage (Linux x86_64 only) -------------------------------------------
+# jpackage --type app-image lays out launcher + bundled runtime; appimagetool
+# folds that tree into one self-mounting executable that runs on any distro
+# (including ones the deb/rpm cannot target).  appimagetool itself is pinned
+# by version and sha256, matching the release pipeline's supply-chain posture.
+APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
+APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+
+build_appimage() {
+	# app-image is the raw launcher tree: installer-only flags such as
+	# --license-file or --file-associations are rejected here, so this
+	# does not go through package()
+	echo "==> jpackage --type app-image"
+	jpackage \
+		--type app-image \
+		--name JLS \
+		--app-version "$APP_VERSION" \
+		--input "$INPUT" \
+		--main-jar "$(basename "$JAR")" \
+		--runtime-image "$RUNTIME" \
+		--icon resources/packaging/jls.png \
+		--dest "$STAGE/appimage"
+
+	# AppDir contract: an AppRun entry point, exactly one top-level
+	# .desktop, and a top-level icon.  The jpackage launcher resolves its
+	# app directory through /proc/self/exe, so a symlinked AppRun works.
+	local appdir="$STAGE/appimage/JLS"
+	ln -s bin/JLS "$appdir/AppRun"
+	cp resources/packaging/jls.png "$appdir/jls.png"
+	ln -s jls.png "$appdir/.DirIcon"
+	cat > "$appdir/JLS.desktop" <<-EOF
+		[Desktop Entry]
+		Type=Application
+		Name=JLS
+		Comment=Educational digital logic circuit editor and simulator
+		Exec=JLS %f
+		Icon=jls
+		Categories=Education;Electronics;
+		MimeType=application/x-jls-circuit;
+		Terminal=false
+	EOF
+
+	local tool="${APPIMAGETOOL:-}"
+	if [ -z "$tool" ]; then
+		tool="$STAGE/appimagetool"
+		echo "==> fetching appimagetool 1.9.1"
+		curl -fsSL -o "$tool" "$APPIMAGETOOL_URL"
+		echo "${APPIMAGETOOL_SHA256}  ${tool}" | sha256sum -c -
+		chmod +x "$tool"
+	fi
+	# --appimage-extract-and-run: appimagetool is itself an AppImage and
+	# would otherwise need FUSE, absent on CI runners and NixOS
+	echo "==> appimagetool"
+	ARCH=x86_64 "$tool" --appimage-extract-and-run \
+		"$appdir" "$DIST/JLS-${VERSION}-x86_64.AppImage"
+}
+
 case "$(uname -s)" in
 	Linux)
 		# --resource-dir overrides the generated .desktop entry: the JDK
@@ -125,6 +184,11 @@ case "$(uname -s)" in
 			package rpm "${linux_flags[@]}"
 		else
 			echo "==> rpmbuild not found; skipping --type rpm"
+		fi
+		if [ "$(uname -m)" = "x86_64" ]; then
+			build_appimage
+		else
+			echo "==> non-x86_64 Linux; skipping AppImage (tool pin is x86_64)"
 		fi
 		;;
 	Darwin)

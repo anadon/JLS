@@ -12,3 +12,7 @@ Thumbs.db
 
 # Claude Code agent worktrees (transient session infrastructure)
 .claude/worktrees/
+
+# nix build output symlinks
+result
+result-*

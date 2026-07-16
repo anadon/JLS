@@ -84,6 +84,16 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   one tag. The image is headless by construction (no display stack);
   use an installer or the jar for the GUI editor.
 
+  Images are signed (keyless cosign, bound to this repository's release
+  workflow) and carry build-provenance attestations:
+
+  ```sh
+  cosign verify ghcr.io/anadon/jls:<version> \
+    --certificate-identity-regexp='^https://github.com/anadon/JLS/' \
+    --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+  gh attestation verify oci://ghcr.io/anadon/jls:<version> --repo anadon/JLS
+  ```
+
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
   limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and

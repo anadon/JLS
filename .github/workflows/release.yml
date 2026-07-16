@@ -140,6 +140,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # keyless cosign signing + OCI provenance attestation (#133)
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -185,6 +188,37 @@ jobs:
           PLATFORMS: linux/amd64,linux/arm64,linux/riscv64
           PUSH: ${{ github.event_name == 'push' && '1' || '0' }}
         run: bash scripts/build-container.sh
+
+      # Signature and provenance go on the manifest-list DIGEST, not a
+      # tag — tags are mutable (#133).  Publications, so tag pushes only.
+      - name: Read pushed digest
+        if: github.event_name == 'push'
+        id: digest
+        run: echo "digest=$(cat target/container/digest)" >> "$GITHUB_OUTPUT"
+
+      - name: Install cosign
+        if: github.event_name == 'push'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      # Keyless: the signature binds to this workflow's OIDC identity;
+      # verify with
+      #   cosign verify ghcr.io/anadon/jls:<version> \
+      #     --certificate-identity-regexp='^https://github.com/anadon/JLS/' \
+      #     --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+      - name: Sign the image (keyless cosign)
+        if: github.event_name == 'push'
+        run: cosign sign --yes "ghcr.io/anadon/jls@${{ steps.digest.outputs.digest }}"
+
+      # Same provenance statement the jar and installers get (#44),
+      # attached to the image in the registry:
+      #   gh attestation verify oci://ghcr.io/anadon/jls:<version> --repo anadon/JLS
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-name: ghcr.io/anadon/jls
+          subject-digest: ${{ steps.digest.outputs.digest }}
+          push-to-registry: true
 
   # Self-contained installers with a bundled jlink-trimmed runtime and the
   # .jls file association (#82).  The whole recipe lives in

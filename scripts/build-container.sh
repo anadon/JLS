@@ -63,7 +63,15 @@ if [ -n "${PLATFORMS:-}" ]; then
 		echo "==> PLATFORMS without PUSH=1: build-only, results stay in the buildx cache"
 	fi
 	echo "==> $DOCKER buildx build --platform ${PLATFORMS}"
-	"$DOCKER" buildx build --platform "$PLATFORMS" "${tags[@]}" "${push_flag[@]}" "$STAGE"
+	# --metadata-file: surfaces the manifest-list digest; on PUSH=1 the
+	# workflow signs and attests by digest (tags are mutable, #133)
+	"$DOCKER" buildx build --platform "$PLATFORMS" "${tags[@]}" "${push_flag[@]}" \
+		--metadata-file "$STAGE/metadata.json" "$STAGE"
+	if [ "${PUSH:-0}" = "1" ]; then
+		DIGEST="$(sed -n 's/.*"containerimage.digest": *"\([^"]*\)".*/\1/p' "$STAGE/metadata.json" | head -1)"
+		echo "==> pushed digest: ${DIGEST}"
+		printf '%s' "$DIGEST" > "$STAGE/digest"
+	fi
 else
 	echo "==> $DOCKER build"
 	"$DOCKER" build "${tags[@]}" "$STAGE"

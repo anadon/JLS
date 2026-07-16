@@ -22,8 +22,9 @@
 # jlink --strip-debug shells out to objcopy (Temurin's jmods come
 # pre-stripped, which is why the old Temurin build stage never needed it)
 FROM ubuntu:26.04 AS runtime
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openjdk-25-jdk-headless binutils \
+RUN apt-get -o Acquire::Retries=3 update \
+    && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+        openjdk-25-jdk-headless binutils \
     && rm -rf /var/lib/apt/lists/*
 COPY jls.jar /build/jls.jar
 RUN set -eux; \
@@ -32,9 +33,12 @@ RUN set -eux; \
           --no-man-pages --compress zip-6 --output /build/runtime
 
 # fontconfig + DejaVu let batch image export (-i) render text headlessly
+# (Acquire::Retries: the arm64/riscv64 ports mirror drops connections
+# often enough under QEMU-length builds that one retry pass is not enough)
 FROM ubuntu:26.04
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends fontconfig fonts-dejavu-core \
+RUN apt-get -o Acquire::Retries=3 update \
+    && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+        fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # the source label links the ghcr package to the repository

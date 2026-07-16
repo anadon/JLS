@@ -31,7 +31,7 @@
             pname = "jls";
             # keep in sync with pom.xml; the base triple is enough — a
             # -SNAPSHOT suffix between releases changes nothing here
-            version = "5.0.1";
+            version = "5.0.2";
             src = self;
 
             # fingerprint of the Maven dependency closure. Refresh after

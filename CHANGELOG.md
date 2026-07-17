@@ -25,6 +25,13 @@ All notable changes to JLS are documented here. The format follows
   the same circuit produces byte-identical SVG across runs and load
   instances (elements draw in a stable geometric order, not HashSet
   order), so SVG goldens and reproducible-builds expectations hold.
+- Executable architecture rules (#155): ArchUnit 1.4.2 (test scope
+  only, nothing ships in the jar) checks the compiled bytecode for
+  the invariants the source-scan ratchets state - only `TellUser`
+  touches `JOptionPane` (#81), HDL internals are wired only from the
+  CLI (#60), and `jls.sim` must not depend on `jls.edit` (#77, with
+  the three existing simulator classes pinned as a shrinking
+  baseline). New violations fail `mvn test` immediately.
 - Seeded generative fuzzing of the save/load pair (#160), dependency
   free: `GenerativeRoundTripFuzzTest` drives random circuits (element
   mix, boundary bit widths, escape-space names, wired pin pairs)

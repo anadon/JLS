@@ -68,6 +68,18 @@
       <version>6.1.2</version>
       <scope>test</scope>
     </dependency>
+    <!-- executable architecture rules (issue #155): bytecode-level
+         dependency checks complementing the source-scan ratchets.
+         Deliberately the core artifact, not archunit-junit5: the
+         junit5 integration pins a junit-platform version that would
+         fight the JUnit 6 line above, and plain @Test methods calling
+         ArchRule.check() need no integration -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+      <version>1.4.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

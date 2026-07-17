@@ -132,8 +132,23 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 
 ## Recommended — test/build scope only (not distributed)
 
-### 4. ArchUnit — executable architecture rules
+### 4. ArchUnit — executable architecture rules *(ADOPTED, #155)*
 
+- **Verdict (2026-07-17):** adopted at 1.4.2, core artifact only — the
+  `archunit-junit5` integration pins a junit-platform line that would
+  fight the JUnit 6 dependency, and plain `@Test` methods calling
+  `ArchRule.check()` need no integration. JDK 25 bytecode imports fine.
+  `ArchitectureRulesTest` lands three rules: the bytecode half of the
+  #81 TellUser discipline (passes clean), jls.hdl reachable only via
+  the JLSStart wiring point (passes clean), and jls.sim ↛ jls.edit with
+  the three simulator classes pinned as a shrinking baseline (the #77
+  debt, now machine-enforced instead of prose). Cost measured: ~2.5 s
+  added to the test run, all in the one-time class-file import. The
+  source-scan ratchets stay alongside: they see comments and would
+  catch a use ArchUnit can't see (reflection), while ArchUnit catches
+  fully-qualified references the text scan misses — complementary, not
+  redundant. Future recorded decisions should get a rule here as their
+  tripwire.
 - **What:** [ArchUnit](https://github.com/TNG/ArchUnit), Apache-2.0,
   v1.4.2 (April 2026). Test-scope; runs as ordinary JUnit tests.
 - **Overlap:** JLS already enforces architectural invariants with

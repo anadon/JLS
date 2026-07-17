@@ -433,8 +433,86 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of close method
 
 	// can't be in EditWindow, but should be
-	private enum State {idle, chosen, placing, moving, selecting, selected, option,
+	// (package-private so the gesture decision below is testable: #126)
+	enum State {idle, chosen, placing, moving, selecting, selected, option,
 		startwire, drawire};
+
+	/**
+	 * What the ctrl-W shortcut does, as a pure function of editor state
+	 * and selection size, so the dispatch is unit-testable headless
+	 * (issue #126; the injected-facts pattern of ToolkitPolicy).
+	 */
+	enum CtrlW {START_WIRE, TOGGLE_WATCH, NONE};
+
+	/**
+	 * Decide the ctrl-W gesture. From idle the shortcut always starts a
+	 * wire — before #126 it also required an empty selection, so the
+	 * hover selection that idle mouse motion maintains made the shortcut
+	 * toggle watch, or do nothing, until the cursor left every element.
+	 * Watch toggling remains reachable from every non-idle state with a
+	 * single selected element (e.g. after a select-rectangle).
+	 *
+	 * @param state The current editor state.
+	 * @param selectionSize The number of currently selected elements.
+	 * @return the gesture to perform.
+	 */
+	static CtrlW ctrlWGesture(State state, int selectionSize) {
+
+		if (state == State.idle)
+			return CtrlW.START_WIRE;
+		if (selectionSize == 1)
+			return CtrlW.TOGGLE_WATCH;
+		return CtrlW.NONE;
+	} // end of ctrlWGesture method
+
+	/**
+	 * Result of starting the wire-drawing gesture: the initial wire end,
+	 * and whether a selection had to be cleared to start it. The flag is
+	 * captured before the clear — keyed off the selection afterwards it
+	 * would always be true, because the new wire end becomes the
+	 * selection (the pitfall AmityWilder/JLS@b1f1573 fixed).
+	 */
+	static final class WireStart {
+		final WireEnd end;
+		final boolean hadSelection;
+		WireStart(WireEnd end, boolean hadSelection) {
+			this.end = end;
+			this.hadSelection = hadSelection;
+		}
+	} // end of WireStart class
+
+	/**
+	 * The model half of the idle-state wire-start gesture (#126): clear
+	 * the (hover) selection, create the initial wire end at (x,y), add
+	 * it to the circuit and to the selection, and give it a fresh wire
+	 * net. Swing-free so it is unit-testable headless; the caller owns
+	 * the GUI half (state transition, overlap feedback, repaint).
+	 *
+	 * @param circuit The circuit being edited.
+	 * @param selected The current selection; cleared, then left holding
+	 *        only the new wire end.
+	 * @param x The x-coordinate for the wire end.
+	 * @param y The y-coordinate for the wire end.
+	 * @return the new wire end and the pre-clear selection state.
+	 */
+	static WireStart startWireGesture(Circuit circuit, Set<Element> selected,
+			int x, int y) {
+
+		boolean hadSelection = !selected.isEmpty();
+		for (Element el : selected) {
+			el.setHighlight(false);
+		}
+		selected.clear();
+		WireEnd end = new WireEnd(circuit);
+		end.setXY(x,y);
+		end.init(circuit);
+		circuit.addElement(end);
+		selected.add(end);
+		WireNet net = new WireNet();
+		net.add(end);
+		end.setNet(net);
+		return new WireStart(end,hadSelection);
+	} // end of startWireGesture method
 
 		/**
 		 * The window the circuit is displayed and edited in.
@@ -582,28 +660,42 @@ public abstract class SimpleEditor extends JPanel {
 						if (!enabled)
 							return;
 
-						// if nothing selected and current state is idle
-						if (selected.size() == 0 && currentState == State.idle) {
+						// decide what the shortcut does here (#126)
+						CtrlW gesture = ctrlWGesture(currentState,selected.size());
+
+						// if current state is idle, start a wire, superseding
+						// any hover selection (#126)
+						if (gesture == CtrlW.START_WIRE) {
 
 							// start a wire
 							Point p = getMousePosition();
 							if (p == null)
 								return; // not in drawing window
 							setState(State.startwire);
-							wireEnd = new WireEnd(circuit);
 							x = p.x;
 							y = p.y;
-							wireEnd.setXY(x,y);
-							wireEnd.init(circuit);
-							circuit.addElement(wireEnd);
-							selected.add(wireEnd);
+							WireStart start =
+									startWireGesture(circuit,selected,x,y);
+							wireEnd = start.end;
 							wire = null;
-							net = new WireNet();
-							net.add(wireEnd);
-							wireEnd.setNet(net);
+							net = wireEnd.getNet();
+
+							// a cleared selection was under the cursor, so
+							// report the (likely) overlap the same way wire
+							// dragging does
+							if (start.hadSelection) {
+								if (overlap()) {
+									info.setText(overlapMessage);
+									info.setForeground(Color.red);
+								}
+								else {
+									info.setText("");
+									info.setForeground(Color.black);
+								}
+							}
 							repaint();
 						}
-						else if (selected.size() == 1){
+						else if (gesture == CtrlW.TOGGLE_WATCH) {
 
 							// watch/unwatch
 							Element el = (Element)selected.toArray()[0];

@@ -1821,8 +1821,10 @@ public abstract class SimpleEditor extends JPanel {
 					// if left button...
 					if (leftButton) {
 
-						// see if cursor is on an element
-						for (Element el : circuit.getElements()) {
+						// see if cursor is on an element, asking the spatial
+						// index for the few elements near the cursor instead
+						// of scanning the whole circuit (#3, #17)
+						for (Element el : circuit.elementsAt(x,y)) {
 							if (el.contains(x,y)) {
 
 								// do nothing if editor is disabled
@@ -1872,8 +1874,9 @@ public abstract class SimpleEditor extends JPanel {
 					// if right button show menu
 					else if (rightButton) {
 
-						// see if cursor is on an element
-						for (Element el : circuit.getElements()) {
+						// see if cursor is on an element, via the spatial
+						// index as in the left-button path (#3, #17)
+						for (Element el : circuit.elementsAt(x,y)) {
 							if (el.contains(x,y)) {
 
 								// can't display menu on attached wire end
@@ -2187,8 +2190,9 @@ public abstract class SimpleEditor extends JPanel {
 
 				if (currentState == State.idle && rightButton) {
 
-					// see if cursor is on an element
-					for (Element el : circuit.getElements()) {
+					// see if cursor is on an element, via the spatial index
+					// as in mousePressed (#3, #17)
+					for (Element el : circuit.elementsAt(x,y)) {
 						if (el.contains(x,y)) {
 
 							// can't display menu on attached wire end
@@ -3428,6 +3432,10 @@ public abstract class SimpleEditor extends JPanel {
 						// check every element in the selected set
 						for (Element sel : selected) {
 
+							// whether this element actually made a connection
+							// (only then can the index have gone stale)
+							boolean connected = false;
+
 							// check against every element near the selection
 							// (grown so edge-touching put alignments are
 							// included), as in overlap() (#3, #17)
@@ -3455,6 +3463,7 @@ public abstract class SimpleEditor extends JPanel {
 											// wire end to wire end
 											WireEnd otherEnd = (WireEnd)el;
 											WireEnd endLeft = connect(end,otherEnd);
+											connected = true;
 											if (currentState == State.startwire) {
 												wireEnd = endLeft;
 												net = endLeft.getNet();
@@ -3466,6 +3475,7 @@ public abstract class SimpleEditor extends JPanel {
 											// wire end to wire
 											Wire wire = (Wire)el;
 											WireEnd it = connect(end,wire);
+											connected = true;
 											if (currentState == State.startwire) {
 												wireEnd = it;
 												net = it.getNet();
@@ -3491,6 +3501,7 @@ public abstract class SimpleEditor extends JPanel {
 												continue;
 											}
 											connect(end,put);
+											connected = true;
 											ok = true;
 										}
 									}
@@ -3526,6 +3537,7 @@ public abstract class SimpleEditor extends JPanel {
 											}
 
 											connect(end,put);
+											connected = true;
 											ok = true;
 										}
 									}
@@ -3556,6 +3568,7 @@ public abstract class SimpleEditor extends JPanel {
 
 											// put to put
 											connect(p1,p2);
+											connected = true;
 										}
 									}
 								}
@@ -3563,8 +3576,13 @@ public abstract class SimpleEditor extends JPanel {
 
 							// connections made for this element may have
 							// moved wires and merged ends; rebuild before
-							// the next element queries the index
-							circuit.invalidateIndex();
+							// the next element queries the index. When
+							// nothing connected, nothing moved, so the
+							// common no-connection drop stays O(selected)
+							// instead of paying a rebuild per element
+							if (connected) {
+								circuit.invalidateIndex();
+							}
 						}
 
 						// add any new wires created by connecting puts to puts

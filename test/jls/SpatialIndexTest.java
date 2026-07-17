@@ -32,7 +32,7 @@ class SpatialIndexTest {
 	 * the editor, so the element set includes WireEnds and Wires (whose
 	 * index bounds are derived from their ends, not x/y/width/height).
 	 */
-	private static String wiredCircuitText() {
+	static String wiredCircuitText() {
 		StringBuilder text = new StringBuilder("CIRCUIT indexed\n");
 		int id = 0;
 		int constA = id++;
@@ -79,7 +79,7 @@ class SpatialIndexTest {
 			.append("END\n");
 	}
 
-	private static Circuit loadWired() throws Exception {
+	static Circuit loadWired() throws Exception {
 		Circuit circuit = new Circuit("");
 		assertTrue(circuit.load(new Scanner(wiredCircuitText())),
 				() -> "load failed: " + JLSInfo.loadError);

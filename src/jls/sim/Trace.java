@@ -16,6 +16,12 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	
 	// named constants
 	protected final int HEIGHT = 40;
+
+	// how many changes each trace retains for scrollback (issue #121).
+	// This is the display-side bound (distinct from #20's simulation
+	// state bounds): at ~136 bytes per change (Change object + cloned
+	// BitSet + linked-list node) it caps a trace at roughly 14 MB.
+	static final int MAX_RETAINED_CHANGES = 100_000;
 	
 	// structure to contain a change
 	private class Change {
@@ -127,9 +133,11 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		ch.when = when;
 		pendingChanges.add(0,ch);
 		
-		// delete undisplayable values
-		// (test for when == 0 due to no width yet)
-		if (when != 0 && pendingChanges.size() > getWidth())
+		// retain a bounded scrollback history (issue #121): the cap
+		// used to be the panel width, which discarded everything a
+		// finished run could no longer display; the panel now grows
+		// with the run, so retention is a documented count instead
+		if (pendingChanges.size() > MAX_RETAINED_CHANGES)
 			pendingChanges.removeLast();
 	} // end of addValue method
 	
@@ -165,65 +173,84 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		g.setColor(Color.black);
 		g.drawString(name,width+5,baseline);
 		
+		// take one snapshot of the committed changes so every phase
+		// below sees the same list even if a commit lands mid-paint
+		java.util.ArrayList<Change> snapshot = changes;
+
 		// set up for loop
 		int top = HEIGHT/2-10;
 		int bottom = HEIGHT/2+10;
 		int middle = (top+bottom)/2;
-		double pos = width;
 		long when = now;
 		int ch = 0;
-		
+
 		// draw a terminator line
 		g.setColor(Color.pink);
 		g.drawLine(width,0,width,HEIGHT);
-		
+
 		// draw tic marks,
-		// first compute tic increment
-		int t = 0;
-		int m = 1;
-		int inc = 0;
-		while (t < 50) {
-			inc = m*50;
-			t = inc/scaleFactor;
-			if (t < 50) {
-				inc = m*100;
-				t = inc/scaleFactor;
-			}
-			if (t < 50) {
-				inc = m*200;
-				t = inc/scaleFactor;
-			}
-			if (t < 50) {
-				inc = m*250;
-				t = inc/scaleFactor;
-			}
-			m *= 10;
-		}
-		
-		// then draw tics
-		double tpos = width-now/scaleFactor;
-		int value = 0;
-		while (tpos < width) {
+		// first compute tic increment (extracted for unit testing,
+		// issue #121)
+		int inc = TraceGeometry.ticIncrement(scaleFactor);
+
+		// the panel spans the whole retained run now (issue #121), so
+		// drawing is windowed to the clip: sweeping every tic and every
+		// change from time zero would be O(run length) per repaint
+		Rectangle clip = g.getClipBounds();
+		int clipLo = clip == null ? 0 : clip.x;
+		int clipHi = clip == null ? width : clip.x+clip.width;
+
+		// label only every stride-th tic so adjacent labels can never
+		// overlap (issue #121): bound every label's width by the digit
+		// count of the largest time value, measured in this font's
+		// metrics (metrics, never hard-coded pixels - issue #111)
+		double pitch = 1.0*inc/scaleFactor;
+		double tzero = width-now/scaleFactor;
+		long lastTic = Math.max(0,(long)Math.ceil((width-tzero)/pitch));
+		int digitWidth = fm.charWidth(' ');
+		for (char c = '0'; c <= '9'; c += 1)
+			digitWidth = Math.max(digitWidth,fm.charWidth(c));
+		int labelWidth = (String.valueOf(lastTic*inc).length()+1)*digitWidth;
+		int stride = TraceGeometry.labelStride(labelWidth,pitch);
+
+		// then draw tics, starting one label stride left of the clip
+		// so a label that begins off-clip still paints its tail
+		long firstTic = Math.max(0,
+				(long)Math.floor((clipLo-tzero)/pitch)-stride);
+		for (long tic = firstTic; ; tic += 1) {
+			double tpos = tzero+tic*pitch;
+			if (tpos >= width || tpos > clipHi)
+				break;
 			g.setColor(Color.lightGray);
 			g.drawLine((int)Math.rint(tpos), 0, (int)Math.rint(tpos), HEIGHT);
-			
+
 			// draw value if no changes (i.e., the header)
-			if (changes.isEmpty()) {
-				g.drawString(value+"", (int)Math.rint(tpos)+2, height);
+			if (snapshot.isEmpty() && tic % stride == 0) {
+				g.drawString((tic*inc)+"", (int)Math.rint(tpos)+2, height);
 			}
-			tpos += 1.0*inc/scaleFactor;
-			value += inc;
 		}
-		
+
+		// skip changes that lie entirely right of the clip: the first
+		// change at or before the time just right of the clip edge
+		// (2px slack for rounding) opens the visible window
+		if (!snapshot.isEmpty() && clipHi < width) {
+			long tClip = now-(long)(width-clipHi-2)*scaleFactor;
+			ch = firstChangeAtOrBefore(snapshot,tClip);
+			if (ch > 0)
+				when = snapshot.get(ch-1).when;
+		}
+		double pos = width-(double)(now-when)/scaleFactor;
+		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value : null;
+		double leftEdge = Math.max(0,clipLo-2);
+
 		// draw until no longer visible
 		g.setColor(Color.black);
-		BitSet previousVal = null;
-		while (pos > 0) {
-			
+		while (pos > leftEdge) {
+
 			// get the next change
-			if (ch >= changes.size())
+			if (ch >= snapshot.size())
 				break;
-			Change change = changes.get(ch);
+			Change change = snapshot.get(ch);
 			double len = ((double)(when-change.when)/scaleFactor);
 			int rpos = (int)Math.round(pos);
 			int rlen = (int)Math.round(len);
@@ -290,40 +317,89 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 				}
 			}
 			previousVal = change.value;
-			pos = pos-len;
+			// recompute the position from the change time rather than
+			// accumulate, so a windowed repaint puts every segment
+			// exactly where a full repaint would (issue #121)
+			pos = width-(double)(now-change.when)/scaleFactor;
 			when = change.when;
 			ch += 1;
 		}
-		
+
 		// draw slider
 		g.setColor(Color.gray);
 		g.drawLine(sliderPos,0,sliderPos,HEIGHT);
-		
+
 		// draw value at slider position
-		long stime = now-(width-sliderPos)*scaleFactor;
-		if (stime >= 0) {
-			Change lastChange = null;
-			for (Change chg : changes) {
-				lastChange = chg;
-				if (stime >= chg.when)
-					break;
+		// (don't draw value if no changes (e.g., the header))
+		long stime = now-(long)(width-sliderPos)*scaleFactor;
+		if (stime >= 0 && !snapshot.isEmpty()) {
+
+			// binary search: the retained history is no longer bounded
+			// by the panel width (issue #121)
+			int at = Math.min(firstChangeAtOrBefore(snapshot,stime),
+					snapshot.size()-1);
+			Change lastChange = snapshot.get(at);
+			String val = "HiZ";
+			if (!lastChange.value.equals(off)) {
+				val = BitSetUtils.ToString(lastChange.value,base);
 			}
-			
-			// don't draw value if no changes (e.g., the header)
-			if (lastChange != null) {
-				String val = "HiZ";
-				if (!lastChange.value.equals(off)) {
-					val = BitSetUtils.ToString(lastChange.value,base);
-				}
-				int w = fm.stringWidth(val);
-				g.setColor(Color.white);
-				g.fillRect(sliderPos-w-4,baseline-ascent,w+3,height);
-				g.setColor(Color.magenta);
-				g.drawString(val,sliderPos-w-1,baseline);
+			int w = fm.stringWidth(val);
+			g.setColor(Color.white);
+			g.fillRect(sliderPos-w-4,baseline-ascent,w+3,height);
+			g.setColor(Color.magenta);
+			g.drawString(val,sliderPos-w-1,baseline);
+
+			// the name at the right edge may be scrolled out of view,
+			// so label the cursor with the signal name too (issue
+			// #121; bsiever prior art)
+			if (!name.isEmpty()) {
+				int nw = fm.stringWidth(name);
+				g.setColor(Color.black);
+				g.drawString(name,sliderPos-nw-1,baseline+ascent+3);
 			}
 		}
-		
+
 	} // end of paintComponent method
+
+	/**
+	 * Find the first (newest) committed change at or before a given
+	 * time - the change whose value is in effect at that time.  The
+	 * list is ordered newest first; binary search keeps repaints from
+	 * scanning the whole retained history (issue #121).
+	 *
+	 * @param list The committed changes, newest first.
+	 * @param time The simulation time to look up.
+	 *
+	 * @return The smallest index whose change time is at or before
+	 *         time, or list.size() if every change is later.
+	 */
+	private static int firstChangeAtOrBefore(
+			java.util.ArrayList<Change> list, long time) {
+
+		int lo = 0;
+		int hi = list.size();
+		while (lo < hi) {
+			int mid = (lo+hi) >>> 1;
+			if (list.get(mid).when <= time)
+				hi = mid;
+			else
+				lo = mid+1;
+		}
+		return lo;
+	} // end of firstChangeAtOrBefore method
+
+	/**
+	 * Test seam for the search over the committed snapshot (issue
+	 * #121): package-private, used by TraceWindowingTest.
+	 *
+	 * @param time The simulation time to look up.
+	 *
+	 * @return See firstChangeAtOrBefore(list,time).
+	 */
+	int firstChangeAtOrBefore(long time) {
+
+		return firstChangeAtOrBefore(changes,time);
+	} // end of firstChangeAtOrBefore method
 	
 	/**
 	 * Called to tell this object that the trace window has been resized.
@@ -344,8 +420,9 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @param x The x-coordinate of the slider.
 	 */
 	public void mouseMoved(int x) {
-		
-		long time = now-(width-x)*scaleFactor;
+
+		// long math: the panel can now span the whole run (issue #121)
+		long time = now-(long)(width-x)*scaleFactor;
 		
 		// set slider pos
 		if (time > now)

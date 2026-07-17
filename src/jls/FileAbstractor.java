@@ -173,12 +173,13 @@ public final class FileAbstractor {
 
 		File temp = new File(target.getPath() + ".tmp");
 		try {
-			try (Writer out = new OutputStreamWriter(
-					container == Container.XZ
-							? new XZOutputStream(new FileOutputStream(temp),
-									new LZMA2Options())
-							: new FileOutputStream(temp),
-					StandardCharsets.UTF_8)) {
+			try (FileOutputStream rawOut = new FileOutputStream(temp);
+					Writer out = new OutputStreamWriter(
+							container == Container.XZ
+									? new XZOutputStream(rawOut,
+											new LZMA2Options())
+									: rawOut,
+							StandardCharsets.UTF_8)) {
 				out.write(circuitText);
 			}
 			try {

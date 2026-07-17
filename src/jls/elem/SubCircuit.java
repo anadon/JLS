@@ -164,8 +164,8 @@ public class SubCircuit extends LogicElement implements TriProp {
 				for (Element el : subCircuit.getElements()) {
 					if (el instanceof InputPin || el instanceof OutputPin) {
 						Pin p = (Pin)el;
-						String name = p.getName();
-						width = Math.max(width,fm.stringWidth(name));
+						String pinName = p.getName();
+						width = Math.max(width,fm.stringWidth(pinName));
 					}
 				}
 				width = (width+s-1)/s*s+s;
@@ -290,10 +290,10 @@ public class SubCircuit extends LogicElement implements TriProp {
 		// draw inputs and outputs
 		for (Input input : inputs) {
 			input.draw(g);
-			String name = input.getName();
-			rect = fm.getStringBounds(name,g);
+			String inputName = input.getName();
+			rect = fm.getStringBounds(inputName,g);
 			g.setColor(Color.BLACK);
-			
+
 			if(orientation == JLSInfo.Orientation.RIGHT)
 			{
 				dx = JLSInfo.pointDiameter/2+1;
@@ -304,12 +304,12 @@ public class SubCircuit extends LogicElement implements TriProp {
 				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
-			g.drawString(name,x+dx,input.getY()+dy);
+			g.drawString(inputName,x+dx,input.getY()+dy);
 		}
 		for (Output output : outputs) {
 			output.draw(g);
-			String name = output.getName();
-			rect = fm.getStringBounds(name,g);
+			String outputName = output.getName();
+			rect = fm.getStringBounds(outputName,g);
 			g.setColor(Color.BLACK);
 			if(orientation == JLSInfo.Orientation.LEFT)
 			{
@@ -321,7 +321,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
-			g.drawString(name,x+dx,output.getY()+dy);
+			g.drawString(outputName,x+dx,output.getY()+dy);
 		}
 		
 	} // end of draw method

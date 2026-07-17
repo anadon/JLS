@@ -73,16 +73,18 @@ public abstract class LogicElement extends Element implements Reacts {
 	
 	/**
 	 * Copy values to new object.
-	 * 
-	 * @param it The new object.
+	 *
+	 * @param el The new object.
 	 */
-	public void copy(LogicElement it) {
-		
+	@Override
+	public void copy(Element el) {
+
+		LogicElement it = (LogicElement)el;
 		it.lx = lx;
 		it.ly = ly;
 		it.savex = savex;
 		it.savey = savey;
-		super.copy(it);
+		super.copy(el);
 	} // end of copy method
 	
 	/**

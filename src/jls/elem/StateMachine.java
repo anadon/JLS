@@ -541,13 +541,17 @@ public final class StateMachine extends LogicElement implements Printable {
 	 */
 	@Override
 	public void setValue(String name, long value) {
-		
+
 		switch (loadState) {
 		case newOutput:
 			buildState.setOutputValue(name,value);
 			break;
+		case machine:
+		case newState:
+		case newTransition:
+			break;
 		}
-		
+
 	} // end of setValue (long) method
 
 	/**

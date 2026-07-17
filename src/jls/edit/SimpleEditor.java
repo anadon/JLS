@@ -25,7 +25,6 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -1942,11 +1941,11 @@ public abstract class SimpleEditor extends JPanel {
 
 								// drag wire means drag both ends
 								if (el instanceof Wire) {
-									Wire wire = (Wire)el;
-									WireEnd end1 = wire.getEnd();
+									Wire dragWire = (Wire)el;
+									WireEnd end1 = dragWire.getEnd();
 									if (end1.isAttached())
 										continue;
-									WireEnd end2 = wire.getOtherEnd(end1);
+									WireEnd end2 = dragWire.getOtherEnd(end1);
 									if (end2.isAttached())
 										continue;
 									selected.add(end1);
@@ -3897,9 +3896,7 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// now copy all wire ends, checking for those attached to puts,
-						// create set of all new wire ends for net partitioning later
-						LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
+						// now copy all wire ends, checking for those attached to puts
 						for (Element el : from.getElements()) {
 							if (!(el instanceof WireEnd))
 								continue;
@@ -3908,7 +3905,6 @@ public abstract class SimpleEditor extends JPanel {
 							newEnd.fixPosition();
 							newEnd.move(x,y);
 							circuit.addElement(newEnd);
-							ends.add(newEnd);
 							if (oldEnd.isAttached()) {
 								Put newPut = oldEnd.getPut().getCopy();
 								newEnd.setPut(newPut);

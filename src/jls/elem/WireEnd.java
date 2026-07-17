@@ -39,7 +39,7 @@ public class WireEnd extends LogicElement {
 	@Override
 	public String toString() {
 		
-		return "WireEnd[" + net + "]";
+		return "WireEnd[" + (net == null ? "no net" : net.getBits() + " bit net") + "]";
 	} // end of toString method
 	
 	/**

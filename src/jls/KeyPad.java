@@ -38,10 +38,10 @@ public final class KeyPad extends JButton implements ActionListener {
 	public KeyPad(JTextField target, int digitKeys, long defaultValue, final Window f) {
 		
 		// initialize
-		URL down = getClass().getResource("images/down.gif");
+		URL down = KeyPad.class.getResource("images/down.gif");
 		setIcon(new ImageIcon(down));
 		setBackground(Color.WHITE);
-		URL up = getClass().getResource("images/up.gif");
+		URL up = KeyPad.class.getResource("images/up.gif");
 		hide.setIcon(new ImageIcon(up));
 		
 		

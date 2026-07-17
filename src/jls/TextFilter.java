@@ -76,7 +76,7 @@ public final class TextFilter extends DocumentFilter {
 
 			// make sure is still numeric and not too big
 			try {
-				BigInteger val = new BigInteger(str,base);
+				new BigInteger(str,base);
 				if (max != null) {
 					String old = target.getText();
 					String all = old.substring(0,offset)+str+old.substring(offset+length);

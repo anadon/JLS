@@ -367,10 +367,12 @@ public abstract class Group extends LogicElement {
 	/**
 	 * Copy values to new object.
 	 * 
-	 * @param it The new object.
+	 * @param el The new object.
 	 */
-	public void copy(Group it) {
-		
+	@Override
+	public void copy(Element el) {
+
+		Group it = (Group)el;
 		it.bits = bits;
 		it.ranges = new ArrayList<Entry>(ranges);
 		it.triState = triState;
@@ -381,7 +383,7 @@ public abstract class Group extends LogicElement {
 		for (Output output : outputs) {
 			it.outputs.add(output.copy(it));
 		}
-		super.copy(it);
+		super.copy(el);
 		return;
 	} // end of copy method
 	

@@ -420,15 +420,17 @@ public abstract class Gate extends LogicElement {
 	/**
 	 * Copy info in this element to another element.
 	 * 
-	 * @param it The element to copy to.
+	 * @param el The element to copy to.
 	 */
-	public void copy(Gate it) {
+	@Override
+	public void copy(Element el) {
 
+		Gate it = (Gate)el;
 		it.outputs.add(outputs.get(0).copy(it));
 		for (Input in : inputs) {
 			it.inputs.add(in.copy(it));
 		}
-		super.copy(it);
+		super.copy(el);
 		return;
 	} // end of copy method
 	
@@ -827,7 +829,7 @@ public abstract class Gate extends LogicElement {
 				reject("Must have at least 2 inputs");
 				return;
 			}
-			if (bits < 1 && type != "Extend") {
+			if (bits < 1 && !"Extend".equals(type)) {
 				reject("Must have at least 1 gate (bit)");
 				return;
 			}

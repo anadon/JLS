@@ -31,7 +31,7 @@ public final class Tutorial extends JDialog {
 		JEditorPane editorPane = new JEditorPane();
 		editorPane.setEditable(false);
 		
-		java.net.URL helpURL = getClass().getResource("tutorial/" + name);
+		java.net.URL helpURL = Tutorial.class.getResource("tutorial/" + name);
 		if (helpURL != null) {
 		    try {
 		        editorPane.setPage(helpURL);

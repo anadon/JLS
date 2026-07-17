@@ -427,7 +427,7 @@ public class State {
 			newTrans.equal = tran.equal;
 			newTrans.value = tran.value;
 			newTrans.bits = tran.bits;
-			newTrans.nextStateName = new String(tran.nextState.getName());
+			newTrans.nextStateName = tran.nextState.getName();
 			for (Point p : tran.points) {
 				newTrans.points.add(new Point(p.x,p.y));
 			}

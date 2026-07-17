@@ -655,11 +655,8 @@ public class Element {
 
 	/**
 	 * Show timing change dialog.
-	 * 
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
 	 */
-	public void changeTiming(JPanel editWindow, int x) {
+	public void changeTiming() {
 
 		// display dialog
 		new DelayChange(this instanceof Memory);

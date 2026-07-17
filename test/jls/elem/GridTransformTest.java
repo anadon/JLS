@@ -18,7 +18,7 @@ class GridTransformTest {
 	void andGateOrientationsAreTransformsOfEachOther() {
 		// from the baseline: right (48x24 put frame) has puts
 		// input0@0,0  input1@0,24  output@48,12
-		int w = 48, h = 24;
+		int w = 48;
 
 		// left = mirrorX(right): input0@48,0  input1@48,24  output@0,12
 		assertEquals(new Point(48, 0), GridTransform.mirrorX(0, 0, w));

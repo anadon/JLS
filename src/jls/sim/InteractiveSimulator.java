@@ -717,13 +717,11 @@ public final class InteractiveSimulator extends Simulator {
 	 * Update the clock display before the event reacts, at a bounded
 	 * rate: the per-event setText+validate was both an EDT violation and
 	 * a real slowdown (issue #49, finding H8).
-	 *
-	 * @param event The event about to react.
 	 */
 	private volatile long lastClockUpdate = 0;
 
 	@Override
-	protected void beforeReact(SimEvent event) {
+	protected void beforeReact() {
 
 		if (JLSInfo.batch && JLSInfo.frame == null)
 			return;

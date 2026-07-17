@@ -494,7 +494,7 @@ public class Text extends DisplayElement {
 			else if (event.getSource() == colorButton) {
 				final JColorChooser ch = new JColorChooser(color);
 				ch.setPreviewPanel(new JPanel());
-				ActionListener ok = new ActionListener(){public void actionPerformed(ActionEvent event) {
+				ActionListener ok = new ActionListener(){@Override public void actionPerformed(ActionEvent event) {
 					col = ch.getColor();
 					textArea.setForeground(col);
 					changed = true;

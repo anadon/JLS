@@ -147,7 +147,7 @@ public abstract class Simulator {
 				break;
 			}
 
-			beforeReact(event);
+			beforeReact();
 
 			// make the event happen
 			event.getCallBack().react(now,me,event.getTodo());
@@ -171,10 +171,8 @@ public abstract class Simulator {
 	/**
 	 * Hook called after the clock has advanced to the event's time but
 	 * before the event reacts (e.g. to update a clock display).
-	 *
-	 * @param event The event about to react.
 	 */
-	protected void beforeReact(SimEvent event) {
+	protected void beforeReact() {
 	} // end of beforeReact method
 
 	/**

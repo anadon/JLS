@@ -426,12 +426,6 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of removeFromImportMenu method
 
 	/**
-	 * Change the name of a circuit in the import menu.
-	 * 
-	 * @param oldname The current name.
-	 * @param newname The new name.
-	 */
-	/**
 	 * Point this editor's import map at a replacement circuit instance
 	 * with the same name. Undo/redo installs a freshly loaded Circuit;
 	 * without this refresh a sibling editor's Import silently copies the
@@ -4090,7 +4084,7 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// change its timing info
-						el.changeTiming(this, x);
+						el.changeTiming();
 
 						// clean up
 						clearSelected();

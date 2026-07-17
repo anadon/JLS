@@ -1,0 +1,5 @@
+# Circuit fixtures are byte-exact test inputs (issue #111): a CRLF
+# rewrite on checkout would silently change what the round-trip and
+# determinism suites compare against. Never translate them.
+*.jls -text
+*.jls~ -text

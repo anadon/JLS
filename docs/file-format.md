@@ -205,7 +205,7 @@ element's attributes; their order is not significant to the reader,
 but the canonical writer order is: the base attributes, then the
 type's own attributes, in each type's historical order.
 
-**Base attributes** (every element type; all `int`):
+**Base attributes** (every element type; `int` unless noted):
 <!-- Element.java: BASE_ATTRIBUTES, in save order. -->
 
 | attribute | meaning | omitted when |
@@ -215,6 +215,7 @@ type's own attributes, in each type's historical order.
 | `width`, `height` | drawn size | the type recomputes size on load |
 | `fixed` | element is not editable | editable (any value ⇒ fixed) |
 | `trpos` | position in the signal-trace window | `-1` (not traced) |
+| `sid` | permanent element identity (`String`, §8) | never |
 
 **Unknown attribute names are silently ignored.** The reader offers
 each item's name and value to the element; if no declared attribute
@@ -349,6 +350,33 @@ MUST resolve refs only within the block; writers MUST NOT emit
 forward ids that don't exist in the block. Ids carry no meaning
 beyond reference resolution and are not stable across saves.
 
+**Stable ids** (`sid`, issue #165) are the opposite: a permanent
+identity minted once, when the element comes into existence, and
+preserved by every save, load, undo restore, and checkpoint
+recovery. The value is `replica:counter`, where the replica id is
+1–64 characters of `[0-9a-z]` naming where the element was created
+and the counter is a non-negative decimal. Copying an element mints
+a fresh id — a paste is a new element. Stable ids MUST be unique
+within their `CIRCUIT` block; a reader MUST refuse a file that
+declares the same `sid` twice in one block. Elements in files that
+predate `sid` (or hand-edited blocks without one) get an id minted
+at load under the reserved replica id `legacy`, numbered in file
+order — deterministically, so every load of the same file mints the
+same ids. `sid` is metadata: it never affects simulation, and a
+pre-#165 reader that drops it loses nothing but identity continuity
+(§9's silent-drop caveat), which is why it did not bump the format
+version. Distributed collaboration (issue #163) addresses elements
+by stable id.
+
+**Canonical order** (issue #166): the canonical writer emits element
+blocks sorted by stable id and assigns the save-time `id`s in that
+same order, making the serialized form a pure function of circuit
+content — two circuits with identical content save byte-identically,
+whatever their load/edit history. A reader MUST NOT rely on this
+order (block order is not significant, §5), but tools MAY rely on
+JLS saves being deterministic, and JLS uses the canonical bytes as
+its convergence oracle and state hash for collaboration.
+
 ---
 
 ## 9. Evolution policy
@@ -424,6 +452,7 @@ ELEMENT Constant
  int y 60
  int width 24
  int height 24
+ String sid "legacy:0"
  Int value 5
  int base 10
  String orient "RIGHT"
@@ -434,6 +463,7 @@ ELEMENT OutputPin
  int y 60
  int width 48
  int height 24
+ String sid "legacy:1"
  String name "out"
  int bits 3
  int watch 0
@@ -445,6 +475,7 @@ ELEMENT WireEnd
  int y 72
  int width 8
  int height 8
+ String sid "legacy:2"
  String put "output"
  ref attach 0
  ref wire 3
@@ -455,6 +486,7 @@ ELEMENT WireEnd
  int y 72
  int width 8
  int height 8
+ String sid "legacy:3"
  String put "input"
  ref attach 1
  ref wire 2

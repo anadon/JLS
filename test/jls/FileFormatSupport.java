@@ -72,36 +72,20 @@ final class FileFormatSupport {
 	}
 
 	/**
-	 * Reduce a saved circuit file to a canonical form: ELEMENT..END blocks
-	 * sorted, save-order-dependent id lines removed, the FORMAT header
-	 * (byte-pinned by FormatHeaderTest) dropped. Elements live in a
-	 * HashSet, so block order and the ids assigned at save time are not
-	 * stable across load instances; comparisons of saved circuit content
-	 * must use this form. Only sound for circuits without id
-	 * cross-references (ref lines), since those change with the ids.
+	 * A saved circuit minus its " String sid " lines, for comparisons
+	 * against pre-#165 fixture text, which has none. Saves are otherwise
+	 * byte-deterministic (#166: canonical order sorted by stable id, ids
+	 * and refs assigned in that order), so this is the only masking a
+	 * saved-content comparison ever needs - and none is needed when both
+	 * sides went through a post-#165 save.
 	 */
-	static String canonicalize(String saved) {
-		java.util.List<String> blocks = new java.util.ArrayList<String>();
-		StringBuilder current = null;
-		StringBuilder header = new StringBuilder();
+	static String stripStableIds(String saved) {
+		StringBuilder kept = new StringBuilder();
 		for (String line : saved.split("\n")) {
-			if (line.startsWith("FORMAT ")) {
-				continue;
-			}
-			if (line.startsWith("ELEMENT")) {
-				current = new StringBuilder();
-			}
-			if (current == null) {
-				header.append(line).append('\n');
-			} else if (!line.startsWith(" int id ")) {
-				current.append(line).append('\n');
-			}
-			if (line.equals("END") && current != null) {
-				blocks.add(current.toString());
-				current = null;
+			if (!line.startsWith(" String sid ")) {
+				kept.append(line).append('\n');
 			}
 		}
-		java.util.Collections.sort(blocks);
-		return header + String.join("", blocks);
+		return kept.toString();
 	}
 }

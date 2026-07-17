@@ -66,37 +66,11 @@ class CircuitSnapshotTest {
 		assertNotNull(restored, () -> "restore failed: " + JLSInfo.loadError);
 		assertEquals(circuit.getElements().size(), restored.getElements().size());
 
-		// elements live in a HashSet, so block order and the ids/refs
-		// assigned at save time differ between circuit instances; compare
-		// the order- and id-independent canonical form
-		assertEquals(canonicalize(before), canonicalize(save(restored)),
-				"a restored snapshot must save to equivalent content");
-	}
-
-	/**
-	 * Canonical form of a saved circuit: ELEMENT..END blocks sorted, with
-	 * save-order-dependent id and ref lines removed.
-	 */
-	private static String canonicalize(String saved) {
-		java.util.List<String> blocks = new java.util.ArrayList<>();
-		StringBuilder current = null;
-		StringBuilder header = new StringBuilder();
-		for (String line : saved.split("\n")) {
-			if (line.startsWith("ELEMENT")) {
-				current = new StringBuilder();
-			}
-			if (current == null) {
-				header.append(line).append('\n');
-			} else if (!line.startsWith(" int id ") && !line.startsWith(" ref ")) {
-				current.append(line).append('\n');
-			}
-			if (line.equals("END") && current != null) {
-				blocks.add(current.toString());
-				current = null;
-			}
-		}
-		java.util.Collections.sort(blocks);
-		return header + String.join("", blocks);
+		// saves are canonical (#166): stable ids survive the restore and
+		// determine block order, ids, and refs, so capture -> restore ->
+		// save reproduces the original save byte-for-byte
+		assertEquals(before, save(restored),
+				"a restored snapshot must save to identical bytes");
 	}
 
 	@Test
@@ -116,6 +90,20 @@ class CircuitSnapshotTest {
 		CircuitSnapshot second = CircuitSnapshot.capture(circuit);
 		assertTrue(first.sameAs(second),
 				"no-op changes must produce identical snapshots (undo skips them)");
+	}
+
+	@Test
+	void restoreDoesNotPerturbSnapshotIdentity() throws Exception {
+		// #166 P4: the undo stack drops no-op entries by byte equality,
+		// which must keep working across a restore - saves are canonical,
+		// so a restored circuit snapshots identically to its original
+		Circuit circuit = load(CIRCUIT_TEXT);
+		CircuitSnapshot first = CircuitSnapshot.capture(circuit);
+		Circuit restored = first.restore("snaptest", null);
+		assertNotNull(restored, () -> "restore failed: " + JLSInfo.loadError);
+		assertTrue(first.sameAs(CircuitSnapshot.capture(restored)),
+				"a restored circuit must snapshot identically (no-op "
+						+ "undo entries stay droppable across restores)");
 	}
 
 	@Test

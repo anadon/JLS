@@ -9,10 +9,6 @@ import java.awt.image.BufferedImage;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -59,10 +55,7 @@ class GenerativeRoundTripFuzzTest {
 	// generator
 	// ------------------------------------------------------------------
 
-	/**
-	 * One generated element block. Coordinates are unique per element
-	 * (the canonicalizer needs pairwise-distinct blocks).
-	 */
+	/** One generated element block. */
 	private static String el(String type, int id, int x, int y, String attrs) {
 		return "ELEMENT " + type + "\n int id " + id + "\n int x " + x
 				+ "\n int y " + y + "\n" + attrs + "END\n";
@@ -211,92 +204,6 @@ class GenerativeRoundTripFuzzTest {
 	}
 
 	// ------------------------------------------------------------------
-	// canonicalization (ref-aware; see AllElementsRoundTripTest)
-	// ------------------------------------------------------------------
-
-	/**
-	 * Canonical form for saves of circuits that may contain ref lines:
-	 * blocks sorted by ref-masked content, ids renumbered in sorted
-	 * order, ref targets rewritten to the new ids. Sound only when the
-	 * masked blocks are pairwise distinct, which the generator
-	 * guarantees by giving every element a unique x coordinate.
-	 */
-	private static String canonicalize(String saved, long seed) {
-		List<String> blocks = new ArrayList<String>();
-		StringBuilder current = null;
-		StringBuilder header = new StringBuilder();
-		for (String line : saved.split("\n")) {
-			if (line.startsWith("ELEMENT")) {
-				current = new StringBuilder();
-			}
-			if (current == null) {
-				header.append(line).append('\n');
-			} else {
-				current.append(line).append('\n');
-			}
-			if (line.equals("END") && current != null) {
-				blocks.add(current.toString());
-				current = null;
-			}
-		}
-		List<String> masked = new ArrayList<String>();
-		for (String b : blocks) {
-			masked.add(mask(b));
-		}
-		List<Integer> order = new ArrayList<Integer>();
-		for (int i = 0; i < blocks.size(); i++) {
-			order.add(i);
-		}
-		order.sort((a, b) -> masked.get(a).compareTo(masked.get(b)));
-		for (int i = 1; i < order.size(); i++) {
-			assertTrue(!masked.get(order.get(i - 1)).equals(masked.get(order.get(i))),
-					"seed " + seed + ": generated blocks must be pairwise"
-					+ " distinct for canonicalization");
-		}
-		Map<String, String> newId = new HashMap<String, String>();
-		for (int pos = 0; pos < order.size(); pos++) {
-			for (String line : blocks.get(order.get(pos)).split("\n")) {
-				if (line.startsWith(" int id ")) {
-					newId.put(line.substring(" int id ".length()).trim(),
-							Integer.toString(pos));
-				}
-			}
-		}
-		StringBuilder out = new StringBuilder(header);
-		for (int pos = 0; pos < order.size(); pos++) {
-			for (String line : blocks.get(order.get(pos)).split("\n")) {
-				if (line.startsWith(" int id ")) {
-					out.append(" int id ").append(pos).append('\n');
-				} else if (line.startsWith(" ref ")) {
-					String[] parts = line.trim().split("\\s+");
-					out.append(" ref ").append(parts[1]).append(' ')
-							.append(newId.get(parts[2])).append('\n');
-				} else {
-					out.append(line).append('\n');
-				}
-			}
-		}
-		return out.toString();
-	}
-
-	/** A block with its id and ref targets hidden, for stable sorting. */
-	private static String mask(String block) {
-		StringBuilder out = new StringBuilder();
-		for (String line : block.split("\n")) {
-			if (line.startsWith(" int id ")) {
-				continue;
-			}
-			if (line.startsWith(" ref ")) {
-				String[] parts = line.trim().split("\\s+");
-				out.append(" ref ").append(parts[1]).append(" ?\n");
-			} else {
-				out.append(line).append('\n');
-			}
-		}
-		return out.toString();
-	}
-
-	// ------------------------------------------------------------------
 	// harness
 	// ------------------------------------------------------------------
 
@@ -364,10 +271,11 @@ class GenerativeRoundTripFuzzTest {
 				fail("seed " + seed + ": a circuit that loaded and saved"
 						+ " must load again; got: " + JLSInfo.loadError);
 			}
-			assertEquals(canonicalize(savedOnce, seed),
-					canonicalize(save(second), seed),
+			// saves are canonical (#166), so the fixed point holds
+			// byte-for-byte with no canonicalization
+			assertEquals(savedOnce, save(second),
 					"seed " + seed + ": save -> load -> save must be a"
-					+ " fixed point");
+					+ " byte fixed point");
 		}
 		// guard the generator itself: if almost everything is rejected,
 		// the property above is vacuous and the generator has drifted

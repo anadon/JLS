@@ -964,6 +964,37 @@ public class Circuit implements Printable {
 		// if any exceptions, assume load problem
 		try {
 
+			// stable identity (#165): file-declared stable ids must be
+			// unique within the circuit, and elements from files that
+			// predate stable ids get one minted deterministically - in
+			// file order, which is itself deterministic (#98), so two
+			// loads of the same file always agree
+			Set<jls.elem.ElementId> usedIds = new HashSet<jls.elem.ElementId>();
+			for (Element el : loadedElements) {
+				if (el.hasFileStableId() && !usedIds.add(el.getStableId())) {
+					JLSInfo.setLoadError(LoadError.of(
+							LoadError.Category.ELEMENT_ERROR,
+							"two elements declare the same stable id '"
+									+ el.getStableId() + "'",
+							"Remove the duplicated sid line from the file, "
+									+ "or re-save the circuit from JLS."));
+					return false;
+				}
+			}
+			long nextLegacy = 0;
+			for (Element el : loadedElements) {
+				if (el.hasFileStableId()) {
+					continue;
+				}
+				jls.elem.ElementId minted;
+				do {
+					minted = jls.elem.ElementId.legacy(nextLegacy);
+					nextLegacy += 1;
+				} while (usedIds.contains(minted));
+				usedIds.add(minted);
+				el.assignLegacyStableId(minted);
+			}
+
 			// finish up non-wire ends first
 			for (Element el : loadedElements) {
 				if (el instanceof WireEnd)
@@ -1082,31 +1113,98 @@ public class Circuit implements Printable {
 	 */
 	public void save(PrintWriter output) {
 
+		// canonical newlines (#111, #166): println follows the platform
+		// line separator, but canonical bytes must be identical on every
+		// OS - a circuit saved on Windows must byte-match the same
+		// circuit saved on Linux, or determinism (and stateHash) would
+		// be platform-dependent. Wrap the writer so every println, here
+		// and in every element save method, terminates lines with '\n'.
+		PrintWriter out = canonicalNewlines(output);
+
 		// write header; a file-level save states the format version once
 		// at the top (issue #79) - nested subcircuit blocks, which are
 		// always saved through their imported circuit, never repeat it
 		if (isImported()) {
-			output.println("CIRCUIT " + subElement.getName());
+			out.println("CIRCUIT " + subElement.getName());
 		} else {
-			output.println("FORMAT " + formatVersionNeeded());
-			output.println("CIRCUIT " + name);
+			out.println("FORMAT " + formatVersionNeeded());
+			out.println("CIRCUIT " + name);
 		}
+
+		// canonical save order (#166): elements sorted by stable id,
+		// wires - which are reconstructed from refs and save nothing -
+		// after every saved block. The sequential file-local ids are
+		// assigned in that same order, so id and ref lines depend only
+		// on circuit content: two circuits with identical content save
+		// byte-identically, whatever their load/edit history.
+		java.util.List<Element> ordered =
+				new java.util.ArrayList<Element>(elements);
+		ordered.sort(java.util.Comparator
+				.comparingInt((Element el) -> el instanceof Wire ? 1 : 0)
+				.thenComparing(Element::getStableId));
 
 		// give each element a unique id
 		int id = 0;
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			el.setID(id);
 			id += 1;
 		}
 
 		// save elements
-		for (Element el : elements) {
-			el.save(output);
+		for (Element el : ordered) {
+			el.save(out);
 		}
 
 		// write trailer
-		output.println("ENDCIRCUIT");
+		out.println("ENDCIRCUIT");
+		out.flush();
 	} // end of save method
+
+	/**
+	 * Wrap a writer so println terminates lines with '\n' whatever the
+	 * platform line separator is. PrintWriter(Writer) adds no buffering,
+	 * so writes pass straight through to the wrapped writer.
+	 */
+	private static PrintWriter canonicalNewlines(PrintWriter output) {
+
+		return new PrintWriter(output) {
+			@Override
+			public void println() {
+				write('\n');
+			}
+		};
+	} // end of canonicalNewlines method
+
+	/**
+	 * A hash of this circuit's canonical serialized form (#166): equal
+	 * for any two circuits with identical content, whatever their
+	 * load/edit history. The convergence oracle and sync indicator for
+	 * collaborative editing (#163).
+	 *
+	 * @return the SHA-256 of the canonical save text, in lowercase hex.
+	 */
+	public String stateHash() {
+
+		java.io.StringWriter text = new java.io.StringWriter();
+		try (PrintWriter out = new PrintWriter(text)) {
+			save(out);
+		}
+		java.security.MessageDigest sha;
+		try {
+			sha = java.security.MessageDigest.getInstance("SHA-256");
+		} catch (java.security.NoSuchAlgorithmException ex) {
+			// every JRE ships SHA-256 (it is required by the platform spec)
+			throw new AssertionError(ex);
+		}
+		byte[] digest = sha.digest(text.toString()
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		StringBuilder hex = new StringBuilder(digest.length * 2);
+		for (byte b : digest) {
+			hex.append(Character.forDigit((b >> 4) & 0xf, 16));
+			hex.append(Character.forDigit(b & 0xf, 16));
+		}
+		return hex.toString();
+	} // end of stateHash method
 
 	/**
 	 * The save-format version a save of this circuit must declare: the

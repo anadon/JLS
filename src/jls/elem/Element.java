@@ -21,7 +21,9 @@ import java.math.*;
 public class Element {
 
 	// saved properties
-	private int id; 						// unique for every element when written to file
+	private int id; 						// file-local reference index, reassigned on every save
+	private ElementId stableId = ElementId.mintFresh(); // permanent identity (#165)
+	private boolean stableIdFromFile = false; // whether stableId was declared by the loaded file
 	protected int x; 						// upper left corner of element
 	protected int y;						//   (snap-to position for most elements)
 	protected int width = 0; 				// size of element
@@ -204,6 +206,21 @@ public class Element {
 			protected void set(Element el, int value) { el.tracePosition = value; }
 			@Override
 			protected boolean omitted(Element el) { return el.tracePosition == -1; }
+		},
+		new Attribute.StringAttribute("sid") {
+			@Override
+			protected String get(Element el) { return el.stableId.toString(); }
+			@Override
+			protected void set(Element el, String value) {
+				el.stableId = ElementId.parse(value);
+				el.stableIdFromFile = true;
+			}
+			@Override
+			public void copy(Element from, Element to) {
+				// identity is never copied: a pasted element is a new
+				// element and keeps the fresh id minted at its
+				// construction (#165 P3)
+			}
 		}
 	);
 
@@ -462,6 +479,43 @@ public class Element {
 
 		this.id = id;
 	} // end of setID method
+
+	/**
+	 * Get this element's permanent identity (#165). Minted at creation,
+	 * persisted through saves, preserved by load and undo restore; a
+	 * copy gets a fresh one.
+	 *
+	 * @return the stable id.
+	 */
+	public ElementId getStableId() {
+
+		return stableId;
+	} // end of getStableId method
+
+	/**
+	 * Whether this element's stable id was declared by the file it was
+	 * loaded from, as opposed to minted at construction. Drives legacy
+	 * minting in Circuit.finishLoad: only elements without a
+	 * file-declared id get a deterministic legacy id.
+	 *
+	 * @return true if the id came from the loaded file.
+	 */
+	public boolean hasFileStableId() {
+
+		return stableIdFromFile;
+	} // end of hasFileStableId method
+
+	/**
+	 * Replace this element's stable id with a deterministically minted
+	 * legacy id (#165). Called only by Circuit.finishLoad for elements
+	 * read from files that predate stable ids.
+	 *
+	 * @param id The minted id.
+	 */
+	public void assignLegacyStableId(ElementId id) {
+
+		stableId = id;
+	} // end of assignLegacyStableId method
 
 	/**
 	 * Save all information about this element in a file.

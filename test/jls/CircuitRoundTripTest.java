@@ -77,14 +77,17 @@ class CircuitRoundTripTest {
 		Circuit second = load(new Scanner(savedOnce));
 		String savedTwice = save(second);
 
-		// Elements live in a HashSet, so block order and the ids assigned
-		// at save time are not stable across load instances; compare the
-		// order-independent, id-free canonical form instead.
-		assertEquals(FileFormatSupport.canonicalize(savedOnce),
-				FileFormatSupport.canonicalize(savedTwice),
-				"saving a reloaded circuit must reproduce the same content");
-		assertEquals(FileFormatSupport.canonicalize(CIRCUIT_TEXT),
-				FileFormatSupport.canonicalize(savedOnce),
+		// saves are canonical (#166): sorted by stable id, with ids and
+		// refs assigned in that order, so the fixed point holds
+		// byte-for-byte with no canonicalization
+		assertEquals(savedOnce, savedTwice,
+				"saving a reloaded circuit must reproduce the same bytes");
+
+		// and against the pre-#165 fixture text: identical except for
+		// the FORMAT header and the minted sid lines (legacy files mint
+		// ids in file order, so even block order is preserved)
+		assertEquals("FORMAT 1\n" + CIRCUIT_TEXT,
+				FileFormatSupport.stripStableIds(savedOnce),
 				"a loaded circuit must save back to its original content");
 	}
 

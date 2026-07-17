@@ -50,6 +50,7 @@ class CliImageExportTest {
 				+ File.separator + "bin" + File.separator + "java";
 		List<String> cmd = new ArrayList<>();
 		cmd.add(java);
+		cmd.addAll(jls.CoverageAgent.jvmArgs());
 		cmd.add("-Djava.awt.headless=true");
 		cmd.add("-cp");
 		cmd.add(System.getProperty("java.class.path"));

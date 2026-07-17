@@ -175,11 +175,8 @@ public final class InteractiveSimulator extends Simulator {
 		getScale.addActionListener(
 				new ActionListener() {
 					public void actionPerformed(ActionEvent event) {
-						if (scaleField.getText().length() == 0)
-							scaleFactor = 1;
-						else
-							scaleFactor = Math.max(1,Integer.parseInt(scaleField.getText()));
-						scaleField.setText(scaleFactor+"");
+						scaleFactor = NumericField.parse(window,scaleField,
+								1,scaleFactor,"Scale factor");
 						traces.setScaleFactor();
 						if (now != 0)
 							traces.draw();
@@ -255,11 +252,8 @@ public final class InteractiveSimulator extends Simulator {
 						action.add(pause);
 						action.add(stop);
 						action.validate();
-						if (scaleField.getText().length() == 0)
-							scaleFactor = 1;
-						else
-							scaleFactor = Math.max(1,Integer.parseInt(scaleField.getText()));
-						scaleField.setText(scaleFactor+"");
+						scaleFactor = NumericField.parse(window,scaleField,
+								1,scaleFactor,"Scale factor");
 						traces.setScaleFactor();
 						setMaxTime();
 						runSim();
@@ -279,17 +273,11 @@ public final class InteractiveSimulator extends Simulator {
 						action.add(print);
 						action.add(help);
 						action.validate();
-						if (scaleField.getText().length() == 0)
-							scaleFactor = 1;
-						else
-							scaleFactor = Math.max(1,Integer.parseInt(scaleField.getText()));
-						scaleField.setText(scaleFactor+"");
+						scaleFactor = NumericField.parse(window,scaleField,
+								1,scaleFactor,"Scale factor");
 						traces.setScaleFactor();
-						if (stepField.getText().length() == 0)
-							stepAmount = 1;
-						else
-							stepAmount = Math.max(1,Integer.parseInt(stepField.getText()));
-						stepField.setText(stepAmount+"");
+						stepAmount = NumericField.parse(window,stepField,
+								1,stepAmount,"Step amount");
 						setMaxTime();
 						if (sim == null) {
 							stepEnd = stepAmount;
@@ -324,17 +312,11 @@ public final class InteractiveSimulator extends Simulator {
 						action.validate();
 
 						// set up step info
-						if (scaleField.getText().length() == 0)
-							scaleFactor = 1;
-						else
-							scaleFactor = Math.max(1,Integer.parseInt(scaleField.getText()));
-						scaleField.setText(scaleFactor+"");
+						scaleFactor = NumericField.parse(window,scaleField,
+								1,scaleFactor,"Scale factor");
 						traces.setScaleFactor();
-						if (stepField.getText().length() == 0)
-							stepAmount = 1;
-						else
-							stepAmount = Math.max(1,Integer.parseInt(stepField.getText()));
-						stepField.setText(stepAmount+"");
+						stepAmount = NumericField.parse(window,stepField,
+								1,stepAmount,"Step amount");
 						setMaxTime();
 
 						// create step object (TimerTask)
@@ -415,11 +397,8 @@ public final class InteractiveSimulator extends Simulator {
 						action.add(pause);
 						action.add(stop);
 						action.validate();
-						if (scaleField.getText().length() == 0)
-							scaleFactor = 1;
-						else
-							scaleFactor = Math.max(1,Integer.parseInt(scaleField.getText()));
-						scaleField.setText(scaleFactor+"");
+						scaleFactor = NumericField.parse(window,scaleField,
+								1,scaleFactor,"Scale factor");
 						traces.setScaleFactor();
 						paused = false;
 						stepEnd = -1;  // kill any stepping
@@ -464,11 +443,11 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	public void setMaxTime() {
 
-		if (tlimit.getText().length() == 0)
-			maxTime = 1;
-		else
-			maxTime = Math.max(1,Integer.parseInt(tlimit.getText()));
-		tlimit.setText(maxTime+"");
+		// maxTime is a long but only ever holds int-ranged values on the
+		// interactive path (the field's TextFilter caps typing at
+		// Integer.MAX_VALUE); the clamp keeps the cast safe regardless
+		int previous = (int)Math.min(Math.max(1,maxTime),Integer.MAX_VALUE);
+		maxTime = NumericField.parse(window,tlimit,1,previous,"Time limit");
 	} // end of setMaxTime method
 
 	/**

@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JTabbedPane;
@@ -121,17 +123,16 @@ public final class Editor extends SimpleEditor {
 
 		// make sure name is not already used in some other editor
 		String name = fileName.replaceAll("\\.jls$","");
+		List<Circuit> edited = new ArrayList<Circuit>();
 		for (Component edit : tabbedParent.getComponents()) {
 			if (!(edit instanceof Editor))
 				continue;
-			Editor otherEditor = (Editor)edit;
-			if (otherEditor.getCircuit().isImported())
-				continue;
-			if (name.equals(otherEditor.getCircuit().getName())) {
-				TellUser.error(JLSInfo.frame,
-				"Circuit with this name already being edited", "Error");
-				return;
-			}
+			edited.add(((Editor)edit).getCircuit());
+		}
+		if (nameUsedByAnotherEditor(name,circuit,edited)) {
+			TellUser.error(JLSInfo.frame,
+			"Circuit with this name already being edited", "Error");
+			return;
 		}
 
 		// change name in tab
@@ -160,6 +161,35 @@ public final class Editor extends SimpleEditor {
 			cancelCheckpoint(oldName);
 		}
 	} // end of saveAs method
+
+	/**
+	 * See if a proposed circuit name is already used by a circuit open in
+	 * some other editor.  The circuit being saved is skipped (a circuit
+	 * doesn't collide with itself, so Save As under the current name is
+	 * allowed), as are imported circuits, which can't be saved anyway.
+	 *
+	 * @param name The proposed circuit name (no .jls extension).
+	 * @param self The circuit being saved.
+	 * @param edited The circuits open in sibling editors, including self.
+	 *
+	 * @return true if another editor's circuit already has the name.
+	 */
+	static boolean nameUsedByAnotherEditor(String name, Circuit self,
+			Iterable<Circuit> edited) {
+
+		for (Circuit other : edited) {
+
+			// don't compare the circuit being saved with itself
+			if (other == self)
+				continue;
+
+			if (other.isImported())
+				continue;
+			if (name.equals(other.getName()))
+				return true;
+		}
+		return false;
+	} // end of nameUsedByAnotherEditor method
 
 	/**
 	 * Close this editor window, save circuit if necessary and ok with user.

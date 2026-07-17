@@ -68,11 +68,7 @@ class CliTextSaveTest {
 		return new String(in.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	/**
-	 * A minimal circuit in the on-disk text form. Wire-free, so content
-	 * comparisons can use FileFormatSupport.canonicalize (ref lines
-	 * change with the unstable save-time ids).
-	 */
+	/** A minimal circuit in the on-disk text form. */
 	private static String circuitText(String name) {
 		return "CIRCUIT " + name + "\n"
 				+ "ELEMENT Constant\n"
@@ -126,8 +122,11 @@ class CliTextSaveTest {
 		Result r = run("-savetext", "in.jls", "sub/in.jls");
 		assertEquals(0, r.exit, r.stderr);
 
-		assertEquals(FileFormatSupport.canonicalize(circuitText("in")),
-				FileFormatSupport.canonicalize(
+		// saves are canonical (#166): legacy files mint stable ids in
+		// file order, so the output is the input plus the FORMAT header
+		// and the minted sid lines
+		assertEquals("FORMAT 1\n" + circuitText("in"),
+				FileFormatSupport.stripStableIds(
 						Files.readString(tmp.resolve("in.jls"))),
 				"the plain-text save must hold the identical circuit");
 
@@ -151,15 +150,14 @@ class CliTextSaveTest {
 		assertEquals(0, run("-savetext", "out.jls", "in.jls").exit);
 		String first = Files.readString(tmp.resolve("out.jls"));
 
-		// converting the output onto itself must preserve the content
-		// (canonicalized: element order and ids are not stable per load)
+		// converting the output onto itself must preserve the content -
+		// byte-for-byte, since saves are canonical (#166) and the first
+		// conversion persisted the stable ids
 		Result r = run("-savetext", "out.jls", "out.jls");
 		assertEquals(0, r.exit, r.stderr);
-		assertEquals(FileFormatSupport.canonicalize(first),
-				FileFormatSupport.canonicalize(
-						Files.readString(tmp.resolve("out.jls"))),
-				"plain-text re-save of a plain-text save must hold the "
-						+ "same circuit");
+		assertEquals(first, Files.readString(tmp.resolve("out.jls")),
+				"plain-text re-save of a plain-text save must be "
+						+ "byte-identical");
 	}
 
 	@Test

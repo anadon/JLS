@@ -1123,21 +1123,64 @@ public class Circuit implements Printable {
 			output.println("CIRCUIT " + name);
 		}
 
+		// canonical save order (#166): elements sorted by stable id,
+		// wires - which are reconstructed from refs and save nothing -
+		// after every saved block. The sequential file-local ids are
+		// assigned in that same order, so id and ref lines depend only
+		// on circuit content: two circuits with identical content save
+		// byte-identically, whatever their load/edit history.
+		java.util.List<Element> ordered =
+				new java.util.ArrayList<Element>(elements);
+		ordered.sort(java.util.Comparator
+				.comparingInt((Element el) -> el instanceof Wire ? 1 : 0)
+				.thenComparing(Element::getStableId));
+
 		// give each element a unique id
 		int id = 0;
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			el.setID(id);
 			id += 1;
 		}
 
 		// save elements
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			el.save(output);
 		}
 
 		// write trailer
 		output.println("ENDCIRCUIT");
 	} // end of save method
+
+	/**
+	 * A hash of this circuit's canonical serialized form (#166): equal
+	 * for any two circuits with identical content, whatever their
+	 * load/edit history. The convergence oracle and sync indicator for
+	 * collaborative editing (#163).
+	 *
+	 * @return the SHA-256 of the canonical save text, in lowercase hex.
+	 */
+	public String stateHash() {
+
+		java.io.StringWriter text = new java.io.StringWriter();
+		try (PrintWriter out = new PrintWriter(text)) {
+			save(out);
+		}
+		java.security.MessageDigest sha;
+		try {
+			sha = java.security.MessageDigest.getInstance("SHA-256");
+		} catch (java.security.NoSuchAlgorithmException ex) {
+			// every JRE ships SHA-256 (it is required by the platform spec)
+			throw new AssertionError(ex);
+		}
+		byte[] digest = sha.digest(text.toString()
+				.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		StringBuilder hex = new StringBuilder(digest.length * 2);
+		for (byte b : digest) {
+			hex.append(Character.forDigit((b >> 4) & 0xf, 16));
+			hex.append(Character.forDigit(b & 0xf, 16));
+		}
+		return hex.toString();
+	} // end of stateHash method
 
 	/**
 	 * The save-format version a save of this circuit must declare: the

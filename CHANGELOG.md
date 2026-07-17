@@ -24,6 +24,27 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Stable element identity (#165, collaboration stage 0a): every
+  element now carries a permanent id (`replica:counter`), minted at
+  creation and persisted in the save format as a new `sid` base
+  attribute. Files that predate the field mint deterministic
+  `legacy:N` ids at load, in file order, so every load of the same
+  file agrees. Identity survives save/load, undo restore, and
+  checkpoint recovery; copying mints a fresh id (a paste is a new
+  element). A file declaring the same id twice is refused with a
+  structured load error. No format-version bump: the attribute is
+  simulation-neutral metadata under the documented evolution policy
+  (`docs/file-format.md` §8-9).
+- Deterministic canonical serialization (#166, collaboration stage
+  0c): a circuit's saved form is now a pure function of its content.
+  Elements are emitted sorted by stable id with the file-local
+  `id`s (and so the wire `ref` lines) assigned in that order -
+  previously two loads of the same file saved differently in 261 of
+  276 lines on the fork shift-register fixture. Round-trip suites
+  now assert byte equality end to end; the test-side `canonicalize`
+  workaround (documented as unsound for circuits with wires) is
+  deleted. `Circuit.stateHash()` exposes the SHA-256 of the
+  canonical bytes as the convergence oracle for #163.
 - Per-element simulation goldens with a completeness ratchet (#158):
   every simulating palette element now has a behavioral pin -
   Adder (sum/carry sweep), Decoder (one-hot), Extend, Mux, the

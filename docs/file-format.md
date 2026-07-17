@@ -368,6 +368,15 @@ pre-#165 reader that drops it loses nothing but identity continuity
 version. Distributed collaboration (issue #163) addresses elements
 by stable id.
 
+**Canonical order** (issue #166): the canonical writer emits element
+blocks sorted by stable id and assigns the save-time `id`s in that
+same order, making the serialized form a pure function of circuit
+content — two circuits with identical content save byte-identically,
+whatever their load/edit history. A reader MUST NOT rely on this
+order (block order is not significant, §5), but tools MAY rely on
+JLS saves being deterministic, and JLS uses the canonical bytes as
+its convergence oracle and state hash for collaboration.
+
 ---
 
 ## 9. Evolution policy

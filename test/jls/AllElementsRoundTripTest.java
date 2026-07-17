@@ -151,95 +151,14 @@ class AllElementsRoundTripTest {
 
 	@Test
 	void saveLoadIsAFixedPointForEveryElementType() throws Exception {
+		// saves are canonical (#166): sorted by stable id, with ids and
+		// refs assigned in that order, so the fixed point holds
+		// byte-for-byte with no canonicalization
 		Circuit first = load(fixture());
 		String savedOnce = save(first);
 		Circuit second = load(savedOnce);
-		assertEquals(canonicalize(savedOnce), canonicalize(save(second)),
-				"save -> load -> save must be a fixed point");
-	}
-
-	/**
-	 * Reduce a saved file to a canonical form. Elements live in a HashSet,
-	 * so block order and the ids assigned at save time are not stable
-	 * across load instances; sort the blocks and renumber ids (and the
-	 * ref lines that use them) in sorted-block order.
-	 */
-	private static String canonicalize(String saved) {
-		// split into header and ELEMENT..END blocks
-		List<String> blocks = new ArrayList<String>();
-		StringBuilder current = null;
-		StringBuilder header = new StringBuilder();
-		for (String line : saved.split("\n")) {
-			if (line.startsWith("ELEMENT")) {
-				current = new StringBuilder();
-			}
-			if (current == null) {
-				header.append(line).append('\n');
-			} else {
-				current.append(line).append('\n');
-			}
-			if (line.equals("END") && current != null) {
-				blocks.add(current.toString());
-				current = null;
-			}
-		}
-		// sort by content with ids and ref targets masked
-		List<String> masked = new ArrayList<String>();
-		for (String b : blocks) {
-			masked.add(mask(b));
-		}
-		List<Integer> order = new ArrayList<Integer>();
-		for (int i = 0; i < blocks.size(); i++) {
-			order.add(i);
-		}
-		order.sort((a, b) -> masked.get(a).compareTo(masked.get(b)));
-		for (int i = 1; i < order.size(); i++) {
-			assertTrue(!masked.get(order.get(i - 1)).equals(masked.get(order.get(i))),
-					"fixture blocks must be pairwise distinct for canonicalization");
-		}
-		// renumber: old id -> position in sorted order
-		java.util.Map<String, String> newId = new java.util.HashMap<String, String>();
-		for (int pos = 0; pos < order.size(); pos++) {
-			String block = blocks.get(order.get(pos));
-			for (String line : block.split("\n")) {
-				if (line.startsWith(" int id ")) {
-					newId.put(line.substring(" int id ".length()).trim(),
-							Integer.toString(pos));
-				}
-			}
-		}
-		StringBuilder out = new StringBuilder(header);
-		for (int pos = 0; pos < order.size(); pos++) {
-			for (String line : blocks.get(order.get(pos)).split("\n")) {
-				if (line.startsWith(" int id ")) {
-					out.append(" int id ").append(pos).append('\n');
-				} else if (line.startsWith(" ref ")) {
-					String[] parts = line.trim().split("\\s+");
-					out.append(" ref ").append(parts[1]).append(' ')
-						.append(newId.get(parts[2])).append('\n');
-				} else {
-					out.append(line).append('\n');
-				}
-			}
-		}
-		return out.toString();
-	}
-
-	/** A block with its id and ref targets hidden, for stable sorting. */
-	private static String mask(String block) {
-		StringBuilder out = new StringBuilder();
-		for (String line : block.split("\n")) {
-			if (line.startsWith(" int id ")) {
-				continue;
-			}
-			if (line.startsWith(" ref ")) {
-				String[] parts = line.trim().split("\\s+");
-				out.append(" ref ").append(parts[1]).append(" ?\n");
-			} else {
-				out.append(line).append('\n');
-			}
-		}
-		return out.toString();
+		assertEquals(savedOnce, save(second),
+				"save -> load -> save must be a byte fixed point");
 	}
 
 	@Test

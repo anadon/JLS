@@ -207,7 +207,11 @@
                slightly below measured coverage to absorb JDK jitter;
                a PR that raises coverage should also raise the floor to
                just below the new measurement (issue #66).
-               Baseline 2026-07-08: INSTRUCTION 18.04%, LINE 18.44%. -->
+               Baseline 2026-07-08: INSTRUCTION 18.04%, LINE 18.44%.
+               Raised 2026-07-17 (issues #158/#159/#160: element
+               simulation goldens, generative fuzzing, CLI-subprocess
+               agent propagation): INSTRUCTION 35.58%, LINE 34.99%,
+               and a first BRANCH floor at measured 33.46%. -->
           <execution>
             <id>coverage-ratchet</id>
             <phase>verify</phase>
@@ -222,12 +226,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.175</minimum>
+                      <minimum>0.345</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.180</minimum>
+                      <minimum>0.340</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.325</minimum>
                     </limit>
                   </limits>
                 </rule>

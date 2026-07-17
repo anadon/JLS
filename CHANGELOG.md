@@ -18,6 +18,24 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Per-element simulation goldens with a completeness ratchet (#158):
+  every simulating palette element now has a behavioral pin -
+  Adder (sum/carry sweep), Decoder (one-hot), Extend, Mux, the
+  barrel shifter's three kinds, TruthTable (rows and don't-cares),
+  Binder/Splitter range routing, JumpStart/JumpEnd, SigGen and Stop
+  join the existing gate/memory/sequential goldens. Expected values
+  are computed independently of the implementation. A reflective
+  ratchet fails the build when a palette element has neither a
+  golden nor a commented exemption, so the gap cannot reopen.
+  Detection power was verified the issue's way: a hand-mutated Mux
+  select decode passes the entire pre-existing suite (40 tests) and
+  fails the new golden precisely.
+- CLI subprocess coverage (#159): the JaCoCo agent now rides into
+  the JVMs the CLI suites spawn, so JLSStart's exercised paths are
+  measured (4.7% -> 25.5% line on its own). The coverage ratchet
+  floors rose from 17.5%/18.0% (set 2026-07-08) to 34.5%
+  instruction / 34.0% line, plus a first 32.5% BRANCH floor
+  (measured: 35.58% / 34.99% / 33.46%).
 - Vector circuit image export (#154): `-i out.svg` writes the circuit
   as resolution-independent SVG through the same element paint path
   the PNG/JPEG export uses, via JFreeSVG (GPLv3, same license as JLS,

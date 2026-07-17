@@ -14,6 +14,12 @@ External claims are **[verified]** (checked against live sources this
 month) or **[from memory]** (well-known but not re-verified — confirm
 before a design commitment).*
 
+*Implementation is planned in GitHub issues: tracking issue #163
+(architecture, layering, interfaces, validation program) with
+sub-issues #165 (stable ids), #166 (deterministic serialization),
+#167 (operation layer), #168 (transport/SAS), #169 (session
+lifecycle), #170 (security hardening), #171 (CRDT replication).*
+
 ## Executive summary
 
 1. **Serialization is NOT deterministic today — confirmed, with the

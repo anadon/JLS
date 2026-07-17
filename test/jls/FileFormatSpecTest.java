@@ -242,14 +242,16 @@ class FileFormatSpecTest {
 		String saved = save(load(fixture()));
 		String[] lines = saved.split("\n");
 
-		// §4: the FORMAT header is the first line, stating the version
-		// this JLS writes; the spec documents that same version
-		assertEquals("FORMAT " + Circuit.FORMAT_VERSION, lines[0],
+		// §4: the FORMAT header is the first line, stating the lowest
+		// version whose features the file uses (#124: this fixture's
+		// groups are horizontal, so it needs nothing past version 1);
+		// the spec documents the newest version the code implements
+		assertEquals("FORMAT 1", lines[0],
 				"the FORMAT header must be the first line");
 		assertTrue(spec().contains("**format version "
 						+ Circuit.FORMAT_VERSION + "**"),
-				"the spec must document the version the code writes ("
-						+ Circuit.FORMAT_VERSION + ")");
+				"the spec must document the newest version the code "
+						+ "implements (" + Circuit.FORMAT_VERSION + ")");
 		assertTrue(lines[1].startsWith("CIRCUIT "),
 				"the top-level CIRCUIT line must follow the header");
 		assertEquals("ENDCIRCUIT", lines[lines.length - 1],

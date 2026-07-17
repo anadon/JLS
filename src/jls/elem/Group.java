@@ -79,15 +79,28 @@ public abstract class Group extends LogicElement {
 		FontMetrics fm = g.getFontMetrics();
 		int s = JLSInfo.spacing;
 		int puts = ranges.size();
-		// determine width
-		width = 0;
+
+		// the size decomposes into an across axis (from the narrow puts
+		// to the bundle side, sized by the widest range label and
+		// snapped to the grid) and an along axis (one grid step per
+		// put); orientation decides which axis is which (issue #124,
+		// re-derived from AmityWilder's vertical-groups branch)
+		int across = 0;
 		for(Entry e : ranges) {
-			width = Math.max(width, fm.stringWidth(e.toCircuitString()));
+			across = Math.max(across, fm.stringWidth(e.toCircuitString()));
 		}
-		width = (width+2*s)/s*s;
-	
-		// determine height
-		height = (puts+1)*s;
+		across = (across+2*s)/s*s;
+		int along = (puts+1)*s;
+
+		if (orientation == JLSInfo.Orientation.LEFT
+				|| orientation == JLSInfo.Orientation.RIGHT) {
+			width = across;
+			height = along;
+		}
+		else {
+			width = along;
+			height = across;
+		}
 
 	} // end of init method
 	
@@ -150,14 +163,9 @@ public abstract class Group extends LogicElement {
 	public void setValue(String name, String value) {
 		
 		if (name.equals("orient")) {
-			if(value.equals("LEFT"))
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(value.equals("RIGHT"))
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
+			// unknown strings leave the orientation unchanged, matching
+			// the historical loaders (issue #124: all four orientations)
+			orientation = JLSInfo.Orientation.parse(value, orientation);
 		} else if(name.equals("noncontig")) {
 			if(value.equals("true")) noncontig = true;
 			else noncontig = false;
@@ -172,20 +180,45 @@ public abstract class Group extends LogicElement {
 	 */
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
+		orientation = orientation.flipped();
+		inputs.clear();
+		outputs.clear();
+		width = 0;
+		height = 0;
+	}
+
+	/**
+	 * This method will rotate the group a quarter turn (issue #124).
+	 * Subclasses re-run init to rebuild the puts on the new axes.
+	 * @param direction The direction to rotate
+	 * @param g The current graphics context for use in recalculating size
+	 */
+	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	{
+		if(direction == JLSInfo.Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = orientation.ccw();
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(direction == JLSInfo.Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = orientation.cw();
 		}
 		inputs.clear();
 		outputs.clear();
 		width = 0;
 		height = 0;
 	}
-	
+
+	/**
+	 * Tells if a Group is capable of rotating: the same no-attachments
+	 * constraint as flipping, since both rebuild every put.
+	 * @return False if any input or output has a wire attached, True otherwise
+	 */
+	public boolean canRotate()
+	{
+		return canFlip();
+	}
+
 	/**
 	 * Tells if a Group is capable of flippiing, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -301,6 +334,24 @@ public abstract class Group extends LogicElement {
 		}
 		output.println("END");
 	} // end of save method
+
+	/**
+	 * A vertically-oriented group is a format-version-2 feature: a
+	 * version-1 reader ignores the UP/DOWN orient value and silently
+	 * loads the group horizontal, so files that use it must declare
+	 * version 2 to be refused cleanly by older readers instead
+	 * (issue #124 per the docs/file-format.md section 9 policy).
+	 *
+	 * @return 2 if this group is vertical, 1 otherwise.
+	 */
+	public int saveFormatVersion() {
+
+		if (orientation == JLSInfo.Orientation.UP
+				|| orientation == JLSInfo.Orientation.DOWN) {
+			return 2;
+		}
+		return 1;
+	} // end of saveFormatVersion method
 	
 	/**
 	 * Copy values to new object.
@@ -336,6 +387,8 @@ public abstract class Group extends LogicElement {
 		private JRadioButton group = new JRadioButton("Group Bits");
 		private JRadioButton left = new JRadioButton("Left");
 		private JRadioButton right = new JRadioButton("Right", true);
+		private JRadioButton up = new JRadioButton("Up");
+		private JRadioButton down = new JRadioButton("Down");
 		private String type;
 		
 		/**
@@ -386,15 +439,25 @@ public abstract class Group extends LogicElement {
 			JLabel olbl = new JLabel("Orientation");
 			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(1,3));
+			JPanel orients = new JPanel(new GridLayout(3,3));
+			orients.add(new JLabel(""));
+			orients.add(up);
+			orients.add(new JLabel(""));
 			orients.add(left);
 			orients.add(new JLabel(""));
 			orients.add(right);
+			orients.add(new JLabel(""));
+			orients.add(down);
+			orients.add(new JLabel(""));
 			left.setHorizontalAlignment(SwingConstants.CENTER);
 			right.setHorizontalAlignment(SwingConstants.CENTER);
+			up.setHorizontalAlignment(SwingConstants.CENTER);
+			down.setHorizontalAlignment(SwingConstants.CENTER);
 			ButtonGroup gr = new ButtonGroup();
 			gr.add(left);
 			gr.add(right);
+			gr.add(up);
+			gr.add(down);
 			window.add(orients);
 
 			confirmOnEnter(bitsField);
@@ -446,6 +509,14 @@ public abstract class Group extends LogicElement {
 			else if(right.isSelected())
 			{
 				orientation = JLSInfo.Orientation.RIGHT;
+			}
+			else if(up.isSelected())
+			{
+				orientation = JLSInfo.Orientation.UP;
+			}
+			else if(down.isSelected())
+			{
+				orientation = JLSInfo.Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

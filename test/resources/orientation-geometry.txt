@@ -62,3 +62,11 @@ ShiftRegister I=DOWN S=UP rect=0,0,24,24 puts=amount@12,0;input@12,0;output@12,2
 TriState G=DOWN C=DOWN finishLoadError=invalid element
 Mux I=DOWN S=DOWN rect=0,0,60,24 puts=input0@12,0;input1@24,0;input2@36,0;input3@48,0;output@24,24;select@12,24
 ShiftRegister I=DOWN S=DOWN rect=0,0,24,24 puts=amount@12,24;input@12,0;output@12,24
+Binder LEFT rect=0,0,24,36 puts=0@24,12;1@24,24;output@0,12
+Splitter LEFT rect=0,0,24,36 puts=0@0,12;1@0,24;input@24,12
+Binder RIGHT rect=0,0,24,36 puts=0@0,12;1@0,24;output@24,12
+Splitter RIGHT rect=0,0,24,36 puts=0@24,12;1@24,24;input@0,12
+Binder UP rect=0,0,36,24 puts=0@12,24;1@24,24;output@12,0
+Splitter UP rect=0,0,36,24 puts=0@12,0;1@24,0;input@12,24
+Binder DOWN rect=0,0,36,24 puts=0@12,0;1@24,0;output@12,24
+Splitter DOWN rect=0,0,36,24 puts=0@12,24;1@24,24;input@12,0

@@ -126,6 +126,17 @@ class OrientationGeometryTest {
 						+ " String iOrient \"" + go + "\"\n String sOrient \"" + co + "\"\n"));
 			}
 		}
+		// wire groups gained UP/DOWN in #124; their across size is
+		// metrics-driven but grid-snapped, and the labels here are
+		// single digits, so the entries are stable for any font whose
+		// digit advance is under one grid unit
+		for (String o : ORIENTS) {
+			String groupAttrs = " int bits 2\n String orient \"" + o
+					+ "\"\n String noncontig \"true\"\n int tristate 0\n"
+					+ " pair 0 0\n pair 1 1\n";
+			lines.add(describe("Binder " + o, "Binder", groupAttrs));
+			lines.add(describe("Splitter " + o, "Splitter", groupAttrs));
+		}
 		return String.join("\n", lines) + "\n";
 	}
 

@@ -6,7 +6,8 @@
      this document; line numbers drift, symbol names do not). -->
 
 This document is the normative specification of the `.jls` circuit
-save format, **format version 1**. It is written so that a third party
+save format, up to and including **format version 2**. It is written
+so that a third party
 can implement a reader or writer from this document alone, without
 consulting the JLS source. Where the words MUST, MUST NOT, SHOULD and
 MAY appear, they are used as in RFC 2119.
@@ -109,7 +110,7 @@ numbers assume this layout.
 file          = format-line circuit-block
 
 format-line   = "FORMAT" version              ; §4; absent in legacy files
-version       = decimal integer               ; 1 in current files
+version       = decimal integer               ; 1 or 2 in current files
 
 circuit-block = "CIRCUIT" name { element } "ENDCIRCUIT"
 name          = token                         ; §3.1
@@ -167,7 +168,11 @@ Rules:
 - **Legacy files have no header** and are implicitly version 0. A
   reader MUST accept a file whose first token is `CIRCUIT` and treat
   it as version 0. Version 0 and version 1 differ *only* in the
-  header's presence.
+  header's presence. Version 2 differs from version 1 only in that
+  the `orient` attribute of `Binder` and `Splitter` elements may be
+  `UP` or `DOWN` as well as `LEFT`/`RIGHT` (issue #124) — a
+  version-1 reader would silently load such a group horizontal,
+  which is exactly the mis-load the header exists to prevent.
 - A reader MUST accept any declared version less than or equal to
   the newest it implements, and MUST refuse a greater one with an
   explicit "this file needs a newer reader" diagnostic — refusing is
@@ -180,7 +185,11 @@ Rules:
   reference reader rejects a `FORMAT` token inside an element body as
   an unknown item kind.
 - A writer MUST emit the header with the highest version whose
-  features it uses (currently always `FORMAT 1`).
+  features the file uses: `FORMAT 2` when any group in the file
+  (including inside nested subcircuit blocks) is vertically
+  oriented, otherwise `FORMAT 1` — so files that avoid newer
+  features stay readable by older JLS versions.
+  <!-- Circuit.formatVersionNeeded, Element.saveFormatVersion. -->
 
 ---
 
@@ -267,13 +276,13 @@ this table; a tag not in it (and not a documented later addition)
 MUST fail the load with a diagnostic naming the tag, and SHOULD
 suggest that the file may need a newer reader.
 
-Version-1 writers emit exactly these 32 tags:
+Version-1 and version-2 writers emit exactly these 32 tags:
 
 | tag | element | notes |
 |---|---|---|
 | `Adder` | ripple adder | |
 | `AndGate` | AND gate | |
-| `Binder` | wire bundler | `pair` items: (input index, bundle bit) |
+| `Binder` | wire bundler | `pair` items: (input index, bundle bit); `orient` values `UP`/`DOWN` require version 2 (§4) |
 | `Clock` | clock generator | |
 | `Constant` | constant driver | value is an `Int` item |
 | `Decoder` | decoder | |
@@ -294,7 +303,7 @@ Version-1 writers emit exactly these 32 tags:
 | `Register` | latch / D flip-flop | |
 | `ShiftRegister` | combinational barrel shifter | despite the name, stateless; tag and attributes match the bsiever-fork 4.6 element (issue #122) |
 | `SigGen` | signal generator | |
-| `Splitter` | wire unbundler | `pair` items: (output index, bundle bit) |
+| `Splitter` | wire unbundler | `pair` items: (output index, bundle bit); `orient` values `UP`/`DOWN` require version 2 (§4) |
 | `StateMachine` | finite state machine | state list encoded as ordered `String state`/`output`/`trans`/`next` items with interleaved `int`/`long` values; the item *sequence* is significant for this type only |
 | `Stop` | simulation stop control | |
 | `SubCircuit` | nested circuit instance | body contains one nested `CIRCUIT` block (no `FORMAT` line) |
@@ -365,6 +374,16 @@ Concretely:
 - A reader MUST keep accepting **all older versions** (including the
   headerless version 0) indefinitely; version support is only ever
   added, never removed.
+
+Version history:
+
+- **0**: headerless legacy files (everything before the header).
+- **1**: version 0 plus the `FORMAT` header itself; no other change.
+- **2**: version 1 plus vertical (`UP`/`DOWN`) `orient` values on
+  `Binder`/`Splitter` (issue #124). A version-1 reader silently
+  ignores the unknown value and loads the group horizontal — a
+  mis-load, hence the bump. Writers emit `FORMAT 2` only for files
+  that contain a vertical group (§4).
 
 **The silent-drop caveat** (issue #47): "no bump needed" trades
 compatibility for silent data loss in *pre-versioning* readers. The

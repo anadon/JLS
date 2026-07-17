@@ -230,6 +230,27 @@ A constant wider than its net silently loses its high bits; this is
 the width-adaptation rule, consistent with §2's
 "values are interpreted at the reader's declared width".
 
+### 6.3 Shift register (combinational shifter)
+
+`ShiftRegister.react` (issue #122) is a Mux-style combinational
+element, not a clocked register — the name and semantics are the
+bsiever fork's, whose 4.6 release shipped it, so fork-authored
+circuits keep their meaning upstream. Ports: `input` (n bits, n ≥ 2),
+`amount` (ceil(log2 n) bits), `output` (n bits). On any input change
+it recomputes
+
+- **LogicalLeft**: `output[i] = input[i - amount]`, zero fill;
+- **LogicalRight**: `output[i] = input[i + amount]`, zero fill;
+- **ArithmeticRight**: as LogicalRight but vacated high bits copy the
+  sign bit `input[n-1]`;
+
+an `amount` ≥ n therefore yields 0 (logical) or all-sign-bits
+(arithmetic). There is no clock, no stored value, and no reset; the
+result follows the standard §6.2 transport-delay discipline (default
+delay 25). An undriven `input` or `amount` reads as 0, like Mux's
+select (a deliberate hardening over the fork, whose react assumed a
+driven data input). Pinned by `ShiftRegisterTest`.
+
 ## 7. Propagation delays per element
 
 Defaults, from the code (all user-adjustable per instance via the
@@ -246,6 +267,7 @@ Propagation Delays" restores these defaults via
 | Adder | 30 × bits (ripple-carry model, recomputed from width) | `src/jls/elem/Adder.java` |
 | Decoder | 15 | `src/jls/elem/Decoder.java` |
 | Mux | 25 | `src/jls/elem/Mux.java` |
+| Shift register (combinational barrel shifter, issue #122) | 25 | `src/jls/elem/ShiftRegister.java` |
 | Register | 50 | `src/jls/elem/Register.java` |
 | State machine | 30 | `src/jls/elem/StateMachine.java` |
 | Truth table | 30 | `src/jls/elem/TruthTable.java` |

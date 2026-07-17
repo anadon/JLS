@@ -121,6 +121,9 @@ class OrientationGeometryTest {
 				lines.add(describe("Mux I=" + go + " S=" + co, "Mux",
 						" int inputs 4\n int bits 1\n int delay 10\n String iOrient \"" + go
 						+ "\"\n String sOrient \"" + co + "\"\n"));
+				lines.add(describe("ShiftRegister I=" + go + " S=" + co, "ShiftRegister",
+						" String type \"LogicalLeft\"\n int bits 8\n int delay 25\n"
+						+ " String iOrient \"" + go + "\"\n String sOrient \"" + co + "\"\n"));
 			}
 		}
 		return String.join("\n", lines) + "\n";

@@ -83,6 +83,7 @@ import jls.elem.OutputPin;
 import jls.elem.Pause;
 import jls.elem.Put;
 import jls.elem.Register;
+import jls.elem.ShiftRegister;
 import jls.elem.SigGen;
 import jls.elem.Splitter;
 import jls.elem.StateMachine;
@@ -1245,7 +1246,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
 
-				JPanel comb = new JPanel(new GridLayout(2,2));
+				JPanel comb = new JPanel(new GridLayout(2,3));
 
 				image = getImage("mux");
 				text = image == null ? "MUX" : "";
@@ -1264,6 +1265,15 @@ public abstract class SimpleEditor extends JPanel {
 					}
 				};
 				comb.add(makeElement(act,"decoder"));
+
+				image = getImage("shiftregister");
+				text = image == null ? "SHIFT" : "";
+				act = new AbstractAction(text,image) {
+					public void actionPerformed(ActionEvent event) {
+						setup(new ShiftRegister(circuit),event.getSource() instanceof JButton);
+					}
+				};
+				comb.add(makeElement(act,"shift register (combinational shifter)"));
 
 				image = getImage("adder");
 				text = image == null ? "ADDER" : "";
@@ -1396,7 +1406,9 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			public ImageIcon getImage(String name) {
 				URL image = getClass().getResource("images/" + name + ".gif");
-				return new ImageIcon(image);
+				// a missing icon falls back to the button's text label
+				// instead of an NPE at startup (issue #78 observation)
+				return image == null ? null : new ImageIcon(image);
 			} // end of geImage method
 
 			/**

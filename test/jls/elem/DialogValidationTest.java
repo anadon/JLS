@@ -111,6 +111,28 @@ class DialogValidationTest {
 	}
 
 	@Test
+	void shiftRegisterBitsRuleIsOneStringOnTwoSurfaces() {
+		assertEquals(ShiftRegister.BITS_CONSTRAINT, ShiftRegister.checkBits(1));
+		assertNull(ShiftRegister.checkBits(2));
+		String error = loadExpectingFailure(element("ShiftRegister",
+				" String type \"LogicalLeft\"\n int bits 1\n"));
+		assertTrue(error.contains(ShiftRegister.checkBits(1)),
+				"the loader must reject with the dialog's constraint string,"
+						+ " got: " + error);
+	}
+
+	@Test
+	void shiftRegisterUnknownKindIsRejectedNotGuessed() {
+		// issue #122 section 9: an unmappable shift kind must fail the
+		// load with a diagnostic, never silently fall back
+		String error = loadExpectingFailure(element("ShiftRegister",
+				" String type \"RotateLeft\"\n int bits 8\n"));
+		assertTrue(error.contains(ShiftRegister.TYPE_CONSTRAINT),
+				"the loader must name the legal shift kinds,"
+						+ " got: " + error);
+	}
+
+	@Test
 	void truthTableEntryRuleHasOneWording() {
 		// declares a 2x2 table but writes to row 5; the dialog enforces
 		// the same bounds structurally (it only builds in-range entries)

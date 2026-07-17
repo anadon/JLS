@@ -267,7 +267,7 @@ this table; a tag not in it (and not a documented later addition)
 MUST fail the load with a diagnostic naming the tag, and SHOULD
 suggest that the file may need a newer reader.
 
-Version-1 writers emit exactly these 31 tags:
+Version-1 writers emit exactly these 32 tags:
 
 | tag | element | notes |
 |---|---|---|
@@ -292,6 +292,7 @@ Version-1 writers emit exactly these 31 tags:
 | `OutputPin` | circuit output | |
 | `Pause` | simulation pause control | |
 | `Register` | latch / D flip-flop | |
+| `ShiftRegister` | combinational barrel shifter | despite the name, stateless; tag and attributes match the bsiever-fork 4.6 element (issue #122) |
 | `SigGen` | signal generator | |
 | `Splitter` | wire unbundler | `pair` items: (output index, bundle bit) |
 | `StateMachine` | finite state machine | state list encoded as ordered `String state`/`output`/`trans`/`next` items with interleaved `int`/`long` values; the item *sequence* is significant for this type only |

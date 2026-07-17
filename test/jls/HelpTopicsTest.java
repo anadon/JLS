@@ -175,6 +175,7 @@ class HelpTopicsTest {
 			Map.entry("Register", "register"),
 			Map.entry("Memory", "memory"),
 			Map.entry("Mux", "mux"),
+			Map.entry("ShiftRegister", "shiftregister"),
 			Map.entry("Decoder", "decoder"),
 			Map.entry("Adder", "adder"),
 			Map.entry("Clock", "clock"),
@@ -223,8 +224,8 @@ class HelpTopicsTest {
 	private static final List<String> TOPICS_USED_BY_CODE = List.of(
 			"top", "adder", "bundle", "unbundle", "clock", "const",
 			"decoder", "display", "end", "import", "inter.sim", "memory",
-			"mux", "register", "siggen", "start", "stmach", "text",
-			"truth", "DELAY", "TRISTATE",
+			"mux", "register", "shiftregister", "siggen", "start",
+			"stmach", "text", "truth", "DELAY", "TRISTATE",
 			// dynamic: Gate dialogs pass their type string
 			"AND", "OR", "NAND", "NOR", "NOT", "XOR",
 			// dynamic: Pin dialogs pass "Input"/"Output"

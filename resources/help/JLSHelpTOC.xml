@@ -70,6 +70,7 @@
    	    <tocitem text="Multiplexor" target="mux"/>
    	    <tocitem text="Decoder" target="decoder"/>
    	    <tocitem text="Adder" target="adder"/>
+   	    <tocitem text="Shift Register" target="shiftregister"/>
 	</tocitem>
    	<tocitem text="Memory">
    	    <tocitem text="Register" target="register"/>

@@ -87,6 +87,9 @@ class AllElementsRoundTripTest {
 		t.append(el("Register", id++, x += 120, 120,
 				" String name \"reg\"\n int bits 4\n Int init 3\n String orient \"RIGHT\"\n"
 				+ " int delay 8\n String type \"nff\"\n int watch 1\n"));
+		t.append(el("ShiftRegister", id++, x += 120, 120,
+				" String type \"ArithmeticRight\"\n int bits 8\n int delay 25\n"
+				+ " String iOrient \"DOWN\"\n String sOrient \"LEFT\"\n"));
 		t.append(el("SigGen", id++, x += 120, 120,
 				" int width 48\n int height 24\n String signals \"in1 0 1 0 1\\n\"\n"));
 		t.append(el("Stop", id++, x += 120, 120, ""));

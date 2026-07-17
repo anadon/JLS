@@ -1161,7 +1161,9 @@ public class Circuit implements Printable {
 			Rectangle rect = new Rectangle(0, 0, JLSInfo.circuitsize,
 					JLSInfo.circuitsize);
 			rect.add(getBounds());
-			ed.setCircuitSize(rect.getSize());
+			if (ed != null) {
+				ed.setCircuitSize(rect.getSize());
+			}
 		}
 
 		// partition into draw layers in one pass instead of four full

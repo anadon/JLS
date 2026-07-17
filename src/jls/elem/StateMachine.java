@@ -1088,7 +1088,9 @@ public final class StateMachine extends LogicElement implements Printable {
 				prev = last;
 				last = p;
 			}
-			SMUtil.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
+			if (prev != null) {
+				SMUtil.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
+			}
 		} // end of drawTrans method
 		
 		/**
@@ -1100,28 +1102,33 @@ public final class StateMachine extends LogicElement implements Printable {
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == changeName) {
-				CreateState cs = new CreateState("Change",on.getName());
-				if (!cs.wasCancelled()) {
-					boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
-					if (!ok) {
-						TellUser.error(this,
-								"Name won't fit", "Error");
-						return;
+				if (on != null) {
+					CreateState cs = new CreateState("Change",on.getName());
+					if (!cs.wasCancelled()) {
+						boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
+						if (!ok) {
+							TellUser.error(this,
+									"Name won't fit", "Error");
+							return;
+						}
+						editArea.repaint();
 					}
-					editArea.repaint();
 				}
 			}
 			else if (event.getSource() == makeInit) {
-				
-				// turn off initial state anywhere else
-				for (State state : states) {
-					state.setInitial(false);
+
+				if (on != null) {
+
+					// turn off initial state anywhere else
+					for (State state : states) {
+						state.setInitial(false);
+					}
+
+					// make current state initial
+					on.setInitial(true);
+					setDrawState(DrawState.idle);
+					editArea.repaint();
 				}
-				
-				// make current state initial
-				on.setInitial(true);
-				setDrawState(DrawState.idle);
-				editArea.repaint();
 			}
 			else if (event.getSource() == addTrans) {
 				points.clear();
@@ -1129,15 +1136,21 @@ public final class StateMachine extends LogicElement implements Printable {
 				setDrawState(DrawState.newTrans);
 			}
 			else if (event.getSource() == deleteAllTrans) {
-				on.deleteAllTrans();
-				setDrawState(DrawState.idle);
-				editArea.repaint();
+				if (on != null) {
+					on.deleteAllTrans();
+					setDrawState(DrawState.idle);
+					editArea.repaint();
+				}
 			}
 			else if (event.getSource() == editOutputs) {
-				on.editOuts(currentDialog);
+				if (on != null) {
+					on.editOuts(currentDialog);
+				}
 			}
 			else if (event.getSource() == showOutputs) {
-				on.showOuts(currentDialog);
+				if (on != null) {
+					on.showOuts(currentDialog);
+				}
 			}
 			else if (event.getSource() == delete) {
 				if (on != null) {
@@ -1476,7 +1489,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			if (drawState == DrawState.selected) {
 				
 				if (leftButton) {
-					if (selrect.contains(x,y)) {
+					if (selrect != null && selrect.contains(x,y)) {
 						setDrawState(DrawState.moving);
 						selrect = null;
 						repaint();

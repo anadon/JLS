@@ -1809,6 +1809,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Create a new state with a name.
 	 */
+	@SuppressWarnings("serial")
 	private class CreateState extends ElementDialog {
 
 		private String name;

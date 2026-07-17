@@ -1553,7 +1553,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	//-------------------------------------------------------------------------------
 
 	private int[] toBeValue;
-	class Out {
+	static class Out {
 		int position;
 		BitSet value;
 	}

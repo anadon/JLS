@@ -968,6 +968,7 @@ public final class InteractiveSimulator extends Simulator {
 	/**
 	 * Trace window.
 	 */
+	@SuppressWarnings("serial")
 	public class Traces extends JPanel implements MouseMotionListener {
 
 		// properties
@@ -1246,6 +1247,7 @@ public final class InteractiveSimulator extends Simulator {
 	 * A header for the traces, will display the slider and the time the
 	 * slider indicates.
 	 */
+	@SuppressWarnings("serial")
 	private class Header extends Trace {
 
 		/**

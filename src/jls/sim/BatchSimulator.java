@@ -21,7 +21,7 @@ import java.util.*;
 public class BatchSimulator extends Simulator {
 
 	// for printing traces
-	private class TrEvent {
+	private static class TrEvent {
 		public long time;
 		public BitSet value;
 	}

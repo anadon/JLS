@@ -24,7 +24,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	static final int MAX_RETAINED_CHANGES = 100_000;
 	
 	// structure to contain a change
-	private class Change {
+	private static class Change {
 		public BitSet value;
 		public long when;
 	};

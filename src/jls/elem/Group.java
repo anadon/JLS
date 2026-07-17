@@ -821,7 +821,7 @@ public abstract class Group extends LogicElement {
 	/**
 	 * A bit range entry.
 	 */
-	protected class Entry {
+	protected static class Entry {
 		
 		// properties
 		//private int from;

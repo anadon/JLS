@@ -306,6 +306,7 @@ public class Text extends DisplayElement {
 	/**
 	 * Dialog to get text information from user.
 	 */
+	@SuppressWarnings("serial")
 	private class TextEdit extends ElementDialog implements ActionListener {
 
 		// GUI elements

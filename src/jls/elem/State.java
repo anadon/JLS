@@ -57,7 +57,7 @@ public class State {
 	private int x;
 	private int y;
 	private int diameter;
-	private class Check {
+	private static class Check {
 		public int bits;
 		public boolean isInput;	// false if output
 		public int refs; // delete from map when 0
@@ -76,7 +76,7 @@ public class State {
 	/**
 	 * Outputs from this state.
 	 */
-	private class Out {
+	private static class Out {
 
 		public String signal;
 		public int bits;
@@ -89,7 +89,7 @@ public class State {
 	/**
 	 * Transitions from a given state
 	 */
-	private class Transition {
+	private static class Transition {
 
 		public String signal = "";
 		public int bits = 1;
@@ -1285,6 +1285,7 @@ public class State {
 	/**
 	 * Dialog to create info about a transition.
 	 */
+	@SuppressWarnings("serial")
 	private class CreateTrans extends ElementDialog implements ActionListener {
 
 		// properties

@@ -1222,7 +1222,7 @@ public class Memory extends LogicElement {
 	private WordStore mem;
 	private WordStore initMem;
 	private BitSet currentValue;
-	private class WriteRecord {
+	private static class WriteRecord {
 		BitSet what;
 		int where;
 		long when;

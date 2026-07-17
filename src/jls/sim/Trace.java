@@ -241,7 +241,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		}
 		double pos = width-(double)(now-when)/scaleFactor;
 		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value : null;
-		int leftEdge = Math.max(0,clipLo-2);
+		double leftEdge = Math.max(0,clipLo-2);
 
 		// draw until no longer visible
 		g.setColor(Color.black);

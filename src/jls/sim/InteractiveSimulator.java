@@ -1100,6 +1100,7 @@ public final class InteractiveSimulator extends Simulator {
 
 			if (!SwingUtilities.isEventDispatchThread()) {
 				SwingUtilities.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						draw();
 					}
@@ -1137,6 +1138,7 @@ public final class InteractiveSimulator extends Simulator {
 			if (atEnd && port != null) {
 				final JViewport p = port;
 				SwingUtilities.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						p.setViewPosition(new Point(
 								Math.max(0,target-p.getExtentSize().width),

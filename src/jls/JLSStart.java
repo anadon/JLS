@@ -91,17 +91,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private Circuit clipboard = new Circuit("clipboard");		// for cut and paste
 
 	/**
-	 * Parse command line arguments and start up JLS.
-	 * 
-	 * @param args Command line arguments.
+	 * Start up JLS.
+	 *
+	 * @param exh The default exception handler.
 	 */
-	public static void start(String[] args, DefaultExceptionHandler exh) {
+	public static void start(DefaultExceptionHandler exh) {
 
 		// save exception handler reference
 		exHandler = exh;
-
-		// parse command line
-		//parseCommandLine(args);
 
 		// if print of circuit wanted, and there is a circuit specified, then print it
 		if (printCircuit && startFile != null) {

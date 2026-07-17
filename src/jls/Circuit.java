@@ -386,7 +386,7 @@ public class Circuit implements Printable {
 		// a fresh load must not report a previous load's failure (#58)
 		JLSInfo.setLoadError(null);
 		lineNumber = 1;
-		boolean ok = readFormatHeader(input) && load(input, 0);
+		boolean ok = readFormatHeader(input) && loadCircuit(input);
 		if (!ok) {
 			// Scanner swallows IOException and presents it as end of
 			// input; distinguish a truncated/corrupted stream from a
@@ -535,17 +535,15 @@ public class Circuit implements Printable {
 	} // end of describe method
 
 	/**
-	 * Load circuit from file.
-	 * 
+	 * Load circuit from file without resetting the line number counter,
+	 * for the recursive call.
+	 *
 	 * @param input
 	 *            A scanner to read with.
-	 * @param ln
-	 *            Unused, except to give a different signature for the recursive
-	 *            call that doesn't reset the line number counter.
-	 * 
+	 *
 	 * @return false if there were problems, true if load was successful.
 	 */
-	private boolean load(Scanner input, int ln) {
+	private boolean loadCircuit(Scanner input) {
 
 		// catch all exceptions, assume there is a problem with the circuit file
 		try {
@@ -682,7 +680,7 @@ public class Circuit implements Printable {
 									: ": " + er.getMessage()),
 					TRUNCATED_HINT);
 		}
-	} // end of load method
+	} // end of loadCircuit method
 
 	/**
 	 * Load an element by reading all of its instance variable values.
@@ -726,7 +724,7 @@ public class Circuit implements Printable {
 							NOT_JLS_HINT);
 				}
 				Circuit subCirc = new Circuit("");
-				if (!subCirc.load(input, 0)) {
+				if (!subCirc.loadCircuit(input)) {
 					// the subcircuit's load already reported the
 					// specific failure - keep it (#58)
 					return false;

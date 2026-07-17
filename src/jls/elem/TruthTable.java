@@ -1268,7 +1268,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 */
 	public void renameInput(String signal) {
 
-		String newSignal = getNewName(signal);
+		String newSignal = getNewName();
 		if (newSignal == null)
 			return;
 
@@ -1286,7 +1286,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 */
 	public void renameOutput(String signal) {
 
-		String newSignal = getNewName(signal);
+		String newSignal = getNewName();
 		if (newSignal == null)
 			return;
 
@@ -1300,12 +1300,10 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Get new signal name.
 	 * Check for invalid name and duplicate names.
-	 * 
-	 * @param signal Current signal name.
-	 * 
+	 *
 	 * @return new signal name, or null if invalid or duplicate or canceled.
 	 */
-	private String getNewName(String signal) {
+	private String getNewName() {
 
 		// get name
 		String newSignal =

@@ -2,7 +2,6 @@ package jls.elem;
 
 import jls.*;
 import jls.sim.*;
-import java.awt.Rectangle;
 import java.util.*;
 
 /**
@@ -176,38 +175,31 @@ public class WireNet {
 	
 	/**
 	 * Not visible, so always return false.
-	 * 
-	 * @param x The x-coordinate of the given point.
-	 * @param y The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return false.
 	 */
-	public boolean contains(int x, int y) {
-		
+	public boolean contains() {
+
 		return false;
 	} // end of contains method
-	
+
 	/**
 	 * Not visible, so always return false.
-	 * 
-	 * @param other The other element.
-	 * 
+	 *
 	 * @return false.
 	 */
-	public boolean intersects(Element other) {
-		
+	public boolean intersects() {
+
 		return false;
 	} // end of intersects method
-	
+
 	/**
 	 * Not visible, so always return false.
-	 * 
-	 * @param rect The given rectangle.
-	 * 
+	 *
 	 * @return false.
 	 */
-	public boolean isInside(Rectangle rect) {
-		
+	public boolean isInside() {
+
 		return false;
 	} // end of isInside method
 	

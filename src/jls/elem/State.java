@@ -449,10 +449,10 @@ public class State {
 
 	/**
 	 * Replace all symbolic links to next states with actual references.
-	 * 
-	 * @param it The new state machine.
+	 *
+	 * @param stateMap A map from state name to state.
 	 */
-	public void linkTrans(StateMachine it, Map<String,State>stateMap) {
+	public void linkTrans(Map<String,State>stateMap) {
 
 		for (Transition tran : trans) {
 			if (tran.nextStateName != null) {
@@ -523,11 +523,10 @@ public class State {
 
 	/**
 	 * Set an output String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
+	 *
 	 * @param value The instance variable value.
 	 */
-	public void setOutputValue(String name, String value) {
+	public void setOutputValue(String value) {
 
 		buildOut = new Out();
 		buildOut.signal = value;
@@ -906,7 +905,7 @@ public class State {
 		}
 
 		// get condition info
-		CreateTrans ct = new CreateTrans(newTrans,this,mainDialog);
+		CreateTrans ct = new CreateTrans(newTrans,this);
 
 		// if it wasn't canceled...
 		if (!ct.wasCancelled()) {
@@ -1307,7 +1306,7 @@ public class State {
 		 * 
 		 * @param tr The transition to edit.
 		 */
-		public CreateTrans(Transition tr, State st, JDialog theDialog) {
+		public CreateTrans(Transition tr, State st) {
 
 			// set up
 			super("Create Transition",null);
@@ -1624,8 +1623,8 @@ public class State {
 	/**
 	 * Edit outputs.
 	 */
-	public void editOuts(JDialog theDialog) {
-		new EditOutputs(theDialog);
+	public void editOuts() {
+		new EditOutputs();
 	} // end of editOuts method
 
 	/**
@@ -1648,7 +1647,7 @@ public class State {
 		/**
 		 * Initialize dialog.
 		 */
-		public EditOutputs(JDialog theDialog) {
+		public EditOutputs() {
 
 			// set up
 			super("Edit Outputs",null);
@@ -1913,11 +1912,10 @@ public class State {
 	 * Send all out values of this state to the state machine outputs.
 	 * Unspecified outputs will be made 0.
 	 * 
-	 * @param mach This state machine.
 	 * @param now The current simulation time.
 	 * @param sim The simulator.
 	 */
-	public void sendOutputs(StateMachine mach, long now, Simulator sim) {
+	public void sendOutputs(long now, Simulator sim) {
 
 		Set<Output> sent = new HashSet<Output>();
 

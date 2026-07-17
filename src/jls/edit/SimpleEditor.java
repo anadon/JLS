@@ -4090,7 +4090,7 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// change its timing info
-						el.changeTiming(this, x, y);
+						el.changeTiming(this, x);
 
 						// clean up
 						clearSelected();

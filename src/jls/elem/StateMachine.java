@@ -464,7 +464,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(name,value);
+				buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans")) {
 				loadState = LoadState.newTransition;
@@ -480,7 +480,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(name,value);
+				buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans")) {
 				loadState = LoadState.newTransition;
@@ -496,7 +496,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(name,value);
+				buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans") || name.equals("next")) {
 				loadState = LoadState.newTransition;
@@ -596,7 +596,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		// link transitions to states
 		for (State istate : it.states) {
-			istate.linkTrans(it,stateMap);
+			istate.linkTrans(stateMap);
 		}
 		
 		// copy inputs and outputs
@@ -1148,7 +1148,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			}
 			else if (event.getSource() == editOutputs) {
 				if (on != null) {
-					on.editOuts(currentDialog);
+					on.editOuts();
 				}
 			}
 			else if (event.getSource() == showOutputs) {
@@ -2052,7 +2052,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		}
 
 		// send all initial state output values
-		currentState.sendOutputs(this,0,sim);
+		currentState.sendOutputs(0,sim);
 
 		// make not busy
 		busy = false;
@@ -2132,7 +2132,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			currentState = (State)todo;
 			
 			// send values to outputs
-			currentState.sendOutputs(this,now,sim);
+			currentState.sendOutputs(now,sim);
 			
 			// no longer busy
 			busy = false;

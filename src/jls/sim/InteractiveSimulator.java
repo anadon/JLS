@@ -977,6 +977,12 @@ public final class InteractiveSimulator extends Simulator {
 		private java.util.List<Trace> newList = new LinkedList<Trace>();
 		private int nameSpace;
 
+		// hard ceiling on how wide the trace panels may grow (issue
+		// #121): keeps a very long run at a tiny scale factor from
+		// demanding an absurd component width; the retained history
+		// is bounded by Trace.MAX_RETAINED_CHANGES anyway
+		private static final int MAX_PANEL_WIDTH = 4_000_000;
+
 		/**
 		 * Set up the window.
 		 */
@@ -1082,14 +1088,61 @@ public final class InteractiveSimulator extends Simulator {
 		} // end of getNameSpace method
 
 		/**
-		 * Repaint all the trace objects.
+		 * Repaint all the trace objects, first growing them to span the
+		 * whole retained run so the enclosing scroll pane can reach all
+		 * of it (issue #121).  Every call site is on the EDT except the
+		 * animate path, which reaches here from a java.util.Timer
+		 * thread (runSim() at animate start; a pre-existing off-EDT
+		 * path in the #49 series), so re-dispatch before touching the
+		 * component tree or the viewport.
 		 */
 		private void draw() {
+
+			if (!SwingUtilities.isEventDispatchThread()) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						draw();
+					}
+				});
+				return;
+			}
+
+			// width the run needs at the current scale factor, plus the
+			// name area; never smaller than the viewport so short runs
+			// still fill the window
+			JViewport port = (JViewport)SwingUtilities.getAncestorOfClass(
+					JViewport.class,this);
+			int viewWidth = port == null ? getWidth()
+					: port.getExtentSize().width;
+			long runWidth = now/scaleFactor+nameSpace+10;
+			final int target = (int)Math.min(
+					Math.max(runWidth,viewWidth),MAX_PANEL_WIDTH);
+
+			// keep following the newest activity unless the user has
+			// scrolled back into the history
+			boolean atEnd = port == null || port.getViewPosition().x
+					+port.getExtentSize().width >= getWidth()-5;
+			if (target != getWidth()) {
+				resize(target);
+				revalidate();
+			}
 
 			repaint();
 			for (Trace tr : traceList) {
 				tr.commit(now);
 				tr.repaint();
+			}
+
+			// after the revalidate has laid the new width out
+			if (atEnd && port != null) {
+				final JViewport p = port;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						p.setViewPosition(new Point(
+								Math.max(0,target-p.getExtentSize().width),
+								p.getViewPosition().y));
+					}
+				});
 			}
 		} // end of draw method
 
@@ -1208,7 +1261,8 @@ public final class InteractiveSimulator extends Simulator {
 
 			super.paintComponent(g);
 			int width = getWidth()-parent.getNameSpace()-10;
-			long time = now-(width-sliderPos)*scaleFactor;
+			// long math: the panel can span the whole run (issue #121)
+			long time = now-(long)(width-sliderPos)*scaleFactor;
 			if (time >= 0 && time <= now) {
 				g.setColor(Color.gray);
 				g.drawString(time+"",sliderPos,2*HEIGHT/3);

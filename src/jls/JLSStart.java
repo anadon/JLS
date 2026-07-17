@@ -164,7 +164,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 						+ " is not a valid circuit file: " + JLSInfo.loadError);
 				System.exit(1);
 			}
-			input.close();
 
 			// finish up load
 			try {
@@ -273,7 +272,6 @@ public class JLSStart extends JFrame implements ChangeListener {
 						+ " is not a valid circuit file: " + JLSInfo.loadError);
 				System.exit(1);
 			}
-			input.close();
 
 			// finish up load
 			try {

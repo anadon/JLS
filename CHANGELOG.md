@@ -51,13 +51,23 @@ All notable changes to JLS are documented here. The format follows
 - The display-test substrate (#162): a `display`-tagged surefire
   execution, headless (self-skipping) by default and run for real
   under `xvfb-run -a mvn -B verify -Djls.test.headless=false`, which
-  CI now does. First tenant: `DialogConstructionSmokeTest`, which
-  constructs all 24 element create/edit dialog families through the
-  editor's real `setup()` entry and dismisses each through the
-  close-box cancel path. The bulk of the suite stays headless in its
-  own execution either way (with a display present, `TellUser` turns
-  interactive, so mixing the two would let a stray warning block a
-  test on a modal dialog).
+  CI now does. Tenants:
+  - `DialogConstructionSmokeTest` constructs all 24 element
+    create/edit dialog families through the editor's real `setup()`
+    entry and dismisses each through the close-box cancel path.
+  - `EditorGestureTest` (#91 layer 2, #84 safety net) drives the
+    SimpleEditor mouse state machine with synthetic events - move,
+    rubber-band select, right-click delete, undo/redo - and asserts
+    the resulting circuit model. Synthetic `MouseEvent` dispatch, not
+    `Robot`: the move/select/menu paths read `event.getX()/getY()`,
+    so the whole suite runs deterministically in ~1.3 s. Because it
+    touches only surfaces that survive the #84 decomposition (canvas
+    events, popup item texts, the circuit model), it is the
+    characterization safety net for that refactor.
+  The bulk of the suite stays headless in its own execution either
+  way (with a display present, `TellUser` turns interactive, so
+  mixing the two would let a stray warning block a test on a modal
+  dialog).
 - The coverage ratchet floors rose twice from 17.5%/18.0% (set
   2026-07-08): first to 34.5% instruction / 34.0% line with a first
   32.5% BRANCH floor, then to 42.0% / 40.0% / 36.5% (measured

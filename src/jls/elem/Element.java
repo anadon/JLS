@@ -424,8 +424,18 @@ public class Element {
 	} // end of setHightlight method
 
 	/**
+	 * Whether this element is currently drawn highlighted (selected).
+	 *
+	 * @return true if highlighted.
+	 */
+	public boolean isHighlighted() {
+
+		return highlight;
+	} // end of isHighlighted method
+
+	/**
 	 * Set id of this element (for file save).
-	 * 
+	 *
 	 * @param id The id.
 	 */
 	public void setID(int id) {

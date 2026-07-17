@@ -247,10 +247,13 @@
                The floors are pinned to the *headless* measurement so a
                plain mvn verify passes anywhere; under the #162 display
                substrate (xvfb-run ... -Djls.test.headless=false, which
-               CI uses) the same commit measures higher - 51.13%
-               instruction / 48.85% line / 38.26% branch on
-               2026-07-17 - because the dialog-construction suite runs
-               too. Raise the floors from headless numbers only. -->
+               CI uses) the same commit measures higher - 57.88%
+               instruction / 55.47% line / 44.19% branch on
+               2026-07-17 - because the dialog-construction and
+               editor-gesture suites run too. That substrate number
+               crossing 50% line is the milestone that gates PIT
+               mutation testing (#161). Raise the floors from headless
+               numbers only. -->
           <execution>
             <id>coverage-ratchet</id>
             <phase>verify</phase>

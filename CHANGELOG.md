@@ -48,10 +48,21 @@ All notable changes to JLS are documented here. The format follows
   Graphics2D. Plus direct tests for the clipboard copy machinery
   (`Util.copy`/`partition`, including partial-selection pruning),
   the pure Util helpers, and Memory's file-based initialization.
+- The display-test substrate (#162): a `display`-tagged surefire
+  execution, headless (self-skipping) by default and run for real
+  under `xvfb-run -a mvn -B verify -Djls.test.headless=false`, which
+  CI now does. First tenant: `DialogConstructionSmokeTest`, which
+  constructs all 24 element create/edit dialog families through the
+  editor's real `setup()` entry and dismisses each through the
+  close-box cancel path. The bulk of the suite stays headless in its
+  own execution either way (with a display present, `TellUser` turns
+  interactive, so mixing the two would let a stray warning block a
+  test on a modal dialog).
 - The coverage ratchet floors rose twice from 17.5%/18.0% (set
   2026-07-08): first to 34.5% instruction / 34.0% line with a first
-  32.5% BRANCH floor, then to 42.0% / 40.0% / 36.5% (measured:
-  42.65% / 40.88% / 37.21%).
+  32.5% BRANCH floor, then to 42.0% / 40.0% / 36.5% (measured
+  headless: 42.65% / 40.88% / 37.21%; under the display substrate
+  the same commit measures 51.13% / 48.85% / 38.26%).
 - Vector circuit image export (#154): `-i out.svg` writes the circuit
   as resolution-independent SVG through the same element paint path
   the PNG/JPEG export uses, via JFreeSVG (GPLv3, same license as JLS,

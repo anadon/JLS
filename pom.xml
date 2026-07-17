@@ -45,6 +45,15 @@
          wall-clock time, so the same commit rebuilds byte-identically;
          bump it alongside the version when cutting a release (#44) -->
     <project.build.outputTimestamp>2026-07-16T00:00:00Z</project.build.outputTimestamp>
+    <!-- the display-tagged suite (issue #162) runs in its own surefire
+         execution with this property controlling java.awt.headless:
+         true (default) makes it self-skip; CI and local runs execute it
+         under a real or virtual display with
+           xvfb-run -a mvn -B verify -Djls.test.headless=false
+         The shared headless execution never sees a display either way -
+         with one present, TellUser turns interactive and a stray
+         warning in an unrelated test would block on a modal dialog. -->
+    <jls.test.headless>true</jls.test.headless>
   </properties>
 
   <dependencies>
@@ -178,11 +187,31 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.6</version>
-        <configuration>
-          <!-- tests exercise load/save and element construction without a
-               display; @{argLine} lets the JaCoCo agent attach (#66) -->
-          <argLine>@{argLine} -Djava.awt.headless=true</argLine>
-        </configuration>
+        <executions>
+          <execution>
+            <!-- the bulk of the suite: load/save, simulation, element
+                 construction - all without a display; @{argLine} lets
+                 the JaCoCo agent attach (#66) -->
+            <id>default-test</id>
+            <configuration>
+              <argLine>@{argLine} -Djava.awt.headless=true</argLine>
+              <excludedGroups>display</excludedGroups>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- the display-tagged suite (issue #162): dialog
+                 construction and other tests that need a real or
+                 virtual display; see the jls.test.headless property -->
+            <id>display-tests</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <argLine>@{argLine} -Djava.awt.headless=${jls.test.headless}</argLine>
+              <groups>display</groups>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <!-- coverage report on every test run: target/site/jacoco
@@ -214,7 +243,14 @@
                and a first BRANCH floor at measured 33.46%.
                Raised again same day (draw/print-path smoke, Util and
                Memory-file coverage): INSTRUCTION 42.65%, LINE 40.88%,
-               BRANCH 37.21%. -->
+               BRANCH 37.21%.
+               The floors are pinned to the *headless* measurement so a
+               plain mvn verify passes anywhere; under the #162 display
+               substrate (xvfb-run ... -Djls.test.headless=false, which
+               CI uses) the same commit measures higher - 51.13%
+               instruction / 48.85% line / 38.26% branch on
+               2026-07-17 - because the dialog-construction suite runs
+               too. Raise the floors from headless numbers only. -->
           <execution>
             <id>coverage-ratchet</id>
             <phase>verify</phase>

@@ -44,16 +44,25 @@ jobs:
           cache: maven
 
       # External HDL simulators activate the otherwise-skipped
-      # Verilog/VHDL validation tests (issue #60); best-effort so a
-      # transient apt failure doesn't block the build
-      - name: Install HDL simulators
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl || echo "HDL simulators unavailable; validation tests will skip"
+      # Verilog/VHDL validation tests (issue #60); xvfb activates the
+      # display-tagged UI suite (issue #162). Best-effort so a
+      # transient apt failure doesn't block the build - each affected
+      # suite skips itself when its tool is missing
+      - name: Install HDL simulators and virtual display
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl xvfb || echo "some optional tools unavailable; their tests will skip"
 
       # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
       # the headless test suite, and runs the SpotBugs check goal
       # (threshold High, baseline in config/spotbugs-exclude.xml).
+      # Under xvfb the display-tagged surefire execution also runs
+      # (issue #162); the main test execution stays headless either way.
       - name: Build, lint, and analyze
-        run: mvn -B verify
+        run: |
+          if command -v xvfb-run >/dev/null; then
+            xvfb-run -a mvn -B verify -Djls.test.headless=false
+          else
+            mvn -B verify
+          fi
 
       - name: Upload jar
         if: matrix.java == 25

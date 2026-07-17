@@ -1,6 +1,7 @@
 # TEMPORARY — will be removed before this branch is merged.
-# Dumps the repository's open code scanning alerts into the job log so
-# they can be triaged from an environment without Security-tab access.
+# Runs the same CodeQL analysis as codeql.yml on this branch, then dumps
+# the branch's open code scanning alerts into the job log so they can be
+# triaged from an environment without Security-tab access.
 name: Dump code scanning alerts
 
 on:
@@ -10,18 +11,60 @@ on:
 
 permissions:
   contents: read
-  security-events: read
 
 jobs:
-  dump:
+  analyze:
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java
+            build-mode: manual
+          - language: actions
+            build-mode: none
     steps:
-      - name: List open alerts
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        if: matrix.language == 'java'
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
+
+      - name: Build
+        if: matrix.language == 'java'
+        run: mvn -B -DskipTests package
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+
+  dump:
+    needs: analyze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - name: List open alerts for this branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for page in $(seq 1 40); do
-            out=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&per_page=100&page=$page" \
+            out=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=${{ github.ref }}&per_page=100&page=$page" \
               --jq '.[] | {number, rule: .rule.id, severity: .rule.severity, security_severity: .rule.security_severity_level, description: .rule.description, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, end_line: .most_recent_instance.location.end_line, message: .most_recent_instance.message.text, ref: .most_recent_instance.ref}')
             if [ -z "$out" ]; then break; fi
             echo "$out"

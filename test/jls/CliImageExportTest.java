@@ -148,6 +148,21 @@ class CliImageExportTest {
 	}
 
 	@Test
+	void svgOperandProducesAVectorImage() throws Exception {
+		// vector export (issue #154): same paint path, SVG output
+		writeCircuit("export.jls");
+		Result r = run("-i", "shot.svg", "export.jls");
+		assertEquals(0, r.exit, r.stderr);
+		File file = new File(tmp.toFile(), "shot.svg");
+		assertTrue(file.exists(), "shot.svg was not written");
+		String svg = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+		assertTrue(svg.contains("<svg"), "no <svg element in output");
+		assertTrue(svg.contains("</svg>"), "unterminated SVG document");
+		assertFalse(new File(tmp.toFile(), "export.png").exists(),
+				"the default output must not be written when a path is given");
+	}
+
+	@Test
 	void unsupportedImageExtensionIsAUsageError() throws Exception {
 		writeCircuit("export.jls");
 		Result r = run("-ishot.bmp", "export.jls");

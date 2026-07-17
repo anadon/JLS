@@ -18,6 +18,13 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Vector circuit image export (#154): `-i out.svg` writes the circuit
+  as resolution-independent SVG through the same element paint path
+  the PNG/JPEG export uses, via JFreeSVG (GPLv3, same license as JLS,
+  ~50 KB, no transitive dependencies). Exports are deterministic -
+  the same circuit produces byte-identical SVG across runs and load
+  instances (elements draw in a stable geometric order, not HashSet
+  order), so SVG goldens and reproducible-builds expectations hold.
 - Seeded generative fuzzing of the save/load pair (#160), dependency
   free: `GenerativeRoundTripFuzzTest` drives random circuits (element
   mix, boundary bit widths, escape-space names, wired pin pairs)

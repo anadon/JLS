@@ -55,6 +55,13 @@
       <artifactId>xz</artifactId>
       <version>1.12</version>
     </dependency>
+    <!-- vector circuit image export: -i out.svg (issue #154). GPLv3,
+         same license as JLS; ~50 KB, zero transitive dependencies -->
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>org.jfree.svg</artifactId>
+      <version>5.0.7</version>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

@@ -74,8 +74,20 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
   dialogs (the `test/jls/ui` layer-1 assertions are layout-independent
   and should survive).
 
-### 2. JFreeSVG — vector image export
+### 2. JFreeSVG — vector image export *(ADOPTED, #154)*
 
+- **Verdict (2026-07-17):** adopted at 5.0.7. The spike went exactly as
+  predicted — `SVGGraphics2D` slotted into `Circuit.exportImage` with no
+  per-element changes, and `-i out.svg` works end to end. One finding the
+  survey missed: SVG serializes *draw order* into the output, and the
+  element set is a `HashSet`, so a naive drop-in was byte-unstable across
+  load instances (the render-path twin of the #166 save-order problem).
+  The export now draws in a stable geometric order and `SvgExportTest`
+  pins byte-identical output across fresh loads. Text stays as SVG
+  `<text>` elements (smaller, selectable, and the font-metrics caveat is
+  the same one that already rules out pixel goldens); no golden of the
+  full document for that reason — determinism plus structural assertions
+  instead.
 - **What:** [JFreeSVG](https://github.com/jfree/jfreesvg) (jfree.org),
   **GPLv3** — the same license as JLS, so no compatibility question at
   all. Tiny (~50 KB), zero dependencies, requires Java 11+.

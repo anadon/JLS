@@ -8,6 +8,12 @@ infrastructure (parsers, layout engines, external simulators) was already
 surveyed in depth by [`hdl-support-research.md`](hdl-support-research.md)
 §3/§7 — those verdicts are summarized here, not re-litigated.*
 
+*Revised 2026-07-17: an explicit active-maintenance policy was adopted
+(ground rule 4), which demoted jqwik and Cacio-tta from the recommended
+list to the rejects table. Per-library investigation issues are filed:
+FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
+#157.*
+
 ## Ground rules any candidate must pass
 
 1. **License: GPLv3-compatible for runtime code.** JLS is GPLv3 and ships
@@ -26,10 +32,16 @@ surveyed in depth by [`hdl-support-research.md`](hdl-support-research.md)
    suites), the load-error taxonomy, and batch stdout are compatibility
    contracts. A library that would change observable behavior must
    reproduce it exactly or is disqualified.
-4. **Maintenance reality check.** JDK 25 baseline, single-maintainer
-   project: a dependency that is itself abandoned is a liability
-   (the fork already removed one of those — JavaHelp/`jhall.jar`, dead
-   upstream since ~2007, replaced by the in-jar `jls.Help` viewer).
+4. **Actively maintained projects only** *(policy, adopted 2026-07-17)*.
+   JDK 25 baseline, single-maintainer project: a dependency that is
+   itself abandoned is a liability (the fork already removed one of
+   those — JavaHelp/`jhall.jar`, dead upstream since ~2007, replaced by
+   the in-jar `jls.Help` viewer). Candidates must show ongoing releases
+   and responsive upstream activity; projects in declared "maintenance
+   mode" or with dormant release histories are rejected regardless of
+   technical fit. This applies to test/build scope too — a test harness
+   dependency that cannot follow the JDK baseline blocks upgrades just
+   as effectively as a runtime one.
 
 ## Recommended — runtime dependencies
 
@@ -131,55 +143,7 @@ surveyed in depth by [`hdl-support-research.md`](hdl-support-research.md)
 - **Cost:** one test dependency; the existing bespoke ratchet tests can
   be ported incrementally or left alongside.
 
-### 5. jqwik — property-based testing for the round-trip suites
-
-- **What:** [jqwik](https://github.com/jqwik-team/jqwik), EPL-2.0
-  (test-scope, so license is a non-issue — same as JUnit), runs on the
-  JUnit Platform already in use. *Honesty note:* upstream declares
-  maintenance mode (bug fixes and dependency updates, no new
-  features) — acceptable for a test-only dependency with this small a
-  surface, but recorded here as the revisit trigger.
-- **Overlap:** the highest-value invariants in the test suite are
-  already property-shaped, enumerated by hand: save→load→save
-  round-trips (`CircuitRoundTripTest`, `AllElementsRoundTripTest`),
-  `BitSetUtils` value encoding, container sniffing and hostile-input
-  caps (`UntrustedFileHardeningTest`), format-header negotiation.
-- **Improvement:** generators over element parameters (bit widths,
-  propagation delays, names including the HDL-hostile ones
-  `HdlNames.java` legalizes, memory contents) turn "round-trips for the
-  fixtures we thought of" into "round-trips for anything the dialogs
-  can produce", with automatic shrinking to a minimal failing circuit.
-  The same applies to fuzzing `FileAbstractor` with mutated containers
-  against the `LoadError` taxonomy (must classify, never stack-trace) —
-  a cheap, targeted complement to the #38 hardening tests.
-- **Cost:** one test dependency; property tests sit beside, not
-  instead of, the existing goldens.
-
-### 6. Cacio-tta — in-JVM headless Swing rendering for the #91 layer-2 harness *(evaluate)*
-
-- **What:** [caciocavallo /
-  cacio-tta](https://github.com/CaciocavalloSilano/caciocavallo), GPLv2
-  + Classpath Exception, test-scope. A software-rendered AWT toolkit:
-  real Swing components paint into an off-screen buffer inside the test
-  JVM — no X server at all.
-- **Overlap:** the `test/jls/ui` layered harness reserves layer 2
-  ("Swing harness under Xvfb") and layer 3 ("render-to-image"). CI is
-  headless today, which is why only layer 1 (model assertions) exists.
-- **Improvement:** layers 2 and 3 without adding Xvfb to CI — dialogs
-  actually construct, focus traversal runs, `paintComponent` output is
-  assertable as an image, all under plain `mvn verify` on the existing
-  runner. This is the established pattern for headless Swing testing in
-  CI.
-- **Why only "evaluate":** it reaches into JDK internals and needs
-  `--add-opens`/`--add-exports` flags per JDK release; maintenance is
-  thin, and JDK 25 compatibility must be proven in a spike before the
-  harness design commits to it. If the spike fails, Xvfb on the CI
-  runner is the boring fallback (`xvfb-run mvn verify` — zero
-  dependencies, slightly slower, Linux-CI-only). Either way, pair it
-  with plain JUnit + the existing layer-1 helpers rather than adopting
-  AssertJ-Swing (see rejects).
-
-### 7. Error Prone — compile-time bug pattern checks *(optional)*
+### 5. Error Prone — compile-time bug pattern checks *(optional)*
 
 - **What:** [Error Prone](https://github.com/google/error-prone)
   (Google), Apache-2.0, a javac plugin (build-time only; requires
@@ -208,32 +172,34 @@ surveyed in depth by [`hdl-support-research.md`](hdl-support-research.md)
 | **ELK (Eclipse Layout Kernel)** | future import auto-layout | Settled in `hdl-support-research.md` §3/§7.2: EPL-2.0 without GPL secondary designation — cannot be linked into GPLv3 JLS. Out-of-process runner remains the escape hatch; hand-rolled layered layout first. |
 | **JGraphX / JUNG** | `SimpleEditor` canvas | Reject. JGraphX archived since 2020, JUNG dormant; and JLS's editor semantics (wire nets, puts, 12 px grid, save-format coupling) do not map onto generic graph widgets. The bespoke editor is the product. |
 | **ANTLR verilog grammars, hdlConvertor, vMAGIC** | `jls.hdl` | Settled negative in `hdl-support-research.md` §7.3–7.4 (macros never expanded, open correctness bugs, dead projects). Emitters stay hand-written; import goes through external Yosys JSON. |
-| **AssertJ-Swing (FEST lineage)** | `test/jls/ui` layer 2 | Reject. The fork chain is effectively unmaintained (upstream FEST dead; assertj-swing stale for years); betting the #91 harness on it repeats the JavaHelp mistake. Jemmy (OpenJDK) is alive but heavyweight; plain JUnit + Cacio/Xvfb covers the need. |
+| **AssertJ-Swing (FEST lineage)** | `test/jls/ui` layer 2 | Reject. The fork chain is effectively unmaintained (upstream FEST dead; assertj-swing stale for years); betting the #91 harness on it repeats the JavaHelp mistake. Jemmy (OpenJDK) is alive but heavyweight; plain JUnit + Xvfb covers the need. |
+| **jqwik** | round-trip/hardening test suites | Reject under the active-maintenance policy (was recommended in the initial draft): upstream declares maintenance mode — bug fixes and dependency updates only. Technically the best JVM property-based-testing fit; the dormant alternatives (junit-quickcheck, QuickTheories) are worse. The *capability* (generator-driven round-trip and hostile-input fuzzing) stays wanted — revisit if jqwik regains active development or a maintained successor appears. |
+| **Cacio-tta (caciocavallo)** | `test/jls/ui` #91 layer-2 harness | Reject under the active-maintenance policy (was "evaluate" in the initial draft): thin maintenance plus deep coupling to JDK internals (`--add-opens` per release) is exactly the combination the policy exists to exclude — each JDK baseline raise would gamble on a quiet upstream. The #91 layer-2 substrate is `xvfb-run mvn verify` on the CI runner instead: zero dependencies, boring, Linux-CI-only. |
 | **JTS / spatial index libraries** | `jls.SpatialIndex` (208 lines, #43) | Reject. A full computational-geometry suite to replace 208 pinned-by-tests lines at classroom circuit scale is negative-value. |
 | **MigLayout / JGoodies Forms** | ~30 element dialogs | Defer. The dialogs are written and working; relayout churn has no user-visible payoff. Revisit only if the #78 element registry starts *generating* dialogs, where a terser layout DSL would earn its keep. |
 | **SLF4J / Logback / JUL config** | `TellUser`, `DefaultExceptionHandler`, CLI stderr contract | Reject. JLS's error-reporting contracts are deliberately narrow and test-enforced; a logging framework adds configuration surface with no consumer (students don't read logs; graders read the contracted stderr lines). |
 | **OpenPDF / Batik** | printing (`java.awt.print`), image export | Reject. OS print-to-PDF covers PDF; Batik is a heavyweight way to get what JFreeSVG does in 50 KB. |
 | **JavaFX migration** | all of Swing | Out of scope. A platform rewrite, not a library adoption; contradicts the working Swing investment and the single-jar deployment (JavaFX is per-platform modules). |
 | **VCD writer libraries** | `BatchSimulator` VCD export | Keep custom. No credibly maintained Java VCD writer exists on Maven Central; the in-tree writer is small and pinned by `VcdExportGoldenTest`. Delegating *viewing* to GTKWave/Surfer (already the docs' stance) is the right split. |
-| **PIT (pitest) mutation testing** | JaCoCo ratchet | Not yet. Mutation testing earns its cost once line coverage is well past the current ~18 % ratchet; today it would mostly mutate uncovered code. Revisit when the ratchet crosses ~50 %. |
+| **PIT (pitest) mutation testing** | JaCoCo ratchet | Not yet — but *not* a maintenance rejection: pitest is actively maintained. Mutation testing (deliberately seeding bugs into the bytecode and checking the tests catch them — a measure of test *strength*, where JaCoCo only measures *reach*) earns its cost once line coverage is well past the current ~18 % ratchet; today it would mostly mutate uncovered code. Revisit when the ratchet crosses ~50 %. |
 | **JCommander / commons-cli / airline** | `JLSStart` FLAGS | Dominated by picocli on every axis (maintenance, help generation, completion, zero-dep option). |
 
 ## Suggested adoption order
 
-1. **FlatLaf** — largest user-visible win per line changed; unblocks the
-   U4/#76 ergonomics items. (Runtime, Apache-2.0.)
-2. **JFreeSVG** — smallest effort-to-value ratio in the list; same
-   license as the project. (Runtime, GPLv3.)
-3. **ArchUnit** — locks in the architecture the docs describe while the
-   #78 registry refactor churns the code. (Test-only.)
-4. **jqwik** — deepens the round-trip/hardening suites that everything
-   else (undo, checkpoints, HDL import) leans on. (Test-only.)
-5. **Cacio-tta spike** — decides the #91 layer-2 substrate. (Test-only,
-   evaluate.)
-6. **picocli** — fold into the next CLI-growing milestone rather than as
-   standalone churn. (Runtime, Apache-2.0.)
-7. **Error Prone** — one trial run; keep only if the findings pay for
-   the setup. (Build-only.)
+Each surviving recommendation has an investigation issue covering
+comparables, benefits, and costs before any adoption commitment:
 
-Items 1, 2, 3, 4 have no interaction with each other or with in-flight
-issues and can proceed independently; 5–7 each have a stated gate.
+1. **FlatLaf** (#153) — largest user-visible win per line changed;
+   unblocks the U4/#76 ergonomics items. (Runtime, Apache-2.0.)
+2. **JFreeSVG** (#154) — smallest effort-to-value ratio in the list;
+   same license as the project. (Runtime, GPLv3.)
+3. **ArchUnit** (#155) — locks in the architecture the docs describe
+   while the #78 registry refactor churns the code. (Test-only.)
+4. **picocli** (#156) — fold into the next CLI-growing milestone rather
+   than as standalone churn. (Runtime, Apache-2.0.)
+5. **Error Prone** (#157) — one trial run, coordinated with the #93
+   NullAway plan (NullAway is an Error Prone plugin); keep only if the
+   findings pay for the setup. (Build-only.)
+
+Items 1–3 have no interaction with each other or with in-flight issues
+and can proceed independently; 4 and 5 each have a stated gate.

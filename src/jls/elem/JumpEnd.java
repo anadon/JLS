@@ -22,7 +22,14 @@ import javax.swing.*;
 public class JumpEnd extends LogicElement {
 	
 	// default value
-	private static final int defaultBits = 1; 
+	private static final int defaultBits = 1;
+
+	/**
+	 * Message shown when the END gesture is invoked with no named wires
+	 * to connect to (#131).
+	 */
+	public static final String NO_NAMED_WIRES =
+			"No named wires exist. Name a wire with START first.";
 	
 	// saved properties
 	private int bits = defaultBits;
@@ -59,6 +66,14 @@ public class JumpEnd extends LogicElement {
 		// show creation dialog
 		
 		if(name == null) {
+
+			// fail fast when there is nothing to connect to: the selection
+			// dialog would show an empty list and could never be completed
+			// (#131; prior art bsiever/JLS@26053a00)
+			if (circuit.getJumpStartNames().isEmpty()) {
+				TellUser.error(editWindow,NO_NAMED_WIRES,"Error");
+				return false;
+			}
 			new EndCreate();
 		}
 		else {

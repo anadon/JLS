@@ -1358,6 +1358,58 @@ public class Circuit implements Printable {
 		rect = new Rectangle(rect.x - border, rect.y - border, rect.width + 2
 				* border, rect.height + 2 * border);
 
+		// vector export (issue #154): the same element paint path that
+		// fills a bitmap below draws into JFreeSVG's Graphics2D instead,
+		// so .svg output needs no per-element work
+		if (file.toLowerCase(java.util.Locale.ROOT).endsWith(".svg")) {
+			org.jfree.svg.SVGGraphics2D svg =
+					new org.jfree.svg.SVGGraphics2D(rect.width, rect.height);
+			// a fixed defs prefix keeps two exports of the same circuit
+			// byte-identical (the default prefix is instance-derived)
+			svg.setDefsKeyPrefix("jls");
+			AffineTransform svgTranslate = new AffineTransform();
+			svgTranslate.translate(-rect.x, -rect.y);
+			svg.setTransform(svgTranslate);
+			svg.setColor(Color.white);
+			svg.fill(rect);
+			// draw in a deterministic order: elements live in a
+			// HashSet, and while raster export doesn't care (same
+			// pixels either way, overlaps aside), SVG serializes the
+			// draw order into the file - an unstable order would break
+			// byte-identical goldens across load instances. Wires
+			// under non-wires, like the interactive draw path.
+			java.util.List<Element> wireLayer = new java.util.ArrayList<Element>();
+			java.util.List<Element> partLayer = new java.util.ArrayList<Element>();
+			for (Element el : elements) {
+				(el instanceof jls.elem.Wire ? wireLayer : partLayer).add(el);
+			}
+			// order on index bounds, not x/y: wires keep x/y at their
+			// defaults, but their bounds are derived from their ends
+			java.util.Comparator<Element> drawOrder = java.util.Comparator
+					.comparingInt((Element el) -> el.getIndexBounds().x)
+					.thenComparingInt(el -> el.getIndexBounds().y)
+					.thenComparingInt(el -> el.getIndexBounds().width)
+					.thenComparingInt(el -> el.getIndexBounds().height)
+					.thenComparing(el -> el.getClass().getName())
+					.thenComparingInt(Element::getID);
+			wireLayer.sort(drawOrder);
+			partLayer.sort(drawOrder);
+			for (Element el : wireLayer) {
+				el.draw(svg);
+			}
+			for (Element el : partLayer) {
+				el.draw(svg);
+			}
+			try {
+				java.nio.file.Files.writeString(java.nio.file.Path.of(file),
+						svg.getSVGDocument(),
+						java.nio.charset.StandardCharsets.UTF_8);
+			} finally {
+				svg.dispose();
+			}
+			return;
+		}
+
 		// set up image
 		BufferedImage image = new BufferedImage(rect.width, rect.height,
 				BufferedImage.TYPE_INT_RGB);

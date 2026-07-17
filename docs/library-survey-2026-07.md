@@ -74,8 +74,20 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
   dialogs (the `test/jls/ui` layer-1 assertions are layout-independent
   and should survive).
 
-### 2. JFreeSVG — vector image export
+### 2. JFreeSVG — vector image export *(ADOPTED, #154)*
 
+- **Verdict (2026-07-17):** adopted at 5.0.7. The spike went exactly as
+  predicted — `SVGGraphics2D` slotted into `Circuit.exportImage` with no
+  per-element changes, and `-i out.svg` works end to end. One finding the
+  survey missed: SVG serializes *draw order* into the output, and the
+  element set is a `HashSet`, so a naive drop-in was byte-unstable across
+  load instances (the render-path twin of the #166 save-order problem).
+  The export now draws in a stable geometric order and `SvgExportTest`
+  pins byte-identical output across fresh loads. Text stays as SVG
+  `<text>` elements (smaller, selectable, and the font-metrics caveat is
+  the same one that already rules out pixel goldens); no golden of the
+  full document for that reason — determinism plus structural assertions
+  instead.
 - **What:** [JFreeSVG](https://github.com/jfree/jfreesvg) (jfree.org),
   **GPLv3** — the same license as JLS, so no compatibility question at
   all. Tiny (~50 KB), zero dependencies, requires Java 11+.
@@ -120,8 +132,23 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 
 ## Recommended — test/build scope only (not distributed)
 
-### 4. ArchUnit — executable architecture rules
+### 4. ArchUnit — executable architecture rules *(ADOPTED, #155)*
 
+- **Verdict (2026-07-17):** adopted at 1.4.2, core artifact only — the
+  `archunit-junit5` integration pins a junit-platform line that would
+  fight the JUnit 6 dependency, and plain `@Test` methods calling
+  `ArchRule.check()` need no integration. JDK 25 bytecode imports fine.
+  `ArchitectureRulesTest` lands three rules: the bytecode half of the
+  #81 TellUser discipline (passes clean), jls.hdl reachable only via
+  the JLSStart wiring point (passes clean), and jls.sim ↛ jls.edit with
+  the three simulator classes pinned as a shrinking baseline (the #77
+  debt, now machine-enforced instead of prose). Cost measured: ~2.5 s
+  added to the test run, all in the one-time class-file import. The
+  source-scan ratchets stay alongside: they see comments and would
+  catch a use ArchUnit can't see (reflection), while ArchUnit catches
+  fully-qualified references the text scan misses — complementary, not
+  redundant. Future recorded decisions should get a rule here as their
+  tripwire.
 - **What:** [ArchUnit](https://github.com/TNG/ArchUnit), Apache-2.0,
   v1.4.2 (April 2026). Test-scope; runs as ordinary JUnit tests.
 - **Overlap:** JLS already enforces architectural invariants with
@@ -143,7 +170,26 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** one test dependency; the existing bespoke ratchet tests can
   be ported incrementally or left alongside.
 
-### 5. Error Prone — compile-time bug pattern checks *(optional)*
+### 5. Error Prone — compile-time bug pattern checks *(TRIALED, #157: plumbing kept opt-in; no default-build gate)*
+
+- **Verdict (2026-07-17):** the trial run happened (2.50.0 on the JDK 25
+  build, default check set, full `src/` compile). Result: **zero
+  ERROR-severity findings and zero true bugs** among 99 warnings —
+  52 MissingOverride (style), 24 PatternMatchingInstanceof (useful, but
+  exactly the #95 sealed-dispatch program's job), 8 InvalidParam
+  (javadoc drift), 5 JdkObsolete (the Vector/LinkedList holdouts #94
+  and #96 already track), and singletons that are benign or false
+  positives (both ReferenceEquality hits are *intentional* identity
+  comparisons of wire ends in `Element.touches`). Compile time 6 s →
+  22 s. The survey's own bar was "keep only if the first report pays
+  for the setup" — it did not: SpotBugs at threshold High had already
+  taken the real bugs off the table. **Decision:** no `-Werror` gate
+  and no baseline apparatus for EP core; but the compiler plumbing
+  (the `errorprone` Maven profile: forked javac, `--add-exports`,
+  processor path) stays in-tree as the ready-made substrate for #93 —
+  NullAway is an Error Prone plugin and was the strategic reason to
+  wire this at all. `mvn -Perrorprone clean compile` reproduces the
+  report at any time.
 
 - **What:** [Error Prone](https://github.com/google/error-prone)
   (Google), Apache-2.0, a javac plugin (build-time only; requires

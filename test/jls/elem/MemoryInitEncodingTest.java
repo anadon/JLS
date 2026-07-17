@@ -83,6 +83,19 @@ class MemoryInitEncodingTest {
 	}
 
 	@Test
+	void outOfCapacityAddressesStayRaw() {
+		// the raw init form is loaded leniently (zeros assumed at
+		// simulation start), but the RLE decoder rejects addresses at
+		// or past the capacity - so encoding them would save a file
+		// the loader refuses to read back. Found by the generative
+		// fuzzer (issue #160).
+		assertNull(Memory.encodeInitRLE("22 3\n", 32),
+				"an address past the capacity bound must stay raw");
+		assertNotNull(Memory.encodeInitRLE("1f 3\n", 32),
+				"the last in-capacity address must still encode");
+	}
+
+	@Test
 	void bigValuesSurvive() {
 		String text = "0 ffffffffffffffffffff\n"; // wider than a long
 		String rle = Memory.encodeInitRLE(text);

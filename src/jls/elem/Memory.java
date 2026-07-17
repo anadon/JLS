@@ -375,7 +375,8 @@ public class Memory extends LogicElement {
 		// long runs of identical words; save those run-length encoded
 		// (#21). Text with comments or hand formatting keeps the raw
 		// encoding so it round-trips exactly. The loader accepts both.
-		String rle = encodeInitRLE(initialValue);
+		String rle = encodeInitRLE(initialValue,
+				Math.min(capacity, MAX_INIT_WORDS));
 		if (rle != null && rle.length() < initialValue.length()) {
 			output.println(" String initrle \"" + rle + "\"");
 		} else {
@@ -403,6 +404,25 @@ public class Memory extends LogicElement {
 	 */
 	static String encodeInitRLE(String text) {
 
+		return encodeInitRLE(text, MAX_INIT_WORDS);
+	} // end of encodeInitRLE method
+
+	/**
+	 * Encode with an explicit address bound. Addresses at or past the
+	 * bound keep the raw encoding: the raw form is loaded leniently
+	 * (out-of-range init falls back to zeros with a warning at
+	 * simulation start), but the RLE decoder rejects such addresses at
+	 * load, so encoding them would save a file the loader refuses to
+	 * read back - a save/load fixed-point violation found by the
+	 * generative fuzzer (issue #160).
+	 *
+	 * @param text The initial-memory text.
+	 * @param maxWords Upper bound on encoded addresses (exclusive).
+	 *
+	 * @return the encoded form, or null to use the raw encoding.
+	 */
+	static String encodeInitRLE(String text, long maxWords) {
+
 		if (text.isEmpty()) {
 			return null;
 		}
@@ -426,7 +446,7 @@ public class Memory extends LogicElement {
 			} catch (NumberFormatException ex) {
 				return null;
 			}
-			if (addr < 0) {
+			if (addr < 0 || addr >= maxWords) {
 				return null;
 			}
 			addrs.add(addr);

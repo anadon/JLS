@@ -50,6 +50,7 @@ class CliImageExportTest {
 				+ File.separator + "bin" + File.separator + "java";
 		List<String> cmd = new ArrayList<>();
 		cmd.add(java);
+		cmd.addAll(jls.CoverageAgent.jvmArgs());
 		cmd.add("-Djava.awt.headless=true");
 		cmd.add("-cp");
 		cmd.add(System.getProperty("java.class.path"));
@@ -145,6 +146,21 @@ class CliImageExportTest {
 		Result r = run("-ishot.png", "export.jls");
 		assertEquals(0, r.exit, r.stderr);
 		assertDecodableImage("shot.png", 0x89, 'P', 'N', 'G');
+	}
+
+	@Test
+	void svgOperandProducesAVectorImage() throws Exception {
+		// vector export (issue #154): same paint path, SVG output
+		writeCircuit("export.jls");
+		Result r = run("-i", "shot.svg", "export.jls");
+		assertEquals(0, r.exit, r.stderr);
+		File file = new File(tmp.toFile(), "shot.svg");
+		assertTrue(file.exists(), "shot.svg was not written");
+		String svg = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+		assertTrue(svg.contains("<svg"), "no <svg element in output");
+		assertTrue(svg.contains("</svg>"), "unterminated SVG document");
+		assertFalse(new File(tmp.toFile(), "export.png").exists(),
+				"the default output must not be written when a path is given");
 	}
 
 	@Test

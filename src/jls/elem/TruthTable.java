@@ -448,6 +448,13 @@ public final class TruthTable extends LogicElement implements Printable {
 		// use better graphics
 		Graphics2D gg = (Graphics2D)g;
 
+		// the display panel is otherwise created only when the edit
+		// dialog opens, so printing a freshly loaded circuit crashed
+		// here with an NPE (found by PrintPathSmokeTest, issue #91)
+		if (disp == null) {
+			disp = new DisplayBool(this);
+		}
+
 		// construct name
 		Circuit c = circuit;
 		String nm = name + " in " + circuit.getName();

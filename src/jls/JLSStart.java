@@ -571,7 +571,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		new FlagSpec("b", Arity.NONE, null, null,
 				"run in batch (headless) mode"),
 		new FlagSpec("i", Arity.OPTIONAL, "imagefile", "an image file",
-				"export an image of the circuit (default circuit_file.png; use .jpg/.jpeg for JPEG)"),
+				"export an image of the circuit (default circuit_file.png; use .jpg/.jpeg for JPEG, .svg for SVG)"),
 		new FlagSpec("s", Arity.REQUIRED, "file", "a startup file",
 				"startup parameter file"),
 		new FlagSpec("t", Arity.REQUIRED, "file", "a test file",
@@ -609,7 +609,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 	/**
 	 * Whether a file name names a supported image output format:
-	 * .png, .jpg or .jpeg, case-insensitive (issue #71).
+	 * .png, .jpg or .jpeg (issue #71), or .svg (issue #154),
+	 * case-insensitive.
 	 *
 	 * @param name The file name to check.
 	 *
@@ -619,7 +620,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		String lower = name.toLowerCase(java.util.Locale.ROOT);
 		return lower.endsWith(".png") || lower.endsWith(".jpg")
-				|| lower.endsWith(".jpeg");
+				|| lower.endsWith(".jpeg") || lower.endsWith(".svg");
 	} // end of isImageFileName method
 
 	/**
@@ -743,7 +744,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			JLSInfo.imgexport = true;
 			if (opnd != null) {
 				if (!isImageFileName(opnd)) {
-					usageError("option -i output file must end in .png, .jpg or .jpeg: "
+					usageError("option -i output file must end in .png, .jpg, .jpeg or .svg: "
 							+ opnd);
 				}
 				imageFile = opnd;

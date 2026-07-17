@@ -7,7 +7,99 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
+### Fixed
+- Printing a freshly loaded circuit containing a truth table no longer
+  crashes with a NullPointerException: `TruthTable.print` assumed the
+  table's display panel had been built by the edit dialog, which is
+  only true after the dialog has been opened once in the session. The
+  panel is now built lazily at print time. Found by the new print-path
+  smoke test.
+- A Memory whose initial-contents text names addresses at or past the
+  declared capacity no longer saves a file JLS itself refuses to load
+  (#160): such text is accepted leniently at load (zeros assumed at
+  simulation start, as before), but the save path re-encoded it as an
+  `initrle` attribute whose loader enforces the capacity bound. The
+  RLE encoder now falls back to the raw `init` encoding for
+  out-of-capacity addresses. Found by the new generative fuzzer on
+  its second seed.
+
 ### Added
+- Per-element simulation goldens with a completeness ratchet (#158):
+  every simulating palette element now has a behavioral pin -
+  Adder (sum/carry sweep), Decoder (one-hot), Extend, Mux, the
+  barrel shifter's three kinds, TruthTable (rows and don't-cares),
+  Binder/Splitter range routing, JumpStart/JumpEnd, SigGen and Stop
+  join the existing gate/memory/sequential goldens. Expected values
+  are computed independently of the implementation. A reflective
+  ratchet fails the build when a palette element has neither a
+  golden nor a commented exemption, so the gap cannot reopen.
+  Detection power was verified the issue's way: a hand-mutated Mux
+  select decode passes the entire pre-existing suite (40 tests) and
+  fails the new golden precisely.
+- CLI subprocess coverage (#159): the JaCoCo agent now rides into
+  the JVMs the CLI suites spawn, so JLSStart's exercised paths are
+  measured (4.7% -> 25.5% line on its own).
+- Headless draw- and print-path smoke coverage (#91 layer 1, #162):
+  every palette element (including a nested SubCircuit) draws on
+  both export canvases - raster and SVG - with a reflective
+  completeness sweep keeping the fixture honest; every page the
+  print Book collects (circuit, state machine and its output
+  summary, truth table, nested subcircuit) renders into a
+  Graphics2D. Plus direct tests for the clipboard copy machinery
+  (`Util.copy`/`partition`, including partial-selection pruning),
+  the pure Util helpers, and Memory's file-based initialization.
+- The display-test substrate (#162): a `display`-tagged surefire
+  execution, headless (self-skipping) by default and run for real
+  under `xvfb-run -a mvn -B verify -Djls.test.headless=false`, which
+  CI now does. Tenants:
+  - `DialogConstructionSmokeTest` constructs all 24 element
+    create/edit dialog families through the editor's real `setup()`
+    entry and dismisses each through the close-box cancel path.
+  - `EditorGestureTest` (#91 layer 2, #84 safety net) drives the
+    SimpleEditor mouse state machine with synthetic events - move,
+    rubber-band select, right-click delete, undo/redo - and asserts
+    the resulting circuit model. Synthetic `MouseEvent` dispatch, not
+    `Robot`: the move/select/menu paths read `event.getX()/getY()`,
+    so the whole suite runs deterministically in ~1.3 s. Because it
+    touches only surfaces that survive the #84 decomposition (canvas
+    events, popup item texts, the circuit model), it is the
+    characterization safety net for that refactor.
+  The bulk of the suite stays headless in its own execution either
+  way (with a display present, `TellUser` turns interactive, so
+  mixing the two would let a stray warning block a test on a modal
+  dialog).
+- The coverage ratchet floors rose twice from 17.5%/18.0% (set
+  2026-07-08): first to 34.5% instruction / 34.0% line with a first
+  32.5% BRANCH floor, then to 42.0% / 40.0% / 36.5% (measured
+  headless: 42.65% / 40.88% / 37.21%; under the display substrate
+  the same commit measures 51.13% / 48.85% / 38.26%).
+- Vector circuit image export (#154): `-i out.svg` writes the circuit
+  as resolution-independent SVG through the same element paint path
+  the PNG/JPEG export uses, via JFreeSVG (GPLv3, same license as JLS,
+  ~50 KB, no transitive dependencies). Exports are deterministic -
+  the same circuit produces byte-identical SVG across runs and load
+  instances (elements draw in a stable geometric order, not HashSet
+  order), so SVG goldens and reproducible-builds expectations hold.
+- Executable architecture rules (#155): ArchUnit 1.4.2 (test scope
+  only, nothing ships in the jar) checks the compiled bytecode for
+  the invariants the source-scan ratchets state - only `TellUser`
+  touches `JOptionPane` (#81), HDL internals are wired only from the
+  CLI (#60), and `jls.sim` must not depend on `jls.edit` (#77, with
+  the three existing simulator classes pinned as a shrinking
+  baseline). New violations fail `mvn test` immediately.
+- An opt-in `errorprone` Maven profile (#157):
+  `mvn -Perrorprone clean compile` runs Error Prone 2.50.0's default
+  checks over the build. The trial verdict (no default-build gate;
+  the plumbing waits for #93 NullAway) is recorded in
+  `docs/library-survey-2026-07.md`.
+- Seeded generative fuzzing of the save/load pair (#160), dependency
+  free: `GenerativeRoundTripFuzzTest` drives random circuits (element
+  mix, boundary bit widths, escape-space names, wired pin pairs)
+  through the save → load → save fixed point and asserts truncated
+  saves classify cleanly; `ContainerMutationFuzzTest` bit-flips,
+  truncates, splices and corrupts valid text/zip/XZ containers and
+  asserts every outcome is a classified `LoadError`, never an escaped
+  exception. Failures reproduce from printed seeds.
 - Opt-in plain-text saves (#129): the Save As dialog offers a
   plain-text file type, and the new `-savetext out.jls circuit.jls`
   flag rewrites an existing circuit file uncompressed. Plain-text

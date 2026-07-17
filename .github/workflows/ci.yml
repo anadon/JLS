@@ -86,6 +86,27 @@ jobs:
               print(f"| {c.get('type')} | {cov} | {mis} | {pct:.1f}% |")
           EOF
 
+  # Machine-checked proofs (proofs/README.md): the Agda development in
+  # proofs/ verifies the spatial-index query-parity and draw-culling
+  # theorems the drag/drop hot path relies on; a non-zero exit means a
+  # proof no longer checks. ProofBridgeTest (in the build job) pins the
+  # proof's modelling assumptions to the Java implementation.
+  proofs:
+    name: Verify Agda proofs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Agda
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends agda agda-stdlib
+
+      # the stdlib is copied somewhere writable because Agda refreshes
+      # .agdai interface files beside the sources while checking
+      - name: Check proofs
+        run: |
+          cp -r /usr/share/agda-stdlib "$RUNNER_TEMP/agda-stdlib"
+          LC_ALL=C.UTF-8 agda -i "$RUNNER_TEMP/agda-stdlib" -i proofs proofs/SpatialIndexCorrectness.agda
+
   # First-light Wayland GUI lane (issue #101): boots the JLS GUI on
   # JetBrains Runtime's experimental WLToolkit (Project Wakefield)
   # against a headless sway compositor - no X11 anywhere - and captures

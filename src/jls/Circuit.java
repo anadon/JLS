@@ -1168,13 +1168,29 @@ public class Circuit implements Printable {
 		// scans (#27 S3): wires under non-wires, the second (selected)
 		// set on top of both. Elements far outside the clip cannot be
 		// visible and are skipped, so a scrolled view pays for what it
-		// shows, not for the whole circuit (#17).
+		// shows, not for the whole circuit (#17). The candidates come
+		// from the spatial index, not a full scan, so a dirty-region
+		// repaint during a drag costs O(visible), not O(circuit); the
+		// query pads the clip by the same margin mayBeVisible allows
+		// for labels, so its exact check below accepts the same
+		// elements a full scan would. That parity is machine-checked:
+		// THEOREM 2 (culling-parity) in
+		// proofs/SpatialIndexCorrectness.agda, with the margin/grow/
+		// intersects assumptions pinned by jls.ProofBridgeTest.
 		Rectangle clip = g.getClipBounds();
+		java.util.Collection<Element> candidates;
+		if (clip == null) {
+			candidates = elements;
+		} else {
+			Rectangle query = new Rectangle(clip);
+			query.grow(DRAW_MARGIN, DRAW_MARGIN);
+			candidates = elementsNear(query);
+		}
 		java.util.List<Element> wires = new java.util.ArrayList<Element>();
 		java.util.List<Element> parts = new java.util.ArrayList<Element>();
 		java.util.List<Element> secondWires = new java.util.ArrayList<Element>();
 		java.util.List<Element> secondParts = new java.util.ArrayList<Element>();
-		for (Element el : elements) {
+		for (Element el : candidates) {
 			if (clip != null && !mayBeVisible(el, clip)) {
 				continue;
 			}
@@ -1199,13 +1215,20 @@ public class Circuit implements Printable {
 	} // end of draw method
 
 	/**
+	 * How far outside its index bounds an element may draw (labels and
+	 * similar decorations). Draw culling pads by this margin on both the
+	 * index query and the exact visibility check.
+	 */
+	private static final int DRAW_MARGIN = 8 * JLSInfo.spacing;
+
+	/**
 	 * Whether an element could draw inside the clip. The margin generously
 	 * covers labels drawn near (but outside) an element's bounds.
 	 */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 
 		Rectangle b = el.getIndexBounds();
-		b.grow(8 * JLSInfo.spacing, 8 * JLSInfo.spacing);
+		b.grow(DRAW_MARGIN, DRAW_MARGIN);
 		return b.intersects(clip);
 	} // end of mayBeVisible method
 

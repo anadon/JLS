@@ -259,6 +259,61 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of mixesTriStateAndNormal method
 
 	/**
+	 * See if a wire hanging off the moving selection collides with
+	 * anything along its span: a stationary wire end it lands on, or a
+	 * stationary non-wire element its body sweeps across.
+	 *
+	 * The element check closes a drag-direction asymmetry: dragging an
+	 * element into a wire has always been an overlap (the main overlap()
+	 * loop calls sel.intersects(wire)), but dragging the wire so its
+	 * body crossed a stationary element was never checked, so the same
+	 * forbidden geometry could be created from one direction and not the
+	 * other. The element predicate here is elm.intersects(wire) - the
+	 * exact call the reverse direction makes - so the two directions
+	 * cannot disagree. Consequences preserved from both directions:
+	 * wire-over-wire crossings stay legal (schematic wires cross
+	 * freely), and a wire never collides with an element an end of it
+	 * sits on (Wire.intersects excludes wires whose endpoint is inside
+	 * the rectangle), so attached wires do not collide with their own
+	 * element. Elements in the selected set move rigidly with the wire
+	 * and are skipped, as in the main overlap() loop.
+	 *
+	 * Queries the spatial index around the wire's own bounds (#3, #17);
+	 * one query serves both the wire-end and the element checks.
+	 *
+	 * @param circuit The circuit being edited.
+	 * @param selected The moving selection.
+	 * @param sel The selected element the wire hangs off.
+	 * @param wire The wire to check.
+	 *
+	 * @return true if the wire collides along its span.
+	 */
+	static boolean wireCollidesAlongSpan(Circuit circuit,
+			Set<Element> selected, Element sel, Wire wire) {
+
+		Rectangle span = wire.getIndexBounds();
+		span.grow(JLSInfo.pointDiameter,JLSInfo.pointDiameter);
+		for (Element elm : circuit.elementsNear(span)) {
+			if (sel == elm)
+				continue;
+			if (elm instanceof WireEnd) {
+				if (wire.touches((WireEnd)elm)) {
+					return true;
+				}
+				continue;
+			}
+			if (elm instanceof Wire)
+				continue;
+			if (selected.contains(elm))
+				continue;
+			if (elm.intersects(wire)) {
+				return true;
+			}
+		}
+		return false;
+	} // end of wireCollidesAlongSpan method
+
+	/**
 	 * Create new editor.
 	 * 
 	 * @param pane The tabbed pane this editor is in.
@@ -1821,8 +1876,10 @@ public abstract class SimpleEditor extends JPanel {
 					// if left button...
 					if (leftButton) {
 
-						// see if cursor is on an element
-						for (Element el : circuit.getElements()) {
+						// see if cursor is on an element, asking the spatial
+						// index for the few elements near the cursor instead
+						// of scanning the whole circuit (#3, #17)
+						for (Element el : circuit.elementsAt(x,y)) {
 							if (el.contains(x,y)) {
 
 								// do nothing if editor is disabled
@@ -1872,8 +1929,9 @@ public abstract class SimpleEditor extends JPanel {
 					// if right button show menu
 					else if (rightButton) {
 
-						// see if cursor is on an element
-						for (Element el : circuit.getElements()) {
+						// see if cursor is on an element, via the spatial
+						// index as in the left-button path (#3, #17)
+						for (Element el : circuit.elementsAt(x,y)) {
 							if (el.contains(x,y)) {
 
 								// can't display menu on attached wire end
@@ -2187,8 +2245,9 @@ public abstract class SimpleEditor extends JPanel {
 
 				if (currentState == State.idle && rightButton) {
 
-					// see if cursor is on an element
-					for (Element el : circuit.getElements()) {
+					// see if cursor is on an element, via the spatial index
+					// as in mousePressed (#3, #17)
+					for (Element el : circuit.elementsAt(x,y)) {
 						if (el.contains(x,y)) {
 
 							// can't display menu on attached wire end
@@ -3213,12 +3272,15 @@ public abstract class SimpleEditor extends JPanel {
 
 							// wires hanging off a moved wire end, or off a
 							// wire end attached to one of sel's puts, must
-							// not land on other wire ends anywhere along
-							// their span; these checks depend only on sel
+							// not land on other wire ends or sweep across
+							// stationary elements anywhere along their span
+							// (wireCollidesAlongSpan; the element predicate
+							// is the same one the reverse drag direction
+							// uses); these checks depend only on sel
 							if (sel instanceof WireEnd) {
 								WireEnd end = (WireEnd)sel;
 								for (Wire wire : end.getWires()) {
-									if (wireLandsOnWireEnd(sel,wire)) {
+									if (wireCollidesAlongSpan(circuit,selected,sel,wire)) {
 										overlapMessage = "overlap";
 										untouchAll();
 										return true;
@@ -3228,7 +3290,7 @@ public abstract class SimpleEditor extends JPanel {
 							for (Put p : sel.getAllPuts()) {
 								if (p.isAttached()) {
 									Wire wire = p.getWireEnd().getOnlyWire();
-									if (wireLandsOnWireEnd(sel,wire)) {
+									if (wireCollidesAlongSpan(circuit,selected,sel,wire)) {
 										overlapMessage = "overlap";
 										untouchAll();
 										return true;
@@ -3428,6 +3490,10 @@ public abstract class SimpleEditor extends JPanel {
 						// check every element in the selected set
 						for (Element sel : selected) {
 
+							// whether this element actually made a connection
+							// (only then can the index have gone stale)
+							boolean connected = false;
+
 							// check against every element near the selection
 							// (grown so edge-touching put alignments are
 							// included), as in overlap() (#3, #17)
@@ -3455,6 +3521,7 @@ public abstract class SimpleEditor extends JPanel {
 											// wire end to wire end
 											WireEnd otherEnd = (WireEnd)el;
 											WireEnd endLeft = connect(end,otherEnd);
+											connected = true;
 											if (currentState == State.startwire) {
 												wireEnd = endLeft;
 												net = endLeft.getNet();
@@ -3466,6 +3533,7 @@ public abstract class SimpleEditor extends JPanel {
 											// wire end to wire
 											Wire wire = (Wire)el;
 											WireEnd it = connect(end,wire);
+											connected = true;
 											if (currentState == State.startwire) {
 												wireEnd = it;
 												net = it.getNet();
@@ -3491,6 +3559,7 @@ public abstract class SimpleEditor extends JPanel {
 												continue;
 											}
 											connect(end,put);
+											connected = true;
 											ok = true;
 										}
 									}
@@ -3526,6 +3595,7 @@ public abstract class SimpleEditor extends JPanel {
 											}
 
 											connect(end,put);
+											connected = true;
 											ok = true;
 										}
 									}
@@ -3556,6 +3626,7 @@ public abstract class SimpleEditor extends JPanel {
 
 											// put to put
 											connect(p1,p2);
+											connected = true;
 										}
 									}
 								}
@@ -3563,8 +3634,13 @@ public abstract class SimpleEditor extends JPanel {
 
 							// connections made for this element may have
 							// moved wires and merged ends; rebuild before
-							// the next element queries the index
-							circuit.invalidateIndex();
+							// the next element queries the index. When
+							// nothing connected, nothing moved, so the
+							// common no-connection drop stays O(selected)
+							// instead of paying a rebuild per element
+							if (connected) {
+								circuit.invalidateIndex();
+							}
 						}
 
 						// add any new wires created by connecting puts to puts
@@ -3619,34 +3695,6 @@ public abstract class SimpleEditor extends JPanel {
 						put.setTouching(true);
 						touchedPuts.add(put);
 					} // end of touch method
-
-					/**
-					 * See if a wire attached to a selected element has been
-					 * dragged onto some wire end along its span. Queries the
-					 * spatial index around the wire's own bounds (#3, #17).
-					 *
-					 * @param sel The selected element the wire hangs off.
-					 * @param wire The wire to check.
-					 *
-					 * @return true if the wire lands on a wire end.
-					 */
-					private boolean wireLandsOnWireEnd(Element sel, Wire wire) {
-
-						Rectangle span = wire.getIndexBounds();
-						span.grow(JLSInfo.pointDiameter,JLSInfo.pointDiameter);
-						for (Element elm : circuit.elementsNear(span)) {
-							if (sel == elm)
-								continue;
-							if (!(elm instanceof WireEnd)) {
-								continue;
-							}
-							WireEnd otherEnd = (WireEnd)elm;
-							if (wire.touches(otherEnd)) {
-								return true;
-							}
-						}
-						return false;
-					} // end of wireLandsOnWireEnd method
 
 					/**
 					 * Copy all selected elements to the clipboard.

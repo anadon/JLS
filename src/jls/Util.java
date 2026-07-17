@@ -249,7 +249,42 @@ public final class Util {
 		}
 		
 	} // end of isValidFileName method
-	
+
+	/**
+	 * The directory used to seed file choosers and new-circuit
+	 * directories when nothing better is remembered.  This is the
+	 * user's home directory, not the process working directory:
+	 * a desktop-launched session (deb/rpm/msi/dmg/AppImage, issue #82)
+	 * inherits whatever directory the launcher happened to run in -
+	 * commonly the filesystem root, the install directory, or an
+	 * AppImage mount point - none of which is anywhere a user keeps
+	 * circuits (issue #130).
+	 *
+	 * @return the user's home directory.
+	 */
+	public static String defaultDirectory() {
+
+		return System.getProperty("user.home");
+	} // end of defaultDirectory method
+
+	/**
+	 * Pick the directory a file chooser should open in: a remembered
+	 * directory when one exists, otherwise the default directory
+	 * (issue #130).
+	 *
+	 * @param remembered A previously-used directory, or null/empty if
+	 * none has been recorded yet.
+	 *
+	 * @return remembered if non-null and non-empty, otherwise
+	 * defaultDirectory().
+	 */
+	public static String seedDirectory(String remembered) {
+
+		if (remembered == null || remembered.equals(""))
+			return defaultDirectory();
+		return remembered;
+	} // end of seedDirectory method
+
 	/**
 	 * Convert value to a string in the given base.
 	 * 

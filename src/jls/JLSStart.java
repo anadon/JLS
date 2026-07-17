@@ -1348,7 +1348,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// create circuit and set up editor
 		Circuit circ = new Circuit(name);
-		circ.setDirectory(System.getProperty("user.dir"));
+		circ.setDirectory(Util.defaultDirectory());
 		exHandler.setCircuit(circ);
 		setupEditor(circ,name);
 	} // end of newCircuit method
@@ -1368,7 +1368,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// get circuit name from user if parameter is null
 		if (filePath == null) {
-			prevOpenDir = prevOpenDir.equals("") ? System.getProperty("user.dir") : prevOpenDir;
+			prevOpenDir = Util.seedDirectory(prevOpenDir);
 			JFileChooser chooser = new JFileChooser( prevOpenDir );
 			
 			javax.swing.filechooser.FileFilter filter =
@@ -1393,7 +1393,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			dir = prevOpenDir;
 		}else {
 			file = new File(filePath);
-			// a bare relative filename has no parent
+			// a bare relative filename has no parent; it was resolved
+			// against the working directory (this branch only runs for a
+			// command-line start file), so user.dir - not user.home - IS
+			// the file's real directory.  Deliberately kept on user.dir;
+			// see issue #130's H1 exclusion.
 			String parent = file.getParent();
 			prevOpenDir = (parent == null || parent.equals(""))
 					? System.getProperty("user.dir") : parent;
@@ -1575,7 +1579,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 					"no circuit to import into", "Error");
 			return;
 		}
-		JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
 			public boolean accept(File f) {
@@ -2060,7 +2064,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			return;
 
 		// get name from user
-		JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
 			public boolean accept(File f) {

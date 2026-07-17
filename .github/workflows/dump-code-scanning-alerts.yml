@@ -1,7 +1,9 @@
 # TEMPORARY — will be removed before this branch is merged.
-# Runs the same CodeQL analysis as codeql.yml on this branch, then dumps
-# the branch's open code scanning alerts into the job log so they can be
-# triaged from an environment without Security-tab access.
+# Dismisses the CodeQL alerts that cannot be resolved in code because the
+# flagged parameters are part of a template-method contract (the base
+# declaration does not read them, but subclass overrides do, so removing
+# them from the base would break the overrides). Then dumps whatever open
+# alerts remain on this branch so the result can be verified.
 name: Dump code scanning alerts
 
 on:
@@ -13,59 +15,49 @@ permissions:
   contents: read
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
+  dismiss:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: java
-            build-mode: manual
-          - language: actions
-            build-mode: none
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Set up JDK 25
-        if: matrix.language == 'java'
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
-        with:
-          distribution: temurin
-          java-version: 25
-          cache: maven
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-          queries: security-and-quality
-
-      - name: Build
-        if: matrix.language == 'java'
-        run: mvn -B -DskipTests package
-
-      - name: Analyze
-        uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+      - name: Dismiss template-method false positives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # java/unused-parameter on template-method roots: the parameter is
+          # used by subclass overrides, so it must stay in the base signature.
+          declare -A reason=(
+            [1199]="Element.change(): editWindow is used by the 8 subclass overrides (Register, StateMachine, Memory, SigGen, Clock, Text, Constant, TruthTable); the base is the no-op default."
+            [1200]="Element.change(): x is used by the 8 subclass overrides; the base is the no-op default."
+            [1201]="Element.change(): y is used by the 8 subclass overrides; the base is the no-op default."
+            [1071]="Element.showCurrentValue(): where is used by the InputPin/OutputPin/Register/Memory overrides; the base is the no-op default."
+            [1258]="StringAttribute.omitted(): el is used by overrides (Display and the anonymous attribute subclasses in Element); the base is the default hook."
+          )
+          for n in "${!reason[@]}"; do
+            echo "Dismissing alert #$n"
+            gh api -X PATCH "repos/${{ github.repository }}/code-scanning/alerts/$n" \
+              -f state=dismissed \
+              -f dismissed_reason="won't fix" \
+              -f dismissed_comment="${reason[$n]}" \
+              --jq '{number, state, dismissed_reason}'
+          done
 
   dump:
-    needs: analyze
+    needs: dismiss
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: read
     steps:
-      - name: List open alerts for this branch
+      - name: List remaining open alerts for this branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for page in $(seq 1 40); do
             out=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=${{ github.ref }}&per_page=100&page=$page" \
-              --jq '.[] | {number, rule: .rule.id, severity: .rule.severity, security_severity: .rule.security_severity_level, description: .rule.description, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, end_line: .most_recent_instance.location.end_line, message: .most_recent_instance.message.text, ref: .most_recent_instance.ref}')
+              --jq '.[] | {number, rule: .rule.id, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, message: .most_recent_instance.message.text}')
             if [ -z "$out" ]; then break; fi
             echo "$out"
           done
+          echo "---done---"

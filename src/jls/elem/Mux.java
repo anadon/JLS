@@ -152,23 +152,21 @@ public class Mux extends LogicElement {
 		// draw context
 		super.draw(g);
 		
-		// draw shape
+		// draw shape: the conventional trapezoid symbol (#123), wide side
+		// at the inputs, narrow side at the output. Canonical segments
+		// (output RIGHT) are mapped through the orientation transform
+		// (#24). The slant is half a grid unit, so the narrow side still
+		// spans every put on it and the selector's put circle (radius
+		// pointDiameter/2) still touches the slanted edge at its put.
 		int s = JLSInfo.spacing;
 		g.setColor(Color.black);
-		if(outputOrientation == JLSInfo.Orientation.LEFT || outputOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			g.drawArc(x,y,2*s,2*s,0,180);
-			g.drawLine(x,y+s,x,y+height-s);
-			g.drawLine(x+2*s,y+s,x+2*s,y+height-s);
-			g.drawArc(x,y+height-2*s,2*s,2*s,180,180);
-		}
-		else
-		{
-			g.drawArc(x, y, 2*s, 2*s, -90, -180);
-			g.drawLine(x+s,y,x+width-s,y);
-			g.drawLine(x+s,y+2*s,x+width-s,y+2*s);
-			g.drawArc(x+width-2*s,y,2*s,2*s,-90,180);
-		}
+		GridTransform.Chain t = placement();
+		int slant = s/2;
+		int ch = (numInputs+1)*s;					// canonical height
+		t.drawLine(g,x,y,0,0,0,ch);					// input (wide) side
+		t.drawLine(g,x,y,2*s,slant,2*s,ch-slant);	// output (narrow) side
+		t.drawLine(g,x,y,0,0,2*s,slant);			// top slant
+		t.drawLine(g,x,y,0,ch,2*s,ch-slant);		// bottom slant
 		// draw inputs and labels
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();

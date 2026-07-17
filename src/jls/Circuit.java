@@ -1113,14 +1113,22 @@ public class Circuit implements Printable {
 	 */
 	public void save(PrintWriter output) {
 
+		// canonical newlines (#111, #166): println follows the platform
+		// line separator, but canonical bytes must be identical on every
+		// OS - a circuit saved on Windows must byte-match the same
+		// circuit saved on Linux, or determinism (and stateHash) would
+		// be platform-dependent. Wrap the writer so every println, here
+		// and in every element save method, terminates lines with '\n'.
+		PrintWriter out = canonicalNewlines(output);
+
 		// write header; a file-level save states the format version once
 		// at the top (issue #79) - nested subcircuit blocks, which are
 		// always saved through their imported circuit, never repeat it
 		if (isImported()) {
-			output.println("CIRCUIT " + subElement.getName());
+			out.println("CIRCUIT " + subElement.getName());
 		} else {
-			output.println("FORMAT " + formatVersionNeeded());
-			output.println("CIRCUIT " + name);
+			out.println("FORMAT " + formatVersionNeeded());
+			out.println("CIRCUIT " + name);
 		}
 
 		// canonical save order (#166): elements sorted by stable id,
@@ -1144,12 +1152,28 @@ public class Circuit implements Printable {
 
 		// save elements
 		for (Element el : ordered) {
-			el.save(output);
+			el.save(out);
 		}
 
 		// write trailer
-		output.println("ENDCIRCUIT");
+		out.println("ENDCIRCUIT");
+		out.flush();
 	} // end of save method
+
+	/**
+	 * Wrap a writer so println terminates lines with '\n' whatever the
+	 * platform line separator is. PrintWriter(Writer) adds no buffering,
+	 * so writes pass straight through to the wrapped writer.
+	 */
+	private static PrintWriter canonicalNewlines(PrintWriter output) {
+
+		return new PrintWriter(output) {
+			@Override
+			public void println() {
+				write('\n');
+			}
+		};
+	} // end of canonicalNewlines method
 
 	/**
 	 * A hash of this circuit's canonical serialized form (#166): equal

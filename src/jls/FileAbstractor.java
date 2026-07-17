@@ -218,7 +218,15 @@ public final class FileAbstractor {
 			raw.close();
 			throw ex;
 		}
-		return nonEmpty(new Scanner(new BoundedInputStream(xz),
+		// drain before returning: a Scanner over the live stream would
+		// keep the file open for as long as the caller holds it, and on
+		// Windows an open handle blocks deletion (issue #111) - the zip
+		// path already reads into memory, and the expansion is bounded
+		byte[] contents;
+		try (BoundedInputStream bounded = new BoundedInputStream(xz)) {
+			contents = bounded.readAllBytes();
+		}
+		return nonEmpty(new Scanner(new ByteArrayInputStream(contents),
 				StandardCharsets.UTF_8));
 	}
 
@@ -264,7 +272,19 @@ public final class FileAbstractor {
 					+ (MAX_CIRCUIT_TEXT_BYTES >> 20)
 					+ " MiB circuit size limit");
 		}
-		return nonEmpty(new Scanner(file, StandardCharsets.UTF_8));
+		// read into memory rather than scanning the file directly, so no
+		// handle stays open behind the returned Scanner (issue #111);
+		// decode strictly, as Scanner(File) did - the text probe is what
+		// rejects binary non-circuit files in the sniffing cascade
+		byte[] contents = Files.readAllBytes(file.toPath());
+		String text;
+		try {
+			text = StandardCharsets.UTF_8.newDecoder()
+					.decode(java.nio.ByteBuffer.wrap(contents)).toString();
+		} catch (java.nio.charset.CharacterCodingException ex) {
+			throw new IOException("not UTF-8 text");
+		}
+		return nonEmpty(new Scanner(text));
 	}
 
 	/**

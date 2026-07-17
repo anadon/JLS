@@ -103,6 +103,35 @@ class DeterministicSaveTest {
 	}
 
 	@Test
+	void canonicalBytesAreIdenticalWhateverThePlatformNewline()
+			throws Exception {
+		// #111 failure 1: println follows the platform line separator,
+		// so unwrapped saves would differ between Windows and Linux.
+		// Simulate a \r\n platform by overriding println() exactly the
+		// way PrintWriter specializes it per platform; the save path
+		// must never let it reach the output.
+		Circuit circuit = load(fixtureText());
+		StringWriter plain = new StringWriter();
+		try (PrintWriter writer = new PrintWriter(plain)) {
+			circuit.save(writer);
+		}
+		StringWriter crlf = new StringWriter();
+		try (PrintWriter writer = new PrintWriter(crlf) {
+			@Override
+			public void println() {
+				write("\r\n");
+			}
+		}) {
+			circuit.save(writer);
+		}
+		assertEquals(plain.toString(), crlf.toString(),
+				"canonical bytes must not depend on the platform line "
+						+ "separator");
+		assertTrue(plain.toString().indexOf('\r') < 0,
+				"canonical saves must use bare \\n line endings");
+	}
+
+	@Test
 	void stateHashIsContentDetermined() throws Exception {
 		String text = fixtureText();
 		Circuit first = load(text);

@@ -8,6 +8,21 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Fixed
+- Circuits saved on Windows are now byte-identical to the same
+  circuits saved on Linux (#111): `Circuit.save` pins `\n` line
+  endings whatever the platform separator is, which the
+  deterministic-serialization guarantee (#166) and `stateHash`
+  require. Also fixed the first of the Windows test failures
+  (`CircuitRoundTripTest.saveLoadIsAFixedPoint`).
+- Opening a circuit no longer keeps the file locked (#111): the
+  XZ and plain-text read paths drained the file lazily through the
+  returned Scanner, holding an open handle for the circuit's whole
+  editing lifetime - which on Windows blocks deletion (and broke
+  the test suite's temp-dir cleanup). All three container paths now
+  read into memory (already bounded by the 64 MiB hostile-input cap)
+  and release the file before returning. A `.gitattributes` entry
+  additionally protects the byte-exact `.jls` fixtures from CRLF
+  rewriting on Windows checkouts.
 - Printing a freshly loaded circuit containing a truth table no longer
   crashes with a NullPointerException: `TruthTable.print` assumed the
   table's display panel had been built by the edit dialog, which is

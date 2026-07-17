@@ -378,6 +378,46 @@ class ElementSimulationGoldenTest {
 	}
 
 	// ------------------------------------------------------------------
+	// Memory file-based initialization
+	// ------------------------------------------------------------------
+
+	@org.junit.jupiter.api.io.TempDir
+	java.nio.file.Path tmp;
+
+	@Test
+	void memoryInitializesFromItsNamedFile() throws Exception {
+		// the "file" attribute names an on-disk image that overrides
+		// the inline init text at simulation start; same "addr value"
+		// hex format. Batch mode keeps a failed read headless (stdout
+		// message), so pin the success path under batch like the CLI.
+		java.nio.file.Path image = tmp.resolve("mem.dat");
+		java.nio.file.Files.writeString(image, "0 5\n1 9\n2 c\n");
+
+		CircuitTextBuilder cb = new CircuitTextBuilder();
+		int rom = cb.memory("ROM", 8, 4, "");
+		int addr = cb.constant(2);
+		int select = cb.constant(0);
+		int enable = cb.constant(0);
+		int out = cb.outputPin("out", 8);
+		cb.wire(addr, "output", rom, "address");
+		cb.wire(select, "output", rom, "CS");
+		cb.wire(enable, "output", rom, "OE");
+		cb.wire(rom, "output", out, "input");
+		String text = cb.build().replace(" String file \"\"",
+				" String file \"" + image.toAbsolutePath() + "\"");
+
+		boolean batch = JLSInfo.batch;
+		JLSInfo.batch = true;
+		try {
+			assertEquals(0xc, simulate(text, "out"),
+					"the file image, not the empty inline init, must"
+							+ " provide the contents");
+		} finally {
+			JLSInfo.batch = batch;
+		}
+	}
+
+	// ------------------------------------------------------------------
 	// Stop
 	// ------------------------------------------------------------------
 

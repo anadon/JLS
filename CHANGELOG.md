@@ -8,6 +8,12 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Fixed
+- Printing a freshly loaded circuit containing a truth table no longer
+  crashes with a NullPointerException: `TruthTable.print` assumed the
+  table's display panel had been built by the edit dialog, which is
+  only true after the dialog has been opened once in the session. The
+  panel is now built lazily at print time. Found by the new print-path
+  smoke test.
 - A Memory whose initial-contents text names addresses at or past the
   declared capacity no longer saves a file JLS itself refuses to load
   (#160): such text is accepted leniently at load (zeros assumed at
@@ -32,10 +38,20 @@ All notable changes to JLS are documented here. The format follows
   fails the new golden precisely.
 - CLI subprocess coverage (#159): the JaCoCo agent now rides into
   the JVMs the CLI suites spawn, so JLSStart's exercised paths are
-  measured (4.7% -> 25.5% line on its own). The coverage ratchet
-  floors rose from 17.5%/18.0% (set 2026-07-08) to 34.5%
-  instruction / 34.0% line, plus a first 32.5% BRANCH floor
-  (measured: 35.58% / 34.99% / 33.46%).
+  measured (4.7% -> 25.5% line on its own).
+- Headless draw- and print-path smoke coverage (#91 layer 1, #162):
+  every palette element (including a nested SubCircuit) draws on
+  both export canvases - raster and SVG - with a reflective
+  completeness sweep keeping the fixture honest; every page the
+  print Book collects (circuit, state machine and its output
+  summary, truth table, nested subcircuit) renders into a
+  Graphics2D. Plus direct tests for the clipboard copy machinery
+  (`Util.copy`/`partition`, including partial-selection pruning),
+  the pure Util helpers, and Memory's file-based initialization.
+- The coverage ratchet floors rose twice from 17.5%/18.0% (set
+  2026-07-08): first to 34.5% instruction / 34.0% line with a first
+  32.5% BRANCH floor, then to 42.0% / 40.0% / 36.5% (measured:
+  42.65% / 40.88% / 37.21%).
 - Vector circuit image export (#154): `-i out.svg` writes the circuit
   as resolution-independent SVG through the same element paint path
   the PNG/JPEG export uses, via JFreeSVG (GPLv3, same license as JLS,

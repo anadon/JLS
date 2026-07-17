@@ -241,6 +241,138 @@ public final class CircuitTextBuilder {
 		return id;
 	}
 
+	/** Puts: "address", "CS", "OE" (+"WE", "input" for RAM), "output". */
+	public int memory(String type, int bits, int capacity, String init) {
+		int id = nextId++;
+		open("Memory", id)
+				.append(" String name \"mem").append(id).append("\"\n")
+				.append(" String type \"").append(type).append("\"\n")
+				.append(" int bits ").append(bits).append('\n')
+				.append(" int cap ").append(capacity).append('\n')
+				.append(" int time 10\n")
+				.append(" int watch 0\n")
+				.append(" String file \"\"\n")
+				.append(" String init \"").append(init).append("\"\n")
+				.append("END\n");
+		return id;
+	}
+
+	/** Clocked register; type "nff" (negative edge) or "pff". */
+	public int register(int bits, long init, String type) {
+		int id = nextId++;
+		open("Register", id)
+				.append(" String name \"reg").append(id).append("\"\n")
+				.append(" int bits ").append(bits).append('\n')
+				.append(" Int init ").append(init).append('\n')
+				.append(" String orient \"RIGHT\"\n")
+				.append(" int delay 8\n")
+				.append(" String type \"").append(type).append("\"\n")
+				.append(" int watch 1\n")
+				.append("END\n");
+		return id;
+	}
+
+	/** Value display; put "input". */
+	public int display(int bits, int base) {
+		int id = nextId++;
+		open("Display", id)
+				.append(" int bits ").append(bits).append('\n')
+				.append(" int base ").append(base).append('\n')
+				.append("END\n");
+		return id;
+	}
+
+	/** Decorative annotation; no puts. */
+	public int text(String content) {
+		int id = nextId++;
+		open("Text", id)
+				.append(" String text \"").append(content).append("\"\n")
+				.append(" String fn \"Dialog\"\n int fs 12\n")
+				.append(" int bold 0\n int ital 0\n int color -16777216\n")
+				.append("END\n");
+		return id;
+	}
+
+	/** Pauses the interactive simulator; puts "input0".."input3". */
+	public int pause() {
+		int id = nextId++;
+		open("Pause", id).append("END\n");
+		return id;
+	}
+
+	/** Puts: "input", "control", "output"; control perpendicular. */
+	public int triState(int bits) {
+		int id = nextId++;
+		open("TriState", id)
+				.append(" int bits ").append(bits).append('\n')
+				.append(" int delay 10\n")
+				.append(" String Gorient \"UP\"\n")
+				.append(" String Corient \"LEFT\"\n")
+				.append("END\n");
+		return id;
+	}
+
+	/**
+	 * One-state machine driving output signal z with the given value on
+	 * every clock edge (the SequentialGoldenTest fixture shape).
+	 * Puts: "clock" and the output signal name "z".
+	 */
+	public int stateMachine(long zValue, int zBits) {
+		int id = nextId++;
+		open("StateMachine", id)
+				.append(" String name \"sm").append(id).append("\"\n")
+				.append(" int delay 5\n int trig 0\n")
+				.append(" String state \"S\"\n")
+				.append("  int x 40\n  int y 40\n  int diameter 40\n")
+				.append("  int init 1\n")
+				.append("  String output \"z\"\n   long value ").append(zValue)
+				.append("\n   int bits ").append(zBits).append('\n')
+				.append("  String trans \"always\"\n   String next \"S\"\n")
+				.append("END\n");
+		return id;
+	}
+
+	/**
+	 * Subcircuit block wrapping a one-wire passthrough inner circuit
+	 * (input pin "a" wired to output pin "y"). The block's puts take
+	 * the inner pins' names: "a" (input) and "y" (output).
+	 */
+	public int subCircuit(String name) {
+		int id = nextId++;
+		text.append("ELEMENT SubCircuit\n")
+				.append(" String orient \"RIGHT\"\n")
+				.append(" int id ").append(id).append('\n')
+				.append(" int x ").append(60 + 24 * id).append('\n')
+				.append(" int y 60\n int width 48\n int height 48\n")
+				.append(" String name \"").append(name).append("\"\n")
+				.append("CIRCUIT inner\n")
+				.append("ELEMENT InputPin\n")
+				.append(" int id 0\n int x 60\n int y 60\n")
+				.append(" int width 48\n int height 24\n")
+				.append(" String name \"a\"\n int bits 1\n int watch 0\n")
+				.append(" String orient \"RIGHT\"\n")
+				.append("END\n")
+				.append("ELEMENT OutputPin\n")
+				.append(" int id 1\n int x 240\n int y 60\n")
+				.append(" int width 48\n int height 24\n")
+				.append(" String name \"y\"\n int bits 1\n int watch 0\n")
+				.append(" String orient \"RIGHT\"\n")
+				.append("END\n")
+				.append("ELEMENT WireEnd\n")
+				.append(" int id 2\n int x 120\n int y 60\n")
+				.append(" int width 8\n int height 8\n")
+				.append(" String put \"output\"\n ref attach 0\n ref wire 3\n")
+				.append("END\n")
+				.append("ELEMENT WireEnd\n")
+				.append(" int id 3\n int x 180\n int y 60\n")
+				.append(" int width 8\n int height 8\n")
+				.append(" String put \"input\"\n ref attach 1\n ref wire 2\n")
+				.append("END\n")
+				.append("ENDCIRCUIT\n")
+				.append("END\n");
+		return id;
+	}
+
 	public int clock(int cycle, int one) {
 		int id = nextId++;
 		open("Clock", id)

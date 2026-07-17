@@ -69,6 +69,7 @@
 	<mapID target="mux" url="elements/components/mux.html" />
 	<mapID target="adder" url="elements/components/adder.html" />
 	<mapID target="decoder" url="elements/components/decoder.html" />
+	<mapID target="shiftregister" url="elements/components/shiftregister.html" />
 	<mapID target="clock" url="elements/timing/clock.html" />
 	<mapID target="stop" url="elements/timing/stop.html" />
 	<mapID target="pause" url="elements/timing/pause.html" />

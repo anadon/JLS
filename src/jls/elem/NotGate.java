@@ -45,6 +45,7 @@ public class NotGate extends Gate {
 	/**
 	 * The kind descriptor for this gate.
 	 */
+	@Override
 	protected Kind kind() {
 		
 		return KIND;
@@ -57,6 +58,7 @@ public class NotGate extends Gate {
 	/**
 	 * NOT the input bits (an absent input counts as 0).
 	 */
+	@Override
 	protected BitSet computeOutput() {
 
 		BitSet value = inputs.get(0).getValue();

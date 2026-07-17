@@ -87,6 +87,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @return The name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -157,6 +158,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * 
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void paintComponent(Graphics g) {
 		
 		super.paintComponent(g);
@@ -439,6 +441,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @param event The event object containing the position of the mouse.
 	 */
+	@Override
 	public void mousePressed(MouseEvent event) {
 		
 		// get the coordinates of the mouse
@@ -465,6 +468,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		// add listeners
 		ActionListener list = new ActionListener() {
 			
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				
 				// tell parent object to move this JPanel
@@ -491,16 +495,22 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @param event The MouseEvent for the movement.
 	 */
+	@Override
 	public void mouseMoved(MouseEvent event) {
 		
 		parent.mouseMoved(event);
 	} // end of mouseMoved method
 	
 	// unused
+	@Override
 	public void mouseEntered(MouseEvent event) {}
+	@Override
 	public void mouseExited(MouseEvent event) {}
+	@Override
 	public void mouseReleased(MouseEvent event) {}
+	@Override
 	public void mouseClicked(MouseEvent event) {}
+	@Override
 	public void mouseDragged(MouseEvent event) {}
 	
 	/**

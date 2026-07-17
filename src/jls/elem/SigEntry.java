@@ -50,6 +50,7 @@ public abstract class SigEntry extends Entry implements ActionListener {
 	 *
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 
 		FontMetrics fm = g.getFontMetrics();
@@ -66,6 +67,7 @@ public abstract class SigEntry extends Entry implements ActionListener {
 	 * @param row Unused.
 	 * @param col Unused.
 	 */
+	@Override
 	public void selected(int row, int col) {
 
 		JPopupMenu menu = new JPopupMenu();
@@ -89,6 +91,7 @@ public abstract class SigEntry extends Entry implements ActionListener {
 	 *
 	 * @param event The event object.
 	 */
+	@Override
 	public void actionPerformed(ActionEvent event) {
 
 		if (event.getSource() == remove) {

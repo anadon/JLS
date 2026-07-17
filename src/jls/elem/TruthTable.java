@@ -117,6 +117,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show creation dialog
@@ -141,6 +142,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param g The graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		// determine width if needed
@@ -149,7 +151,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			if (width == 0 && height == 0) {
 				FontMetrics fm = g.getFontMetrics();
 				String dname = name;
-				if (name.equals("")) 
+				if (name.isEmpty()) 
 					dname = "Logic";
 				width = fm.stringWidth(" " + dname + " ");
 				for (String input : inputNames) {
@@ -210,6 +212,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 
 		// set up
@@ -230,7 +233,7 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		// draw name
 		String dname = name;
-		if (name.equals("")) {
+		if (name.isEmpty()) {
 			dname = "Logic";
 		}
 		int w = fm.stringWidth(dname);
@@ -258,6 +261,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param output The PrintWriter to write to.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT TruthTable");
@@ -283,12 +287,15 @@ public final class TruthTable extends LogicElement implements Printable {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((TruthTable)el).name; }
+			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((TruthTable)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
 				// registering the name
@@ -296,15 +303,21 @@ public final class TruthTable extends LogicElement implements Printable {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((TruthTable)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((TruthTable)el).propDelay = v; }
 		},
 		new Attribute.IntAttribute("rows") {
+			@Override
 			protected int get(Element el) { return ((TruthTable)el).rows; }
+			@Override
 			protected void set(Element el, int v) { ((TruthTable)el).rows = v; }
 		},
 		new Attribute.IntAttribute("cols") {
+			@Override
 			protected int get(Element el) { return ((TruthTable)el).cols; }
+			@Override
 			protected void set(Element el, int v) {
 				// setting cols allocates the table (rows is loaded and
 				// copied first, in save order)
@@ -321,6 +334,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -332,6 +346,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 
 		if (name.equals("input")) {
@@ -351,6 +366,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * @param v1 The first value.
 	 * @param v1 The second value.
 	 */
+	@Override
 	public void setPair(int v1, int v2) {
 
 		if (v1 != irow) {
@@ -370,6 +386,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 
 		// create new element; the attribute registry copies name, delay,
@@ -403,6 +420,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 
 		info.setText("circuit determined by truth table");
@@ -414,6 +432,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param circ A reference back to the circuit the element is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 
 		circ.removeName(name);
@@ -423,6 +442,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Print the truth table.
 	 */
+	@Override
 	public int print(Graphics g, PageFormat format, int pagenum) {
 
 		// use better graphics
@@ -472,6 +492,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -492,6 +513,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return true.
 	 */ 
+	@Override
 	public boolean canChange() {
 
 		return true;
@@ -521,6 +543,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return true if element must be re-placed in the circuit, false if not.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 
 		// save current truth table info
@@ -666,6 +689,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			// lay out the table once the window exists
 			addWindowListener (
 					new WindowAdapter() {
+						@Override
 						public void windowOpened(WindowEvent event) {
 							disp.doLayout(inputNames,outputNames,table,null);
 							disp.repaint();
@@ -684,6 +708,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		 *
 		 * @param event The event object.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == inputField) {
@@ -699,12 +724,13 @@ public final class TruthTable extends LogicElement implements Printable {
 		/**
 		 * Check the form against the truth table constraints (issue #52).
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			java.util.List<Violation> violations =
 					new java.util.ArrayList<Violation>();
 			String tname = nameField.getText().trim();
-			if (tname.equals("") || !Util.isValidName(tname)) {
+			if (tname.isEmpty() || !Util.isValidName(tname)) {
 				violations.add(new Violation("Missing or invalid element name",
 						nameField));
 			}
@@ -721,6 +747,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		/**
 		 * Apply the validated form to the truth table.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			String tname = nameField.getText().trim();
@@ -739,6 +766,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		/**
 		 * Cancel the edit.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			// restore info
@@ -761,7 +789,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	public void addInput(String signal) {
 
 		// ignore empty input
-		if (signal.equals("")) 
+		if (signal.isEmpty()) 
 			return;
 
 		// don't allow duplicate names
@@ -854,7 +882,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	public void addOutput(String signal) {
 
 		// ignore empty input
-		if (signal.equals("")) 
+		if (signal.isEmpty()) 
 			return;
 
 		// don't allow duplicate names
@@ -1290,7 +1318,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		newSignal = newSignal.trim();
 
 		// don't allow null
-		if (newSignal.equals("")) {
+		if (newSignal.isEmpty()) {
 			TellUser.error(edit,"invalid name", "Error");
 			return null;
 		}
@@ -1481,6 +1509,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 
 		propDelay = getDefaultDelay();
@@ -1491,6 +1520,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 
 		return true;
@@ -1501,6 +1531,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 
 		return propDelay;
@@ -1509,8 +1540,9 @@ public final class TruthTable extends LogicElement implements Printable {
 	/**
 	 * Set the propagation delay in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 
 		propDelay = temp;
@@ -1531,6 +1563,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 
 		// create toBeValue array
@@ -1567,6 +1600,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// if an input has changed ...

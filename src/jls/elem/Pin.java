@@ -43,6 +43,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @return the string.
 	 */
+	@Override
 	public String toString() {
 		
 		return name + ",bits=" + bits + ",watched=" + watched + ",hashCode=" + hashCode();
@@ -53,6 +54,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -63,6 +65,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @return the number of bits.
 	 */
+	@Override
 	public int getBits() {
 		
 		return bits;
@@ -104,6 +107,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @param g Graphics object used to compute the size of the name.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up size if needed
@@ -142,12 +146,15 @@ public abstract class Pin extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((Pin)el).name; }
+			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((Pin)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten pin copies assigned the field
 				// without registering the name
@@ -155,17 +162,23 @@ public abstract class Pin extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((Pin)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((Pin)el).bits = v; }
 		},
 		new Attribute.IntAttribute("watch") {
+			@Override
 			protected int get(Element el) { return ((Pin)el).watched ? 1 : 0; }
+			@Override
 			protected void set(Element el, int v) { ((Pin)el).watched = v != 0; }
 		},
 		new Attribute.OrientationAttribute("orient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Pin)el).orientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Pin)el).orientation = o;
 			}
@@ -179,6 +192,7 @@ public abstract class Pin extends LogicElement {
 	 * Base attributes plus the shared pin attributes, in save order
 	 * (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -199,6 +213,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		super.save(output);
@@ -221,6 +236,7 @@ public abstract class Pin extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 
 		if (name.equals("tristate")) {
@@ -237,6 +253,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 
 		// set up shape
@@ -324,7 +341,7 @@ public abstract class Pin extends LogicElement {
 	 */
 	public void printValue(String qual) {
 
-		if (qual.equals("")) {
+		if (qual.isEmpty()) {
 			System.out.printf("%s Pin %s: %s\n", pinKind(), name,
 					BitSetUtils.toDisplay(currentValue, bits));
 		}
@@ -339,6 +356,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @param circ The circuit this element is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 
 		if (circ.isImported()) {
@@ -356,6 +374,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @return false if the put has a wire attached, true otherwise.
 	 */
+	@Override
 	public boolean canRotate() {
 
 		for (Input in : inputs) {
@@ -376,6 +395,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @return false if the put has a wire attached, true otherwise.
 	 */
+	@Override
 	public boolean canFlip() {
 
 		return canRotate();
@@ -387,6 +407,7 @@ public abstract class Pin extends LogicElement {
 	 * @param direction The direction to rotate.
 	 * @param g The current graphics context for size recalculation.
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g) {
 
 		if (direction == JLSInfo.Orientation.LEFT) {
@@ -407,6 +428,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @param g The current graphics context for size recalculation.
 	 */
+	@Override
 	public void flip(Graphics g) {
 
 		orientation = orientation.flipped();
@@ -428,6 +450,7 @@ public abstract class Pin extends LogicElement {
 	 *
 	 * @return the current value.
 	 */
+	@Override
 	public BitSet getCurrentValue() {
 
 		if (currentValue == null)
@@ -441,6 +464,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(bits + " bit input pin");
@@ -526,6 +550,7 @@ public abstract class Pin extends LogicElement {
 		/**
 		 * Validate the form and create the pin.
 		 */
+		@Override
 		protected void validateAndAccept() {
 			
 			try {
@@ -571,6 +596,7 @@ public abstract class Pin extends LogicElement {
 		/**
 		 * Cancel this pin.
 		 */
+		@Override
 		protected void cancelDialog() {
 			
 			cancelled = true;
@@ -584,6 +610,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canWatch() {
 		
 		return true;
@@ -594,6 +621,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @return true if it is, false if it is not.
 	 */
+	@Override
 	public boolean isWatched() {
 		
 		return watched;
@@ -604,6 +632,7 @@ public abstract class Pin extends LogicElement {
 	 * 
 	 * @param state True to make it watched, false to make it not watched.
 	 */
+	@Override
 	public void setWatched(boolean state) {
 		
 		watched = state;

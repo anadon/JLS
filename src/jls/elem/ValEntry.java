@@ -47,6 +47,7 @@ public abstract class ValEntry extends Entry {
 	 *
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 
 		FontMetrics fm = g.getFontMetrics();

@@ -34,6 +34,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @return the name, orientation and input/output pin names.
 	 */
+	@Override
 	public String toString() {
 		
 		String result = "SubCircuit[" + name + ",";
@@ -99,6 +100,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -124,6 +126,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @return false if canceled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show creation dialog
@@ -149,6 +152,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// determine width if needed
@@ -171,6 +175,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 		
 		// create sorted lists of input pins and output pins
 		Comparator<Pin> cmp = new Comparator<Pin>() {
+			@Override
 			public int compare(Pin s1, Pin s2) {
 				return (s1.getName()).compareTo(s2.getName());
 			}
@@ -261,6 +266,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -325,6 +331,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param output The PrintWriter to write to.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT SubCircuit");
@@ -341,6 +348,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 *
 	 * @return the minimum format version for the nested circuit.
 	 */
+	@Override
 	public int saveFormatVersion() {
 
 		return subCircuit.formatVersionNeeded();
@@ -352,6 +360,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 		
 		if (name.equals("orient")) {
@@ -372,11 +381,12 @@ public class SubCircuit extends LogicElement implements TriProp {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		// create infrastructure
 		SubCircuit it = new SubCircuit(circuit);
-		it.name = new String(name);
+		it.name = name;
 		it.subCircuit = new Circuit(subCircuit.getName());
 		it.subCircuit.setImported(it);
 		it.orientation = orientation;
@@ -433,8 +443,9 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * Unattaches from all wire nets.
 	 * Forces wire nets it disconnects from to recheck their information.
 	 * 
-	 * @param circuit The circuit it is being removed from.
+	 * @param circ The circuit it is being removed from.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		circ.removeName(name);
@@ -446,6 +457,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(subCircuit.getName() + " (a subcircuit)");
@@ -457,6 +469,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * @param which True to set all watchable elements to watched, false to make them
 	 *        not watched.
 	 */
+	@Override
 	public void setWatched(boolean which) {
 		
 		for (Element element : subCircuit.getElements()) {
@@ -469,6 +482,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	/**
 	 * Reset propagation delays of all elements in the subcircuit.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		subCircuit.resetAllDelays();
@@ -479,6 +493,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -488,7 +503,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * Remap all input and output pins to inputs and outputs.
 	 * Used by undo/redo (finishDo).
 	 * 
-	 * @param circuit The new circuit containing new versions of the input and output pins.
+	 * @param circ The new circuit containing new versions of the input and output pins.
 	 */
 	public void remapPins(Circuit circ) {
 		
@@ -523,6 +538,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param which True to set to tri-state, false otherwise.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 		
 		for (Input input : inputs) {
@@ -557,6 +573,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @return true if it can be, false if not.
 	 */
+	@Override
 	public boolean canFlip() {
 		boolean success = true;
 		for(Input i : inputs)
@@ -583,6 +600,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param g The Graphics object used to draw this element.
 	 */
+	@Override
 	public void flip(Graphics g) {
 		if(orientation == JLSInfo.Orientation.LEFT)
 		{
@@ -658,6 +676,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 			/**
 			 * Validate the form and name the subcircuit.
 			 */
+			@Override
 			protected void validateAndAccept() {
 
 				String tname = nameField.getText().trim();
@@ -685,6 +704,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 			/**
 			 * Cancel this pin.
 			 */
+			@Override
 			protected void cancelDialog() {
 
 				cancelled = true;
@@ -701,6 +721,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * Initialize inputs of this element, and of all elements in the subcircuit,
 	 * to 0.
 	 */
+	@Override
 	public void initInputs() {
 		
 		// initialize this element's inputs
@@ -722,6 +743,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * 
 	 * @param sim The simulator for this circuit.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// set all output pins
@@ -748,6 +770,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// send all input values to input pins of subcircuit

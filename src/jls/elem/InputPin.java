@@ -37,6 +37,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		return super.setup(g,editWindow,x,y,"Input");
@@ -45,6 +46,7 @@ public class InputPin extends Pin implements TriProp {
 	/**
 	 * The pin kind for user-facing messages.
 	 */
+	@Override
 	protected String pinKind() {
 
 		return "Input";
@@ -56,6 +58,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param g The Graphics object used to compute the size of the name.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		super.init(g);
@@ -99,6 +102,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT InputPin");
@@ -111,6 +115,7 @@ public class InputPin extends Pin implements TriProp {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		InputPin it = new InputPin(circuit);
@@ -124,6 +129,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String tri = "";
@@ -138,6 +144,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param which True to set to tri-state, false otherwise.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 		
 		for (Output output : outputs) {
@@ -148,6 +155,7 @@ public class InputPin extends Pin implements TriProp {
 	/**
 	 * Return a string representation of this InputPin.
 	 */
+	@Override
 	public String toString() {
 		
 		return "[InputPin " + name + "(" + bits + " bits)]";
@@ -162,6 +170,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) { 
 		
 		currentValue = new BitSet();
@@ -190,6 +199,7 @@ public class InputPin extends Pin implements TriProp {
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// send to output
@@ -211,6 +221,7 @@ public class InputPin extends Pin implements TriProp {
 	 * 
 	 * @param where Unused.
 	 */
+	@Override
 	public void showCurrentValue(Point where) {
 		
 		String value = "off";

@@ -65,7 +65,7 @@ public class WireNet {
 	/**
 	 * Remove wire.
 	 * 
-	 * @param end The wire to remove.
+	 * @param wire The wire to remove.
 	 */
 	public void remove(Wire wire) {
 		
@@ -75,7 +75,7 @@ public class WireNet {
 	/**
 	 * Create a new wire net containing a given wire end (that must be in this net).
 	 * 
-	 * @param wire The wire end that is part of the new net.
+	 * @param end The wire end that is part of the new net.
 	 * 
 	 * @return The new wire net.
 	 */

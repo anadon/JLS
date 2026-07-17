@@ -49,6 +49,7 @@ public abstract class Put {
 	 * 
 	 * @return the string.
 	 */
+	@Override
 	public String toString() {
 		
 		return name + ",bits=" + bits + ",x=" + xr + ",y=" + yr;

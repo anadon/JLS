@@ -61,6 +61,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -114,6 +115,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		if (g != null) {
@@ -148,6 +150,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -215,6 +218,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @return the rectangle bounding this element.
 	 */
+	@Override
 	public Rectangle getRect() {
 		
 		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
@@ -228,12 +232,15 @@ public class JumpEnd extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((JumpEnd)el).name; }
+			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((JumpEnd)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
 				// registering the name
@@ -241,13 +248,17 @@ public class JumpEnd extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((JumpEnd)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((JumpEnd)el).bits = v; }
 		},
 		new Attribute.OrientationAttribute("orientation") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((JumpEnd)el).orientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((JumpEnd)el).orientation = o;
 			}
@@ -260,6 +271,7 @@ public class JumpEnd extends LogicElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -271,6 +283,7 @@ public class JumpEnd extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 
 		if (name.equals("tristate")) {
@@ -285,6 +298,7 @@ public class JumpEnd extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT JumpEnd");
@@ -297,6 +311,7 @@ public class JumpEnd extends LogicElement {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 
 		JumpEnd it = new JumpEnd(circuit);
@@ -310,6 +325,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -320,6 +336,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(bits + " bit wire connection, value = " +
@@ -342,6 +359,7 @@ public class JumpEnd extends LogicElement {
 	 * Tells if an adder is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		return !(outputs.get(0).isAttached());
@@ -351,6 +369,7 @@ public class JumpEnd extends LogicElement {
 	 * This method will flip an adder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		if(orientation == JLSInfo.Orientation.LEFT)
@@ -390,7 +409,6 @@ public class JumpEnd extends LogicElement {
 		/**
 		 * Set up dialog window.
 		 * 
-		 * @param type The type of pin ("Input" or "Output").
 		 */
 		private EndCreate() {
 			
@@ -443,6 +461,7 @@ public class JumpEnd extends LogicElement {
 		/**
 		 * Validate the form and create the jump end.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			if (starts.getSelectedIndex() < 0) {
@@ -463,6 +482,7 @@ public class JumpEnd extends LogicElement {
 		/**
 		 * Cancel this jump end.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -482,6 +502,7 @@ public class JumpEnd extends LogicElement {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// set output to 0 or off
@@ -505,6 +526,7 @@ public class JumpEnd extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send along.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// get the input value

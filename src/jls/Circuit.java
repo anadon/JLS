@@ -376,7 +376,7 @@ public class Circuit implements Printable {
 	/**
 	 * Load circuit from file.
 	 * 
-	 * @param scanner
+	 * @param input
 	 *            A scanner to read with.
 	 * 
 	 * @return false if there were problems, true if load was successful.
@@ -537,7 +537,7 @@ public class Circuit implements Printable {
 	/**
 	 * Load circuit from file.
 	 * 
-	 * @param scanner
+	 * @param input
 	 *            A scanner to read with.
 	 * @param ln
 	 *            Unused, except to give a different signature for the recursive
@@ -570,7 +570,7 @@ public class Circuit implements Printable {
 			}
 
 			// ignore name if not a subcircuit
-			if (name.equals(""))
+			if (name.isEmpty())
 				name = input.next();
 			else
 				input.next();
@@ -687,7 +687,7 @@ public class Circuit implements Printable {
 	/**
 	 * Load an element by reading all of its instance variable values.
 	 * 
-	 * @param instance
+	 * @param el
 	 *            An empty object to load.
 	 * 
 	 * @return false if the file is not in the right format, true if it is.
@@ -1244,6 +1244,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return Printable.PAGE_EXISTS.
 	 */
+	@Override
 	public int print(Graphics g, PageFormat format, int pagenum) {
 
 		// use better graphics
@@ -1623,6 +1624,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return string version of this circuit.
 	 */
+	@Override
 	public String toString() {
 
 		return name + "(" + super.toString() + ")";

@@ -38,6 +38,7 @@ public class TestGen extends SigSim {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 	} // end of init method
@@ -61,6 +62,7 @@ public class TestGen extends SigSim {
 	 * 
 	 * @param sim The simulator.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// open test file
@@ -87,6 +89,7 @@ public class TestGen extends SigSim {
 	 * 
 	 * @param msg An error message.
 	 */
+	@Override
 	protected void specError(String msg) {
 		
 		if (JLSInfo.batch && JLSInfo.frame == null) {

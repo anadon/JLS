@@ -22,6 +22,7 @@ public class Extend extends Gate implements TriProp {
 	/**
 	 * The kind descriptor for this gate.
 	 */
+	@Override
 	protected Kind kind() {
 		
 		return KIND;
@@ -87,6 +88,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		boolean ok = super.setup(g,editWindow,x,y,"Extend");
@@ -110,6 +112,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		super.init(g);
@@ -139,6 +142,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		super.save(output,"Extend",outputs.get(0).isTriState());
@@ -150,6 +154,7 @@ public class Extend extends Gate implements TriProp {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 		
 		if (name.equals("tristate")) {
@@ -164,6 +169,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText("1 bit to " + bits + " bits");
@@ -174,6 +180,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @return false.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return false;
@@ -184,6 +191,7 @@ public class Extend extends Gate implements TriProp {
 	 * 
 	 * @param which True if tristate, false if not.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 		
 		for (Output out : outputs) {
@@ -201,6 +209,7 @@ public class Extend extends Gate implements TriProp {
 	 * gates, it propagates immediately (no delay) and passes tri-state
 	 * (null) values through.
 	 */
+	@Override
 	protected BitSet computeOutput() {
 
 		BitSet value = inputs.get(0).getValue();
@@ -216,6 +225,7 @@ public class Extend extends Gate implements TriProp {
 	 *
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		Output out = outputs.get(0);
@@ -235,6 +245,7 @@ public class Extend extends Gate implements TriProp {
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// get the input value

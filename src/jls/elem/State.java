@@ -82,6 +82,7 @@ public class State {
 		public int bits;
 		public long value;
 
+		@Override
 		public String toString() { return signal + "[" + bits + "] = " + value; }
 	} // end of Out class
 
@@ -411,7 +412,7 @@ public class State {
 		// make copy of all outs
 		for (Out out : outs) {
 			Out newOut = new Out();
-			newOut.signal = new String(out.signal);
+			newOut.signal = out.signal;
 			newOut.value = out.value;
 			newOut.bits = out.bits;
 			newState.outs.add(newOut);
@@ -420,7 +421,7 @@ public class State {
 		// make copy of all transitions
 		for (Transition tran : trans) {
 			Transition newTrans = new Transition();
-			newTrans.signal = new String(tran.signal);
+			newTrans.signal = tran.signal;
 			newTrans.unconditional = tran.unconditional;
 			newTrans.other = tran.other;
 			newTrans.equal = tran.equal;
@@ -896,7 +897,7 @@ public class State {
 
 		// load transition with known info
 		for (Transition oldTrans : trans) {
-			if (!oldTrans.signal.equals("")) {
+			if (!oldTrans.signal.isEmpty()) {
 				newTrans.signal = oldTrans.signal;
 			}
 			if (oldTrans.bits != 0) {
@@ -973,7 +974,7 @@ public class State {
 				trans.add(newTrans);
 				return;
 			}
-			if (!signal.equals("") && !signal.equals(newTrans.signal)) {
+			if (!signal.isEmpty() && !signal.equals(newTrans.signal)) {
 				TellUser.error(mainDialog,
 						"Can't test different signals in same state",
 						"Error");
@@ -1125,8 +1126,8 @@ public class State {
 	 * Also save reference to the highlighted transition so it can be deleted
 	 * if the user wants to.
 	 * 
-	 * @param x The x-coordinate of the given point.
-	 * @param y The y-coordinate of the given point.
+	 * @param xp The x-coordinate of the given point.
+	 * @param yp The y-coordinate of the given point.
 	 * 
 	 * @return true if some transition is highlighted, false if none
 	 */
@@ -1261,7 +1262,7 @@ public class State {
 
 		Set<String> inputs = new HashSet<String>();
 		for (Transition tr : trans) {
-			if (!tr.signal.equals("") && !tr.signal.equals("else"))
+			if (!tr.signal.isEmpty() && !tr.signal.equals("else"))
 				inputs.add(tr.signal);
 		}
 		return inputs;
@@ -1348,7 +1349,7 @@ public class State {
 			// add radio buttons
 			window.add(new JLabel(" "));
 			window.add(conditional);
-			if (trans.signal.equals("")) {
+			if (trans.signal.isEmpty()) {
 				window.add(unconditional);
 			}
 			window.add(otherwise);
@@ -1382,7 +1383,7 @@ public class State {
 				valueField.setEditable(false);
 				bitsField.setEditable(false);
 			}
-			else if (!tr.signal.equals("")) {
+			else if (!tr.signal.isEmpty()) {
 				signalField.setEditable(false);
 				bitsField.setEditable(false);
 			}
@@ -1399,6 +1400,7 @@ public class State {
 		/**
 		 * Validate the form and set up the transition.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			// handle unconditional transition
@@ -1418,7 +1420,7 @@ public class State {
 			}
 
 			// check for missing signal name
-			if (signalField.getText().equals("")) {
+			if (signalField.getText().isEmpty()) {
 				reject("Missing signal name");
 				return;
 			}
@@ -1492,6 +1494,7 @@ public class State {
 		/**
 		 * Cancel the new transition.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -1503,6 +1506,7 @@ public class State {
 		 *
 		 * @param event The event object.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			// save equality type check
@@ -1517,7 +1521,7 @@ public class State {
 			
 			// handle new conditional transition
 			else if (event.getSource() == conditional) {
-				if (trans.signal.equals("")) {
+				if (trans.signal.isEmpty()) {
 					signalField.setEditable(true);
 					valueField.setEditable(true);
 					bitsField.setEditable(true);
@@ -1578,6 +1582,7 @@ public class State {
 		close.setBackground(Color.green);
 		window.add(close);
 		close.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				show.dispose();
 			}
@@ -1705,6 +1710,7 @@ public class State {
 		/**
 		 * Close the dialog (outputs are edited in place).
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			dispose();
@@ -1715,12 +1721,13 @@ public class State {
 		 *
 		 * @param event The event object.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == add) {
 				Out newOut = new Out();
 				newOut.signal = signalField.getText().trim();
-				if (newOut.signal.equals("")) {
+				if (newOut.signal.isEmpty()) {
 					TellUser.error(this,
 							"Missing signal name", "Error");
 					return;

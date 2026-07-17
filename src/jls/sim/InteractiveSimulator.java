@@ -174,6 +174,7 @@ public final class InteractiveSimulator extends Simulator {
 		params.add(getScale);
 		getScale.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						scaleFactor = NumericField.parse(window,scaleField,
 								1,scaleFactor,"Scale factor");
@@ -201,6 +202,7 @@ public final class InteractiveSimulator extends Simulator {
 		b10.setBackground(Color.gray);
 		b16.setBackground(Color.lightGray);
 		ActionListener blist = new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				int newBase = 0;
 				b2.setBackground(Color.lightGray);
@@ -237,6 +239,7 @@ public final class InteractiveSimulator extends Simulator {
 		// handle window events
 		window.addComponentListener(
 				new ComponentAdapter() {
+					@Override
 					public void componentResized(ComponentEvent event) {
 						window.doLayout();
 						traces.resize(traces.getWidth());
@@ -247,6 +250,7 @@ public final class InteractiveSimulator extends Simulator {
 		// handle start button push
 		start.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
 						action.add(pause);
@@ -264,6 +268,7 @@ public final class InteractiveSimulator extends Simulator {
 		// handle step button push
 		step.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
 						action.add(resume);
@@ -304,6 +309,7 @@ public final class InteractiveSimulator extends Simulator {
 		// handle animate button push
 		animate.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// set up buttons
@@ -322,6 +328,7 @@ public final class InteractiveSimulator extends Simulator {
 						// create step object (TimerTask)
 						TimerTask tc = new TimerTask() {
 
+							@Override
 							public void run() {
 								
 								if (now >= maxTime) {
@@ -357,6 +364,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		end.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
 						action.add(animate);
@@ -376,6 +384,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		pause.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
 						action.add(resume);
@@ -392,6 +401,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		resume.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
 						action.add(pause);
@@ -409,6 +419,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		stop.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						stop();
 					}
@@ -417,6 +428,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		print.addActionListener(
 				new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						printTraces();
 					}
@@ -517,6 +529,7 @@ public final class InteractiveSimulator extends Simulator {
 		// create new thread for the simulator
 		sim = new Thread("Runner") {
 
+			@Override
 			public void run() {
 
 				// disable circuit editor (if one)
@@ -614,6 +627,7 @@ public final class InteractiveSimulator extends Simulator {
 	 * @return true to proceed with the next event, false to re-check the
 	 *         loop conditions.
 	 */
+	@Override
 	protected boolean beforeEvent() {
 
 		Editor ed = circuit.getEditor();
@@ -708,6 +722,7 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	private volatile long lastClockUpdate = 0;
 
+	@Override
 	protected void beforeReact(SimEvent event) {
 
 		if (JLSInfo.batch && JLSInfo.frame == null)
@@ -732,6 +747,7 @@ public final class InteractiveSimulator extends Simulator {
 	 *
 	 * @param event The event that just reacted.
 	 */
+	@Override
 	protected void afterEvent(SimEvent event) {
 
 		if (!isQuiet()) {
@@ -768,6 +784,7 @@ public final class InteractiveSimulator extends Simulator {
 	 *
 	 * @param which True to pause the simulation, false to resume it.
 	 */
+	@Override
 	public void pause(boolean which) {
 
 		if (sim != null) {
@@ -796,6 +813,7 @@ public final class InteractiveSimulator extends Simulator {
 	/**
 	 * Stop (end) the simulation, if there is one.
 	 */
+	@Override
 	public void stop() {
 
 		if (sim != null) {
@@ -911,6 +929,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		Printable pr = new Printable() {
 
+			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 
 				if (pagenum > 0) return Printable.NO_SUCH_PAGE;
@@ -1165,7 +1184,7 @@ public final class InteractiveSimulator extends Simulator {
 		 * Move a trace up or down.
 		 * Also rebuild trace position map.
 		 *
-		 * @param tr The trace to move
+		 * @param trace The trace to move
 		 * @param dir The direction (-2=top, -1=up, 1=down, 2=bottom).
 		 */
 		public void move(Trace trace, int dir) {
@@ -1206,6 +1225,7 @@ public final class InteractiveSimulator extends Simulator {
 		 *
 		 * @param event The event containing the new position of the mouse.
 		 */
+		@Override
 		public void mouseMoved(MouseEvent event) {
 
 			if (!paused && !stopping)
@@ -1217,6 +1237,7 @@ public final class InteractiveSimulator extends Simulator {
 		} // end of mouseMoved method
 
 		// unused
+		@Override
 		public void mouseDragged(MouseEvent event) {}
 
 	} // end of Traces class
@@ -1238,6 +1259,7 @@ public final class InteractiveSimulator extends Simulator {
 		/**
 		 * Draw the slider and the time the slider indicates.
 		 */
+		@Override
 		public void paintComponent(Graphics g) {
 
 			super.paintComponent(g);
@@ -1253,6 +1275,7 @@ public final class InteractiveSimulator extends Simulator {
 		/**
 		 * Override superclass method to ignore events.
 		 */
+		@Override
 		public void mousePressed(MouseEvent event) {}
 
 	} // end of Header class

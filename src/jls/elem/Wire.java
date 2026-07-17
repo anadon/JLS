@@ -40,6 +40,7 @@ public class Wire extends Element {
 	/**
 	 * This form of init not used.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// do nothing
@@ -52,6 +53,7 @@ public class Wire extends Element {
 	 * @param dx Distance to move in the x direction.
 	 * @param dy Distance to move in the y direction.
 	 */
+	@Override
 	public void move(int dx, int dy) {
 		
 	} // end of move method
@@ -96,6 +98,7 @@ public class Wire extends Element {
 	/**
 	 * Wires don't get saved.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		// do nothing
@@ -106,6 +109,7 @@ public class Wire extends Element {
 	 * 
 	 * @param g Graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		if (touching) {
@@ -198,6 +202,7 @@ public class Wire extends Element {
 	 *
 	 * @return the index bounds.
 	 */
+	@Override
 	public Rectangle getIndexBounds() {
 
 		int x1 = end1.getX();
@@ -233,6 +238,7 @@ public class Wire extends Element {
 	 * @return true if the point is within 1/2 spacing of the wire and not within
 	 * pointDiameter pixels of either end, false if not.
 	 */
+	@Override
 	public boolean contains(int x, int y) {
 		
 		int x1 = end1.getX();
@@ -318,6 +324,7 @@ public class Wire extends Element {
 	 * 
 	 * @param info A JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String tri = "";
@@ -350,8 +357,9 @@ public class Wire extends Element {
 	 * Remove this wire and both of its ends from the circuit.
 	 * Ends are removed only if possible.
 	 * 
-	 * @param The circuit it is in.
+	 * @param circ The circuit it is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		// remove from circuit
@@ -398,7 +406,7 @@ public class Wire extends Element {
 	/**
 	 * Put this wire in a new wire net.
 	 * 
-	 * @param the new wire net.
+	 * @param net The new wire net.
 	 */
 	public void setNet(WireNet net) {
 		
@@ -410,6 +418,7 @@ public class Wire extends Element {
 	 * 
 	 * @return true if it is, false if not.
 	 */
+	@Override
 	public boolean isInside(Rectangle rect) {
 		
 		if (rect.contains(end1.getX(),end1.getY()) && rect.contains(end2.getX(),end2.getY())) {
@@ -425,6 +434,7 @@ public class Wire extends Element {
 	 * 
 	 * @param which True to say it is, false if not.
 	 */
+	@Override
 	public void setTouching(boolean which) {
 		
 		touching = which;
@@ -458,7 +468,7 @@ public class Wire extends Element {
 		name = TellUser.prompt(null, "Name?");
 		if (name == null)
 			return;
-		while (name.equals("")) {
+		while (name.isEmpty()) {
 			name = TellUser.prompt(null, "Invalid name, try again");
 			if (name == null)
 				return;

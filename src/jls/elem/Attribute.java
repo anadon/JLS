@@ -95,6 +95,7 @@ public abstract class Attribute {
 			return false;
 		} // end of omitted method
 
+		@Override
 		public void save(Element el, PrintWriter output) {
 
 			if (!omitted(el)) {
@@ -102,11 +103,13 @@ public abstract class Attribute {
 			}
 		} // end of save method
 
+		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		@Override
 		public boolean setInt(Element el, String name, int value) {
 
 			if (!this.name.equals(name)) {
@@ -134,16 +137,19 @@ public abstract class Attribute {
 
 		protected abstract void set(Element el, BigInteger value);
 
+		@Override
 		public void save(Element el, PrintWriter output) {
 
 			output.println(" Int " + name + " " + get(el).toString());
 		} // end of save method
 
+		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		@Override
 		public boolean setBigInt(Element el, String name, BigInteger value) {
 
 			if (!this.name.equals(name)) {
@@ -153,6 +159,7 @@ public abstract class Attribute {
 			return true;
 		} // end of setBigInt method
 
+		@Override
 		public boolean setLong(Element el, String name, long value) {
 
 			if (!this.name.equals(name)) {
@@ -185,6 +192,7 @@ public abstract class Attribute {
 			return false;
 		} // end of omitted method
 
+		@Override
 		public void save(Element el, PrintWriter output) {
 
 			if (omitted(el)) {
@@ -196,11 +204,13 @@ public abstract class Attribute {
 			output.println(" String " + name + " \"" + str + "\"");
 		} // end of save method
 
+		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		@Override
 		public boolean setString(Element el, String name, String value) {
 
 			if (!this.name.equals(name)) {
@@ -229,11 +239,13 @@ public abstract class Attribute {
 		protected abstract void setOrientation(Element el,
 				jls.JLSInfo.Orientation value);
 
+		@Override
 		protected String get(Element el) {
 
 			return getOrientation(el).toString();
 		} // end of get method
 
+		@Override
 		protected void set(Element el, String value) {
 
 			setOrientation(el, jls.JLSInfo.Orientation.parse(value,

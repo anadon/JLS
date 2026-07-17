@@ -44,6 +44,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -68,6 +69,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up height and width
@@ -138,6 +140,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -257,6 +260,7 @@ public class Binder extends Group implements TriProp {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		Binder it = new Binder(circuit);
@@ -269,6 +273,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT Binder");
@@ -280,6 +285,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText("bundle " + bits + " bits");
@@ -292,6 +298,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param which True to set to tri-state, false otherwise.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 		
 		// save current state
@@ -330,6 +337,7 @@ public class Binder extends Group implements TriProp {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		super.rotate(direction, g);
@@ -340,6 +348,7 @@ public class Binder extends Group implements TriProp {
 	 * This method will flip a binder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		super.flip(g);
@@ -355,6 +364,7 @@ public class Binder extends Group implements TriProp {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		Output out = outputs.get(0);
@@ -373,6 +383,7 @@ public class Binder extends Group implements TriProp {
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// create output value

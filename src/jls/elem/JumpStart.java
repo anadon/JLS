@@ -56,6 +56,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -81,6 +82,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		if (g != null) {
@@ -115,6 +117,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -189,6 +192,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return the rectangle bounding this element.
 	 */
+	@Override
 	public Rectangle getRect() {
 		
 		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
@@ -199,12 +203,15 @@ public class JumpStart extends LogicElement implements TriProp {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((JumpStart)el).name; }
+			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((JumpStart)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
 				// registering the name
@@ -212,17 +219,23 @@ public class JumpStart extends LogicElement implements TriProp {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((JumpStart)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((JumpStart)el).bits = v; }
 		},
 		new Attribute.IntAttribute("watch") {
+			@Override
 			protected int get(Element el) { return ((JumpStart)el).watched ? 1 : 0; }
+			@Override
 			protected void set(Element el, int v) { ((JumpStart)el).watched = v != 0; }
 		},
 		new Attribute.OrientationAttribute("orientation") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((JumpStart)el).orientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((JumpStart)el).orientation = o;
 			}
@@ -235,6 +248,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -245,6 +259,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT JumpStart");
@@ -255,6 +270,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 
 		JumpStart it = new JumpStart(circuit);
@@ -268,6 +284,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -287,6 +304,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return the number of bits.
 	 */
+	@Override
 	public int getBits() {
 		
 		return bits;
@@ -297,6 +315,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(bits + " bit wire name, value = " +
@@ -308,6 +327,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 
 	 * @param circ A reference back to the circuit the element is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		// remove from list of jump starts and list of names in circuit
@@ -335,6 +355,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * Tells if an adder is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		return !(inputs.get(0).isAttached());
@@ -344,6 +365,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * This method will flip an adder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		if(orientation == JLSInfo.Orientation.LEFT)
@@ -370,6 +392,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canWatch() {
 		
 		return true;
@@ -380,6 +403,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return true if it is, false if it is not.
 	 */
+	@Override
 	public boolean isWatched() {
 		
 		return watched;
@@ -390,6 +414,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param state True to make it watched, false to make it not watched.
 	 */
+	@Override
 	public void setWatched(boolean state) {
 		
 		watched = state;
@@ -465,6 +490,7 @@ public class JumpStart extends LogicElement implements TriProp {
 		/**
 		 * Validate the form and create the jump start.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			String tname = nameField.getText();
@@ -502,6 +528,7 @@ public class JumpStart extends LogicElement implements TriProp {
 		/**
 		 * Cancel this element.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -516,6 +543,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param which True to set to tri-state, false otherwise.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 		
 		for (Element el : circuit.getElements()) {
@@ -539,6 +567,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @return the current value.
 	 */
+	@Override
 	public BitSet getCurrentValue() {
 		
 		if (currentValue == null)
@@ -553,6 +582,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// create set of matching jump ends
@@ -578,6 +608,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		

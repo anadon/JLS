@@ -58,6 +58,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -88,6 +89,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		int s = JLSInfo.spacing;
@@ -134,6 +136,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -173,17 +176,23 @@ public class Constant extends LogicElement implements ActionListener {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.BigIntAttribute("value") {
+			@Override
 			protected BigInteger get(Element el) { return ((Constant)el).value; }
+			@Override
 			protected void set(Element el, BigInteger v) { ((Constant)el).value = v; }
 		},
 		new Attribute.IntAttribute("base") {
+			@Override
 			protected int get(Element el) { return ((Constant)el).base; }
+			@Override
 			protected void set(Element el, int v) { ((Constant)el).base = v; }
 		},
 		new Attribute.StringAttribute("orient") {
+			@Override
 			protected String get(Element el) {
 				return ((Constant)el).orientation.toString();
 			}
+			@Override
 			protected void set(Element el, String v) {
 				// unknown strings leave the orientation unchanged,
 				// as the handwritten loader always did
@@ -202,6 +211,7 @@ public class Constant extends LogicElement implements ActionListener {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -210,6 +220,7 @@ public class Constant extends LogicElement implements ActionListener {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		Constant it = new Constant(circuit);
@@ -223,6 +234,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT Constant");
@@ -246,6 +258,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 *
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 
 		info.setText("a constant value");
@@ -256,6 +269,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return the rectangle bounding this element.
 	 */
+	@Override
 	public Rectangle getRect() {
 		if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
 		{
@@ -280,6 +294,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * Tells if a constant is capable of rotatating, can only rotate when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate()
 	{
 		return !outputs.get(0).isAttached();
@@ -290,6 +305,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
@@ -311,6 +327,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * Tells if a constant is capable of flipping, can only flip when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		return !outputs.get(0).isAttached();
@@ -320,6 +337,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * This method will flip a constant
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		orientation = orientation.flipped();
@@ -436,6 +454,7 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Validate the form and set the constant's value.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			try {
@@ -471,6 +490,7 @@ public class Constant extends LogicElement implements ActionListener {
 		 *
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == repeat) {
@@ -500,7 +520,7 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 			else if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 2;
 				valuePad.setBase(2);
@@ -508,7 +528,7 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 			else if (event.getSource() == base10) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 10;
 				valuePad.setBase(10);
@@ -516,7 +536,7 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 			else if (event.getSource() == base16) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 16;
 				valuePad.setBase(16);
@@ -527,6 +547,7 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Cancel this gate.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -540,6 +561,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -555,6 +577,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return false.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 	
 		// save g for valueFits method
@@ -675,6 +698,7 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Validate the form and change the constant's value.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			// get base
@@ -718,11 +742,12 @@ public class Constant extends LogicElement implements ActionListener {
 		 *
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 2;
 				valuePad.setBase(2);
@@ -730,7 +755,7 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 			else if (event.getSource() == base10) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 10;
 				valuePad.setBase(10);
@@ -738,7 +763,7 @@ public class Constant extends LogicElement implements ActionListener {
 			}
 			else if (event.getSource() == base16) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 16;
 				valuePad.setBase(16);
@@ -749,6 +774,7 @@ public class Constant extends LogicElement implements ActionListener {
 		/**
 		 * Cancel this gate.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -762,6 +788,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean quickChange() {
 		
 		return true;
@@ -780,6 +807,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @return menu.
 	 */
+	@Override
 	public JMenuItem setupQuickMenu(SimpleEditor sed) {
 		
 		if (menuMade)
@@ -802,6 +830,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @param event The event object for the button push.
 	 */
+	@Override
 	public void actionPerformed(ActionEvent event) {
 		
 		if (event.getSource() == zero) {
@@ -833,6 +862,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * 
 	 * @param sim The simulator to post events to.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// create value
@@ -855,6 +885,7 @@ public class Constant extends LogicElement implements ActionListener {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// get the new output value

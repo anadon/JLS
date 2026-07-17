@@ -53,6 +53,7 @@ public class Text extends DisplayElement {
 	 * 
 	 * @return true if there is text, false if not.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show creation dialog
@@ -84,6 +85,7 @@ public class Text extends DisplayElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		// first split lines
@@ -99,7 +101,7 @@ public class Text extends DisplayElement {
 				str += c;
 			}
 		}
-		if (!str.equals("")) {
+		if (!str.isEmpty()) {
 			lines.add(str);
 		}
 
@@ -109,7 +111,7 @@ public class Text extends DisplayElement {
 		}
 
 		// initialize font info defaults if not set from file
-		if (fontName.equals("")) {
+		if (fontName.isEmpty()) {
 			fontName = g.getFont().getFamily();
 		}
 		if (fontSize == 0) {
@@ -140,27 +142,39 @@ public class Text extends DisplayElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("text") {
+			@Override
 			protected String get(Element el) { return ((Text)el).text; }
+			@Override
 			protected void set(Element el, String v) { ((Text)el).text = v; }
 		},
 		new Attribute.StringAttribute("fn") {
+			@Override
 			protected String get(Element el) { return ((Text)el).fontName; }
+			@Override
 			protected void set(Element el, String v) { ((Text)el).fontName = v; }
 		},
 		new Attribute.IntAttribute("fs") {
+			@Override
 			protected int get(Element el) { return ((Text)el).fontSize; }
+			@Override
 			protected void set(Element el, int v) { ((Text)el).fontSize = v; }
 		},
 		new Attribute.IntAttribute("bold") {
+			@Override
 			protected int get(Element el) { return ((Text)el).isBold ? 1 : 0; }
+			@Override
 			protected void set(Element el, int v) { ((Text)el).isBold = v == 1; }
 		},
 		new Attribute.IntAttribute("ital") {
+			@Override
 			protected int get(Element el) { return ((Text)el).isItalic ? 1 : 0; }
+			@Override
 			protected void set(Element el, int v) { ((Text)el).isItalic = v == 1; }
 		},
 		new Attribute.IntAttribute("color") {
+			@Override
 			protected int get(Element el) { return ((Text)el).color.getRGB(); }
+			@Override
 			protected void set(Element el, int v) { ((Text)el).color = new Color(v); }
 		}
 	);
@@ -171,6 +185,7 @@ public class Text extends DisplayElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -181,6 +196,7 @@ public class Text extends DisplayElement {
 	 *
 	 * @return an exact copy of this element.
 	 */
+	@Override
 	public Text copy() {
 
 		Text it = new Text(circuit);
@@ -196,6 +212,7 @@ public class Text extends DisplayElement {
 	 *
 	 * @param output A print writer to write to.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Text");
@@ -208,6 +225,7 @@ public class Text extends DisplayElement {
 	 * 
 	 * @param g The Graphics element to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 
 		// save current graphics object
@@ -244,6 +262,7 @@ public class Text extends DisplayElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canChange() {
 
 		return true;
@@ -260,6 +279,7 @@ public class Text extends DisplayElement {
 	 * 
 	 * @return true if element must be re-placed in the circuit, false if not.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show dialog
@@ -323,12 +343,12 @@ public class Text extends DisplayElement {
 			// set up font name
 			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 			String [] names = ge.getAvailableFontFamilyNames();
-			if (fontName.equals("")) {
+			if (fontName.isEmpty()) {
 				Font f = textArea.getFont();
 				fn = f.getFamily();
 			}
 			else {
-				fn = new String(fontName);
+				fn = fontName;
 			}
 			fonts = new JComboBox<String>(names);
 			fonts.setSelectedItem(fn);
@@ -380,6 +400,7 @@ public class Text extends DisplayElement {
 
 			// make the text area get the focus
 			this.addWindowFocusListener(new WindowAdapter() {
+			    @Override
 			    public void windowGainedFocus(WindowEvent e) {
 			        textArea.requestFocusInWindow();
 			    }
@@ -391,11 +412,12 @@ public class Text extends DisplayElement {
 		/**
 		 * Accept the entered text.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			result = textArea.getText();
 			if (changed) {
-				fontName = new String(fn);
+				fontName = fn;
 				fontSize = fs;
 				isBold = isB;
 				isItalic = isI;
@@ -407,6 +429,7 @@ public class Text extends DisplayElement {
 		/**
 		 * Cancel this text element.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -418,6 +441,7 @@ public class Text extends DisplayElement {
 		 * 
 		 * @param event The event object for this event.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == fonts) {

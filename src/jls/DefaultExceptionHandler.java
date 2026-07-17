@@ -45,6 +45,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	 * @param t Unused.
 	 * @param th A throwable containing the exception/error information.
 	 */
+	@Override
 	public void uncaughtException(Thread t, Throwable th) {
 		
 		// if already trying to recover, forget it

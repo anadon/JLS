@@ -51,6 +51,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -75,6 +76,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
@@ -147,6 +149,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -241,29 +244,39 @@ public class Mux extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("inputs") {
+			@Override
 			protected int get(Element el) { return ((Mux)el).numInputs; }
+			@Override
 			protected void set(Element el, int v) { ((Mux)el).numInputs = v; }
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((Mux)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((Mux)el).bits = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((Mux)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((Mux)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("iOrient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Mux)el).outputOrientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Mux)el).outputOrientation = o;
 			}
 		},
 		new Attribute.OrientationAttribute("sOrient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Mux)el).selectorOrientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Mux)el).selectorOrientation = o;
 			}
@@ -276,6 +289,7 @@ public class Mux extends LogicElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -286,6 +300,7 @@ public class Mux extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Mux");
@@ -298,6 +313,7 @@ public class Mux extends LogicElement {
 	 *
 	 * @return a copy of this element.
 	 */
+	@Override
 	public Element copy() {
 
 		Mux it = new Mux(circuit);
@@ -316,6 +332,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(numInputs + " input, " + bits + " bit multiplexor");
@@ -326,6 +343,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return true;
@@ -334,6 +352,7 @@ public class Mux extends LogicElement {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		propDelay = defaultPropDelay;
@@ -344,6 +363,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 		
 		return propDelay;
@@ -352,8 +372,9 @@ public class Mux extends LogicElement {
 	/**
 	 * Set the propagation delay in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 		
 		propDelay = temp;
@@ -363,6 +384,7 @@ public class Mux extends LogicElement {
 	 * Tells if a mux is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		boolean success = true;
@@ -389,6 +411,7 @@ public class Mux extends LogicElement {
 	 * This method will flip a mux's selector
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		selectorOrientation = selectorOrientation.flipped();
@@ -404,6 +427,7 @@ public class Mux extends LogicElement {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
@@ -427,6 +451,7 @@ public class Mux extends LogicElement {
 	 * Tells if a mux is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate()
 	{
 		boolean success = true;
@@ -563,6 +588,7 @@ public class Mux extends LogicElement {
 		 *
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if(event.getSource() == oLeft || event.getSource() == oRight)
@@ -588,6 +614,7 @@ public class Mux extends LogicElement {
 		/**
 		 * Validate the form and create the mux.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			try {
@@ -665,6 +692,7 @@ public class Mux extends LogicElement {
 		/**
 		 * Cancel this mux.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -687,6 +715,7 @@ public class Mux extends LogicElement {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// set outputs to 0
@@ -704,6 +733,7 @@ public class Mux extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo Null if an input change, the new output value otherwise.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// if an input has changed ...

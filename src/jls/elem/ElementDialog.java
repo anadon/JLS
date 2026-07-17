@@ -173,11 +173,13 @@ public abstract class ElementDialog extends JDialog {
 		cancel.setBackground(Color.pink);
 		getRootPane().setDefaultButton(ok);
 		ok.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				confirmDialog();
 			}
 		});
 		ActionListener doCancel = new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				cancelDialog();
 			}
@@ -190,6 +192,7 @@ public abstract class ElementDialog extends JDialog {
 		// closing the window cancels
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
+			@Override
 			public void windowClosing(WindowEvent e) {
 				cancelDialog();
 			}
@@ -205,6 +208,7 @@ public abstract class ElementDialog extends JDialog {
 	protected void confirmOnEnter(javax.swing.JTextField field) {
 
 		field.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				confirmDialog();
 			}

@@ -141,6 +141,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return false if canceled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -165,6 +166,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		// determine width if needed
@@ -173,7 +175,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			if (width == 0 && height == 0) {
 				FontMetrics fm = g.getFontMetrics();
 				String dname = name;
-				if (name.equals("")) 
+				if (name.isEmpty()) 
 					dname = "State Machine";
 				width = fm.stringWidth(" " + dname + " ");
 				for (State state : states) {
@@ -274,6 +276,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// set up
@@ -295,7 +298,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		// draw name
 		String dname = name;
-		if (name.equals("")) {
+		if (name.isEmpty()) {
 			dname = "State Machine";
 		}
 		int w = fm.stringWidth(dname);
@@ -321,6 +324,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Print the state machine.
 	 */
+	@Override
 	public int print(Graphics g, PageFormat format, int pagenum) {
 		
 		// use better graphics
@@ -380,6 +384,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param output The PrintWriter to write to.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT StateMachine");
@@ -398,15 +403,21 @@ public final class StateMachine extends LogicElement implements Printable {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((StateMachine)el).name; }
+			@Override
 			protected void set(Element el, String v) { ((StateMachine)el).name = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((StateMachine)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((StateMachine)el).propDelay = v; }
 		},
 		new Attribute.IntAttribute("trig") {
+			@Override
 			protected int get(Element el) { return ((StateMachine)el).trigger; }
+			@Override
 			protected void set(Element el, int v) { ((StateMachine)el).trigger = v; }
 		}
 	);
@@ -417,6 +428,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -428,6 +440,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 		
 		switch (loadState) {
@@ -499,6 +512,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 		
 		switch (loadState) {
@@ -525,6 +539,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, long value) {
 		
 		switch (loadState) {
@@ -541,6 +556,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param v1 The first value.
 	 * @param v1 The second value.
 	 */
+	@Override
 	public void setPair(int v1, int v2) {
 		
 		buildState.setTransPair(v1,v2);
@@ -559,6 +575,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		// create new element; the attribute registry copies name, delay
@@ -596,6 +613,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String trig = "falling";
@@ -616,6 +634,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -656,6 +675,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return true;
@@ -664,6 +684,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		propDelay = defaultPropDelay;
@@ -674,6 +695,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 		
 		return propDelay;
@@ -682,8 +704,9 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Set the propagation delay in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 		
 		propDelay = temp;
@@ -694,6 +717,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return true.
 	 */ 
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -713,6 +737,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @return true if element must be re-placed in the circuit, false if not.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 	
 		// save current state machine
@@ -885,6 +910,7 @@ public final class StateMachine extends LogicElement implements Printable {
 			
 			// set up editing area
 			editArea = new JPanel() {
+				@Override
 				public void paintComponent(Graphics g) {
 					super.paintComponent(g);
 					if (selrect != null) {
@@ -988,6 +1014,7 @@ public final class StateMachine extends LogicElement implements Printable {
 
 			// set up new state key binding
 			Action newState = new AbstractAction() {
+				@Override
 				public void actionPerformed(ActionEvent event) {
 					
 					createNewState();
@@ -1069,6 +1096,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @param event The event.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == changeName) {
@@ -1240,6 +1268,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * hand-edited files. The remedy is in the editor itself: right
 		 * click a state and choose "make initial state".
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			String violated = checkInitialState();
@@ -1252,6 +1281,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Apply the validated form to the state machine.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			if (rising.isSelected()) {
@@ -1274,6 +1304,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Cancel this dialog.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			canceled = true;
@@ -1295,6 +1326,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @param event The mouse event.
 		 */
+		@Override
 		public void mousePressed(MouseEvent event) {
 			
 			// get info
@@ -1546,6 +1578,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @param event The mouse event.
 		 */
+		@Override
 		public void mouseReleased(MouseEvent event) {
 			
 			if (drawState == DrawState.moving || drawState == DrawState.placing) {
@@ -1611,6 +1644,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @param event The mouse event.
 		 */
+		@Override
 		public void mouseMoved(MouseEvent event) {
 			
 			// get info
@@ -1691,6 +1725,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @param event The mouse event.
 		 */
+		@Override
 		public void mouseDragged(MouseEvent event) {
 			
 			// if moving
@@ -1762,8 +1797,11 @@ public final class StateMachine extends LogicElement implements Printable {
 		} // end of mouseDragged method
 
 		// unused
+		@Override
 		public void mouseClicked(MouseEvent event) {}
+		@Override
 		public void mouseEntered(MouseEvent event) {}
+		@Override
 		public void mouseExited(MouseEvent event) {}
 		
 	} // end of Create class
@@ -1807,10 +1845,11 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Check the state name: present and unique in this machine.
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			String newName = nameField.getText().trim();
-			if (newName.equals("")) {
+			if (newName.isEmpty()) {
 				return java.util.List.of(new Violation("Missing name",
 						nameField));
 			}
@@ -1826,6 +1865,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Accept the validated name.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			name = nameField.getText().trim();
@@ -1835,6 +1875,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		/**
 		 * Cancel state creation.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			stateCancelled = true;
@@ -1846,6 +1887,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		 * 
 		 * @return the name.
 		 */
+		@Override
 		public String getName() {
 			
 			return name;
@@ -1882,6 +1924,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		return new Printable() {
 			
+			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 				
 				// set up
@@ -1959,6 +2002,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// set all outputs to 0
@@ -2004,6 +2048,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// if an input has changed ...

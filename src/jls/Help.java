@@ -170,6 +170,7 @@ public final class Help {
 			this.topic = topic;
 		}
 
+		@Override
 		public String toString() {
 			return text;
 		}
@@ -180,6 +181,7 @@ public final class Help {
 		page = new JEditorPane();
 		page.setEditable(false);
 		page.addHyperlinkListener(new HyperlinkListener() {
+			@Override
 			public void hyperlinkUpdate(HyperlinkEvent event) {
 				if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED
 						&& event.getURL() != null) {
@@ -200,6 +202,7 @@ public final class Help {
 		toc.setShowsRootHandles(true);
 		toc.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		toc.addTreeSelectionListener(new TreeSelectionListener() {
+			@Override
 			public void valueChanged(TreeSelectionEvent event) {
 				TreePath path = toc.getSelectionPath();
 				if (path == null)

@@ -64,6 +64,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -89,6 +90,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up size if there is a graphics object
@@ -164,6 +166,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw watched background
@@ -474,12 +477,15 @@ public class Register extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			@Override
 			protected String get(Element el) { return ((Register)el).name; }
+			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((Register)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
 				// registering the name
@@ -487,13 +493,17 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((Register)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((Register)el).bits = v; }
 		},
 		new Attribute.BigIntAttribute("init") {
+			@Override
 			protected BigInteger get(Element el) {
 				return ((Register)el).initialValue;
 			}
+			@Override
 			protected void set(Element el, BigInteger v) {
 				// the handwritten loader (and copy) also reset the
 				// displayed current value
@@ -503,18 +513,23 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.OrientationAttribute("orient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Register)el).orientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Register)el).orientation = o;
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((Register)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((Register)el).propDelay = v; }
 		},
 		new Attribute.StringAttribute("type") {
+			@Override
 			protected String get(Element el) {
 				switch (((Register)el).type) {
 				case PosFF: return "pff";
@@ -522,6 +537,7 @@ public class Register extends LogicElement {
 				default: return "latch";
 				}
 			}
+			@Override
 			protected void set(Element el, String v) {
 				// unknown strings leave the type unchanged, as the
 				// handwritten loader did
@@ -534,7 +550,9 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("watch") {
+			@Override
 			protected int get(Element el) { return ((Register)el).watched ? 1 : 0; }
+			@Override
 			protected void set(Element el, int v) { ((Register)el).watched = v != 0; }
 		}
 	);
@@ -545,6 +563,7 @@ public class Register extends LogicElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -555,6 +574,7 @@ public class Register extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Register");
@@ -575,6 +595,7 @@ public class Register extends LogicElement {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 
 		Register it = new Register(circuit);
@@ -592,6 +613,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String ty = "";
@@ -609,6 +631,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -619,6 +642,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return the number of bits.
 	 */ 
+	@Override
 	public int getBits() {
 		
 		return bits;
@@ -629,6 +653,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param circ A reference back to the circuit the element is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		circ.removeName(name);
@@ -640,6 +665,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return true;
@@ -648,6 +674,7 @@ public class Register extends LogicElement {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		propDelay = defaultPropDelay;
@@ -658,6 +685,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 		
 		return propDelay;
@@ -666,8 +694,9 @@ public class Register extends LogicElement {
 	/**
 	 * Set the propagation delay in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 		
 		propDelay = temp;
@@ -715,6 +744,7 @@ public class Register extends LogicElement {
 	 * Tells if a register is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate() {
 		
 		for(Input i : inputs) {
@@ -736,6 +766,7 @@ public class Register extends LogicElement {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g) {
 		
 		if(direction == JLSInfo.Orientation.LEFT) {
@@ -755,6 +786,7 @@ public class Register extends LogicElement {
 	 * Tells if a register is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip() {
 		
 		for(Input i : inputs) {
@@ -775,6 +807,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g) {
 		
 		orientation = orientation.flipped();
@@ -974,10 +1007,11 @@ public class Register extends LogicElement {
 		/**
 		 * Validate the form and apply it to the register.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			String tname = nameField.getText().trim();
-			if (tname.equals("") || !Util.isValidName(tname)) {
+			if (tname.isEmpty() || !Util.isValidName(tname)) {
 				reject("Missing or invalid name");
 				return;
 			}
@@ -1051,11 +1085,12 @@ public class Register extends LogicElement {
 		 *
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == base2) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 2;
 				valuePad.setBase(2);
@@ -1063,7 +1098,7 @@ public class Register extends LogicElement {
 			}
 			else if (event.getSource() == base10) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 10;
 				valuePad.setBase(10);
@@ -1071,7 +1106,7 @@ public class Register extends LogicElement {
 			}
 			else if (event.getSource() == base16) {
 				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().equals(""))
+				if (!valueField.getText().isEmpty())
 					val = new BigInteger(valueField.getText(),base);
 				base = 16;
 				valuePad.setBase(16);
@@ -1082,6 +1117,7 @@ public class Register extends LogicElement {
 		/**
 		 * Cancel this gate.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -1095,6 +1131,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return true.
 	 */ 
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -1112,6 +1149,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return true if the name has grown, false if not.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 	
 		// save g for valueFits method
@@ -1155,6 +1193,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canWatch() {
 		
 		return true;
@@ -1165,6 +1204,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return true if it is, false if it is not.
 	 */
+	@Override
 	public boolean isWatched() {
 		
 		return watched;
@@ -1175,6 +1215,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param state True to make it watched, false to make it not watched.
 	 */
+	@Override
 	public void setWatched(boolean state) {
 		
 		watched = state;
@@ -1187,7 +1228,7 @@ public class Register extends LogicElement {
 	 */
 	public void printValue(String prefix) {
 		
-		if (prefix.equals("")) {
+		if (prefix.isEmpty()) {
 			System.out.printf("Register %s: %s\n", name, BitSetUtils.toDisplay(currentValue,bits));
 		}
 		else {
@@ -1209,6 +1250,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @return the current value.
 	 */
+	@Override
 	public BitSet getCurrentValue() {
 		
 		if (currentValue == null)
@@ -1222,6 +1264,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 
 		// set current value and to-be value to the initial value
@@ -1248,6 +1291,7 @@ public class Register extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// if an input has changed ...
@@ -1319,6 +1363,7 @@ public class Register extends LogicElement {
 	 * 
 	 * @param where Unused.
 	 */
+	@Override
 	public void showCurrentValue(Point where) {
 		
 		String hex = BitSetUtils.ToString(currentValue,16);

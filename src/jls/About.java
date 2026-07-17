@@ -61,6 +61,7 @@ public final class About extends JDialog implements ActionListener {
 	 * 
 	 * @param event Unused.
 	 */
+	@Override
 	public void actionPerformed(ActionEvent event) {
 		
 		dispose();

@@ -140,49 +140,69 @@ public class Element {
 	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("id") {
+			@Override
 			protected int get(Element el) { return el.id; }
+			@Override
 			protected void set(Element el, int value) { el.id = value; }
+			@Override
 			public void copy(Element from, Element to) {
 				// ids are assigned at save time, never copied
 			}
 		},
 		new Attribute.IntAttribute("x") {
+			@Override
 			protected int get(Element el) { return el.x; }
+			@Override
 			protected void set(Element el, int value) { el.x = value; }
 		},
 		new Attribute.IntAttribute("y") {
+			@Override
 			protected int get(Element el) { return el.y; }
+			@Override
 			protected void set(Element el, int value) { el.y = value; }
 		},
 		new Attribute.IntAttribute("width") {
+			@Override
 			protected int get(Element el) { return el.width; }
+			@Override
 			protected void set(Element el, int value) { el.width = value; }
+			@Override
 			protected boolean omitted(Element el) {
 				// recomputed by init() on load for some elements (#21)
 				return el.sizeIsRecomputedOnLoad();
 			}
 		},
 		new Attribute.IntAttribute("height") {
+			@Override
 			protected int get(Element el) { return el.height; }
+			@Override
 			protected void set(Element el, int value) { el.height = value; }
+			@Override
 			protected boolean omitted(Element el) {
 				return el.sizeIsRecomputedOnLoad();
 			}
 		},
 		new Attribute.IntAttribute("fixed") {
+			@Override
 			protected int get(Element el) { return el.uneditable ? 1 : 0; }
+			@Override
 			protected void set(Element el, int value) {
 				// any saved value means uneditable, as the loader always did
 				el.uneditable = true;
 			}
+			@Override
 			protected boolean omitted(Element el) { return !el.uneditable; }
+			@Override
 			public void copy(Element from, Element to) {
 				to.uneditable = from.uneditable;
 			}
 		},
 		new Attribute.IntAttribute("trpos") {
+			@Override
 			protected int get(Element el) { return el.tracePosition; }
+			@Override
 			protected void set(Element el, int value) { el.tracePosition = value; }
+			@Override
 			protected boolean omitted(Element el) { return el.tracePosition == -1; }
 		}
 	);
@@ -635,13 +655,8 @@ public class Element {
 
 	/**
 	 * Show timing change dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
 	 */
-	public void changeTiming(JPanel editWindow, int x, int y) {
+	public void changeTiming() {
 
 		// display dialog
 		new DelayChange(this instanceof Memory);
@@ -747,6 +762,7 @@ public class Element {
 		/**
 		 * Validate and apply the new delay.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			int temp = 0;
@@ -782,7 +798,7 @@ public class Element {
 	 * Set the propagation delay or access time in this element.
 	 * Overridden by elements with timing info.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 *        Must be Integer, don't change to int!
 	 */
 	public void setDelay(int temp) {

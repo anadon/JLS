@@ -37,6 +37,7 @@ public class Stop extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// complete initialization
@@ -54,6 +55,7 @@ public class Stop extends LogicElement {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up size
@@ -73,6 +75,7 @@ public class Stop extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		int s = JLSInfo.spacing;
@@ -145,6 +148,7 @@ public class Stop extends LogicElement {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		Stop it = new Stop(circuit);
@@ -160,6 +164,7 @@ public class Stop extends LogicElement {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT Stop");
@@ -172,6 +177,7 @@ public class Stop extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText("stop simulation");
@@ -185,8 +191,9 @@ public class Stop extends LogicElement {
 	/**
 	 * Initialize simulation.
 	 * 
-	 * @param The simulator.
+	 * @param sim The simulator.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// do nothing
@@ -199,6 +206,7 @@ public class Stop extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo Should be null.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// find the attached input

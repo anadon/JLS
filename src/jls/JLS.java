@@ -37,7 +37,7 @@ public final class JLS  {
 		// awt.toolkit.name is read exactly once, at toolkit creation
 		ToolkitPolicy.apply();
 
-		JLSStart.start(args, exHandler);
+		JLSStart.start(exHandler);
 	} // end of main method
 
 } // end of JLS class

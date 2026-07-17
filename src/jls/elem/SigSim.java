@@ -203,6 +203,7 @@ public abstract class SigSim extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		throw new UnsupportedOperationException("react in SigGen called");

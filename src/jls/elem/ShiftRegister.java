@@ -89,6 +89,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
 			int x, int y) {
 
@@ -114,6 +115,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(java.awt.Graphics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
@@ -185,6 +187,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(java.awt.Graphics g) {
 
 		// draw context
@@ -230,9 +233,11 @@ public class ShiftRegister extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("type") {
+			@Override
 			protected String get(Element el) {
 				return ((ShiftRegister)el).type.name();
 			}
+			@Override
 			protected void set(Element el, String v) {
 				// an unknown kind is rejected, not guessed (issue #122
 				// section 9: fail with the element named)
@@ -246,7 +251,9 @@ public class ShiftRegister extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((ShiftRegister)el).bits; }
+			@Override
 			protected void set(Element el, int v) {
 				String violated = checkBits(v);
 				if (violated != null) {
@@ -256,21 +263,27 @@ public class ShiftRegister extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((ShiftRegister)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((ShiftRegister)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("iOrient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).outputOrientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((ShiftRegister)el).outputOrientation = o;
 			}
 		},
 		new Attribute.OrientationAttribute("sOrient") {
+			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).amountOrientation;
 			}
+			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((ShiftRegister)el).amountOrientation = o;
 			}
@@ -283,6 +296,7 @@ public class ShiftRegister extends LogicElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -293,6 +307,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT ShiftRegister");
@@ -305,6 +320,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return a copy of this element.
 	 */
+	@Override
 	public Element copy() {
 
 		ShiftRegister it = new ShiftRegister(circuit);
@@ -323,6 +339,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(javax.swing.JLabel info) {
 
 		String kind = "";
@@ -339,6 +356,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 
 		return true;
@@ -347,6 +365,7 @@ public class ShiftRegister extends LogicElement {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 
 		propDelay = defaultPropDelay;
@@ -357,6 +376,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 
 		return propDelay;
@@ -367,6 +387,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 
 		propDelay = temp;
@@ -378,6 +399,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip() {
 
 		for (Input i : inputs) {
@@ -399,6 +421,7 @@ public class ShiftRegister extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation
 	 *          of size when flipping.
 	 */
+	@Override
 	public void flip(java.awt.Graphics g) {
 
 		amountOrientation = amountOrientation.flipped();
@@ -415,6 +438,7 @@ public class ShiftRegister extends LogicElement {
 	 * @param direction The direction to rotate.
 	 * @param g The current graphics context for use in recalculating size.
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, java.awt.Graphics g) {
 
 		if (direction == JLSInfo.Orientation.LEFT) {
@@ -438,6 +462,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate() {
 
 		for (Input i : inputs) {
@@ -595,6 +620,7 @@ public class ShiftRegister extends LogicElement {
 		 *
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(java.awt.event.ActionEvent event) {
 
 			if (event.getSource() == oLeft || event.getSource() == oRight) {
@@ -619,6 +645,7 @@ public class ShiftRegister extends LogicElement {
 		 * Check the form against the element's parameter constraints
 		 * (issue #52: the same rule strings the loader rejects with).
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			int newBits;
@@ -639,9 +666,16 @@ public class ShiftRegister extends LogicElement {
 		/**
 		 * Set the shift register parameters from the validated form.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
-			bits = Integer.parseInt(bitsField.getText());
+			try {
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again", bitsField);
+				return;
+			}
 			if (shiftRight.isSelected()) {
 				type = ShiftRegister.Type.LogicalRight;
 			}
@@ -694,6 +728,7 @@ public class ShiftRegister extends LogicElement {
 		/**
 		 * Cancel this shift register.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -715,6 +750,7 @@ public class ShiftRegister extends LogicElement {
 	 *
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 
 		// set outputs to 0
@@ -732,6 +768,7 @@ public class ShiftRegister extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo Null if an input change, the new output value otherwise.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// if an input has changed ...

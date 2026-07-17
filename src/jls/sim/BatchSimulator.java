@@ -21,7 +21,7 @@ import java.util.*;
 public class BatchSimulator extends Simulator {
 
 	// for printing traces
-	private class TrEvent {
+	private static class TrEvent {
 		public long time;
 		public BitSet value;
 	}
@@ -45,6 +45,7 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Stop (end) the simulation, if there is one.
 	 */
+	@Override
 	public void stop() {
 
 		stopping = true;
@@ -56,6 +57,7 @@ public class BatchSimulator extends Simulator {
 	 *
 	 * @param which Ignored.
 	 */
+	@Override
 	public void pause(boolean which) {
 
 		stopping = true;
@@ -83,6 +85,7 @@ public class BatchSimulator extends Simulator {
 	 *
 	 * @param event The event that just reacted.
 	 */
+	@Override
 	protected void afterEvent(SimEvent event) {
 
 		// accumulate when any trace consumer is active: the -r printer
@@ -153,7 +156,7 @@ public class BatchSimulator extends Simulator {
 	 * Find all watched elements and add entries to batch trace map.
 	 * Recursively checks all subcircuits.
 	 * 
-	 * @param circuit The circuit (or subcircuit) to look in.
+	 * @param circ The circuit (or subcircuit) to look in.
 	 */
 	private void findWatched(Circuit circ) {
 
@@ -214,6 +217,7 @@ public class BatchSimulator extends Simulator {
 		// printable object to do the work
 		Printable pr = new Printable() {
 
+			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 
 				int HEIGHT = 40;

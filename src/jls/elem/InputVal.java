@@ -30,6 +30,7 @@ public final class InputVal extends ValEntry {
 	 * @param row The row this entry is in.
 	 * @param col The column this entry is in.
 	 */
+	@Override
 	public void selected(int row, int col) {
 		
 		if (value == 2) {

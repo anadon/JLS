@@ -91,17 +91,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private Circuit clipboard = new Circuit("clipboard");		// for cut and paste
 
 	/**
-	 * Parse command line arguments and start up JLS.
-	 * 
-	 * @param args Command line arguments.
+	 * Start up JLS.
+	 *
+	 * @param exh The default exception handler.
 	 */
-	public static void start(String[] args, DefaultExceptionHandler exh) {
+	public static void start(DefaultExceptionHandler exh) {
 
 		// save exception handler reference
 		exHandler = exh;
-
-		// parse command line
-		//parseCommandLine(args);
 
 		// if print of circuit wanted, and there is a circuit specified, then print it
 		if (printCircuit && startFile != null) {
@@ -398,6 +395,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			// start up GUI
 			Runnable mainwindow = new Runnable() {
 
+				@Override
 				public void run() {
 					try {new JLSStart();}
 					catch(HeadlessException e) {
@@ -520,7 +518,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				SubCircuit sel = (SubCircuit)el;
 				Circuit subCirc = sel.getSubCircuit();
 				String subQual = "";
-				if (qual.equals("")) {
+				if (qual.isEmpty()) {
 					subQual = subCirc.getName();
 				}
 				else {
@@ -926,6 +924,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		addWindowListener (
 				new WindowAdapter() {
+					@Override
 					public void windowClosing(WindowEvent e) {
 						shutdown();
 					}
@@ -987,6 +986,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * 
 	 * @param event Unused.
 	 */
+	@Override
 	public void stateChanged(ChangeEvent event) {
 
 		Editor ed = (Editor)edits.getSelectedComponent();
@@ -1049,6 +1049,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		newc.setToolTipText("create a new circuit");
 		menu.add(newc);
 		newc.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				newCircuit();
 			}
@@ -1059,6 +1060,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		open.setToolTipText("open an existing circuit file");
 		menu.add(open);
 		open.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				open(null);
 			}
@@ -1069,6 +1071,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		saveItem.setToolTipText("save the currently visible circuit");
 		menu.add(saveItem);
 		saveItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
 				if (ed != null)
@@ -1081,6 +1084,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		saveAs.setToolTipText("save the currently visible circuit under a new name");
 		menu.add(saveAs);
 		saveAs.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
 				if (ed != null)
@@ -1098,11 +1102,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 		print.add(printAll);
 		print.add(justThis);
 		printAll.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				print(true);
 			}
 		});
 		justThis.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				print(false);
 			}
@@ -1113,6 +1119,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		importItem.setToolTipText("create a subcircuit from a circuit file");
 		menu.add(importItem);
 		importItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				try {
 					fileImport();
@@ -1127,6 +1134,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		exportItem.setToolTipText("create a JPEG image file of the circuit");
 		menu.add(exportItem);
 		exportItem.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				try {
 					exportImage();
@@ -1143,6 +1151,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		close.setToolTipText("close the currently visible circuit");
 		menu.add(close);
 		close.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				closeVisibleEditor();
 			}
@@ -1153,6 +1162,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		exit.setToolTipText("terminate JLS");
 		menu.add(exit);
 		exit.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				shutdown();
 			}
@@ -1185,6 +1195,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		menu.add(stop);
 
 		run.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.setBottomComponent(interSim.getStatusBar());
 				both.setDividerLocation(0.9);
@@ -1196,12 +1207,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		stop.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				interSim.stop();
 			}
 		});
 
 		show.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.setDividerLocation(0.7);
 				both.setBottomComponent(interSim.getWindow());
@@ -1209,6 +1222,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		hide.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.remove(interSim.getWindow());
 				both.setDividerLocation(1.0);
@@ -1230,6 +1244,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem resetDelays = new JMenuItem("Reset all propagation delays");
 		menu.add(resetDelays);
 		resetDelays.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
@@ -1242,6 +1257,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem removeProbes = new JMenuItem("Remove all probes");
 		menu.add(removeProbes);
 		removeProbes.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
@@ -1254,6 +1270,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem clearWatches = new JMenuItem("Unwatch all elements");
 		menu.add(clearWatches);
 		clearWatches.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
@@ -1266,6 +1283,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem expand = new JMenuItem("Expand circuit drawing area by 10%");
 		menu.add(expand);
 		expand.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
@@ -1277,6 +1295,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem gridCol = new JMenuItem("Change editor window grid color");
 		menu.add(gridCol);
 		gridCol.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.gridColor);
 				if (newColor != null)
@@ -1291,6 +1310,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem editBkg = new JMenuItem("Change editor window background color");
 		menu.add(editBkg);
 		editBkg.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.backgroundColor);
 				if (newColor != null)
@@ -1319,6 +1339,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem about = new JMenuItem("About");
 		help.add(about);
 		about.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				new About();
 			}
@@ -1336,6 +1357,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial1.setToolTipText(tip1);
 		tutorial.add(tutorial1);
 		tutorial1.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial1.html",false);
 			}
@@ -1346,6 +1368,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial2.setToolTipText(tip2);
 		tutorial.add(tutorial2);
 		tutorial2.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial2.html",false);
 			}
@@ -1355,6 +1378,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial3.setToolTipText(tip3);
 		tutorial.add(tutorial3);
 		tutorial3.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial3.html",false);
 			}
@@ -1365,6 +1389,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial4.setToolTipText(tip4);
 		tutorial.add(tutorial4);
 		tutorial4.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial4.html",false);
 			}
@@ -1374,6 +1399,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem contents = new JMenuItem("Contents");
 		help.add(contents);
 		contents.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				Help.showTopic("top");
 			}
@@ -1387,7 +1413,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private void newCircuit() {
 
 		String name = TellUser.prompt(this, "Enter circuit name (without .jls)");
-		if (name == null || name.equals(""))
+		if (name == null || name.isEmpty())
 			return;
 		if (!Util.isValidName(name)) {
 			TellUser.error(JLSInfo.frame,"Invalid circuit name - must have only letters, digits & _", "Error");
@@ -1413,7 +1439,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/**
 	 * Open an existing circuit.
 	 * 
-	 * @param name The name of the circuit.  If null, then prompt user for
+	 * @param filePath The name of the circuit.  If null, then prompt user for
 	 * the name.
 	 */
 	private void open(String filePath) {
@@ -1428,10 +1454,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 			
 			javax.swing.filechooser.FileFilter filter =
 				new javax.swing.filechooser.FileFilter() {
+				@Override
 				public boolean accept(File f) {
 					return f.getName().endsWith(".jls") || f.getName().endsWith(".jls~")
 					|| f.isDirectory();
 				}
+				@Override
 				public String getDescription() {
 					return "JLS Circuit Files";
 				}
@@ -1442,7 +1470,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				return;
 			file = chooser.getSelectedFile();
 			filePath = file.getAbsolutePath();
-			if (filePath == null || filePath.equals(""))
+			if (filePath == null || filePath.isEmpty())
 				return;
 			prevOpenDir = chooser.getCurrentDirectory().toString();
 			dir = prevOpenDir;
@@ -1454,7 +1482,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			// the file's real directory.  Deliberately kept on user.dir;
 			// see issue #130's H1 exclusion.
 			String parent = file.getParent();
-			prevOpenDir = (parent == null || parent.equals(""))
+			prevOpenDir = (parent == null || parent.isEmpty())
 					? System.getProperty("user.dir") : parent;
 			dir = prevOpenDir;
 		}
@@ -1637,9 +1665,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			@Override
 			public String getDescription() {
 				return "JLS Circuit Files";
 			}
@@ -2122,9 +2152,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jpg") || f.isDirectory();
 			}
+			@Override
 			public String getDescription() {
 				return "JLS Circuit Images";
 			}
@@ -2133,7 +2165,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) 
 			return;
 		String fileName = chooser.getSelectedFile().getName().trim();
-		if (fileName == null || fileName.equals(""))
+		if (fileName == null || fileName.isEmpty())
 			return;
 		String tempName = fileName.replaceAll("\\.jpg$","");
 		if (!Util.isValidName(tempName)) {
@@ -2166,7 +2198,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				String component = name.substring(first,p);
 				if (!Util.isValidName(component))
 					return null;
-				if (component.equals(""))
+				if (component.isEmpty())
 					return null;
 				comp.add(component);
 				first = p+1;

@@ -105,18 +105,22 @@ public final class Editor extends SimpleEditor {
 		// forks without an XZ reader; both save under the .jls name
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			@Override
 			public String getDescription() {
 				return "JLS Circuit Files (XZ compressed, the default)";
 			}
 		};
 		javax.swing.filechooser.FileFilter textFilter =
 			new javax.swing.filechooser.FileFilter() {
+			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			@Override
 			public String getDescription() {
 				return "JLS Circuit Files (plain text: diffable, fork-readable)";
 			}
@@ -127,7 +131,7 @@ public final class Editor extends SimpleEditor {
 		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
 			return;
 		String fileName = chooser.getSelectedFile().getName().trim();
-		if (fileName == null || fileName.equals(""))
+		if (fileName == null || fileName.isEmpty())
 			return;
 		String tempName = fileName.replaceAll("\\.jls$","");
 		if (!Util.isValidName(tempName)) {
@@ -216,6 +220,7 @@ public final class Editor extends SimpleEditor {
 	/**
 	 * Close this editor window, save circuit if necessary and ok with user.
 	 */
+	@Override
 	public void close() {
 		
 		// close any subcircuits of this one that are open

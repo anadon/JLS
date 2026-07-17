@@ -78,6 +78,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -102,6 +103,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up size
@@ -157,6 +159,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -226,6 +229,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT Display");
@@ -238,23 +242,31 @@ public class Display extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((Display)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((Display)el).bits = v; }
 		},
 		new Attribute.IntAttribute("base") {
+			@Override
 			protected int get(Element el) { return ((Display)el).base; }
+			@Override
 			protected void set(Element el, int v) { ((Display)el).base = v; }
 		},
 		new Attribute.IntAttribute("orient") {
 			// legacy single-input save format marker; only saved when
 			// present in the loaded file
+			@Override
 			protected int get(Element el) { return ((Display)el).orient; }
+			@Override
 			protected void set(Element el, int v) { ((Display)el).orient = v; }
+			@Override
 			protected boolean omitted(Element el) {
 				// -1 is the "no marker" sentinel; 0 (Top) is a valid
 				// legacy value and must be re-saved (issue #57)
 				return ((Display)el).orient < 0;
 			}
+			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy never carried the legacy marker
 				// to the copy
@@ -268,6 +280,7 @@ public class Display extends LogicElement {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -278,6 +291,7 @@ public class Display extends LogicElement {
 	 *
 	 * @return a copy of this element.
 	 */
+	@Override
 	public Element copy() {
 
 		Display it = new Display(circuit);
@@ -293,6 +307,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		info.setText(bits + " bit display, value = " + BitSetUtils.toDisplay(currentValue,bits));
@@ -303,6 +318,7 @@ public class Display extends LogicElement {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		// No-op
@@ -312,6 +328,7 @@ public class Display extends LogicElement {
 	 * Tells if a display is capable of rotatating, can only rotate when input has no attachment.
 	 * @return False if input has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate()
 	{
 		// Displays cannot be rotated ever since they implement the Stop behavior for inputs.
@@ -322,6 +339,7 @@ public class Display extends LogicElement {
 	 * Tells if a display is capable of flippinging, can only flip when input has no attachment.
 	 * @return False if input has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		// Displays cannot be flipped ever since they implement the Stop behavior for inputs.
@@ -332,6 +350,7 @@ public class Display extends LogicElement {
 	 * This method will flip a display
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		// No-op
@@ -397,6 +416,7 @@ public class Display extends LogicElement {
 		/**
 		 * Validate the form and create the display.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			try {
@@ -424,6 +444,7 @@ public class Display extends LogicElement {
 		/**
 		 * Cancel this mux.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -444,6 +465,7 @@ public class Display extends LogicElement {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		Input in = inputs.get(0);
@@ -462,6 +484,7 @@ public class Display extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		currentValue = inputs.get(0).getValue();

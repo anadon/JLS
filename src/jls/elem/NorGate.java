@@ -63,6 +63,7 @@ public class NorGate extends Gate {
 	/**
 	 * The kind descriptor for this gate.
 	 */
+	@Override
 	protected Kind kind() {
 		
 		return KIND;
@@ -75,6 +76,7 @@ public class NorGate extends Gate {
 	/**
 	 * NOR the input bits (absent inputs count as 0).
 	 */
+	@Override
 	protected BitSet computeOutput() {
 
 		BitSet value = new BitSet(bits);

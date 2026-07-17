@@ -28,6 +28,7 @@ public class DelayGate extends Gate {
 	/**
 	 * The kind descriptor for this gate.
 	 */
+	@Override
 	protected Kind kind() {
 		
 		return KIND;
@@ -66,6 +67,7 @@ public class DelayGate extends Gate {
 	 * 
 	 * @return false if canceled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		// show creation dialog
@@ -92,6 +94,7 @@ public class DelayGate extends Gate {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String pd = ", delay = " + propDelay;
@@ -104,6 +107,7 @@ public class DelayGate extends Gate {
 	/**
 	 * Cannot reset propagation delay.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		// do nothing
@@ -192,6 +196,7 @@ public class DelayGate extends Gate {
 			/**
 			 * Validate the form and create the delay gate.
 			 */
+			@Override
 			protected void validateAndAccept() {
 
 				try {
@@ -228,6 +233,7 @@ public class DelayGate extends Gate {
 			/**
 			 * Cancel this gate.
 			 */
+			@Override
 			protected void cancelDialog() {
 
 				cancelled = true;
@@ -245,6 +251,7 @@ public class DelayGate extends Gate {
 	/**
 	 * A delay gate outputs its input unchanged (after the propagation delay).
 	 */
+	@Override
 	protected BitSet computeOutput() {
 
 		BitSet value = inputs.get(0).getValue();

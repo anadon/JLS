@@ -36,6 +36,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * @param x Initial x-coordinate.
 	 * @param y Initial y-coordinate.
 	 */
+	@Override
 	public void setXY(int x, int y) {
 		
 		// save non snap-to position
@@ -58,6 +59,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * @param name The name of the value.
 	 * @param value The initial value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 		
 		if (name.equals("x")) {
@@ -71,16 +73,18 @@ public abstract class LogicElement extends Element implements Reacts {
 	
 	/**
 	 * Copy values to new object.
-	 * 
-	 * @param it The new object.
+	 *
+	 * @param el The new object.
 	 */
-	public void copy(LogicElement it) {
-		
+	@Override
+	public void copy(Element el) {
+
+		LogicElement it = (LogicElement)el;
 		it.lx = lx;
 		it.ly = ly;
 		it.savex = savex;
 		it.savey = savey;
-		super.copy(it);
+		super.copy(el);
 	} // end of copy method
 	
 	/**
@@ -89,6 +93,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * @param dx Distance to move horizontally.
 	 * @param dy Distance to move vertically.
 	 */
+	@Override
 	public void move(int dx, int dy) {
 		
 		// modify non snap-to position
@@ -119,6 +124,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * Save current coordinates of this element and all attached wire ends
 	 * in case move doesn't work.
 	 */
+	@Override
 	public void savePosition() {
 		
 		// save non snap-to position
@@ -149,6 +155,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * Restore saved coordinates of this element and all attached wire ends
 	 * when move doesn't work.
 	 */
+	@Override
 	public void restorePosition() {
 		
 		// restore non snap-to position
@@ -179,6 +186,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	/**
 	 * Fix the position of this element, and all attached wire ends.
 	 */
+	@Override
 	public void fixPosition() {
 		
 		// make non snap-to position the same as the snap-to position
@@ -205,8 +213,9 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * Unattaches from all wire nets.
 	 * Forces wire nets it disconnects from to recheck their information.
 	 * 
-	 * @param circuit The circuit it is being removed from.
+	 * @param circ The circuit it is being removed from.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		for (Put p : inputs) {
@@ -237,6 +246,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * @return the input or output that the given coordinates are close to,
 	 * or null if not close to any in this element.
 	 */
+	@Override
 	public Put getPut(int x, int y) {
 		
 		for (Input input : inputs) {
@@ -259,6 +269,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	/**
 	 * Set/reset touching flag for all inputs and outputs.
 	 */
+	@Override
 	public void setTouching(boolean setting) {
 		
 		for (Put p : inputs) {
@@ -275,6 +286,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 *
 	 * @return a set of all inputs and outputs.
 	 */
+	@Override
 	public Set<Put> getAllPuts() {
 
 		Set<Put>all = new HashSet<Put>(inputs);
@@ -313,6 +325,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * 
 	 * @return the put, or null if no such put.
 	 */
+	@Override
 	public Put getPut(String name) {
 		
 		for (Put p : inputs) {
@@ -395,6 +408,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * 
 	 * @param sim The simulator object.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		System.out.println("initSim not implemented: " + getClass().getName());
@@ -422,6 +436,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * 
 	 * @param newDelay The new delay value.
 	 */
+	@Override
 	public void setDelay(int newDelay) {
 		
 	} // end of setDelay method
@@ -430,6 +445,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * Get the name of this element.
 	 * Overridden in elements that have names.
 	 */
+	@Override
 	public String getName() {
 		
 		return "";
@@ -457,6 +473,7 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * For elements that don't react.
 	 * Overridden by most elements.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		throw new UnsupportedOperationException("no react");

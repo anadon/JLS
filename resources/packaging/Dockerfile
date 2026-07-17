@@ -21,7 +21,7 @@
 # binutils: the archive's JDK carries unstripped native libraries, so
 # jlink --strip-debug shells out to objcopy (Temurin's jmods come
 # pre-stripped, which is why the old Temurin build stage never needed it)
-FROM ubuntu:26.04 AS runtime
+FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb AS runtime
 RUN apt-get -o Acquire::Retries=3 update \
     && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
         openjdk-25-jdk-headless binutils \
@@ -35,7 +35,7 @@ RUN set -eux; \
 # fontconfig + DejaVu let batch image export (-i) render text headlessly
 # (Acquire::Retries: the arm64/riscv64 ports mirror drops connections
 # often enough under QEMU-length builds that one retry pass is not enough)
-FROM ubuntu:26.04
+FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb
 RUN apt-get -o Acquire::Retries=3 update \
     && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
         fontconfig fonts-dejavu-core \

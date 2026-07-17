@@ -280,7 +280,7 @@ public final class Util {
 	 */
 	public static String seedDirectory(String remembered) {
 
-		if (remembered == null || remembered.equals(""))
+		if (remembered == null || remembered.isEmpty())
 			return defaultDirectory();
 		return remembered;
 	} // end of seedDirectory method
@@ -288,9 +288,9 @@ public final class Util {
 	/**
 	 * Convert value to a string in the given base.
 	 * 
-	 * @param The value to convert.
+	 * @param value The value to convert.
 	 * @param base The base.
-	 * @param True if prefix or suffix needed, false if not.
+	 * @param extra True if prefix or suffix needed, false if not.
 	 * 
 	 * @return the string.
 	 */

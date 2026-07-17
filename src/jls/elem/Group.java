@@ -65,6 +65,7 @@ public abstract class Group extends LogicElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// no need to do anything if no graphics object
@@ -109,6 +110,7 @@ public abstract class Group extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -138,6 +140,7 @@ public abstract class Group extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 		
 		if (name.equals("bits")) {
@@ -160,6 +163,7 @@ public abstract class Group extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 		
 		if (name.equals("orient")) {
@@ -178,6 +182,7 @@ public abstract class Group extends LogicElement {
 	 * This method will flip a group
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		orientation = orientation.flipped();
@@ -193,6 +198,7 @@ public abstract class Group extends LogicElement {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		if(direction == JLSInfo.Orientation.LEFT)
@@ -214,6 +220,7 @@ public abstract class Group extends LogicElement {
 	 * constraint as flipping, since both rebuild every put.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate()
 	{
 		return canFlip();
@@ -223,6 +230,7 @@ public abstract class Group extends LogicElement {
 	 * Tells if a Group is capable of flippiing, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		boolean success = true;
@@ -251,6 +259,7 @@ public abstract class Group extends LogicElement {
 	 * @param v1 The first value.
 	 * @param v1 The second value.
 	 */
+	@Override
 	public void setPair(int v1, int v2) {
 		// a malformed file used to NPE/AIOOBE here; reject with a real
 		// message and bound the sparse-list growth (issue #52)
@@ -311,6 +320,7 @@ public abstract class Group extends LogicElement {
 	 *
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		super.save(output);
@@ -344,6 +354,7 @@ public abstract class Group extends LogicElement {
 	 *
 	 * @return 2 if this group is vertical, 1 otherwise.
 	 */
+	@Override
 	public int saveFormatVersion() {
 
 		if (orientation == JLSInfo.Orientation.UP
@@ -356,10 +367,12 @@ public abstract class Group extends LogicElement {
 	/**
 	 * Copy values to new object.
 	 * 
-	 * @param it The new object.
+	 * @param el The new object.
 	 */
-	public void copy(Group it) {
-		
+	@Override
+	public void copy(Element el) {
+
+		Group it = (Group)el;
 		it.bits = bits;
 		it.ranges = new ArrayList<Entry>(ranges);
 		it.triState = triState;
@@ -370,7 +383,7 @@ public abstract class Group extends LogicElement {
 		for (Output output : outputs) {
 			it.outputs.add(output.copy(it));
 		}
-		super.copy(it);
+		super.copy(el);
 		return;
 	} // end of copy method
 	
@@ -468,6 +481,7 @@ public abstract class Group extends LogicElement {
 		 * Check the bit count against the shared group constraint (issue
 		 * #52): a rejected dialog must leave the element unchanged.
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			int newBits;
@@ -488,9 +502,16 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Create the bundler/unbundler from the validated form.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
-			bits = Integer.parseInt(bitsField.getText());
+			try {
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again", bitsField);
+				return;
+			}
 
 			// set up ranges
 			if (single.isSelected()) {
@@ -524,6 +545,7 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Cancel this element.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -647,6 +669,7 @@ public abstract class Group extends LogicElement {
 		/**
 		 * There must be at least one chosen group.
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			if (picked.size() == 0) {
@@ -659,6 +682,7 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Create the range entries from the validated choices.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			// generate range entries
@@ -674,6 +698,7 @@ public abstract class Group extends LogicElement {
 		 * 
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 			if (event.getSource() == add) {
 				
@@ -786,6 +811,7 @@ public abstract class Group extends LogicElement {
 		/**
 		 * Cancel this gate.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -797,7 +823,7 @@ public abstract class Group extends LogicElement {
 	/**
 	 * A bit range entry.
 	 */
-	protected class Entry {
+	protected static class Entry {
 		
 		// properties
 		//private int from;
@@ -900,6 +926,7 @@ public abstract class Group extends LogicElement {
 		 * 
 		 * @return The string.
 		 */
+		@Override
 		public String toString() {
 			
 			String p = "";

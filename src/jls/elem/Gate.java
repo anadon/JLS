@@ -97,6 +97,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		Kind k = kind();
@@ -116,6 +117,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		save(output,kind().saveName,false);
@@ -126,6 +128,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		showInfo(info,kind().displayName);
@@ -179,6 +182,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up size
@@ -258,6 +262,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -347,17 +352,23 @@ public abstract class Gate extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			@Override
 			protected int get(Element el) { return ((Gate)el).bits; }
+			@Override
 			protected void set(Element el, int v) { ((Gate)el).bits = v; }
 		},
 		new Attribute.IntAttribute("numInputs") {
+			@Override
 			protected int get(Element el) { return ((Gate)el).numInputs; }
+			@Override
 			protected void set(Element el, int v) { ((Gate)el).numInputs = v; }
 		},
 		new Attribute.StringAttribute("orientation") {
+			@Override
 			protected String get(Element el) {
 				return ((Gate)el).orientation.toString();
 			}
+			@Override
 			protected void set(Element el, String v) {
 				// gates use their own lowercase orientation enum;
 				// unknown strings leave the orientation unchanged
@@ -369,7 +380,9 @@ public abstract class Gate extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			@Override
 			protected int get(Element el) { return ((Gate)el).propDelay; }
+			@Override
 			protected void set(Element el, int v) { ((Gate)el).propDelay = v; }
 		}
 	);
@@ -381,6 +394,7 @@ public abstract class Gate extends LogicElement {
 	 * Base attributes plus the shared gate attributes, in save order
 	 * (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -391,6 +405,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return A copy of this gate.
 	 */
+	@Override
 	public Element copy() {
 		
 		try {
@@ -405,15 +420,17 @@ public abstract class Gate extends LogicElement {
 	/**
 	 * Copy info in this element to another element.
 	 * 
-	 * @param it The element to copy to.
+	 * @param el The element to copy to.
 	 */
-	public void copy(Gate it) {
+	@Override
+	public void copy(Element el) {
 
+		Gate it = (Gate)el;
 		it.outputs.add(outputs.get(0).copy(it));
 		for (Input in : inputs) {
 			it.inputs.add(in.copy(it));
 		}
-		super.copy(it);
+		super.copy(el);
 		return;
 	} // end of copy method
 	
@@ -421,6 +438,7 @@ public abstract class Gate extends LogicElement {
 	 * Gate sizes are a pure function of input count and orientation,
 	 * recomputed by init() on every load, so they are not saved (#21).
 	 */
+	@Override
 	protected boolean sizeIsRecomputedOnLoad() {
 
 		return true;
@@ -464,6 +482,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return a rectangle that bounds the element on the screen.
 	 */
+	@Override
 	public Rectangle getRect() {
 		
 		if (orientation == Orientation.left || orientation == Orientation.right) {
@@ -500,6 +519,7 @@ public abstract class Gate extends LogicElement {
 	/**
 	 * Reset propagation delay to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		propDelay = getDefaultDelay();
@@ -510,6 +530,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return true;
@@ -520,6 +541,7 @@ public abstract class Gate extends LogicElement {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 		
 		return propDelay;
@@ -528,8 +550,9 @@ public abstract class Gate extends LogicElement {
 	/**
 	 * Set the propagation delay in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 		
 		propDelay = temp;
@@ -540,6 +563,7 @@ public abstract class Gate extends LogicElement {
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
+	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
 		if(orientation == Orientation.left)
@@ -597,6 +621,7 @@ public abstract class Gate extends LogicElement {
 	 * Tells if a gate is capable of rotating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canRotate()
 	{
 		boolean success = true;
@@ -623,6 +648,7 @@ public abstract class Gate extends LogicElement {
 	 * Tells if a gate is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
+	@Override
 	public boolean canFlip()
 	{
 		boolean success = true;
@@ -649,6 +675,7 @@ public abstract class Gate extends LogicElement {
 	 * This method will flip a gate
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
+	@Override
 	public void flip(Graphics g)
 	{
 		if(orientation == Orientation.left)
@@ -787,6 +814,7 @@ public abstract class Gate extends LogicElement {
 		/**
 		 * Validate the form and create the gate.
 		 */
+		@Override
 		protected void validateAndAccept() {
 			
 			try {
@@ -801,7 +829,7 @@ public abstract class Gate extends LogicElement {
 				reject("Must have at least 2 inputs");
 				return;
 			}
-			if (bits < 1 && type != "Extend") {
+			if (bits < 1 && !"Extend".equals(type)) {
 				reject("Must have at least 1 gate (bit)");
 				return;
 			}
@@ -827,6 +855,7 @@ public abstract class Gate extends LogicElement {
 		 * 
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 			
 			// if repeat previous button, set previous values
@@ -852,6 +881,7 @@ public abstract class Gate extends LogicElement {
 		/**
 		 * Cancel this gate.
 		 */
+		@Override
 		protected void cancelDialog() {
 			
 			cancelled = true;
@@ -916,6 +946,7 @@ public abstract class Gate extends LogicElement {
 	 *
 	 * @param sim The simulator to post events to.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 
 		// set output pin
@@ -937,6 +968,7 @@ public abstract class Gate extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// if the input has changed ...

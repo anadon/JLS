@@ -83,7 +83,7 @@ public class Memory extends LogicElement {
 	/**
 	 * Create a new memory element.
 	 * 
-	 * @param circuit The circuit this element is part of.
+	 * @param circ The circuit this element is part of.
 	 */
 	public Memory(Circuit circ) {
 		
@@ -100,6 +100,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show creation dialog
@@ -127,6 +128,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param g The Graphics object to use.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// set up
@@ -183,6 +185,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw watched background
@@ -288,6 +291,7 @@ public class Memory extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 
 		if (name.equals("bits")) {
@@ -322,6 +326,7 @@ public class Memory extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 		
 		if (name.equals("name")) {
@@ -353,6 +358,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT Memory");
@@ -535,17 +541,18 @@ public class Memory extends LogicElement {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 		
 		Memory it = new Memory(circuit);
-		it.name = new String(name);
+		it.name = name;
 		it.type = type;
 		it.bits = bits;
 		it.accessTime = accessTime;
-		it.initialValue = new String(initialValue);
+		it.initialValue = initialValue;
 		it.capacity = capacity;
-		it.fileName = new String(fileName);
-		it.specs = new String(specs);
+		it.fileName = fileName;
+		it.specs = specs;
 		it.watched = watched;
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
@@ -560,9 +567,10 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param info The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
-		if (fileName.equals("")) {
+		if (fileName.isEmpty()) {
 			info.setText(specs + ", built-in initializaion");
 		}
 		else {
@@ -575,6 +583,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return the name.
 	 */
+	@Override
 	public String getName() {
 		
 		return name;
@@ -585,6 +594,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return the number of bits.
 	 */ 
+	@Override
 	public int getBits() {
 		
 		return bits;
@@ -595,6 +605,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canWatch() {
 		
 		return true;
@@ -605,6 +616,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return true if it is, false if it is not.
 	 */
+	@Override
 	public boolean isWatched() {
 		
 		return watched;
@@ -615,6 +627,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param state True to make it watched, false to make it not watched.
 	 */
+	@Override
 	public void setWatched(boolean state) {
 		
 		watched = state;
@@ -625,6 +638,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean hasTiming() {
 		
 		return true;
@@ -633,6 +647,7 @@ public class Memory extends LogicElement {
 	/**
 	 * Reset access time to default value.
 	 */
+	@Override
 	public void resetPropDelay() {
 		
 		accessTime = defaultAccessTime;
@@ -643,6 +658,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return the current delay.
 	 */
+	@Override
 	public int getDelay() {
 		
 		return accessTime;
@@ -651,8 +667,9 @@ public class Memory extends LogicElement {
 	/**
 	 * Set the access time in this element.
 	 * 
-	 * @param amount The new delay amount.
+	 * @param temp The new delay amount.
 	 */
+	@Override
 	public void setDelay(int temp) {
 		
 		accessTime = temp;
@@ -674,6 +691,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param circ A reference back to the circuit the element is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		circ.removeName(name);
@@ -798,12 +816,13 @@ public class Memory extends LogicElement {
 		 * Check the form against the shared memory constraints (issue
 		 * #52): a rejected dialog must leave the memory unchanged.
 		 */
+		@Override
 		protected java.util.List<Violation> validateInputs() {
 
 			java.util.List<Violation> violations =
 					new java.util.ArrayList<Violation>();
 			String tname = nameField.getText().trim();
-			if (tname.equals("") || !Util.isValidName(tname)) {
+			if (tname.isEmpty() || !Util.isValidName(tname)) {
 				violations.add(new Violation("Missing or invalid name",
 						nameField));
 			}
@@ -852,6 +871,7 @@ public class Memory extends LogicElement {
 		/**
 		 * Apply the validated form to the memory element.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			String tname = nameField.getText().trim();
@@ -859,13 +879,25 @@ public class Memory extends LogicElement {
 			int tcapacity = capacity;
 			Memory.Type ttype = null;
 			if (create) {
-				tbits = Integer.parseInt(bitsField.getText());
-				tcapacity = Integer.parseInt(capacityField.getText(),10);
+				try {
+					tbits = Integer.parseInt(bitsField.getText());
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric", bitsField);
+					return;
+				}
+				try {
+					tcapacity = Integer.parseInt(capacityField.getText(),10);
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric", capacityField);
+					return;
+				}
 				ttype = ram.isSelected() ? Memory.Type.RAM : Memory.Type.ROM;
 			}
 
 			// everything is ok, so make it permanent
-			if (!name.equals(""))
+			if (!name.isEmpty())
 				circuit.removeName(name);
 			circuit.addName(tname);
 			name = tname;
@@ -892,6 +924,7 @@ public class Memory extends LogicElement {
 		 * 
 		 * @param event The event object for this action.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 			
 			if (event.getSource() == fromFile) {
@@ -902,7 +935,7 @@ public class Memory extends LogicElement {
 				if (file == null)
 					return;
 				file = file.trim();
-				while (!file.equals("") && !Util.isValidName(file)) {
+				while (!file.isEmpty() && !Util.isValidName(file)) {
 					TellUser.error(this,
 							"Missing or invalid file name, try again", "Error");
 					file = TellUser.prompt(this,
@@ -925,6 +958,7 @@ public class Memory extends LogicElement {
 				window.add(pane);
 				
 				Action okAction = new AbstractAction("ok") {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						tempInit = area.getText();
 						String msg = initOK(tempInit,Integer.MAX_VALUE,Integer.MAX_VALUE,false);
@@ -938,6 +972,7 @@ public class Memory extends LogicElement {
 					}
 				};
 				Action cancelAction = new AbstractAction("cancel") {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						init.dispose();
 					}
@@ -958,6 +993,7 @@ public class Memory extends LogicElement {
 		/**
 		 * Cancel this element.
 		 */
+		@Override
 		protected void cancelDialog() {
 			
 			cancelled = true;
@@ -967,7 +1003,7 @@ public class Memory extends LogicElement {
 		/**
 		 * See if the given name fits in the box on the screen.
 		 * 
-		 * @param value The value to check.
+		 * @param name The value to check.
 		 * 
 		 * @return true if it fits, false if not.
 		 */
@@ -986,6 +1022,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return true.
 	 */ 
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -1003,6 +1040,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return true if the name is bigger, false if not.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// save g for valueFits method
@@ -1055,7 +1093,7 @@ public class Memory extends LogicElement {
 			
 			// iognore blank  or comment lines
 			String temp = nextLine.trim();
-			if (!temp.equals("") && temp.charAt(0) != '#') {
+			if (!temp.isEmpty() && temp.charAt(0) != '#') {
 
 				// check this line
 				Scanner lscan = new Scanner (nextLine);
@@ -1139,7 +1177,7 @@ public class Memory extends LogicElement {
 			// if first time printing, print a heading
 			if (firstTime) {
 				firstTime = false;
-				if (qual.equals("")) {
+				if (qual.isEmpty()) {
 					System.out.println("Changed locations in memory " + name);
 				}
 				else {
@@ -1157,7 +1195,7 @@ public class Memory extends LogicElement {
 		
 		// if nothing changed, print message to that effect
 		if (firstTime) {
-			if (qual.equals("")) {
+			if (qual.isEmpty()) {
 				System.out.println("No changes in memory " + name);
 			}
 			else {
@@ -1184,7 +1222,7 @@ public class Memory extends LogicElement {
 	private WordStore mem;
 	private WordStore initMem;
 	private BitSet currentValue;
-	private class WriteRecord {
+	private static class WriteRecord {
 		BitSet what;
 		int where;
 		long when;
@@ -1239,18 +1277,21 @@ public class Memory extends LogicElement {
 			present = (BitSet)from.present.clone();
 		}
 
+		@Override
 		public BitSet get(int addr) {
 			if (!present.get(addr))
 				return null;
 			return BitSet.valueOf(new long[] { words[addr] });
 		}
 
+		@Override
 		public void put(int addr, BitSet value) {
 			long[] asLongs = value.toLongArray();
 			words[addr] = asLongs.length == 0 ? 0 : asLongs[0];
 			present.set(addr);
 		}
 
+		@Override
 		public SortedSet<Integer> addresses() {
 			SortedSet<Integer> addrs = new TreeSet<Integer>();
 			for (int a = present.nextSetBit(0); a >= 0; a = present.nextSetBit(a+1)) {
@@ -1259,6 +1300,7 @@ public class Memory extends LogicElement {
 			return addrs;
 		}
 
+		@Override
 		public WordStore copy() {
 			return new DenseWordStore(this);
 		}
@@ -1281,18 +1323,22 @@ public class Memory extends LogicElement {
 			map = new HashMap<Integer,BitSet>(from.map);
 		}
 
+		@Override
 		public BitSet get(int addr) {
 			return map.get(addr);
 		}
 
+		@Override
 		public void put(int addr, BitSet value) {
 			map.put(addr, value);
 		}
 
+		@Override
 		public SortedSet<Integer> addresses() {
 			return new TreeSet<Integer>(map.keySet());
 		}
 
+		@Override
 		public WordStore copy() {
 			return new SparseWordStore(this);
 		}
@@ -1314,13 +1360,14 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param sim Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// create initial memory array
 		initMem = newWordStore();
 		
 		// if there is an initialization file specified
-		if (!fileName.equals("")) {
+		if (!fileName.isEmpty()) {
 			
 			// read and parse file
 			try {
@@ -1362,7 +1409,7 @@ public class Memory extends LogicElement {
 		else {
 			
 			// parse built-in values
-			String msg = initOK(new String(initialValue),capacity,bits,true);
+			String msg = initOK(initialValue,capacity,bits,true);
 			if (msg != null) {
 				if (JLSInfo.batch && JLSInfo.frame == null) {
 					System.out.println(msg + " in memory file " +
@@ -1399,6 +1446,7 @@ public class Memory extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// todo
@@ -1548,6 +1596,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @return the last value output.
 	 */
+	@Override
 	public BitSet getCurrentValue() {
 		
 		return currentValue;
@@ -1570,6 +1619,7 @@ public class Memory extends LogicElement {
 	 * 
 	 * @param where Where on the screen to display.
 	 */
+	@Override
 	public void showCurrentValue(Point where) {
 		
 		// set up
@@ -1616,6 +1666,7 @@ public class Memory extends LogicElement {
 		window.add(pane,BorderLayout.CENTER);
 		JButton ok = new JButton("ok");
 		ok.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				contents.dispose();
 			}

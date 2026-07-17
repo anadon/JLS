@@ -25,7 +25,6 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -140,6 +139,7 @@ public abstract class SimpleEditor extends JPanel {
 			new ConcurrentHashMap<String,String>();
 	private static final ExecutorService checkpointWriter =
 			Executors.newSingleThreadExecutor(new ThreadFactory() {
+				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = new Thread(r, "JLS-checkpoint-writer");
 					t.setDaemon(true);
@@ -161,6 +161,7 @@ public abstract class SimpleEditor extends JPanel {
 		if (pendingCheckpoints.put(fileName, circuitText) != null)
 			return;	// a queued task will pick up this newer text
 		checkpointWriter.execute(new Runnable() {
+			@Override
 			public void run() {
 				String content = pendingCheckpoints.remove(fileName);
 				if (content == null)
@@ -316,7 +317,7 @@ public abstract class SimpleEditor extends JPanel {
 	/**
 	 * Create new editor.
 	 * 
-	 * @param pane The tabbed pane this editor is in.
+	 * @param parent The tabbed pane this editor is in.
 	 * @param circuit The circuit it will edit.
 	 * @param name The name of the circuit.
 	 * @param clipboard For cut and paste.
@@ -362,6 +363,7 @@ public abstract class SimpleEditor extends JPanel {
 		corner.setToolTipText("expand circuit drawing area by 10%");
 		pane.setCorner(JScrollPane.LOWER_RIGHT_CORNER, corner);
 		corner.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				me.increaseSize();
 			}
@@ -395,6 +397,7 @@ public abstract class SimpleEditor extends JPanel {
 	public void addToImportMenu(Circuit subCirc) {
 
 		Action act = new AbstractAction(subCirc.getName()) {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				ew.doImport((String)(this.getValue(Action.NAME)));
 			}
@@ -423,12 +426,6 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of removeFromImportMenu method
 
 	/**
-	 * Change the name of a circuit in the import menu.
-	 * 
-	 * @param oldname The current name.
-	 * @param newname The new name.
-	 */
-	/**
 	 * Point this editor's import map at a replacement circuit instance
 	 * with the same name. Undo/redo installs a freshly loaded Circuit;
 	 * without this refresh a sibling editor's Import silently copies the
@@ -451,6 +448,7 @@ public abstract class SimpleEditor extends JPanel {
 		menuMap.put(newname,item);
 
 		Action act = new AbstractAction(newname) {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				ew.doImport((String)(this.getValue(Action.NAME)));
 			}
@@ -767,6 +765,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up ctrl-w (new wire / watch) key binding
 				Action ctrlw = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -842,6 +841,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up end wire key binding
 				Action endWire = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -881,6 +881,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up view key binding
 				Action see = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -909,6 +910,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up modify key binding
 				Action modify = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -927,6 +929,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up probe key binding
 				Action probe = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -950,6 +953,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up timing key binding
 				Action timing = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -973,6 +977,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up selectAll key binding
 				Action selectAll = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 
 						// do nothing if editor is disabled
@@ -987,6 +992,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up close window key binding
 				Action closeWin = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						close();
 					}
@@ -996,6 +1002,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up delete key binding
 				Action deleteKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							remove();
@@ -1012,6 +1019,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up cut key binding
 				Action cutKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							copy();
@@ -1028,6 +1036,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up copy key binding
 				Action copyKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							copy();
@@ -1042,6 +1051,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up paste key binding
 				Action pasteKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							if (clipboard.getElements().size() == 0)
@@ -1058,6 +1068,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up undo key binding
 				Action undoKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							undo();
@@ -1070,6 +1081,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up redo key binding
 				Action redoKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 							redo();
@@ -1082,6 +1094,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up lock key binding
 				Action lockKey = new AbstractAction() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
 
@@ -1126,6 +1139,7 @@ public abstract class SimpleEditor extends JPanel {
 				ImageIcon image = getImage("and");
 				String text = image == null ? "AND" : "";
 				Action act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new AndGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1135,6 +1149,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("or");
 				text = image == null ? "OR" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new OrGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1144,6 +1159,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("not");
 				text = image == null ? "NOT" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NotGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1153,6 +1169,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("xor");
 				text = image == null ? "XOR" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new XorGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1162,6 +1179,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("nand");
 				text = image == null ? "NAND" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NandGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1171,6 +1189,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("nor");
 				text = image == null ? "NOR" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NorGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1180,6 +1199,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("delay");
 				text = image == null ? "DELAY" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new DelayGate(circuit),event.getSource() instanceof JButton);
 					}
@@ -1189,6 +1209,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("tristate");
 				text = image == null ? "TriState" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new TriState(circuit),event.getSource() instanceof JButton);
 					}
@@ -1204,6 +1225,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("jumpstart");
 				text = image == null ? "START" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new JumpStart(circuit),event.getSource() instanceof JButton);
 					}
@@ -1213,6 +1235,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("jumpend");
 				text = image == null ? "END" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new JumpEnd(circuit),event.getSource() instanceof JButton);
 					}
@@ -1222,6 +1245,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("ipin");
 				text = image == null ? "I-PIN" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new InputPin(circuit),event.getSource() instanceof JButton);
 					}
@@ -1231,6 +1255,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("opin");
 				text = image == null ? "O-PIN" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new OutputPin(circuit),event.getSource() instanceof JButton);
 					}
@@ -1240,6 +1265,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("split");
 				text = image == null ? "SPLIT" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Splitter(circuit),event.getSource() instanceof JButton);
 					}
@@ -1249,6 +1275,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("bind");
 				text = image == null ? "BIND" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Binder(circuit),event.getSource() instanceof JButton);
 					}
@@ -1258,6 +1285,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("const");
 				text = image == null ? "CONST" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Constant(circuit),event.getSource() instanceof JButton);
 					}
@@ -1267,6 +1295,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("extend");
 				text = image == null ? "1-to-N" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Extend(circuit),event.getSource() instanceof JButton);
 					}
@@ -1282,6 +1311,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("register");
 				text = image == null ? "REG" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Register(circuit),event.getSource() instanceof JButton);
 					}
@@ -1291,6 +1321,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("memory");
 				text = image == null ? "MEMORY" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Memory(circuit),event.getSource() instanceof JButton);
 					}
@@ -1306,6 +1337,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("mux");
 				text = image == null ? "MUX" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Mux(circuit),event.getSource() instanceof JButton);
 					}
@@ -1315,6 +1347,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("decoder");
 				text = image == null ? "DEC" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Decoder(circuit),event.getSource() instanceof JButton);
 					}
@@ -1324,6 +1357,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("shiftregister");
 				text = image == null ? "SHIFT" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new ShiftRegister(circuit),event.getSource() instanceof JButton);
 					}
@@ -1333,6 +1367,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("adder");
 				text = image == null ? "ADDER" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Adder(circuit),event.getSource() instanceof JButton);
 					}
@@ -1342,6 +1377,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("clock");
 				text = image == null ? "CLOCK" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Clock(circuit),event.getSource() instanceof JButton);
 					}
@@ -1356,6 +1392,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("pause");
 				text = image == null ? "PAUSE" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Pause(circuit),event.getSource() instanceof JButton);
 					}
@@ -1365,6 +1402,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("stop");
 				text = image == null ? "STOP" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Stop(circuit),event.getSource() instanceof JButton);
 					}
@@ -1380,6 +1418,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("siggen");
 				text = image == null ? "SIGGEN" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new SigGen(circuit),event.getSource() instanceof JButton);
 					}
@@ -1389,6 +1428,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("display");
 				text = image == null ? "DISPLAY" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new jls.elem.Display(circuit),
 								event.getSource() instanceof JButton);
@@ -1405,6 +1445,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("statemachine");
 				text = image == null ? "ST. MAC." : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new StateMachine(circuit),event.getSource() instanceof JButton);
 					}
@@ -1414,6 +1455,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("truth");
 				text = image == null ? "Truth Table" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new TruthTable(circuit),event.getSource() instanceof JButton);
 					}
@@ -1427,6 +1469,7 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("text");
 				text = image == null ? "TEXT" : "";
 				act = new AbstractAction(text,image) {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Text(circuit),event.getSource() instanceof JButton);
 					}
@@ -1443,6 +1486,7 @@ public abstract class SimpleEditor extends JPanel {
 				toolbar.add(imp);
 
 				imp.addActionListener(new ActionListener() {
+					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (importMenu.getComponentCount() > 0) {
 							Dimension d = imp.getSize();
@@ -1500,6 +1544,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param g The Graphics object to draw with.
 			 */
+			@Override
 			public void paintComponent(Graphics g) {
 
 				super.paintComponent(g);
@@ -1552,6 +1597,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event The event object for actions.
 			 */
+			@Override
 			public void actionPerformed(ActionEvent event) {
 
 				info.setForeground(Color.BLACK);
@@ -1855,6 +1901,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event The event object for presses.
 			 */
+			@Override
 			public void mousePressed(MouseEvent event) {
 
 				// do nothing if editor is disabled
@@ -1888,11 +1935,11 @@ public abstract class SimpleEditor extends JPanel {
 
 								// drag wire means drag both ends
 								if (el instanceof Wire) {
-									Wire wire = (Wire)el;
-									WireEnd end1 = wire.getEnd();
+									Wire dragWire = (Wire)el;
+									WireEnd end1 = dragWire.getEnd();
 									if (end1.isAttached())
 										continue;
-									WireEnd end2 = wire.getOtherEnd(end1);
+									WireEnd end2 = dragWire.getOtherEnd(end1);
 									if (end2.isAttached())
 										continue;
 									selected.add(end1);
@@ -2235,6 +2282,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event The event object for releases.
 			 */
+			@Override
 			public void mouseReleased(MouseEvent event) {
 
 				// do nothing if editor is disabled
@@ -2373,6 +2421,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event The event object for drags.
 			 */
+			@Override
 			public void mouseDragged(MouseEvent event) {
 
 				// do nothing if editor is disabled
@@ -2576,6 +2625,7 @@ public abstract class SimpleEditor extends JPanel {
 			 *
 			 * @param event The event object for moves.
 			 */
+			@Override
 			public void mouseMoved(MouseEvent event) {
 
 				// do nothing if editor is disabled
@@ -2701,6 +2751,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event Unused.
 			 */
+			@Override
 			public void mouseClicked(MouseEvent event) {}
 
 			/**
@@ -2708,6 +2759,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event Unused.
 			 */
+			@Override
 			public void mouseEntered(MouseEvent event) {
 
 				requestFocusInWindow(true);
@@ -2718,6 +2770,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param event Unused.
 			 */
+			@Override
 			public void mouseExited(MouseEvent event) {
 
 				if (currentState == State.idle) {
@@ -2901,7 +2954,7 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * See if a wire end can attach to a wire.
 			 * 
-			 * @param end The wire end.
+			 * @param end1 The wire end.
 			 * @param wire The wire.
 			 * 
 			 * @returns true if can connect, false if not.
@@ -3143,8 +3196,8 @@ public abstract class SimpleEditor extends JPanel {
 			 * Not possible if both are outputs or both are inputs,
 			 * unless both are tristate outputs.
 			 * 
-			 * @param put1 The put.
-			 * @param put2 The other put.
+			 * @param p1 The put.
+			 * @param p2 The other put.
 			 * 
 			 * @return true if puts can be attached, false if not.
 			 */
@@ -3768,7 +3821,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (el instanceof JumpEnd)
 								continue;
 							String name = el.getName();
-							if (name != null && !name.equals("")) {
+							if (name != null && !name.isEmpty()) {
 								if (circuit.hasName(name)) {
 									info.setForeground(Color.red);
 									info.setText("Paste will result in elements with duplicate names");
@@ -3807,7 +3860,7 @@ public abstract class SimpleEditor extends JPanel {
 						// add names to circuit name list
 						for (Element el : from.getElements()) {
 							String name = el.getName();
-							if (name != null && !name.equals(""))
+							if (name != null && !name.isEmpty())
 								circuit.addName(name);
 						}
 
@@ -3837,9 +3890,7 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// now copy all wire ends, checking for those attached to puts,
-						// create set of all new wire ends for net partitioning later
-						LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
+						// now copy all wire ends, checking for those attached to puts
 						for (Element el : from.getElements()) {
 							if (!(el instanceof WireEnd))
 								continue;
@@ -3848,7 +3899,6 @@ public abstract class SimpleEditor extends JPanel {
 							newEnd.fixPosition();
 							newEnd.move(x,y);
 							circuit.addElement(newEnd);
-							ends.add(newEnd);
 							if (oldEnd.isAttached()) {
 								Put newPut = oldEnd.getPut().getCopy();
 								newEnd.setPut(newPut);
@@ -4034,7 +4084,7 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// change its timing info
-						el.changeTiming(this, x, y);
+						el.changeTiming();
 
 						// clean up
 						clearSelected();
@@ -4502,7 +4552,7 @@ public abstract class SimpleEditor extends JPanel {
 					 * Find all named elements and add names to the namesUsed list in this circuit.
 					 * Do the same for all subcircuits.
 					 * 
-					 * @param The circuit to process.
+					 * @param circ The circuit to process.
 					 */
 					private void updateNamesUsed(Circuit circ) {
 

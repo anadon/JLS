@@ -45,6 +45,7 @@ public class AndGate extends Gate {
 	/**
 	 * The kind descriptor for this gate.
 	 */
+	@Override
 	protected Kind kind() {
 		
 		return KIND;
@@ -57,6 +58,7 @@ public class AndGate extends Gate {
 	/**
 	 * AND the input bits (absent inputs count as 0).
 	 */
+	@Override
 	protected BitSet computeOutput() {
 
 		BitSet value = new BitSet(bits);

@@ -38,10 +38,10 @@ public final class KeyPad extends JButton implements ActionListener {
 	public KeyPad(JTextField target, int digitKeys, long defaultValue, final Window f) {
 		
 		// initialize
-		URL down = getClass().getResource("images/down.gif");
+		URL down = KeyPad.class.getResource("images/down.gif");
 		setIcon(new ImageIcon(down));
 		setBackground(Color.WHITE);
-		URL up = getClass().getResource("images/up.gif");
+		URL up = KeyPad.class.getResource("images/up.gif");
 		hide.setIcon(new ImageIcon(up));
 		
 		
@@ -111,6 +111,7 @@ public final class KeyPad extends JButton implements ActionListener {
 
 		// standard dismissal (#86): Escape closes the keypad ...
 		ActionListener hideAction = new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				hideKeyPad();
 			}
@@ -121,6 +122,7 @@ public final class KeyPad extends JButton implements ActionListener {
 
 		// ... and so does clicking anywhere outside it (focus loss)
 		win.addWindowFocusListener(new WindowAdapter() {
+			@Override
 			public void windowLostFocus(WindowEvent event) {
 				if (winVisible) {
 					hideKeyPad();
@@ -145,6 +147,7 @@ public final class KeyPad extends JButton implements ActionListener {
 	 * 
 	 * @param event The event object for actions.
 	 */
+	@Override
 	public void actionPerformed(ActionEvent event) {
 		
 		if (event.getSource() == this) {

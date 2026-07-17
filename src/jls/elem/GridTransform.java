@@ -14,8 +14,8 @@ import java.awt.Point;
  * OrientationGeometryTest pins what any such conversion must reproduce.
  *
  * All point transforms take an offset relative to the element's origin
- * within a box of the given width and height, and return the offset in
- * the transformed box (whose dimensions swap under rotation).
+ * plus the box dimension the transform depends on, and return the offset
+ * in the transformed box (whose dimensions swap under rotation).
  */
 public final class GridTransform {
 
@@ -26,7 +26,7 @@ public final class GridTransform {
 	 * Rotate a point 90 degrees clockwise within a w-by-h box; the result
 	 * lives in an h-by-w box.
 	 */
-	public static Point rotateCW(int px, int py, int width, int height) {
+	public static Point rotateCW(int px, int py, int height) {
 
 		return new Point(height - py, px);
 	} // end of rotateCW method
@@ -35,7 +35,7 @@ public final class GridTransform {
 	 * Rotate a point 90 degrees counter-clockwise within a w-by-h box; the
 	 * result lives in an h-by-w box.
 	 */
-	public static Point rotateCCW(int px, int py, int width, int height) {
+	public static Point rotateCCW(int px, int py, int width) {
 
 		return new Point(py, width - px);
 	} // end of rotateCCW method
@@ -51,7 +51,7 @@ public final class GridTransform {
 	/**
 	 * Mirror a point across the box's vertical axis (flip left/right).
 	 */
-	public static Point mirrorX(int px, int py, int width, int height) {
+	public static Point mirrorX(int px, int py, int width) {
 
 		return new Point(width - px, py);
 	} // end of mirrorX method
@@ -59,7 +59,7 @@ public final class GridTransform {
 	/**
 	 * Mirror a point across the box's horizontal axis (flip up/down).
 	 */
-	public static Point mirrorY(int px, int py, int width, int height) {
+	public static Point mirrorY(int px, int py, int height) {
 
 		return new Point(px, height - py);
 	} // end of mirrorY method
@@ -144,21 +144,21 @@ public final class GridTransform {
 			for (int op : ops) {
 				switch (op) {
 				case CW:
-					p = GridTransform.rotateCW(p.x, p.y, w, h);
+					p = GridTransform.rotateCW(p.x, p.y, h);
 					int t = w; w = h; h = t;
 					break;
 				case CCW:
-					p = GridTransform.rotateCCW(p.x, p.y, w, h);
+					p = GridTransform.rotateCCW(p.x, p.y, w);
 					t = w; w = h; h = t;
 					break;
 				case R180:
 					p = GridTransform.rotate180(p.x, p.y, w, h);
 					break;
 				case MX:
-					p = GridTransform.mirrorX(p.x, p.y, w, h);
+					p = GridTransform.mirrorX(p.x, p.y, w);
 					break;
 				default:
-					p = GridTransform.mirrorY(p.x, p.y, w, h);
+					p = GridTransform.mirrorY(p.x, p.y, h);
 					break;
 				}
 			}

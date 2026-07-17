@@ -48,6 +48,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @return false if canceled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// make sure there isn't a signal generator in the circuit already
@@ -81,6 +82,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @param g Unused.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// do nothing if no graphics object
@@ -103,6 +105,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @param g The graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		// draw context
@@ -125,6 +128,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @param output The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT SigGen");
@@ -139,7 +143,9 @@ public class SigGen extends SigSim {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("signals") {
+			@Override
 			protected String get(Element el) { return ((SigGen)el).signals; }
+			@Override
 			protected void set(Element el, String v) { ((SigGen)el).signals = v; }
 		}
 	);
@@ -150,6 +156,7 @@ public class SigGen extends SigSim {
 	/**
 	 * Base attributes plus this element's own, in save order (#23).
 	 */
+	@Override
 	protected java.util.List<Attribute> savedAttributes() {
 
 		return ALL_ATTRIBUTES;
@@ -160,6 +167,7 @@ public class SigGen extends SigSim {
 	 *
 	 * @return an exact copy of this element.
 	 */
+	@Override
 	public SigGen copy() {
 
 		SigGen it = new SigGen(circuit);
@@ -172,6 +180,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @return true.
 	 */
+	@Override
 	public boolean canChange() {
 		
 		return true;
@@ -187,6 +196,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @return false.
 	 */
+	@Override
 	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
 		
 		// show dialog
@@ -230,6 +240,7 @@ public class SigGen extends SigSim {
 		/**
 		 * Accept the signal specification.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			String newSignals = textArea.getText();
@@ -243,6 +254,7 @@ public class SigGen extends SigSim {
 		/**
 		 * Cancel this edit.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -261,6 +273,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @param sim The simulator.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// do nothing if in an imported circuit
@@ -277,6 +290,7 @@ public class SigGen extends SigSim {
 	 * 
 	 * @param msg An error message.
 	 */
+	@Override
 	protected void specError(String msg) {
 		
 		if (JLSInfo.batch && JLSInfo.frame == null) {

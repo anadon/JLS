@@ -36,9 +36,10 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return the string.
 	 */
+	@Override
 	public String toString() {
 		
-		return "WireEnd[" + net + "]";
+		return "WireEnd[" + (net == null ? "no net" : net.getBits() + " bit net") + "]";
 	} // end of toString method
 	
 	/**
@@ -54,8 +55,9 @@ public class WireEnd extends LogicElement {
 	/**
 	 * This form of init not used.
 	 * 
-	 * @param The Graphics object needed by overridden methods.
+	 * @param g The Graphics object needed by overridden methods.
 	 */
+	@Override
 	public void init(Graphics g) {
 		
 		// do nothing
@@ -110,6 +112,7 @@ public class WireEnd extends LogicElement {
 	/**
 	 * Make a copy of this wire end.
 	 */
+	@Override
 	public WireEnd copy() {
 		
 		WireEnd it = new WireEnd(circuit);
@@ -123,6 +126,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return The x-coordinate.
 	 */
+	@Override
 	public int getX() {
 		
 		return x;
@@ -133,6 +137,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return The y-coordinate.
 	 */
+	@Override
 	public int getY() {
 		
 		return y;
@@ -156,6 +161,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return true if the point is in the display area, false if not.
 	 */
+	@Override
 	public boolean contains(int x, int y) {
 		
 		return getRect().contains(x,y);
@@ -169,6 +175,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return true if the element is inside, false if not.
 	 */
+	@Override
 	public boolean isInside(Rectangle rect) {
 		
 		return rect.contains(x,y);
@@ -179,6 +186,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		Color inside;
@@ -214,6 +222,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @param circ The circuit this wire end is in.
 	 */
+	@Override
 	public void remove(Circuit circ) {
 		
 		circ.remove(this);
@@ -310,6 +319,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return true if it is, false if not.
 	 */
+	@Override
 	public boolean isTouching() {
 		
 		return touching;
@@ -320,6 +330,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @param setting True if it is, false if not.
 	 */
+	@Override
 	public void setTouching(boolean setting) {
 		
 		touching = setting;
@@ -330,6 +341,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return the number of bits.
 	 */
+	@Override
 	public int getBits() {
 		
 		return net.getBits();
@@ -370,6 +382,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @param info A JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 		
 		String inp = "";
@@ -424,7 +437,7 @@ public class WireEnd extends LogicElement {
 	/**
 	 * Put this wire end in a new wire net.
 	 * 
-	 * @param the new wire net.
+	 * @param net The new wire net.
 	 */
 	public void setNet(WireNet net) {
 		
@@ -480,6 +493,7 @@ public class WireEnd extends LogicElement {
 	 * 
 	 * @return the bounding rectangle.
 	 */
+	@Override
 	public Rectangle getRect() {
 		
 		int d = JLSInfo.pointDiameter;
@@ -512,6 +526,7 @@ public class WireEnd extends LogicElement {
 	 * on every load, so their size is not saved (#21). They dominate
 	 * saved files: every wire segment endpoint is one of these blocks.
 	 */
+	@Override
 	protected boolean sizeIsRecomputedOnLoad() {
 
 		return true;
@@ -522,6 +537,7 @@ public class WireEnd extends LogicElement {
 	 *
 	 * @param output A PrintWriter to write to.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 		
 		output.println("ELEMENT WireEnd");
@@ -552,6 +568,7 @@ public class WireEnd extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, int value) {
 		
 		if (name.equals("attach")) {
@@ -584,6 +601,7 @@ public class WireEnd extends LogicElement {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
+	@Override
 	public void setValue(String name, String value) {
 		
 		if (name.equals("put")) {
@@ -611,6 +629,7 @@ public class WireEnd extends LogicElement {
 	/**
 	 * Wire ends do nothing during simulation.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 		
 		// do nothing

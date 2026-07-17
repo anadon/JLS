@@ -39,9 +39,10 @@ final class FileFormatSupport {
 
 	/** Write content the way the current save path does: XZ-compressed text. */
 	static void writeXZ(File file, String content) throws Exception {
-		try (Writer out = new OutputStreamWriter(
-				new XZOutputStream(new FileOutputStream(file), new LZMA2Options()),
-				StandardCharsets.UTF_8)) {
+		try (FileOutputStream rawOut = new FileOutputStream(file);
+				Writer out = new OutputStreamWriter(
+						new XZOutputStream(rawOut, new LZMA2Options()),
+						StandardCharsets.UTF_8)) {
 			out.write(content);
 		}
 	}

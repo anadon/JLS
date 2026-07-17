@@ -45,6 +45,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 *            times/seqs are equal, and +1 if this object's time/seq is
 	 *            greater than other's.
 	 */
+	@Override
 	public int compareTo(SimEvent other) {
 		
 		// compare times first
@@ -72,11 +73,12 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 *
 	 * @return true if the objects are equal, false otherwise.
 	 */
+	@Override
 	public boolean equals(Object other) {
-		
-		if (other == null)
+
+		if (!(other instanceof SimEvent))
 			return false;
-		
+
 		SimEvent oth = (SimEvent) other;
 		
 		if (this.time != oth.time)
@@ -95,6 +97,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 *
 	 * @return the time of the event.
 	 */
+	@Override
 	public int hashCode() {
 		
 		return (int)time;

@@ -35,6 +35,7 @@ public class Output extends Put {
 	 * 
 	 * @return the string verison of all the properties.
 	 */
+	@Override
 	public String toString() {
 		
 		return "Output[" + super.toString() + ",tristate=" + triState + "]";

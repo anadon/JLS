@@ -57,7 +57,7 @@ public class State {
 	private int x;
 	private int y;
 	private int diameter;
-	private class Check {
+	private static class Check {
 		public int bits;
 		public boolean isInput;	// false if output
 		public int refs; // delete from map when 0
@@ -76,19 +76,20 @@ public class State {
 	/**
 	 * Outputs from this state.
 	 */
-	private class Out {
+	private static class Out {
 
 		public String signal;
 		public int bits;
 		public long value;
 
+		@Override
 		public String toString() { return signal + "[" + bits + "] = " + value; }
 	} // end of Out class
 
 	/**
 	 * Transitions from a given state
 	 */
-	private class Transition {
+	private static class Transition {
 
 		public String signal = "";
 		public int bits = 1;
@@ -411,7 +412,7 @@ public class State {
 		// make copy of all outs
 		for (Out out : outs) {
 			Out newOut = new Out();
-			newOut.signal = new String(out.signal);
+			newOut.signal = out.signal;
 			newOut.value = out.value;
 			newOut.bits = out.bits;
 			newState.outs.add(newOut);
@@ -420,13 +421,13 @@ public class State {
 		// make copy of all transitions
 		for (Transition tran : trans) {
 			Transition newTrans = new Transition();
-			newTrans.signal = new String(tran.signal);
+			newTrans.signal = tran.signal;
 			newTrans.unconditional = tran.unconditional;
 			newTrans.other = tran.other;
 			newTrans.equal = tran.equal;
 			newTrans.value = tran.value;
 			newTrans.bits = tran.bits;
-			newTrans.nextStateName = new String(tran.nextState.getName());
+			newTrans.nextStateName = tran.nextState.getName();
 			for (Point p : tran.points) {
 				newTrans.points.add(new Point(p.x,p.y));
 			}
@@ -448,10 +449,10 @@ public class State {
 
 	/**
 	 * Replace all symbolic links to next states with actual references.
-	 * 
-	 * @param it The new state machine.
+	 *
+	 * @param stateMap A map from state name to state.
 	 */
-	public void linkTrans(StateMachine it, Map<String,State>stateMap) {
+	public void linkTrans(Map<String,State>stateMap) {
 
 		for (Transition tran : trans) {
 			if (tran.nextStateName != null) {
@@ -522,11 +523,10 @@ public class State {
 
 	/**
 	 * Set an output String instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
+	 *
 	 * @param value The instance variable value.
 	 */
-	public void setOutputValue(String name, String value) {
+	public void setOutputValue(String value) {
 
 		buildOut = new Out();
 		buildOut.signal = value;
@@ -896,7 +896,7 @@ public class State {
 
 		// load transition with known info
 		for (Transition oldTrans : trans) {
-			if (!oldTrans.signal.equals("")) {
+			if (!oldTrans.signal.isEmpty()) {
 				newTrans.signal = oldTrans.signal;
 			}
 			if (oldTrans.bits != 0) {
@@ -905,7 +905,7 @@ public class State {
 		}
 
 		// get condition info
-		CreateTrans ct = new CreateTrans(newTrans,this,mainDialog);
+		CreateTrans ct = new CreateTrans(newTrans,this);
 
 		// if it wasn't canceled...
 		if (!ct.wasCancelled()) {
@@ -973,7 +973,7 @@ public class State {
 				trans.add(newTrans);
 				return;
 			}
-			if (!signal.equals("") && !signal.equals(newTrans.signal)) {
+			if (!signal.isEmpty() && !signal.equals(newTrans.signal)) {
 				TellUser.error(mainDialog,
 						"Can't test different signals in same state",
 						"Error");
@@ -1125,8 +1125,8 @@ public class State {
 	 * Also save reference to the highlighted transition so it can be deleted
 	 * if the user wants to.
 	 * 
-	 * @param x The x-coordinate of the given point.
-	 * @param y The y-coordinate of the given point.
+	 * @param xp The x-coordinate of the given point.
+	 * @param yp The y-coordinate of the given point.
 	 * 
 	 * @return true if some transition is highlighted, false if none
 	 */
@@ -1261,7 +1261,7 @@ public class State {
 
 		Set<String> inputs = new HashSet<String>();
 		for (Transition tr : trans) {
-			if (!tr.signal.equals("") && !tr.signal.equals("else"))
+			if (!tr.signal.isEmpty() && !tr.signal.equals("else"))
 				inputs.add(tr.signal);
 		}
 		return inputs;
@@ -1284,6 +1284,7 @@ public class State {
 	/**
 	 * Dialog to create info about a transition.
 	 */
+	@SuppressWarnings("serial")
 	private class CreateTrans extends ElementDialog implements ActionListener {
 
 		// properties
@@ -1305,7 +1306,7 @@ public class State {
 		 * 
 		 * @param tr The transition to edit.
 		 */
-		public CreateTrans(Transition tr, State st, JDialog theDialog) {
+		public CreateTrans(Transition tr, State st) {
 
 			// set up
 			super("Create Transition",null);
@@ -1348,7 +1349,7 @@ public class State {
 			// add radio buttons
 			window.add(new JLabel(" "));
 			window.add(conditional);
-			if (trans.signal.equals("")) {
+			if (trans.signal.isEmpty()) {
 				window.add(unconditional);
 			}
 			window.add(otherwise);
@@ -1382,7 +1383,7 @@ public class State {
 				valueField.setEditable(false);
 				bitsField.setEditable(false);
 			}
-			else if (!tr.signal.equals("")) {
+			else if (!tr.signal.isEmpty()) {
 				signalField.setEditable(false);
 				bitsField.setEditable(false);
 			}
@@ -1399,6 +1400,7 @@ public class State {
 		/**
 		 * Validate the form and set up the transition.
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			// handle unconditional transition
@@ -1418,7 +1420,7 @@ public class State {
 			}
 
 			// check for missing signal name
-			if (signalField.getText().equals("")) {
+			if (signalField.getText().isEmpty()) {
 				reject("Missing signal name");
 				return;
 			}
@@ -1461,7 +1463,7 @@ public class State {
 						hasBits + " bits");
 				return;
 			}
-			int newbits = Integer.parseInt(bitsField.getText());
+			int newbits = tempBits;
 			if (trans.bits != -1 && trans.bits != newbits) {
 				reject("Bits don't match with previous signal specification of " +
 						trans.bits + " bits");
@@ -1484,7 +1486,7 @@ public class State {
 			else {
 				trans.equal = false;
 			}
-			trans.value = Integer.parseInt(valueField.getText());
+			trans.value = tempValue;
 			trans.bits = newbits;
 			dispose();
 		} // end of validateAndAccept method
@@ -1492,6 +1494,7 @@ public class State {
 		/**
 		 * Cancel the new transition.
 		 */
+		@Override
 		protected void cancelDialog() {
 
 			cancelled = true;
@@ -1503,6 +1506,7 @@ public class State {
 		 *
 		 * @param event The event object.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			// save equality type check
@@ -1517,7 +1521,7 @@ public class State {
 			
 			// handle new conditional transition
 			else if (event.getSource() == conditional) {
-				if (trans.signal.equals("")) {
+				if (trans.signal.isEmpty()) {
 					signalField.setEditable(true);
 					valueField.setEditable(true);
 					bitsField.setEditable(true);
@@ -1578,6 +1582,7 @@ public class State {
 		close.setBackground(Color.green);
 		window.add(close);
 		close.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				show.dispose();
 			}
@@ -1618,8 +1623,8 @@ public class State {
 	/**
 	 * Edit outputs.
 	 */
-	public void editOuts(JDialog theDialog) {
-		new EditOutputs(theDialog);
+	public void editOuts() {
+		new EditOutputs();
 	} // end of editOuts method
 
 	/**
@@ -1642,7 +1647,7 @@ public class State {
 		/**
 		 * Initialize dialog.
 		 */
-		public EditOutputs(JDialog theDialog) {
+		public EditOutputs() {
 
 			// set up
 			super("Edit Outputs",null);
@@ -1705,6 +1710,7 @@ public class State {
 		/**
 		 * Close the dialog (outputs are edited in place).
 		 */
+		@Override
 		protected void validateAndAccept() {
 
 			dispose();
@@ -1715,12 +1721,13 @@ public class State {
 		 *
 		 * @param event The event object.
 		 */
+		@Override
 		public void actionPerformed(ActionEvent event) {
 
 			if (event.getSource() == add) {
 				Out newOut = new Out();
 				newOut.signal = signalField.getText().trim();
-				if (newOut.signal.equals("")) {
+				if (newOut.signal.isEmpty()) {
 					TellUser.error(this,
 							"Missing signal name", "Error");
 					return;
@@ -1905,11 +1912,10 @@ public class State {
 	 * Send all out values of this state to the state machine outputs.
 	 * Unspecified outputs will be made 0.
 	 * 
-	 * @param mach This state machine.
 	 * @param now The current simulation time.
 	 * @param sim The simulator.
 	 */
-	public void sendOutputs(StateMachine mach, long now, Simulator sim) {
+	public void sendOutputs(long now, Simulator sim) {
 
 		Set<Output> sent = new HashSet<Output>();
 

@@ -51,12 +51,14 @@ public final class TextFilter extends DocumentFilter {
 		this.base = base;
 	} // end of setBase method
 
+	@Override
 	public void insertString(DocumentFilter.FilterBypass b, int offset,
 			String str, AttributeSet s) throws BadLocationException {
 
 		// not allowed
 	} // end of insertString method
 
+	@Override
 	public void remove(DocumentFilter.FilterBypass b, int offset,
 			int length) throws BadLocationException {
 
@@ -64,6 +66,7 @@ public final class TextFilter extends DocumentFilter {
 		super.remove(b,offset,length);
 	} // end of insertString method
 
+	@Override
 	public void replace(DocumentFilter.FilterBypass b, int offset, int length,
 			String str, AttributeSet s) throws BadLocationException {
 
@@ -73,7 +76,7 @@ public final class TextFilter extends DocumentFilter {
 
 			// make sure is still numeric and not too big
 			try {
-				BigInteger val = new BigInteger(str,base);
+				new BigInteger(str,base);
 				if (max != null) {
 					String old = target.getText();
 					String all = old.substring(0,offset)+str+old.substring(offset+length);

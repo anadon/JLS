@@ -285,12 +285,15 @@ class SimulationSemanticsRegressionTest {
 	private static final class CountingSimulator extends Simulator {
 		int posts = 0;
 		int pauses = 0;
+		@Override
 		public void post(SimEvent event) {
 			posts += 1;
 			super.post(event);
 		}
+		@Override
 		public void stop() {
 		}
+		@Override
 		public void pause(boolean which) {
 			if (which) {
 				pauses += 1;

@@ -22,21 +22,25 @@ public final class InputSig extends SigEntry {
 		super(ttelem,signal,g);
 	} // end of constructor
 
+	@Override
 	protected void doRemove() {
 
 		ttelem.removeInput(signal);
 	} // end of doRemove method
 
+	@Override
 	protected void doRename() {
 
 		ttelem.renameInput(signal);
 	} // end of doRename method
 
+	@Override
 	protected void doMoveLeft() {
 
 		ttelem.moveInputLeft(signal);
 	} // end of doMoveLeft method
 
+	@Override
 	protected void doMoveRight() {
 
 		ttelem.moveInputRight(signal);

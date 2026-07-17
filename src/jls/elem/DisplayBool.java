@@ -36,6 +36,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	 * 
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void paintComponent(Graphics g) {
 		
 		super.paintComponent(g);
@@ -57,6 +58,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	 * 
 	 * @param g The Graphics object to print with.
 	 */
+	@Override
 	public void print(Graphics g) {
 		
 		// don't draw anything until there is something to draw
@@ -166,6 +168,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	 * 
 	 * @param event The event object.
 	 */
+	@Override
 	public void mousePressed(MouseEvent event) {
 		
 		int x = event.getX();
@@ -181,9 +184,13 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	} // end of mousePressed method
 
 	// remaining methods not used
+	@Override
 	public void mouseReleased(MouseEvent event) {}
+	@Override
 	public void mouseClicked(MouseEvent event) {}
+	@Override
 	public void mouseEntered(MouseEvent event) {}
+	@Override
 	public void mouseExited(MouseEvent event) {}
 
 } // end of Display class

@@ -26,6 +26,7 @@ public final class Cross extends Entry {
 	 * 
 	 * @param g The Graphics object to draw with.
 	 */
+	@Override
 	public void draw(Graphics g) {
 		
 		g.setColor(Color.black);

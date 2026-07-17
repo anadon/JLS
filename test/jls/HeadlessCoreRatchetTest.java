@@ -131,7 +131,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/ValEntry.java",
 			"src/jls/elem/Wire.java",
 			"src/jls/elem/WireEnd.java",
-			"src/jls/elem/WireNet.java",
 			"src/jls/elem/XorGate.java",
 			"src/jls/sim/BatchSimulator.java",
 			"src/jls/sim/InteractiveSimulator.java",

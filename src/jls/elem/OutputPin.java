@@ -33,6 +33,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * 
 	 * @return the string.
 	 */
+	@Override
 	public String toString() {
 		
 		return "OutputPin[" + super.toString() + "]";
@@ -52,6 +53,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 */
+	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
 		return super.setup(g, editWindow, x, y, "Output");
@@ -60,6 +62,7 @@ public class OutputPin extends Pin implements TriProp {
 	/**
 	 * The pin kind for user-facing messages.
 	 */
+	@Override
 	protected String pinKind() {
 
 		return "Output";
@@ -72,6 +75,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param g
 	 *            The Graphics object used to compute the size of the name.
 	 */
+	@Override
 	public void init(Graphics g) {
 
 		super.init(g);
@@ -92,6 +96,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param output
 	 *            The output writer.
 	 */
+	@Override
 	public void save(PrintWriter output) {
 
 		output.println("ELEMENT OutputPin");
@@ -107,6 +112,7 @@ public class OutputPin extends Pin implements TriProp {
 	/**
 	 * Copy this element.
 	 */
+	@Override
 	public Element copy() {
 
 		OutputPin it = new OutputPin(circuit);
@@ -121,6 +127,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param info
 	 *            The JLabel to display with.
 	 */
+	@Override
 	public void showInfo(JLabel info) {
 
 		String value = ", value = " + BitSetUtils.toDisplay(currentValue, bits);
@@ -139,6 +146,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param which
 	 *            True to make this pin tristate, false to make it not.
 	 */
+	@Override
 	public void setTriState(boolean which) {
 
 		if (!getCircuit().isImported())
@@ -169,6 +177,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param sim
 	 *            Unused.
 	 */
+	@Override
 	public void initSim(Simulator sim) {
 
 		Input in = inputs.get(0);
@@ -193,6 +202,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param todo
 	 *            Unused.
 	 */
+	@Override
 	public void react(long now, Simulator sim, Object todo) {
 
 		// send to output
@@ -216,6 +226,7 @@ public class OutputPin extends Pin implements TriProp {
 	 * @param where
 	 *            Unused.
 	 */
+	@Override
 	public void showCurrentValue(Point where) {
 
 		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(

@@ -16,3 +16,13 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+  # Refresh the digest-pinned base images (Scorecard pinned-dependencies)
+  - package-ecosystem: docker
+    directories:
+      - "/resources/packaging"
+      - "/.devcontainer"
+    schedule:
+      interval: weekly
+    groups:
+      docker:
+        patterns: ["*"]

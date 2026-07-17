@@ -653,7 +653,7 @@ public abstract class SimpleEditor extends JPanel {
 				copy.setToolTipText("copy all selected elements to clipboard");
 				copy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 				delete.setToolTipText("delete all selected elements");
-				delete.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0));
+				delete.setAccelerator(DeleteKeyPolicy.menuAccelerator(System.getProperty("os.name")));
 				lock.setToolTipText("make selected elements uneditable (cannot be undone)");
 				lock.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 
@@ -950,7 +950,8 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0),"do delete");
+				for (KeyStroke stroke : DeleteKeyPolicy.canvasBindings())
+					getInputMap().put(stroke,"do delete");
 				getActionMap().put("do delete", deleteKey);
 
 				// set up cut key binding

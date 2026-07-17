@@ -1463,7 +1463,7 @@ public class State {
 						hasBits + " bits");
 				return;
 			}
-			int newbits = Integer.parseInt(bitsField.getText());
+			int newbits = tempBits;
 			if (trans.bits != -1 && trans.bits != newbits) {
 				reject("Bits don't match with previous signal specification of " +
 						trans.bits + " bits");
@@ -1486,7 +1486,7 @@ public class State {
 			else {
 				trans.equal = false;
 			}
-			trans.value = Integer.parseInt(valueField.getText());
+			trans.value = tempValue;
 			trans.bits = newbits;
 			dispose();
 		} // end of validateAndAccept method

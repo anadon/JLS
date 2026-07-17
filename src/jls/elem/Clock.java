@@ -493,8 +493,24 @@ public class Clock extends LogicElement {
 		@Override
 		protected void validateAndAccept() {
 
-			cycleTime = Integer.parseInt(cycleTimeField.getText());
-			oneTime = Integer.parseInt(oneTimeField.getText());
+			int newCycleTime;
+			int newOneTime;
+			try {
+				newCycleTime = Integer.parseInt(cycleTimeField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again", cycleTimeField);
+				return;
+			}
+			try {
+				newOneTime = Integer.parseInt(oneTimeField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again", oneTimeField);
+				return;
+			}
+			cycleTime = newCycleTime;
+			oneTime = newOneTime;
 			if(left.isSelected())
 			{
 				orientation = JLSInfo.Orientation.LEFT;

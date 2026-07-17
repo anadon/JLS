@@ -879,8 +879,20 @@ public class Memory extends LogicElement {
 			int tcapacity = capacity;
 			Memory.Type ttype = null;
 			if (create) {
-				tbits = Integer.parseInt(bitsField.getText());
-				tcapacity = Integer.parseInt(capacityField.getText(),10);
+				try {
+					tbits = Integer.parseInt(bitsField.getText());
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric", bitsField);
+					return;
+				}
+				try {
+					tcapacity = Integer.parseInt(capacityField.getText(),10);
+				}
+				catch (NumberFormatException ex) {
+					reject("Value not numeric", capacityField);
+					return;
+				}
 				ttype = ram.isSelected() ? Memory.Type.RAM : Memory.Type.ROM;
 			}
 

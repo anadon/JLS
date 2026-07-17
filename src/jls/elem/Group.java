@@ -503,7 +503,13 @@ public abstract class Group extends LogicElement {
 		@Override
 		protected void validateAndAccept() {
 
-			bits = Integer.parseInt(bitsField.getText());
+			try {
+				bits = Integer.parseInt(bitsField.getText());
+			}
+			catch (NumberFormatException ex) {
+				reject("Value not numeric, try again", bitsField);
+				return;
+			}
 
 			// set up ranges
 			if (single.isSelected()) {

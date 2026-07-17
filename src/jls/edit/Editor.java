@@ -96,7 +96,7 @@ public final class Editor extends SimpleEditor {
 
 		// get name from user
 		String oldName = circuit.getDirectory() + "/" + circuit.getName() + ".jls~";
-		JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
 			public boolean accept(File f) {

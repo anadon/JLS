@@ -20,7 +20,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for page in 1 2 3 4 5 6 7 8 9 10; do
+          for page in $(seq 1 40); do
             out=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&per_page=100&page=$page" \
               --jq '.[] | {number, rule: .rule.id, severity: .rule.severity, security_severity: .rule.security_severity_level, description: .rule.description, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, end_line: .most_recent_instance.location.end_line, message: .most_recent_instance.message.text, ref: .most_recent_instance.ref}')
             if [ -z "$out" ]; then break; fi

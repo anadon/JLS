@@ -22,16 +22,20 @@ on:
   # steps are gated on the push event below.
   workflow_dispatch:
 
+# Least privilege (#68): the workflow token is read-only by default and
+# each publishing job elevates only what it uses.
 permissions:
-  # create the release and upload assets
-  contents: write
-  # sign the provenance attestation (OIDC)
-  id-token: write
-  attestations: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      # create the release and upload assets
+      contents: write
+      # sign the provenance attestation (OIDC)
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -265,6 +269,12 @@ jobs:
             experimental: true
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
+    permissions:
+      # append installer assets to the release
+      contents: write
+      # sign the per-installer provenance attestations (OIDC)
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 

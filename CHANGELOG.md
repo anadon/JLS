@@ -7,7 +7,13 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
-*(Nothing yet.)*
+### Added
+- Opt-in plain-text saves (#129): the Save As dialog offers a
+  plain-text file type, and the new `-savetext out.jls circuit.jls`
+  flag rewrites an existing circuit file uncompressed. Plain-text
+  `.jls` files diff cleanly in version control and open in JLS forks
+  that removed the XZ reader; saves stay XZ-compressed by default,
+  and the loader has always accepted both.
 
 ## [5.0.4] — 2026-07-16
 

@@ -8,9 +8,6 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
@@ -83,41 +80,12 @@ class CircuitRoundTripTest {
 		// Elements live in a HashSet, so block order and the ids assigned
 		// at save time are not stable across load instances; compare the
 		// order-independent, id-free canonical form instead.
-		assertEquals(canonicalize(savedOnce), canonicalize(savedTwice),
+		assertEquals(FileFormatSupport.canonicalize(savedOnce),
+				FileFormatSupport.canonicalize(savedTwice),
 				"saving a reloaded circuit must reproduce the same content");
-		assertEquals(canonicalize(CIRCUIT_TEXT), canonicalize(savedOnce),
+		assertEquals(FileFormatSupport.canonicalize(CIRCUIT_TEXT),
+				FileFormatSupport.canonicalize(savedOnce),
 				"a loaded circuit must save back to its original content");
-	}
-
-	/**
-	 * Reduce a saved circuit file to a canonical form: ELEMENT..END blocks
-	 * sorted, save-order-dependent id lines removed.
-	 */
-	private static String canonicalize(String saved) {
-		List<String> blocks = new ArrayList<>();
-		StringBuilder current = null;
-		StringBuilder header = new StringBuilder();
-		for (String line : saved.split("\n")) {
-			if (line.startsWith("FORMAT ")) {
-				// the version header (issue #79) is byte-pinned by
-				// FormatHeaderTest; this suite compares circuit content
-				continue;
-			}
-			if (line.startsWith("ELEMENT")) {
-				current = new StringBuilder();
-			}
-			if (current == null) {
-				header.append(line).append('\n');
-			} else if (!line.startsWith(" int id ")) {
-				current.append(line).append('\n');
-			}
-			if (line.equals("END") && current != null) {
-				blocks.add(current.toString());
-				current = null;
-			}
-		}
-		Collections.sort(blocks);
-		return header + String.join("", blocks);
 	}
 
 	@Test

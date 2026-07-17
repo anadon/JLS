@@ -1,6 +1,7 @@
 package jls;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -85,6 +86,101 @@ class FileAbstractorTest {
 		Scanner scanner = FileAbstractor.openCircuit(file.getAbsolutePath());
 		assertNotNull(scanner);
 		assertEquals("CIRCUIT newer\nENDCIRCUIT\n", FileFormatSupport.drain(scanner));
+		assertEquals(0, tmp.toFile().listFiles((d, n) -> n.endsWith(".tmp")).length,
+				"temp file must not survive a successful write");
+	}
+
+	// ------------------------------------------------------------------
+	// opt-in plain-text container (issue #129)
+	// ------------------------------------------------------------------
+
+	/** The XZ stream magic bytes (spec docs/file-format.md section 1). */
+	private static final byte[] XZ_MAGIC =
+			{(byte) 0xFD, '7', 'z', 'X', 'Z', 0};
+
+	private static boolean startsWithXZMagic(File file) throws Exception {
+		byte[] head = Files.readAllBytes(file.toPath());
+		if (head.length < XZ_MAGIC.length) {
+			return false;
+		}
+		for (int i = 0; i < XZ_MAGIC.length; i++) {
+			if (head[i] != XZ_MAGIC[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Test
+	void aFreshCircuitDefaultsToTheXZContainer() {
+		// issue #129 P3: the GUI save path takes its container from the
+		// circuit, so the circuit's default pins the default save format
+		assertEquals(FileAbstractor.Container.XZ,
+				new Circuit("fresh").getSaveContainer(),
+				"a circuit must default to the XZ save container");
+	}
+
+	@Test
+	void defaultWriteIsStillXZCompressed() throws Exception {
+		// issue #129 P3: the default container must not change
+		File file = tmp.resolve("dflt.jls").toFile();
+		FileAbstractor.writeCircuit(file, "CIRCUIT dflt\nENDCIRCUIT\n");
+		assertTrue(startsWithXZMagic(file),
+				"a default save must still be an XZ stream");
+	}
+
+	@Test
+	void plainTextWriteIsTheBareCircuitText() throws Exception {
+		// issue #129 H1: the plain-text container is the identical text
+		// payload minus the XZ wrapper -- byte-for-byte on disk
+		String content = "CIRCUIT plain\nENDCIRCUIT\n";
+		File file = tmp.resolve("plain.jls").toFile();
+		FileAbstractor.writeCircuit(file, content,
+				FileAbstractor.Container.PLAIN_TEXT);
+
+		assertEquals(content, Files.readString(file.toPath()),
+				"the file must hold the bare UTF-8 circuit text");
+		Scanner scanner = FileAbstractor.openCircuit(file.getAbsolutePath());
+		assertNotNull(scanner, "plain-text save must reopen: " + JLSInfo.loadError);
+		assertEquals(content, FileFormatSupport.drain(scanner));
+		assertEquals(0, tmp.toFile().listFiles((d, n) -> n.endsWith(".tmp")).length,
+				"temp file must not survive a successful write");
+	}
+
+	@Test
+	void bothContainersLoadTheSameCircuitText() throws Exception {
+		// cross-container equivalence: the same circuit saved both ways
+		// loads identically through the sniffer
+		String content = "CIRCUIT both\nENDCIRCUIT\n";
+		File xz = tmp.resolve("both_xz.jls").toFile();
+		File text = tmp.resolve("both_text.jls").toFile();
+		FileAbstractor.writeCircuit(xz, content, FileAbstractor.Container.XZ);
+		FileAbstractor.writeCircuit(text, content,
+				FileAbstractor.Container.PLAIN_TEXT);
+
+		assertTrue(startsWithXZMagic(xz), "XZ save must be an XZ stream");
+		assertFalse(startsWithXZMagic(text),
+				"plain-text save must not be an XZ stream");
+		Scanner fromXz = FileAbstractor.openCircuit(xz.getAbsolutePath());
+		Scanner fromText = FileAbstractor.openCircuit(text.getAbsolutePath());
+		assertNotNull(fromXz);
+		assertNotNull(fromText);
+		assertEquals(FileFormatSupport.drain(fromXz),
+				FileFormatSupport.drain(fromText),
+				"both containers must yield the same circuit text");
+	}
+
+	@Test
+	void plainTextWriteReplacesAnXZFileAtomically() throws Exception {
+		// re-saving an XZ file as plain text is the interop conversion
+		// (issue #129); it must go through the same temp/rename machinery
+		File file = tmp.resolve("convert.jls").toFile();
+		FileAbstractor.writeCircuit(file, "CIRCUIT old\nENDCIRCUIT\n");
+		FileAbstractor.writeCircuit(file, "CIRCUIT convert\nENDCIRCUIT\n",
+				FileAbstractor.Container.PLAIN_TEXT);
+
+		assertEquals("CIRCUIT convert\nENDCIRCUIT\n",
+				Files.readString(file.toPath()));
 		assertEquals(0, tmp.toFile().listFiles((d, n) -> n.endsWith(".tmp")).length,
 				"temp file must not survive a successful write");
 	}

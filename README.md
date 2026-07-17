@@ -101,7 +101,10 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   default, or pass an output path such as `-i out.jpg` for JPEG),
   Verilog export (`-export out.v circuit.jls` writes the drawn circuit
   as a structural Verilog-2005 module — a deployment bridge, not an HDL
-  tutorial; note JLS's two-state-plus-HiZ semantics), and
+  tutorial; note JLS's two-state-plus-HiZ semantics),
+  plain-text re-save (`-savetext out.jls circuit.jls` rewrites the
+  circuit uncompressed, for version-control diffs and for JLS forks
+  without an XZ reader — see "Circuit file compatibility" below), and
   printing (`-p`/`-v`/`-r`).
   Diagnostics go to stderr as one `jls: error: ...` line; exit status is
   0 on success, 1 on runtime failure, and 2 on a usage error.
@@ -227,13 +230,18 @@ JLS saves circuits as `.jls` files. **The extension has meant different
 container formats over time**, and the loader accepts all of them by
 sniffing the actual content:
 
-- **XZ-compressed text** — what current versions of JLS write when saving.
-  Despite the plain `.jls` name, these files are XZ data (they start with the
-  `ý7zXZ` magic bytes) wrapping a line-oriented text description of the
-  circuit.
+- **XZ-compressed text** — what current versions of JLS write by default
+  when saving. Despite the plain `.jls` name, these files are XZ data (they
+  start with the `ý7zXZ` magic bytes) wrapping a line-oriented text
+  description of the circuit.
 - **Zip archive** — the original JLS format: a zip containing a single
   `JLSCircuit` entry with the same text description.
-- **Plain text** — the uncompressed circuit description itself.
+- **Plain text** — the uncompressed circuit description itself. Current JLS
+  writes it on request: choose the plain-text file type in File > Save As,
+  or run `jls -savetext out.jls circuit.jls` to rewrite an existing file.
+  Plain-text saves diff cleanly in version control and open in JLS forks
+  that dropped the XZ reader (the 4.6–4.10 fork lineage); saves stay
+  XZ-compressed unless you opt in.
 
 Inside whichever container, circuit text written by current JLS begins with
 a `FORMAT 1` version line ahead of the top-level `CIRCUIT` line; files from

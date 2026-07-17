@@ -30,11 +30,23 @@ import org.tukaani.xz.XZOutputStream;
  * format probe rejected the file in {@link JLSInfo#loadError} instead of
  * silently returning null.
  *
- * Writing produces the current save format (XZ-compressed UTF-8 text) via
- * a temp file and atomic rename, so a crash mid-write can never leave a
- * truncated file where a complete one used to be.
+ * Writing produces the current save format (XZ-compressed UTF-8 text) by
+ * default, or the identical text uncompressed when the caller opts in
+ * (issue #129) -- either way via a temp file and atomic rename, so a
+ * crash mid-write can never leave a truncated file where a complete one
+ * used to be.
  */
 public final class FileAbstractor {
+
+	/**
+	 * The on-disk container a save is written in. XZ is the default
+	 * (issue #21 chose it for size); PLAIN_TEXT is the opt-in interchange
+	 * form (issue #129): the same circuit text minus the compression
+	 * wrapper, so version control gets meaningful diffs and readers
+	 * without an XZ decoder (the 4.6-4.10 fork lineage) can open the
+	 * file. Reading needs no counterpart: openCircuit sniffs both.
+	 */
+	public enum Container { XZ, PLAIN_TEXT }
 
 	/**
 	 * Upper bound on the circuit text a container may expand to. Circuit
@@ -142,10 +154,30 @@ public final class FileAbstractor {
 	 */
 	public static void writeCircuit(File target, String circuitText) throws IOException {
 
+		writeCircuit(target, circuitText, Container.XZ);
+	}
+
+	/**
+	 * Write circuit text to the target file in the named container:
+	 * Container.XZ is the standard save format, Container.PLAIN_TEXT the
+	 * opt-in uncompressed form (issue #129). Both containers share the
+	 * temp-file/atomic-rename machinery, so the previous complete file
+	 * survives a crash mid-write either way.
+	 *
+	 * @param target      The file to (re)place.
+	 * @param circuitText The complete circuit text, as produced by Circuit.save.
+	 * @param container   The on-disk container to wrap the text in.
+	 */
+	public static void writeCircuit(File target, String circuitText,
+			Container container) throws IOException {
+
 		File temp = new File(target.getPath() + ".tmp");
 		try {
 			try (Writer out = new OutputStreamWriter(
-					new XZOutputStream(new FileOutputStream(temp), new LZMA2Options()),
+					container == Container.XZ
+							? new XZOutputStream(new FileOutputStream(temp),
+									new LZMA2Options())
+							: new FileOutputStream(temp),
 					StandardCharsets.UTF_8)) {
 				out.write(circuitText);
 			}

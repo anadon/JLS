@@ -7,7 +7,25 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
+### Fixed
+- A Memory whose initial-contents text names addresses at or past the
+  declared capacity no longer saves a file JLS itself refuses to load
+  (#160): such text is accepted leniently at load (zeros assumed at
+  simulation start, as before), but the save path re-encoded it as an
+  `initrle` attribute whose loader enforces the capacity bound. The
+  RLE encoder now falls back to the raw `init` encoding for
+  out-of-capacity addresses. Found by the new generative fuzzer on
+  its second seed.
+
 ### Added
+- Seeded generative fuzzing of the save/load pair (#160), dependency
+  free: `GenerativeRoundTripFuzzTest` drives random circuits (element
+  mix, boundary bit widths, escape-space names, wired pin pairs)
+  through the save → load → save fixed point and asserts truncated
+  saves classify cleanly; `ContainerMutationFuzzTest` bit-flips,
+  truncates, splices and corrupts valid text/zip/XZ containers and
+  asserts every outcome is a classified `LoadError`, never an escaped
+  exception. Failures reproduce from printed seeds.
 - Opt-in plain-text saves (#129): the Save As dialog offers a
   plain-text file type, and the new `-savetext out.jls circuit.jls`
   flag rewrites an existing circuit file uncompressed. Plain-text

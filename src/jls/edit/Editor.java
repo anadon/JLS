@@ -64,7 +64,10 @@ public final class Editor extends SimpleEditor {
 			circuit.save(output);
 		}
 		try {
-			FileAbstractor.writeCircuit(new File(fileName), text.toString());
+			// the circuit remembers its container: XZ by default, plain
+			// text if the user chose it in Save As (issue #129)
+			FileAbstractor.writeCircuit(new File(fileName), text.toString(),
+					circuit.getSaveContainer());
 		} catch (IOException ex) {
 			TellUser.error(getTopLevelAncestor(),
 					"Can't write to " + fileName + ": " + ex.getMessage(), "Error");
@@ -97,17 +100,31 @@ public final class Editor extends SimpleEditor {
 		// get name from user
 		String oldName = circuit.getDirectory() + "/" + circuit.getName() + ".jls~";
 		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
+		// the file-type choice picks the on-disk container (issue #129):
+		// XZ (the default) or plain text for version control and for JLS
+		// forks without an XZ reader; both save under the .jls name
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
 			public String getDescription() {
-				return "JLS Circuit Files";
+				return "JLS Circuit Files (XZ compressed, the default)";
 			}
 		};
+		javax.swing.filechooser.FileFilter textFilter =
+			new javax.swing.filechooser.FileFilter() {
+			public boolean accept(File f) {
+				return f.getName().endsWith(".jls") || f.isDirectory();
+			}
+			public String getDescription() {
+				return "JLS Circuit Files (plain text: diffable, fork-readable)";
+			}
+		};
+		chooser.addChoosableFileFilter(filter);
+		chooser.addChoosableFileFilter(textFilter);
 		chooser.setFileFilter(filter);
-		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) 
+		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
 			return;
 		String fileName = chooser.getSelectedFile().getName().trim();
 		if (fileName == null || fileName.equals(""))
@@ -153,6 +170,11 @@ public final class Editor extends SimpleEditor {
 		}
 		circuit.setName(name);
 		circuit.setDirectory(chooser.getCurrentDirectory().toString());
+		// remember the chosen container so plain Save keeps it (#129);
+		// "All Files" or the default filter both mean the XZ default
+		circuit.setSaveContainer(chooser.getFileFilter() == textFilter
+				? FileAbstractor.Container.PLAIN_TEXT
+				: FileAbstractor.Container.XZ);
 
 		// save circuit
 		if (save()) {

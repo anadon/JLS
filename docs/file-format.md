@@ -42,7 +42,7 @@ fails when this document and the code drift apart.
 A `.jls` file is one of three containers, distinguished by **content
 sniffing, never by file name**. A reader MUST try, in order:
 
-1. **XZ-compressed text** — what current JLS writes. The file is a
+1. **XZ-compressed text** — what current JLS writes by default. The file is a
    standard XZ stream (magic bytes `FD 37 7A 58 5A 00`, "ý7zXZ")
    whose decompressed payload is the circuit text.
 2. **Zip archive** — the original JLS container: a zip holding the
@@ -53,8 +53,12 @@ sniffing, never by file name**. A reader MUST try, in order:
 
 The circuit text is UTF-8 in every container.
 
-A conformant writer MUST write the XZ container (a writer producing
-files only for its own consumption MAY use plain text; JLS reads it).
+A conformant writer MUST write either the XZ container or the
+plain-text container; the zip container is read-only legacy. JLS
+writes XZ by default and plain text on explicit request (the Save As
+file-type choice or the `-savetext` flag, issue #129) — plain text is
+the interchange form for version control and for readers without an
+XZ decoder.
 Writes go to a temporary file that is atomically renamed over the
 target, so a crash mid-write never leaves a truncated file where a
 complete one used to be; readers therefore MAY assume a file is

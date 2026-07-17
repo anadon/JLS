@@ -60,6 +60,8 @@ public class Circuit implements Printable {
 															// can be unique
 	private SortedMap<String, JumpStart> starts = new TreeMap<String, JumpStart>(); // jumpstarts
 	private boolean changed = false;
+	private FileAbstractor.Container saveContainer =
+			FileAbstractor.Container.XZ; // on-disk container saves use (#129)
 
 	private final SpatialIndex index = new SpatialIndex(); // grid index over
 															// element bounds
@@ -145,6 +147,31 @@ public class Circuit implements Printable {
 
 		this.name = name;
 	} // end of setName method
+
+	/**
+	 * Get the on-disk container this circuit's saves are written in.
+	 * XZ unless the user opted into plain text (issue #129).
+	 *
+	 * @return the save container.
+	 */
+	public FileAbstractor.Container getSaveContainer() {
+
+		return saveContainer;
+	} // end of getSaveContainer method
+
+	/**
+	 * Change the on-disk container this circuit's saves are written in.
+	 * Set from the Save As file-type choice (issue #129); the choice
+	 * sticks for later plain Saves of the same circuit, so re-saving
+	 * cannot silently re-wrap a version-controlled plain-text file.
+	 *
+	 * @param container
+	 *            The container future saves will use.
+	 */
+	public void setSaveContainer(FileAbstractor.Container container) {
+
+		this.saveContainer = container;
+	} // end of setSaveContainer method
 
 	/**
 	 * Check if circuit has changed.

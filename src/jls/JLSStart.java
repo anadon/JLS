@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.file.FileSystems;
@@ -76,6 +78,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static String imageFile = null;
 	private static String vcdFile = null;
 	private static String exportFile = null;
+	private static String textSaveFile = null;
 	private static boolean printCircuit = false;
 	private static boolean printCircuitTop;
 	private static String printer = null;
@@ -357,6 +360,39 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		}
 
+		else if (JLSInfo.textsave) {
+
+			// plain-text re-save (issue #129) is headless like batch mode
+			System.setProperty("java.awt.headless", "true");
+
+			if (startFile == null) {
+				System.err.println("jls: error: plain-text save requires a circuit file");
+				System.exit(1);
+			}
+			Circuit circ = loadCircuitHeadless(startFile);
+
+			// like Save As, the circuit takes the output file's name, so
+			// the file name and its CIRCUIT line cannot disagree
+			circ.setName(Util.isValidFileName(
+					textSaveFile.replaceAll("\\.jls$", "")));
+
+			// serialize and write uncompressed; writeCircuit keeps the
+			// temp-file/atomic-rename guarantee of ordinary saves
+			StringWriter text = new StringWriter();
+			try (PrintWriter output = new PrintWriter(text)) {
+				circ.save(output);
+			}
+			try {
+				FileAbstractor.writeCircuit(new File(textSaveFile),
+						text.toString(),
+						FileAbstractor.Container.PLAIN_TEXT);
+			} catch (IOException e) {
+				System.err.println("jls: error: can't write " + textSaveFile
+						+ ": " + e.getMessage());
+				System.exit(1);
+			}
+		}
+
 		else {
 
 			// start up GUI
@@ -556,6 +592,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"write watched-signal waveforms to the named VCD file (batch mode)"),
 		new FlagSpec("export", Arity.REQUIRED, "file", "an output file",
 				"export the circuit as Verilog-2005 (.v) or VHDL (.vhd/.vhdl), chosen by the file extension"),
+		new FlagSpec("savetext", Arity.REQUIRED, "file", "an output file",
+				"re-save the circuit to the named .jls file as plain (uncompressed) text"),
 	};
 
 	/**
@@ -686,7 +724,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		return !(printCircuit && startFile != null)
 				&& !JLSInfo.batch && !JLSInfo.imgexport
-				&& !JLSInfo.hdlexport;
+				&& !JLSInfo.hdlexport && !JLSInfo.textsave;
 	} // end of guiSessionRequested method
 
 	/**
@@ -766,6 +804,23 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			JLSInfo.hdlexport = true;
 			exportFile = opnd;
+			break;
+		case "savetext":
+			// the output must reopen by the same rules as any other
+			// circuit file, so its name is validated up front (#129):
+			// a .jls suffix on a valid circuit name
+			// (-savetext is Arity.REQUIRED, so opnd cannot be null; the
+			// guard keeps that invariant locally checkable)
+			String textName = opnd == null ? "" : opnd;
+			if (!textName.endsWith(".jls")
+					|| Util.isValidFileName(
+							textName.replaceAll("\\.jls$", "")) == null) {
+				usageError("option -savetext output file must be a .jls "
+						+ "file named like a circuit (letters, digits and "
+						+ "underscores, starting with a letter): " + opnd);
+			}
+			JLSInfo.textsave = true;
+			textSaveFile = opnd;
 			break;
 		default:
 			// unreachable: parseCommandLine only passes table flags

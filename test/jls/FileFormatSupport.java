@@ -69,4 +69,38 @@ final class FileFormatSupport {
 		scanner.close();
 		return sb.toString();
 	}
+
+	/**
+	 * Reduce a saved circuit file to a canonical form: ELEMENT..END blocks
+	 * sorted, save-order-dependent id lines removed, the FORMAT header
+	 * (byte-pinned by FormatHeaderTest) dropped. Elements live in a
+	 * HashSet, so block order and the ids assigned at save time are not
+	 * stable across load instances; comparisons of saved circuit content
+	 * must use this form. Only sound for circuits without id
+	 * cross-references (ref lines), since those change with the ids.
+	 */
+	static String canonicalize(String saved) {
+		java.util.List<String> blocks = new java.util.ArrayList<String>();
+		StringBuilder current = null;
+		StringBuilder header = new StringBuilder();
+		for (String line : saved.split("\n")) {
+			if (line.startsWith("FORMAT ")) {
+				continue;
+			}
+			if (line.startsWith("ELEMENT")) {
+				current = new StringBuilder();
+			}
+			if (current == null) {
+				header.append(line).append('\n');
+			} else if (!line.startsWith(" int id ")) {
+				current.append(line).append('\n');
+			}
+			if (line.equals("END") && current != null) {
+				blocks.add(current.toString());
+				current = null;
+			}
+		}
+		java.util.Collections.sort(blocks);
+		return header + String.join("", blocks);
+	}
 }

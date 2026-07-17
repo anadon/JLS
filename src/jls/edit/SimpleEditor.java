@@ -201,6 +201,63 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of cancelCheckpoint method
 
 	/**
+	 * See if attaching a wire end to a put of a bundle (Group) would mix
+	 * tri-state and normal connections, which bundles cannot have.
+	 *
+	 * A wire net's tri-state flag reflects only the puts the net is
+	 * already attached to (see WireNet.recheck), so the incoming end is
+	 * classified only when its net has at least one attached end. A
+	 * freshly drawn wire's net has none and used to be miscounted as a
+	 * normal connection, spuriously refusing legitimate tri-state bundle
+	 * wiring (issue #118). The guard is on the whole net, not on
+	 * end.isAttached(): the end handed to canConnect passed the
+	 * isDangling gate, so it is itself never attached, but its net can
+	 * already be tri-state or normal through its other, attached ends,
+	 * and those connections must still be counted.
+	 *
+	 * @param end The (dangling) wire end being attached.
+	 * @param put The put it would be attached to.
+	 *
+	 * @return true if put belongs to a bundle and the attach would mix
+	 *         tri-state and normal wires, false otherwise.
+	 */
+	static boolean mixesTriStateAndNormal(WireEnd end, Put put) {
+
+		if (!(put.getElement() instanceof Group))
+			return false;
+
+		// classify the bundle's already-attached wires
+		boolean tri = false;
+		boolean norm = false;
+		for (Put p : put.getElement().getAllPuts()) {
+			if (p.isAttached()) {
+				if (p.getWireEnd().isTriState())
+					tri = true;
+				else
+					norm = true;
+			}
+		}
+
+		// classify the incoming wire, but only if its net is attached to
+		// something - an unattached net's tri-state flag is meaningless
+		boolean netAttached = false;
+		for (WireEnd e : end.getNet().getAllEnds()) {
+			if (e.isAttached()) {
+				netAttached = true;
+				break;
+			}
+		}
+		if (netAttached) {
+			if (end.isTriState())
+				tri = true;
+			else
+				norm = true;
+		}
+
+		return tri && norm;
+	} // end of mixesTriStateAndNormal method
+
+	/**
 	 * Create new editor.
 	 * 
 	 * @param pane The tabbed pane this editor is in.
@@ -2839,23 +2896,9 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// groups cannot have both tri-state and normal connections
-				if(put.getElement() instanceof Group) {
-					boolean tri = false;
-					boolean norm = false;
-					for(Put p : put.getElement().getAllPuts()) {
-						if(p.isAttached()) {
-							if(p.getWireEnd().isTriState())
-								tri = true;
-							else
-								norm = true;
-						}
-					}
-					if(end.isTriState()) tri = true;
-					else norm = true;
-					if(tri && norm) {
-						overlapMessage = "Cannot connect both tri-state and normal wires to a bundle";
-						return false;
-					}
+				if (mixesTriStateAndNormal(end,put)) {
+					overlapMessage = "Cannot connect both tri-state and normal wires to a bundle";
+					return false;
 				}
 
 				// can't attach if multiple wire ends in the same wire net

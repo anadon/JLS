@@ -458,8 +458,15 @@ class ElementSimulationGoldenTest {
 		String outcome = captured.toString(StandardCharsets.UTF_8);
 		assertTrue(outcome.startsWith("Simulation Stopped at "),
 				"a triggered Stop must end the run (got: " + outcome + ")");
-		long stoppedAt = Long.parseLong(outcome
-				.substring("Simulation Stopped at ".length()).trim());
+		String stoppedText = outcome
+				.substring("Simulation Stopped at ".length()).trim();
+		long stoppedAt;
+		try {
+			stoppedAt = Long.parseLong(stoppedText);
+		} catch (NumberFormatException malformed) {
+			throw new AssertionError("the outcome line must end in a"
+					+ " numeric stop time, got: " + outcome, malformed);
+		}
 		assertTrue(stoppedAt < 1_000_000,
 				"the stop must fire before the time limit, at "
 						+ stoppedAt);

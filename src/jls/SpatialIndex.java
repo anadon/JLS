@@ -28,6 +28,13 @@ import jls.elem.Element;
  * per-mouse-event drag path keeps it incrementally up to date via
  * {@link #update(Element)}, which is what turns O(S x N) drag work into
  * O(S).
+ *
+ * Query correctness -- that this grid scheme returns exactly the elements
+ * a brute-force boundsTouch scan would, so the exact-predicate callers
+ * behave identically to full scans -- is machine-checked: THEOREM 1
+ * (query-parity) in proofs/SpatialIndexCorrectness.agda, whose modelling
+ * assumptions (interval clamping, floorDiv monotonicity, the boundsTouch
+ * formula) are pinned to this class by jls.ProofBridgeTest.
  */
 public final class SpatialIndex {
 

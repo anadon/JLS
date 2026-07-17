@@ -1173,7 +1173,10 @@ public class Circuit implements Printable {
 		// repaint during a drag costs O(visible), not O(circuit); the
 		// query pads the clip by the same margin mayBeVisible allows
 		// for labels, so its exact check below accepts the same
-		// elements a full scan would.
+		// elements a full scan would. That parity is machine-checked:
+		// THEOREM 2 (culling-parity) in
+		// proofs/SpatialIndexCorrectness.agda, with the margin/grow/
+		// intersects assumptions pinned by jls.ProofBridgeTest.
 		Rectangle clip = g.getClipBounds();
 		java.util.Collection<Element> candidates;
 		if (clip == null) {

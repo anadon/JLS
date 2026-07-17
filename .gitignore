@@ -16,3 +16,6 @@ Thumbs.db
 # nix build output symlinks
 result
 result-*
+
+# Agda interface files (proofs/)
+*.agdai

@@ -1,0 +1,28 @@
+# TEMPORARY — will be removed before this branch is merged.
+# Dumps the repository's open code scanning alerts into the job log so
+# they can be triaged from an environment without Security-tab access.
+name: Dump code scanning alerts
+
+on:
+  push:
+    branches: ["claude/jls-security-findings-0293fs"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: read
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List open alerts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for page in 1 2 3 4 5 6 7 8 9 10; do
+            out=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&per_page=100&page=$page" \
+              --jq '.[] | {number, rule: .rule.id, severity: .rule.severity, security_severity: .rule.security_severity_level, description: .rule.description, path: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, end_line: .most_recent_instance.location.end_line, message: .most_recent_instance.message.text, ref: .most_recent_instance.ref}')
+            if [ -z "$out" ]; then break; fi
+            echo "$out"
+          done

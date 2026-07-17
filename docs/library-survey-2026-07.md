@@ -170,7 +170,26 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** one test dependency; the existing bespoke ratchet tests can
   be ported incrementally or left alongside.
 
-### 5. Error Prone — compile-time bug pattern checks *(optional)*
+### 5. Error Prone — compile-time bug pattern checks *(TRIALED, #157: plumbing kept opt-in; no default-build gate)*
+
+- **Verdict (2026-07-17):** the trial run happened (2.50.0 on the JDK 25
+  build, default check set, full `src/` compile). Result: **zero
+  ERROR-severity findings and zero true bugs** among 99 warnings —
+  52 MissingOverride (style), 24 PatternMatchingInstanceof (useful, but
+  exactly the #95 sealed-dispatch program's job), 8 InvalidParam
+  (javadoc drift), 5 JdkObsolete (the Vector/LinkedList holdouts #94
+  and #96 already track), and singletons that are benign or false
+  positives (both ReferenceEquality hits are *intentional* identity
+  comparisons of wire ends in `Element.touches`). Compile time 6 s →
+  22 s. The survey's own bar was "keep only if the first report pays
+  for the setup" — it did not: SpotBugs at threshold High had already
+  taken the real bugs off the table. **Decision:** no `-Werror` gate
+  and no baseline apparatus for EP core; but the compiler plumbing
+  (the `errorprone` Maven profile: forked javac, `--add-exports`,
+  processor path) stays in-tree as the ready-made substrate for #93 —
+  NullAway is an Error Prone plugin and was the strategic reason to
+  wire this at all. `mvn -Perrorprone clean compile` reproduces the
+  report at any time.
 
 - **What:** [Error Prone](https://github.com/google/error-prone)
   (Google), Apache-2.0, a javac plugin (build-time only; requires

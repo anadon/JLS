@@ -32,6 +32,11 @@ All notable changes to JLS are documented here. The format follows
   CLI (#60), and `jls.sim` must not depend on `jls.edit` (#77, with
   the three existing simulator classes pinned as a shrinking
   baseline). New violations fail `mvn test` immediately.
+- An opt-in `errorprone` Maven profile (#157):
+  `mvn -Perrorprone clean compile` runs Error Prone 2.50.0's default
+  checks over the build. The trial verdict (no default-build gate;
+  the plumbing waits for #93 NullAway) is recorded in
+  `docs/library-survey-2026-07.md`.
 - Seeded generative fuzzing of the save/load pair (#160), dependency
   free: `GenerativeRoundTripFuzzTest` drives random circuits (element
   mix, boundary bit widths, escape-space names, wired pin pairs)

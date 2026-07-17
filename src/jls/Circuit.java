@@ -964,6 +964,37 @@ public class Circuit implements Printable {
 		// if any exceptions, assume load problem
 		try {
 
+			// stable identity (#165): file-declared stable ids must be
+			// unique within the circuit, and elements from files that
+			// predate stable ids get one minted deterministically - in
+			// file order, which is itself deterministic (#98), so two
+			// loads of the same file always agree
+			Set<jls.elem.ElementId> usedIds = new HashSet<jls.elem.ElementId>();
+			for (Element el : loadedElements) {
+				if (el.hasFileStableId() && !usedIds.add(el.getStableId())) {
+					JLSInfo.setLoadError(LoadError.of(
+							LoadError.Category.ELEMENT_ERROR,
+							"two elements declare the same stable id '"
+									+ el.getStableId() + "'",
+							"Remove the duplicated sid line from the file, "
+									+ "or re-save the circuit from JLS."));
+					return false;
+				}
+			}
+			long nextLegacy = 0;
+			for (Element el : loadedElements) {
+				if (el.hasFileStableId()) {
+					continue;
+				}
+				jls.elem.ElementId minted;
+				do {
+					minted = jls.elem.ElementId.legacy(nextLegacy);
+					nextLegacy += 1;
+				} while (usedIds.contains(minted));
+				usedIds.add(minted);
+				el.assignLegacyStableId(minted);
+			}
+
 			// finish up non-wire ends first
 			for (Element el : loadedElements) {
 				if (el instanceof WireEnd)

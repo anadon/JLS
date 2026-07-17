@@ -262,11 +262,17 @@ class AllElementsRoundTripTest {
 				+ " checked only " + checked);
 	}
 
-	/** Saved text minus the id line, which save() writes but copy() skips. */
+	/**
+	 * Saved text minus the id and sid lines: save() writes both, but
+	 * copy() deliberately skips them (the save-time id is reassigned per
+	 * save; a copy is a new element with a freshly minted stable id,
+	 * issue #165 P3).
+	 */
 	private static String withoutId(String saved) {
 		List<String> kept = new ArrayList<String>();
 		for (String line : saved.split("\n")) {
-			if (!line.startsWith(" int id ")) {
+			if (!line.startsWith(" int id ")
+					&& !line.startsWith(" String sid ")) {
 				kept.add(line);
 			}
 		}

@@ -93,7 +93,10 @@ final class FileFormatSupport {
 			}
 			if (current == null) {
 				header.append(line).append('\n');
-			} else if (!line.startsWith(" int id ")) {
+			} else if (!line.startsWith(" int id ")
+					&& !line.startsWith(" String sid ")) {
+				// sid lines are dropped only so comparisons against
+				// pre-#165 fixture text (which has none) stay valid
 				current.append(line).append('\n');
 			}
 			if (line.equals("END") && current != null) {

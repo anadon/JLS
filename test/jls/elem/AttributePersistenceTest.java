@@ -50,6 +50,9 @@ class AttributePersistenceTest {
 		Element constant = circuit.getElements().iterator().next();
 		constant.setID(0);
 
+		// the sid line is the one post-handwritten addition: permanent
+		// element identity (#165), minted deterministically at load for
+		// pre-sid files like this fixture
 		assertEquals("ELEMENT Constant\n"
 				+ " int id 0\n"
 				+ " int x 60\n"
@@ -58,6 +61,7 @@ class AttributePersistenceTest {
 				+ " int height 24\n"
 				+ " int fixed 1\n"
 				+ " int trpos 3\n"
+				+ " String sid \"legacy:0\"\n"
 				+ " Int value 255\n"
 				+ " int base 16\n"
 				+ " String orient \"LEFT\"\n"
@@ -109,7 +113,21 @@ class AttributePersistenceTest {
 		assertNotNull(copy);
 		constant.setID(0);
 		copy.setID(0);
-		assertEquals(saveElement(constant), saveElement(copy),
+		// the stable id is deliberately not field-equivalent: a copy is
+		// a new element and mints a fresh identity (#165 P3)
+		assertEquals(withoutSid(saveElement(constant)),
+				withoutSid(saveElement(copy)),
 				"a copy must serialize identically to its original");
+	}
+
+	/** Saved text minus the sid line, which copy() deliberately skips. */
+	private static String withoutSid(String saved) {
+		StringBuilder kept = new StringBuilder();
+		for (String line : saved.split("\n")) {
+			if (!line.startsWith(" String sid ")) {
+				kept.append(line).append('\n');
+			}
+		}
+		return kept.toString();
 	}
 }

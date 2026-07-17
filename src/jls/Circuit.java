@@ -81,13 +81,17 @@ public class Circuit implements Printable {
 	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
-	 * The save-format version this JLS writes and the newest it can read
-	 * (issue #79). Headerless legacy files are implicitly version 0;
-	 * version 1 files begin with a "FORMAT 1" line ahead of the top-level
-	 * CIRCUIT line. Nested subcircuit blocks never carry a header - a
-	 * file states its format version exactly once, at the top.
+	 * The newest save-format version this JLS can read (issue #79).
+	 * Headerless legacy files are implicitly version 0; headered files
+	 * begin with a "FORMAT n" line ahead of the top-level CIRCUIT line.
+	 * Nested subcircuit blocks never carry a header - a file states its
+	 * format version exactly once, at the top. A writer emits the
+	 * highest version whose features the file actually uses (see
+	 * {@link #formatVersionNeeded()}), so files that avoid newer
+	 * features stay readable by older JLS versions. Version 2 adds
+	 * vertical (UP/DOWN) orientation for Binder/Splitter (issue #124).
 	 */
-	public static final int FORMAT_VERSION = 1;
+	public static final int FORMAT_VERSION = 2;
 
 	/**
 	 * Create a new, empty circuit.
@@ -376,7 +380,9 @@ public class Circuit implements Printable {
 	/**
 	 * Consume the optional FORMAT version header at the top of a file
 	 * (issue #79). Legacy files have no header and are implicitly format
-	 * version 0; current saves begin with "FORMAT 1". A version newer
+	 * version 0; current saves begin with a FORMAT line declaring the
+	 * version their features need (see
+	 * {@link #formatVersionNeeded()}). A version newer
 	 * than {@link #FORMAT_VERSION} is refused with an explicit
 	 * needs-a-newer-JLS error (#58 taxonomy) rather than a misparse.
 	 * Only the true top of a file may carry the header - nested
@@ -1057,7 +1063,7 @@ public class Circuit implements Printable {
 		if (isImported()) {
 			output.println("CIRCUIT " + subElement.getName());
 		} else {
-			output.println("FORMAT " + FORMAT_VERSION);
+			output.println("FORMAT " + formatVersionNeeded());
 			output.println("CIRCUIT " + name);
 		}
 
@@ -1076,6 +1082,24 @@ public class Circuit implements Printable {
 		// write trailer
 		output.println("ENDCIRCUIT");
 	} // end of save method
+
+	/**
+	 * The save-format version a save of this circuit must declare: the
+	 * highest version any of its elements (or, through SubCircuit,
+	 * nested circuits) requires - see the docs/file-format.md section 9
+	 * evolution policy. Files that use no post-version-1 feature keep
+	 * declaring "FORMAT 1" so older JLS versions can still read them.
+	 *
+	 * @return the format version a save of this circuit declares.
+	 */
+	public int formatVersionNeeded() {
+
+		int version = 1;
+		for (Element el : elements) {
+			version = Math.max(version, el.saveFormatVersion());
+		}
+		return version;
+	} // end of formatVersionNeeded method
 
 	/**
 	 * Draw the circuit by drawing every element. First the set of elements not

@@ -96,9 +96,10 @@ class FormatHeaderTest {
 
 	@Test
 	void newSavesBeginWithTheFormatHeader() throws Exception {
+		// the writer emits the lowest version whose features the file
+		// uses (#124); this fixture uses none past version 1
 		String saved = save(load(LEGACY_TEXT));
-		assertTrue(saved.startsWith("FORMAT " + Circuit.FORMAT_VERSION
-						+ "\nCIRCUIT "),
+		assertTrue(saved.startsWith("FORMAT 1\nCIRCUIT "),
 				"a save must start with the FORMAT header, got:\n" + saved);
 	}
 
@@ -111,13 +112,18 @@ class FormatHeaderTest {
 
 	@Test
 	void headeredTextLoads() throws Exception {
-		Circuit circuit = load("FORMAT 1\n" + LEGACY_TEXT);
-		assertEquals(1, circuit.getElements().size());
+		// every version up to the newest this JLS implements is readable
+		for (int version = 1; version <= Circuit.FORMAT_VERSION; version++) {
+			Circuit circuit = load("FORMAT " + version + "\n" + LEGACY_TEXT);
+			assertEquals(1, circuit.getElements().size());
+		}
 	}
 
 	@Test
 	void newerFormatVersionFailsAsNeedsNewerJls() {
-		for (String version : new String[] {"2", "999", "999999999999"}) {
+		for (String version : new String[] {
+				Integer.toString(Circuit.FORMAT_VERSION + 1),
+				"999", "999999999999"}) {
 			LoadError error =
 					failToLoad("FORMAT " + version + "\n" + LEGACY_TEXT);
 			assertSame(LoadError.Category.NEWER_FORMAT, error.getCategory(),
@@ -169,7 +175,7 @@ class FormatHeaderTest {
 		assertEquals(1, formatLines,
 				"a file states its format version exactly once, at the "
 						+ "top:\n" + saved);
-		assertTrue(saved.startsWith("FORMAT " + Circuit.FORMAT_VERSION + "\n"),
+		assertTrue(saved.startsWith("FORMAT 1\n"),
 				"the one FORMAT line must be the first line:\n" + saved);
 	}
 

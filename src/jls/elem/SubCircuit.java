@@ -333,6 +333,18 @@ public class SubCircuit extends LogicElement implements TriProp {
 		subCircuit.save(output);
 		output.println("END");
 	} // end of save method
+
+	/**
+	 * A subcircuit block needs whatever format version its nested
+	 * circuit needs - a file states its version once, at the top
+	 * (issue #79), so the requirement propagates up through here.
+	 *
+	 * @return the minimum format version for the nested circuit.
+	 */
+	public int saveFormatVersion() {
+
+		return subCircuit.formatVersionNeeded();
+	} // end of saveFormatVersion method
 	
 	/**
 	 * Set a String instance variable value (during a load).

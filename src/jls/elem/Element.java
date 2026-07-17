@@ -649,6 +649,20 @@ public class Element {
 	} // end of changeTiming method
 
 	/**
+	 * The save-format version this element's current state requires
+	 * (issue #79 evolution policy: a writer emits the highest version
+	 * whose features the file uses). Almost everything is expressible
+	 * in version 1; an element whose state older readers would
+	 * silently mis-load overrides this (issue #124: vertical groups).
+	 *
+	 * @return the minimum format version that can carry this element.
+	 */
+	public int saveFormatVersion()
+	{
+		return 1;
+	}
+
+	/**
 	 * Tells if an element is capable of rotatating, defaults to false.
 	 * This method may be overridden if an element supports rotation
 	 * @return True if an element supports rotation otherwise false

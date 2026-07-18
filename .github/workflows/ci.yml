@@ -1,25 +1,33 @@
 name: CI
 
 # push is limited to master so a branch with an open PR builds once,
-# not twice (issue #47)
+# not twice (issue #47); the nightly cron runs ONLY the gui-wayland lane
+# (issue #101 P3: its 20-consecutive-runs stability record accrues on a
+# fixed cadence, independent of push traffic - every other job skips on
+# schedule events)
 on:
   push:
     branches: ["master"]
   pull_request:
+  schedule:
+    - cron: "17 4 * * *"
 
 # least-privilege token: the build only reads the repo (issue #68)
 permissions:
   contents: read
 
 # a new push to the same branch/PR cancels the still-running build of the
-# old head; release.yml deliberately has no concurrency group (issue #47)
+# old head; release.yml deliberately has no concurrency group (issue #47).
+# The nightly gets its own group so a cron firing never cancels (or is
+# cancelled by) an in-flight master build
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'schedule' && 'nightly' || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     name: Build (JDK ${{ matrix.java }})
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -105,6 +113,7 @@ jobs:
   # required once 20 consecutive runs show at most one failure).
   windows:
     name: Build (Windows, JDK 25)
+    if: github.event_name != 'schedule'
     runs-on: windows-latest
     continue-on-error: true
     steps:
@@ -128,6 +137,7 @@ jobs:
   # proof's modelling assumptions to the Java implementation.
   proofs:
     name: Verify Agda proofs
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -146,6 +156,11 @@ jobs:
   # JetBrains Runtime's experimental WLToolkit (Project Wakefield)
   # against a headless sway compositor - no X11 anywhere - and captures
   # a screenshot, the compositor tree, and JLS's stderr as artifacts.
+  # The rig first maps a minimal HelloSwingControl frame on the same
+  # runtime/compositor, so a failure is automatically classified as
+  # JLS-side (exit 1) or upstream JBR/sway (exit 2) per #101 section 9.
+  # Runs on every event including the nightly cron (which runs ONLY this
+  # job) so the #101 P3 stability record accrues daily.
   # continue-on-error while the lane stabilizes (#101 H2/P3: it becomes
   # a required check once 20 consecutive runs show at most one failure).
   gui-wayland:
@@ -165,7 +180,17 @@ jobs:
       #   curl -fsSL <JBR_URL> | sha256sum
       # Until then this placeholder fails the checksum on purpose and
       # the job skips with a notice rather than running unverified bits.
+      # (Re-verified 2026-07-18: cache-redirector.jetbrains.com is still
+      # an egress-policy denial from the authoring sandbox, and the hash
+      # is not published anywhere else reachable - GitHub release pages
+      # only link the CDN-hosted .checksum file.)
       JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
+      # ---- P2 pixel gate (#101) --------------------------------------
+      # 0 = record the AE metric without gating. TODO(maintainer): after
+      # the first green run, set this to ~10% of the observed AE value
+      # from the pixel-diff.txt artifact (decision recorded on #101:
+      # calibrate from measurement, not the blind 1% guess).
+      PIXEL_DIFF_MIN: "0"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -257,6 +282,7 @@ jobs:
   # localize the offending input.
   reproducibility:
     name: Reproducible build check
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

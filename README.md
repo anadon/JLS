@@ -264,11 +264,15 @@ java -Dawt.toolkit.name=WLToolkit -jar target/jls-*.jar
 ```
 
 [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) automates the whole
-first-light experiment (issue #101): headless sway up, JLS launched on a
-JBR (`JBR_HOME=...`), window presence asserted via `swaymsg`, screenshot
-and logs collected into an artifacts directory. CI's `gui-wayland` lane
-runs exactly this script. The development container below accepts a
-`JBR_URL` build argument to bake that runtime in.
+first-light experiment (issue #101): headless sway up, a minimal
+[`HelloSwingControl`](scripts/HelloSwingControl.java) frame mapped first
+(so a failure is classified as JLS-side — exit 1 — or upstream JBR/sway —
+exit 2), then JLS launched on a JBR (`JBR_HOME=...`), window presence
+asserted via `swaymsg`, screenshot and logs collected into an artifacts
+directory. CI's `gui-wayland` lane runs exactly this script — on every
+push/PR and on a nightly cron that runs only this lane. The development
+container below accepts a `JBR_URL` build argument to bake that runtime
+in.
 
 ### Development container
 

@@ -1686,7 +1686,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial1.html",false);
+				new Tutorial(JLSInfo.frame,0);
 			}
 		});
 		JMenuItem tutorial2 = new JMenuItem("4-Bit Counter");
@@ -1702,7 +1702,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial2.html",false);
+				new Tutorial(JLSInfo.frame,1);
 			}
 		});
 		JMenuItem tutorial3 = new JMenuItem("Full Adder");
@@ -1717,7 +1717,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial3.html",false);
+				new Tutorial(JLSInfo.frame,2);
 			}
 		});
 		JMenuItem tutorial4 = new JMenuItem("Sign Extension");
@@ -1733,7 +1733,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial4.html",false);
+				new Tutorial(JLSInfo.frame,3);
 			}
 		});
 

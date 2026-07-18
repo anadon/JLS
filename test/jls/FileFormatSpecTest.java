@@ -319,15 +319,11 @@ class FileFormatSpecTest {
 			assertFalse(Modifier.isAbstract(c.getModifiers()),
 					tag + " must be concrete");
 			try {
-				Class<? extends Element> c = Class.forName("jls.elem." + tag)
-						.asSubclass(Element.class);
-				assertFalse(Modifier.isAbstract(c.getModifiers()),
-						tag + " must be concrete");
 				// existence probe: throws if the (Circuit) constructor
 				// is missing; the assert uses the value (Error Prone
 				// ReturnValueIgnored, via the #93 NullAway wiring)
 				assertNotNull(c.getConstructor(Circuit.class));
-			} catch (ReflectiveOperationException | ClassCastException ex) {
+			} catch (NoSuchMethodException ex) {
 				broken.add(tag + " (" + ex + ")");
 			}
 		}

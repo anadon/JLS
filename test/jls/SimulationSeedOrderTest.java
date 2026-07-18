@@ -14,7 +14,7 @@ import java.util.Scanner;
 import org.junit.jupiter.api.Test;
 
 import jls.elem.Element;
-import jls.elem.LogicElement;
+import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
 /**
@@ -27,6 +27,12 @@ import jls.sim.Simulator;
  * ({@link Circuit#getElementsInStableOrder()}), the same order the
  * canonical save uses, so simulated values are a pure function of
  * circuit content.
+ *
+ * The seed order is observed through the events the elements post:
+ * every Constant posts exactly one time-0 event from its initSim, so
+ * a post-recording simulator sees the initSim visitation order as its
+ * event-callback order. (The element hierarchy is sealed, issue #95,
+ * so a recording test-double element is deliberately impossible.)
  */
 class SimulationSeedOrderTest {
 
@@ -34,24 +40,17 @@ class SimulationSeedOrderTest {
 	private static final Path FORK_FIXTURE =
 			Path.of("test", "fixtures", "fork-4.6-shiftregister.jls");
 
-	/** A logic element that records when initSim visits it. */
-	private static final class Probe extends LogicElement {
+	/** A simulator that records the callback of every posted event. */
+	private static final class RecordingSimulator extends Simulator {
 
-		private final List<Element> visits;
-
-		Probe(Circuit circuit, List<Element> visits) {
-			super(circuit);
-			this.visits = visits;
-		}
+		/** The event callbacks, in posting order. */
+		private final List<Object> posted = new ArrayList<Object>();
 
 		@Override
-		public void initSim(Simulator sim) {
-			visits.add(this);
+		public void post(SimEvent event) {
+			posted.add(event.getCallBack());
+			super.post(event);
 		}
-	}
-
-	/** A simulator exposing the protected seed phase. */
-	private static final class SeedSimulator extends Simulator {
 
 		void seed() {
 			initSimulation();
@@ -66,14 +65,19 @@ class SimulationSeedOrderTest {
 		}
 	}
 
-	@Test
-	void stableOrderIsSortedByStableId() throws Exception {
+	private static Circuit load(String text) throws Exception {
 		Circuit circuit = new Circuit("");
-		String text = Files.readString(FORK_FIXTURE, StandardCharsets.UTF_8);
 		assertTrue(circuit.load(new Scanner(text)),
 				() -> "load failed: " + JLSInfo.loadError);
 		assertTrue(circuit.finishLoad(null),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
+		return circuit;
+	}
+
+	@Test
+	void stableOrderIsSortedByStableId() throws Exception {
+		Circuit circuit = load(Files.readString(FORK_FIXTURE,
+				StandardCharsets.UTF_8));
 
 		List<Element> ordered = circuit.getElementsInStableOrder();
 		assertEquals(circuit.getElements().size(), ordered.size(),
@@ -91,20 +95,23 @@ class SimulationSeedOrderTest {
 	}
 
 	@Test
-	void initSimIsSeededInStableIdOrder() {
-		// enough probes that the HashSet's identity-hash order matching
-		// creation order by accident is out of the question
-		Circuit circuit = new Circuit("seed");
-		List<Element> visits = new ArrayList<Element>();
-		for (int i = 0; i < 24; i++) {
-			circuit.addElement(new Probe(circuit, visits));
+	void initSimIsSeededInStableIdOrder() throws Exception {
+		// enough constants that the HashSet's identity-hash order
+		// matching stable order by accident is out of the question
+		CircuitTextBuilder cb = new CircuitTextBuilder();
+		for (int i = 0; i < 16; i++) {
+			cb.constant(i + 1);
 		}
+		Circuit circuit = load(cb.build());
 
-		SeedSimulator sim = new SeedSimulator();
+		RecordingSimulator sim = new RecordingSimulator();
 		sim.setCircuit(circuit);
 		sim.seed();
 
-		assertEquals(circuit.getElementsInStableOrder(), visits,
+		// every element in this circuit is a Constant, and each posts
+		// exactly one time-0 event from initSim, so the posted-callback
+		// order IS the initSim visitation order
+		assertEquals(circuit.getElementsInStableOrder(), sim.posted,
 				"initSim must visit elements in canonical stable-id "
 						+ "order - the time-0 event seq numbers, and with "
 						+ "them every order-sensitive settled value, "

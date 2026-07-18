@@ -39,11 +39,6 @@ class SimEventDedupTest {
 	/** A minimal concrete Simulator exposing the shared event loop. */
 	private static final class PlainSimulator extends Simulator {
 
-		/** Create the simulator and set its self-reference. */
-		PlainSimulator() {
-			me = this;
-		}
-
 		/** Run the shared event loop. */
 		void run() {
 			runEventLoop();

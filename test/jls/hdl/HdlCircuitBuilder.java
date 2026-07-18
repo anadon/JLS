@@ -117,6 +117,19 @@ final class HdlCircuitBuilder {
 		return sb.toString();
 	}
 
+	/** Puts: "select", "input0".."inputN-1" (bits wide), "output". */
+	int mux(int numInputs, int bits) {
+		return element("Mux", " int inputs " + numInputs + "\n int bits "
+				+ bits + "\n int delay 25\n String iOrient \"RIGHT\"\n"
+				+ " String sOrient \"DOWN\"\n");
+	}
+
+	/** Puts: "input" (bits wide), "output" (2^bits wide). */
+	int decoder(int bits) {
+		return element("Decoder", " int bits " + bits
+				+ "\n int delay 15\n String orient \"LEFT\"\n");
+	}
+
 	int display(int bits) {
 		return element("Display", " int bits " + bits + "\n int base 10\n");
 	}

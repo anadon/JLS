@@ -18,6 +18,7 @@ import jls.elem.AndGate;
 import jls.elem.Binder;
 import jls.elem.Clock;
 import jls.elem.Constant;
+import jls.elem.Decoder;
 import jls.elem.DelayGate;
 import jls.elem.Display;
 import jls.elem.Element;
@@ -27,6 +28,7 @@ import jls.elem.InputPin;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
+import jls.elem.Mux;
 import jls.elem.NandGate;
 import jls.elem.NorGate;
 import jls.elem.NotGate;
@@ -61,7 +63,8 @@ import jls.elem.XorGate;
  * the gate family (AND, OR, NAND, NOR, XOR, NOT, DELAY); Extend;
  * TriState; Adder; Register (all three types, with initial value);
  * Clock (an input port to drive from a testbench); Binder and
- * Splitter (bit routing).</li>
+ * Splitter (bit routing); Mux and Decoder (selected assignments,
+ * the #59-adjudicated case/select templates).</li>
  * <li><b>Net topology, not instances</b>: Wire, WireEnd, JumpStart,
  * JumpEnd. Same-named jumps alias nets, so the net walk folds them
  * into one HDL net.</li>
@@ -69,9 +72,9 @@ import jls.elem.XorGate;
  * meaning): Display, SigGen, Pause, Stop, Text, TestGen. Each skip
  * produces a warning the caller surfaces.</li>
  * <li><b>Reject</b> (inexpressible in this version, §9 escalation):
- * SubCircuit, Memory, Mux, Decoder, StateMachine, TruthTable, and
- * anything unrecognized. Rejection lists <em>every</em> offender in
- * one message and nothing is written.</li>
+ * SubCircuit, Memory, StateMachine, TruthTable, and anything
+ * unrecognized. Rejection lists <em>every</em> offender in one
+ * message and nothing is written.</li>
  * </ul>
  *
  * <h2>Net walk</h2>
@@ -122,8 +125,10 @@ public final class HdlExporter {
 	 * @throws HdlExportException if the circuit contains elements the
 	 * exporter cannot express; the message names all of them.
 	 *
+	 * @see jls.hdl.HdlPolicyTest#decoderWithUnattachedInputConstantlyDrivesBitZero()
 	 * @see jls.hdl.HdlPolicyTest#displayIsSkippedWithAWarning()
 	 * @see jls.hdl.HdlPolicyTest#memoryIsRejectedByName()
+	 * @see jls.hdl.HdlPolicyTest#muxWithUnattachedSelectPassesInputZeroThrough()
 	 * @see jls.hdl.HdlPolicyTest#rejectionListsEveryOffenderInOneMessage()
 	 * @see jls.hdl.HdlPolicyTest#simulationControlElementsAreAllSkipped()
 	 * @see jls.hdl.HdlPolicyTest#subCircuitIsRejectedCleanly()
@@ -388,7 +393,7 @@ public final class HdlExporter {
 			AndGate.class, OrGate.class, NandGate.class, NorGate.class,
 			XorGate.class, NotGate.class, DelayGate.class, Extend.class,
 			TriState.class, Adder.class, Register.class, Clock.class,
-			Binder.class, Splitter.class);
+			Binder.class, Splitter.class, Mux.class, Decoder.class);
 
 	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
@@ -600,6 +605,62 @@ public final class HdlExporter {
 						fromBits, target, outBits,
 						ascending(fromBits.length)));
 			}
+			return;
+		}
+
+		if (el instanceof Mux) {
+			int bits = Math.max(outs.get(0).getBits(), 1);
+			String target = target(model, el, 0, outs.get(0), bits, nets,
+					groups, names);
+			HdlModel.Operand select = operand(ins.get(0), nets, groups);
+			List<HdlModel.Operand> values =
+					new ArrayList<HdlModel.Operand>();
+			for (int k = 1; k < ins.size(); k += 1) {
+				values.add(operand(ins.get(k), nets, groups));
+			}
+			int ways = values.size();
+			if (!select.isNet()) {
+				// an unattached select reads 0 (JLS's absent-inputs rule),
+				// so the mux degenerates to a buffer of input0
+				model.addStatement(new HdlModel.GateStatement(
+						"Mux (" + ways + " inputs) at " + at(el)
+								+ "; select unattached, reads 0",
+						HdlModel.GateStatement.Op.BUFFER,
+						List.of(values.get(0)), target));
+				return;
+			}
+			model.addStatement(new HdlModel.SelectStatement(
+					"Mux (" + ways + " inputs) at " + at(el), select, values,
+					HdlModel.Operand.literal(BigInteger.ZERO, bits), target,
+					bits, names.synth("mux_" + el.getID())));
+			return;
+		}
+
+		if (el instanceof Decoder) {
+			int outBits = Math.max(outs.get(0).getBits(), 1);
+			int inBits = Math.max(ins.get(0).getBits(), 1);
+			String target = target(model, el, 0, outs.get(0), outBits, nets,
+					groups, names);
+			HdlModel.Operand select = operand(ins.get(0), nets, groups);
+			String what = "Decoder (" + inBits + " to " + outBits + ") at "
+					+ at(el);
+			if (!select.isNet()) {
+				// an unattached input reads 0 (JLS's absent-inputs rule),
+				// so exactly output bit 0 is set, constantly
+				model.addStatement(new HdlModel.ConstantStatement(
+						what + "; input unattached, reads 0", target, outBits,
+						BigInteger.ONE));
+				return;
+			}
+			List<HdlModel.Operand> values =
+					new ArrayList<HdlModel.Operand>();
+			for (int k = 0; k < outBits; k += 1) {
+				values.add(HdlModel.Operand.literal(
+						BigInteger.ONE.shiftLeft(k), outBits));
+			}
+			model.addStatement(new HdlModel.SelectStatement(what, select,
+					values, HdlModel.Operand.literal(BigInteger.ZERO, outBits),
+					target, outBits, names.synth("dec_" + el.getID())));
 			return;
 		}
 

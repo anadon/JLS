@@ -233,6 +233,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			public void visit(HdlModel.BitMapStatement s) {
 				bitMap(body, s, names);
 			}
+			/** Renders a select statement into the body. */
+			@Override
+			public void visit(HdlModel.SelectStatement s) {
+				select(body, s, names);
+			}
 		});
 	} // end of statement method
 
@@ -432,6 +437,39 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(assignment).append("\n    end if;\n")
 				.append("  end process;\n");
 	} // end of process method
+
+	/**
+	 * Emits a selected assignment (Mux/Decoder), VHDL's concurrent
+	 * {@code with}/{@code select} - the construct-for-construct mirror
+	 * of the Verilog emitter's {@code case} template: one choice per
+	 * value and a {@code when others} carrying the default (which also
+	 * satisfies VHDL's full-coverage rule over std_logic's nine
+	 * values). No helper signal is needed, so
+	 * {@link HdlModel.SelectStatement#helperName} is unused here.
+	 * @param out sink for the architecture-body text
+	 * @param s the select statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
+	private static void select(StringBuilder out, HdlModel.SelectStatement s,
+			Names names) {
+
+		String target = names.of(s.target);
+		out.append("  with ").append(operand(s.selector, names))
+				.append(" select\n");
+		out.append("    ").append(target).append(" <= ");
+		String pad = " ".repeat(4 + target.length() + 4);
+		for (int i = 0; i < s.values.size(); i += 1) {
+			if (i > 0) {
+				out.append(pad);
+			}
+			out.append(operand(s.values.get(i), names)).append(" when ")
+					.append(literal(BigInteger.valueOf(i),
+							s.selector.bits()))
+					.append(",\n");
+		}
+		out.append(pad).append(operand(s.defaultValue, names))
+				.append(" when others;\n");
+	} // end of select method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into slices:

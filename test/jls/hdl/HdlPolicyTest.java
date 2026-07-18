@@ -101,6 +101,50 @@ class HdlPolicyTest {
 	}
 
 	@Test
+	void muxWithUnattachedSelectPassesInputZeroThrough() throws Exception {
+		// JLS reads an unattached select as 0, so the mux degenerates
+		// to a buffer of input0 instead of a constant-selector case
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("muxnosel");
+		int a = cb.inputPin("a", 1);
+		int b = cb.inputPin("b", 1);
+		int mux = cb.mux(2, 1);
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", mux, "input0");
+		cb.wire(b, "output", mux, "input1");
+		cb.wire(mux, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text);
+		assertTrue(result.text.contains("select unattached, reads 0"),
+				result.text);
+		assertTrue(result.text.contains("assign net_2 = a;"), result.text);
+		assertTrue(result.text.contains("assign y = net_2;"), result.text);
+		assertFalse(result.text.contains("case"),
+				"a folded mux must not emit a case: " + result.text);
+	}
+
+	@Test
+	void decoderWithUnattachedInputConstantlyDrivesBitZero()
+			throws Exception {
+		// JLS reads an unattached decoder input as 0, so exactly output
+		// bit 0 is set - a constant driver, not a case
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("decnoin");
+		int dec = cb.decoder(1);
+		int y = cb.outputPin("y", 2);
+		cb.wire(dec, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text);
+		assertTrue(result.text.contains("input unattached, reads 0"),
+				result.text);
+		assertTrue(result.text.contains("assign net_0 = 2'h1;"),
+				result.text);
+		assertTrue(result.text.contains("assign y = net_0;"), result.text);
+	}
+
+	@Test
 	void twoNetsBridgedByJumpsBecomeOneVerilogNet() throws Exception {
 		// three separate wire nets - source->JumpStart, JumpEnd->sink1,
 		// second JumpEnd->sink2 - all alias "mid" and must fuse into

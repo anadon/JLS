@@ -202,6 +202,11 @@ public final class VerilogEmitter implements HdlEmitter {
 			public void visit(HdlModel.BitMapStatement s) {
 				bitMap(out, s);
 			}
+			/** Routes a select statement to {@link #select}. */
+			@Override
+			public void visit(HdlModel.SelectStatement s) {
+				select(out, s);
+			}
 		});
 	} // end of statement method
 
@@ -343,6 +348,34 @@ public final class VerilogEmitter implements HdlEmitter {
 		out.append("  assign ").append(s.notQ).append(" = ~")
 				.append(s.regName).append(";\n");
 	} // end of register method
+
+	/**
+	 * Emits a selected assignment (Mux/Decoder, the #59-adjudicated
+	 * {@code case} template): a helper {@code reg} assigned in an
+	 * {@code always @*} {@code case} over the selector - one arm per
+	 * value, a {@code default} arm for everything else - then a
+	 * continuous {@code assign} of the helper onto the target net.
+	 * @param out the buffer the module text is appended to
+	 * @param s the select statement (selector, values, default, target)
+	 */
+	private static void select(StringBuilder out, HdlModel.SelectStatement s) {
+
+		out.append("  reg").append(range(s.bits)).append(' ')
+				.append(s.helperName).append(";\n");
+		out.append("  always @* case (").append(operand(s.selector))
+				.append(")\n");
+		for (int i = 0; i < s.values.size(); i += 1) {
+			out.append("    ")
+					.append(literal(BigInteger.valueOf(i), s.selector.bits()))
+					.append(": ").append(s.helperName).append(" = ")
+					.append(operand(s.values.get(i))).append(";\n");
+		}
+		out.append("    default: ").append(s.helperName).append(" = ")
+				.append(operand(s.defaultValue)).append(";\n");
+		out.append("  endcase\n");
+		out.append("  assign ").append(s.target).append(" = ")
+				.append(s.helperName).append(";\n");
+	} // end of select method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:

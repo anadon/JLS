@@ -219,6 +219,8 @@ public final class HdlModel {
 		 * @param statement the statement to emit
 		 */
 		void visit(BitMapStatement statement);
+		/** Emit a selected-assignment (Mux/Decoder) statement. */
+		void visit(SelectStatement statement);
 	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
@@ -542,6 +544,64 @@ public final class HdlModel {
 			visitor.visit(this);
 		}
 	} // end of BitMapStatement class
+
+	/**
+	 * A selected assignment (Mux and Decoder, issue #59's "combinational
+	 * three"): the target takes {@code values.get(i)} when the selector
+	 * equals {@code i}, and {@code defaultValue} for any other selector
+	 * value. A JLS Mux reads 0 past its last input, so its default is a
+	 * zero literal; a Decoder enumerates its selector's full range, so
+	 * its default is unreachable in two-state simulation and exists only
+	 * to keep the emitted case/select complete. The selector is always a
+	 * net reference: the exporter folds a literal (unattached) selector
+	 * into the chosen value before building a statement, so emitters
+	 * never see a constant case expression.
+	 */
+	public static final class SelectStatement extends Statement {
+
+		public final Operand selector;
+		public final List<Operand> values;
+		public final Operand defaultValue;
+		public final String target;
+		public final int bits;
+		/**
+		 * State-variable name for emitters whose selected assignment
+		 * needs a helper (the Verilog {@code reg} driven by the
+		 * {@code always}/{@code case} block); unused by emitters with a
+		 * concurrent selected assignment (VHDL {@code with}/
+		 * {@code select}).
+		 */
+		public final String helperName;
+
+		/**
+		 * @param comment identifies the source element
+		 * @param selector the (always net) selector value
+		 * @param values value taken per selector index (defensively copied)
+		 * @param defaultValue value taken for any other selector value
+		 * @param target net driven by the selection
+		 * @param bits width of the target and every value in bits
+		 * @param helperName pre-claimed state-variable name for emitters
+		 * that need one
+		 */
+		SelectStatement(String comment, Operand selector,
+				List<Operand> values, Operand defaultValue, String target,
+				int bits, String helperName) {
+			super(comment);
+			this.selector = selector;
+			this.values = Collections.unmodifiableList(
+					new ArrayList<Operand>(values));
+			this.defaultValue = defaultValue;
+			this.target = target;
+			this.bits = bits;
+			this.helperName = helperName;
+		}
+
+		/** Double-dispatch to the emitter's matching visit method. */
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
+	} // end of SelectStatement class
 
 	// the model proper
 	/** Legalized HDL module name. */

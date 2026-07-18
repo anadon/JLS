@@ -39,7 +39,7 @@ final class VhdlStructure {
 			"std_logic_vector", "unsigned", "downto", "begin", "process",
 			"if", "then", "else", "elsif", "when", "others", "not",
 			"and", "or", "xor", "nand", "nor", "rising_edge",
-			"falling_edge");
+			"falling_edge", "with", "select");
 
 	static void assertSane(String vhdl) {
 

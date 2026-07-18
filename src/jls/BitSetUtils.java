@@ -23,6 +23,12 @@ public final class BitSetUtils {
 	 * @return The corresponding BitSet.
 	 * 
 	 * @throws IllegalArgumentException if value is negative
+	 *
+	 * @see jls.BitSetUtilsCreateTest#assertRoundTrip()
+	 * @see jls.BitSetUtilsCreateTest#negativeValuesAreRejected()
+	 * @see jls.BitSetUtilsCreateTest#zeroYieldsEmptyBitSet()
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public static BitSet Create(long value) {
 		
@@ -134,6 +140,18 @@ public final class BitSetUtils {
      * @param bs The bitset.
      * 
      * @return the corresponding long.
+     *
+     * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+     * @see jls.BatchSimulationGoldenTest#simulate()
+     * @see jls.BitSetUtilsCreateTest#assertRoundTrip()
+     * @see jls.ElementSimulationGoldenTest#pinValue()
+     * @see jls.SequentialGoldenTest#simulate()
+     * @see jls.SequentialGoldenTest#simulateWithVectors()
+     * @see jls.ShiftRegisterTest#pinValue()
+     * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+     * @see jls.SimulationSemanticsRegressionTest#pinValue()
+     * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+     * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
      */
     public static long ToLong(BitSet bs) {
     	

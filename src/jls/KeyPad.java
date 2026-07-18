@@ -111,6 +111,11 @@ public final class KeyPad extends JButton implements ActionListener {
 
 		// standard dismissal (#86): Escape closes the keypad ...
 		ActionListener hideAction = new ActionListener() {
+			/**
+			 * Dismiss the keypad when Escape is pressed.
+			 *
+			 * @param event The event object for actions.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				hideKeyPad();
@@ -122,6 +127,12 @@ public final class KeyPad extends JButton implements ActionListener {
 
 		// ... and so does clicking anywhere outside it (focus loss)
 		win.addWindowFocusListener(new WindowAdapter() {
+			/**
+			 * Hide the keypad when focus moves outside it, recording when so
+			 * a click on the owning button does not immediately reopen it.
+			 *
+			 * @param event The window event describing the focus loss.
+			 */
 			@Override
 			public void windowLostFocus(WindowEvent event) {
 				if (winVisible) {

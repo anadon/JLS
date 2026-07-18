@@ -35,6 +35,7 @@ class CliImageExportTest {
 	@TempDir
 	Path tmp;
 
+	/** Immutable capture of a finished CLI run: its process exit code and stderr text. */
 	private static final class Result {
 		final int exit;
 		final String stderr;

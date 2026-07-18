@@ -66,20 +66,38 @@ final class ToolkitPolicy {
 		final Action action;
 		final String message;
 
+		/**
+		 * @param action  what the policy decided to do.
+		 * @param message the single-line error, or null unless the action
+		 *                is FAIL_WITH_MESSAGE.
+		 */
 		private Decision(Action action, String message) {
 			this.action = action;
 			this.message = message;
 		}
 
+		/**
+		 * A non-failing decision that carries no message.
+		 *
+		 * @param action the action to take (never FAIL_WITH_MESSAGE).
+		 * @return the decision.
+		 */
 		private static Decision of(Action action) {
 			return new Decision(action, null);
 		}
 
+		/**
+		 * A FAIL_WITH_MESSAGE decision carrying the line to print.
+		 *
+		 * @param message the single actionable jls: error: line.
+		 * @return the decision.
+		 */
 		private static Decision fail(String message) {
 			return new Decision(Action.FAIL_WITH_MESSAGE, message);
 		}
 	} // end of Decision class
 
+	/** Not instantiable: the policy is static-use only. */
 	private ToolkitPolicy() {
 		// static use only
 	}
@@ -105,6 +123,8 @@ final class ToolkitPolicy {
 	 *                       consulted when the answer matters.
 	 *
 	 * @return the decision.
+	 *
+	 * @see jls.ToolkitPolicyTest#decide()
 	 */
 	static Decision decide(String osName, String waylandDisplay,
 			String display, String override, boolean headlessRun,
@@ -172,6 +192,9 @@ final class ToolkitPolicy {
 	 * initializer runs.
 	 *
 	 * @return true if the WLToolkit class exists in this runtime.
+	 *
+	 * @see jls.ToolkitPolicyTest#wlToolkitProbeNeverInitializesAwtAndAnswersFalseOnStockJdk()
+	 * @see jls.WaylandStartupCliTest#assumeStockJdk()
 	 */
 	static boolean runtimeHasWlToolkit() {
 

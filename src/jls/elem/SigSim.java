@@ -8,6 +8,12 @@ import java.util.Scanner;
 import jls.*;
 import jls.sim.*;
 
+/**
+ * Base class for signal generators that drive a circuit's input pins during
+ * simulation from a textual signal specification. Subclasses supply the
+ * specification source; this class parses it and posts the resulting timed
+ * events to the simulator.
+ */
 public abstract class SigSim extends LogicElement {
 
 	/**

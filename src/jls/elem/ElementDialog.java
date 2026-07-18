@@ -173,12 +173,22 @@ public abstract class ElementDialog extends JDialog {
 		cancel.setBackground(Color.pink);
 		getRootPane().setDefaultButton(ok);
 		ok.addActionListener(new ActionListener() {
+			/**
+			 * Run the OK path (validate then accept) when OK is clicked.
+			 *
+			 * @param event The button action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				confirmDialog();
 			}
 		});
 		ActionListener doCancel = new ActionListener() {
+			/**
+			 * Cancel the dialog when Cancel is clicked or Escape is pressed.
+			 *
+			 * @param event The action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				cancelDialog();
@@ -192,6 +202,11 @@ public abstract class ElementDialog extends JDialog {
 		// closing the window cancels
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
+			/**
+			 * Cancel the dialog when the window's close box is used.
+			 *
+			 * @param e The window event.
+			 */
 			@Override
 			public void windowClosing(WindowEvent e) {
 				cancelDialog();
@@ -208,6 +223,11 @@ public abstract class ElementDialog extends JDialog {
 	protected void confirmOnEnter(javax.swing.JTextField field) {
 
 		field.addActionListener(new ActionListener() {
+			/**
+			 * Confirm the dialog when Enter is pressed inside the field.
+			 *
+			 * @param event The field action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				confirmDialog();

@@ -57,6 +57,12 @@ public class State {
 	private int x;
 	private int y;
 	private int diameter;
+	/**
+	 * Tracks the bit width and direction of a signal used within this state,
+	 * so signal usage can be checked for consistency. The reference count
+	 * records how many outputs/transitions use the signal; the entry is
+	 * removed from the bitmap when it drops to zero.
+	 */
 	private static class Check {
 		public int bits;
 		public boolean isInput;	// false if output
@@ -82,6 +88,11 @@ public class State {
 		public int bits;
 		public long value;
 
+		/**
+		 * Text representation of this output.
+		 *
+		 * @return the signal name, its bit count, and its value.
+		 */
 		@Override
 		public String toString() { return signal + "[" + bits + "] = " + value; }
 	} // end of Out class
@@ -257,6 +268,15 @@ public class State {
 	 * @param angle The angle of a line segment (in degrees).
 	 * @param g The Graphics object to use.
 	 */
+	/**
+	 * Draw the condition information on a transition.
+	 *
+	 * @param trans A transition.
+	 * @param x The x-coordinate of the middle of a line segment.
+	 * @param y The y-coordinate of the middle of a line segment.
+	 * @param angle The angle of a line segment (in degrees).
+	 * @param g The Graphics object to use.
+	 */
 	public void drawCond(Transition trans, int x, int y, double angle, Graphics g) {
 
 		String cond = "";
@@ -356,6 +376,18 @@ public class State {
 	 * @param angle The angle of a line segment (in degrees).
 	 * @param g The Graphics object to use.
 	 * 
+	 * @return The bounds of the condition on this transition.
+	 */
+	/**
+	 * Get the bounds on the condition.
+	 * If g is null, then return a 0x0 rectangle at x,y.
+	 *
+	 * @param trans A transition.
+	 * @param x The x-coordinate of the middle of a line segment.
+	 * @param y The y-coordinate of the middle of a line segment.
+	 * @param angle The angle of a line segment (in degrees).
+	 * @param g The Graphics object to use.
+	 *
 	 * @return The bounds of the condition on this transition.
 	 */
 	public Rectangle boundCond(Transition trans, int x, int y, double angle, Graphics g) {
@@ -1582,6 +1614,9 @@ public class State {
 		close.setBackground(Color.green);
 		window.add(close);
 		close.addActionListener(new ActionListener() {
+			/**
+			 * Dispose the outputs window when the close button is pressed.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				show.dispose();

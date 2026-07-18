@@ -184,6 +184,8 @@ public class Pause extends LogicElement {
 	 * Initialize simulation.
 	 * 
 	 * @param sim The simulator.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
 	public void initSim(Simulator sim) {
@@ -206,6 +208,8 @@ public class Pause extends LogicElement {
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Should be null.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
 	public void react(long now, Simulator sim, Object todo) {

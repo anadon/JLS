@@ -17,6 +17,14 @@ public final class JLSInfo {
 
 	public static final String version = "JLS " + versionString;
 
+	/**
+	 * Read the project version single-sourced from the build-filtered
+	 * jls/version.properties resource, falling back to "dev" when the
+	 * resource is missing, unreadable, or still holds the unfiltered
+	 * "${...}" placeholder (issue #36).
+	 *
+	 * @return the resolved version string, or "dev" if none is available.
+	 */
 	private static String loadVersion() {
 
 		try (java.io.InputStream in =
@@ -63,6 +71,10 @@ public final class JLSInfo {
 	public static boolean imgexport = false;			// export image from command line
 	public static boolean hdlexport = false;			// export HDL from command line (#60)
 	public static boolean textsave = false;				// re-save as plain text from command line (#129)
+	/**
+	 * The four cardinal directions an element can face in the editor,
+	 * used to drive drawing and to rotate or flip elements.
+	 */
 	public enum Orientation { UP, DOWN, LEFT, RIGHT;
 
 		/**

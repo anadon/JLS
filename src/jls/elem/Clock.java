@@ -35,6 +35,8 @@ public class Clock extends LogicElement {
 	 * @param cycleTime The proposed cycle time.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkCycleTime(int cycleTime) {
 
@@ -50,6 +52,8 @@ public class Clock extends LogicElement {
 	 * @param oneTime The proposed one time.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkOneTime(int cycleTime, int oneTime) {
 
@@ -212,8 +216,23 @@ public class Clock extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("cycle") {
+			/**
+			 * Read the cycle time from the given clock.
+			 *
+			 * @param el The clock to read.
+			 *
+			 * @return the cycle time.
+			 */
 			@Override
 			protected int get(Element el) { return ((Clock)el).cycleTime; }
+			/**
+			 * Store a validated cycle time on the given clock.
+			 *
+			 * @param el The clock to update.
+			 * @param v The new cycle time.
+			 *
+			 * @throws IllegalArgumentException if the cycle time is not positive.
+			 */
 			@Override
 			protected void set(Element el, int v) {
 				String violated = checkCycleTime(v);
@@ -224,8 +243,23 @@ public class Clock extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("one") {
+			/**
+			 * Read the one time from the given clock.
+			 *
+			 * @param el The clock to read.
+			 *
+			 * @return the one time.
+			 */
 			@Override
 			protected int get(Element el) { return ((Clock)el).oneTime; }
+			/**
+			 * Store a validated one time on the given clock.
+			 *
+			 * @param el The clock to update.
+			 * @param v The new one time.
+			 *
+			 * @throws IllegalArgumentException if the one time is not positive.
+			 */
 			@Override
 			protected void set(Element el, int v) {
 				if (v < 1) {
@@ -235,10 +269,23 @@ public class Clock extends LogicElement {
 			}
 		},
 		new Attribute.OrientationAttribute("orient") {
+			/**
+			 * Read the orientation from the given clock.
+			 *
+			 * @param el The clock to read.
+			 *
+			 * @return the orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Clock)el).orientation;
 			}
+			/**
+			 * Store the orientation on the given clock.
+			 *
+			 * @param el The clock to update.
+			 * @param o The new orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Clock)el).orientation = o;

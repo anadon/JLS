@@ -36,6 +36,10 @@ class WaylandStartupCliTest {
 	@TempDir
 	Path tmp;
 
+	/**
+	 * Immutable outcome of one forked JLS run: the child's exit code and
+	 * its captured stdout and stderr text.
+	 */
 	private static final class Result {
 		final int exit;
 		final String stdout;

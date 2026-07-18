@@ -26,6 +26,10 @@ public final class Util {
 	 * @param to A circuit.
 	 * 
 	 * @return the point of minimum x,y coordinates of all elements.
+	 *
+	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
 	 */
 	public static Point copy(Set<Element> from, Circuit to) {
 
@@ -131,6 +135,8 @@ public final class Util {
 	 * Partition all wires and wire ends into wire nets.
 	 * 
 	 * @param circ The circuit to partition.
+	 *
+	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
 	 */
 	public static void partition(Circuit circ) {
 		
@@ -204,6 +210,8 @@ public final class Util {
 	 * @param str The string to check.
 	 * 
 	 * @return true if the name is valid, false if not.
+	 *
+	 * @see jls.UtilFunctionsTest#nameValidationAcceptsIdentifiersOnly()
 	 */
 	public static boolean isValidName(String str) {
 		
@@ -231,6 +239,8 @@ public final class Util {
 	 * @param str The string to check.
 	 * 
 	 * @return the base name (minus directory prefix) if valid, or null if not valid.
+	 *
+	 * @see jls.UtilFunctionsTest#fileNameValidationStripsDirectoriesOnBothSeparators()
 	 */
 	public static String isValidFileName(String str) {
 
@@ -261,6 +271,10 @@ public final class Util {
 	 * circuits (issue #130).
 	 *
 	 * @return the user's home directory.
+	 *
+	 * @see jls.SeedDirectoryTest#defaultDirectoryIsUserHome()
+	 * @see jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
+	 * @see jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
 	 */
 	public static String defaultDirectory() {
 
@@ -277,6 +291,10 @@ public final class Util {
 	 *
 	 * @return remembered if non-null and non-empty, otherwise
 	 * defaultDirectory().
+	 *
+	 * @see jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
+	 * @see jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
+	 * @see jls.SeedDirectoryTest#rememberedDirectoryWins()
 	 */
 	public static String seedDirectory(String remembered) {
 
@@ -293,6 +311,8 @@ public final class Util {
 	 * @param extra True if prefix or suffix needed, false if not.
 	 * 
 	 * @return the string.
+	 *
+	 * @see jls.UtilFunctionsTest#baseConversionMatchesItsDisplayContract()
 	 */
 	public static String convert(BigInteger value, int base, boolean extra) {
 		

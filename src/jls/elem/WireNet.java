@@ -35,6 +35,7 @@ public class WireNet {
 	 * Add a new wire end.
 	 * 
 	 * @param end The new wire end.
+	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void add(WireEnd end) {
 		
@@ -312,6 +313,9 @@ public class WireNet {
 	 * Get all wire ends in this net.
 	 * 
 	 * @return all wire ends.
+	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public Set<WireEnd> getAllEnds() {
 		

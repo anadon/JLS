@@ -245,22 +245,58 @@ public class Decoder extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the input bit width from the given decoder.
+			 *
+			 * @param el The decoder to read from.
+			 * @return the number of input bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((Decoder)el).bits; }
+			/**
+			 * Store the input bit width into the given decoder.
+			 *
+			 * @param el The decoder to write to.
+			 * @param v The number of input bits.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Decoder)el).bits = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation delay from the given decoder.
+			 *
+			 * @param el The decoder to read from.
+			 * @return the propagation delay.
+			 */
 			@Override
 			protected int get(Element el) { return ((Decoder)el).propDelay; }
+			/**
+			 * Store the propagation delay into the given decoder.
+			 *
+			 * @param el The decoder to write to.
+			 * @param v The new propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Decoder)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("orient") {
+			/**
+			 * Read the orientation from the given decoder.
+			 *
+			 * @param el The decoder to read from.
+			 * @return the current orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Decoder)el).orientation;
 			}
+			/**
+			 * Store the orientation into the given decoder.
+			 *
+			 * @param el The decoder to write to.
+			 * @param o The new orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Decoder)el).orientation = o;

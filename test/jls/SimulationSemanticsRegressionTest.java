@@ -268,6 +268,8 @@ class SimulationSemanticsRegressionTest {
 		return buffer.toString(StandardCharsets.UTF_8.name());
 	}
 
+	/** A Runnable whose body may throw a checked exception, so test
+	 * bodies passed to captureStderr can let exceptions propagate. */
 	private interface ThrowingRunnable {
 		void run() throws Exception;
 	}

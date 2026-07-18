@@ -172,6 +172,12 @@ class UiHarnessPilotTest {
 	// assert-the-assertion: every helper must be able to fail
 	// ------------------------------------------------------------------
 
+	/**
+	 * Assert-the-assertion suite: each test pins one harness helper by
+	 * feeding it a case that must fail, proving the assertion actually
+	 * rejects bad input rather than silently passing on an empty or
+	 * mismatched circuit.
+	 */
 	@Nested
 	class EveryAssertionCanFail {
 

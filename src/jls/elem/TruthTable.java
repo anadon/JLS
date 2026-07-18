@@ -69,6 +69,8 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * @param col The offending column index.
 	 *
 	 * @return the constraint message for that entry.
+	 *
+	 * @see jls.elem.DialogValidationTest#truthTableEntryRuleHasOneWording()
 	 */
 	static String entryConstraint(int row, int col) {
 
@@ -287,14 +289,17 @@ public final class TruthTable extends LogicElement implements Printable {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/** Reads the name field of the given truth table. */
 			@Override
 			protected String get(Element el) { return ((TruthTable)el).name; }
+			/** Sets the name during a load and registers it with the circuit. */
 			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((TruthTable)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			/** Copies the name field without registering it with the circuit. */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
@@ -303,20 +308,26 @@ public final class TruthTable extends LogicElement implements Printable {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			/** Reads the propagation delay of the given truth table. */
 			@Override
 			protected int get(Element el) { return ((TruthTable)el).propDelay; }
+			/** Sets the propagation delay during a load. */
 			@Override
 			protected void set(Element el, int v) { ((TruthTable)el).propDelay = v; }
 		},
 		new Attribute.IntAttribute("rows") {
+			/** Reads the row count of the given truth table. */
 			@Override
 			protected int get(Element el) { return ((TruthTable)el).rows; }
+			/** Sets the row count during a load. */
 			@Override
 			protected void set(Element el, int v) { ((TruthTable)el).rows = v; }
 		},
 		new Attribute.IntAttribute("cols") {
+			/** Reads the column count of the given truth table. */
 			@Override
 			protected int get(Element el) { return ((TruthTable)el).cols; }
+			/** Sets the column count during a load and allocates the table. */
 			@Override
 			protected void set(Element el, int v) {
 				// setting cols allocates the table (rows is loaded and
@@ -696,6 +707,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			// lay out the table once the window exists
 			addWindowListener (
 					new WindowAdapter() {
+						/** Lays out the table display once the dialog window is open. */
 						@Override
 						public void windowOpened(WindowEvent event) {
 							disp.doLayout(inputNames,outputNames,table,null);
@@ -1558,6 +1570,11 @@ public final class TruthTable extends LogicElement implements Printable {
 	//-------------------------------------------------------------------------------
 
 	private int[] toBeValue;
+	/**
+	 * A pending output change carried through the simulator: an output pin's
+	 * position (index into the outputs list) paired with the BitSet value it
+	 * should take on when the scheduled event fires.
+	 */
 	static class Out {
 		int position;
 		BitSet value;

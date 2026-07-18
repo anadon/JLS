@@ -53,6 +53,12 @@ public abstract class Pin extends LogicElement {
 	 * Get the name of this pin.
 	 * 
 	 * @return the name.
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#pinValue()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#pinValue()
+	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
 	 */
 	@Override
 	public String getName() {
@@ -146,14 +152,17 @@ public abstract class Pin extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/** Read the pin's name for saving. */
 			@Override
 			protected String get(Element el) { return ((Pin)el).name; }
+			/** Load the pin's name and register it with the circuit. */
 			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((Pin)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			/** Copy the pin's name to another element without re-registering it. */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten pin copies assigned the field
@@ -162,22 +171,28 @@ public abstract class Pin extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			/** Read the pin's bit width for saving. */
 			@Override
 			protected int get(Element el) { return ((Pin)el).bits; }
+			/** Load the pin's bit width. */
 			@Override
 			protected void set(Element el, int v) { ((Pin)el).bits = v; }
 		},
 		new Attribute.IntAttribute("watch") {
+			/** Read the pin's watched flag as an int (1 if watched, else 0). */
 			@Override
 			protected int get(Element el) { return ((Pin)el).watched ? 1 : 0; }
+			/** Load the pin's watched flag from an int (non-zero means watched). */
 			@Override
 			protected void set(Element el, int v) { ((Pin)el).watched = v != 0; }
 		},
 		new Attribute.OrientationAttribute("orient") {
+			/** Read the pin's orientation for saving. */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Pin)el).orientation;
 			}
+			/** Load the pin's orientation. */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Pin)el).orientation = o;
@@ -449,6 +464,13 @@ public abstract class Pin extends LogicElement {
 	 * Get the current value.
 	 *
 	 * @return the current value.
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#pinValue()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#pinValue()
+	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	@Override
 	public BitSet getCurrentValue() {

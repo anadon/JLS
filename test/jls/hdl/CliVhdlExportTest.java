@@ -28,6 +28,7 @@ class CliVhdlExportTest {
 	@TempDir
 	Path tmp;
 
+	/** The outcome of one CLI run: its process exit code and captured stderr. */
 	private static final class Result {
 		final int exit;
 		final String stderr;

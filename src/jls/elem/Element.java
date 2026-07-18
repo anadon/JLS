@@ -41,6 +41,8 @@ public class Element {
 	 * Create a new Element object.
 	 * 
 	 * @param circuit The circuit this element is part of.
+	 *
+	 * @see jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
 	 */
 	public Element(Circuit circuit) {
 
@@ -49,6 +51,8 @@ public class Element {
 
 	/**
 	 * Set up this element (overridden by most elements).
+	 *
+	 * @see jls.ui.DialogConstructionSmokeTest#constructAndCancel()
 	 */
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
@@ -60,6 +64,8 @@ public class Element {
 	 * 
 	 * @param x The x-coordinate of the upper left corner of this element.
 	 * @param y The y-coordinate of the upper left corner of this element.
+	 *
+	 * @see jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
 	 */
 	public void setXY(int x, int y) {
 
@@ -101,6 +107,18 @@ public class Element {
 	 * Get x-coordinate of this element.
 	 * 
 	 * @return the x-coordinate.
+	 *
+	 * @see jls.StableElementIdTest#sidsByLogicalElement()
+	 * @see jls.edit.TriStateBundleConnectTest#elementAt()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @see jls.ui.CircuitAssert#describe()
+	 * @see jls.ui.EditorGestureTest#centerX()
+	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @see jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
+	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @see jls.ui.GeometryAssert#assertElementAt()
+	 * @see jls.ui.GeometryAssert#assertOnGrid()
 	 */
 	public int getX() {
 
@@ -111,6 +129,18 @@ public class Element {
 	 * Get y-coordinate of this element.
 	 * 
 	 * @return the y-coordinate.
+	 *
+	 * @see jls.StableElementIdTest#sidsByLogicalElement()
+	 * @see jls.edit.TriStateBundleConnectTest#elementAt()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @see jls.ui.CircuitAssert#describe()
+	 * @see jls.ui.EditorGestureTest#centerY()
+	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @see jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
+	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @see jls.ui.GeometryAssert#assertElementAt()
+	 * @see jls.ui.GeometryAssert#assertOnGrid()
 	 */
 	public int getY() {
 
@@ -142,32 +172,42 @@ public class Element {
 	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("id") {
+			/** Reads the element's file-local id for the "id" attribute. */
 			@Override
 			protected int get(Element el) { return el.id; }
+			/** Stores a loaded value into the element's file-local id. */
 			@Override
 			protected void set(Element el, int value) { el.id = value; }
+			/** No-op: ids are assigned at save time, never copied. */
 			@Override
 			public void copy(Element from, Element to) {
 				// ids are assigned at save time, never copied
 			}
 		},
 		new Attribute.IntAttribute("x") {
+			/** Reads the element's x-coordinate for the "x" attribute. */
 			@Override
 			protected int get(Element el) { return el.x; }
+			/** Stores a loaded value into the element's x-coordinate. */
 			@Override
 			protected void set(Element el, int value) { el.x = value; }
 		},
 		new Attribute.IntAttribute("y") {
+			/** Reads the element's y-coordinate for the "y" attribute. */
 			@Override
 			protected int get(Element el) { return el.y; }
+			/** Stores a loaded value into the element's y-coordinate. */
 			@Override
 			protected void set(Element el, int value) { el.y = value; }
 		},
 		new Attribute.IntAttribute("width") {
+			/** Reads the element's width for the "width" attribute. */
 			@Override
 			protected int get(Element el) { return el.width; }
+			/** Stores a loaded value into the element's width. */
 			@Override
 			protected void set(Element el, int value) { el.width = value; }
+			/** Whether the width is omitted from the save (recomputed on load). */
 			@Override
 			protected boolean omitted(Element el) {
 				// recomputed by init() on load for some elements (#21)
@@ -175,46 +215,59 @@ public class Element {
 			}
 		},
 		new Attribute.IntAttribute("height") {
+			/** Reads the element's height for the "height" attribute. */
 			@Override
 			protected int get(Element el) { return el.height; }
+			/** Stores a loaded value into the element's height. */
 			@Override
 			protected void set(Element el, int value) { el.height = value; }
+			/** Whether the height is omitted from the save (recomputed on load). */
 			@Override
 			protected boolean omitted(Element el) {
 				return el.sizeIsRecomputedOnLoad();
 			}
 		},
 		new Attribute.IntAttribute("fixed") {
+			/** Reads the uneditable flag as 1 or 0 for the "fixed" attribute. */
 			@Override
 			protected int get(Element el) { return el.uneditable ? 1 : 0; }
+			/** Marks the element uneditable when any "fixed" value is loaded. */
 			@Override
 			protected void set(Element el, int value) {
 				// any saved value means uneditable, as the loader always did
 				el.uneditable = true;
 			}
+			/** Whether "fixed" is omitted (only editable elements omit it). */
 			@Override
 			protected boolean omitted(Element el) { return !el.uneditable; }
+			/** Copies the uneditable flag to the target element. */
 			@Override
 			public void copy(Element from, Element to) {
 				to.uneditable = from.uneditable;
 			}
 		},
 		new Attribute.IntAttribute("trpos") {
+			/** Reads the trace position for the "trpos" attribute. */
 			@Override
 			protected int get(Element el) { return el.tracePosition; }
+			/** Stores a loaded value into the element's trace position. */
 			@Override
 			protected void set(Element el, int value) { el.tracePosition = value; }
+			/** Whether "trpos" is omitted (untraced elements omit it). */
 			@Override
 			protected boolean omitted(Element el) { return el.tracePosition == -1; }
 		},
 		new Attribute.StringAttribute("sid") {
+			/** Reads the stable id as text for the "sid" attribute. */
 			@Override
 			protected String get(Element el) { return el.stableId.toString(); }
+			/** Parses a loaded stable id and marks it as file-declared. */
 			@Override
 			protected void set(Element el, String value) {
 				el.stableId = ElementId.parse(value);
 				el.stableIdFromFile = true;
 			}
+			/** No-op: identity is never copied (a copy mints a fresh id). */
 			@Override
 			public void copy(Element from, Element to) {
 				// identity is never copied: a pasted element is a new
@@ -335,6 +388,10 @@ public class Element {
 
 	/**
 	 * Placeholder for element copies.
+	 *
+	 * @see jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
+	 * @see jls.StableElementIdTest#copyMintsAFreshId()
+	 * @see jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
 	 */
 	public Element copy() {
 
@@ -376,6 +433,12 @@ public class Element {
 	 * 
 	 * @param dx Distance to move in the x-direction.
 	 * @param dy Distance to move in the y-direction.
+	 *
+	 * @see jls.DeterministicSaveTest#stateHashIsContentDetermined()
+	 * @see jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
+	 * @see jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
+	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
 	 */
 	public void move(int dx, int dy) {
 
@@ -397,6 +460,11 @@ public class Element {
 	 * @param y The y-coordinate of the given point.
 	 * 
 	 * @return true if the point is in the display area, false if not.
+	 *
+	 * @see jls.SpatialIndexTest#everyContainingElementIsACandidate()
+	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @see jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
+	 * @see jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
 	 */
 	public boolean contains(int x, int y) {
 
@@ -410,6 +478,15 @@ public class Element {
 	 * @param other The other element.
 	 *
 	 * @return true if this element intersects the other, false if not.
+	 *
+	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
+	 * @see jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
+	 * @see jls.elem.HollowVsFilledCollisionTest#cornerCollisionIsAttributedToTheWireEnd()
+	 * @see jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
+	 * @see jls.elem.HollowVsFilledCollisionTest#edgeCrossingCollidesWithThatWireOnly()
+	 * @see jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
 	 */
 	public boolean intersects(Element other) {
 
@@ -440,6 +517,8 @@ public class Element {
 	 * @param rect The given rectangle.
 	 * 
 	 * @return true if the element is inside, false if not.
+	 *
+	 * @see jls.SpatialIndexTest#everyInsideElementIsACandidate()
 	 */
 	public boolean isInside(Rectangle rect) {
 
@@ -451,6 +530,8 @@ public class Element {
 	 * Set/reset highlight.
 	 * 
 	 * @param light True if item should be highlighted, false otherwise.
+	 *
+	 * @see jls.edit.CtrlWGestureTest#hoverSelect()
 	 */
 	public void setHighlight(boolean light) {
 
@@ -464,6 +545,8 @@ public class Element {
 	 * Whether this element is currently drawn highlighted (selected).
 	 *
 	 * @return true if highlighted.
+	 *
+	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	public boolean isHighlighted() {
 
@@ -474,6 +557,12 @@ public class Element {
 	 * Set id of this element (for file save).
 	 *
 	 * @param id The id.
+	 *
+	 * @see jls.StringEscapeRoundTripTest#roundTrip()
+	 * @see jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
+	 * @see jls.elem.AttributePersistenceTest#savedBytesMatchTheHandwrittenFormat()
+	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @see jls.elem.GroupOrientationTest#orientOf()
 	 */
 	public void setID(int id) {
 
@@ -486,6 +575,11 @@ public class Element {
 	 * copy gets a fresh one.
 	 *
 	 * @return the stable id.
+	 *
+	 * @see jls.StableElementIdTest#copyMintsAFreshId()
+	 * @see jls.StableElementIdTest#idsAreUniqueWithinACircuit()
+	 * @see jls.StableElementIdTest#mintedIdsSkipIdsTheFileAlreadyUses()
+	 * @see jls.StableElementIdTest#sidsByLogicalElement()
 	 */
 	public ElementId getStableId() {
 
@@ -521,6 +615,11 @@ public class Element {
 	 * Save all information about this element in a file.
 	 * 
 	 * @param output The print writer to use.
+	 *
+	 * @see jls.AllElementsRoundTripTest#saveElement()
+	 * @see jls.StringEscapeRoundTripTest#roundTrip()
+	 * @see jls.elem.AttributePersistenceTest#saveElement()
+	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
 	 */
 	public void save(PrintWriter output) {
 
@@ -548,6 +647,8 @@ public class Element {
 	 * Subclasses draw the element itself.
 	 * 
 	 * @param g The Graphics object to draw with.
+	 *
+	 * @see jls.elem.MuxSymbolTest#render()
 	 */
 	public void draw(Graphics g) {
 
@@ -571,6 +672,8 @@ public class Element {
 
 	/**
 	 * Get put near given x,y position (if one) - overridden.
+	 *
+	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
 	 */
 	public Put getPut(int x, int y) {
 
@@ -605,6 +708,11 @@ public class Element {
 	 * Generally overridden.
 	 * 
 	 * @return a set of all inputs and outputs.
+	 *
+	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @see jls.edit.DragCandidateBoundTest#putLocations()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
 	 */
 	public Set<Put> getAllPuts() { return new HashSet<Put>(); }
 
@@ -612,6 +720,19 @@ public class Element {
 	 * Get the rectangle bounding this element.
 	 *  
 	 * @return the bounding rectangle.
+	 *
+	 * @see jls.elem.GroupOrientationTest#horizontalGeometryIsUnchanged()
+	 * @see jls.elem.GroupOrientationTest#verticalBinderLoadsWithVerticalGeometry()
+	 * @see jls.elem.GroupOrientationTest#verticalSplitterLoadsWithVerticalGeometry()
+	 * @see jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
+	 * @see jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
+	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @see jls.ui.EditorGestureTest#centerX()
+	 * @see jls.ui.EditorGestureTest#centerY()
+	 * @see jls.ui.GeometryAssert#assertAbove()
+	 * @see jls.ui.GeometryAssert#assertDimensions()
+	 * @see jls.ui.GeometryAssert#assertLeftOf()
+	 * @see jls.ui.GeometryAssert#assertWithinGridUnits()
 	 */
 	public Rectangle getRect() {
 
@@ -626,6 +747,11 @@ public class Element {
 	 * ends, not from x/y/width/height.
 	 *
 	 * @return the index bounds.
+	 *
+	 * @see jls.DrawCullingParityTest#mayBeVisible()
+	 * @see jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
+	 * @see jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
+	 * @see jls.SpatialIndexTest#bruteForceNear()
 	 */
 	public Rectangle getIndexBounds() {
 
@@ -646,6 +772,9 @@ public class Element {
 	 * @param name Name of the put.
 	 * 
 	 * @return The put.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freeInput()
+	 * @see jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
 	 */
 	public Put getPut(String name) {
 
@@ -888,6 +1017,8 @@ public class Element {
 	 * Overridden by elements that can be watched.
 	 * 
 	 * @return false.
+	 *
+	 * @see jls.ui.CircuitAssert#assertWatched()
 	 */
 	public boolean isWatched() {
 

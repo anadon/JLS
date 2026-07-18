@@ -98,4 +98,26 @@ class ArchitectureRulesTest {
 						+ " grow it")
 				.check(classes);
 	}
+
+	/**
+	 * The collaboration layering rule from issue #163: everything under
+	 * jls.collab except the (future) jls.collab.ui package is headless -
+	 * ops, session, CRDT, and network code never touch Swing. UI effects
+	 * route through listeners marshalled onto the EDT by jls.collab.ui,
+	 * the one collab package allowed to import it. Zero-tolerance from
+	 * the start: the first collab package (jls.collab.op, issue #167)
+	 * is born clean.
+	 */
+	@Test
+	void collabLayersAreHeadless() {
+		noClasses()
+				.that().resideInAPackage("jls.collab..")
+				.and().resideOutsideOfPackage("jls.collab.ui..")
+				.should().dependOnClassesThat()
+				.resideInAPackage("javax.swing..")
+				.because("only jls.collab.ui may touch Swing; ops and"
+						+ " the replication stack are headless by"
+						+ " construction (issues #163/#167)")
+				.check(classes);
+	}
 }

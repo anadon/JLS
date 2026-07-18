@@ -50,6 +50,24 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Operation layer, first slice (#167, collaboration stage 0b): a new
+  `jls.collab.op` package reifies editor mutations as a closed, sealed
+  vocabulary of validated, invertible, serializable commands
+  (`CircuitOp`) applied through one entry point (`OpSink`), addressing
+  elements by stable id (#165) and verified against the canonical
+  serialization oracle (#166): apply-then-inverse restores the exact
+  prior bytes, rejected ops change nothing, and the strict reader
+  (`CircuitOpReader`) round-trips every kind byte-identically while
+  rejecting malformed input. Six op kinds exist (`ToggleWatched`,
+  `AttachProbe`/`RemoveProbe`, `RotateElement`, `FlipElement`,
+  `MoveElements`) and six editor gestures now go through the entry
+  point (watch toggles via ctrl-W and menu, rotate both directions,
+  flip, probe attach/remove); the full mutation-site inventory and
+  migration status live in `docs/operation-layer.md`. Snapshot undo
+  is unchanged - `OpSink.submit` still runs the existing
+  `markChanged` bookkeeping. An ArchUnit rule pins the #163 layering
+  from day one: no collab package outside `jls.collab.ui` may touch
+  Swing.
 - Stable element identity (#165, collaboration stage 0a): every
   element now carries a permanent id (`replica:counter`), minted at
   creation and persisted in the save format as a new `sid` base

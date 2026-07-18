@@ -77,6 +77,10 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   `sha256sum -c SHA256SUMS`; releases additionally carry signed build
   provenance, checkable with
   `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
+  The jar and BOM are bit-for-bit reproducible from the tagged source:
+  each release publishes a `.buildinfo` recording the exact build
+  environment, and [docs/reproducibility.md](docs/reproducibility.md)
+  gives the independent-rebuild recipe.
 
 - **From the Maven registry:** releases are also published to GitHub
   Packages (`maven.pkg.github.com/anadon/JLS`, artifact

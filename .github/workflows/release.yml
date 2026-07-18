@@ -2,7 +2,8 @@ name: Release
 
 # Pushing a tag like v5.0.0 builds the self-contained jar, checks the tag
 # against the pom version, and publishes a GitHub Release with sha256
-# checksums, the CycloneDX SBOM, and build-provenance attestation
+# checksums, the CycloneDX SBOM, a Reproducible Builds .buildinfo record
+# (#185; see docs/reproducibility.md), and build-provenance attestation
 # (#8, hardened by #44; SBOM asset per #65).  A second job builds jpackage
 # installers (deb/rpm, msi, dmg) with a bundled jlink runtime and a .jls
 # file association, and attaches them to the same release (#82).
@@ -67,13 +68,20 @@ jobs:
               ;;
           esac
 
+      # The trailing artifact:buildinfo goal runs in the same Maven
+      # session, so the resulting target/jls-<version>.buildinfo records
+      # the checksums of the artifacts this very build attached (jar,
+      # BOM) plus the exact build environment (JDK vendor+version, Maven
+      # version) a third party needs to reproduce them bit-for-bit
+      # (#185; see docs/reproducibility.md).  The plugin is invoked by
+      # full coordinates so the pinned version is explicit.
       - name: Build and test
-        run: mvn -B verify
+        run: mvn -B verify org.apache.maven.plugins:maven-artifact-plugin:3.6.0:buildinfo
 
       - name: Generate sha256 checksums
         run: |
           cd target
-          sha256sum jls-*.jar bom.json > SHA256SUMS
+          sha256sum jls-*.jar bom.json jls-*.buildinfo > SHA256SUMS
           cat SHA256SUMS
 
       # Signed, verifiable statement that this exact jar was built by this
@@ -92,6 +100,7 @@ jobs:
           files: |
             target/jls-*.jar
             target/bom.json
+            target/*.buildinfo
             target/SHA256SUMS
           generate_release_notes: true
           fail_on_unmatched_files: true

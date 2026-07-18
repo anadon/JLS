@@ -239,13 +239,22 @@ jobs:
       - name: Submit dependency graph
         uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
 
-  # reproducible-builds check (#44, #184): the pom pins
-  # project.build.outputTimestamp, so building the same commit twice must
-  # produce byte-identical jars — compare SHA256 of two clean builds.
-  # bom.json is guarded too: the CycloneDX plugin derives its serial
-  # number and metadata timestamp from the same property, and the BOM
-  # ships in the release SHA256SUMS, so a silent regression of the
-  # property (or of the plugin default) must fail here, not on a release.
+  # Reproducible-builds gate (#44, upgraded by #185): the pom pins
+  # project.build.outputTimestamp, so the jar and BOM must be
+  # byte-identical across rebuilds.  Two checks, in escalating order:
+  #   1. same-runner pre-filter (#44): build twice back-to-back and
+  #      compare — catches wall-clock/ordering/randomness regressions
+  #      cheaply.
+  #   2. independent perturbed rebuild (#185): rebuild the same commit
+  #      from a differently-named workspace path with a shifted
+  #      timezone, a different locale, and a restrictive umask — the
+  #      environment axes the Reproducible Builds definition's "any
+  #      party ... build environment" clause covers.  Only the JDK
+  #      build is held fixed (identical bytecode requires the same
+  #      javac build; that constraint is recorded in the released
+  #      .buildinfo and docs/reproducibility.md, not hidden).
+  # A mismatch fails the job and uploads both jars so diffoscope can
+  # localize the offending input.
   reproducibility:
     name: Reproducible build check
     runs-on: ubuntu-latest
@@ -259,17 +268,50 @@ jobs:
           java-version: 25
           cache: maven
 
-      - name: Build twice and compare jar and BOM checksums
+      - name: Build reference jar and BOM
         run: |
           mvn -B -DskipTests package
-          sha256sum target/jls-*.jar target/bom.json | sed 's|target/||' > first.sha256
+          ( cd target && sha256sum jls-*.jar bom.json ) > reference.sha256
+          mkdir -p "$RUNNER_TEMP/reference"
+          cp target/jls-*.jar target/bom.json "$RUNNER_TEMP/reference/"
+          echo "reference build:"; cat reference.sha256
+
+      - name: Same-runner rebuild (pre-filter, #44)
+        run: |
           rm -rf target
           mvn -B -DskipTests package
           ( cd target && sha256sum jls-*.jar bom.json ) > second.sha256
-          echo "first build:";  cat first.sha256
           echo "second build:"; cat second.sha256
-          diff first.sha256 second.sha256 \
-            || { echo "::error::build is not reproducible: jar or bom.json checksums differ between two builds of the same commit"; exit 1; }
+          diff reference.sha256 second.sha256 \
+            || { echo "::error::build is not reproducible: checksums differ between two builds of the same commit on the same runner"; exit 1; }
+
+      - name: Independent perturbed rebuild (#185)
+        id: perturbed
+        run: |
+          # a deliberately different workspace path (build-path
+          # independence), plus shifted TZ, C locale instead of the
+          # runner's C.UTF-8, and umask 077 instead of the default 022
+          PERTURBED="$RUNNER_TEMP/independent-rebuild/JLS-Perturbed-Workspace"
+          mkdir -p "$PERTURBED"
+          git archive HEAD | tar -x -C "$PERTURBED"
+          cd "$PERTURBED"
+          umask 077
+          TZ=Pacific/Kiritimati LC_ALL=C LANG=C mvn -B -DskipTests package
+          ( cd target && sha256sum jls-*.jar bom.json ) > perturbed.sha256
+          echo "perturbed rebuild:"; cat perturbed.sha256
+          echo "reference:";        cat "$GITHUB_WORKSPACE/reference.sha256"
+          diff "$GITHUB_WORKSPACE/reference.sha256" perturbed.sha256 \
+            || { cp target/jls-*.jar "$RUNNER_TEMP/reference/perturbed-$(cd target && ls jls-*.jar)"; \
+                 echo "::error::build is not environment-independent: perturbed rebuild (path/TZ/locale/umask) differs from the reference — run diffoscope on the uploaded jars"; exit 1; }
+
+      # only populated with a second jar when the perturbed rebuild
+      # diverged; diffoscope on the pair names the offending input
+      - name: Upload jars for diffoscope
+        if: failure() && steps.perturbed.outcome == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reproducibility-diverged-jars
+          path: ${{ runner.temp }}/reference/
 
   # Linux installer reproducibility gate (#189, parent #188): the deb, rpm,
   # and AppImage must each be byte-identical across two builds of one

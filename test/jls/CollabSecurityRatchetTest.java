@@ -111,7 +111,14 @@ class CollabSecurityRatchetTest {
 
 		assertEquals(
 				Set.of("src/jls/Circuit.java", "src/jls/JLSStart.java",
-						"src/jls/ToolkitPolicy.java"),
+						"src/jls/ToolkitPolicy.java",
+						// the #78 element registry and the #79 frozen tag
+						// table are the sanctioned class-selection sites;
+						// their javadoc names the Class.forName reflection
+						// they replaced, which this text scan also sees
+						"src/jls/elem/ElementRegistry.java",
+						"src/jls/elem/ElementType.java",
+						"src/jls/elem/SaveTags.java"),
 				offenders(text -> text.contains("Class.forName"),
 						Set.of()),
 				"Class.forName appeared at a new site; route network "

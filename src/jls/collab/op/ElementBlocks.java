@@ -106,19 +106,18 @@ final class ElementBlocks {
 					+ "subcircuit-import op kind, not through element "
 					+ "blocks");
 		}
-		Element el;
-		try {
-			Class<? extends Element> c =
-					Class.forName("jls.elem." + type)
-							.asSubclass(Element.class);
-			el = c.getConstructor(Circuit.class).newInstance(owner);
-		} catch (ReflectiveOperationException ex) {
-			throw new OpRejected("'" + type + "' is not an element type "
-					+ "this version of JLS can add");
-		} catch (ClassCastException ex) {
+		// the peer-supplied token passes the closed vocabulary first
+		// (issue #170), then instantiation goes through the element
+		// registry's descriptor factory (issue #78) - never reflection
+		// on network-controlled text
+		ElementVocabulary.requireAllowed(type);
+		jls.elem.ElementType descriptor =
+				jls.elem.ElementRegistry.forTag(type);
+		if (descriptor == null) {
 			throw new OpRejected("'" + type + "' is not an element type "
 					+ "this version of JLS can add");
 		}
+		Element el = descriptor.create(owner);
 		Circuit loader = new Circuit("");
 		if (!loader.loadElement(el, in)) {
 			LoadError err = JLSInfo.lastLoadError;

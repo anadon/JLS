@@ -754,6 +754,72 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of guiSessionRequested method
 
 	/**
+	 * The look-and-feel class name selected by the {@code jls.laf} JVM
+	 * property (issue #153). Unset, blank or {@code metal} keeps the
+	 * recorded "same everywhere" default, the cross-platform (Metal)
+	 * look-and-feel; {@code system} selects the platform's native
+	 * look-and-feel; any other value is taken as the fully qualified
+	 * class name of a {@link javax.swing.LookAndFeel} on the classpath.
+	 * The class-name form is the evaluation seam for third-party looks
+	 * such as FlatLaf: drop the jar on the classpath and name its class,
+	 * no rebuild needed. Package-visible for the headless policy tests.
+	 *
+	 * @return the class name of the selected look-and-feel.
+	 *
+	 * @see jls.LookAndFeelPolicyTest
+	 */
+	static String lookAndFeelClassName() {
+
+		String choice = System.getProperty("jls.laf", "metal").trim();
+		if (choice.isEmpty() || choice.equals("metal")) {
+			return UIManager.getCrossPlatformLookAndFeelClassName();
+		}
+		if (choice.equals("system")) {
+			return UIManager.getSystemLookAndFeelClassName();
+		}
+		return choice;
+	} // end of lookAndFeelClassName method
+
+	/**
+	 * Install the look-and-feel selected by {@code -Djls.laf}. A failing
+	 * explicit selection (misspelled class, jar missing from the
+	 * classpath, look-and-feel unsupported on this platform) is not
+	 * fatal: one {@code jls: warning:} line goes to stderr and the
+	 * cross-platform default is installed instead, so no experiment can
+	 * make JLS unlaunchable. Only a failure of the cross-platform
+	 * default itself reports failure, which the caller treats as fatal
+	 * exactly as before (issue #153). Package-visible for the headless
+	 * policy tests.
+	 *
+	 * @return true if a look-and-feel was installed.
+	 *
+	 * @see jls.LookAndFeelPolicyTest
+	 */
+	static boolean installLookAndFeel() {
+
+		String chosen = lookAndFeelClassName();
+		String fallback = UIManager.getCrossPlatformLookAndFeelClassName();
+		try {
+			UIManager.setLookAndFeel(chosen);
+			return true;
+		}
+		catch (Exception ex) {
+			if (chosen.equals(fallback)) {
+				return false;
+			}
+			System.err.println("jls: warning: can't set look and feel "
+					+ chosen + " (" + ex + "); using the default");
+		}
+		try {
+			UIManager.setLookAndFeel(fallback);
+			return true;
+		}
+		catch (Exception ex) {
+			return false;
+		}
+	} // end of installLookAndFeel method
+
+	/**
 	 * Act on one parsed flag.
 	 *
 	 * @param flag The flag name (guaranteed present in the flag table).
@@ -926,49 +992,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
 		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
-		text.append("JVM property -Djls.laf=metal|system selects the look and feel (default metal)\n");
+		text.append("JVM property -Djls.laf=metal|system|<class> selects the Swing look-and-feel (default metal)\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
 	} // end of usageText method
 
 	/**
-	 * The look and feel class to install, chosen by the
-	 * {@code jls.laf} JVM property (issue #76): {@code system} selects
-	 * the platform look and feel, anything else (including the unset
-	 * default and {@code metal}) selects the cross-platform Metal look
-	 * that JLS has always used.  Package-visible for the policy test.
-	 *
-	 * @param mode The value of the {@code jls.laf} property, or null.
-	 *
-	 * @return the look and feel class name to install.
-	 *
-	 * @see jls.LookAndFeelPolicyTest
-	 */
-	static String lookAndFeelClassName(String mode) {
-
-		if ("system".equals(mode)) {
-			return UIManager.getSystemLookAndFeelClassName();
-		}
-		return UIManager.getCrossPlatformLookAndFeelClassName();
-	} // end of lookAndFeelClassName method
-
-	/**
 	 * Set up main window.
 	 */
 	public JLSStart() {
 
-		// cross-platform Metal by default for continuity;
-		// -Djls.laf=system opts into the platform look and feel. A
-		// failure falls back to whatever the JVM started with instead
-		// of aborting (issue #76).
-		try {
-			UIManager.setLookAndFeel(
-					lookAndFeelClassName(System.getProperty("jls.laf")));
-		}
-		catch (Exception ex) {
-			System.err.println(
-					"jls: warning: could not set look and feel: " + ex);
+		// install the selected look-and-feel: the recorded "same
+		// everywhere" cross-platform default, unless -Djls.laf picks
+		// another one (issue #153)
+		if (!installLookAndFeel()) {
+
+			TellUser.error(this, "Can't set cross platform look and feel", "Error");
+			System.exit(1);
 		}
 
 		// apply persisted user preferences (theme, colors) before any

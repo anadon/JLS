@@ -73,6 +73,21 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** ~1 MB in the shaded jar; a visual-regression pass over the
   dialogs (the `test/jls/ui` layer-1 assertions are layout-independent
   and should survive).
+- **Verdict (2026-07-18, #153): adopt — recommended, gated on cross-OS
+  visual QA.** The evaluation
+  ([`flatlaf-evaluation-2026-07.md`](flatlaf-evaluation-2026-07.md))
+  verified 3.7.2 on the JDK 25 baseline (installs headlessly, runtime
+  light/dark switching works), measured the real shaded-jar delta
+  (1,013,610 bytes, ×1.86), confirmed zero transitive dependencies and
+  zero test-suite impact, audited the hardcoded colors (none block a
+  light-theme default; they gate only a future dark default), and
+  re-verified the comparables (Darklaf stale since 2025-09; Radiance
+  active but invasive). A dependency-free `-Djls.laf` selection seam
+  with Metal fallback shipped in `JLSStart` so the remaining
+  screenshot-matrix QA (Linux/Windows/macOS at fractional scales — the
+  one part a headless container cannot do) needs no rebuild. The
+  default switch itself, the `pom.xml` dependency, and the
+  ARCHITECTURE.md re-record happen together at the adoption commit.
 
 ### 2. JFreeSVG — vector image export *(ADOPTED, #154)*
 

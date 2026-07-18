@@ -7,7 +7,32 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
-### Fixed
+### Added
+- Batch advancement of the open issue backlog (multi-agent workflow
+  session, one worker + one adversarial auditor per issue; each
+  increment's detail is recorded on its issue thread and in the
+  per-issue commits on this branch). Highlights: collaboration
+  Stages 0b-2 groundwork (#167 element-transplant ops, #168
+  jls.collab.net identity/handshake/framing, #169 jls.collab.session
+  roster and floor control, #170 ElementVocabulary + security
+  ratchets, #171 jls.collab.crdt causal substrate); the element
+  registry (#78) and frozen save-tag table (#79) replacing
+  Class.forName in the loader; the sealed element hierarchy (#95);
+  JSpecify/NullAway on the default build for jls.sim/jls.util (#93);
+  value-semantics increment (#94); headless jls.core ratchet step
+  (#77, BatchTracePrinter extraction); editor UndoManager extraction
+  (#84); keyboard accelerators/mnemonics and focus model (#75);
+  CVD-safe theme + wire glyphs (#76); editor zoom Viewport core
+  (#74); subcircuit-disabled banner (#86); tutorial refresh (#73);
+  menu-bar spec test (#91) and display-substrate additions (#162);
+  editor save/clipboard smoke tests (#56); HDL Stage 1 mux/decoder
+  export (#59), Stage 2 Yosys front end (#61), layout seam (#62),
+  Stage 3 header scanners (#63); installer reproducibility plumbing
+  and gates (#184/#185/#188/#189/#190/#191); GPG and Authenticode
+  signing scaffolding (#136/#134); Wayland rig hardening (#101);
+  FlatLaf and picocli evaluations (#153, #156 — picocli rejected);
+  PIT mutation-testing trial (#161); coverage climb (#159); private
+  doclint progress (#192). Issues #81, #111, #156, #180-#183 closed.
 - State machines now save deterministically (#180): `StateMachine.save`
   and `State.save` iterated `HashSet`s whose members override no
   `hashCode`, so state and transition blocks were emitted in

@@ -51,6 +51,16 @@ public final class TextFilter extends DocumentFilter {
 		this.base = base;
 	} // end of setBase method
 
+	/**
+	 * Block direct inserts; only edits routed through replace are allowed.
+	 *
+	 * @param b The filter bypass.
+	 * @param offset Where the text would be inserted.
+	 * @param str The text that would be inserted.
+	 * @param s The attributes of the inserted text.
+	 *
+	 * @throws BadLocationException If the offset is invalid.
+	 */
 	@Override
 	public void insertString(DocumentFilter.FilterBypass b, int offset,
 			String str, AttributeSet s) throws BadLocationException {
@@ -58,6 +68,16 @@ public final class TextFilter extends DocumentFilter {
 		// not allowed
 	} // end of insertString method
 
+	/**
+	 * Allow removals unchanged; deleting characters can never make the
+	 * field non-numeric or too large.
+	 *
+	 * @param b The filter bypass.
+	 * @param offset Where the removal starts.
+	 * @param length How many characters to remove.
+	 *
+	 * @throws BadLocationException If the range is invalid.
+	 */
 	@Override
 	public void remove(DocumentFilter.FilterBypass b, int offset,
 			int length) throws BadLocationException {
@@ -66,6 +86,18 @@ public final class TextFilter extends DocumentFilter {
 		super.remove(b,offset,length);
 	} // end of insertString method
 
+	/**
+	 * Apply an edit only if the resulting field stays numeric in the current
+	 * base and does not exceed the configured maximum; otherwise ignore it.
+	 *
+	 * @param b The filter bypass.
+	 * @param offset Where the change starts.
+	 * @param length How many existing characters the change spans.
+	 * @param str The replacement text.
+	 * @param s The attributes of the replacement text.
+	 *
+	 * @throws BadLocationException If the range is invalid.
+	 */
 	@Override
 	public void replace(DocumentFilter.FilterBypass b, int offset, int length,
 			String str, AttributeSet s) throws BadLocationException {

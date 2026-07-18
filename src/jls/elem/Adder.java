@@ -272,22 +272,58 @@ public class Adder extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit width from the given adder.
+			 *
+			 * @param el The adder to read from.
+			 * @return the number of bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((Adder)el).bits; }
+			/**
+			 * Set the bit width on the given adder.
+			 *
+			 * @param el The adder to modify.
+			 * @param v The new number of bits.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Adder)el).bits = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation delay from the given adder.
+			 *
+			 * @param el The adder to read from.
+			 * @return the propagation delay.
+			 */
 			@Override
 			protected int get(Element el) { return ((Adder)el).propDelay; }
+			/**
+			 * Set the propagation delay on the given adder.
+			 *
+			 * @param el The adder to modify.
+			 * @param v The new propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Adder)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("orient") {
+			/**
+			 * Read the orientation from the given adder.
+			 *
+			 * @param el The adder to read from.
+			 * @return the current orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Adder)el).orientation;
 			}
+			/**
+			 * Set the orientation on the given adder.
+			 *
+			 * @param el The adder to modify.
+			 * @param o The new orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Adder)el).orientation = o;

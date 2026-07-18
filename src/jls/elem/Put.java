@@ -59,6 +59,10 @@ public abstract class Put {
 	 * Get the put's name;
 	 * 
 	 * @return the put's name.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
 	 */
 	public String getName() {
 		
@@ -69,6 +73,11 @@ public abstract class Put {
 	 * Get put's x-coordinate.
 	 * 
 	 * @return The x-coordinate.
+	 *
+	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @see jls.edit.DragCandidateBoundTest#putLocations()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getX() {
 		
@@ -79,6 +88,11 @@ public abstract class Put {
 	 * Get put's y-coordinate.
 	 * 
 	 * @return The y-coordinate.
+	 *
+	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @see jls.edit.DragCandidateBoundTest#putLocations()
+	 * @see jls.elem.GroupOrientationTest#puts()
+	 * @see jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getY() {
 		
@@ -89,6 +103,8 @@ public abstract class Put {
 	 * Get number of bits in this put.
 	 * 
 	 * @return the number of bits.
+	 *
+	 * @see jls.ui.CircuitAssert#assertPutBits()
 	 */
 	public int getBits() {
 		
@@ -99,6 +115,9 @@ public abstract class Put {
 	 * Get the element this put is part of.
 	 * 
 	 * @return the element.
+	 *
+	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public LogicElement getElement() {
 		
@@ -107,6 +126,9 @@ public abstract class Put {
 	
 	/**
 	 * Get wire end this put is attached to, or null if not attached.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public WireEnd getWireEnd() {
 		
@@ -117,6 +139,11 @@ public abstract class Put {
 	 * See if this put is attached to a WireEnd.
 	 * 
 	 * @return true if it is attached, false if not.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @see jls.edit.TriStateBundleConnectTest#freeInput()
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
 		

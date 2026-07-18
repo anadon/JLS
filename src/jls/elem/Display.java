@@ -242,30 +242,54 @@ public class Display extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit count from the given display element.
+			 */
 			@Override
 			protected int get(Element el) { return ((Display)el).bits; }
+			/**
+			 * Store the bit count into the given display element.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Display)el).bits = v; }
 		},
 		new Attribute.IntAttribute("base") {
+			/**
+			 * Read the display radix from the given display element.
+			 */
 			@Override
 			protected int get(Element el) { return ((Display)el).base; }
+			/**
+			 * Store the display radix into the given display element.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Display)el).base = v; }
 		},
 		new Attribute.IntAttribute("orient") {
 			// legacy single-input save format marker; only saved when
 			// present in the loaded file
+			/**
+			 * Read the legacy orientation marker from the given display element.
+			 */
 			@Override
 			protected int get(Element el) { return ((Display)el).orient; }
+			/**
+			 * Store the legacy orientation marker into the given display element.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Display)el).orient = v; }
+			/**
+			 * Suppress saving the orientation marker unless a legacy value was loaded.
+			 */
 			@Override
 			protected boolean omitted(Element el) {
 				// -1 is the "no marker" sentinel; 0 (Top) is a valid
 				// legacy value and must be re-saved (issue #57)
 				return ((Display)el).orient < 0;
 			}
+			/**
+			 * Deliberately skip copying the legacy orientation marker.
+			 */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy never carried the legacy marker

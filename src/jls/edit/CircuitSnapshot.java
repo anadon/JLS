@@ -29,6 +29,11 @@ public final class CircuitSnapshot {
 
 	private final byte[] deflated;
 
+	/**
+	 * Wrap already-deflated save bytes; use {@link #capture} to create one.
+	 *
+	 * @param deflated The deflated save-format bytes to retain.
+	 */
 	private CircuitSnapshot(byte[] deflated) {
 
 		this.deflated = deflated;
@@ -40,6 +45,14 @@ public final class CircuitSnapshot {
 	 * @param circuit The circuit to snapshot.
 	 *
 	 * @return the snapshot.
+	 *
+	 * @see jls.StableElementIdTest#undoRestorePreservesIds()
+	 * @see jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
+	 * @see jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
+	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @see jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
 	 */
 	public static CircuitSnapshot capture(Circuit circuit) {
 
@@ -60,6 +73,11 @@ public final class CircuitSnapshot {
 	 *
 	 * @return the restored circuit, or null if the snapshot did not load
 	 *         (JLSInfo.loadError says why).
+	 *
+	 * @see jls.StableElementIdTest#undoRestorePreservesIds()
+	 * @see jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
+	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
 	 */
 	public Circuit restore(String name, Graphics g) {
 
@@ -89,6 +107,10 @@ public final class CircuitSnapshot {
 	 * @param other The other snapshot.
 	 *
 	 * @return true if the serialized content is identical.
+	 *
+	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @see jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
 	 */
 	public boolean sameAs(CircuitSnapshot other) {
 
@@ -99,12 +121,21 @@ public final class CircuitSnapshot {
 	 * Retained size of this snapshot, for measurements.
 	 *
 	 * @return the deflated byte count.
+	 *
+	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
 	 */
 	public int retainedBytes() {
 
 		return deflated.length;
 	} // end of retainedBytes method
 
+	/**
+	 * Compress save-format bytes with the fastest deflate setting.
+	 *
+	 * @param data The raw bytes to compress.
+	 *
+	 * @return the deflated bytes.
+	 */
 	private static byte[] deflate(byte[] data) {
 
 		Deflater deflater = new Deflater(Deflater.BEST_SPEED);
@@ -123,6 +154,16 @@ public final class CircuitSnapshot {
 		}
 	} // end of deflate method
 
+	/**
+	 * Decompress bytes produced by {@link #deflate}; truncated input yields
+	 * whatever inflated so far, leaving the loader to report the failure.
+	 *
+	 * @param data The deflated bytes to expand.
+	 *
+	 * @return the inflated bytes.
+	 *
+	 * @throws IllegalStateException if the data is not a valid deflate stream.
+	 */
 	private static byte[] inflate(byte[] data) {
 
 		Inflater inflater = new Inflater();

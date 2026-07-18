@@ -35,6 +35,12 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * 
 	 * @param x Initial x-coordinate.
 	 * @param y Initial y-coordinate.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @see jls.edit.WireSweepSymmetryTest#wire()
+	 * @see jls.elem.HollowVsFilledCollisionTest#corner()
+	 * @see jls.elem.HollowVsFilledCollisionTest#probe()
 	 */
 	@Override
 	public void setXY(int x, int y) {
@@ -285,6 +291,8 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * Generally overridden.
 	 *
 	 * @return a set of all inputs and outputs.
+	 *
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	@Override
 	public Set<Put> getAllPuts() {
@@ -301,6 +309,10 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * exporter (issue #60); getAllPuts() loses the order.
 	 *
 	 * @return an unmodifiable view of the inputs, in order.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public java.util.List<Input> getInputList() {
 
@@ -324,6 +336,9 @@ public abstract class LogicElement extends Element implements Reacts {
 	 * @param name The name of the put.
 	 * 
 	 * @return the put, or null if no such put.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @see jls.ui.CircuitAssert#assertPutBits()
 	 */
 	@Override
 	public Put getPut(String name) {
@@ -416,6 +431,8 @@ public abstract class LogicElement extends Element implements Reacts {
 				
 	/**
 	 * Initialize all inputs to 0.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public void initInputs() {
 		
@@ -444,6 +461,9 @@ public abstract class LogicElement extends Element implements Reacts {
 	/**
 	 * Get the name of this element.
 	 * Overridden in elements that have names.
+	 *
+	 * @see jls.ui.CircuitAssert#assertElementPresent()
+	 * @see jls.ui.CircuitAssert#describe()
 	 */
 	@Override
 	public String getName() {
@@ -482,11 +502,31 @@ public abstract class LogicElement extends Element implements Reacts {
 	//-----------------------------------------------------------------------
 	// these shouldn't be called
 	
+	/**
+	 * Get this element's bit width.
+	 * Overridden by elements that have a single bit width; the base
+	 * version has none and always fails.
+	 *
+	 * @return the number of bits.
+	 *
+	 * @throws UnsupportedOperationException always, on the base element.
+	 *
+	 * @see jls.ui.CircuitAssert#assertBits()
+	 */
 	public int getBits() {
 		
 		throw new UnsupportedOperationException("no getBits");
 	} // end of getBits method
 	
+	/**
+	 * Get this element's current output value.
+	 * Overridden by elements that hold a value; the base version has
+	 * none and always fails.
+	 *
+	 * @return the current value.
+	 *
+	 * @throws UnsupportedOperationException always, on the base element.
+	 */
 	public BitSet getCurrentValue() {
 		
 		throw new UnsupportedOperationException("no getCurrentValue");

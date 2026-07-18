@@ -22,24 +22,36 @@ public final class OutputSig extends SigEntry {
 		super(ttelem,signal,g);
 	} // end of constructor
 
+	/**
+	 * Remove this output signal from the truth table.
+	 */
 	@Override
 	protected void doRemove() {
 
 		ttelem.removeOutput(signal);
 	} // end of doRemove method
 
+	/**
+	 * Rename this output signal in the truth table.
+	 */
 	@Override
 	protected void doRename() {
 
 		ttelem.renameOutput(signal);
 	} // end of doRename method
 
+	/**
+	 * Move this output signal one position to the left in the truth table.
+	 */
 	@Override
 	protected void doMoveLeft() {
 
 		ttelem.moveOutputLeft(signal);
 	} // end of doMoveLeft method
 
+	/**
+	 * Move this output signal one position to the right in the truth table.
+	 */
 	@Override
 	protected void doMoveRight() {
 

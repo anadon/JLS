@@ -6,6 +6,11 @@ import java.awt.geom.*;
 import jls.*;
 
 
+/**
+ * Static drawing helpers shared by state-machine elements, providing
+ * geometry utilities such as computing an angle from a rectangle's
+ * dimensions and rendering directional arrowheads.
+ */
 public class SMUtil {
 
 	/**

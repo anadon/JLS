@@ -83,6 +83,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	private String name = "";
 	
 	// for loading from file
+	/**
+	 * Parser state while reading a state machine from a file, naming which
+	 * kind of element the loader is currently building.
+	 */
 	private enum LoadState {machine, newState, newOutput, newTransition};
 	private LoadState loadState = LoadState.machine;
 	private State buildState;
@@ -97,6 +101,9 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * Create a new adder element.
 	 *
 	 * @param circuit The circuit this element is part of.
+	 *
+	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @see jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
 	 */
 	public StateMachine(Circuit circuit) {
 
@@ -125,6 +132,8 @@ public final class StateMachine extends LogicElement implements Printable {
 	 *
 	 * @return the violated constraint message, or null if an initial
 	 *         state exists.
+	 *
+	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	String checkInitialState() {
 
@@ -403,20 +412,38 @@ public final class StateMachine extends LogicElement implements Printable {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/**
+			 * Read this machine's name for the "name" attribute.
+			 */
 			@Override
 			protected String get(Element el) { return ((StateMachine)el).name; }
+			/**
+			 * Write this machine's name from the "name" attribute.
+			 */
 			@Override
 			protected void set(Element el, String v) { ((StateMachine)el).name = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read this machine's propagation delay for the "delay" attribute.
+			 */
 			@Override
 			protected int get(Element el) { return ((StateMachine)el).propDelay; }
+			/**
+			 * Write this machine's propagation delay from the "delay" attribute.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((StateMachine)el).propDelay = v; }
 		},
 		new Attribute.IntAttribute("trig") {
+			/**
+			 * Read this machine's trigger edge for the "trig" attribute.
+			 */
 			@Override
 			protected int get(Element el) { return ((StateMachine)el).trigger; }
+			/**
+			 * Write this machine's trigger edge from the "trig" attribute.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((StateMachine)el).trigger = v; }
 		}
@@ -439,6 +466,8 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
+	 *
+	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	@Override
 	public void setValue(String name, String value) {
@@ -511,6 +540,8 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * 
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
+	 *
+	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	@Override
 	public void setValue(String name, int value) {
@@ -845,6 +876,11 @@ public final class StateMachine extends LogicElement implements Printable {
 	
 	
 	// drawing states
+	/**
+	 * Interaction mode of the editor's drawing area, tracking what the user
+	 * is currently doing (idle, placing or moving states, drawing transitions,
+	 * selecting, etc.) so mouse events are handled accordingly.
+	 */
 	private enum DrawState {idle, created, placing, selecting, selected, moving,
 		newTrans, pointMoving};
 	
@@ -914,6 +950,10 @@ public final class StateMachine extends LogicElement implements Printable {
 			
 			// set up editing area
 			editArea = new JPanel() {
+				/**
+				 * Paint the states, any selection rectangle and an
+				 * in-progress transition in the editing area.
+				 */
 				@Override
 				public void paintComponent(Graphics g) {
 					super.paintComponent(g);
@@ -1018,6 +1058,9 @@ public final class StateMachine extends LogicElement implements Printable {
 
 			// set up new state key binding
 			Action newState = new AbstractAction() {
+				/**
+				 * Handle the new-state key binding by creating a state.
+				 */
 				@Override
 				public void actionPerformed(ActionEvent event) {
 					
@@ -1814,10 +1857,19 @@ public final class StateMachine extends LogicElement implements Printable {
 		} // end of mouseDragged method
 
 		// unused
+		/**
+		 * Unused mouse listener method.
+		 */
 		@Override
 		public void mouseClicked(MouseEvent event) {}
+		/**
+		 * Unused mouse listener method.
+		 */
 		@Override
 		public void mouseEntered(MouseEvent event) {}
+		/**
+		 * Unused mouse listener method.
+		 */
 		@Override
 		public void mouseExited(MouseEvent event) {}
 		
@@ -1942,6 +1994,9 @@ public final class StateMachine extends LogicElement implements Printable {
 		
 		return new Printable() {
 			
+			/**
+			 * Print a grid summarizing every state's output values.
+			 */
 			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 				
@@ -2017,8 +2072,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	/**
 	 * Initialize this element by setting its outputs to 0,
 	 * busy to false, and currentState to the initial state.
-	 * 
+	 *
 	 * @param sim Unused.
+	 *
+	 * @see jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
 	 */
 	@Override
 	public void initSim(Simulator sim) {

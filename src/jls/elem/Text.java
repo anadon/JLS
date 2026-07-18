@@ -142,38 +142,110 @@ public class Text extends DisplayElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("text") {
+			/**
+			 * Get the text string from the given element.
+			 *
+			 * @param el The element to read from.
+			 * @return The element's text.
+			 */
 			@Override
 			protected String get(Element el) { return ((Text)el).text; }
+			/**
+			 * Set the text string on the given element.
+			 *
+			 * @param el The element to write to.
+			 * @param v The new text value.
+			 */
 			@Override
 			protected void set(Element el, String v) { ((Text)el).text = v; }
 		},
 		new Attribute.StringAttribute("fn") {
+			/**
+			 * Get the font name from the given element.
+			 *
+			 * @param el The element to read from.
+			 * @return The element's font name.
+			 */
 			@Override
 			protected String get(Element el) { return ((Text)el).fontName; }
+			/**
+			 * Set the font name on the given element.
+			 *
+			 * @param el The element to write to.
+			 * @param v The new font name.
+			 */
 			@Override
 			protected void set(Element el, String v) { ((Text)el).fontName = v; }
 		},
 		new Attribute.IntAttribute("fs") {
+			/**
+			 * Get the font size from the given element.
+			 *
+			 * @param el The element to read from.
+			 * @return The element's font size.
+			 */
 			@Override
 			protected int get(Element el) { return ((Text)el).fontSize; }
+			/**
+			 * Set the font size on the given element.
+			 *
+			 * @param el The element to write to.
+			 * @param v The new font size.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Text)el).fontSize = v; }
 		},
 		new Attribute.IntAttribute("bold") {
+			/**
+			 * Get the bold flag from the given element as 1 or 0.
+			 *
+			 * @param el The element to read from.
+			 * @return 1 if bold, 0 if not.
+			 */
 			@Override
 			protected int get(Element el) { return ((Text)el).isBold ? 1 : 0; }
+			/**
+			 * Set the bold flag on the given element from 1 or 0.
+			 *
+			 * @param el The element to write to.
+			 * @param v 1 to make bold, anything else to clear it.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Text)el).isBold = v == 1; }
 		},
 		new Attribute.IntAttribute("ital") {
+			/**
+			 * Get the italic flag from the given element as 1 or 0.
+			 *
+			 * @param el The element to read from.
+			 * @return 1 if italic, 0 if not.
+			 */
 			@Override
 			protected int get(Element el) { return ((Text)el).isItalic ? 1 : 0; }
+			/**
+			 * Set the italic flag on the given element from 1 or 0.
+			 *
+			 * @param el The element to write to.
+			 * @param v 1 to make italic, anything else to clear it.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Text)el).isItalic = v == 1; }
 		},
 		new Attribute.IntAttribute("color") {
+			/**
+			 * Get the color from the given element as a packed RGB int.
+			 *
+			 * @param el The element to read from.
+			 * @return The element's color as an RGB integer.
+			 */
 			@Override
 			protected int get(Element el) { return ((Text)el).color.getRGB(); }
+			/**
+			 * Set the color on the given element from a packed RGB int.
+			 *
+			 * @param el The element to write to.
+			 * @param v The new color as an RGB integer.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Text)el).color = new Color(v); }
 		}
@@ -401,6 +473,11 @@ public class Text extends DisplayElement {
 
 			// make the text area get the focus
 			this.addWindowFocusListener(new WindowAdapter() {
+			    /**
+			     * Move focus to the text area when the dialog gains focus.
+			     *
+			     * @param e The window focus event.
+			     */
 			    @Override
 			    public void windowGainedFocus(WindowEvent e) {
 			        textArea.requestFocusInWindow();
@@ -494,7 +571,13 @@ public class Text extends DisplayElement {
 			else if (event.getSource() == colorButton) {
 				final JColorChooser ch = new JColorChooser(color);
 				ch.setPreviewPanel(new JPanel());
-				ActionListener ok = new ActionListener(){@Override public void actionPerformed(ActionEvent event) {
+				ActionListener ok = new ActionListener(){
+				/**
+				 * Apply the chosen color to the text and mark it changed.
+				 *
+				 * @param event The event from the color chooser's OK button.
+				 */
+				@Override public void actionPerformed(ActionEvent event) {
 					col = ch.getColor();
 					textArea.setForeground(col);
 					changed = true;

@@ -46,6 +46,11 @@ public class WireEnd extends LogicElement {
 	 * Create a new wire end.
 	 * 
 	 * @param circuit The circuit the wire end is in.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @see jls.edit.WireSweepSymmetryTest#wire()
+	 * @see jls.elem.HollowVsFilledCollisionTest#corner()
 	 */
 	public WireEnd(Circuit circuit) {
 		
@@ -67,6 +72,8 @@ public class WireEnd extends LogicElement {
 	 * Initialize the wire end.
 	 * 
 	 * @param circ The circuit this wire end is in.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void init(Circuit circ) {
 		
@@ -125,6 +132,8 @@ public class WireEnd extends LogicElement {
 	 * Get x-coordinate of this wire end.
 	 * 
 	 * @return The x-coordinate.
+	 *
+	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getX() {
@@ -136,6 +145,8 @@ public class WireEnd extends LogicElement {
 	 * Get y-coordinate of this wire end.
 	 * 
 	 * @return The y-coordinate.
+	 *
+	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getY() {
@@ -147,6 +158,9 @@ public class WireEnd extends LogicElement {
 	 * Add a wire to this end.
 	 * 
 	 * @param wire The wire to add.
+	 *
+	 * @see jls.edit.WireSweepSymmetryTest#wire()
+	 * @see jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public void addWire(Wire wire) {
 		
@@ -298,6 +312,9 @@ public class WireEnd extends LogicElement {
 	 * Get the put this wire end is attached to, or null of not attached.
 	 * 
 	 * @return the put attached to.
+	 *
+	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public Put getPut() {
 		
@@ -308,6 +325,8 @@ public class WireEnd extends LogicElement {
 	 * See if this wire end is attached to a put.
 	 * 
 	 * @return true if it is, false if not.
+	 *
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
 		
@@ -371,6 +390,9 @@ public class WireEnd extends LogicElement {
 	 * Find out if this wire end is tri-state.
 	 * 
 	 * @return true if it is, false if it is not.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#danglingEnd()
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
 	 */
 	public boolean isTriState() {
 		
@@ -438,6 +460,8 @@ public class WireEnd extends LogicElement {
 	 * Put this wire end in a new wire net.
 	 * 
 	 * @param net The new wire net.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void setNet(WireNet net) {
 		
@@ -448,6 +472,11 @@ public class WireEnd extends LogicElement {
 	 * Get the wire net this wire end is in.
 	 * 
 	 * @return This wire end's wire net.
+	 *
+	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @see jls.ui.CircuitAssert#reaches()
 	 */
 	public WireNet getNet() {
 		
@@ -458,6 +487,8 @@ public class WireEnd extends LogicElement {
 	 * See if this wire end is dangling (i.e., has at most one wire and is not attached).
 	 * 
 	 * @return true if dangling, false if not.
+	 *
+	 * @see jls.edit.TriStateBundleConnectTest#danglingEnd()
 	 */
 	public boolean isDangling() {
 		

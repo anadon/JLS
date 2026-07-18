@@ -34,6 +34,13 @@ public final class HdlModel {
 		/** Human context for the port (element kind, width), or null. */
 		public final String comment;
 
+		/**
+		 * Builds an immutable port descriptor.
+		 * @param name legalized HDL identifier for the port
+		 * @param direction whether the port is an input or an output
+		 * @param bits width of the port in bits
+		 * @param comment human context (element kind, width), or null
+		 */
 		Port(String name, Direction direction, int bits, String comment) {
 			this.name = name;
 			this.direction = direction;
@@ -48,6 +55,11 @@ public final class HdlModel {
 		public final String name;
 		public final int bits;
 
+		/**
+		 * Builds an immutable internal-net descriptor.
+		 * @param name legalized HDL identifier for the net
+		 * @param bits width of the net in bits
+		 */
 		Net(String name, int bits) {
 			this.name = name;
 			this.bits = bits;
@@ -66,32 +78,63 @@ public final class HdlModel {
 		private final BigInteger literal;	// null for nets
 		private final int bits;
 
+		/**
+		 * Private canonical constructor; use {@link #net} or
+		 * {@link #literal}. Exactly one of net/literal is non-null.
+		 * @param net referenced net name, or null for a literal
+		 * @param literal literal value, or null for a net reference
+		 * @param bits operand width in bits
+		 */
 		private Operand(String net, BigInteger literal, int bits) {
 			this.net = net;
 			this.literal = literal;
 			this.bits = bits;
 		}
 
+		/**
+		 * Creates an operand referencing a whole net or port.
+		 * @param name the net/port name
+		 * @param bits operand width in bits
+		 * @return a net-reference operand
+		 */
 		public static Operand net(String name, int bits) {
 			return new Operand(name, null, bits);
 		}
 
+		/**
+		 * Creates a literal-valued operand of a known width.
+		 * @param value the literal value
+		 * @param bits operand width in bits
+		 * @return a literal operand
+		 */
 		public static Operand literal(BigInteger value, int bits) {
 			return new Operand(null, value, bits);
 		}
 
+		/**
+		 * @return true if this operand references a net, false if literal
+		 */
 		public boolean isNet() {
 			return net != null;
 		}
 
+		/**
+		 * @return the referenced net name, or null for a literal
+		 */
 		public String netName() {
 			return net;
 		}
 
+		/**
+		 * @return the literal value, or null for a net reference
+		 */
 		public BigInteger literalValue() {
 			return literal;
 		}
 
+		/**
+		 * @return operand width in bits
+		 */
 		public int bits() {
 			return bits;
 		}
@@ -103,6 +146,9 @@ public final class HdlModel {
 		/** Identifies the source element ("AndGate at (240,120)"). */
 		public final String comment;
 
+		/**
+		 * @param comment identifies the source element
+		 */
 		Statement(String comment) {
 			this.comment = comment;
 		}
@@ -117,24 +163,38 @@ public final class HdlModel {
 	 * statement kind fails to compile until every emitter handles it.
 	 */
 	public interface StatementVisitor {
+		/** Emit a bitwise gate statement. */
 		void visit(GateStatement statement);
+		/** Emit a bit-replication (extend) statement. */
 		void visit(ReplicateStatement statement);
+		/** Emit a constant-driver statement. */
 		void visit(ConstantStatement statement);
+		/** Emit a tri-state buffer statement. */
 		void visit(TriStateStatement statement);
+		/** Emit an adder statement. */
 		void visit(AdderStatement statement);
+		/** Emit a register statement. */
 		void visit(RegisterStatement statement);
+		/** Emit a bit-routing (Binder/Splitter) statement. */
 		void visit(BitMapStatement statement);
 	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
 	public static final class GateStatement extends Statement {
 
+		/** The bitwise operation the gate applies; BUFFER is a plain pass-through. */
 		public enum Op { AND, OR, NAND, NOR, XOR, NOT, BUFFER }
 
 		public final Op op;
 		public final List<Operand> inputs;
 		public final String output;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param op the bitwise operation (or BUFFER)
+		 * @param inputs the gate inputs (defensively copied)
+		 * @param output net driven by the gate
+		 */
 		GateStatement(String comment, Op op, List<Operand> inputs,
 				String output) {
 			super(comment);
@@ -144,6 +204,7 @@ public final class HdlModel {
 			this.output = output;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -157,6 +218,12 @@ public final class HdlModel {
 		public final String output;
 		public final int bits;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param input the single 1-bit input to replicate
+		 * @param output net driven by the replicated bits
+		 * @param bits number of output bits
+		 */
 		ReplicateStatement(String comment, Operand input, String output,
 				int bits) {
 			super(comment);
@@ -165,6 +232,7 @@ public final class HdlModel {
 			this.bits = bits;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -178,6 +246,12 @@ public final class HdlModel {
 		public final int bits;
 		public final BigInteger value;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param output net driven by the constant
+		 * @param bits width of the constant in bits
+		 * @param value the constant value
+		 */
 		ConstantStatement(String comment, String output, int bits,
 				BigInteger value) {
 			super(comment);
@@ -186,6 +260,7 @@ public final class HdlModel {
 			this.value = value;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -200,6 +275,13 @@ public final class HdlModel {
 		public final String output;
 		public final int bits;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param input the driven value
+		 * @param control 1-bit enable; output is HiZ when 0
+		 * @param output net driven by the buffer
+		 * @param bits width of the data path in bits
+		 */
 		TriStateStatement(String comment, Operand input, Operand control,
 				String output, int bits) {
 			super(comment);
@@ -209,6 +291,7 @@ public final class HdlModel {
 			this.bits = bits;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -225,6 +308,15 @@ public final class HdlModel {
 		public final String carryOut;	// 1 bit
 		public final int bits;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param a first addend
+		 * @param b second addend
+		 * @param carryIn 1-bit carry input
+		 * @param sum net driven by the sum
+		 * @param carryOut 1-bit carry output net
+		 * @param bits width of the addends and sum in bits
+		 */
 		AdderStatement(String comment, Operand a, Operand b, Operand carryIn,
 				String sum, String carryOut, int bits) {
 			super(comment);
@@ -236,6 +328,7 @@ public final class HdlModel {
 			this.bits = bits;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -249,6 +342,7 @@ public final class HdlModel {
 	 */
 	public static final class RegisterStatement extends Statement {
 
+		/** The register's clocking behavior: level-sensitive latch or edge-triggered flip-flop. */
 		public enum Kind { LATCH, POS_EDGE, NEG_EDGE }
 
 		public final Kind kind;
@@ -260,6 +354,17 @@ public final class HdlModel {
 		public final int bits;
 		public final BigInteger initial;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param kind latch, positive-edge, or negative-edge
+		 * @param regName the state variable name
+		 * @param d data input
+		 * @param clock 1-bit clock; a literal clock never ticks
+		 * @param q net driven by the register state
+		 * @param notQ net driven by the inverted state
+		 * @param bits width of the register in bits
+		 * @param initial reset/initial value
+		 */
 		RegisterStatement(String comment, Kind kind, String regName,
 				Operand d, Operand clock, String q, String notQ, int bits,
 				BigInteger initial) {
@@ -274,6 +379,7 @@ public final class HdlModel {
 			this.initial = initial;
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -293,6 +399,14 @@ public final class HdlModel {
 		public final int targetBits;
 		private final int[] targetIndex;
 
+		/**
+		 * @param comment identifies the source element
+		 * @param source the source operand being routed
+		 * @param sourceIndex source bit positions (defensively copied)
+		 * @param target net receiving the routed bits
+		 * @param targetBits width of the target in bits
+		 * @param targetIndex target bit positions (defensively copied)
+		 */
 		BitMapStatement(String comment, Operand source, int[] sourceIndex,
 				String target, int targetBits, int[] targetIndex) {
 			super(comment);
@@ -303,14 +417,21 @@ public final class HdlModel {
 			this.targetIndex = targetIndex.clone();
 		}
 
+		/**
+		 * @return a copy of the source bit-position array
+		 */
 		public int[] sourceIndex() {
 			return sourceIndex.clone();
 		}
 
+		/**
+		 * @return a copy of the target bit-position array
+		 */
 		public int[] targetIndex() {
 			return targetIndex.clone();
 		}
 
+		/** Double-dispatch to the emitter's matching visit method. */
 		@Override
 		public void accept(StatementVisitor visitor) {
 			visitor.visit(this);
@@ -328,20 +449,37 @@ public final class HdlModel {
 			new LinkedHashMap<String, String>();
 	private final List<String> warnings = new ArrayList<String>();
 
+	/**
+	 * Creates an empty model; the exporter fills it via the package-private
+	 * mutators.
+	 * @param moduleName legalized HDL module name
+	 * @param sourceCircuitName original JLS circuit name
+	 * @param jlsVersion JLS version that produced the model
+	 */
 	HdlModel(String moduleName, String sourceCircuitName, String jlsVersion) {
 		this.moduleName = moduleName;
 		this.sourceCircuitName = sourceCircuitName;
 		this.jlsVersion = jlsVersion;
 	}
 
+	/**
+	 * @return the module ports, unmodifiable
+	 */
 	public List<Port> ports() {
 		return Collections.unmodifiableList(ports);
 	}
 
+	/**
+	 * @return the internal nets, unmodifiable
+	 * @see jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
+	 */
 	public List<Net> nets() {
 		return Collections.unmodifiableList(nets);
 	}
 
+	/**
+	 * @return the per-element statements, unmodifiable
+	 */
 	public List<Statement> statements() {
 		return Collections.unmodifiableList(statements);
 	}
@@ -357,22 +495,44 @@ public final class HdlModel {
 	}
 
 	// package-private mutators for the exporter
+	/**
+	 * Appends a port (exporter use only).
+	 * @param port the port to add
+	 */
 	void addPort(Port port) {
 		ports.add(port);
 	}
 
+	/**
+	 * Appends an internal net (exporter use only).
+	 * @param name legalized net name
+	 * @param bits width of the net in bits
+	 */
 	void addNet(String name, int bits) {
 		nets.add(new Net(name, bits));
 	}
 
+	/**
+	 * Appends a statement (exporter use only).
+	 * @param statement the statement to add
+	 */
 	void addStatement(Statement statement) {
 		statements.add(statement);
 	}
 
+	/**
+	 * Records a legalization rename (exporter use only).
+	 * @param from original JLS name
+	 * @param to legalized HDL identifier
+	 */
 	void addRename(String from, String to) {
 		renames.put(from, to);
 	}
 
+	/**
+	 * Records a walk-time warning (exporter use only).
+	 * @param warning the warning message
+	 */
 	void addWarning(String warning) {
 		warnings.add(warning);
 	}

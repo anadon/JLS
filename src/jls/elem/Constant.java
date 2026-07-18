@@ -176,22 +176,59 @@ public class Constant extends LogicElement implements ActionListener {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.BigIntAttribute("value") {
+			/**
+			 * Read the constant's value for persistence.
+			 *
+			 * @param el The Constant element to read from.
+			 * @return the stored value.
+			 */
 			@Override
 			protected BigInteger get(Element el) { return ((Constant)el).value; }
+			/**
+			 * Write the constant's value when loading.
+			 *
+			 * @param el The Constant element to write to.
+			 * @param v The value to store.
+			 */
 			@Override
 			protected void set(Element el, BigInteger v) { ((Constant)el).value = v; }
 		},
 		new Attribute.IntAttribute("base") {
+			/**
+			 * Read the constant's display radix for persistence.
+			 *
+			 * @param el The Constant element to read from.
+			 * @return the stored base.
+			 */
 			@Override
 			protected int get(Element el) { return ((Constant)el).base; }
+			/**
+			 * Write the constant's display radix when loading.
+			 *
+			 * @param el The Constant element to write to.
+			 * @param v The base to store.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Constant)el).base = v; }
 		},
 		new Attribute.StringAttribute("orient") {
+			/**
+			 * Read the constant's orientation as a string for persistence.
+			 *
+			 * @param el The Constant element to read from.
+			 * @return the orientation name.
+			 */
 			@Override
 			protected String get(Element el) {
 				return ((Constant)el).orientation.toString();
 			}
+			/**
+			 * Write the constant's orientation from a string when loading;
+			 * unknown strings leave the orientation unchanged.
+			 *
+			 * @param el The Constant element to write to.
+			 * @param v The orientation name to parse.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// unknown strings leave the orientation unchanged,

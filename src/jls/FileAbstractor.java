@@ -56,6 +56,9 @@ public final class FileAbstractor {
 	 */
 	static final long MAX_CIRCUIT_TEXT_BYTES = 64L << 20;
 
+	/**
+	 * Not instantiable: FileAbstractor is a static read/write utility.
+	 */
 	private FileAbstractor() {
 	}
 
@@ -66,6 +69,24 @@ public final class FileAbstractor {
 	 *
 	 * @return a Scanner over the circuit text, or null with
 	 *         JLSInfo.loadError describing why every format probe failed.
+	 *
+	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @see jls.ContainerMutationFuzzTest#loadMutant()
+	 * @see jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
+	 * @see jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
+	 * @see jls.FileAbstractorTest#emptyFileIsRejectedNotReturnedEmpty()
+	 * @see jls.FileAbstractorTest#invalidCircuitNameIsRejected()
+	 * @see jls.FileAbstractorTest#missingFileReportsWhy()
+	 * @see jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
+	 * @see jls.FileAbstractorTest#unreadableFileReportsPerFormatReasons()
+	 * @see jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
+	 * @see jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
+	 * @see jls.FileFormatSupport#openWithFormatSniffer()
+	 * @see jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
+	 * @see jls.UntrustedFileHardeningTest#oversizedZipEntryIsRejected()
+	 * @see jls.UntrustedFileHardeningTest#sniffingCascadeDoesNotLeakFileDescriptors()
+	 * @see jls.edit.CheckpointWriterTest#awaitWritten()
+	 * @see jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
 	 */
 	public static Scanner openCircuit(String filePath) {
 
@@ -151,6 +172,11 @@ public final class FileAbstractor {
 	 *
 	 * @param target      The file to (re)place.
 	 * @param circuitText The complete circuit text, as produced by Circuit.save.
+	 *
+	 * @see jls.FileAbstractorTest#defaultWriteIsStillXZCompressed()
+	 * @see jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
+	 * @see jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
+	 * @see jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
 	 */
 	public static void writeCircuit(File target, String circuitText) throws IOException {
 
@@ -167,6 +193,10 @@ public final class FileAbstractor {
 	 * @param target      The file to (re)place.
 	 * @param circuitText The complete circuit text, as produced by Circuit.save.
 	 * @param container   The on-disk container to wrap the text in.
+	 *
+	 * @see jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
+	 * @see jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
+	 * @see jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
 	 */
 	public static void writeCircuit(File target, String circuitText,
 			Container container) throws IOException {
@@ -238,6 +268,8 @@ public final class FileAbstractor {
 	 * truncate any circuit larger than the Scanner's buffer (issue #2).
 	 *
 	 * @throws IOException if the file is not a zip or has no circuit entry.
+	 *
+	 * @see jls.FileFormatSupport#openAsZip()
 	 */
 	static Scanner readZip(File file) throws IOException {
 
@@ -296,10 +328,22 @@ public final class FileAbstractor {
 
 		private long remaining = MAX_CIRCUIT_TEXT_BYTES;
 
+		/**
+		 * Wrap a stream, capping the total bytes it may hand out at
+		 * MAX_CIRCUIT_TEXT_BYTES.
+		 *
+		 * @param in The underlying stream to bound.
+		 */
 		BoundedInputStream(java.io.InputStream in) {
 			super(in);
 		}
 
+		/**
+		 * Read one byte, failing once the running total exceeds the cap.
+		 *
+		 * @return the byte read, or -1 at end of stream.
+		 * @throws IOException if the stream expands past the size cap.
+		 */
 		@Override
 		public int read() throws IOException {
 			int b = super.read();
@@ -309,6 +353,15 @@ public final class FileAbstractor {
 			return b;
 		}
 
+		/**
+		 * Read into a buffer, failing once the running total exceeds the cap.
+		 *
+		 * @param buf The destination buffer.
+		 * @param off The offset in buf to write the first byte at.
+		 * @param len The maximum number of bytes to read.
+		 * @return the number of bytes read, or -1 at end of stream.
+		 * @throws IOException if the stream expands past the size cap.
+		 */
 		@Override
 		public int read(byte[] buf, int off, int len) throws IOException {
 			int n = super.read(buf, off, len);
@@ -321,6 +374,11 @@ public final class FileAbstractor {
 			return n;
 		}
 
+		/**
+		 * The message thrown when the bounded stream exceeds the cap.
+		 *
+		 * @return the size-limit error message.
+		 */
 		private static String overrun() {
 			return "compressed stream expands past the "
 					+ (MAX_CIRCUIT_TEXT_BYTES >> 20)
@@ -328,6 +386,15 @@ public final class FileAbstractor {
 		}
 	}
 
+	/**
+	 * Guard against a container that decoded but held no circuit text,
+	 * so an empty file is rejected rather than returned as a valid Scanner.
+	 *
+	 * @param scanner A Scanner over the decoded container contents.
+	 * @return the same scanner when it has content.
+	 * @throws IOException if the scanner has no tokens (the file is empty);
+	 *         the scanner is closed first.
+	 */
 	private static Scanner nonEmpty(Scanner scanner) throws IOException {
 
 		if (!scanner.hasNext()) {
@@ -337,6 +404,14 @@ public final class FileAbstractor {
 		return scanner;
 	}
 
+	/**
+	 * A short human-readable reason for a probe failure, for the combined
+	 * load-error message; falls back to the exception class name when the
+	 * exception carries no message.
+	 *
+	 * @param ex The exception a format probe rejected the file with.
+	 * @return its message, or the simple class name if there is none.
+	 */
 	private static String reason(IOException ex) {
 
 		String message = ex.getMessage();

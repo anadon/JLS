@@ -143,8 +143,20 @@ public class SigGen extends SigSim {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("signals") {
+			/**
+			 * Read the signals attribute from the given element.
+			 *
+			 * @param el The SigGen to read from.
+			 * @return the element's signal specification.
+			 */
 			@Override
 			protected String get(Element el) { return ((SigGen)el).signals; }
+			/**
+			 * Store the signals attribute into the given element.
+			 *
+			 * @param el The SigGen to write to.
+			 * @param v The signal specification to store.
+			 */
 			@Override
 			protected void set(Element el, String v) { ((SigGen)el).signals = v; }
 		}

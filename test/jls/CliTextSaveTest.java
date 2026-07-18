@@ -30,6 +30,7 @@ class CliTextSaveTest {
 	@TempDir
 	Path tmp;
 
+	/** The outcome of one CLI invocation: the process exit code and its captured stderr. */
 	private static final class Result {
 		final int exit;
 		final String stderr;

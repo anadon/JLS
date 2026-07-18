@@ -244,38 +244,98 @@ public class Mux extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("inputs") {
+			/**
+			 * Read the number of data inputs from the given mux.
+			 *
+			 * @param el The element (a Mux) to read from.
+			 * @return the number of inputs.
+			 */
 			@Override
 			protected int get(Element el) { return ((Mux)el).numInputs; }
+			/**
+			 * Set the number of data inputs on the given mux.
+			 *
+			 * @param el The element (a Mux) to modify.
+			 * @param v The new number of inputs.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Mux)el).numInputs = v; }
 		},
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit width from the given mux.
+			 *
+			 * @param el The element (a Mux) to read from.
+			 * @return the number of bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((Mux)el).bits; }
+			/**
+			 * Set the bit width on the given mux.
+			 *
+			 * @param el The element (a Mux) to modify.
+			 * @param v The new bit width.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Mux)el).bits = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation delay from the given mux.
+			 *
+			 * @param el The element (a Mux) to read from.
+			 * @return the propagation delay.
+			 */
 			@Override
 			protected int get(Element el) { return ((Mux)el).propDelay; }
+			/**
+			 * Set the propagation delay on the given mux.
+			 *
+			 * @param el The element (a Mux) to modify.
+			 * @param v The new propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Mux)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("iOrient") {
+			/**
+			 * Read the output orientation from the given mux.
+			 *
+			 * @param el The element (a Mux) to read from.
+			 * @return the output orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Mux)el).outputOrientation;
 			}
+			/**
+			 * Set the output orientation on the given mux.
+			 *
+			 * @param el The element (a Mux) to modify.
+			 * @param o The new output orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Mux)el).outputOrientation = o;
 			}
 		},
 		new Attribute.OrientationAttribute("sOrient") {
+			/**
+			 * Read the selector orientation from the given mux.
+			 *
+			 * @param el The element (a Mux) to read from.
+			 * @return the selector orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Mux)el).selectorOrientation;
 			}
+			/**
+			 * Set the selector orientation on the given mux.
+			 *
+			 * @param el The element (a Mux) to modify.
+			 * @param o The new selector orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Mux)el).selectorOrientation = o;

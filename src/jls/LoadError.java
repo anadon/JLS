@@ -51,6 +51,11 @@ public final class LoadError {
 
 		private final String label;
 
+		/**
+		 * Bind a category to its user-visible label.
+		 *
+		 * @param label the fixed text shown for this category.
+		 */
 		Category(String label) {
 			this.label = label;
 		}
@@ -59,6 +64,8 @@ public final class LoadError {
 		 * The user-visible name of this category.
 		 *
 		 * @return the label, e.g. "malformed file".
+		 *
+		 * @see jls.elem.OrientationGeometryTest#errorCategory()
 		 */
 		public String label() {
 			return label;
@@ -108,6 +115,17 @@ public final class LoadError {
 
 	/**
 	 * @return the failure category.
+	 *
+	 * @see jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
+	 * @see jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
+	 * @see jls.FormatHeaderTest#truncatedFormatHeaderFailsAsMalformed()
+	 * @see jls.LoadErrorReportingTest#badElementParameterNamesElementLineAndConstraint()
+	 * @see jls.LoadErrorReportingTest#garbageBytesAreReportedAsNotACircuitFile()
+	 * @see jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
+	 * @see jls.LoadErrorReportingTest#nonIntegerAttributeValueReportsAttributeAndLine()
+	 * @see jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
+	 * @see jls.LoadErrorReportingTest#unknownElementTagNamesTagCategoryAndUpgradeHint()
+	 * @see jls.elem.OrientationGeometryTest#errorCategory()
 	 */
 	public Category getCategory() {
 
@@ -124,6 +142,8 @@ public final class LoadError {
 
 	/**
 	 * @return the 1-based line the loader had reached, or 0 if unknown.
+	 *
+	 * @see jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
 	 */
 	public int getLine() {
 
@@ -153,6 +173,10 @@ public final class LoadError {
 	 * circuit file: ..."), so this text starts at the category.
 	 *
 	 * @return the full user-visible message.
+	 *
+	 * @see jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
+	 * @see jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
+	 * @see jls.StableElementIdTest#duplicateFileIdsAreRejected()
 	 */
 	public String render() {
 
@@ -180,6 +204,10 @@ public final class LoadError {
 		return msg.toString();
 	} // end of render method
 
+	/**
+	 * @return the rendered message, so the error reads well when logged or
+	 *         string-concatenated.
+	 */
 	@Override
 	public String toString() {
 

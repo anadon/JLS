@@ -45,6 +45,10 @@ public class JumpEnd extends LogicElement {
 	 * Create a new wire jump end.
 	 * 
 	 * @param circuit The circuit this element is part of.
+	 *
+	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
+	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	public JumpEnd(Circuit circuit) {
 		
@@ -60,6 +64,10 @@ public class JumpEnd extends LogicElement {
 	 * @param y The y-coordinate of the last known mouse position.
 	 * 
 	 * @return false if cancelled, true otherwise.
+	 *
+	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
+	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
@@ -232,14 +240,34 @@ public class JumpEnd extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/**
+			 * Read the wire name to be written out for this element.
+			 *
+			 * @param el The JumpEnd being saved.
+			 * @return the wire name.
+			 */
 			@Override
 			protected String get(Element el) { return ((JumpEnd)el).name; }
+			/**
+			 * Restore the wire name during a load, registering it with the
+			 * circuit so later lookups resolve.
+			 *
+			 * @param el The JumpEnd being loaded.
+			 * @param v The wire name read from the file.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((JumpEnd)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			/**
+			 * Copy the wire name from one element to another without
+			 * re-registering it with the circuit.
+			 *
+			 * @param from The source JumpEnd.
+			 * @param to The destination JumpEnd.
+			 */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
@@ -248,16 +276,40 @@ public class JumpEnd extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit width to be written out for this element.
+			 *
+			 * @param el The JumpEnd being saved.
+			 * @return the number of bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((JumpEnd)el).bits; }
+			/**
+			 * Restore the bit width during a load.
+			 *
+			 * @param el The JumpEnd being loaded.
+			 * @param v The number of bits read from the file.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((JumpEnd)el).bits = v; }
 		},
 		new Attribute.OrientationAttribute("orientation") {
+			/**
+			 * Read the orientation to be written out for this element.
+			 *
+			 * @param el The JumpEnd being saved.
+			 * @return the element's orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((JumpEnd)el).orientation;
 			}
+			/**
+			 * Restore the orientation during a load.
+			 *
+			 * @param el The JumpEnd being loaded.
+			 * @param o The orientation read from the file.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((JumpEnd)el).orientation = o;
@@ -324,6 +376,8 @@ public class JumpEnd extends LogicElement {
 	 * Get the name of this jump end.
 	 * 
 	 * @return the name.
+	 *
+	 * @see jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
 	public String getName() {
@@ -544,6 +598,14 @@ public class JumpEnd extends LogicElement {
 	
 	} // end of react method
 
+	/**
+	 * Set the name of the named wire this end connects to, bypassing the
+	 * selection dialog (used by the editor's match gesture).
+	 *
+	 * @param newName The wire name to attach to.
+	 *
+	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
+	 */
 	public void setName(String newName) {
 		name = newName;
 	}

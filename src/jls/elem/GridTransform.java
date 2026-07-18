@@ -19,12 +19,17 @@ import java.awt.Point;
  */
 public final class GridTransform {
 
+	/**
+	 * Prevents instantiation; this class holds only static transforms.
+	 */
 	private GridTransform() {
 	} // end of constructor
 
 	/**
 	 * Rotate a point 90 degrees clockwise within a w-by-h box; the result
 	 * lives in an h-by-w box.
+	 *
+	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotateCW(int px, int py, int height) {
 
@@ -34,6 +39,9 @@ public final class GridTransform {
 	/**
 	 * Rotate a point 90 degrees counter-clockwise within a w-by-h box; the
 	 * result lives in an h-by-w box.
+	 *
+	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
+	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotateCCW(int px, int py, int width) {
 
@@ -42,6 +50,8 @@ public final class GridTransform {
 
 	/**
 	 * Rotate a point 180 degrees within a w-by-h box.
+	 *
+	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotate180(int px, int py, int width, int height) {
 
@@ -50,6 +60,9 @@ public final class GridTransform {
 
 	/**
 	 * Mirror a point across the box's vertical axis (flip left/right).
+	 *
+	 * @see jls.elem.GridTransformTest#adderLeftIsMirrorOfRight()
+	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
 	public static Point mirrorX(int px, int py, int width) {
 
@@ -58,6 +71,8 @@ public final class GridTransform {
 
 	/**
 	 * Mirror a point across the box's horizontal axis (flip up/down).
+	 *
+	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
 	public static Point mirrorY(int px, int py, int height) {
 
@@ -66,6 +81,8 @@ public final class GridTransform {
 
 	/**
 	 * The dimensions of a box after a quarter-turn rotation.
+	 *
+	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Dimension rotatedSize(int width, int height) {
 
@@ -96,36 +113,69 @@ public final class GridTransform {
 		private final java.util.List<Integer> ops =
 				new java.util.ArrayList<Integer>();
 
+		/**
+		 * Create an empty chain over a canonical box of the given size.
+		 *
+		 * @param width the canonical box width.
+		 * @param height the canonical box height.
+		 */
 		private Chain(int width, int height) {
 
 			canonicalWidth = width;
 			canonicalHeight = height;
 		} // end of constructor
 
+		/**
+		 * Append a 90-degree clockwise rotation to the chain.
+		 *
+		 * @return this chain, for further chaining.
+		 */
 		public Chain rotateCW() {
 
 			ops.add(CW);
 			return this;
 		} // end of rotateCW method
 
+		/**
+		 * Append a 90-degree counter-clockwise rotation to the chain.
+		 *
+		 * @return this chain, for further chaining.
+		 */
 		public Chain rotateCCW() {
 
 			ops.add(CCW);
 			return this;
 		} // end of rotateCCW method
 
+		/**
+		 * Append a 180-degree rotation to the chain.
+		 *
+		 * @return this chain, for further chaining.
+		 */
 		public Chain rotate180() {
 
 			ops.add(R180);
 			return this;
 		} // end of rotate180 method
 
+		/**
+		 * Append a mirror across the vertical axis (flip left/right) to the
+		 * chain.
+		 *
+		 * @return this chain, for further chaining.
+		 */
 		public Chain mirrorX() {
 
 			ops.add(MX);
 			return this;
 		} // end of mirrorX method
 
+		/**
+		 * Append a mirror across the horizontal axis (flip up/down) to the
+		 * chain.
+		 *
+		 * @return this chain, for further chaining.
+		 */
 		public Chain mirrorY() {
 
 			ops.add(MY);

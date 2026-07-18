@@ -21,6 +21,12 @@ import java.util.*;
 public class BatchSimulator extends Simulator {
 
 	// for printing traces
+	/**
+	 * One recorded sample in a watched element's trace: the value the
+	 * element held starting at the given simulation time. The BitSet
+	 * width is the element's bit count plus one, with the extra top bit
+	 * set to mark a HiZ (undriven) value.
+	 */
 	private static class TrEvent {
 		public long time;
 		public BitSet value;
@@ -35,6 +41,24 @@ public class BatchSimulator extends Simulator {
 
 	/**
 	 * Create a new Simulator object.
+	 *
+	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @see jls.ElementSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#simulate()
+	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public BatchSimulator() {
 
@@ -65,6 +89,23 @@ public class BatchSimulator extends Simulator {
 
 	/**
 	 * Run the simulator.
+	 *
+	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @see jls.ElementSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#simulate()
+	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public void runSim() {
 
@@ -129,6 +170,10 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Create and add TestGen element to circuit.
 	 * Remove any SigGen's in the circuit.
+	 *
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public void addTestGen() {
 
@@ -217,6 +262,15 @@ public class BatchSimulator extends Simulator {
 		// printable object to do the work
 		Printable pr = new Printable() {
 
+			/**
+			 * Render the accumulated waveform traces onto the print page.
+			 *
+			 * @param g The graphics context to draw into.
+			 * @param format The page geometry.
+			 * @param pagenum The zero-based page number to render.
+			 *
+			 * @return PAGE_EXISTS if drawn, NO_SUCH_PAGE past the last page.
+			 */
 			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 
@@ -424,6 +478,9 @@ public class BatchSimulator extends Simulator {
 	 * trace (issue #72).
 	 *
 	 * @param fileName The VCD file to write, or null.
+	 *
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public void setVcdFile(String fileName) {
 
@@ -435,6 +492,8 @@ public class BatchSimulator extends Simulator {
 	 * given to setVcdFile, as IEEE 1364-2001 (section 18) VCD.
 	 *
 	 * @throws java.io.IOException if the file cannot be written.
+	 *
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 */
 	public void writeVcd() throws java.io.IOException {
 
@@ -452,6 +511,9 @@ public class BatchSimulator extends Simulator {
 	 * JLS simulation time unit per VCD time unit (timescale 1 ns).
 	 *
 	 * @return the complete VCD text.
+	 *
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public String toVcd() {
 
@@ -598,6 +660,8 @@ public class BatchSimulator extends Simulator {
 
 	/**
 	 * Display reason for stopping and the time at which it stopped.
+	 *
+	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
 	 */
 	public void displayOutcome() {
 

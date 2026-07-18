@@ -27,6 +27,10 @@ class CliSmokeTest {
 	@TempDir
 	Path tmp;
 
+	/**
+	 * Immutable capture of one CLI invocation's outcome: the process exit
+	 * status and the full text written to stderr, as asserted by the tests.
+	 */
 	private static final class Result {
 		final int exit;
 		final String stderr;

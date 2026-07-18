@@ -28,6 +28,7 @@ class CliVerilogExportTest {
 	@TempDir
 	Path tmp;
 
+	/** the exit code and captured stderr of one CLI subprocess run. */
 	private static final class Result {
 		final int exit;
 		final String stderr;

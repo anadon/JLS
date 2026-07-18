@@ -1735,8 +1735,12 @@ public class Circuit implements Printable {
 		// add this circuit
 		book.append(this, format);
 
+		// create a list of elements sorted by stable ID for deterministic order
+		List<Element> ordered = new ArrayList<>(elements);
+		ordered.sort(Comparator.comparing(Element::getStableId));
+
 		// add state machines
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof StateMachine) {
 				StateMachine sm = (StateMachine) el;
 				book.append(sm, format);
@@ -1747,7 +1751,7 @@ public class Circuit implements Printable {
 		}
 
 		// add truth tables
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof TruthTable) {
 				TruthTable tt = (TruthTable) el;
 				book.append(tt, format);
@@ -1755,7 +1759,7 @@ public class Circuit implements Printable {
 		}
 
 		// add subcircuits
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof SubCircuit) {
 				((SubCircuit) el).getSubCircuit().addToBook(book, format);
 			}

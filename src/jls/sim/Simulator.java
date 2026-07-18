@@ -2,19 +2,17 @@ package jls.sim;
 
 import jls.*;
 import jls.elem.*;
-import jls.edit.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-
-import javax.print.PrintService;
-import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 
 import java.util.*;
 
 /**
  * Event driven circuit simulator.
+ *
+ * Headless by construction (issue #77): this abstract engine and its
+ * hooks (issue #25) must not import AWT, Swing, or {@code jls.edit} -
+ * the HeadlessCoreRatchetTest enforces it. GUI concerns live in the
+ * GUI-side subclass ({@link InteractiveSimulator}) and its
+ * collaborators, never here.
  *
  * @author David A. Poplawski
  */

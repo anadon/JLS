@@ -214,9 +214,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			batchSim.displayOutcome();
 			displayResults(circ,"");
 
-			// print trace if requested
+			// print trace if requested (the AWT print surface lives
+			// GUI-side, outside the headless core - issue #77)
 			if (JLSInfo.printTrace) {
-				batchSim.printTrace(printer);
+				BatchTracePrinter.printTrace(
+						batchSim.getTraceSamples(),printer);
 			}
 
 			// write VCD waveform file if requested (issue #72)

@@ -51,9 +51,14 @@ Sources use the historical `src/` layout (not `src/main/java`);
   - `CircuitSnapshot` — undo snapshots (see below).
 - **`jls.sim`** — simulation:
   - `Simulator` — the shared event loop, queue, duplicate
-    suppression, time limit (issue #25).
-  - `BatchSimulator` (headless; trace accumulation, VCD export) and
-    `InteractiveSimulator` (GUI; step/pause/animate, trace window).
+    suppression, time limit (issue #25). Headless by construction
+    (issue #77): `Simulator` and `BatchSimulator` import no AWT,
+    Swing, or `jls.edit` (`HeadlessCoreRatchetTest` enforces it).
+  - `BatchSimulator` (headless; `TraceSample` accumulation, VCD
+    export) and `InteractiveSimulator` (GUI; step/pause/animate,
+    trace window). Batch `-r` trace printing is GUI-side in
+    `jls.BatchTracePrinter`, consuming
+    `BatchSimulator.getTraceSamples`.
   - `SimEvent`, `Reacts` — the event model.
 - **`resources/`** — bundled into the jar: `help/**` (the in-jar
   manual), `images/**`. **`src-filtered/`** — `version.properties`

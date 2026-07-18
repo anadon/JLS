@@ -75,25 +75,25 @@ class ArchitectureRulesTest {
 
 	/**
 	 * The headless-core direction (issue #77): the simulation engine
-	 * must not depend on the editor. This does not hold yet - the
-	 * simulator base class and both concrete simulators reach into
-	 * jls.edit today, which is exactly the debt #77 records. The
-	 * baseline below pins the offenders; anything new in jls.sim
-	 * picking up an editor dependency fails immediately.
+	 * must not depend on the editor. The abstract Simulator base class
+	 * and BatchSimulator are clean now (their editor/AWT surface moved
+	 * to jls.BatchTracePrinter); the GUI-side InteractiveSimulator is
+	 * the one recorded debtor left, until it moves out of jls.sim.
+	 * Anything else in jls.sim picking up an editor dependency fails
+	 * immediately.
 	 */
 	@Test
 	void onlyTheKnownDebtInSimDependsOnEdit() {
-		// the name pattern covers the classes' anonymous/nested
-		// classes too - they compile from the same source files
+		// the name pattern covers the class's anonymous/nested
+		// classes too - they compile from the same source file
 		noClasses()
 				.that().resideInAPackage("jls.sim..")
 				.and().haveNameNotMatching(
-						"jls\\.sim\\.(Simulator|InteractiveSimulator|"
-						+ "BatchSimulator)(\\$.*)?")
+						"jls\\.sim\\.InteractiveSimulator(\\$.*)?")
 				.should().dependOnClassesThat()
 				.resideInAPackage("jls.edit..")
 				.because("the simulation engine belongs to the headless"
-						+ " core (issue #77); the three named classes are"
+						+ " core (issue #77); InteractiveSimulator is"
 						+ " the recorded debt - shrink the list, never"
 						+ " grow it")
 				.check(classes);

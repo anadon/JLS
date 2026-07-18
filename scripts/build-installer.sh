@@ -356,6 +356,29 @@ case "$(uname -s)" in
 			--win-menu \
 			--win-shortcut \
 			--win-per-user-install
+		# Determinism (#190): WiX embeds a per-build random package code
+		# GUID plus build timestamps that jpackage exposes no control
+		# over, so two builds of one commit differ.  normalize-msi.py
+		# rewrites exactly that volatile set in place (content-derived
+		# package code, SOURCE_DATE_EPOCH-clamped timestamps); its
+		# self-test runs first so a broken tool can never touch the msi,
+		# and any structural surprise is a hard error, not a silent
+		# skip.  See docs/windows-msi-determinism.md; escape hatch:
+		# JLS_SKIP_MSI_NORMALIZE=1.
+		if [ "${JLS_SKIP_MSI_NORMALIZE:-0}" != "1" ]; then
+			PYTHON="$(command -v python3 || command -v python || true)"
+			if [ -z "$PYTHON" ]; then
+				echo "error: python is required to normalize the msi (#190);" >&2
+				echo "       set JLS_SKIP_MSI_NORMALIZE=1 to build a non-deterministic msi" >&2
+				exit 1
+			fi
+			"$PYTHON" scripts/normalize-msi.py --self-test
+			# clamp to the commit date until #188's shared
+			# SOURCE_DATE_EPOCH export lands and takes precedence
+			SDE="${SOURCE_DATE_EPOCH:-$(git log -1 --pretty=%ct 2>/dev/null || echo 0)}"
+			"$PYTHON" scripts/normalize-msi.py \
+				--source-date-epoch "$SDE" "$DIST/JLS-${APP_VERSION}.msi"
+		fi
 		# same collision-proofing as the dmg
 		mv "$DIST/JLS-${APP_VERSION}.msi" "$DIST/JLS-${APP_VERSION}-${ARCH}.msi"
 		;;

@@ -23,6 +23,17 @@ All notable changes to JLS are documented here. The format follows
   and release the file before returning. A `.gitattributes` entry
   additionally protects the byte-exact `.jls` fixtures from CRLF
   rewriting on Windows checkouts.
+- The remaining Windows test failure (#111) — the orientation-geometry
+  baseline "diverging" on Windows — was golden-file line endings, not
+  geometry: an `autocrlf` checkout rewrote `test/resources/` goldens
+  to CRLF while the tests compare against `\n`-joined strings. The
+  `.gitattributes` protection now covers `test/resources/**` (the
+  geometry baseline and all HDL export goldens). The `TriState
+  finishLoadError=invalid element` lines noted in the same report are
+  deliberate: collinear gate/control orientation pairs have always
+  been rejected, and the baseline records that. CI gains an advisory
+  `windows-latest` lane so `mvn verify` exercises Windows on every
+  build (promoted to required once stable, like the Wayland lane).
 - Printing a freshly loaded circuit containing a truth table no longer
   crashes with a NullPointerException: `TruthTable.print` assumed the
   table's display panel had been built by the edit dialog, which is

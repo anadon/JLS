@@ -95,6 +95,32 @@ jobs:
               print(f"| {c.get('type')} | {cov} | {mis} | {pct:.1f}% |")
           EOF
 
+  # Windows test lane (issue #111): all three Windows-only failures
+  # (CRLF round-trip, held file handles blocking @TempDir cleanup,
+  # golden-file CRLF checkout) shipped because no Windows leg ran the
+  # suite. Runs headless — the display-tagged suite and the HDL
+  # simulator suites skip themselves — and skips the JaCoCo ratchet,
+  # whose floors are calibrated against the fuller Linux run.
+  # Advisory while it stabilizes (same promotion rule as gui-wayland:
+  # required once 20 consecutive runs show at most one failure).
+  windows:
+    name: Build (Windows, JDK 25)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build, lint, and analyze
+        shell: bash
+        run: mvn -B verify -Djacoco.skip=true
+
   # Machine-checked proofs (proofs/README.md): the Agda development in
   # proofs/ verifies the spatial-index query-parity and draw-culling
   # theorems the drag/drop hot path relies on; a non-zero exit means a

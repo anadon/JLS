@@ -57,6 +57,32 @@ checksums. That is expected; the jar and `bom.json` are the
 byte-reproducible artifacts (CI rebuilds and re-checks them on every
 push), while installer integrity rests on the attestation.
 
+Releases cut after the JLS release signing key lands (#136) additionally
+carry embedded GPG signatures on the rpm and the AppImage; earlier
+releases are verified by the checksums and attestation alone. The key's
+public half will be committed at `resources/packaging/RELEASE-KEY.asc`
+(fingerprint: `FINGERPRINT-PENDING` — both filled in when the key is
+generated, #136). To verify a signed rpm, import the key once, then
+expect `digests signatures OK`:
+
+```sh
+rpm --import RELEASE-KEY.asc     # as root; once
+rpm -K jls-<version>-1.<arch>.rpm
+```
+
+The AppImage signature is embedded in the runtime (ELF sections
+`.sha256_sig`/`.sig_key`), where validators such as AppImageUpdate and
+appimagelint check it; display it with:
+
+```sh
+./JLS-<version>-<arch>.AppImage --appimage-signature
+```
+
+The deb intentionally carries no embedded signature — Debian tooling
+verifies signed *repository* metadata, not individual .deb files — so
+for the deb use the checksums and provenance attestation described
+below.
+
 ## Running JLS from the jar (no installer)
 
 The plain jar remains the portable path — for lab machines you cannot

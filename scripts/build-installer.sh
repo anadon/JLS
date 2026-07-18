@@ -29,6 +29,15 @@
 #                      epoch); defaults to the pom's
 #                      project.build.outputTimestamp so installers and
 #                      jar share one source-derived clock (#44, #188)
+#   JLS_SIGN_KEY=fpr   GPG fingerprint of the release signing key (#136,
+#                      Linux only): the rpm gets an embedded rpmsign
+#                      signature and the AppImage an embedded
+#                      appimagetool --sign signature, so `rpm -K` and
+#                      AppImage validators verify natively.  The key must
+#                      sign unattended (the release workflow presets the
+#                      passphrase in an ephemeral gpg-agent); unset —
+#                      the normal case for local builds — everything
+#                      still builds, just unsigned.
 #
 # Outputs land in target/installer/dist/.
 
@@ -240,10 +249,20 @@ build_appimage() {
 		echo "${APPIMAGETOOL_SHA256}  ${tool}" | sha256sum -c -
 		chmod +x "$tool"
 	fi
+	# Embedded GPG signature (#136): appimagetool fills the runtime's
+	# reserved .sha256_sig/.sig_key ELF sections, which AppImage
+	# validators check and the launcher never reads — gated on
+	# JLS_SIGN_KEY so local builds without the release key keep working.
+	local sign_flags=()
+	if [ -n "${JLS_SIGN_KEY:-}" ]; then
+		sign_flags=(--sign --sign-key "$JLS_SIGN_KEY")
+	fi
+
 	# --appimage-extract-and-run: appimagetool is itself an AppImage and
 	# would otherwise need FUSE, absent on CI runners and NixOS
 	echo "==> appimagetool"
 	ARCH="$ARCH" "$tool" --appimage-extract-and-run \
+		"${sign_flags[@]}" \
 		"$appdir" "$DIST/JLS-${VERSION}-${ARCH}.AppImage"
 }
 
@@ -357,6 +376,16 @@ case "$(uname -s)" in
 				'%clamp_mtime_to_source_date_epoch 1' \
 				> "$STAGE/rpm-home/.rpmmacros"
 			( export HOME="$STAGE/rpm-home"; package rpm "${linux_flags[@]}" )
+			# Embedded GPG signature (#136).  rpmsign mutates the file
+			# in place, which is why the workflow signs before its
+			# attestation and checksum steps (both run after this
+			# script).  Signing was asked for, so a missing rpmsign is
+			# an error, not a skip — never ship unsigned by surprise.
+			if [ -n "${JLS_SIGN_KEY:-}" ]; then
+				echo "==> rpmsign"
+				rpmsign --define "_gpg_name $JLS_SIGN_KEY" \
+					--addsign "$DIST"/jls-*.rpm
+			fi
 		else
 			echo "==> rpmbuild not found; skipping --type rpm"
 		fi

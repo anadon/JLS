@@ -340,6 +340,55 @@ jobs:
         shell: bash
         run: mvn -B -q package -DskipTests
 
+      # GPG release signing (#136): the rpm gets an embedded rpmsign
+      # signature and the AppImage an embedded appimagetool --sign
+      # signature, so `rpm -K` and AppImage validators verify natively —
+      # the Sigstore attestation below proves origin but is invisible to
+      # that tooling.  Custody: the primary key stays offline with the
+      # maintainer; CI holds only a passphrase-protected signing subkey
+      # (secrets RELEASE_GPG_KEY = armored `gpg --export-secret-subkeys`
+      # output, RELEASE_GPG_PASSPHRASE).  Guarded on secret presence
+      # rather than event type: releases keep working unsigned until the
+      # key exists, and dry-runs exercise the signing path too (signing
+      # publishes nothing; the artifacts stay on the runner).
+      - name: Import release signing key
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          RELEASE_GPG_KEY: ${{ secrets.RELEASE_GPG_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: |
+          if [ -z "${RELEASE_GPG_KEY}" ]; then
+            echo "::notice::RELEASE_GPG_KEY secret not set; rpm and AppImage ship unsigned (#136)"
+            exit 0
+          fi
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          echo allow-preset-passphrase > "${GNUPGHOME}/gpg-agent.conf"
+          gpg --batch --import <<<"${RELEASE_GPG_KEY}"
+          FPR="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr/{print $10; exit}')"
+          # the CI secret and the published public key must be the same
+          # key, or every signature made here would fail for users; on
+          # mismatch stop and audit the secret — do not release (#136)
+          if [ -f resources/packaging/RELEASE-KEY.asc ]; then
+            PUB="$(gpg --batch --with-colons --show-keys resources/packaging/RELEASE-KEY.asc | awk -F: '/^fpr/{print $10; exit}')"
+            if [ "${FPR}" != "${PUB}" ]; then
+              echo "::error::RELEASE_GPG_KEY (${FPR}) does not match resources/packaging/RELEASE-KEY.asc (${PUB}); audit the secret (#136)"
+              exit 1
+            fi
+          fi
+          # preset the passphrase in the ephemeral agent so rpmsign's
+          # and appimagetool's gpg invocations run unattended
+          gpgconf --launch gpg-agent
+          gpg --batch --with-colons --with-keygrip --list-secret-keys \
+            | awk -F: '$1 == "grp" {print $10}' \
+            | while read -r grip; do
+                "$(gpgconf --list-dirs libexecdir)/gpg-preset-passphrase" \
+                  --preset "${grip}" <<<"${RELEASE_GPG_PASSPHRASE}" || true
+              done
+          echo "GNUPGHOME=${GNUPGHOME}" >> "${GITHUB_ENV}"
+          echo "JLS_SIGN_KEY=${FPR}" >> "${GITHUB_ENV}"
+
       # jar -> jdeps -> jlink -> jpackage; produces target/installer/dist/
       # (deb and, where rpmbuild exists, rpm on Linux; msi on Windows --
       # WiX is preinstalled on windows-latest; dmg on macOS)
@@ -348,6 +397,42 @@ jobs:
         env:
           JLS_SKIP_BUILD: "1"
         run: bash scripts/build-installer.sh
+
+      # Predictions P1 and P3 from #136, enforced on every signed build:
+      # the rpm must verify against the public half of the signing key
+      # (`digests signatures OK`), the AppImage's .sha256_sig section
+      # must be filled in, and the signed AppImage must still launch
+      # (per #136's falsification criteria a signing failure stops the
+      # release; a broken launcher means appimagetool's signing damaged
+      # the runtime — ship unsigned and report the tool bug upstream).
+      - name: Verify release signatures
+        if: runner.os == 'Linux' && env.JLS_SIGN_KEY != ''
+        shell: bash
+        run: |
+          DB="$(mktemp -d)"
+          rpm --dbpath "${DB}" --initdb
+          gpg --batch --export --armor "${JLS_SIGN_KEY}" > "${DB}/pub.asc"
+          rpm --dbpath "${DB}" --import "${DB}/pub.asc"
+          for f in target/installer/dist/jls-*.rpm; do
+            out="$(rpm --dbpath "${DB}" -K "${f}")"
+            echo "${out}"
+            case "${out}" in
+              *"digests signatures OK") ;;
+              *) echo "::error::rpm signature verification failed for ${f} (#136)"; exit 1 ;;
+            esac
+          done
+          for f in target/installer/dist/JLS-*.AppImage; do
+            # the embedded signature lives in the runtime's .sha256_sig
+            # ELF section; still all-zero means nothing was signed
+            if readelf -x .sha256_sig "${f}" | awk '/^ *0x/ { for (i = 2; i <= 5 && i <= NF; i++) if ($i !~ /^0+$/) ok = 1 } END { exit !ok }'; then
+              echo "${f}: embedded GPG signature present"
+            else
+              echo "::error::${f} has no embedded signature (#136)"
+              exit 1
+            fi
+            "${f}" --appimage-extract-and-run -h > /dev/null
+            echo "${f}: launcher still works (-h)"
+          done
 
       # Same provenance statement as the jar, one per installer (#44).
       # Runs before the checksum step so the glob only matches installers.

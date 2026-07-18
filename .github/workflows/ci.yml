@@ -266,3 +266,51 @@ jobs:
           echo "second build:"; cat second.sha256
           diff first.sha256 second.sha256 \
             || { echo "::error::build is not reproducible: jar checksums differ between two builds of the same commit"; exit 1; }
+
+  # Linux installer reproducibility gate (#189, parent #188): the deb, rpm,
+  # and AppImage must each be byte-identical across two builds of one
+  # commit.  Mirrors the #44 jar gate above; the jar itself is covered
+  # there, so the two installer builds share one jar via JLS_SKIP_BUILD and
+  # this job isolates the jlink/jpackage/appimagetool stages.  Installing
+  # rpm makes rpmbuild present, so the script's rpm leg (which is skipped
+  # when rpmbuild is absent) always runs — and is therefore gated — here.
+  installer-reproducibility:
+    name: Linux installer reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # fakeroot + dpkg-deb for --type deb, rpm for --type rpm, and
+      # diffoscope to attribute any mismatch before failing
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm diffoscope-minimal
+
+      - name: Build installers twice and compare checksums
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && sha256sum * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && sha256sum * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 || {
+            for f in first-dist/*; do
+              echo "==> diffoscope $(basename "$f")"
+              diffoscope --max-text-report-size 500000 \
+                "$f" "target/installer/dist/$(basename "$f")" || true
+            done
+            echo "::error::Linux installers are not reproducible: checksums differ between two builds of the same commit"
+            exit 1
+          }

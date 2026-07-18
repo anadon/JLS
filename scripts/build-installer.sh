@@ -25,6 +25,9 @@
 #   JLS_JBR_HOME=path  Linux only: bundle this JetBrains Runtime root
 #                      (must contain bin/java) instead of downloading
 #                      the pinned one — see the JBR block below
+#   SOURCE_DATE_EPOCH  pin all embedded timestamps to this Unix time
+#                      (defaults to the commit date; see the deterministic
+#                      timestamps section below)
 #
 # Outputs land in target/installer/dist/.
 
@@ -69,6 +72,29 @@ case "$ARCH" in
 esac
 
 echo "==> version ${VERSION} (installer version ${APP_VERSION}, arch ${ARCH})"
+
+# --- deterministic timestamps (#188/#189) ----------------------------------
+# Byte-reproducible installers need every embedded timestamp pinned to the
+# commit being built instead of the wall clock.  An externally supplied
+# SOURCE_DATE_EPOCH (https://reproducible-builds.org/specs/source-date-epoch/)
+# wins so release tooling can pin the whole pipeline at once; otherwise the
+# commit date is used, with 0 (the epoch) as a deterministic last resort
+# outside a git checkout.  dpkg-deb, rpmbuild, and appimagetool's bundled
+# mksquashfs (squashfs-tools 4.6.1) all honor the exported value by clamping
+# member timestamps to it.
+if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+	SOURCE_DATE_EPOCH="$(git -C "$ROOT" log -1 --pretty=%ct 2>/dev/null || echo 0)"
+fi
+export SOURCE_DATE_EPOCH
+echo "==> SOURCE_DATE_EPOCH ${SOURCE_DATE_EPOCH}"
+
+# Clamp every mtime under the given directories to SOURCE_DATE_EPOCH so no
+# archiver can pick up build-time file times; -h retargets symlinks (AppRun,
+# .DirIcon) themselves rather than their targets.  GNU touch only — called
+# solely on the Linux lane.
+clamp_mtimes() {
+	find "$@" -depth -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+}
 
 # --- shaded jar -------------------------------------------------------------
 if [ "${JLS_SKIP_BUILD:-0}" != "1" ]; then
@@ -171,6 +197,11 @@ build_appimage() {
 		MimeType=application/x-jls-circuit;
 		Terminal=false
 	EOF
+
+	# appimagetool's mksquashfs clamps squashfs inode times and the
+	# superblock mkfs time to SOURCE_DATE_EPOCH; clamping the AppDir
+	# itself keeps the staged tree deterministic as well (#189)
+	clamp_mtimes "$appdir"
 
 	local tool="${APPIMAGETOOL:-}"
 	if [ -z "$tool" ]; then
@@ -279,9 +310,24 @@ case "$(uname -s)" in
 			--linux-shortcut
 			--linux-menu-group "Education;Electronics;"
 		)
+		# jpackage restages input/ and runtime/ into its own build tree;
+		# clamping here plus dpkg-deb/rpmbuild's own SOURCE_DATE_EPOCH
+		# clamping pins every packaged mtime (#189)
+		clamp_mtimes "$INPUT" "$RUNTIME"
 		package deb "${linux_flags[@]}"
 		if command -v rpmbuild >/dev/null 2>&1; then
-			package rpm "${linux_flags[@]}"
+			# jpackage offers no rpmbuild passthrough, and rpm stamps
+			# the build host and build time into the header: stage an
+			# .rpmmacros that pins BUILDHOST and derives BUILDTIME plus
+			# payload mtimes from SOURCE_DATE_EPOCH, and point HOME at
+			# it for just this invocation (#189)
+			mkdir -p "$STAGE/rpm-home"
+			printf '%s\n' \
+				'%_buildhost reproducible' \
+				'%use_source_date_epoch_as_buildtime 1' \
+				'%clamp_mtime_to_source_date_epoch 1' \
+				> "$STAGE/rpm-home/.rpmmacros"
+			( export HOME="$STAGE/rpm-home"; package rpm "${linux_flags[@]}" )
 		else
 			echo "==> rpmbuild not found; skipping --type rpm"
 		fi

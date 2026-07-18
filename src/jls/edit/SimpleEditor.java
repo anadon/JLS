@@ -56,6 +56,7 @@ import javax.swing.SwingConstants;
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
+import jls.MenuAcceleratorPolicy;
 import jls.TellUser;
 import jls.Util;
 import jls.collab.op.AttachProbe;
@@ -584,6 +585,17 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of changeBackgroundColor method
 
 	/**
+	 * Give keyboard focus to the editing canvas. Called when this
+	 * editor's tab is selected so canvas shortcuts work immediately;
+	 * together with the click-to-focus behavior in the canvas itself
+	 * this replaces the old focus-follows-mouse model (issue #75).
+	 */
+	public void focusOnCanvas() {
+
+		ew.requestFocusInWindow();
+	} // end of focusOnCanvas method
+
+	/**
 	 * Increase circuit drawing area size by 10%.
 	 */
 	public void increaseSize() {
@@ -911,6 +923,13 @@ public abstract class SimpleEditor extends JPanel {
 				// set up GUI
 				setBackground(JLSInfo.backgroundColor);
 
+				// the canvas holds keyboard focus like any other component:
+				// it is focusable, takes focus on click (mousePressed) and
+				// on tab selection (focusOnCanvas), and never grabs focus
+				// on hover (issue #75 removed the mouseEntered grab that
+				// made shortcuts die when the pointer left the canvas)
+				setFocusable(true);
+
 				// add listeners for mouse activities
 				addMouseListener(this);
 				addMouseMotionListener(this);
@@ -925,7 +944,10 @@ public abstract class SimpleEditor extends JPanel {
 				timing.setToolTipText("change propagation delay or access time");
 				timing.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 				view.setToolTipText("view current simulated value");
-				view.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// plain V, not menu-mask+S: the old stroke shadowed the
+				// menu bar's Save accelerator whenever the canvas had
+				// focus (#75)
+				view.setAccelerator(MenuAcceleratorPolicy.viewValueStroke());
 				cut.setToolTipText("cut all selected elements to clipboard");
 				cut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 				copy.setToolTipText("copy all selected elements to clipboard");
@@ -934,6 +956,14 @@ public abstract class SimpleEditor extends JPanel {
 				delete.setAccelerator(DeleteKeyPolicy.menuAccelerator(System.getProperty("os.name")));
 				lock.setToolTipText("make selected elements uneditable (cannot be undone)");
 				lock.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
+				// rotate/flip show the plain-key canvas bindings (#75)
+				Crotate.setToolTipText("rotate the selected element clockwise");
+				Crotate.setAccelerator(MenuAcceleratorPolicy.rotateCwStroke());
+				CCrotate.setToolTipText("rotate the selected element counter-clockwise");
+				CCrotate.setAccelerator(MenuAcceleratorPolicy.rotateCcwStroke());
+				flip.setToolTipText("flip the selected element");
+				flip.setAccelerator(MenuAcceleratorPolicy.flipStroke());
 
 				// TODO: Make an action for this.
 				//matchJump.setToolTipText("create the wire end to match this wire start");
@@ -960,7 +990,9 @@ public abstract class SimpleEditor extends JPanel {
 				newMenu.add(undo);
 
 				redo.setToolTipText("redo last undo");
-				redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// Shift+Cmd+Z on macOS (platform convention), Ctrl+Y
+				// elsewhere; the policy keeps Cmd+Y bound as an alias (#75)
+				redo.setAccelerator(MenuAcceleratorPolicy.redoDisplayed(System.getProperty("os.name")));
 				newMenu.add(redo);
 
 				makeElements();
@@ -1141,7 +1173,7 @@ public abstract class SimpleEditor extends JPanel {
 
 					}
 				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"view");
+				getInputMap().put(MenuAcceleratorPolicy.viewValueStroke(),"view");
 				getActionMap().put("view", see);
 
 				// set up modify key binding
@@ -1383,7 +1415,10 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Y,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do redo");
+				// every redo stroke the policy defines: the platform
+				// accelerator plus, on macOS, the historical Cmd+Y alias (#75)
+				for (KeyStroke stroke : MenuAcceleratorPolicy.redoBindings(System.getProperty("os.name")))
+					getInputMap().put(stroke,"do redo");
 				getActionMap().put("do redo", redoKey);
 
 				// set up lock key binding
@@ -1422,7 +1457,97 @@ public abstract class SimpleEditor extends JPanel {
 				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do lock");
 				getActionMap().put("do lock", lockKey);
 
+				// set up rotate/flip key bindings (#75): plain R, Shift+R,
+				// and F act on a single selected element, sharing the same
+				// code path as the popup menu items
+				Action rotateCwKey = new AbstractAction() {
+					/**
+					 * Handle the rotate-clockwise shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						rotateSelected(true);
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.rotateCwStroke(),"rotate cw");
+				getActionMap().put("rotate cw", rotateCwKey);
+				Action rotateCcwKey = new AbstractAction() {
+					/**
+					 * Handle the rotate-counter-clockwise shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						rotateSelected(false);
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.rotateCcwStroke(),"rotate ccw");
+				getActionMap().put("rotate ccw", rotateCcwKey);
+				Action flipKey = new AbstractAction() {
+					/**
+					 * Handle the flip shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						flipSelected();
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.flipStroke(),"do flip");
+				getActionMap().put("do flip", flipKey);
+
 			} // end of constructor
+
+			/**
+			 * Rotate the single selected element, if there is exactly one
+			 * and it can rotate. Shared by the popup menu items and the
+			 * R/Shift+R key bindings (#75).
+			 *
+			 * @param clockwise true to rotate clockwise, false for
+			 * counter-clockwise.
+			 */
+			private void rotateSelected(boolean clockwise) {
+
+				if (!enabled)
+					return;
+				if (selected.size() != 1)
+					return;
+				Element el = (Element)(selected.toArray()[0]);
+				if (!el.canRotate() || el.isUneditable())
+					return;
+
+				// #167: through the op entry point
+				submitOp(new RotateElement(el.getStableId(), clockwise));
+				clearSelected();
+				setState(State.idle);
+				repaint();
+			} // end of rotateSelected method
+
+			/**
+			 * Flip the single selected element, if there is exactly one and
+			 * it can flip. Shared by the popup menu item and the F key
+			 * binding (#75).
+			 */
+			private void flipSelected() {
+
+				if (!enabled)
+					return;
+				if (selected.size() != 1)
+					return;
+				Element el = (Element)(selected.toArray()[0]);
+				if (!el.canFlip() || el.isUneditable())
+					return;
+
+				// #167: through the op entry point
+				submitOp(new FlipElement(el.getStableId()));
+				clearSelected();
+				setState(State.idle);
+				repaint();
+			} // end of flipSelected method
 
 			/**
 			 * Create element tool bar and menu.
@@ -2276,28 +2401,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				if(event.getSource() == Crotate)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new RotateElement(el.getStableId(), true));
-					clearSelected();
-					setState(State.idle);
-					repaint();
-
-
+					rotateSelected(true);
 				}
 
 				if(event.getSource() == CCrotate)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new RotateElement(el.getStableId(), false));
-					clearSelected();
-					setState(State.idle);
-					repaint();
+					rotateSelected(false);
 				}
 
 				if(event.getSource() == matchJump) {
@@ -2322,14 +2431,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				if(event.getSource() == flip)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new FlipElement(el.getStableId()));
-					clearSelected();
-					setState(State.idle);
-					repaint();
+					flipSelected();
 				}
 				// if connection, start drawing wires
 				else if (event.getSource() == connect) {
@@ -2360,6 +2462,11 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			@Override
 			public void mousePressed(MouseEvent event) {
+
+				// a click gives the canvas keyboard focus, the standard
+				// desktop focus model (issue #75); this replaces the old
+				// focus-follows-mouse grab in mouseEntered
+				requestFocusInWindow();
 
 				// do nothing if editor is disabled
 				if (!enabled)
@@ -3218,15 +3325,15 @@ public abstract class SimpleEditor extends JPanel {
 			public void mouseClicked(MouseEvent event) {}
 
 			/**
-			 * Get focus for keyboard events.
-			 * 
+			 * Unused. Hover no longer grabs keyboard focus: the canvas
+			 * takes focus on click and on tab selection instead, so
+			 * shortcuts keep working when the pointer leaves the canvas
+			 * (issue #75).
+			 *
 			 * @param event Unused.
 			 */
 			@Override
-			public void mouseEntered(MouseEvent event) {
-
-				requestFocusInWindow(true);
-			} // end of mouseEntered method
+			public void mouseEntered(MouseEvent event) {}
 
 			/**
 			 * If in the idle state, unhighlight everything.

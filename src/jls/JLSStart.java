@@ -11,6 +11,7 @@ import java.awt.EventQueue;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.print.Book;
@@ -1109,6 +1110,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			circ = sub.getCircuit();
 		}
 		interSim.setCircuit(circ);
+
+		// the newly selected editor's canvas takes keyboard focus, so
+		// canvas shortcuts work immediately without mousing over it
+		// (issue #75: focus follows tab selection and clicks, not hover)
+		ed.focusOnCanvas();
 	} // end of stateChanged method
 
 	/**
@@ -1150,11 +1156,20 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	public JMenu fileMenu() {
 
+		// menu accelerators are registered by Swing in the window's
+		// WHEN_IN_FOCUSED_WINDOW map, so every file operation works no
+		// matter which component has focus (issue #75); the platform
+		// modifier and the mnemonic come from MenuAcceleratorPolicy so
+		// the scheme is unit-testable headless
+		String osName = System.getProperty("os.name");
 		JMenu menu = new JMenu("File");
+		menu.setMnemonic(MenuAcceleratorPolicy.fileMenuMnemonic());
 
 		// new
 		JMenuItem newc = new JMenuItem("New");
 		newc.setToolTipText("create a new circuit");
+		newc.setAccelerator(MenuAcceleratorPolicy.newCircuit(osName));
+		newc.setMnemonic(KeyEvent.VK_N);
 		menu.add(newc);
 		newc.addActionListener(new ActionListener() {
 			/**
@@ -1171,6 +1186,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// open
 		JMenuItem open = new JMenuItem("Open");
 		open.setToolTipText("open an existing circuit file");
+		open.setAccelerator(MenuAcceleratorPolicy.open(osName));
+		open.setMnemonic(KeyEvent.VK_O);
 		menu.add(open);
 		open.addActionListener(new ActionListener() {
 			/**
@@ -1188,6 +1205,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// save
 		JMenuItem saveItem = new JMenuItem("Save");
 		saveItem.setToolTipText("save the currently visible circuit");
+		saveItem.setAccelerator(MenuAcceleratorPolicy.save(osName));
+		saveItem.setMnemonic(KeyEvent.VK_S);
 		menu.add(saveItem);
 		saveItem.addActionListener(new ActionListener() {
 			/**
@@ -1207,6 +1226,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// save as
 		JMenuItem saveAs = new JMenuItem("Save As");
 		saveAs.setToolTipText("save the currently visible circuit under a new name");
+		saveAs.setAccelerator(MenuAcceleratorPolicy.saveAs(osName));
+		saveAs.setMnemonic(KeyEvent.VK_A);
 		menu.add(saveAs);
 		saveAs.addActionListener(new ActionListener() {
 			/**
@@ -1225,6 +1246,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// print menu item
 		JMenu print = new JMenu("Print...");
+		print.setMnemonic(KeyEvent.VK_P);
 		JMenuItem printAll = new JMenuItem("Entire circuit");
 		printAll.setToolTipText("print the circuit and all subcircuits");
 		JMenuItem justThis = new JMenuItem("Just visible window");
@@ -1260,6 +1282,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// import from file menu item
 		JMenuItem importItem = new JMenuItem("Import");
 		importItem.setToolTipText("create a subcircuit from a circuit file");
+		importItem.setMnemonic(KeyEvent.VK_I);
 		menu.add(importItem);
 		importItem.addActionListener(new ActionListener() {
 			/**
@@ -1281,6 +1304,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// export circuit image menu item
 		JMenuItem exportItem = new JMenuItem("Export Image");
 		exportItem.setToolTipText("create a JPEG image file of the circuit");
+		exportItem.setMnemonic(KeyEvent.VK_E);
 		menu.add(exportItem);
 		exportItem.addActionListener(new ActionListener() {
 			/**
@@ -1302,8 +1326,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		// close menu item
+		// no accelerator on Close yet: the platform-conventional Cmd/Ctrl+W
+		// still starts a wire (or toggles a watch) when the canvas has
+		// focus, and issue #75's adjudication keeps that old binding as an
+		// alias, so advertising W here would promise a close the canvas
+		// would intercept; the wire-start rebinding owns that migration
 		JMenuItem close = new JMenuItem("Close");
 		close.setToolTipText("close the currently visible circuit");
+		close.setMnemonic(KeyEvent.VK_C);
 		menu.add(close);
 		close.addActionListener(new ActionListener() {
 			/**
@@ -1321,6 +1351,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// exit menu item
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.setToolTipText("terminate JLS");
+		exit.setAccelerator(MenuAcceleratorPolicy.exit(osName));
+		exit.setMnemonic(KeyEvent.VK_X);
 		menu.add(exit);
 		exit.addActionListener(new ActionListener() {
 			/**
@@ -1345,19 +1377,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu simMenu() {
 
 		JMenu menu = new JMenu("Simulator");
+		menu.setMnemonic(MenuAcceleratorPolicy.simulatorMenuMnemonic());
 		JMenuItem show = new JMenuItem("Show Simulator Window");
 		show.setToolTipText("make simulator window appear");
+		show.setMnemonic(KeyEvent.VK_S);
 		menu.add(show);
 		JMenuItem hide = new JMenuItem("Hide Simulator Window");
 		hide.setToolTipText("make simulator window disappear");
+		hide.setMnemonic(KeyEvent.VK_H);
 		menu.add(hide);
 		JMenuItem run = new JMenuItem("Run (in background)");
 		run.setToolTipText("run simulator, don't show window");
 		run.setAccelerator(KeyStroke.getKeyStroke("F5"));
+		run.setMnemonic(KeyEvent.VK_R);
 		menu.add(run);
 		JMenuItem stop = new JMenuItem("Stop (background simulator)");
 		stop.setToolTipText("stop runaway simulator");
 		stop.setAccelerator(KeyStroke.getKeyStroke("F7"));
+		stop.setMnemonic(KeyEvent.VK_T);
 		menu.add(stop);
 
 		run.addActionListener(new ActionListener() {
@@ -1430,8 +1467,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu globalMenu() {
 
 		JMenu menu = new JMenu("Global");
+		menu.setMnemonic(MenuAcceleratorPolicy.globalMenuMnemonic());
 
 		JMenuItem resetDelays = new JMenuItem("Reset all propagation delays");
+		resetDelays.setMnemonic(KeyEvent.VK_R);
 		menu.add(resetDelays);
 		resetDelays.addActionListener(new ActionListener() {
 			/**
@@ -1451,6 +1490,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem removeProbes = new JMenuItem("Remove all probes");
+		removeProbes.setMnemonic(KeyEvent.VK_P);
 		menu.add(removeProbes);
 		removeProbes.addActionListener(new ActionListener() {
 			/**
@@ -1470,6 +1510,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem clearWatches = new JMenuItem("Unwatch all elements");
+		clearWatches.setMnemonic(KeyEvent.VK_U);
 		menu.add(clearWatches);
 		clearWatches.addActionListener(new ActionListener() {
 			/**
@@ -1489,6 +1530,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem expand = new JMenuItem("Expand circuit drawing area by 10%");
+		expand.setMnemonic(KeyEvent.VK_E);
 		menu.add(expand);
 		expand.addActionListener(new ActionListener() {
 			/**
@@ -1532,6 +1574,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		}
 
 		JMenuItem gridCol = new JMenuItem("Change editor window grid color");
+		gridCol.setMnemonic(KeyEvent.VK_G);
 		menu.add(gridCol);
 		gridCol.addActionListener(new ActionListener() {
 			/**
@@ -1555,6 +1598,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem editBkg = new JMenuItem("Change editor window background color");
+		editBkg.setMnemonic(KeyEvent.VK_B);
 		menu.add(editBkg);
 		editBkg.addActionListener(new ActionListener() {
 			/**
@@ -1604,9 +1648,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu helpMenu() {
 
 		JMenu help = new JMenu("Help");
+		help.setMnemonic(MenuAcceleratorPolicy.helpMenuMnemonic());
 
 		// set up about
 		JMenuItem about = new JMenuItem("About");
+		about.setMnemonic(KeyEvent.VK_A);
 		help.add(about);
 		about.addActionListener(new ActionListener() {
 			/**
@@ -1622,6 +1668,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// set up tutorial
 		JMenu tutorial = new JMenu("Tutorial");
+		tutorial.setMnemonic(KeyEvent.VK_T);
 		help.add(tutorial);
 		JMenuItem tutorial1 = new JMenuItem("Introduction");
 		String tip1 = "<html>This tutorial demonstrates the " +
@@ -1692,6 +1739,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// set up help contents viewer
 		JMenuItem contents = new JMenuItem("Contents");
+		contents.setMnemonic(KeyEvent.VK_C);
 		help.add(contents);
 		contents.addActionListener(new ActionListener() {
 			/**

@@ -33,9 +33,12 @@ self-contained installers with a bundled Java runtime — no JDK needed:
   Verify the download against `SHA256SUMS-installers-windows-<arch>`
   first if you want the assurance signing would otherwise give.
 - **macOS:** `JLS-<version>-aarch64.dmg` (Apple silicon). The app is
-  unsigned, so Gatekeeper blocks a plain double-click the first time:
-  right-click (Control-click) the app and choose "Open", then confirm —
-  needed only once. Intel Macs: use the jar below.
+  unsigned by choice, not oversight — signing requires paid Apple
+  Developer Program enrollment, which this free university tool
+  deliberately forgoes (#128, #135). Gatekeeper therefore blocks a
+  plain double-click the first time: right-click (Control-click) the
+  app and choose "Open", then confirm — needed only once. Intel Macs:
+  use the jar below.
 - **RISC-V:** no installer (nothing exists to build one on), but the jar
   below runs on any riscv64 JDK 25+, and the container image ships a
   `linux/riscv64` variant.

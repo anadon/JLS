@@ -232,7 +232,12 @@ jobs:
   # Verification status:
   #   - ubuntu-latest (x86_64 deb + rpm + AppImage): recipe verified
   #     end-to-end on Linux (deb installed, launcher ran, .jls
-  #     association files present).
+  #     association files present).  Per the #82 adjudication
+  #     (2026-07-17) the Linux legs bundle JetBrains Runtime (Wayland
+  #     WLToolkit) once the JBR sha256 pin in scripts/build-installer.sh
+  #     is armed (issue #101's placeholder convention); until then they
+  #     fall back to the build JDK's jlink image with a loud warning in
+  #     the build log.
   #   - windows-latest (msi) and macos-latest (dmg, Apple silicon — the
   #     macos-latest runners are arm64): built successfully in dry-runs;
   #     still continue-on-error until a real msi/dmg has been installed

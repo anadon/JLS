@@ -22,6 +22,9 @@
 #                      running Maven (CI builds/tests in a prior step)
 #   APPIMAGETOOL=path  use this appimagetool instead of downloading the
 #                      pinned one (Linux x86_64 only)
+#   JLS_JBR_HOME=path  Linux only: bundle this JetBrains Runtime root
+#                      (must contain bin/java) instead of downloading
+#                      the pinned one — see the JBR block below
 #
 # Outputs land in target/installer/dist/.
 
@@ -184,8 +187,88 @@ build_appimage() {
 		"$appdir" "$DIST/JLS-${VERSION}-${ARCH}.AppImage"
 }
 
+# --- Linux bundled runtime: JetBrains Runtime (Wayland) ---------------------
+# Adjudicated on issue #82 (2026-07-17, from the #100 handoff): the Linux
+# installers must bundle a runtime that carries Swing's Wayland toolkit
+# (WLToolkit, Project Wakefield), which today only JetBrains Runtime ships
+# — mainline OpenJDK does not.  JBR is a JetBrains OpenJDK fork under
+# GPLv2 + Classpath Exception, so redistribution is permitted.  Revisit if
+# mainline OpenJDK gains Wayland support.
+#
+# Same pin-and-placeholder convention as ci.yml's gui-wayland lane (issue
+# #101): the sha256 could not be computed from the authoring environment
+# (cache-redirector.jetbrains.com is proxy-blocked there), so until a real
+# checksum is pinned the build falls back LOUDLY to the build JDK's jlink
+# image above (X11/XWayland only) rather than fetch an unverified archive.
+# To arm the JBR path, run
+#   curl -fsSL <JBR_URL> | sha256sum
+# from an unproxied machine and replace the placeholder for each arch.
+#
+# The jbrsdk flavor is pinned (not jbr) because it ships jmods, which lets
+# jlink trim the bundled image to the jdeps-derived module set;
+# select_linux_runtime copes with either layout regardless.
+JBR_VERSION="25.0.3"
+JBR_BUILD="b508.16"
+case "$ARCH" in
+	x86_64) JBR_PLATFORM="linux-x64" ;;
+	aarch64) JBR_PLATFORM="linux-aarch64" ;;
+	*) JBR_PLATFORM="" ;;
+esac
+JBR_URL="https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-${JBR_VERSION}-${JBR_PLATFORM}-${JBR_BUILD}.tar.gz"
+case "$JBR_PLATFORM" in
+	linux-x64) JBR_SHA256="UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101" ;;
+	linux-aarch64) JBR_SHA256="UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101" ;;
+	*) JBR_SHA256="" ;;
+esac
+
+# Repoint $RUNTIME at a JBR-derived image when a JBR is available: an
+# explicit JLS_JBR_HOME wins; otherwise a pinned-and-verified download.
+# With jmods present the image is jlink-trimmed to $MODULES (using the
+# JBR's own jlink so linker and modules agree); a runtime-only JBR is
+# bundled whole.  Without any JBR the already-built build-JDK image
+# ships, with a warning that Wayland-only sessions will need XWayland.
+select_linux_runtime() {
+	local jbr=""
+	if [ -n "${JLS_JBR_HOME:-}" ]; then
+		if [ ! -x "$JLS_JBR_HOME/bin/java" ]; then
+			echo "JLS_JBR_HOME=$JLS_JBR_HOME has no executable bin/java" >&2
+			exit 1
+		fi
+		jbr="$JLS_JBR_HOME"
+	elif [ -n "$JBR_SHA256" ] && [ "${JBR_SHA256#UNVERIFIED-}" = "$JBR_SHA256" ]; then
+		echo "==> fetching JetBrains Runtime ${JBR_VERSION}${JBR_BUILD} (${JBR_PLATFORM})"
+		curl -fsSL -o "$STAGE/jbr.tar.gz" "$JBR_URL"
+		echo "${JBR_SHA256}  ${STAGE}/jbr.tar.gz" | sha256sum -c -
+		mkdir -p "$STAGE/jbr"
+		tar -xzf "$STAGE/jbr.tar.gz" -C "$STAGE/jbr" --strip-components=1
+		jbr="$STAGE/jbr"
+	else
+		echo "==> WARNING: no JetBrains Runtime available (the JBR sha256 pin is a placeholder — see issue #101);" >&2
+		echo "==>          bundling the build JDK's runtime instead: Wayland-only sessions will need XWayland" >&2
+		return 0
+	fi
+	"$jbr/bin/java" -version
+	if [ -d "$jbr/jmods" ]; then
+		echo "==> jlink (JetBrains Runtime)"
+		rm -rf "$STAGE/jbr-runtime"
+		"$jbr/bin/jlink" \
+			--module-path "$jbr/jmods" \
+			--add-modules "$MODULES" \
+			--strip-debug \
+			--no-header-files \
+			--no-man-pages \
+			--compress zip-6 \
+			--output "$STAGE/jbr-runtime"
+		RUNTIME="$STAGE/jbr-runtime"
+	else
+		RUNTIME="$jbr"
+	fi
+	echo "==> Linux runtime: JBR image at ${RUNTIME} ($(du -sh "$RUNTIME" | cut -f1))"
+}
+
 case "$(uname -s)" in
 	Linux)
+		select_linux_runtime
 		# --resource-dir overrides the generated .desktop entry: the JDK
 		# default Exec line has no %f field code, so double-clicked .jls
 		# files would never reach argv (see resource-dir-linux/JLS.desktop)

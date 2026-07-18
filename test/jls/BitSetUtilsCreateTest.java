@@ -41,6 +41,30 @@ class BitSetUtilsCreateTest {
 		}
 	}
 
+	/**
+	 * Exact bit population, not just the ToLong projection: ToLong
+	 * cannot see bits at index 64 and above (its pow accumulator
+	 * overflows to zero), so a PIT mutant (issue #161) that turned the
+	 * high-bit count from {@code 64 - nlz} into {@code 64 + nlz}
+	 * survived the round-trip tests above — Java's shift-count
+	 * masking makes {@code value >> 64 == value}, planting a mirror
+	 * copy of every bit at index 64+.  Cardinality and length pin the
+	 * population exactly.
+	 */
+	@Test
+	void noBitsAppearAboveTheHighBit() {
+		Random random = new Random(161);
+		for (int i = 0; i < 1_000; i++) {
+			long value = random.nextLong() & Long.MAX_VALUE;
+			BitSet bs = BitSetUtils.Create(value);
+			assertEquals(Long.bitCount(value), bs.cardinality(),
+					"bit count must match for " + value);
+			assertEquals(64 - Long.numberOfLeadingZeros(value),
+					bs.length(),
+					"highest set bit must match for " + value);
+		}
+	}
+
 	@Test
 	void zeroYieldsEmptyBitSet() {
 		assertTrue(BitSetUtils.Create(0L).isEmpty());

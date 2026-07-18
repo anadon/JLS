@@ -377,6 +377,17 @@ class CircuitOpTest {
 						+ " int dx 4\n int dx 6\n int dy 0\nEND\n",
 				// probe without a name
 				"OP AttachProbe\n String id \"legacy:1\"\nEND\n",
+				// stray parse-legal int fields on kinds that take
+				// none: these survive the line parser and must die in
+				// the per-kind field-shape check (requireFields — its
+				// removal survived the issue #161 PIT trial for
+				// exactly these three kinds)
+				"OP ToggleWatched\n String id \"legacy:1\"\n"
+						+ " int dx 1\nEND\n",
+				"OP RemoveProbe\n String id \"legacy:1\"\n"
+						+ " int dy 1\nEND\n",
+				"OP FlipElement\n String id \"legacy:1\"\n"
+						+ " int cw 1\nEND\n",
 				// oversized string value
 				"OP AttachProbe\n String id \"legacy:1\"\n String name \""
 						+ "x".repeat(10_001) + "\"\nEND\n",
@@ -397,6 +408,29 @@ class CircuitOpTest {
 					() -> "reader accepted: " + text.substring(0,
 							Math.min(40, text.length())));
 		}
+	}
+
+	/**
+	 * The id-count limit is exact (issue #161 PIT trial: the
+	 * {@code >=} boundary at the MAX_IDS check had no test on either
+	 * side): a block listing exactly 10,000 ids parses, one more is
+	 * rejected.
+	 */
+	@Test
+	void readerEnforcesTheIdLimitExactly() throws Exception {
+		StringBuilder atLimit = new StringBuilder("OP MoveElements\n");
+		for (int i = 0; i < 10_000; i++) {
+			atLimit.append(" String id \"legacy:1\"\n");
+		}
+		atLimit.append(" int dx 4\n int dy 0\nEND\n");
+		String overLimit = atLimit.toString().replaceFirst(
+				" int dx", " String id \"legacy:1\"\n int dx");
+		assertTrue(CircuitOpReader.read(new Scanner(atLimit.toString()))
+				instanceof MoveElements,
+				"exactly 10,000 ids must parse");
+		assertThrows(OpRejected.class,
+				() -> CircuitOpReader.read(new Scanner(overLimit)),
+				"10,001 ids must be rejected");
 	}
 
 	// ------------------------------------------------------------------

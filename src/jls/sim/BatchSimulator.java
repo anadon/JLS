@@ -28,15 +28,24 @@ public class BatchSimulator extends Simulator {
 	 * set to mark a HiZ (undriven) value.
 	 */
 	private static class TrEvent {
+		/** The simulation time this sample takes effect. */
 		public long time;
+		/** The sampled value (top extra bit set marks HiZ). */
 		public BitSet value;
+
+		/** Create an empty sample; the recorder fills the fields. */
+		TrEvent() {
+		}
 	}
+	/** Per watched element, its recorded samples in time order. */
 	private Map<LogicElement,LinkedList<TrEvent>> eventTrace =
 		new HashMap<LogicElement,LinkedList<TrEvent>>();
 
-	// VCD export (issue #72): the file to write, or null for no export.
-	// A non-null value enables trace accumulation in afterEvent even
-	// when the -r printer flag (JLSInfo.printTrace) is off.
+	/**
+	 * VCD export (issue #72): the file to write, or null for no export.
+	 * A non-null value enables trace accumulation in afterEvent even
+	 * when the -r printer flag (JLSInfo.printTrace) is off.
+	 */
 	private String vcdFileName = null;
 
 	/**

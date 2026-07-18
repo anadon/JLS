@@ -11,7 +11,7 @@ package jls.sim;
  */
 public final class TraceGeometry {
 
-	// minimum pixel gap between adjacent tic marks
+	/** The minimum pixel gap between adjacent tic marks. */
 	public static final int MIN_TIC_GAP = 50;
 
 	/**

@@ -21,16 +21,33 @@ import java.util.*;
 public abstract class Simulator {
 
 	// properties
+	/** Pending events, ordered by (time, seq) - see SimEvent.compareTo. */
 	protected PriorityQueue<SimEvent> eventQueue = new PriorityQueue<SimEvent>();
+	/** The pending events, for duplicate suppression in post(). */
 	protected Set<SimEvent>dupCheck = new HashSet<SimEvent>();
+	/** The circuit being simulated. */
 	protected Circuit circuit = null;
+	/** The current simulation time. */
 	protected long now = 0;
+	/** The simulation time limit. */
 	protected long maxTime = JLSInfo.defaultTimeLimit;
-	// volatile: set from the EDT (Stop button), read in the sim thread's
-	// event loop (issue #49, finding H7)
+	/**
+	 * Whether a stop has been requested. Volatile: set from the EDT
+	 * (Stop button), read in the sim thread's event loop (issue #49,
+	 * finding H7).
+	 */
 	protected volatile boolean stopping = false;
+	/** This simulator, as passed to element initSim/react callbacks. */
 	protected Simulator me = null;
+	/** The test-vector file name, or null if none. */
 	protected String testFileName = null;
+
+	/**
+	 * Create a simulator. Subclasses set {@link #me} so element
+	 * callbacks receive the concrete simulator.
+	 */
+	protected Simulator() {
+	} // end of constructor
 
 
 	/**

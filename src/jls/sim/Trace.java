@@ -15,14 +15,17 @@ import java.util.*;
 public class Trace extends JPanel implements MouseListener, MouseMotionListener {
 	
 	// named constants
+	/** The pixel height of one trace row. */
 	protected final int HEIGHT = 40;
 
-	// how many changes each trace retains for scrollback (issue #121).
-	// This is the display-side bound (distinct from #20's simulation
-	// state bounds): at ~136 bytes per change (Change object + cloned
-	// BitSet + linked-list node) it caps a trace at roughly 14 MB.
+	/**
+	 * How many changes each trace retains for scrollback (issue #121).
+	 * This is the display-side bound (distinct from #20's simulation
+	 * state bounds): at ~136 bytes per change (Change object + cloned
+	 * BitSet + linked-list node) it caps a trace at roughly 14 MB.
+	 */
 	static final int MAX_RETAINED_CHANGES = 100_000;
-	
+
 	// structure to contain a change
 	/**
 	 * A single recorded signal value together with the simulation time at
@@ -30,32 +33,57 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * first to draw and to look up the value in effect at any time.
 	 */
 	private static class Change {
+		/** The recorded signal value (null for HiZ). */
 		public BitSet value;
+		/** The simulation time the value took effect. */
 		public long when;
+
+		/** Create an empty change; the recorder fills the fields. */
+		Change() {
+		}
 	};
-	
+
 	// properties
+	/** The traced signal's display name. */
 	private String name;
+	/** The element whose output this trace records. */
 	private Element element;
+	/** The trace-window container this trace row belongs to. */
 	protected InteractiveSimulator.Traces parent;
-	// pendingChanges is written by the sim thread and copied by the EDT
-	// at commit; both methods are synchronized and the committed list is
-	// replaced, never mutated, so drawing iterates a stable snapshot
-	// (issue #49, finding M9)
+	/**
+	 * Changes recorded but not yet committed to the display.  Written
+	 * by the sim thread and copied by the EDT at commit; both methods
+	 * are synchronized and the committed list is replaced, never
+	 * mutated, so drawing iterates a stable snapshot (issue #49,
+	 * finding M9).
+	 */
 	private LinkedList<Change> pendingChanges = new LinkedList<Change>();
-	// ArrayList: paintComponent indexes into this list per change, which
-	// was O(n^2) on a LinkedList (issue #43)
+	/**
+	 * The committed changes drawing reads, newest first.  ArrayList:
+	 * paintComponent indexes into this list per change, which was
+	 * O(n^2) on a LinkedList (issue #43).
+	 */
 	private volatile java.util.ArrayList<Change> changes =
 			new java.util.ArrayList<Change>();
+	/** The latest committed simulation time. */
 	protected long now = 0;
+	/** Horizontal scale: simulation time units per pixel. */
 	private int scaleFactor = 1;
+	/** The drawable trace width in pixels. */
 	protected int width;
+	/** The traced signal's bit width. */
 	private int bits;
+	/** The last committed value, to suppress no-change samples. */
 	private BitSet previousValue = null;
+	/** This trace, for inner-class callbacks. */
 	private Trace me;
+	/** The time-cursor slider position in pixels, or -1 if none. */
 	protected int sliderPos = -1;
+	/** The numeric base values are labeled in (2, 10, or 16). */
 	private int base = 10;
+	/** The HiZ sentinel: only the extra top bit (index bits) set. */
 	private BitSet off;
+	/** An all-ones sentinel; initialized but currently unread. */
 	private BitSet begin;
 	
 	/**

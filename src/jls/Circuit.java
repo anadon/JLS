@@ -13,7 +13,6 @@ import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +32,8 @@ import javax.imageio.ImageIO;
 import jls.edit.Editor;
 import jls.edit.SimpleEditor;
 import jls.elem.Element;
+import jls.elem.ElementRegistry;
+import jls.elem.ElementType;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
 import jls.elem.Output;
@@ -873,15 +874,15 @@ public class Circuit implements Printable {
 							TRUNCATED_HINT);
 				}
 
-				// get element type and create element; the tag routes
-				// through the frozen tag table, never reflection on the
-				// tag text (issue #79), and the (Circuit) constructor is
-				// selected explicitly - getConstructors() returns
-				// constructors in no specified order (issue #55)
+				// get element type and create the element through the
+				// registry (issue #78): the descriptor's factory replaces
+				// the historical Class.forName reflection, so a tag no
+				// longer has to name a class (aliases can preserve
+				// renamed tags, #79) and every non-element class in
+				// jls.elem is simply not a tag
 				String elementType = input.next();
-				Class<? extends Element> elementClass =
-						SaveTags.resolve(elementType);
-				if (elementClass == null) {
+				ElementType descriptor = ElementRegistry.forTag(elementType);
+				if (descriptor == null) {
 					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
 							"this version of JLS has no element type "
 									+ "named '" + elementType + "'",
@@ -892,33 +893,15 @@ public class Circuit implements Printable {
 				}
 				Element newElement = null;
 				try {
-					newElement = elementClass.getConstructor(Circuit.class)
-							.newInstance(this);
-				} catch (NoSuchMethodException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"'" + elementType + "' cannot be created "
-									+ "from a save file",
-							NOT_JLS_HINT);
-				} catch (InstantiationException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"element type '" + elementType
-									+ "' could not be created",
-							NOT_JLS_HINT);
-				} catch (IllegalAccessException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"element type '" + elementType
-									+ "' could not be created",
-							NOT_JLS_HINT);
-				} catch (InvocationTargetException ex) {
+					newElement = descriptor.create(this);
+				} catch (RuntimeException ex) {
 					// the element's own constructor threw; its message
 					// (never its class name or stack, #58 P6) is the why
-					Throwable cause = ex.getCause() == null ? ex
-							: ex.getCause();
 					return failLoad(LoadError.Category.ELEMENT_ERROR,
 							"creating an element of type '" + elementType
 									+ "' failed"
-									+ (cause.getMessage() == null ? ""
-											: ": " + cause.getMessage()),
+									+ (ex.getMessage() == null ? ""
+											: ": " + ex.getMessage()),
 							"Fix that element's values in the file, or "
 									+ "re-save the circuit from JLS.");
 				}

@@ -1,7 +1,6 @@
 package jls.elem;
 
 import jls.*;
-import jls.elem.Gate.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
 import java.awt.*;

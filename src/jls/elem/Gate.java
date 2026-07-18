@@ -1,8 +1,11 @@
 package jls.elem;
 
 import jls.*;
+import jls.JLSInfo.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
+
+import java.util.Locale;
 
 import java.util.BitSet;
 
@@ -22,14 +25,12 @@ import javax.swing.*;
 public abstract class Gate extends LogicElement {
 	
 	// named constants
-	/**
-	 * The four directions a gate can face, controlling how its inputs and
-	 * output are laid out and drawn. Persisted by lowercase name.
-	 */
-	protected enum Orientation {up, down, left, right};
+	// gates share the one JLSInfo.Orientation enum (issue #78 H3); only
+	// their persistence differs - lowercase names, kept byte-identical
+	// by the "orientation" attribute below
 	protected static final int defaultInputs = 2;
 	protected static final int defaultBits = 1;
-	protected static final Orientation defaultOrientation = Orientation.right;
+	protected static final Orientation defaultOrientation = Orientation.RIGHT;
 	
 	// saved properties
 	protected int numInputs = defaultInputs;
@@ -199,7 +200,7 @@ public abstract class Gate extends LogicElement {
 	public void init(Graphics g) {
 		
 		// set up size
-		if (orientation == Orientation.left || orientation == Orientation.right) {
+		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			width = JLSInfo.spacing*4;
 			height = JLSInfo.spacing*(Math.max(numInputs,3)-1);
 		}
@@ -210,11 +211,11 @@ public abstract class Gate extends LogicElement {
 		
 		Output out;
 		
-		if (orientation == Orientation.left || orientation == Orientation.right) {
+		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			
 			int inx = 0;
 			int outx = JLSInfo.spacing*4;
-			if (orientation == Orientation.left) {
+			if (orientation == Orientation.LEFT) {
 				inx = JLSInfo.spacing*4;
 				outx = 0;
 			}
@@ -243,7 +244,7 @@ public abstract class Gate extends LogicElement {
 		else { // up or down
 			int iny = 0;
 			int outy = JLSInfo.spacing*4;
-			if (orientation == Orientation.up) {
+			if (orientation == Orientation.UP) {
 				iny = JLSInfo.spacing*4;
 				outy = 0;
 			}
@@ -287,21 +288,21 @@ public abstract class Gate extends LogicElement {
 		int ox = 0;
 		int oy = 0;
 		AffineTransform trans = new AffineTransform();
-		if (orientation == Orientation.right) {
+		if (orientation == Orientation.RIGHT) {
 			trans.translate(x+s,y+dist);
 			ox = -s;
 		}
-		else if (orientation == Orientation.left) {
+		else if (orientation == Orientation.LEFT) {
 			trans.translate(x+s,y+dist);
 			trans.rotate(Math.toRadians(180),s,s);
 			ox = s;
 		}
-		else if (orientation == Orientation.up) {
+		else if (orientation == Orientation.UP) {
 			trans.translate(x+dist,y+s);
 			trans.rotate(Math.toRadians(-90),s,s);
 			oy = s;
 		}
-		else if (orientation == Orientation.down) {
+		else if (orientation == Orientation.DOWN) {
 			trans.translate(x+dist,y+s);
 			trans.rotate(Math.toRadians(90),s,s);
 			oy = -s;
@@ -315,7 +316,7 @@ public abstract class Gate extends LogicElement {
 		// draw input/output points and line to them
 		Output out = outputs.get(0);
 		double inc = 2.0*s/(2*numInputs);
-		if (orientation == Orientation.left || orientation == Orientation.right) {
+		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			
 			// output
 			int lx = out.getX();
@@ -384,11 +385,13 @@ public abstract class Gate extends LogicElement {
 		},
 		new Attribute.StringAttribute("orientation") {
 			/**
-			 * Read the orientation attribute from a gate as its enum name.
+			 * Read the orientation attribute from a gate as the
+			 * lowercase enum name gates have always saved.
 			 */
 			@Override
 			protected String get(Element el) {
-				return ((Gate)el).orientation.toString();
+				return ((Gate)el).orientation.name()
+						.toLowerCase(Locale.ROOT);
 			}
 			/**
 			 * Set a gate's orientation from a saved enum name, leaving it
@@ -396,10 +399,11 @@ public abstract class Gate extends LogicElement {
 			 */
 			@Override
 			protected void set(Element el, String v) {
-				// gates use their own lowercase orientation enum;
+				// gates historically persist lowercase names ("up"),
+				// unlike the shared "orient" attribute's uppercase;
 				// unknown strings leave the orientation unchanged
 				for (Orientation o : Orientation.values()) {
-					if (o.toString().equals(v)) {
+					if (o.name().toLowerCase(Locale.ROOT).equals(v)) {
 						((Gate)el).orientation = o;
 					}
 				}
@@ -518,7 +522,7 @@ public abstract class Gate extends LogicElement {
 	@Override
 	public Rectangle getRect() {
 		
-		if (orientation == Orientation.left || orientation == Orientation.right) {
+		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
 		}
 		else {
@@ -599,49 +603,13 @@ public abstract class Gate extends LogicElement {
 	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
 	{
-		if(orientation == Orientation.left)
-		{
-			if(direction == JLSInfo.Orientation.LEFT)
-			{
-				orientation = Orientation.down;
-			}
-			else
-			{
-				orientation = Orientation.up;
-			}
+		// one shared enum (issue #78 H3), so the quarter-turn is its
+		// ccw()/cw() instead of a hand-rolled transition table
+		if (direction == JLSInfo.Orientation.LEFT) {
+			orientation = orientation.ccw();
 		}
-		else if(orientation == Orientation.right)
-		{
-			if(direction == JLSInfo.Orientation.LEFT)
-			{
-				orientation = Orientation.up;
-			}
-			else
-			{
-				orientation = Orientation.down;
-			}
-		}
-		else if(orientation == Orientation.up)
-		{
-			if(direction == JLSInfo.Orientation.LEFT)
-			{
-				orientation = Orientation.left;
-			}
-			else
-			{
-				orientation = Orientation.right;
-			}
-		}
-		else if(orientation == Orientation.down)
-		{
-			if(direction == JLSInfo.Orientation.LEFT)
-			{
-				orientation = Orientation.right;
-			}
-			else
-			{
-				orientation = Orientation.left;
-			}
+		else {
+			orientation = orientation.cw();
 		}
 		width = 0;
 		height = 0;
@@ -711,22 +679,7 @@ public abstract class Gate extends LogicElement {
 	@Override
 	public void flip(Graphics g)
 	{
-		if(orientation == Orientation.left)
-		{
-			orientation = Orientation.right;
-		}
-		else if(orientation == Orientation.right)
-		{
-			orientation = Orientation.left;
-		}
-		else if(orientation == Orientation.up)
-		{
-			orientation = Orientation.down;
-		}
-		else if(orientation == Orientation.down)
-		{
-			orientation = Orientation.up;
-		}
+		orientation = orientation.flipped();
 		inputs.clear();
 		outputs.clear();
 		width = 0;
@@ -867,16 +820,16 @@ public abstract class Gate extends LogicElement {
 				return;
 			}
 			if (left.isSelected()) {
-				orientation = Orientation.left;
+				orientation = Orientation.LEFT;
 			}
 			else if (right.isSelected()) {
-				orientation = Orientation.right;
+				orientation = Orientation.RIGHT;
 			}
 			else if (up.isSelected()) {
-				orientation = Orientation.up;
+				orientation = Orientation.UP;
 			}
 			else {
-				orientation = Orientation.down;
+				orientation = Orientation.DOWN;
 			}
 			inputsPad.close();
 			gatesPad.close();
@@ -900,11 +853,11 @@ public abstract class Gate extends LogicElement {
 				right.setSelected(false);
 				up.setSelected(false);
 				down.setSelected(false);
-				if (orientation == Orientation.left)
+				if (orientation == Orientation.LEFT)
 					left.setSelected(true);
-				else if (orientation == Orientation.right)
+				else if (orientation == Orientation.RIGHT)
 					right.setSelected(true);
-				else if (orientation == Orientation.up)
+				else if (orientation == Orientation.UP)
 					up.setSelected(true);
 				else 
 					down.setSelected(true);

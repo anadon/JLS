@@ -119,16 +119,16 @@ public class Extend extends Gate implements TriProp {
 		inputs.clear();
 		int s = JLSInfo.spacing;
 		switch (orientation) {
-		case left:
+		case LEFT:
 			inputs.add(new Input("input0",this,4*s,s,1));
 			break;
-		case right:
+		case RIGHT:
 			inputs.add(new Input("input0",this,0,s,1));
 			break;
-		case up:
+		case UP:
 			inputs.add(new Input("input0",this,s,4*s,1));
 			break;
-		case down:
+		case DOWN:
 			inputs.add(new Input("input0",this,s,0,1));
 			break;
 		}

@@ -134,6 +134,23 @@ boots the GUI on a JBR under a headless sway compositor and screenshots
 it via [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) (issue #101),
 which also reproduces the setup locally or in the dev container.
 
+The supported desktop matrix:
+
+| Desktop / session | AWT toolkit | Java runtime | Status |
+|---|---|---|---|
+| Windows | Win32 | any JDK 25+ | supported |
+| macOS | Cocoa | any JDK 25+ | supported |
+| Linux, X11 session | XToolkit | any JDK 25+ | supported |
+| Linux, Wayland via XWayland (`DISPLAY` set) | XToolkit | any JDK 25+ | supported |
+| Linux, Wayland-native (`DISPLAY` unset) | `WLToolkit` (experimental) | JBR / Wakefield builds | supported |
+| Headless (batch, image/Verilog export) | none | any JDK 25+ | supported |
+
+The Wayland-native row is verified two ways: CI's headless-sway lane on
+every push, and — because a headless software-rendered rig can diverge
+from real GPU-backed compositors — a scripted once-per-release
+spot-check on a physical GNOME (Mutter) or KDE (KWin) desktop:
+[`docs/wayland-desktop-checklist.md`](docs/wayland-desktop-checklist.md).
+
 ## Building from source
 
 The build uses Maven and JDK 25+:

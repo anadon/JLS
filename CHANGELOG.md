@@ -23,6 +23,17 @@ All notable changes to JLS are documented here. The format follows
   and release the file before returning. A `.gitattributes` entry
   additionally protects the byte-exact `.jls` fixtures from CRLF
   rewriting on Windows checkouts.
+- The remaining Windows test failure (#111) — the orientation-geometry
+  baseline "diverging" on Windows — was golden-file line endings, not
+  geometry: an `autocrlf` checkout rewrote `test/resources/` goldens
+  to CRLF while the tests compare against `\n`-joined strings. The
+  `.gitattributes` protection now covers `test/resources/**` (the
+  geometry baseline and all HDL export goldens). The `TriState
+  finishLoadError=invalid element` lines noted in the same report are
+  deliberate: collinear gate/control orientation pairs have always
+  been rejected, and the baseline records that. CI gains an advisory
+  `windows-latest` lane so `mvn verify` exercises Windows on every
+  build (promoted to required once stable, like the Wayland lane).
 - Printing a freshly loaded circuit containing a truth table no longer
   crashes with a NullPointerException: `TruthTable.print` assumed the
   table's display panel had been built by the edit dialog, which is
@@ -39,6 +50,46 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Documentation is now build-enforced: `mvn verify` runs a javadoc
+  doclint gate (all groups except unresolvable-by-design test
+  references) over the public/protected API with warnings as
+  failures, and a new package-info ratchet requires every package in
+  both trees to carry a package comment. The gate is scoped to API
+  visibility because under `-private` the standard doclet warns on
+  every test-tree `@see` target in a way doclint exclusions cannot
+  reach (verified empirically; recorded in the pom comment).
+  Fixed en route: eleven malformed doc comments the #186 pass left
+  behind - duplicated `@param v1` tags in five files, three stale
+  javadoc blocks orphaned above attribute tables by the #23
+  refactor, a mistyped `@returns`, two empty comments, and a VCD
+  format description whose angle-bracket placeholders parsed as
+  unclosed HTML.
+- Per-package coverage floors (#159): the JaCoCo ratchet now guards
+  `jls`, `jls.sim`, `jls.elem`, and the new `jls.collab.op` package
+  individually (instruction, line, and branch), so a regression in
+  the tested core can no longer hide behind coverage gains elsewhere
+  in the bundle - verified by a synthetic regression (deleting the
+  op-layer test class) that the bundle instruction/line floors do not
+  catch but the package floors do. `jls.edit` stays deliberately
+  unfloored until the UI-harness work makes editor code testable.
+- Operation layer, first slice (#167, collaboration stage 0b): a new
+  `jls.collab.op` package reifies editor mutations as a closed, sealed
+  vocabulary of validated, invertible, serializable commands
+  (`CircuitOp`) applied through one entry point (`OpSink`), addressing
+  elements by stable id (#165) and verified against the canonical
+  serialization oracle (#166): apply-then-inverse restores the exact
+  prior bytes, rejected ops change nothing, and the strict reader
+  (`CircuitOpReader`) round-trips every kind byte-identically while
+  rejecting malformed input. Six op kinds exist (`ToggleWatched`,
+  `AttachProbe`/`RemoveProbe`, `RotateElement`, `FlipElement`,
+  `MoveElements`) and six editor gestures now go through the entry
+  point (watch toggles via ctrl-W and menu, rotate both directions,
+  flip, probe attach/remove); the full mutation-site inventory and
+  migration status live in `docs/operation-layer.md`. Snapshot undo
+  is unchanged - `OpSink.submit` still runs the existing
+  `markChanged` bookkeeping. An ArchUnit rule pins the #163 layering
+  from day one: no collab package outside `jls.collab.ui` may touch
+  Swing.
 - Stable element identity (#165, collaboration stage 0a): every
   element now carries a permanent id (`replica:counter`), minted at
   creation and persisted in the save format as a new `sid` base

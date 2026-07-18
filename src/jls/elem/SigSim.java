@@ -216,7 +216,10 @@ public abstract class SigSim extends LogicElement {
 	} // end of react method
 
 	/**
-	 * 
+	 * Report an error in the signal-generator specification being
+	 * parsed. Subclasses decide how the message reaches the user.
+	 *
+	 * @param error The error message.
 	 */
 	protected abstract void specError(String error);
 

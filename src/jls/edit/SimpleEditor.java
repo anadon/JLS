@@ -57,6 +57,14 @@ import jls.FileAbstractor;
 import jls.JLSInfo;
 import jls.TellUser;
 import jls.Util;
+import jls.collab.op.AttachProbe;
+import jls.collab.op.CircuitOp;
+import jls.collab.op.FlipElement;
+import jls.collab.op.OpRejected;
+import jls.collab.op.OpSink;
+import jls.collab.op.RemoveProbe;
+import jls.collab.op.RotateElement;
+import jls.collab.op.ToggleWatched;
 import jls.elem.Adder;
 import jls.elem.AndGate;
 import jls.elem.Binder;
@@ -900,14 +908,9 @@ public abstract class SimpleEditor extends JPanel {
 							if (!el.canWatch())
 								return;
 
-							// remove if watched, add if not
-							if (el.isWatched()) {
-								el.setWatched(false);
-							}
-							else {
-								el.setWatched(true);
-							}
-							markChanged();
+							// remove if watched, add if not (#167: through
+							// the op entry point)
+							submitOp(new ToggleWatched(el.getStableId()));
 
 							// clean up
 							clearSelected();
@@ -1940,14 +1943,15 @@ public abstract class SimpleEditor extends JPanel {
 					if (el.isUneditable())
 						return;
 
-					// remove if watched, add if not
-					if (el.isWatched()) {
-						el.setWatched(false);
-					}
-					else {
-						el.setWatched(true);
-					}
-					markChanged();
+					// do nothing if not watchable (the menu item only
+					// shows for watchable elements; this mirrors the
+					// ctrl-W path's guard)
+					if (!el.canWatch())
+						return;
+
+					// remove if watched, add if not (#167: through the
+					// op entry point)
+					submitOp(new ToggleWatched(el.getStableId()));
 
 					// clean up
 					clearSelected();
@@ -2131,8 +2135,8 @@ public abstract class SimpleEditor extends JPanel {
 					if(!enabled)
 						return;
 					Element el = (Element)(selected.toArray()[0]);
-					el.rotate(JLSInfo.Orientation.RIGHT, this.getGraphics());
-					markChanged();
+					// #167: through the op entry point
+					submitOp(new RotateElement(el.getStableId(), true));
 					clearSelected();
 					setState(State.idle);
 					repaint();
@@ -2145,8 +2149,8 @@ public abstract class SimpleEditor extends JPanel {
 					if(!enabled)
 						return;
 					Element el = (Element)(selected.toArray()[0]);
-					el.rotate(JLSInfo.Orientation.LEFT, this.getGraphics());
-					markChanged();
+					// #167: through the op entry point
+					submitOp(new RotateElement(el.getStableId(), false));
 					clearSelected();
 					setState(State.idle);
 					repaint();
@@ -2177,8 +2181,8 @@ public abstract class SimpleEditor extends JPanel {
 					if(!enabled)
 						return;
 					Element el = (Element)(selected.toArray()[0]);
-					el.flip(this.getGraphics());
-					markChanged();
+					// #167: through the op entry point
+					submitOp(new FlipElement(el.getStableId()));
 					clearSelected();
 					setState(State.idle);
 					repaint();
@@ -3266,7 +3270,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * @param end1 The wire end.
 			 * @param wire The wire.
 			 * 
-			 * @returns true if can connect, false if not.
+			 * @return true if can connect, false if not.
 			 */
 			public boolean canConnect(WireEnd end1, Wire wire) {
 
@@ -4369,16 +4373,32 @@ public abstract class SimpleEditor extends JPanel {
 						// get the single item in the selected set
 						Wire wire = (Wire)(selected.toArray()[0]);
 
-						// remove if wire has a probe, add if not
+						// remove if wire has a probe, add if not (#167:
+						// prompting stays here in the gesture - an op is
+						// pure data - and the mutation goes through the
+						// op entry point)
 						if (wire.hasProbe()) {
-							wire.removeProbe();
+							submitOp(new RemoveProbe(wire.getStableId()));
 						}
 						else {
-							wire.attachProbe(null);
+							String name = TellUser.prompt(null, "Name?");
+							while (name != null && name.isEmpty()) {
+								name = TellUser.prompt(null,
+										"Invalid name, try again");
+							}
+							if (name == null) {
+								// parity with the pre-op path: a
+								// cancelled prompt still marked the
+								// circuit changed
+								markChanged();
+							}
+							else {
+								submitOp(new AttachProbe(
+										wire.getStableId(), name));
+							}
 						}
 
 						// clean up
-						markChanged();
 						clearSelected();
 						setState(State.idle);
 						repaint();
@@ -4633,6 +4653,47 @@ public abstract class SimpleEditor extends JPanel {
 						}
 
 					} // end of markChanged method
+
+					/**
+					 * The single mutation entry point (issue #167, collab
+					 * Stage 0b): validate the op, apply it to the circuit,
+					 * then do the existing change bookkeeping (undo
+					 * snapshot, checkpoint, changed flag). The
+					 * collaboration layer (issue #163) will observe this
+					 * same entry point; gestures migrate to it one at a
+					 * time under the snapshot-undo safety net.
+					 */
+					private final OpSink opSink = new OpSink() {
+						@Override
+						public void submit(CircuitOp op) throws OpRejected {
+
+							op.apply(circuit, getGraphics());
+							markChanged();
+						}
+					};
+
+					/**
+					 * Submit a gesture's committed op, reporting a
+					 * rejection to the user. Rejections cannot happen from
+					 * correctly guarded gestures - the guards run before
+					 * the op is built - so a dialog here means a gesture
+					 * bug, not a user error.
+					 *
+					 * @param op The operation to perform.
+					 *
+					 * @return true if the op applied, false if rejected.
+					 */
+					private boolean submitOp(CircuitOp op) {
+
+						try {
+							opSink.submit(op);
+							return true;
+						} catch (OpRejected ex) {
+							TellUser.error(JLSInfo.frame, ex.getMessage(),
+									"Error");
+							return false;
+						}
+					} // end of submitOp method
 
 					/**
 					 * Push a copy of the circuit being edited on the undo stack.

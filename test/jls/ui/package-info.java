@@ -10,13 +10,19 @@
  * flag). See {@link jls.ui.CircuitAssert} and {@link jls.ui.GeometryAssert}.
  * No display, no Graphics, no Swing; safe on any CI runner.</li>
  *
- * <li><b>Layer 2 (future):</b> Swing-harness assertions -- menus, focus,
- * event dispatch, synthesized mouse/keyboard interaction driving the real
- * listener chain, run under Xvfb on CI. Candidates: AssertJ-Swing, with a
- * {@code java.awt.Robot} + {@code SwingUtilities.invokeAndWait} fallback.
- * New helpers for that layer belong in this package (e.g.
- * {@code EditorHarness}, {@code MenuAssert}) and must not be required by
- * Layer-1 tests.</li>
+ * <li><b>Layer 2 (present, growing):</b> Swing-harness assertions -- menus,
+ * focus, event dispatch, synthesized mouse/keyboard interaction driving the
+ * real listener chain. Substrate decision (issue #162, recorded per the
+ * 2026-07 library survey): a real display server via {@code xvfb-run} on
+ * CI ({@code -Djls.test.headless=false}, the {@code display}-tagged
+ * surefire execution), driven by plain JUnit with
+ * {@code SwingUtilities.invokeAndWait} and synthesized {@code AWTEvent}s
+ * ({@code java.awt.Robot} where true OS-level input is needed).
+ * AssertJ-Swing was rejected (unmaintained fork chain); Cacio-tta was
+ * rejected (JDK-internals coupling). See
+ * {@code DialogConstructionSmokeTest}, {@code EditorGestureTest},
+ * {@code KeyPadDismissalTest}; new helpers for this layer belong in this
+ * package and must not be required by Layer-1 tests.</li>
  *
  * <li><b>Layer 3 (future):</b> rendering assertions -- paint to a
  * BufferedImage without a window and make semantic checks (element paints

@@ -3,3 +3,9 @@
 # determinism suites compare against. Never translate them.
 *.jls -text
 *.jls~ -text
+
+# Golden baselines are compared byte-for-byte against strings the
+# tests build with \n (issue #111): the orientation-geometry baseline
+# and the HDL export goldens would all mismatch on a Windows
+# autocrlf checkout if git rewrote their line endings.
+test/resources/** -text

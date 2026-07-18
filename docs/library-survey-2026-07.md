@@ -121,12 +121,32 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** negligible; one new accepted extension in the `-i`
   validation, docs, and a golden test.
 
-### 3. picocli — command-line parsing *(qualified recommendation)*
+### 3. picocli — command-line parsing *(REJECTED for the current CLI shape, #156; re-evaluate at subcommands)*
 
+- **Verdict (2026-07-18):** rejected after a behavior-preservation
+  spike against picocli 4.7.7 —
+  [`picocli-evaluation-2026-07.md`](picocli-evaluation-2026-07.md) has
+  the full method, code, and results. Feasibility is confirmed (46/46
+  contract-parity checks, byte-identical `-h` output and error lines,
+  exact exit codes), but the shims that parity requires — a
+  longest-match pre-tokenizer (picocli's POSIX clustering silently
+  misparses `-vcdout.vcd` as `-v cdout.vcd`, the #72 bug class), an
+  exception translator that regexes picocli's non-API message strings,
+  and a custom `-i` lookahead consumer — total about as much code as
+  the ~130-line hand parser they would replace, while adding a 408 KB
+  dependency whose every upgrade becomes a CLI-contract risk. Shell
+  completion, the one genuinely new capability, turned out to be a
+  *static* 226-line script generatable from the existing `FLAGS` table
+  without the dependency. Also fact-checked: the latest release is
+  4.7.7 (April 2025), not June 2026 as this survey originally said —
+  ~15 months old, a ground-rule-4 caution. Re-open only if the CLI
+  grows real subcommands (`jls export …`), where picocli's model fits
+  natively and no legacy contract must be reproduced shim-for-shim.
 - **What:** [picocli](https://github.com/remkop/picocli), Apache-2.0,
-  actively maintained (latest release June 2026). Deliberately
-  single-artifact; can even be included as a single source file instead
-  of a jar dependency.
+  latest release 4.7.7 (April 2025; verified on Maven Central
+  2026-07-18). Deliberately single-artifact; can even be included as a
+  single source file instead of a jar dependency (measured: that file
+  is 1.24 MB — bigger than the 408 KB jar).
 - **Overlap:** `JLSStart.java` (~2,200 lines) hand-rolls the `FLAGS`
   table, flag parsing, `-h` output, and usage errors.
 - **Improvement:** typed option binding, generated help that cannot
@@ -140,10 +160,11 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
   table (`CliFlagTableTest`, `CliSmokeTest`, batch-interface §1).
   picocli can reproduce all of it (custom `IParameterExceptionHandler`,
   exit-code mapping), but the migration is a behavior-preservation
-  exercise, not a rewrite win. Worth doing *when the flag table next
-  grows* (e.g. the #59 HDL-import stages) rather than as standalone
-  churn. The existing contract tests are exactly the safety net the
-  migration needs — a rare case where the hard part is already done.
+  exercise, not a rewrite win. The original "fold into the next
+  flag-growing milestone" gate is retired by the #156 spike: per-flag
+  growth costs one `FlagSpec` row and one `apply()` case in the
+  existing table, which picocli does not beat once the contract shims
+  are paid for. The trigger that would reopen this is subcommands.
 
 ## Recommended — test/build scope only (not distributed)
 
@@ -256,8 +277,11 @@ comparables, benefits, and costs before any adoption commitment:
    same license as the project. (Runtime, GPLv3.)
 3. **ArchUnit** (#155) — locks in the architecture the docs describe
    while the #78 registry refactor churns the code. (Test-only.)
-4. **picocli** (#156) — fold into the next CLI-growing milestone rather
-   than as standalone churn. (Runtime, Apache-2.0.)
+4. **picocli** (#156) — evaluated 2026-07-18 and rejected for the
+   current flag-table CLI; the spike and reasoning are in
+   [`picocli-evaluation-2026-07.md`](picocli-evaluation-2026-07.md).
+   Re-evaluate only if the CLI grows subcommands. (Runtime,
+   Apache-2.0.)
 5. **Error Prone** (#157) — one trial run, coordinated with the #93
    NullAway plan (NullAway is an Error Prone plugin); keep only if the
    findings pay for the setup. (Build-only.)

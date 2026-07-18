@@ -37,12 +37,14 @@ import java.util.Vector;
 
 import javax.print.PrintService;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
@@ -98,6 +100,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private JSplitPane both;
 	private JTabbedPane edits;
 	private Circuit clipboard = new Circuit("clipboard");		// for cut and paste
+	private final UserPrefs prefs = UserPrefs.open();	// persistent user preferences (#76)
 
 	/**
 	 * Start up JLS.
@@ -923,25 +926,54 @@ public class JLSStart extends JFrame implements ChangeListener {
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
 		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
+		text.append("JVM property -Djls.laf=metal|system selects the look and feel (default metal)\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
 	} // end of usageText method
 
 	/**
+	 * The look and feel class to install, chosen by the
+	 * {@code jls.laf} JVM property (issue #76): {@code system} selects
+	 * the platform look and feel, anything else (including the unset
+	 * default and {@code metal}) selects the cross-platform Metal look
+	 * that JLS has always used.  Package-visible for the policy test.
+	 *
+	 * @param mode The value of the {@code jls.laf} property, or null.
+	 *
+	 * @return the look and feel class name to install.
+	 *
+	 * @see jls.LookAndFeelPolicyTest
+	 */
+	static String lookAndFeelClassName(String mode) {
+
+		if ("system".equals(mode)) {
+			return UIManager.getSystemLookAndFeelClassName();
+		}
+		return UIManager.getCrossPlatformLookAndFeelClassName();
+	} // end of lookAndFeelClassName method
+
+	/**
 	 * Set up main window.
 	 */
 	public JLSStart() {
 
-		// make it look the same everywhere (especially MAC's).
+		// cross-platform Metal by default for continuity;
+		// -Djls.laf=system opts into the platform look and feel. A
+		// failure falls back to whatever the JVM started with instead
+		// of aborting (issue #76).
 		try {
-			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(
+					lookAndFeelClassName(System.getProperty("jls.laf")));
 		}
 		catch (Exception ex) {
-
-			TellUser.error(this, "Can't set cross platform look and feel", "Error");
-			System.exit(1);
+			System.err.println(
+					"jls: warning: could not set look and feel: " + ex);
 		}
+
+		// apply persisted user preferences (theme, colors) before any
+		// editor window exists (issue #76)
+		prefs.applyStartup();
 
 		// save reference for exceptions
 		exHandler.setJLS(this);
@@ -1433,6 +1465,31 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		});
 
+		JMenu scheme = new JMenu("Color scheme");
+		menu.add(scheme);
+		ButtonGroup schemeGroup = new ButtonGroup();
+		for (Theme theme : Theme.all()) {
+			JRadioButtonMenuItem item =
+					new JRadioButtonMenuItem(theme.name());
+			schemeGroup.add(item);
+			scheme.add(item);
+			item.setSelected(theme == Theme.active());
+			item.addActionListener(new ActionListener() {
+				/**
+				 * Apply and persist the chosen color scheme, then
+				 * repaint every open editor so it takes effect at once.
+				 *
+				 * @param event Unused.
+				 */
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					theme.apply();
+					prefs.rememberTheme(theme.name());
+					refreshEditorColors();
+				}
+			});
+		}
+
 		JMenuItem gridCol = new JMenuItem("Change editor window grid color");
 		menu.add(gridCol);
 		gridCol.addActionListener(new ActionListener() {
@@ -1445,8 +1502,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.gridColor);
-				if (newColor != null)
+				if (newColor != null) {
 					JLSInfo.gridColor = newColor;
+					prefs.rememberGridColor(newColor);
+				}
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
 					ed.repaint();
@@ -1466,8 +1525,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.backgroundColor);
-				if (newColor != null)
+				if (newColor != null) {
 					JLSInfo.backgroundColor = newColor;
+					prefs.rememberBackgroundColor(newColor);
+				}
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
 					ed.changeBackgroundColor();
@@ -1478,6 +1539,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		return menu;
 	} // end of globalMenu method
+
+	/**
+	 * Push the active theme's colors into every open editor tab and
+	 * repaint, so a color scheme change takes effect immediately.
+	 */
+	private void refreshEditorColors() {
+
+		for (int i = 0; i < edits.getTabCount(); i += 1) {
+			Component c = edits.getComponentAt(i);
+			if (c instanceof Editor) {
+				((Editor)c).changeBackgroundColor();
+				c.repaint();
+			}
+		}
+	} // end of refreshEditorColors method
 
 	/**
 	 * Create help menu.

@@ -120,34 +120,71 @@ public class Wire extends Element {
 	} // end of save method
 	
 	/**
+	 * The stroke communicating a wire's value state independently of
+	 * color (issue #76): a wire carrying no value (tri-state HiZ) is
+	 * dashed, a wire carrying a non-zero value is thick, and a wire
+	 * carrying all zeros is a plain thin line.  This is the second
+	 * visual channel that keeps the states distinguishable without
+	 * relying on color vision.
+	 *
+	 * @param value The wire's value (null when off/HiZ).
+	 *
+	 * @return the stroke to draw the wire with.
+	 */
+	static BasicStroke strokeFor(BitSet value) {
+
+		if (value == null) {
+			return new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+					BasicStroke.JOIN_MITER, 10.0f,
+					new float[] {4.0f, 3.0f}, 0.0f);
+		}
+		if (!value.isEmpty()) {
+			return new BasicStroke(3.0f, BasicStroke.CAP_ROUND,
+					BasicStroke.JOIN_ROUND);
+		}
+		return new BasicStroke(1.0f);
+	} // end of strokeFor method
+
+	/**
 	 * Draw this wire.
-	 * 
+	 *
 	 * @param g Graphics object to draw with.
 	 */
 	@Override
 	public void draw(Graphics g) {
-		
+
+		BitSet value = net == null ? null : getValue();
 		if (touching) {
 			g.setColor(JLSInfo.touchColor);
 		}
 		else if (highlight) {
 			g.setColor(JLSInfo.highlightColor);
 		}
-		else if (getValue() == null) { // off
-			g.setColor(Color.blue);
+		else if (value == null) { // off
+			g.setColor(JLSInfo.wireOffColor);
 		}
-		else if (!(getValue().isEmpty())) {
+		else if (!(value.isEmpty())) {
 			g.setColor(JLSInfo.nonZeroColor);
 		}
 		else {
-			g.setColor(Color.black);
+			g.setColor(JLSInfo.wireZeroColor);
 		}
 		int x1 = end1.getX();
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		g.drawLine(x1,y1,x2,y2);
-		
+		if (g instanceof Graphics2D) {
+			// value state is also carried by the stroke (issue #76)
+			Graphics2D g2 = (Graphics2D)g;
+			Stroke saved = g2.getStroke();
+			g2.setStroke(strokeFor(value));
+			g2.drawLine(x1,y1,x2,y2);
+			g2.setStroke(saved);
+		}
+		else {
+			g.drawLine(x1,y1,x2,y2);
+		}
+
 		// draw probe name if there is one
 		if (probeName == null)
 			return;

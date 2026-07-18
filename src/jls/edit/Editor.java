@@ -370,7 +370,7 @@ public final class Editor extends SimpleEditor {
 	 */
 	public void enableEdits() {
 
-		editable.setText(" ");
+		hideDisabledBanner();
 		enabled = true;
 	} // end of enableEdits method
 

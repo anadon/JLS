@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -131,9 +133,14 @@ public abstract class SimpleEditor extends JPanel {
 	private JScrollPane pane;
 	/** Top panel; here so Editor class can display file menu. */
 	protected JPanel top;
-	/** Shows whether circuit editing is enabled. */
-	protected JLabel editable =
-			new JLabel(" ");
+	/**
+	 * Prominent full-width banner explaining why editing is blocked
+	 * while a subcircuit tab is open (issue #86 H2). Hidden whenever
+	 * this editor is enabled; it replaces the old one-line top-bar
+	 * label, which was too easy to miss.
+	 */
+	private JLabel disabledBanner =
+			new JLabel(" ",SwingConstants.CENTER);
 	/** Editing status message display. */
 	private JLabel message =
 			new JLabel(" ");
@@ -400,12 +407,25 @@ public abstract class SimpleEditor extends JPanel {
 		top = new JPanel();
 		top.setLayout(new BorderLayout());
 		top.setBackground(Color.CYAN);
-		top.add(editable,BorderLayout.WEST);
 		top.add(message,BorderLayout.EAST);
 		message.setOpaque(true);
 		message.setBackground(Color.cyan);
 		top.add(info,BorderLayout.CENTER);
-		all.add(top,BorderLayout.NORTH);
+
+		// full-width warning banner above the status bar, shown only
+		// while an open subcircuit tab has this editor disabled
+		// (issue #86 H2)
+		disabledBanner.setName("subcircuitDisabledBanner");
+		disabledBanner.setOpaque(true);
+		disabledBanner.setBackground(new Color(255,204,0));
+		disabledBanner.setForeground(Color.BLACK);
+		disabledBanner.setFont(disabledBanner.getFont().deriveFont(Font.BOLD));
+		disabledBanner.setBorder(BorderFactory.createEmptyBorder(4,8,4,8));
+		disabledBanner.setVisible(false);
+		JPanel north = new JPanel(new BorderLayout());
+		north.add(disabledBanner,BorderLayout.NORTH);
+		north.add(top,BorderLayout.CENTER);
+		all.add(north,BorderLayout.NORTH);
 		ew = new EditWindow();
 		ew.setPreferredSize(new Dimension(JLSInfo.circuitsize,JLSInfo.circuitsize));
 		pane = new JScrollPane(ew);
@@ -610,6 +630,40 @@ public abstract class SimpleEditor extends JPanel {
 
 		enabled = which;
 	} // end of enableEditor method
+
+	/**
+	 * Disable this editor because the named subcircuit is being edited
+	 * in its own tab, and show a prominent banner saying so (issue #86
+	 * H2 - the old one-line status label was too easy to miss).
+	 * {@link jls.edit.Editor#enableEdits()} re-enables editing and
+	 * hides the banner when the subcircuit tab closes.
+	 *
+	 * @param subcircuitName The name of the subcircuit whose open tab
+	 *        blocks editing here.
+	 */
+	public void disableForSubcircuit(String subcircuitName) {
+
+		enabled = false;
+		disabledBanner.setText("Editing of \"" + circuit.getName()
+				+ "\" is disabled while subcircuit \"" + subcircuitName
+				+ "\" is open in its own tab - close that tab to resume editing here.");
+		disabledBanner.setVisible(true);
+		revalidate();
+		repaint();
+	} // end of disableForSubcircuit method
+
+	/**
+	 * Hide the banner shown by {@link #disableForSubcircuit(String)}.
+	 * Called when the subcircuit tab closes and this editor is
+	 * re-enabled.
+	 */
+	protected void hideDisabledBanner() {
+
+		disabledBanner.setText(" ");
+		disabledBanner.setVisible(false);
+		revalidate();
+		repaint();
+	} // end of hideDisabledBanner method
 
 	/**
 	 * Reset editor after finishing a quick edit.
@@ -4437,9 +4491,10 @@ public abstract class SimpleEditor extends JPanel {
 							tabbedParent.add(tabName,ed);
 							tabbedParent.setSelectedComponent(ed);
 
-							// disable this editor while subcircuit it being editted
-							enabled = false;
-							editable.setText("editting is disabled while a subcircuit is being modified");
+							// disable this editor while the subcircuit is
+							// being editted, with a visible explanation
+							// (issue #86 H2)
+							disableForSubcircuit(sub.getName());
 						}
 
 						// otherwise element will change itself

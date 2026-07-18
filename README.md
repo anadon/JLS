@@ -45,7 +45,17 @@ self-contained installers with a bundled Java runtime — no JDK needed:
 
 Installing associates `.jls` circuit files with JLS: double-click a `.jls`
 file and it opens in the editor. Each installer has a sha256 entry in the
-`SHA256SUMS-installers-<os>-<arch>` release asset.
+`SHA256SUMS-installers-<os>-<arch>` release asset, and each carries a
+signed build-provenance attestation, checkable with
+`gh attestation verify JLS-<version>-<arch>.<ext> --repo anadon/JLS`.
+Note the scope of each guarantee: the checksums identify the exact bytes
+that were published and the attestation proves those bytes came from this
+repository's release workflow at a given commit — but the installers are
+*not* byte-reproducible (the native packaging tools embed wall-clock
+state), so rebuilding the same commit yourself will produce different
+checksums. That is expected; the jar and `bom.json` are the
+byte-reproducible artifacts (CI rebuilds and re-checks them on every
+push), while installer integrity rests on the attestation.
 
 ## Running JLS from the jar (no installer)
 

@@ -43,6 +43,7 @@ if [ -n "${JAVA_HOME:-}" ]; then
 	export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
+
 echo "==> toolchain"
 java -version
 jpackage --version

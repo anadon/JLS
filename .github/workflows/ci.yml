@@ -239,9 +239,13 @@ jobs:
       - name: Submit dependency graph
         uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
 
-  # reproducible-builds check (#44): the pom pins
+  # reproducible-builds check (#44, #184): the pom pins
   # project.build.outputTimestamp, so building the same commit twice must
-  # produce byte-identical jars — compare SHA256 of two clean builds
+  # produce byte-identical jars — compare SHA256 of two clean builds.
+  # bom.json is guarded too: the CycloneDX plugin derives its serial
+  # number and metadata timestamp from the same property, and the BOM
+  # ships in the release SHA256SUMS, so a silent regression of the
+  # property (or of the plugin default) must fail here, not on a release.
   reproducibility:
     name: Reproducible build check
     runs-on: ubuntu-latest
@@ -255,17 +259,17 @@ jobs:
           java-version: 25
           cache: maven
 
-      - name: Build twice and compare jar checksums
+      - name: Build twice and compare jar and BOM checksums
         run: |
           mvn -B -DskipTests package
-          sha256sum target/jls-*.jar | sed 's|target/||' > first.sha256
+          sha256sum target/jls-*.jar target/bom.json | sed 's|target/||' > first.sha256
           rm -rf target
           mvn -B -DskipTests package
-          ( cd target && sha256sum jls-*.jar ) > second.sha256
+          ( cd target && sha256sum jls-*.jar bom.json ) > second.sha256
           echo "first build:";  cat first.sha256
           echo "second build:"; cat second.sha256
           diff first.sha256 second.sha256 \
-            || { echo "::error::build is not reproducible: jar checksums differ between two builds of the same commit"; exit 1; }
+            || { echo "::error::build is not reproducible: jar or bom.json checksums differ between two builds of the same commit"; exit 1; }
 
   # Linux installer reproducibility gate (#189, parent #188): the deb, rpm,
   # and AppImage must each be byte-identical across two builds of one

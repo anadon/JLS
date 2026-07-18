@@ -152,6 +152,28 @@ class ArchitectureRulesTest {
 	}
 
 	/**
+	 * The issue #170 serialization prohibition, bytecode half (the
+	 * source-text half is CollabSecurityRatchetTest): no class in the
+	 * application depends on Java object serialization streams. The
+	 * collaboration wire format is the textual save-format grammar;
+	 * deserializing hostile bytes with ObjectInputStream is the
+	 * classic remote-execution surface and is banned everywhere,
+	 * zero-tolerance from a clean baseline.
+	 */
+	@Test
+	void nothingUsesJavaObjectSerializationStreams() {
+		noClasses()
+				.should().dependOnClassesThat()
+				.haveNameMatching(
+						"java\\.io\\.Object(Input|Output)Stream")
+				.because("network and file payloads are textual"
+						+ " save-format grammar with typed rejection,"
+						+ " never Java object serialization"
+						+ " (issue #170)")
+				.check(classes);
+	}
+
+	/**
 	 * Collaboration layering rule 2 from issue #163: the replication
 	 * stack (session roster/presence/token, CRDT merge/op log) sits
 	 * between the operation vocabulary and the transport. It depends
@@ -174,6 +196,54 @@ class ArchitectureRulesTest {
 						+ " UI effects go through listeners (issue"
 						+ " #163 rule 2, built by #169/#171)")
 				.allowEmptyShould(true)
+				.check(classes);
+	}
+
+	/**
+	 * The issue #170 transport confinement, bytecode half: socket
+	 * endpoints may only be touched from the (future) jls.collab.net
+	 * package, the one place the #163 architecture allows transport.
+	 * Zero-tolerance from before that package exists - which also
+	 * means batch mode and the default GUI start cannot bind a
+	 * listener (issue #170 P4), because nothing can construct one.
+	 */
+	@Test
+	void socketEndpointsAreConfinedToCollabNet() {
+		noClasses()
+				.that().resideOutsideOfPackage("jls.collab.net..")
+				.should().dependOnClassesThat()
+				.haveNameMatching(
+						"java\\.net\\.(Socket|ServerSocket"
+						+ "|DatagramSocket|MulticastSocket)"
+						+ "|java\\.nio\\.channels\\.(Asynchronous)?"
+						+ "(Server)?SocketChannel"
+						+ "|java\\.nio\\.channels\\.DatagramChannel"
+						+ "|javax\\.net\\.(SocketFactory"
+						+ "|ServerSocketFactory)"
+						+ "|javax\\.net\\.ssl\\.SSL(Server)?Socket"
+						+ "(Factory)?")
+				.because("transport lives only in jls.collab.net"
+						+ " (issues #163/#170)")
+				.check(classes);
+	}
+
+	/**
+	 * The issue #170 data-only rule for the collaboration layer: no
+	 * class under jls.collab depends on java.lang.reflect. A network
+	 * payload that names an element type passes the token through the
+	 * ElementVocabulary allowlist and hands instantiation to the
+	 * loader; collab code itself never selects classes or invokes
+	 * members reflectively.
+	 */
+	@Test
+	void collabDependsOnNoReflection() {
+		noClasses()
+				.that().resideInAPackage("jls.collab..")
+				.should().dependOnClassesThat()
+				.resideInAPackage("java.lang.reflect..")
+				.because("the collaboration vocabulary is data-only;"
+						+ " element instantiation is gated by the"
+						+ " ElementVocabulary allowlist (issue #170)")
 				.check(classes);
 	}
 }

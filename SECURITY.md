@@ -100,3 +100,26 @@ are enforced by tests, not convention:
   default GUI start cannot open a listener because no listener code
   exists; when it lands, it must bind only on an explicit
   "Start session" action (research doc §6.4).
+## Collaboration payloads (planned; issues #163/#170)
+
+The collaborative-editing program extends the untrusted-input surface
+from files to a stream of session-peer payloads. The content-level
+contract is `docs/collab-vocabulary.md`; the threat entries:
+
+- **Hostile payloads** (malformed, oversized, forged): every
+  network-delivered byte must parse to the closed vocabulary
+  (operations, snapshots) or be rejected with a typed error — no
+  best-effort repair. Element type tokens from a peer pass the
+  `ElementVocabulary` allowlist before any class lookup; Java object
+  serialization is banned repo-wide and socket code is confined to
+  `jls.collab.net`, both enforced by build-failing ratchet tests.
+- **Resource exhaustion** (flood, backlog, oversized frames): per-op
+  caps ship with the parser (issue #38 taxonomy); streaming caps
+  land with the transport layer (issue #168) and are in scope for
+  vulnerability reports once it exists.
+- **Vandalism with valid operations**: a malicious or compromised
+  peer issuing well-formed ops that wreck the circuit is explicitly
+  a *recovery* problem, not a prevention problem — the vocabulary
+  cannot distinguish vandalism from editing. Mitigations are
+  attribution, targeted revert, and eject (issue #169 / Stage 2),
+  not payload validation.

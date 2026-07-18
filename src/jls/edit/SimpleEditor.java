@@ -115,36 +115,58 @@ import jls.elem.XorGate;
 public abstract class SimpleEditor extends JPanel {
 
 	// properties
-	protected Circuit circuit;			// the circuit being edited
-	protected EditWindow ew;			// the editor window
-	// volatile: written from the sim thread (enableEditor around a run),
-	// read by EDT mouse/key handlers (issue #49, finding H7)
-	protected volatile boolean enabled = true;	// disabled when editting a subcircuit
-	protected JTabbedPane tabbedParent;	// the tabbed pane it is in
-	private JScrollPane pane;			// the scroll page it is in
-	protected JPanel top;				// here so Editor class can display file menu
+	/** The circuit being edited. */
+	protected Circuit circuit;
+	/** The editor window. */
+	protected EditWindow ew;
+	/**
+	 * False while a subcircuit is being edited. Volatile: written from
+	 * the sim thread (enableEditor around a run), read by EDT mouse/key
+	 * handlers (issue #49, finding H7).
+	 */
+	protected volatile boolean enabled = true;
+	/** The tabbed pane the editor is in. */
+	protected JTabbedPane tabbedParent;
+	/** The scroll pane the editor is in. */
+	private JScrollPane pane;
+	/** Top panel; here so Editor class can display file menu. */
+	protected JPanel top;
+	/** Shows whether circuit editing is enabled. */
 	protected JLabel editable =
-			new JLabel(" ");				// to show if circuit editing is enabled
-	private JLabel message = 
-			new JLabel(" ");				// editing status message display
+			new JLabel(" ");
+	/** Editing status message display. */
+	private JLabel message =
+			new JLabel(" ");
+	/** Element information display. */
 	private JLabel info =
-			new JLabel(" ",SwingConstants.CENTER);	// element information display
-	private Circuit clipboard;			// for cut and paste
-	private JPopupMenu importMenu = 
-			new JPopupMenu();				// to display importable circuits
+			new JLabel(" ",SwingConstants.CENTER);
+	/** Holds cut/copied elements for cut and paste. */
+	private Circuit clipboard;
+	/** Displays importable circuits. */
+	private JPopupMenu importMenu =
+			new JPopupMenu();
+	/** This editor, for use inside listeners and dialogs. */
 	private SimpleEditor me;
+	/** Snapshots to restore on undo, newest on top. */
 	private Stack<CircuitSnapshot> undos = new Stack<CircuitSnapshot>();
+	/** Snapshots to restore on redo, newest on top. */
 	private Stack<CircuitSnapshot> redos = new Stack<CircuitSnapshot>();
-	private int check = JLSInfo.checkPointFreq+1;				// number of changes, used for checkpointing
+	/** Number of changes since the last checkpoint. */
+	private int check = JLSInfo.checkPointFreq+1;
+	/** Import-menu item for each importable circuit, by name. */
 	private Map<String,JMenuItem> menuMap = new HashMap<String,JMenuItem>();
+	/** Importable circuit for each import-menu item, by name. */
 	private Map<String,Circuit> circMap = new HashMap<String,Circuit>();
 
-	// Checkpoint writing happens off the event thread (#19): the latest
-	// serialized circuit per checkpoint file waits here, and a single
-	// writer thread drains it. If edits outrun the disk, intermediate
-	// checkpoints are superseded before being written (coalescing).
+	/**
+	 * Checkpoint writing happens off the event thread (#19): the latest
+	 * serialized circuit per checkpoint file waits here, and a single
+	 * writer thread drains it. If edits outrun the disk, intermediate
+	 * checkpoints are superseded before being written (coalescing).
+	 */
 	private static final ConcurrentHashMap<String,String> pendingCheckpoints =
 			new ConcurrentHashMap<String,String>();
+	/** The single background thread that drains pendingCheckpoints. */
 	private static final ExecutorService checkpointWriter =
 			Executors.newSingleThreadExecutor(new ThreadFactory() {
 				/**
@@ -417,6 +439,8 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Get reference to top so applet can put menu in.
+	 *
+	 * @return the top panel.
 	 */
 	public JPanel getTop() {
 
@@ -613,15 +637,40 @@ public abstract class SimpleEditor extends JPanel {
 	 * element or wire (idle, chosen, placing, moving, selecting, selected,
 	 * option, startwire, drawire).
 	 */
-	enum State {idle, chosen, placing, moving, selecting, selected, option,
-		startwire, drawire};
+	enum State {
+		/** No gesture in progress. */
+		idle,
+		/** A new element has been chosen from the toolbar. */
+		chosen,
+		/** A new element is following the cursor to its place. */
+		placing,
+		/** Selected elements are being dragged. */
+		moving,
+		/** A selection rectangle is being dragged out. */
+		selecting,
+		/** A selection exists and awaits a command. */
+		selected,
+		/** The option popup menu is showing. */
+		option,
+		/** Wire drawing is armed, waiting for the first end. */
+		startwire,
+		/** A wire is being drawn from its initial end. */
+		drawire
+	};
 
 	/**
 	 * What the ctrl-W shortcut does, as a pure function of editor state
 	 * and selection size, so the dispatch is unit-testable headless
 	 * (issue #126; the injected-facts pattern of ToolkitPolicy).
 	 */
-	enum CtrlW {START_WIRE, TOGGLE_WATCH, NONE};
+	enum CtrlW {
+		/** Start drawing a wire. */
+		START_WIRE,
+		/** Toggle watched status of the selected element. */
+		TOGGLE_WATCH,
+		/** Do nothing. */
+		NONE
+	};
 
 	/**
 	 * Decide the ctrl-W gesture. From idle the shortcut always starts a
@@ -657,7 +706,9 @@ public abstract class SimpleEditor extends JPanel {
 	 * selection (the pitfall AmityWilder/JLS@b1f1573 fixed).
 	 */
 	static final class WireStart {
+		/** The new initial wire end. */
 		final WireEnd end;
+		/** Whether a selection existed before it was cleared. */
 		final boolean hadSelection;
 		/**
 		 * Record the result of a wire-start gesture.
@@ -713,53 +764,92 @@ public abstract class SimpleEditor extends JPanel {
 		private class EditWindow extends JPanel implements ActionListener,MouseListener,MouseMotionListener {
 
 			// popup menus
+			/** Right-click menu over an existing element or wire. */
 			private JPopupMenu optionMenu = new JPopupMenu();
-			private JMenuItem probe = new JMenuItem(""); // will get title when added to menu
-			private JMenuItem watch = new JMenuItem(""); // will get title when added to menu
+			/** Probe menu item; gets its title when added to the menu. */
+			private JMenuItem probe = new JMenuItem("");
+			/** Watch menu item; gets its title when added to the menu. */
+			private JMenuItem watch = new JMenuItem("");
+			/** Menu item to view/modify element details. */
 			private JMenuItem modify = new JMenuItem("Modify");
+			/** Menu item to change propagation delay or access time. */
 			private JMenuItem timing = new JMenuItem("Change Timing");
+			/** Menu item to view the current simulated value. */
 			private JMenuItem view = new JMenuItem("View Contents");
+			/** Menu item to undo the latest change. */
 			private JMenuItem undo = new JMenuItem("Undo");
+			/** Menu item to redo the latest undone change. */
 			private JMenuItem redo = new JMenuItem("Redo");
+			/** Menu item to cut the selection to the clipboard. */
 			private JMenuItem cut = new JMenuItem("Cut");
+			/** Menu item to copy the selection to the clipboard. */
 			private JMenuItem copy = new JMenuItem("Copy");
+			/** Menu item to delete the selection. */
 			private JMenuItem delete = new JMenuItem("Delete");
+			/** Menu item to make the selection uneditable. */
 			private JMenuItem lock = new JMenuItem("Lock");
 
+			/** Right-click menu over empty space. */
 			private JPopupMenu newMenu = new JPopupMenu();
+			/** Menu item to create a new wire. */
 			private JMenuItem connect = new JMenuItem("Wire(s)");
+			/** Menu item to paste the clipboard contents. */
 			private JMenuItem paste = new JMenuItem("Paste");
+			/** Menu item to select all elements. */
 			private JMenuItem selAll = new JMenuItem("Select All");
+			/** Menu item to close the popup menu. */
 			private JMenuItem close = new JMenuItem("Close");
 
+			/** Menu item to rotate the selection clockwise. */
 			private JMenuItem Crotate = new JMenuItem("Rotate Clockwise");
+			/** Menu item to rotate the selection counter-clockwise. */
 			private JMenuItem CCrotate = new JMenuItem("Rotate Counter-Clockwise");
+			/** Menu item to flip the selection. */
 			private JMenuItem flip = new JMenuItem("Flip");
+			/** Menu item to create the wire end matching a jump start. */
 			private JMenuItem matchJump = new JMenuItem("Create Matching End");
 
+			/** The element toolbar shown above the edit window. */
 			private JPanel toolbar;
+			/** The element menu backing the toolbar. */
 			private JMenu elements;
 
 			// properties
+			/** The editor's interaction mode. */
 			private State currentState = State.idle;
-			private boolean firstDraw = true;	// first paint pushes the undo base copy
-			private int x, y;					// latest actual cursor coordinates
-			private Rectangle selRect = null;	// selection rectangle
+			/** True until the first paint, which pushes the undo base copy. */
+			private boolean firstDraw = true;
+			/** Latest actual cursor x coordinate. */
+			private int x;
+			/** Latest actual cursor y coordinate. */
+			private int y;
+			/** Selection rectangle, or null when none is being dragged. */
+			private Rectangle selRect = null;
+			/** Currently selected elements. */
 			private Set<Element>selected =
-					new HashSet<Element>();			// currently selected elements
-			private WireEnd wireEnd;			// used for drawing wires
+					new HashSet<Element>();
+			/** The end of the wire being drawn. */
+			private WireEnd wireEnd;
+			/** The wire being drawn. */
 			private Wire wire;
+			/** The net the wire being drawn belongs to. */
 			private WireNet net;
+			/** The previous wire end while drawing a multi-segment wire. */
 			private WireEnd prev = null;
+			/** Elements to add during a connect. */
 			private Set<Element>adds =
-					new HashSet<Element>();			// for adding elements during a connect
+					new HashSet<Element>();
+			/** Elements to remove during a connect. */
 			private Set<Element>subs =
-					new HashSet<Element>();			// for removing elements during a connect
+					new HashSet<Element>();
+			/** Why the current placement overlaps, for the status line. */
 			private String overlapMessage = "";
+			/** Elements marked touching by overlap/connect. */
 			private Set<Element>touchedElements =
-					new HashSet<Element>();			// elements marked touching by overlap/connect
+					new HashSet<Element>();
+			/** Puts marked touching by overlap/connect. */
 			private Set<Put>touchedPuts =
-					new HashSet<Put>();				// puts marked touching by overlap/connect
+					new HashSet<Put>();
 
 			/**
 			 * Create a new edit window.
@@ -1814,6 +1904,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * Get image.
 			 * 
 			 * @param name Base name of image.
+			 * @return the icon, or null if the image resource is missing.
 			 */
 			public ImageIcon getImage(String name) {
 				URL image = getClass().getResource("images/" + name + ".gif");
@@ -1827,6 +1918,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param action The action for this element.
 			 * @param tip The tool tip for this element.
+			 * @return the toolbar button for the element.
 			 */
 			public JButton makeElement(Action action, String tip) {
 
@@ -2532,6 +2624,8 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Set up the options popup menu.
+			 * 
+			 * @param el The element the menu is being shown for.
 			 */
 			private void makeOptionMenu(Element el) {
 
@@ -2843,6 +2937,10 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * Accumulate a dirty-region rectangle (#17): the union of the
 			 * given rectangles, either of which may be null.
+			 * 
+			 * @param acc The accumulator rectangle, grown in place; may be null.
+			 * @param add The rectangle to add; may be null.
+			 * @return the union, or null when both inputs are null.
 			 */
 			private Rectangle union(Rectangle acc, Rectangle add) {
 

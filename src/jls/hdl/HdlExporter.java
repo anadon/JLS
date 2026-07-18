@@ -94,10 +94,13 @@ public final class HdlExporter {
 	/** What the exporter produced: text plus non-fatal warnings. */
 	public static final class Result {
 
+		/** The rendered target-language text. */
 		public final String text;
+		/** Non-fatal messages produced during the walk, unmodifiable. */
 		public final List<String> warnings;
 
 		/**
+		 * Captures one export's output.
 		 * @param text The rendered target-language text.
 		 * @param warnings Non-fatal messages; copied and made immutable.
 		 */
@@ -379,6 +382,7 @@ public final class HdlExporter {
 	// policy
 	// ------------------------------------------------------------------
 
+	/** Element classes with a direct HDL rendering. */
 	private static final Set<Class<?>> EXPORTED = Set.of(
 			InputPin.class, OutputPin.class, Constant.class,
 			AndGate.class, OrGate.class, NandGate.class, NorGate.class,
@@ -386,14 +390,17 @@ public final class HdlExporter {
 			TriState.class, Adder.class, Register.class, Clock.class,
 			Binder.class, Splitter.class);
 
+	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
 			Display.class, SigGen.class, Pause.class, Stop.class,
 			Text.class, TestGen.class);
 
+	/** Element classes that are net topology, not instances. */
 	private static final Set<Class<?>> TOPOLOGY = Set.of(
 			Wire.class, WireEnd.class, JumpStart.class, JumpEnd.class);
 
 	/**
+	 * Tests the exported policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element has a direct HDL rendering.
 	 */
@@ -402,6 +409,7 @@ public final class HdlExporter {
 	}
 
 	/**
+	 * Tests the warn-and-skip policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element has no HDL meaning and is warn-and-skipped.
 	 */
@@ -410,6 +418,7 @@ public final class HdlExporter {
 	}
 
 	/**
+	 * Tests the net-topology policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element is net topology (wire/jump), not an instance.
 	 */
@@ -600,6 +609,7 @@ public final class HdlExporter {
 	} // end of buildStatement method
 
 	/**
+	 * Maps a gate-family element class to its model operation.
 	 * @param el The element to map.
 	 * @return the gate operation for a gate-family element, or null if the
 	 * element is not a gate.
@@ -637,17 +647,30 @@ public final class HdlExporter {
 	/** One fused electrical net (wire nets joined by jump aliases). */
 	private static final class Group {
 
+		/** Chosen HDL net name; null until the naming pass assigns one. */
 		String name = null;
+		/** Width in bits: the widest member wire net seen so far. */
 		int bits = 0;
+		/** True when the net is a module port, not an internal net. */
 		boolean isPort = false;
+
+		/** Creates an unnamed, zero-width, non-port group. */
+		Group() {
+		} // end of Group constructor
 	} // end of Group class
 
 	/** Union-find over WireNet identity. */
 	private static final class UnionFind {
 
+		/** Each net's parent in its set's tree; roots map to themselves. */
 		private final Map<WireNet, WireNet> parent =
 				new IdentityHashMap<WireNet, WireNet>();
+		/** All registered nets, in first-seen order. */
 		private final List<WireNet> order = new ArrayList<WireNet>();
+
+		/** Creates an empty forest with no registered nets. */
+		UnionFind() {
+		} // end of UnionFind constructor
 
 		/**
 		 * Add a net as its own singleton set, preserving first-seen order.
@@ -693,7 +716,10 @@ public final class HdlExporter {
 			parent.put(find(a), find(b));
 		}
 
-		/** @return all registered nets in first-seen order. */
+		/**
+		 * Gives every net this forest has seen.
+		 * @return all registered nets in first-seen order.
+		 */
 		List<WireNet> all() {
 			return order;
 		}
@@ -731,6 +757,11 @@ public final class HdlExporter {
 	 * The operand an element input reads: its fused net if attached,
 	 * else a zero literal of the put's width (JLS reads unattached
 	 * inputs as 0).
+	 *
+	 * @param in The element input to resolve.
+	 * @param nets Union-find over the circuit's wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @return the net-reference or zero-literal operand.
 	 */
 	private static HdlModel.Operand operand(Input in, UnionFind nets,
 			Map<WireNet, Group> groups) {
@@ -747,6 +778,16 @@ public final class HdlExporter {
 	 * The net an element output drives: its fused net if attached,
 	 * else a freshly declared dangling wire (unc_&lt;id&gt;_&lt;k&gt;)
 	 * so every template stays uniform.
+	 *
+	 * @param model The model being built; receives any dangling net.
+	 * @param el The driving element.
+	 * @param k The output's index on the element.
+	 * @param out The element output to resolve.
+	 * @param bits Width of any dangling net to declare.
+	 * @param nets Union-find over the circuit's wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @param names Identifier allocator for the dangling net.
+	 * @return the name of the net the output drives.
 	 */
 	private static String target(HdlModel model, Element el, int k,
 			Output out, int bits, UnionFind nets, Map<WireNet, Group> groups,
@@ -762,6 +803,7 @@ public final class HdlExporter {
 	} // end of target method
 
 	/**
+	 * Gives the aliasing name a jump element contributes.
 	 * @param el The element to inspect.
 	 * @return the jump name if the element is a JumpStart or JumpEnd (nets
 	 * sharing a name are fused), else null.
@@ -785,6 +827,9 @@ public final class HdlExporter {
 	 * All circuit elements in a stable order: save id first (unique in
 	 * every saved file), then class, name and position as tie-breaks
 	 * for programmatically built circuits.
+	 *
+	 * @param circ The circuit whose elements to order.
+	 * @return the elements, stably sorted.
 	 */
 	private static List<Element> orderedElements(Circuit circ) {
 
@@ -802,6 +847,7 @@ public final class HdlExporter {
 	 * All elements of the given type, sorted by name for deterministic port
 	 * ordering.
 	 *
+	 * @param <T> The element subtype to keep.
 	 * @param ordered The elements to filter.
 	 * @param type The element subtype to keep.
 	 * @return the matching elements, name-sorted.
@@ -821,6 +867,7 @@ public final class HdlExporter {
 	} // end of byName method
 
 	/**
+	 * Builds the identity bit-index mapping.
 	 * @param n The length.
 	 * @return the identity index array {@code {0, 1, ..., n-1}}.
 	 */
@@ -833,7 +880,11 @@ public final class HdlExporter {
 		return a;
 	} // end of ascending method
 
-	/** Type, name (when the element has one) and grid location. */
+	/**
+	 * Describes an element for diagnostics.
+	 * @param el The element to describe.
+	 * @return its type, name (when the element has one) and grid location.
+	 */
 	static String describe(Element el) {
 
 		StringBuilder sb = new StringBuilder(el.getClass().getSimpleName());
@@ -846,6 +897,7 @@ public final class HdlExporter {
 	} // end of describe method
 
 	/**
+	 * Formats an element's position for diagnostics.
 	 * @param el The element.
 	 * @return its grid location as {@code "(x,y)"} for diagnostics.
 	 */

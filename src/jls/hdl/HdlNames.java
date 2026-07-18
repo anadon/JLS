@@ -59,9 +59,15 @@ final class HdlNames {
 			"wand", "weak0", "weak1", "while", "wire", "wor", "xnor",
 			"xor"));
 
+	/** Every identifier claimed in this namespace so far. */
 	private final Set<String> used = new HashSet<String>();
+	/** JLS name to legalized identifier, only where they differ. */
 	private final Map<String, String> renames =
 			new LinkedHashMap<String, String>();
+
+	/** Creates an empty namespace with no claimed identifiers. */
+	HdlNames() {
+	} // end of HdlNames constructor
 
 	/**
 	 * Legalize a JLS-visible name and claim it in this namespace,
@@ -94,7 +100,10 @@ final class HdlNames {
 		return unique(sanitize(base));
 	} // end of synth method
 
-	/** The recorded JLS-name-to-identifier changes, in claim order. */
+	/**
+	 * The recorded JLS-name-to-identifier changes, in claim order.
+	 * @return the rename map, live (not a copy).
+	 */
 	Map<String, String> renames() {
 
 		return renames;
@@ -119,7 +128,11 @@ final class HdlNames {
 		return candidate;
 	} // end of unique method
 
-	/** Steps 1-3 of the rule (character set, first char, keywords). */
+	/**
+	 * Steps 1-3 of the rule (character set, first char, keywords).
+	 * @param name The JLS-visible name to legalize.
+	 * @return the sanitized (but not yet uniquified) identifier.
+	 */
 	private static String sanitize(String name) {
 
 		StringBuilder sb = new StringBuilder(name.length());

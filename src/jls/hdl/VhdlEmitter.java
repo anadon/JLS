@@ -36,6 +36,10 @@ import java.util.Set;
  */
 public final class VhdlEmitter implements HdlEmitter {
 
+	/** Creates the (stateless) emitter. */
+	public VhdlEmitter() {
+	} // end of VhdlEmitter constructor
+
 	/**
 	 * Renders the model as one complete VHDL source file: comment header,
 	 * ieee use clauses, entity and structural architecture.
@@ -160,7 +164,12 @@ public final class VhdlEmitter implements HdlEmitter {
 		out.append("\nend architecture structural;\n");
 	} // end of architecture method
 
-	/** "std_logic_vector(msb downto 0)" for multi-bit, else scalar. */
+	/**
+	 * Renders the VHDL type for a value width.
+	 * @param bits the declared width in bits
+	 * @return {@code "std_logic_vector(msb downto 0)"} for multi-bit,
+	 * else {@code "std_logic"}
+	 */
 	private static String type(int bits) {
 
 		return bits > 1
@@ -404,7 +413,14 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(reg).append(";\n");
 	} // end of register method
 
-	/** One-condition register process, shared by all three kinds. */
+	/**
+	 * One-condition register process, shared by all three kinds.
+	 * @param out sink for the architecture-body text
+	 * @param clock the clock signal in the sensitivity list
+	 * @param data extra sensitivity-list signal (latch data), or null
+	 * @param condition the {@code if ... then} guard line
+	 * @param assignment the guarded state assignment
+	 */
 	private static void process(StringBuilder out, String clock, String data,
 			String condition, String assignment) {
 
@@ -420,6 +436,9 @@ public final class VhdlEmitter implements HdlEmitter {
 	/**
 	 * Bit routing, with contiguous runs coalesced into slices:
 	 * target(targetIndex[i]) = source(sourceIndex[i]).
+	 * @param out sink for the architecture-body text
+	 * @param s the bit-map statement to render
+	 * @param names the legalized-identifier table for this model
 	 */
 	private static void bitMap(StringBuilder out, HdlModel.BitMapStatement s,
 			Names names) {
@@ -463,7 +482,14 @@ public final class VhdlEmitter implements HdlEmitter {
 		return literal(slice, hi - lo + 1);
 	} // end of sourceSelect method
 
-	/** A whole signal, one bit, or a slice, as narrow as legal. */
+	/**
+	 * Renders a whole signal, one bit, or a slice, as narrow as legal.
+	 * @param name the signal name
+	 * @param declaredBits the declared width of the signal
+	 * @param lo the low bit index of the run
+	 * @param hi the high bit index of the run
+	 * @return the narrowest legal VHDL select expression
+	 */
 	private static String select(String name, int declaredBits, int lo,
 			int hi) {
 
@@ -493,7 +519,12 @@ public final class VhdlEmitter implements HdlEmitter {
 				: literal(o.literalValue(), o.bits());
 	} // end of operand method
 
-	/** The operand as a numeric_std unsigned expression of its width. */
+	/**
+	 * The operand as a numeric_std unsigned expression of its width.
+	 * @param o the operand to render
+	 * @param names the legalized-identifier table for this model
+	 * @return the VHDL unsigned expression for the operand
+	 */
 	private static String unsigned(HdlModel.Operand o, Names names) {
 
 		if (!o.isNet()) {
@@ -507,7 +538,12 @@ public final class VhdlEmitter implements HdlEmitter {
 		return "unsigned'(0 => " + names.of(o.netName()) + ")";
 	} // end of unsigned method
 
-	/** '0'/'1' for a scalar, a sized binary string for a vector. */
+	/**
+	 * Renders a VHDL literal of a known width.
+	 * @param value the literal value
+	 * @param bits the literal's width in bits
+	 * @return '0'/'1' for a scalar, a sized binary string for a vector
+	 */
 	private static String literal(BigInteger value, int bits) {
 
 		if (bits == 1) {
@@ -516,7 +552,12 @@ public final class VhdlEmitter implements HdlEmitter {
 		return '"' + bitString(value, bits) + '"';
 	} // end of literal method
 
-	/** The value as exactly {@code bits} binary digits, masked. */
+	/**
+	 * Renders a value in binary.
+	 * @param value the value to render
+	 * @param bits the width to render at
+	 * @return the value as exactly {@code bits} binary digits, masked
+	 */
 	private static String bitString(BigInteger value, int bits) {
 
 		StringBuilder sb = new StringBuilder(bits);
@@ -591,10 +632,13 @@ public final class VhdlEmitter implements HdlEmitter {
 				"std_logic_vector", "std_ulogic", "unsigned", "signed",
 				"rising_edge", "falling_edge", "resize", "to_unsigned"));
 
+		/** The legalized VHDL name for the entity/architecture. */
 		final String moduleName;
+		/** Model identifier to VHDL identifier, in claim order. */
 		private final Map<String, String> map =
 				new LinkedHashMap<String, String>();
-		private final Set<String> used = new HashSet<String>(); // lowercased
+		/** Every claimed identifier, lowercased (VHDL is case-blind). */
+		private final Set<String> used = new HashSet<String>();
 
 		/**
 		 * Claims VHDL identifiers for the module, ports, nets and register
@@ -618,7 +662,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			}
 		} // end of constructor
 
-		/** The VHDL identifier for a model identifier. */
+		/**
+		 * The VHDL identifier for a model identifier.
+		 * @param modelName the model identifier to look up
+		 * @return the claimed VHDL identifier
+		 */
 		String of(String modelName) {
 
 			String id = map.get(modelName);
@@ -629,7 +677,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			return id;
 		} // end of of method
 
-		/** Claim a fresh helper identifier (adder result signals). */
+		/**
+		 * Claim a fresh helper identifier (adder result signals).
+		 * @param base the desired name
+		 * @return the claimed, uniquified identifier
+		 */
 		String synth(String base) {
 
 			return unique(sanitize(base));
@@ -649,6 +701,8 @@ public final class VhdlEmitter implements HdlEmitter {
 		 * composed with this pass, plus this pass's own changes to
 		 * model names the walker did not rename - only entries whose
 		 * two sides differ.
+		 * @param model the model whose renames are composed
+		 * @return JLS/model name to final VHDL identifier, in claim order
 		 */
 		Map<String, String> documentedRenames(HdlModel model) {
 
@@ -695,7 +749,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			return candidate;
 		} // end of unique method
 
-		/** Underscore placement, first character, reserved words. */
+		/**
+		 * Underscore placement, first character, reserved words.
+		 * @param name the candidate identifier to legalize
+		 * @return the sanitized (but not yet uniquified) identifier
+		 */
 		private static String sanitize(String name) {
 
 			StringBuilder sb = new StringBuilder(name.length());

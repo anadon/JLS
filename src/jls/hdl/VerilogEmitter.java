@@ -16,6 +16,10 @@ import java.util.Map;
  */
 public final class VerilogEmitter implements HdlEmitter {
 
+	/** Creates the (stateless) emitter. */
+	public VerilogEmitter() {
+	} // end of VerilogEmitter constructor
+
 	/**
 	 * Renders the elaborated model as one complete Verilog module.
 	 * @param model the HDL model (ports, nets, statements) to export
@@ -134,7 +138,11 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 	} // end of netDeclarations method
 
-	/** " [msb:0]" for multi-bit, "" for scalar. */
+	/**
+	 * Renders a declaration's bit range.
+	 * @param bits width of the declared port, net, or reg
+	 * @return {@code " [msb:0]"} for multi-bit, {@code ""} for scalar
+	 */
 	private static String range(int bits) {
 
 		return bits > 1 ? " [" + (bits - 1) + ":0]" : "";
@@ -339,6 +347,8 @@ public final class VerilogEmitter implements HdlEmitter {
 	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:
 	 * target[targetIndex[i]] = source[sourceIndex[i]].
+	 * @param out the buffer the module text is appended to
+	 * @param s the bit-map statement (source, target, index arrays)
 	 */
 	private static void bitMap(StringBuilder out, HdlModel.BitMapStatement s) {
 
@@ -377,7 +387,14 @@ public final class VerilogEmitter implements HdlEmitter {
 		return literal(slice, hi - lo + 1);
 	} // end of sourceSelect method
 
-	/** A whole net, one bit, or a part-select, as narrow as legal. */
+	/**
+	 * Renders a whole net, one bit, or a part-select, as narrow as legal.
+	 * @param name the net or port name
+	 * @param declaredBits the declared width of the net
+	 * @param lo the low bit index of the run
+	 * @param hi the high bit index of the run
+	 * @return the narrowest legal Verilog select expression
+	 */
 	private static String select(String name, int declaredBits, int lo,
 			int hi) {
 
@@ -404,7 +421,12 @@ public final class VerilogEmitter implements HdlEmitter {
 		return o.isNet() ? o.netName() : literal(o.literalValue(), o.bits());
 	} // end of operand method
 
-	/** A sized hex literal, masked to its width (e.g. 4'hb). */
+	/**
+	 * Renders a sized hex literal, masked to its width (e.g. 4'hb).
+	 * @param value the literal value
+	 * @param bits the literal's width in bits
+	 * @return the sized Verilog hex literal
+	 */
 	private static String literal(BigInteger value, int bits) {
 
 		BigInteger mask = BigInteger.ONE.shiftLeft(bits)

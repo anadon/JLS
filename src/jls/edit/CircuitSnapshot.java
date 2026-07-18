@@ -27,6 +27,7 @@ import jls.JLSInfo;
  */
 public final class CircuitSnapshot {
 
+	/** The deflated save-format bytes of the captured circuit. */
 	private final byte[] deflated;
 
 	/**

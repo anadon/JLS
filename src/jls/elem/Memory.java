@@ -22,6 +22,10 @@ import java.util.*;
 public class Memory extends LogicElement {
 	
 	// types
+	/**
+	 * The two kinds of memory this element can be configured as: RAM
+	 * (readable and writable) or ROM (read-only).
+	 */
 	private static enum Type {RAM,ROM};
 	
 	// default values
@@ -1272,6 +1276,11 @@ public class Memory extends LogicElement {
 	private WordStore mem;
 	private WordStore initMem;
 	private BitSet currentValue;
+	/**
+	 * One entry in the write history: the value written (what), the address
+	 * written to (where), and the simulation time of the write (when). Used
+	 * to populate the activity dialog.
+	 */
 	private static class WriteRecord {
 		BitSet what;
 		int where;
@@ -1557,6 +1566,10 @@ public class Memory extends LogicElement {
 		
 	} // end of initSim method
 	
+	/**
+	 * The memory operation implied by the current input signals: WRITE a
+	 * word, READ a word, or OFF when the chip is not selected.
+	 */
 	private static enum MemoryAction {WRITE,READ,OFF};
 	
 	/**
@@ -1570,6 +1583,10 @@ public class Memory extends LogicElement {
 	public void react(long now, Simulator sim, Object todo) {
 		
 		// todo
+		/**
+		 * A pending memory operation scheduled as a future event: the
+		 * action to perform, the target address, and the data involved.
+		 */
 		class MemAction {
 			MemoryAction action;
 			int addr;

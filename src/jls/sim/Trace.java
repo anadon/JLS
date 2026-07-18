@@ -24,6 +24,11 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	static final int MAX_RETAINED_CHANGES = 100_000;
 	
 	// structure to contain a change
+	/**
+	 * A single recorded signal value together with the simulation time at
+	 * which it took effect.  Traces keep these in a list ordered newest
+	 * first to draw and to look up the value in effect at any time.
+	 */
 	private static class Change {
 		public BitSet value;
 		public long when;

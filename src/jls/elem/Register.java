@@ -20,6 +20,10 @@ import java.math.*;
 public class Register extends LogicElement {
 
 	// register types
+	/**
+	 * The triggering modes a register can have: Latch (level triggered),
+	 * PosFF (positive-edge triggered), and NegFF (negative-edge triggered).
+	 */
 	private enum Type {Latch, PosFF, NegFF};
 	
 	// default values

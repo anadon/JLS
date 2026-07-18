@@ -182,6 +182,7 @@ public final class HdlModel {
 	/** A bitwise gate (or plain buffer) driving one net. */
 	public static final class GateStatement extends Statement {
 
+		/** The bitwise operation the gate applies; BUFFER is a plain pass-through. */
 		public enum Op { AND, OR, NAND, NOR, XOR, NOT, BUFFER }
 
 		public final Op op;
@@ -341,6 +342,7 @@ public final class HdlModel {
 	 */
 	public static final class RegisterStatement extends Statement {
 
+		/** The register's clocking behavior: level-sensitive latch or edge-triggered flip-flop. */
 		public enum Kind { LATCH, POS_EDGE, NEG_EDGE }
 
 		public final Kind kind;

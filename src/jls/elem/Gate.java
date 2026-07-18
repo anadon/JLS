@@ -22,6 +22,10 @@ import javax.swing.*;
 public abstract class Gate extends LogicElement {
 	
 	// named constants
+	/**
+	 * The four directions a gate can face, controlling how its inputs and
+	 * output are laid out and drawn. Persisted by lowercase name.
+	 */
 	protected enum Orientation {up, down, left, right};
 	protected static final int defaultInputs = 2;
 	protected static final int defaultBits = 1;

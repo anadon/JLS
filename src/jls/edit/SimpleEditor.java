@@ -599,6 +599,12 @@ public abstract class SimpleEditor extends JPanel {
 
 	// can't be in EditWindow, but should be
 	// (package-private so the gesture decision below is testable: #126)
+	/**
+	 * The editor's interaction mode, driving how mouse and keyboard input
+	 * are interpreted: the constants enumerate the phases of editing an
+	 * element or wire (idle, chosen, placing, moving, selecting, selected,
+	 * option, startwire, drawire).
+	 */
 	enum State {idle, chosen, placing, moving, selecting, selected, option,
 		startwire, drawire};
 

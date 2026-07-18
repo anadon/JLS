@@ -67,6 +67,15 @@ import jls.sim.BatchSimulator;
 import jls.sim.InteractiveSimulator;
 
 
+/**
+ * Application entry point and main window of JLS. Parses the command line,
+ * then either launches the interactive Swing GUI (a tabbed set of circuit
+ * editors with an attached simulator) or runs one of the headless one-shot
+ * modes - batch simulation, image export, HDL export, plain-text re-save, or
+ * printing a named circuit. As the GUI frame it owns the menu bar, the editor
+ * tabs, the shared cut-and-paste clipboard, and the interactive simulator, and
+ * drives orderly startup and shutdown.
+ */
 @SuppressWarnings("serial")
 public class JLSStart extends JFrame implements ChangeListener {
 

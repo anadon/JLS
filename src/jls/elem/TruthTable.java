@@ -1570,6 +1570,11 @@ public final class TruthTable extends LogicElement implements Printable {
 	//-------------------------------------------------------------------------------
 
 	private int[] toBeValue;
+	/**
+	 * A pending output change carried through the simulator: an output pin's
+	 * position (index into the outputs list) paired with the BitSet value it
+	 * should take on when the scheduled event fires.
+	 */
 	static class Out {
 		int position;
 		BitSet value;

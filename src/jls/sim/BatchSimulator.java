@@ -21,6 +21,12 @@ import java.util.*;
 public class BatchSimulator extends Simulator {
 
 	// for printing traces
+	/**
+	 * One recorded sample in a watched element's trace: the value the
+	 * element held starting at the given simulation time. The BitSet
+	 * width is the element's bit count plus one, with the extra top bit
+	 * set to mark a HiZ (undriven) value.
+	 */
 	private static class TrEvent {
 		public long time;
 		public BitSet value;

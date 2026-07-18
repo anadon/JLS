@@ -48,6 +48,12 @@ class ShiftRegisterTest {
 	// circuit text builder (the #14/#98 harness idiom)
 	// ------------------------------------------------------------------
 
+	/**
+	 * Emits JLS circuit-description text programmatically, handing out
+	 * auto-incrementing element ids and appending the ELEMENT/WireEnd
+	 * records so a test can assemble a loadable circuit without a fixed
+	 * on-disk fixture.
+	 */
 	private static final class CircuitBuilder {
 
 		private final StringBuilder text;

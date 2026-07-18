@@ -28,6 +28,10 @@ class CliFlagTableTest {
 	@TempDir
 	Path tmp;
 
+	/**
+	 * Captured outcome of a child JLS process: its exit code and the full
+	 * text written to stderr, so assertions can inspect both together.
+	 */
 	private static final class Result {
 		final int exit;
 		final String stderr;

@@ -83,6 +83,10 @@ public final class StateMachine extends LogicElement implements Printable {
 	private String name = "";
 	
 	// for loading from file
+	/**
+	 * Parser state while reading a state machine from a file, naming which
+	 * kind of element the loader is currently building.
+	 */
 	private enum LoadState {machine, newState, newOutput, newTransition};
 	private LoadState loadState = LoadState.machine;
 	private State buildState;
@@ -872,6 +876,11 @@ public final class StateMachine extends LogicElement implements Printable {
 	
 	
 	// drawing states
+	/**
+	 * Interaction mode of the editor's drawing area, tracking what the user
+	 * is currently doing (idle, placing or moving states, drawing transitions,
+	 * selecting, etc.) so mouse events are handled accordingly.
+	 */
 	private enum DrawState {idle, created, placing, selecting, selected, moving,
 		newTrans, pointMoving};
 	

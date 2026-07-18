@@ -71,6 +71,10 @@ public final class JLSInfo {
 	public static boolean imgexport = false;			// export image from command line
 	public static boolean hdlexport = false;			// export HDL from command line (#60)
 	public static boolean textsave = false;				// re-save as plain text from command line (#129)
+	/**
+	 * The four cardinal directions an element can face in the editor,
+	 * used to drive drawing and to rotate or flip elements.
+	 */
 	public enum Orientation { UP, DOWN, LEFT, RIGHT;
 
 		/**

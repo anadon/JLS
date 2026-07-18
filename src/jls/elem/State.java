@@ -57,6 +57,12 @@ public class State {
 	private int x;
 	private int y;
 	private int diameter;
+	/**
+	 * Tracks the bit width and direction of a signal used within this state,
+	 * so signal usage can be checked for consistency. The reference count
+	 * records how many outputs/transitions use the signal; the entry is
+	 * removed from the bitmap when it drops to zero.
+	 */
 	private static class Check {
 		public int bits;
 		public boolean isInput;	// false if output

@@ -54,6 +54,12 @@ public class ShiftRegister extends LogicElement {
 
 	// shift kinds (save-file names are the enum names, fixed by the
 	// fork's 4.6 file format)
+	/**
+	 * The three shift behaviors an instance can be fixed to: shift left
+	 * with zero fill, shift right with zero fill, or shift right with
+	 * sign fill (arithmetic). Each constant's name is also its save-file
+	 * tag, so the names must not change.
+	 */
 	private enum Type {LogicalLeft, LogicalRight, ArithmeticRight};
 
 	// default values

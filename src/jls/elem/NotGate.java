@@ -13,7 +13,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class NotGate extends Gate {
+public final class NotGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
 	private static final Kind KIND =

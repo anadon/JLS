@@ -27,6 +27,7 @@ public final class CircuitOpReader {
 	/** Hostile-input caps (issue #38 discipline). */
 	private static final int MAX_IDS = 10_000;
 	private static final int MAX_STRING = 10_000;
+	private static final int MAX_BLOCKS = 1_000;
 	private static final int MAX_LINES = MAX_IDS + 16;
 
 	private CircuitOpReader() {
@@ -55,6 +56,7 @@ public final class CircuitOpReader {
 		String kind = header.substring(3).trim();
 
 		List<ElementId> ids = new ArrayList<ElementId>();
+		List<String> blocks = new ArrayList<String>();
 		String name = null;
 		Integer dx = null;
 		Integer dy = null;
@@ -80,6 +82,14 @@ public final class CircuitOpReader {
 							+ "' lists more than " + MAX_IDS + " ids");
 				}
 				ids.add(parseId(unquote(line.substring(11), "id")));
+			} else if (line.startsWith(" String block ")) {
+				if (blocks.size() >= MAX_BLOCKS) {
+					throw new OpRejected("op block for '" + kind
+							+ "' lists more than " + MAX_BLOCKS
+							+ " element blocks");
+				}
+				blocks.add(unquote(line.substring(14), "block",
+						ElementBlocks.MAX_BLOCK));
 			} else if (line.startsWith(" String name ")) {
 				if (name != null) {
 					throw new OpRejected("duplicate 'name' field");
@@ -99,31 +109,45 @@ public final class CircuitOpReader {
 
 		switch (kind) {
 		case "ToggleWatched":
-			requireFields(kind, ids.size() == 1 && name == null
-					&& dx == null && dy == null && cw == null);
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
 			return new ToggleWatched(ids.get(0));
 		case "AttachProbe":
-			requireFields(kind, ids.size() == 1 && name != null
-					&& !name.isEmpty() && dx == null && dy == null
-					&& cw == null);
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name != null && !name.isEmpty() && dx == null
+					&& dy == null && cw == null);
 			return new AttachProbe(ids.get(0), name);
 		case "RemoveProbe":
-			requireFields(kind, ids.size() == 1 && name == null
-					&& dx == null && dy == null && cw == null);
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
 			return new RemoveProbe(ids.get(0));
 		case "RotateElement":
-			requireFields(kind, ids.size() == 1 && name == null
-					&& dx == null && dy == null && cw != null
-					&& (cw == 0 || cw == 1));
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw != null && (cw == 0 || cw == 1));
 			return new RotateElement(ids.get(0), cw == 1);
 		case "FlipElement":
-			requireFields(kind, ids.size() == 1 && name == null
-					&& dx == null && dy == null && cw == null);
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
 			return new FlipElement(ids.get(0));
 		case "MoveElements":
-			requireFields(kind, !ids.isEmpty() && name == null
-					&& dx != null && dy != null && cw == null);
+			requireFields(kind, !ids.isEmpty() && blocks.isEmpty()
+					&& name == null && dx != null && dy != null
+					&& cw == null);
 			return new MoveElements(ids, dx, dy);
+		case "AddElements":
+			requireFields(kind, !blocks.isEmpty() && ids.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
+			return new AddElements(blocks);
+		case "RemoveElements":
+			requireFields(kind, !ids.isEmpty() && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
+			return new RemoveElements(ids);
 		default:
 			throw new OpRejected("unknown op kind '" + clip(kind) + "'");
 		}
@@ -205,6 +229,24 @@ public final class CircuitOpReader {
 	private static String unquote(String raw, String key)
 			throws OpRejected {
 
+		return unquote(raw, key, MAX_STRING);
+	} // end of unquote method
+
+	/**
+	 * Decode a quoted, escaped string value against an explicit length
+	 * cap - element blocks are legitimately much longer than names.
+	 *
+	 * @param raw The rest of the line, including the surrounding quotes.
+	 * @param key The field name, for the message.
+	 * @param max The longest escaped value accepted, in characters.
+	 *
+	 * @return the decoded string.
+	 *
+	 * @throws OpRejected if no quoted value is present or it is too long.
+	 */
+	private static String unquote(String raw, String key, int max)
+			throws OpRejected {
+
 		int start = raw.indexOf('"');
 		int end = raw.lastIndexOf('"');
 		if (start < 0 || end <= start) {
@@ -213,9 +255,9 @@ public final class CircuitOpReader {
 					+ "' is not");
 		}
 		String escaped = raw.substring(start + 1, end);
-		if (escaped.length() > MAX_STRING) {
+		if (escaped.length() > max) {
 			throw new OpRejected("the value of '" + key + "' exceeds "
-					+ MAX_STRING + " characters");
+					+ max + " characters");
 		}
 		StringBuilder value = new StringBuilder(escaped.length());
 		for (int i = 0; i < escaped.length(); i += 1) {

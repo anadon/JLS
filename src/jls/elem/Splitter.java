@@ -17,7 +17,7 @@ import javax.swing.JPanel;
  * 
  * @author David A. Poplawski
  */
-public class Splitter extends Group implements TriProp {
+public final class Splitter extends Group implements TriProp {
 	
 	/**
 	 * Create a new splitter element.

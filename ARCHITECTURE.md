@@ -51,9 +51,14 @@ Sources use the historical `src/` layout (not `src/main/java`);
   - `CircuitSnapshot` — undo snapshots (see below).
 - **`jls.sim`** — simulation:
   - `Simulator` — the shared event loop, queue, duplicate
-    suppression, time limit (issue #25).
-  - `BatchSimulator` (headless; trace accumulation, VCD export) and
-    `InteractiveSimulator` (GUI; step/pause/animate, trace window).
+    suppression, time limit (issue #25). Headless by construction
+    (issue #77): `Simulator` and `BatchSimulator` import no AWT,
+    Swing, or `jls.edit` (`HeadlessCoreRatchetTest` enforces it).
+  - `BatchSimulator` (headless; `TraceSample` accumulation, VCD
+    export) and `InteractiveSimulator` (GUI; step/pause/animate,
+    trace window). Batch `-r` trace printing is GUI-side in
+    `jls.BatchTracePrinter`, consuming
+    `BatchSimulator.getTraceSamples`.
   - `SimEvent`, `Reacts` — the event model.
 - **`resources/`** — bundled into the jar: `help/**` (the in-jar
   manual), `images/**`. **`src-filtered/`** — `version.properties`
@@ -84,14 +89,17 @@ Loading (`FileAbstractor.openCircuit` → `Circuit.load` →
    than `FORMAT_VERSION` is refused as `NEWER_FORMAT` ("file needs a
    newer JLS") instead of misparsing (issue #79,
    `FormatHeaderTest`).
-3. **Element instantiation is reflective**: `ELEMENT Foo` becomes
-   `Class.forName("jls.elem." + type).getConstructor(Circuit)`
-   (`Circuit.load`), so the loader has no per-element switch — but
-   every element class must keep the `(Circuit)` constructor
-   (`ElementConstructorContractTest`). Parameters arrive through the
-   typed `setValue` protocol (`int`/`long`/`Int`/`String`/`ref`/
-   `pair`/`probe` lines), largely routed through the `Attribute`
-   registry.
+3. **Element instantiation routes through the frozen tag table**:
+   `ELEMENT Foo` resolves via `SaveTags.resolve(tag)` (canonical
+   tags + alias map, issue #79 — tag text never reaches
+   `Class.forName`), then `getConstructor(Circuit)` (`Circuit.load`),
+   so the loader has no per-element switch — but every element class
+   must keep the `(Circuit)` constructor
+   (`ElementConstructorContractTest`), and every savable type needs
+   a `SaveTags` row (`SaveTagsTest`, `FileFormatSpecTest`).
+   Parameters arrive through the typed `setValue` protocol
+   (`int`/`long`/`Int`/`String`/`ref`/`pair`/`probe` lines), largely
+   routed through the `Attribute` registry.
 4. `finishLoad` resolves references (wire ends to puts, subcircuits)
    and validates.
 

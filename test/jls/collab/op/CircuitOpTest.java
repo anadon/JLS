@@ -24,9 +24,12 @@ import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
 import jls.elem.ElementId;
+import jls.elem.JumpEnd;
+import jls.elem.JumpStart;
 import jls.elem.Pin;
 import jls.elem.ShiftRegister;
 import jls.elem.Wire;
+import jls.elem.WireEnd;
 
 /**
  * The operation layer's contract (issue #167, collab Stage 0b), pinned
@@ -87,6 +90,43 @@ class CircuitOpTest {
 		assertTrue(circuit.finishLoad(graphics()),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
 		return circuit;
+	}
+
+	/** A circuit loaded headlessly from inline save-format text. */
+	private static Circuit loadText(String text) throws Exception {
+		Circuit circuit = new Circuit("");
+		assertTrue(circuit.load(new Scanner(text)),
+				() -> "load failed: " + JLSInfo.loadError);
+		assertTrue(circuit.finishLoad(graphics()),
+				() -> "finishLoad failed: " + JLSInfo.loadError);
+		return circuit;
+	}
+
+	/**
+	 * A jump start and its jump end, both unwired and with declared
+	 * stable ids, for the removal-group closure rules.
+	 */
+	private static Circuit loadJumpPair() throws Exception {
+		return loadText("CIRCUIT jumps\n"
+				+ "ELEMENT JumpStart\n int id 0\n int x 180\n int y 60\n"
+				+ " String sid \"js:1\"\n String name \"js\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orientation \"LEFT\"\nEND\n"
+				+ "ELEMENT JumpEnd\n int id 1\n int x 300\n int y 60\n"
+				+ " String sid \"je:2\"\n String name \"js\"\n"
+				+ " int bits 1\n String orientation \"LEFT\"\nEND\n"
+				+ "ENDCIRCUIT\n");
+	}
+
+	/** A donor element block: an unwired adder with a declared sid. */
+	private static String donorAdderBlock() throws Exception {
+		Circuit donor = loadText("CIRCUIT donor\nELEMENT Adder\n"
+				+ " int id 0\n int x 480\n int y 480\n"
+				+ " String sid \"donor:1\"\n int bits 4\n"
+				+ " String orient \"LEFT\"\n int delay 10\nEND\n"
+				+ "ENDCIRCUIT\n");
+		return ElementBlocks.saveBlock(
+				find(donor, el -> el.canRotate()));
 	}
 
 	private static String save(Circuit circuit) {
@@ -156,6 +196,19 @@ class CircuitOpTest {
 				"op and inline rotation must produce identical bytes");
 	}
 
+	@Test
+	void removeMatchesInlineMutation() throws Exception {
+		Circuit viaOp = loadAdder();
+		Circuit inline = loadAdder();
+		Element adder = find(viaOp, Element::canRotate);
+		new RemoveElements(List.of(adder.getStableId()))
+				.apply(viaOp, graphics());
+		Element inlineAdder = find(inline, Element::canRotate);
+		inlineAdder.remove(inline);
+		assertEquals(save(inline), save(viaOp),
+				"op and inline removal must produce identical bytes");
+	}
+
 	// ------------------------------------------------------------------
 	// P2: apply then invert restores the canonical bytes
 	// ------------------------------------------------------------------
@@ -221,6 +274,39 @@ class CircuitOpTest {
 	}
 
 	@Test
+	void removeInverseRestoresBytes() throws Exception {
+		Circuit circuit = loadAdder();
+		Element adder = find(circuit, Element::canRotate);
+		assertInverseRestores(circuit,
+				new RemoveElements(List.of(adder.getStableId())));
+	}
+
+	@Test
+	void addInverseRestoresBytes() throws Exception {
+		Circuit circuit = loadAdder();
+		assertInverseRestores(circuit,
+				new AddElements(List.of(donorAdderBlock())));
+	}
+
+	@Test
+	void jumpEndAloneIsRemovableAndRestorable() throws Exception {
+		Circuit circuit = loadJumpPair();
+		Element end = find(circuit, el -> el instanceof JumpEnd);
+		assertInverseRestores(circuit,
+				new RemoveElements(List.of(end.getStableId())));
+	}
+
+	@Test
+	void jumpStartWithItsEndsIsRemovableAndRestorable()
+			throws Exception {
+		Circuit circuit = loadJumpPair();
+		Element start = find(circuit, el -> el instanceof JumpStart);
+		Element end = find(circuit, el -> el instanceof JumpEnd);
+		assertInverseRestores(circuit, new RemoveElements(
+				List.of(start.getStableId(), end.getStableId())));
+	}
+
+	@Test
 	void inversesHoldOnARestoredCircuit() throws Exception {
 		// section 10 threat: ops validated on a live circuit may behave
 		// differently on a restored object graph
@@ -233,6 +319,10 @@ class CircuitOpTest {
 		Element adder = find(adders, Element::canRotate);
 		assertInverseRestores(adders,
 				new RotateElement(adder.getStableId(), true));
+		assertInverseRestores(adders,
+				new RemoveElements(List.of(adder.getStableId())));
+		assertInverseRestores(adders,
+				new AddElements(List.of(donorAdderBlock())));
 	}
 
 	// ------------------------------------------------------------------
@@ -250,7 +340,11 @@ class CircuitOpTest {
 				new RotateElement(id, true),
 				new RotateElement(id, false),
 				new FlipElement(id),
-				new MoveElements(List.of(id, other), -24, 36));
+				new MoveElements(List.of(id, other), -24, 36),
+				new AddElements(List.of(donorAdderBlock(),
+						"ELEMENT Text\n String text \"multi\nline "
+								+ "\\\"quoted\\\"\"\nEND\n")),
+				new RemoveElements(List.of(id, other)));
 		for (CircuitOp op : ops) {
 			String text = serialize(op);
 			CircuitOp parsed = CircuitOpReader.read(new Scanner(text));
@@ -283,9 +377,30 @@ class CircuitOpTest {
 						+ " int dx 4\n int dx 6\n int dy 0\nEND\n",
 				// probe without a name
 				"OP AttachProbe\n String id \"legacy:1\"\nEND\n",
+				// stray parse-legal int fields on kinds that take
+				// none: these survive the line parser and must die in
+				// the per-kind field-shape check (requireFields — its
+				// removal survived the issue #161 PIT trial for
+				// exactly these three kinds)
+				"OP ToggleWatched\n String id \"legacy:1\"\n"
+						+ " int dx 1\nEND\n",
+				"OP RemoveProbe\n String id \"legacy:1\"\n"
+						+ " int dy 1\nEND\n",
+				"OP FlipElement\n String id \"legacy:1\"\n"
+						+ " int cw 1\nEND\n",
 				// oversized string value
 				"OP AttachProbe\n String id \"legacy:1\"\n String name \""
 						+ "x".repeat(10_001) + "\"\nEND\n",
+				// add without any blocks
+				"OP AddElements\nEND\n",
+				// remove with a block instead of ids
+				"OP RemoveElements\n String block \"x\"\nEND\n",
+				// stray block field on a kind that takes none
+				"OP ToggleWatched\n String id \"legacy:1\"\n"
+						+ " String block \"x\"\nEND\n",
+				// oversized element block
+				"OP AddElements\n String block \""
+						+ "x".repeat(100_001) + "\"\nEND\n",
 		};
 		for (String text : hostile) {
 			assertThrows(OpRejected.class,
@@ -293,6 +408,29 @@ class CircuitOpTest {
 					() -> "reader accepted: " + text.substring(0,
 							Math.min(40, text.length())));
 		}
+	}
+
+	/**
+	 * The id-count limit is exact (issue #161 PIT trial: the
+	 * {@code >=} boundary at the MAX_IDS check had no test on either
+	 * side): a block listing exactly 10,000 ids parses, one more is
+	 * rejected.
+	 */
+	@Test
+	void readerEnforcesTheIdLimitExactly() throws Exception {
+		StringBuilder atLimit = new StringBuilder("OP MoveElements\n");
+		for (int i = 0; i < 10_000; i++) {
+			atLimit.append(" String id \"legacy:1\"\n");
+		}
+		atLimit.append(" int dx 4\n int dy 0\nEND\n");
+		String overLimit = atLimit.toString().replaceFirst(
+				" int dx", " String id \"legacy:1\"\n int dx");
+		assertTrue(CircuitOpReader.read(new Scanner(atLimit.toString()))
+				instanceof MoveElements,
+				"exactly 10,000 ids must parse");
+		assertThrows(OpRejected.class,
+				() -> CircuitOpReader.read(new Scanner(overLimit)),
+				"10,001 ids must be rejected");
 	}
 
 	// ------------------------------------------------------------------
@@ -333,6 +471,161 @@ class CircuitOpTest {
 			assertEquals(before, save(circuit),
 					"a rejected op must not change the circuit");
 		}
+	}
+
+	@Test
+	void addRejectionsLeaveTheCircuitUnchanged() throws Exception {
+		Circuit circuit = loadAdder();
+		String before = save(circuit);
+		Element adder = find(circuit, Element::canRotate);
+		String donor = donorAdderBlock();
+
+		CircuitOp[] invalid = {
+				// no blocks at all
+				new AddElements(List.of()),
+				// stable id already present in the circuit
+				new AddElements(
+						List.of(ElementBlocks.saveBlock(adder))),
+				// same stable id twice within one op
+				new AddElements(List.of(donor, donor)),
+				// not an element block
+				new AddElements(List.of("garbage")),
+				// wiring may not travel through element blocks
+				new AddElements(List.of("ELEMENT WireEnd\nEND\n")),
+				// nor may subcircuits
+				new AddElements(List.of("ELEMENT SubCircuit\nEND\n")),
+				// unknown element type
+				new AddElements(List.of("ELEMENT NoSuchThing\nEND\n")),
+				// no declared stable id
+				new AddElements(List.of("ELEMENT Adder\n int id 0\n"
+						+ " int x 60\n int y 60\n int bits 4\n"
+						+ " String orient \"LEFT\"\n int delay 10\n"
+						+ "END\n")),
+				// arrives off the canvas
+				new AddElements(List.of("ELEMENT Adder\n int id 0\n"
+						+ " int x -60\n int y 60\n"
+						+ " String sid \"neg:1\"\n int bits 4\n"
+						+ " String orient \"LEFT\"\n int delay 10\n"
+						+ "END\n")),
+				// a jump end with no source anywhere
+				new AddElements(List.of("ELEMENT JumpEnd\n int id 0\n"
+						+ " int x 60\n int y 60\n String sid \"je:9\"\n"
+						+ " String name \"nowhere\"\n int bits 1\n"
+						+ " String orientation \"LEFT\"\nEND\n")),
+				// atomicity: a good block first, then a bad one
+				new AddElements(List.of(donor,
+						ElementBlocks.saveBlock(adder))),
+		};
+		for (CircuitOp op : invalid) {
+			assertThrows(OpRejected.class,
+					() -> op.apply(circuit, graphics()),
+					() -> "accepted: " + op);
+			assertEquals(before, save(circuit),
+					"a rejected add must not change the circuit");
+		}
+	}
+
+	@Test
+	void addRejectsDuplicateNames() throws Exception {
+		Circuit circuit = loadText("CIRCUIT named\nELEMENT InputPin\n"
+				+ " int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\nENDCIRCUIT\n");
+		String before = save(circuit);
+		String samePinName = "ELEMENT InputPin\n int id 0\n"
+				+ " int x 240\n int y 240\n String sid \"pin:2\"\n"
+				+ " String name \"A\"\n int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n";
+		String otherName = samePinName.replace("\"A\"", "\"B\"");
+
+		// a name already used in the circuit
+		assertThrows(OpRejected.class,
+				() -> new AddElements(List.of(samePinName))
+						.apply(circuit, graphics()));
+		assertEquals(before, save(circuit));
+
+		// the same name twice within one op
+		assertThrows(OpRejected.class, () -> new AddElements(
+				List.of(otherName, otherName.replace("pin:2", "pin:3")))
+						.apply(circuit, graphics()));
+		assertEquals(before, save(circuit));
+
+		// a jump start name already taken by an existing jump start
+		Circuit jumps = loadJumpPair();
+		String jumpsBefore = save(jumps);
+		Element start = find(jumps, el -> el instanceof JumpStart);
+		assertThrows(OpRejected.class, () -> new AddElements(
+				List.of(ElementBlocks.saveBlock(start)
+						.replace("js:1", "js:9")))
+								.apply(jumps, graphics()));
+		assertEquals(jumpsBefore, save(jumps));
+	}
+
+	@Test
+	void removeRejectionsLeaveTheCircuitUnchanged() throws Exception {
+		Circuit circuit = load();
+		String before = save(circuit);
+		ElementId unknown = ElementId.parse("nosuch:1");
+		Element adderless = find(circuit,
+				el -> el instanceof ShiftRegister);
+		Element wire = find(circuit, el -> el instanceof Wire);
+		Element end = find(circuit, el -> el instanceof WireEnd);
+		Element wired = findWiredElement(circuit);
+
+		CircuitOp[] invalid = {
+				new RemoveElements(List.of()),
+				new RemoveElements(List.of(unknown)),
+				new RemoveElements(List.of(adderless.getStableId(),
+						adderless.getStableId())),
+				new RemoveElements(List.of(wire.getStableId())),
+				new RemoveElements(List.of(end.getStableId())),
+				new RemoveElements(List.of(wired.getStableId())),
+		};
+		for (CircuitOp op : invalid) {
+			assertThrows(OpRejected.class,
+					() -> op.apply(circuit, graphics()),
+					() -> "accepted: " + op);
+			assertEquals(before, save(circuit),
+					"a rejected removal must not change the circuit");
+		}
+
+		// a jump start may not leave its jump ends behind
+		Circuit jumps = loadJumpPair();
+		String jumpsBefore = save(jumps);
+		Element start = find(jumps, el -> el instanceof JumpStart);
+		assertThrows(OpRejected.class,
+				() -> new RemoveElements(List.of(start.getStableId()))
+						.apply(jumps, graphics()));
+		assertEquals(jumpsBefore, save(jumps));
+	}
+
+	@Test
+	void removeRejectsUneditableElements() throws Exception {
+		Circuit circuit = loadAdder();
+		new AddElements(List.of("ELEMENT Adder\n int id 0\n"
+				+ " int x 480\n int y 480\n String sid \"fx:1\"\n"
+				+ " int fixed 1\n int bits 4\n String orient \"LEFT\"\n"
+				+ " int delay 10\nEND\n")).apply(circuit, graphics());
+		String before = save(circuit);
+		assertThrows(OpRejected.class, () -> new RemoveElements(
+				List.of(ElementId.parse("fx:1")))
+						.apply(circuit, graphics()));
+		assertEquals(before, save(circuit),
+				"a rejected removal must not change the circuit");
+	}
+
+	/**
+	 * An element in the circuit that has a wire attached to one of its
+	 * puts, located from the wire-end side (the puts themselves are not
+	 * enumerable through the public element API).
+	 */
+	private static Element findWiredElement(Circuit circuit) {
+		WireEnd attached = (WireEnd) find(circuit,
+				el -> el instanceof WireEnd
+						&& ((WireEnd) el).isAttached()
+						&& ((WireEnd) el).getPut().getElement() != null);
+		return attached.getPut().getElement();
 	}
 
 } // end of CircuitOpTest class

@@ -18,7 +18,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class TriState extends LogicElement {
+public final class TriState extends LogicElement {
 	
 	// defaults
 	private static final int defaultBits = 1;

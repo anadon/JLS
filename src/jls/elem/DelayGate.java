@@ -1,6 +1,7 @@
 package jls.elem;
 
 import jls.*;
+import jls.JLSInfo.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
 
@@ -19,7 +20,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class DelayGate extends Gate {
+public final class DelayGate extends Gate {
 	
 	// identity (#22); previous-settings unused: DELAY has its own dialog
 	private static final Kind KIND =
@@ -214,16 +215,16 @@ public class DelayGate extends Gate {
 					return;
 				}
 				if (left.isSelected()) {
-					orientation = Orientation.left;
+					orientation = Orientation.LEFT;
 				}
 				else if (right.isSelected()) {
-					orientation = Orientation.right;
+					orientation = Orientation.RIGHT;
 				}
 				else if (up.isSelected()) {
-					orientation = Orientation.up;
+					orientation = Orientation.UP;
 				}
 				else {
-					orientation = Orientation.down;
+					orientation = Orientation.DOWN;
 				}
 				delayPad.close();
 				gatesPad.close();

@@ -8,7 +8,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Input extends Put {
+public final class Input extends Put {
 
 	/**
 	 * Construct a new input point.

@@ -50,17 +50,25 @@ public final class JLSInfo {
 	public static final int pointDiameter = 6;			// for inputs and outputs
 	public static final int stateDiameter = 40;			// state machine states
 	public static final int arrowSize = 6;				// state machine arrows
-	public static final Color touchColor = Color.green;	// when connections line up
-	public static final Color highlightColor =
-		Color.pink;										// when elements are highlighted
-	public static final Color selectionColor = 
-		new Color(240,240,240);							// when elements are selected
-	public static final Color watchColor =
-		Color.cyan;										// watched elements
-	public static final Color nonZeroColor =
-		Color.red;										// wires with non-zero values
-	public static final Color initialStateColor =
-		Color.lightGray;									// initial states of state machines
+	// semantic colors; set from the active Theme (issue #76), so they
+	// are mutable statics like gridColor below. Theme.apply() is the
+	// only intended writer.
+	public static Color touchColor =
+		Theme.DEFAULT.touch();							// when connections line up
+	public static Color highlightColor =
+		Theme.DEFAULT.highlight();						// when elements are highlighted
+	public static Color selectionColor =
+		Theme.DEFAULT.selection();						// when elements are selected
+	public static Color watchColor =
+		Theme.DEFAULT.watch();							// watched elements
+	public static Color nonZeroColor =
+		Theme.DEFAULT.nonZero();							// wires with non-zero values
+	public static Color initialStateColor =
+		Theme.DEFAULT.initialState();					// initial states of state machines
+	public static Color wireOffColor =
+		Theme.DEFAULT.wireOff();							// wires with no value (HiZ)
+	public static Color wireZeroColor =
+		Theme.DEFAULT.wireZero();						// wires with an all-zero value
 	public static final int checkPointFreq = 10;			// how many changes between checkpoint file writes
 	public static final int undoStackDepth = 10;			// maximum number of undos
 	public static final long defaultTimeLimit = 100000000;		// default simulation time
@@ -129,9 +137,10 @@ public final class JLSInfo {
 			return current;
 		} // end of parse method
 	}
-	public static Color gridColor = 
-		new Color(240,240,240);							// editor window grid
-	public static Color backgroundColor =  Color.white;	// editor window grid
+	public static Color gridColor =
+		Theme.DEFAULT.grid();							// editor window grid
+	public static Color backgroundColor =
+		Theme.DEFAULT.background();						// editor window background
 	public static String loadError = "";				// error message when loading a circuit
 	public static LoadError lastLoadError = null;		// structured detail behind loadError (#58)
 

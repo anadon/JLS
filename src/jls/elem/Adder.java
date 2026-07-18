@@ -19,7 +19,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Adder extends LogicElement {
+public final class Adder extends LogicElement {
 	
 	// default values
 	private static final int defaultBits = 1;

@@ -18,7 +18,8 @@ import java.math.*;
  * 
  * @author David A. Poplawski
  */
-public class Element {
+public abstract sealed class Element
+		permits DisplayElement, LogicElement, Wire {
 
 	// saved properties
 	private int id; 						// file-local reference index, reassigned on every save

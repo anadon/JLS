@@ -22,6 +22,22 @@
 #                      running Maven (CI builds/tests in a prior step)
 #   APPIMAGETOOL=path  use this appimagetool instead of downloading the
 #                      pinned one (Linux x86_64 only)
+#   JLS_JBR_HOME=path  Linux only: bundle this JetBrains Runtime root
+#                      (must contain bin/java) instead of downloading
+#                      the pinned one — see the JBR block below
+#   SOURCE_DATE_EPOCH  override the build timestamp (seconds since the
+#                      epoch); defaults to the pom's
+#                      project.build.outputTimestamp so installers and
+#                      jar share one source-derived clock (#44, #188)
+#   JLS_SIGN_KEY=fpr   GPG fingerprint of the release signing key (#136,
+#                      Linux only): the rpm gets an embedded rpmsign
+#                      signature and the AppImage an embedded
+#                      appimagetool --sign signature, so `rpm -K` and
+#                      AppImage validators verify natively.  The key must
+#                      sign unattended (the release workflow presets the
+#                      passphrase in an ephemeral gpg-agent); unset —
+#                      the normal case for local builds — everything
+#                      still builds, just unsigned.
 #
 # Outputs land in target/installer/dist/.
 
@@ -35,6 +51,7 @@ cd "$ROOT"
 if [ -n "${JAVA_HOME:-}" ]; then
 	export PATH="$JAVA_HOME/bin:$PATH"
 fi
+
 
 echo "==> toolchain"
 java -version
@@ -66,6 +83,52 @@ case "$ARCH" in
 esac
 
 echo "==> version ${VERSION} (installer version ${APP_VERSION}, arch ${ARCH})"
+
+# --- reproducibility plumbing (#188) ----------------------------------------
+# Byte-reproducibility needs every timestamp the packagers see to be derived
+# from the source, not the build wall clock.  Single source of truth is the
+# pom's project.build.outputTimestamp — the same stamp that already makes the
+# jar reproducible (#44) — exported as SOURCE_DATE_EPOCH, the cross-tool
+# convention (https://reproducible-builds.org/specs/source-date-epoch/) that
+# dpkg-deb, rpmbuild, mksquashfs (inside appimagetool) and friends honor.
+# A caller-supplied SOURCE_DATE_EPOCH wins, so a release lane can pin the
+# tag's commit date instead.
+if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+	POM_STAMP="$(mvn -B -q help:evaluate \
+		-Dexpression=project.build.outputTimestamp -DforceStdout)"
+	case "$POM_STAMP" in
+		# Maven also accepts a raw epoch-seconds value for the property
+		'' | null)
+			echo "project.build.outputTimestamp missing from pom" >&2
+			exit 1
+			;;
+		*[!0-9]*)
+			# ISO-8601 (e.g. 2026-07-16T00:00:00Z): GNU date parses it
+			# with -d; BSD date (macOS) needs -j -f with the layout
+			SOURCE_DATE_EPOCH="$(date -u -d "$POM_STAMP" +%s 2>/dev/null \
+				|| date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$POM_STAMP" +%s)"
+			;;
+		*)
+			SOURCE_DATE_EPOCH="$POM_STAMP"
+			;;
+	esac
+fi
+export SOURCE_DATE_EPOCH
+echo "==> SOURCE_DATE_EPOCH ${SOURCE_DATE_EPOCH}"
+
+# touch -t is the portable clamp (GNU and BSD both take it; -d @epoch is
+# GNU-only), so render the epoch once in touch's CCYYMMDDhhmm.SS format
+CLAMP_STAMP="$(date -u -d "@${SOURCE_DATE_EPOCH}" +%Y%m%d%H%M.%S 2>/dev/null \
+	|| date -u -r "${SOURCE_DATE_EPOCH}" +%Y%m%d%H%M.%S)"
+
+# Clamp every mtime under the given trees to SOURCE_DATE_EPOCH.  The staged
+# input/, runtime/, and app-image trees are (re)created at build time, so
+# without this each build hands the native packagers fresh wall-clock mtimes
+# — the archive members of deb/rpm/AppImage would differ every run.  -h
+# clamps symlinks themselves (AppRun, .DirIcon) instead of chasing targets.
+clamp_mtimes() {
+	find "$@" -exec touch -h -t "$CLAMP_STAMP" {} +
+}
 
 # --- shaded jar -------------------------------------------------------------
 if [ "${JLS_SKIP_BUILD:-0}" != "1" ]; then
@@ -100,6 +163,10 @@ jlink \
 	--compress zip-6 \
 	--output "$RUNTIME"
 echo "==> runtime size: $(du -sh "$RUNTIME" | cut -f1)"
+
+# jlink writes wall-clock mtimes (and the copied jar keeps its own); clamp
+# the whole staged tree before any packager sees it (#188)
+clamp_mtimes "$INPUT" "$RUNTIME"
 
 # --- jpackage ---------------------------------------------------------------
 package() {
@@ -169,6 +236,11 @@ build_appimage() {
 		Terminal=false
 	EOF
 
+	# the AppDir is assembled fresh each build (jpackage copy + the files
+	# above): clamp it so mksquashfs inside appimagetool — which honors
+	# SOURCE_DATE_EPOCH for the filesystem timestamp — sees stable mtimes
+	clamp_mtimes "$appdir"
+
 	local tool="${APPIMAGETOOL:-}"
 	if [ -z "$tool" ]; then
 		tool="$STAGE/appimagetool"
@@ -177,15 +249,105 @@ build_appimage() {
 		echo "${APPIMAGETOOL_SHA256}  ${tool}" | sha256sum -c -
 		chmod +x "$tool"
 	fi
+	# Embedded GPG signature (#136): appimagetool fills the runtime's
+	# reserved .sha256_sig/.sig_key ELF sections, which AppImage
+	# validators check and the launcher never reads — gated on
+	# JLS_SIGN_KEY so local builds without the release key keep working.
+	local sign_flags=()
+	if [ -n "${JLS_SIGN_KEY:-}" ]; then
+		sign_flags=(--sign --sign-key "$JLS_SIGN_KEY")
+	fi
+
 	# --appimage-extract-and-run: appimagetool is itself an AppImage and
 	# would otherwise need FUSE, absent on CI runners and NixOS
 	echo "==> appimagetool"
 	ARCH="$ARCH" "$tool" --appimage-extract-and-run \
+		"${sign_flags[@]}" \
 		"$appdir" "$DIST/JLS-${VERSION}-${ARCH}.AppImage"
+}
+
+# --- Linux bundled runtime: JetBrains Runtime (Wayland) ---------------------
+# Adjudicated on issue #82 (2026-07-17, from the #100 handoff): the Linux
+# installers must bundle a runtime that carries Swing's Wayland toolkit
+# (WLToolkit, Project Wakefield), which today only JetBrains Runtime ships
+# — mainline OpenJDK does not.  JBR is a JetBrains OpenJDK fork under
+# GPLv2 + Classpath Exception, so redistribution is permitted.  Revisit if
+# mainline OpenJDK gains Wayland support.
+#
+# Same pin-and-placeholder convention as ci.yml's gui-wayland lane (issue
+# #101): the sha256 could not be computed from the authoring environment
+# (cache-redirector.jetbrains.com is proxy-blocked there), so until a real
+# checksum is pinned the build falls back LOUDLY to the build JDK's jlink
+# image above (X11/XWayland only) rather than fetch an unverified archive.
+# To arm the JBR path, run
+#   curl -fsSL <JBR_URL> | sha256sum
+# from an unproxied machine and replace the placeholder for each arch.
+#
+# The jbrsdk flavor is pinned (not jbr) because it ships jmods, which lets
+# jlink trim the bundled image to the jdeps-derived module set;
+# select_linux_runtime copes with either layout regardless.
+JBR_VERSION="25.0.3"
+JBR_BUILD="b508.16"
+case "$ARCH" in
+	x86_64) JBR_PLATFORM="linux-x64" ;;
+	aarch64) JBR_PLATFORM="linux-aarch64" ;;
+	*) JBR_PLATFORM="" ;;
+esac
+JBR_URL="https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-${JBR_VERSION}-${JBR_PLATFORM}-${JBR_BUILD}.tar.gz"
+case "$JBR_PLATFORM" in
+	linux-x64) JBR_SHA256="UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101" ;;
+	linux-aarch64) JBR_SHA256="UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101" ;;
+	*) JBR_SHA256="" ;;
+esac
+
+# Repoint $RUNTIME at a JBR-derived image when a JBR is available: an
+# explicit JLS_JBR_HOME wins; otherwise a pinned-and-verified download.
+# With jmods present the image is jlink-trimmed to $MODULES (using the
+# JBR's own jlink so linker and modules agree); a runtime-only JBR is
+# bundled whole.  Without any JBR the already-built build-JDK image
+# ships, with a warning that Wayland-only sessions will need XWayland.
+select_linux_runtime() {
+	local jbr=""
+	if [ -n "${JLS_JBR_HOME:-}" ]; then
+		if [ ! -x "$JLS_JBR_HOME/bin/java" ]; then
+			echo "JLS_JBR_HOME=$JLS_JBR_HOME has no executable bin/java" >&2
+			exit 1
+		fi
+		jbr="$JLS_JBR_HOME"
+	elif [ -n "$JBR_SHA256" ] && [ "${JBR_SHA256#UNVERIFIED-}" = "$JBR_SHA256" ]; then
+		echo "==> fetching JetBrains Runtime ${JBR_VERSION}${JBR_BUILD} (${JBR_PLATFORM})"
+		curl -fsSL -o "$STAGE/jbr.tar.gz" "$JBR_URL"
+		echo "${JBR_SHA256}  ${STAGE}/jbr.tar.gz" | sha256sum -c -
+		mkdir -p "$STAGE/jbr"
+		tar -xzf "$STAGE/jbr.tar.gz" -C "$STAGE/jbr" --strip-components=1
+		jbr="$STAGE/jbr"
+	else
+		echo "==> WARNING: no JetBrains Runtime available (the JBR sha256 pin is a placeholder — see issue #101);" >&2
+		echo "==>          bundling the build JDK's runtime instead: Wayland-only sessions will need XWayland" >&2
+		return 0
+	fi
+	"$jbr/bin/java" -version
+	if [ -d "$jbr/jmods" ]; then
+		echo "==> jlink (JetBrains Runtime)"
+		rm -rf "$STAGE/jbr-runtime"
+		"$jbr/bin/jlink" \
+			--module-path "$jbr/jmods" \
+			--add-modules "$MODULES" \
+			--strip-debug \
+			--no-header-files \
+			--no-man-pages \
+			--compress zip-6 \
+			--output "$STAGE/jbr-runtime"
+		RUNTIME="$STAGE/jbr-runtime"
+	else
+		RUNTIME="$jbr"
+	fi
+	echo "==> Linux runtime: JBR image at ${RUNTIME} ($(du -sh "$RUNTIME" | cut -f1))"
 }
 
 case "$(uname -s)" in
 	Linux)
+		select_linux_runtime
 		# --resource-dir overrides the generated .desktop entry: the JDK
 		# default Exec line has no %f field code, so double-clicked .jls
 		# files would never reach argv (see resource-dir-linux/JLS.desktop)
@@ -196,9 +358,34 @@ case "$(uname -s)" in
 			--linux-shortcut
 			--linux-menu-group "Education;Electronics;"
 		)
+		# jpackage restages input/ and runtime/ into its own build tree;
+		# clamping here plus dpkg-deb/rpmbuild's own SOURCE_DATE_EPOCH
+		# clamping pins every packaged mtime (#189)
+		clamp_mtimes "$INPUT" "$RUNTIME"
 		package deb "${linux_flags[@]}"
 		if command -v rpmbuild >/dev/null 2>&1; then
-			package rpm "${linux_flags[@]}"
+			# jpackage offers no rpmbuild passthrough, and rpm stamps
+			# the build host and build time into the header: stage an
+			# .rpmmacros that pins BUILDHOST and derives BUILDTIME plus
+			# payload mtimes from SOURCE_DATE_EPOCH, and point HOME at
+			# it for just this invocation (#189)
+			mkdir -p "$STAGE/rpm-home"
+			printf '%s\n' \
+				'%_buildhost reproducible' \
+				'%use_source_date_epoch_as_buildtime 1' \
+				'%clamp_mtime_to_source_date_epoch 1' \
+				> "$STAGE/rpm-home/.rpmmacros"
+			( export HOME="$STAGE/rpm-home"; package rpm "${linux_flags[@]}" )
+			# Embedded GPG signature (#136).  rpmsign mutates the file
+			# in place, which is why the workflow signs before its
+			# attestation and checksum steps (both run after this
+			# script).  Signing was asked for, so a missing rpmsign is
+			# an error, not a skip — never ship unsigned by surprise.
+			if [ -n "${JLS_SIGN_KEY:-}" ]; then
+				echo "==> rpmsign"
+				rpmsign --define "_gpg_name $JLS_SIGN_KEY" \
+					--addsign "$DIST"/jls-*.rpm
+			fi
 		else
 			echo "==> rpmbuild not found; skipping --type rpm"
 		fi
@@ -227,6 +414,29 @@ case "$(uname -s)" in
 			--win-menu \
 			--win-shortcut \
 			--win-per-user-install
+		# Determinism (#190): WiX embeds a per-build random package code
+		# GUID plus build timestamps that jpackage exposes no control
+		# over, so two builds of one commit differ.  normalize-msi.py
+		# rewrites exactly that volatile set in place (content-derived
+		# package code, SOURCE_DATE_EPOCH-clamped timestamps); its
+		# self-test runs first so a broken tool can never touch the msi,
+		# and any structural surprise is a hard error, not a silent
+		# skip.  See docs/windows-msi-determinism.md; escape hatch:
+		# JLS_SKIP_MSI_NORMALIZE=1.
+		if [ "${JLS_SKIP_MSI_NORMALIZE:-0}" != "1" ]; then
+			PYTHON="$(command -v python3 || command -v python || true)"
+			if [ -z "$PYTHON" ]; then
+				echo "error: python is required to normalize the msi (#190);" >&2
+				echo "       set JLS_SKIP_MSI_NORMALIZE=1 to build a non-deterministic msi" >&2
+				exit 1
+			fi
+			"$PYTHON" scripts/normalize-msi.py --self-test
+			# clamp to the commit date until #188's shared
+			# SOURCE_DATE_EPOCH export lands and takes precedence
+			SDE="${SOURCE_DATE_EPOCH:-$(git log -1 --pretty=%ct 2>/dev/null || echo 0)}"
+			"$PYTHON" scripts/normalize-msi.py \
+				--source-date-epoch "$SDE" "$DIST/JLS-${APP_VERSION}.msi"
+		fi
 		# same collision-proofing as the dmg
 		mv "$DIST/JLS-${APP_VERSION}.msi" "$DIST/JLS-${APP_VERSION}-${ARCH}.msi"
 		;;

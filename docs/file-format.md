@@ -266,20 +266,27 @@ quoted value.
 
 ## 7. Element type tags
 
-<!-- Loader routing: Circuit.load resolves a tag by
-     Class.forName("jls.elem." + tag) and instantiating the
-     (Circuit) constructor; unknown tags fail the load with
-     UNKNOWN_ELEMENT. Writers: each element class's save() prints
-     "ELEMENT <tag>"; the gate family prints its Kind saveName
-     (Gate.java, "must match the class name"). -->
+<!-- Loader routing: Circuit.load resolves a tag through the
+     frozen tag table jls.elem.SaveTags (canonical tags + alias
+     map, issue #79) and instantiates the (Circuit) constructor;
+     unknown tags fail the load with UNKNOWN_ELEMENT. Writers:
+     each element class's save() prints "ELEMENT <tag>" as a
+     string literal; the gate family prints its Kind saveName
+     (Gate.java). FileFormatSpecTest holds this table, SaveTags,
+     and the writers' real output in lock-step. -->
 
-A tag is resolved by the reference reader to the Java class
-`jls.elem.<tag>` — the tag namespace is currently the loader's class
-namespace, so **tags are case-sensitive and exactly the simple class
-names below**. A reader implementing this specification only needs
-this table; a tag not in it (and not a documented later addition)
-MUST fail the load with a diagnostic naming the tag, and SHOULD
-suggest that the file may need a newer reader.
+Tags are **case-sensitive frozen identifiers** — this table, not any
+implementation's class names, defines the namespace. (Historically
+each tag was the simple name of the Java class implementing the
+element, and the reference reader resolved tags by reflection; the
+tags below are those names, frozen forever as format data. The
+reference implementation now routes tags through an explicit table
+with an alias map, `jls.elem.SaveTags`, so renaming a class can
+never change or break a tag.) A reader implementing this
+specification only needs this table; a tag not in it (and not a
+documented later addition) MUST fail the load with a diagnostic
+naming the tag, and SHOULD suggest that the file may need a newer
+reader.
 
 Version-1 and version-2 writers emit exactly these 32 tags:
 
@@ -329,9 +336,9 @@ Additional notes:
 - **Gate `pair`/sequence-free types**: for every type except
   `StateMachine`, items are order-independent; `pair` items are
   applied in file order.
-- **`TestGen`** resolves through the same routing (it is a loadable
-  class) but is never written by a conformant writer; it exists for
-  the batch test facility. Readers MAY reject it.
+- **`TestGen`** is a loadable-but-not-writable tag: the reference
+  reader accepts it (it exists for the batch test facility) but a
+  conformant writer never emits it. Readers MAY reject it.
 - `SubCircuit` nested blocks recurse: the nested circuit uses this
   same grammar minus the `FORMAT` line, and its elements may include
   further `SubCircuit`s.
@@ -356,7 +363,17 @@ preserved by every save, load, undo restore, and checkpoint
 recovery. The value is `replica:counter`, where the replica id is
 1–64 characters of `[0-9a-z]` naming where the element was created
 and the counter is a non-negative decimal. Copying an element mints
-a fresh id — a paste is a new element. Stable ids MUST be unique
+a fresh id — a paste is a new element. The replica id of freshly
+minted ids is per-install, not per-process (issue #183): it resolves
+as the `jls.replicaId` system property or `JLS_REPLICA_ID`
+environment variable when set (the deterministic knob for CI byte
+comparison and reproducible export), else the value persisted in the
+install's config file (`$XDG_CONFIG_HOME/jls/replica-id`, defaulting
+to `~/.config/jls/replica-id`), else a fresh random draw that is
+persisted for later starts. One install therefore keeps one replica
+across runs, making even from-scratch (never previously saved)
+circuits save reproducibly; two installs still differ, exactly as
+two independently-authored files should. Stable ids MUST be unique
 within their `CIRCUIT` block; a reader MUST refuse a file that
 declares the same `sid` twice in one block. Elements in files that
 predate `sid` (or hand-edited blocks without one) get an id minted
@@ -372,10 +389,15 @@ by stable id.
 blocks sorted by stable id and assigns the save-time `id`s in that
 same order, making the serialized form a pure function of circuit
 content — two circuits with identical content save byte-identically,
-whatever their load/edit history. A reader MUST NOT rely on this
-order (block order is not significant, §5), but tools MAY rely on
-JLS saves being deterministic, and JLS uses the canonical bytes as
-its convergence oracle and state hash for collaboration.
+whatever their load/edit history. The same principle reaches inside
+`StateMachine` blocks (issue #180): state sub-records are emitted
+sorted by state name (grid position as tie-break), and each state's
+transitions sorted unconditional first, then `else`, then
+conditionals by (signal, eq flag, value, bits), tie-broken by the
+next state's name. A reader MUST NOT rely on any of these orders
+(block order is not significant, §5), but tools MAY rely on JLS
+saves being deterministic, and JLS uses the canonical bytes as its
+convergence oracle and state hash for collaboration.
 
 ---
 
@@ -430,11 +452,18 @@ circuit. Writers SHOULD therefore prefer a version bump over an
 "ignorable" attribute whenever dropping the attribute would change
 simulation behavior.
 
-Historical note: tags are Java simple class names today (§7), which
-is why the `edu.mtu.cs.jls` → `jls` package rename did not break the
-format. Decoupling tags from class names via a registry with an alias
-table is planned (issue #79 method, item 3); when it lands, this
-section will record every historical alias.
+**Tag stability** (issue #79): tags are frozen identifiers decoupled
+from implementation class names (§7). The reference implementation
+routes tags through an explicit table with an alias map
+(`jls.elem.SaveTags`); the canonical write-tag for every type is
+frozen forever, so renaming an implementation class is an
+implementation detail — never a format change and never a version
+bump (no old reader ever sees a new tag). If a class whose old name
+was itself once written as a tag is ever renamed, the old tag joins
+the alias map and this section records it. Historical aliases to
+date: **none** (tags began as Java simple class names, which is why
+the `edu.mtu.cs.jls` → `jls` package rename did not break the
+format — simple names were untouched).
 
 ---
 

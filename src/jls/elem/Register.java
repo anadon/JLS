@@ -17,7 +17,7 @@ import java.math.*;
  * 
  * @author David A. Poplawski
  */
-public class Register extends LogicElement {
+public final class Register extends LogicElement {
 
 	// register types
 	/**

@@ -13,7 +13,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class OrGate extends Gate {
+public final class OrGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
 	private static final Kind KIND =

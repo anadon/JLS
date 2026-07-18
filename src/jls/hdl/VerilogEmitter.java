@@ -16,6 +16,10 @@ import java.util.Map;
  */
 public final class VerilogEmitter implements HdlEmitter {
 
+	/** Creates the (stateless) emitter. */
+	public VerilogEmitter() {
+	} // end of VerilogEmitter constructor
+
 	/**
 	 * Renders the elaborated model as one complete Verilog module.
 	 * @param model the HDL model (ports, nets, statements) to export
@@ -134,7 +138,11 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 	} // end of netDeclarations method
 
-	/** " [msb:0]" for multi-bit, "" for scalar. */
+	/**
+	 * Renders a declaration's bit range.
+	 * @param bits width of the declared port, net, or reg
+	 * @return {@code " [msb:0]"} for multi-bit, {@code ""} for scalar
+	 */
 	private static String range(int bits) {
 
 		return bits > 1 ? " [" + (bits - 1) + ":0]" : "";
@@ -193,6 +201,11 @@ public final class VerilogEmitter implements HdlEmitter {
 			@Override
 			public void visit(HdlModel.BitMapStatement s) {
 				bitMap(out, s);
+			}
+			/** Routes a select statement to {@link #select}. */
+			@Override
+			public void visit(HdlModel.SelectStatement s) {
+				select(out, s);
 			}
 		});
 	} // end of statement method
@@ -337,8 +350,38 @@ public final class VerilogEmitter implements HdlEmitter {
 	} // end of register method
 
 	/**
+	 * Emits a selected assignment (Mux/Decoder, the #59-adjudicated
+	 * {@code case} template): a helper {@code reg} assigned in an
+	 * {@code always @*} {@code case} over the selector - one arm per
+	 * value, a {@code default} arm for everything else - then a
+	 * continuous {@code assign} of the helper onto the target net.
+	 * @param out the buffer the module text is appended to
+	 * @param s the select statement (selector, values, default, target)
+	 */
+	private static void select(StringBuilder out, HdlModel.SelectStatement s) {
+
+		out.append("  reg").append(range(s.bits)).append(' ')
+				.append(s.helperName).append(";\n");
+		out.append("  always @* case (").append(operand(s.selector))
+				.append(")\n");
+		for (int i = 0; i < s.values.size(); i += 1) {
+			out.append("    ")
+					.append(literal(BigInteger.valueOf(i), s.selector.bits()))
+					.append(": ").append(s.helperName).append(" = ")
+					.append(operand(s.values.get(i))).append(";\n");
+		}
+		out.append("    default: ").append(s.helperName).append(" = ")
+				.append(operand(s.defaultValue)).append(";\n");
+		out.append("  endcase\n");
+		out.append("  assign ").append(s.target).append(" = ")
+				.append(s.helperName).append(";\n");
+	} // end of select method
+
+	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:
 	 * target[targetIndex[i]] = source[sourceIndex[i]].
+	 * @param out the buffer the module text is appended to
+	 * @param s the bit-map statement (source, target, index arrays)
 	 */
 	private static void bitMap(StringBuilder out, HdlModel.BitMapStatement s) {
 
@@ -377,7 +420,14 @@ public final class VerilogEmitter implements HdlEmitter {
 		return literal(slice, hi - lo + 1);
 	} // end of sourceSelect method
 
-	/** A whole net, one bit, or a part-select, as narrow as legal. */
+	/**
+	 * Renders a whole net, one bit, or a part-select, as narrow as legal.
+	 * @param name the net or port name
+	 * @param declaredBits the declared width of the net
+	 * @param lo the low bit index of the run
+	 * @param hi the high bit index of the run
+	 * @return the narrowest legal Verilog select expression
+	 */
 	private static String select(String name, int declaredBits, int lo,
 			int hi) {
 
@@ -404,7 +454,12 @@ public final class VerilogEmitter implements HdlEmitter {
 		return o.isNet() ? o.netName() : literal(o.literalValue(), o.bits());
 	} // end of operand method
 
-	/** A sized hex literal, masked to its width (e.g. 4'hb). */
+	/**
+	 * Renders a sized hex literal, masked to its width (e.g. 4'hb).
+	 * @param value the literal value
+	 * @param bits the literal's width in bits
+	 * @return the sized Verilog hex literal
+	 */
 	private static String literal(BigInteger value, int bits) {
 
 		BigInteger mask = BigInteger.ONE.shiftLeft(bits)

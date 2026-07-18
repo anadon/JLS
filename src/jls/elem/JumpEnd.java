@@ -19,7 +19,7 @@ import javax.swing.*;
  *  
  * @author David A. Poplawski
  */
-public class JumpEnd extends LogicElement {
+public final class JumpEnd extends LogicElement {
 	
 	// default value
 	private static final int defaultBits = 1;

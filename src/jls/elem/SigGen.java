@@ -16,7 +16,7 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public class SigGen extends SigSim {
+public final class SigGen extends SigSim {
 	
 	// named constants
 	private final String title = " Signal Generator ";

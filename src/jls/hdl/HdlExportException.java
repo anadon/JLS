@@ -9,6 +9,7 @@ package jls.hdl;
  */
 public class HdlExportException extends Exception {
 
+	/** Serialization version, required of every Exception subclass. */
 	private static final long serialVersionUID = 1L;
 
 	/**

@@ -21,6 +21,9 @@
 #                      without PUSH=1 the build only proves the
 #                      platforms compile — nothing lands in `docker
 #                      image ls`)
+#   SOURCE_DATE_EPOCH  override the timestamp stamped into the image
+#                      config/history/layers; defaults to the HEAD
+#                      commit time (issue #184)
 #
 # Tags <version> always, and `latest` only for stable releases (no
 # pre-release/SNAPSHOT suffix).  Pushing is the workflow's job, not ours.
@@ -32,6 +35,20 @@ cd "$ROOT"
 
 DOCKER="${DOCKER:-docker}"
 IMAGE="${IMAGE:-ghcr.io/anadon/jls}"
+
+# Tie image timestamps to the source revision, not build wall-clock
+# (issue #184).  BuildKit clamps image-config and history timestamps to
+# the SOURCE_DATE_EPOCH build arg; on the push path the
+# rewrite-timestamp=true output option below additionally rewrites
+# layer-tarball mtimes to it.  Together with the Dockerfile's apt
+# snapshot pin this ties the JLS-controlled layers to the commit; the
+# digest-pinned base image layers were already fixed.
+if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+	SOURCE_DATE_EPOCH="$(git log -1 --pretty=%ct)"
+fi
+export SOURCE_DATE_EPOCH
+build_args=(--build-arg "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}")
+echo "==> SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
 
 VERSION="$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)"
 echo "==> version ${VERSION}"
@@ -58,7 +75,11 @@ fi
 if [ -n "${PLATFORMS:-}" ]; then
 	push_flag=()
 	if [ "${PUSH:-0}" = "1" ]; then
-		push_flag=(--push)
+		# --output type=image,push=true is the long form of --push;
+		# rewrite-timestamp=true makes BuildKit rewrite layer-tarball
+		# mtimes to SOURCE_DATE_EPOCH so pushed layers are
+		# revision-stamped, not wall-clock-stamped (#184)
+		push_flag=(--output "type=image,push=true,rewrite-timestamp=true")
 	else
 		echo "==> PLATFORMS without PUSH=1: build-only, results stay in the buildx cache"
 	fi
@@ -66,7 +87,7 @@ if [ -n "${PLATFORMS:-}" ]; then
 	# --metadata-file: surfaces the manifest-list digest; on PUSH=1 the
 	# workflow signs and attests by digest (tags are mutable, #133)
 	"$DOCKER" buildx build --platform "$PLATFORMS" "${tags[@]}" "${push_flag[@]}" \
-		--metadata-file "$STAGE/metadata.json" "$STAGE"
+		"${build_args[@]}" --metadata-file "$STAGE/metadata.json" "$STAGE"
 	if [ "${PUSH:-0}" = "1" ]; then
 		DIGEST="$(sed -n 's/.*"containerimage.digest": *"\([^"]*\)".*/\1/p' "$STAGE/metadata.json" | head -1)"
 		echo "==> pushed digest: ${DIGEST}"
@@ -74,7 +95,7 @@ if [ -n "${PLATFORMS:-}" ]; then
 	fi
 else
 	echo "==> $DOCKER build"
-	"$DOCKER" build "${tags[@]}" "$STAGE"
+	"$DOCKER" build "${tags[@]}" "${build_args[@]}" "$STAGE"
 
 	echo "==> built:"
 	"$DOCKER" image ls "$IMAGE"

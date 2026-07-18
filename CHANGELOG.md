@@ -7,7 +7,66 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
-### Fixed
+### Added
+- Batch advancement of the open issue backlog (multi-agent workflow
+  session, one worker + one adversarial auditor per issue; each
+  increment's detail is recorded on its issue thread and in the
+  per-issue commits on this branch). Highlights: collaboration
+  Stages 0b-2 groundwork (#167 element-transplant ops, #168
+  jls.collab.net identity/handshake/framing, #169 jls.collab.session
+  roster and floor control, #170 ElementVocabulary + security
+  ratchets, #171 jls.collab.crdt causal substrate); the element
+  registry (#78) and frozen save-tag table (#79) replacing
+  Class.forName in the loader; the sealed element hierarchy (#95);
+  JSpecify/NullAway on the default build for jls.sim/jls.util (#93);
+  value-semantics increment (#94); headless jls.core ratchet step
+  (#77, BatchTracePrinter extraction); editor UndoManager extraction
+  (#84); keyboard accelerators/mnemonics and focus model (#75);
+  CVD-safe theme + wire glyphs (#76); editor zoom Viewport core
+  (#74); subcircuit-disabled banner (#86); tutorial refresh (#73);
+  menu-bar spec test (#91) and display-substrate additions (#162);
+  editor save/clipboard smoke tests (#56); HDL Stage 1 mux/decoder
+  export (#59), Stage 2 Yosys front end (#61), layout seam (#62),
+  Stage 3 header scanners (#63); installer reproducibility plumbing
+  and gates (#184/#185/#188/#189/#190/#191); GPG and Authenticode
+  signing scaffolding (#136/#134); Wayland rig hardening (#101);
+  FlatLaf and picocli evaluations (#153, #156 — picocli rejected);
+  PIT mutation-testing trial (#161); coverage climb (#159); private
+  doclint progress (#192). Issues #81, #111, #156, #180-#183 closed.
+- State machines now save deterministically (#180): `StateMachine.save`
+  and `State.save` iterated `HashSet`s whose members override no
+  `hashCode`, so state and transition blocks were emitted in
+  identity-hash order — per-run-variable bytes for the same machine,
+  breaking canonical serialization (#166) and the `stateHash`
+  convergence oracle (#163). States now save sorted by name (grid
+  position tie-break) and transitions unconditional-first, then
+  `else`, then conditionals by (signal, eq, value, bits, next) — a
+  total order drawn from the data itself.
+- Simulation results are now reproducible for order-sensitive
+  circuits (#181): the time-0 event seed (`Simulator.initSimulation`,
+  `SubCircuit.initSim` at every nesting depth) iterated the element
+  `HashSet`, so same-time event sequence numbers — the tie-breaker
+  that decides which of two simultaneous drivers a cross-coupled
+  latch or plain multi-driver net settles on — were assigned in
+  identity-hash order, varying between runs and machines. The seed
+  now walks the circuit's canonical stable-id order
+  (`Circuit.getElementsInStableOrder`), making every simulated value
+  a pure function of circuit content.
+- Printed page order is now deterministic (#182): `Circuit.addToBook`
+  collected state-machine, truth-table, and subcircuit pages by
+  iterating the element `HashSet`, so successive prints of one
+  circuit could order those pages differently. All three passes now
+  follow the canonical stable-id order.
+- Circuits built from scratch now save reproducibly (#183): the
+  replica half of every freshly minted stable id was a random UUID
+  drawn once per JVM, so a never-yet-saved circuit produced different
+  `sid` bytes on every process. The replica is now per-install: an
+  explicit `jls.replicaId` system property / `JLS_REPLICA_ID`
+  environment override (the deterministic knob for CI and
+  reproducible export) wins, then a value persisted in
+  `$XDG_CONFIG_HOME/jls/replica-id` (`~/.config/jls/replica-id`),
+  then a fresh draw persisted for later starts. Loaded-file saves,
+  the `legacy` minting path, and identity semantics are unchanged.
 - Circuits saved on Windows are now byte-identical to the same
   circuits saved on Linux (#111): `Circuit.save` pins `\n` line
   endings whatever the platform separator is, which the

@@ -73,6 +73,21 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** ~1 MB in the shaded jar; a visual-regression pass over the
   dialogs (the `test/jls/ui` layer-1 assertions are layout-independent
   and should survive).
+- **Verdict (2026-07-18, #153): adopt — recommended, gated on cross-OS
+  visual QA.** The evaluation
+  ([`flatlaf-evaluation-2026-07.md`](flatlaf-evaluation-2026-07.md))
+  verified 3.7.2 on the JDK 25 baseline (installs headlessly, runtime
+  light/dark switching works), measured the real shaded-jar delta
+  (1,013,610 bytes, ×1.86), confirmed zero transitive dependencies and
+  zero test-suite impact, audited the hardcoded colors (none block a
+  light-theme default; they gate only a future dark default), and
+  re-verified the comparables (Darklaf stale since 2025-09; Radiance
+  active but invasive). A dependency-free `-Djls.laf` selection seam
+  with Metal fallback shipped in `JLSStart` so the remaining
+  screenshot-matrix QA (Linux/Windows/macOS at fractional scales — the
+  one part a headless container cannot do) needs no rebuild. The
+  default switch itself, the `pom.xml` dependency, and the
+  ARCHITECTURE.md re-record happen together at the adoption commit.
 
 ### 2. JFreeSVG — vector image export *(ADOPTED, #154)*
 
@@ -106,12 +121,32 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 - **Cost:** negligible; one new accepted extension in the `-i`
   validation, docs, and a golden test.
 
-### 3. picocli — command-line parsing *(qualified recommendation)*
+### 3. picocli — command-line parsing *(REJECTED for the current CLI shape, #156; re-evaluate at subcommands)*
 
+- **Verdict (2026-07-18):** rejected after a behavior-preservation
+  spike against picocli 4.7.7 —
+  [`picocli-evaluation-2026-07.md`](picocli-evaluation-2026-07.md) has
+  the full method, code, and results. Feasibility is confirmed (46/46
+  contract-parity checks, byte-identical `-h` output and error lines,
+  exact exit codes), but the shims that parity requires — a
+  longest-match pre-tokenizer (picocli's POSIX clustering silently
+  misparses `-vcdout.vcd` as `-v cdout.vcd`, the #72 bug class), an
+  exception translator that regexes picocli's non-API message strings,
+  and a custom `-i` lookahead consumer — total about as much code as
+  the ~130-line hand parser they would replace, while adding a 408 KB
+  dependency whose every upgrade becomes a CLI-contract risk. Shell
+  completion, the one genuinely new capability, turned out to be a
+  *static* 226-line script generatable from the existing `FLAGS` table
+  without the dependency. Also fact-checked: the latest release is
+  4.7.7 (April 2025), not June 2026 as this survey originally said —
+  ~15 months old, a ground-rule-4 caution. Re-open only if the CLI
+  grows real subcommands (`jls export …`), where picocli's model fits
+  natively and no legacy contract must be reproduced shim-for-shim.
 - **What:** [picocli](https://github.com/remkop/picocli), Apache-2.0,
-  actively maintained (latest release June 2026). Deliberately
-  single-artifact; can even be included as a single source file instead
-  of a jar dependency.
+  latest release 4.7.7 (April 2025; verified on Maven Central
+  2026-07-18). Deliberately single-artifact; can even be included as a
+  single source file instead of a jar dependency (measured: that file
+  is 1.24 MB — bigger than the 408 KB jar).
 - **Overlap:** `JLSStart.java` (~2,200 lines) hand-rolls the `FLAGS`
   table, flag parsing, `-h` output, and usage errors.
 - **Improvement:** typed option binding, generated help that cannot
@@ -125,10 +160,11 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
   table (`CliFlagTableTest`, `CliSmokeTest`, batch-interface §1).
   picocli can reproduce all of it (custom `IParameterExceptionHandler`,
   exit-code mapping), but the migration is a behavior-preservation
-  exercise, not a rewrite win. Worth doing *when the flag table next
-  grows* (e.g. the #59 HDL-import stages) rather than as standalone
-  churn. The existing contract tests are exactly the safety net the
-  migration needs — a rare case where the hard part is already done.
+  exercise, not a rewrite win. The original "fold into the next
+  flag-growing milestone" gate is retired by the #156 spike: per-flag
+  growth costs one `FlagSpec` row and one `apply()` case in the
+  existing table, which picocli does not beat once the contract shims
+  are paid for. The trigger that would reopen this is subcommands.
 
 ## Recommended — test/build scope only (not distributed)
 
@@ -227,7 +263,7 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
 | **OpenPDF / Batik** | printing (`java.awt.print`), image export | Reject. OS print-to-PDF covers PDF; Batik is a heavyweight way to get what JFreeSVG does in 50 KB. |
 | **JavaFX migration** | all of Swing | Out of scope. A platform rewrite, not a library adoption; contradicts the working Swing investment and the single-jar deployment (JavaFX is per-platform modules). |
 | **VCD writer libraries** | `BatchSimulator` VCD export | Keep custom. No credibly maintained Java VCD writer exists on Maven Central; the in-tree writer is small and pinned by `VcdExportGoldenTest`. Delegating *viewing* to GTKWave/Surfer (already the docs' stance) is the right split. |
-| **PIT (pitest) mutation testing** | JaCoCo ratchet | Not yet — but *not* a maintenance rejection: pitest is actively maintained. Mutation testing (deliberately seeding bugs into the bytecode and checking the tests catch them — a measure of test *strength*, where JaCoCo only measures *reach*) earns its cost once line coverage is well past the current ~18 % ratchet; today it would mostly mutate uncovered code. Revisit when the ratchet crosses ~50 %. |
+| **PIT (pitest) mutation testing** | JaCoCo ratchet | **Adopt** (verdict 2026-07-18, issue #161; was "not yet" pending the ≥50 % line-coverage gate, which #159/#162 crossed 2026-07-17). The scoped trial (`pitest-maven` 1.25.7 + `pitest-junit5-plugin` 1.2.3 on JDK 25 / JUnit 6.1.2) ran clean in ~2 min and confirmed H1: 39 % mutation score against 58 % line coverage on the mutated classes, and survivor triage yielded 13 concrete new killing assertions in the first pass (SimEvent's entire ordering contract was reached-but-unasserted). One caveat: incremental analysis (`withHistory`) is no longer in the OSS core — it now requires the commercial arcmutate history plugin — so per-PR delta runs are out; the adopted shape is a scoped non-blocking report (nightly or on-demand), per `mutation-testing-trial-2026-07.md`. |
 | **JCommander / commons-cli / airline** | `JLSStart` FLAGS | Dominated by picocli on every axis (maintenance, help generation, completion, zero-dep option). |
 
 ## Suggested adoption order
@@ -241,8 +277,11 @@ comparables, benefits, and costs before any adoption commitment:
    same license as the project. (Runtime, GPLv3.)
 3. **ArchUnit** (#155) — locks in the architecture the docs describe
    while the #78 registry refactor churns the code. (Test-only.)
-4. **picocli** (#156) — fold into the next CLI-growing milestone rather
-   than as standalone churn. (Runtime, Apache-2.0.)
+4. **picocli** (#156) — evaluated 2026-07-18 and rejected for the
+   current flag-table CLI; the spike and reasoning are in
+   [`picocli-evaluation-2026-07.md`](picocli-evaluation-2026-07.md).
+   Re-evaluate only if the CLI grows subcommands. (Runtime,
+   Apache-2.0.)
 5. **Error Prone** (#157) — one trial run, coordinated with the #93
    NullAway plan (NullAway is an Error Prone plugin); keep only if the
    findings pay for the setup. (Build-only.)

@@ -7,5 +7,12 @@
  * mouse coordinates, avoiding brittle global-pointer queries that fail on
  * modern display servers such as Wayland. Add general-purpose, dependency-light
  * utilities here rather than embedding them in the packages that use them.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated {@code @Nullable}, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.util;
+
+import org.jspecify.annotations.NullMarked;

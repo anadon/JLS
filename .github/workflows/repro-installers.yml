@@ -1,0 +1,170 @@
+name: Installer reproducibility probe
+
+# Measures — without gating — how close each native installer format is to
+# byte-reproducibility (#188).  Every leg builds the jar once, then runs
+# scripts/build-installer.sh twice from the same tree and diffs the two
+# dist/ outputs per file:
+#
+#   - matching sha256  -> the format is byte-identical on this leg; its
+#     per-OS sub-issue (#189/#190/#191) can promote the check to a hard
+#     double-build gate, mirroring the jar's gate (#44)
+#   - differing sha256 -> diffoscope enumerates the residual and the report
+#     is uploaded as a workflow artifact, so "not reproducible" is always a
+#     bounded, inspectable claim rather than an assumption (#184 H3)
+#
+# The probe is report-only by design: it always exits green and publishes
+# nothing.  Promotion to a failing gate happens per format in the sub-issues
+# once a lane is proven stable.  Manual dispatch keeps five-runner double
+# builds off the per-push hot path; the monthly run catches toolchain drift
+# (runner image updates swapping dpkg/WiX/hdiutil versions underneath us).
+#
+# All actions are pinned to full commit SHAs (supply-chain posture, #44/#68);
+# Dependabot keeps the pins fresh via the version comments.
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:17 UTC on the 3rd of each month — off the top-of-hour spike
+    - cron: "17 6 3 * *"
+
+# Least privilege (#68): read the repo, upload workflow artifacts, nothing else.
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      # every leg reports; one flaky runner must not hide the others' data
+      fail-fast: false
+      matrix:
+        include:
+          # same legs as release.yml's installers job, so the probe measures
+          # exactly the artifacts a release would ship
+          - os: ubuntu-latest # x86_64 deb + rpm + AppImage
+            jdk: temurin
+          - os: ubuntu-24.04-arm # aarch64 deb + rpm + AppImage
+            jdk: temurin
+          - os: windows-latest # x86_64 msi
+            jdk: temurin
+          # zulu: Temurin publishes no Windows-aarch64 JDK 25; Azul does
+          - os: windows-11-arm # aarch64 msi
+            jdk: zulu
+          - os: macos-latest # aarch64 dmg
+            jdk: temurin
+    runs-on: ${{ matrix.os }}
+    # report-only: a red probe leg must never block anything (#188 §7)
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: ${{ matrix.jdk }}
+          java-version: 25
+          cache: maven
+
+      # the windows-11-arm image ships without WiX (windows-latest
+      # preinstalls it), and jpackage needs candle/light for --type msi;
+      # the x86 WiX binaries run fine under Windows-on-ARM emulation.
+      # choco's PATH edit does not reach later steps, hence GITHUB_PATH.
+      - name: Install WiX Toolset (Windows on ARM)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          choco install wixtoolset -y --no-progress
+          $wix = (Resolve-Path 'C:\Program Files (x86)\WiX Toolset*\bin')[0].Path
+          Add-Content $env:GITHUB_PATH $wix
+
+      # one jar for both installer builds: jar-level reproducibility is
+      # already gated by #44, so rebuilding it here would only add noise
+      - name: Build jar (once, shared by both installer builds)
+        shell: bash
+        run: mvn -B -q package -DskipTests
+
+      - name: Build installers, first pass
+        shell: bash
+        env:
+          JLS_SKIP_BUILD: "1"
+        run: |
+          bash scripts/build-installer.sh
+          # build-installer.sh wipes target/installer on every run; move the
+          # first dist out of the blast radius before the second pass
+          mv target/installer/dist target/dist-first
+
+      - name: Build installers, second pass
+        shell: bash
+        env:
+          JLS_SKIP_BUILD: "1"
+        run: |
+          bash scripts/build-installer.sh
+          mv target/installer/dist target/dist-second
+
+      # Per-file verdicts into the job summary; differing pairs are copied
+      # to target/repro-diff/ for the diffoscope step.  macOS runners lack
+      # sha256sum, hence the shasum fallback.
+      - name: Compare the two builds
+        id: compare
+        shell: bash
+        run: |
+          sum() {
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$1" | cut -d' ' -f1
+            else
+              shasum -a 256 "$1" | cut -d' ' -f1
+            fi
+          }
+          mkdir -p target/repro-diff
+          differing=0
+          {
+            echo "## Installer double-build (${{ matrix.os }})"
+            echo
+            echo "| artifact | first | second | reproducible |"
+            echo "| --- | --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for first in target/dist-first/*; do
+            name="$(basename "$first")"
+            second="target/dist-second/$name"
+            a="$(sum "$first")"
+            if [ -f "$second" ]; then b="$(sum "$second")"; else b="(missing)"; fi
+            if [ "$a" = "$b" ]; then
+              verdict="yes"
+            else
+              verdict="no"
+              differing=1
+              cp "$first" "target/repro-diff/first-$name"
+              [ -f "$second" ] && cp "$second" "target/repro-diff/second-$name"
+            fi
+            echo "| $name | ${a:0:12} | ${b:0:12} | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "differing=$differing" >> "$GITHUB_OUTPUT"
+
+      # Enumerate the residual: an unexplained hash mismatch is exactly the
+      # over-claim-in-reverse that #188 §10 forbids.  diffoscope is
+      # installed from PyPI on the POSIX legs; on Windows its external-tool
+      # ecosystem (msitools et al.) is unavailable, so the msi residual is
+      # analyzed offline from the uploaded artifact pair instead.
+      - name: Run diffoscope on differing installers
+        if: steps.compare.outputs.differing == '1' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          pipx install diffoscope || pip install --user diffoscope
+          export PATH="$HOME/.local/bin:$PATH"
+          mkdir -p target/repro-diff/reports
+          for first in target/repro-diff/first-*; do
+            name="$(basename "${first#target/repro-diff/first-}")"
+            second="target/repro-diff/second-$name"
+            [ -f "$second" ] || continue
+            echo "==> diffoscope $name"
+            # non-zero exit just means "differs", which we already know
+            diffoscope --html "target/repro-diff/reports/$name.html" \
+              --max-report-size 5000000 \
+              "$first" "$second" || true
+          done
+
+      - name: Upload differing pairs and diffoscope reports
+        if: steps.compare.outputs.differing == '1'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: repro-diff-${{ matrix.os }}
+          path: target/repro-diff/
+          retention-days: 30

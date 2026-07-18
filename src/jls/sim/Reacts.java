@@ -17,7 +17,8 @@ public interface Reacts {
 	public abstract void initSim(Simulator sim);
 
 	/**
-	 * 
+	 * React to a simulation event addressed to this element.
+	 *
 	 * @param now The current simulation time.
 	 * @param sim A reference to the simulator in case element needs to post an event.
 	 * @param todo Information needed to react to an event.

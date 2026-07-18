@@ -210,6 +210,70 @@ class VhdlExportGoldenTest {
 				registerFixture("reglatch", "latch", false));
 	}
 
+	/** Two-way, two-bit mux wired between pins. */
+	private static HdlCircuitBuilder muxFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("mux");
+		int a = cb.inputPin("a", 2);
+		int b = cb.inputPin("b", 2);
+		int sel = cb.inputPin("sel", 1);
+		int mux = cb.mux(2, 2);
+		int y = cb.outputPin("y", 2);
+		cb.wire(a, "output", mux, "input0");
+		cb.wire(b, "output", mux, "input1");
+		cb.wire(sel, "output", mux, "select");
+		cb.wire(mux, "output", y, "input");
+		return cb;
+	}
+
+	/**
+	 * Three-way, one-bit mux: the two-bit selector has an out-of-range
+	 * value (3), which JLS reads as 0 - the exported others choice.
+	 */
+	private static HdlCircuitBuilder mux3Fixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("mux3");
+		int a = cb.inputPin("a", 1);
+		int b = cb.inputPin("b", 1);
+		int c = cb.inputPin("c", 1);
+		int sel = cb.inputPin("sel", 2);
+		int mux = cb.mux(3, 1);
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", mux, "input0");
+		cb.wire(b, "output", mux, "input1");
+		cb.wire(c, "output", mux, "input2");
+		cb.wire(sel, "output", mux, "select");
+		cb.wire(mux, "output", y, "input");
+		return cb;
+	}
+
+	/** Two-to-four decoder wired between pins. */
+	private static HdlCircuitBuilder decoderFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("decoder");
+		int d = cb.inputPin("d", 2);
+		int dec = cb.decoder(2);
+		int y = cb.outputPin("y", 4);
+		cb.wire(d, "output", dec, "input");
+		cb.wire(dec, "output", y, "input");
+		return cb;
+	}
+
+	@Test
+	void muxTemplateIsAWithSelect() throws Exception {
+		assertGolden("mux", muxFixture());
+	}
+
+	@Test
+	void muxOutOfRangeSelectReadsZeroInTheOthersChoice() throws Exception {
+		assertGolden("mux3", mux3Fixture());
+	}
+
+	@Test
+	void decoderTemplateIsOneHot() throws Exception {
+		assertGolden("decoder", decoderFixture());
+	}
+
 	@Test
 	void binderAndSplitterTemplates() throws Exception {
 		HdlCircuitBuilder cb = new HdlCircuitBuilder("bundles");

@@ -21,12 +21,21 @@
  * AssertJ-Swing was rejected (unmaintained fork chain); Cacio-tta was
  * rejected (JDK-internals coupling). See
  * {@code DialogConstructionSmokeTest}, {@code EditorGestureTest},
- * {@code KeyPadDismissalTest}; new helpers for this layer belong in this
- * package and must not be required by Layer-1 tests.</li>
+ * {@code KeyPadDismissalTest}, {@code MenuBarSpecTest} (the P3
+ * menu-bar expectation table), {@code InteractiveSimulatorSmokeTest}
+ * (the Runner-thread/EDT handshake); new helpers for this layer belong
+ * in this package and must not be required by Layer-1 tests. The
+ * display suites run with {@code EdtViolationDetector} installed (issue
+ * #162 P2, a hand-rolled RepaintManager hook), so off-EDT Swing access
+ * fails the test that provoked it.</li>
  *
- * <li><b>Layer 3 (future):</b> rendering assertions -- paint to a
- * BufferedImage without a window and make semantic checks (element paints
- * within its bounds, theme color roles used), never brittle pixel goldens.</li>
+ * <li><b>Layer 3 (starter present):</b> rendering assertions -- paint to
+ * a BufferedImage without a window and make semantic checks, never
+ * brittle pixel goldens. Open: {@link jls.ui.RenderAssert} asserts an
+ * element paints, and paints only inside its index bounds plus the
+ * culling margin ({@code Circuit.DRAW_MARGIN}) -- the envelope the paint
+ * pipeline itself relies on -- swept over a fixture by
+ * {@code RenderBoundsTest}, headlessly.</li>
  * </ul>
  *
  * Meaningfulness discipline: every helper assertion in this package is

@@ -7,14 +7,22 @@ package jls.sim;
  */
 public final class SimEvent implements Comparable<SimEvent> {
 	
-	// sequence number
+	/** The next sequence number, assigned at construction (post order). */
 	private static long sequence = 0;
-	
-	// properties
-	private long time;
-	private long seq;
-	private Reacts callBack;
-	private Object todo;
+
+	// properties (all set once in the constructor: a SimEvent is an
+	// immutable value carrier, kept a plain class rather than a record
+	// because its equals/hashCode are intentionally non-structural --
+	// equals excludes seq so the simulator's dupCheck set can coalesce
+	// duplicate postings; see jls.sim.SimEventDedupTest, issue #94)
+	/** The simulation time this event fires at. */
+	private final long time;
+	/** The same-time tie-breaker: this event's global sequence number. */
+	private final long seq;
+	/** The element whose react runs when this event fires. */
+	private final Reacts callBack;
+	/** The event payload; null means "inputs changed, re-read them". */
+	private final Object todo;
 	
 	/**
 	 * Create a new event object with the given time and callback.

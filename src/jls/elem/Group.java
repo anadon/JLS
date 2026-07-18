@@ -16,7 +16,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Group extends LogicElement {
+public abstract sealed class Group extends LogicElement
+		permits Binder, Splitter {
 	
 	// default values
 	private static final int defaultBits = 2;

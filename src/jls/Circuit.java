@@ -13,13 +13,13 @@ import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -32,9 +32,12 @@ import javax.imageio.ImageIO;
 import jls.edit.Editor;
 import jls.edit.SimpleEditor;
 import jls.elem.Element;
+import jls.elem.ElementRegistry;
+import jls.elem.ElementType;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
 import jls.elem.Output;
+import jls.elem.SaveTags;
 import jls.elem.StateMachine;
 import jls.elem.SubCircuit;
 import jls.elem.TruthTable;
@@ -425,6 +428,29 @@ public class Circuit implements Printable {
 
 		return Collections.unmodifiableSet(elements);
 	} // end of getElements method
+
+	/**
+	 * Get the elements in the circuit's canonical order: sorted by
+	 * stable id (#165/#166). {@link #getElements()} iterates in hash
+	 * order, which depends on identity hashes and so varies between
+	 * runs and machines; any consumer whose iteration order reaches
+	 * observable output - the simulation event seed (#181), the
+	 * printed page sequence (#182) - must iterate this list instead,
+	 * so the output is a pure function of circuit content.
+	 *
+	 * @return a fresh list of every element, sorted by stable id.
+	 *
+	 * @see jls.PrintPageOrderTest#bookedPagesFollowStableIdOrder()
+	 * @see jls.SimulationSeedOrderTest#stableOrderIsSortedByStableId()
+	 * @see jls.SimulationSeedOrderTest#initSimIsSeededInStableIdOrder()
+	 */
+	public java.util.List<Element> getElementsInStableOrder() {
+
+		java.util.List<Element> ordered =
+				new java.util.ArrayList<Element>(elements);
+		ordered.sort(java.util.Comparator.comparing(Element::getStableId));
+		return ordered;
+	} // end of getElementsInStableOrder method
 
 	/**
 	 * Mark the spatial index stale after a geometry change the incremental
@@ -848,18 +874,15 @@ public class Circuit implements Printable {
 							TRUNCATED_HINT);
 				}
 
-				// get element type and create element; select the
-				// (Circuit) constructor explicitly - getConstructors()
-				// returns constructors in no specified order (issue #55)
+				// get element type and create the element through the
+				// registry (issue #78): the descriptor's factory replaces
+				// the historical Class.forName reflection, so a tag no
+				// longer has to name a class (aliases can preserve
+				// renamed tags, #79) and every non-element class in
+				// jls.elem is simply not a tag
 				String elementType = input.next();
-				Element newElement = null;
-				try {
-					Class<? extends Element> c =
-							Class.forName("jls.elem." + elementType)
-									.asSubclass(Element.class);
-					newElement = c.getConstructor(Circuit.class)
-							.newInstance(this);
-				} catch (ClassNotFoundException ex) {
+				ElementType descriptor = ElementRegistry.forTag(elementType);
+				if (descriptor == null) {
 					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
 							"this version of JLS has no element type "
 									+ "named '" + elementType + "'",
@@ -867,36 +890,18 @@ public class Circuit implements Printable {
 									+ "version of JLS - upgrade JLS, or "
 									+ "remove the unrecognized element "
 									+ "from the file.");
-				} catch (ClassCastException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"'" + elementType + "' is not a circuit "
-									+ "element type",
-							NOT_JLS_HINT);
-				} catch (NoSuchMethodException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"'" + elementType + "' cannot be created "
-									+ "from a save file",
-							NOT_JLS_HINT);
-				} catch (InstantiationException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"element type '" + elementType
-									+ "' could not be created",
-							NOT_JLS_HINT);
-				} catch (IllegalAccessException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"element type '" + elementType
-									+ "' could not be created",
-							NOT_JLS_HINT);
-				} catch (InvocationTargetException ex) {
+				}
+				Element newElement = null;
+				try {
+					newElement = descriptor.create(this);
+				} catch (RuntimeException ex) {
 					// the element's own constructor threw; its message
 					// (never its class name or stack, #58 P6) is the why
-					Throwable cause = ex.getCause() == null ? ex
-							: ex.getCause();
 					return failLoad(LoadError.Category.ELEMENT_ERROR,
 							"creating an element of type '" + elementType
 									+ "' failed"
-									+ (cause.getMessage() == null ? ""
-											: ": " + cause.getMessage()),
+									+ (ex.getMessage() == null ? ""
+											: ": " + ex.getMessage()),
 							"Fix that element's values in the file, or "
 									+ "re-save the circuit from JLS.");
 				}
@@ -1735,8 +1740,13 @@ public class Circuit implements Printable {
 		// add this circuit
 		book.append(this, format);
 
+		// canonical page order (#182): iterating the element HashSet
+		// would order the pages by identity hash, which varies between
+		// runs - two prints of one circuit could page differently
+		List<Element> ordered = getElementsInStableOrder();
+
 		// add state machines
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof StateMachine) {
 				StateMachine sm = (StateMachine) el;
 				book.append(sm, format);
@@ -1747,7 +1757,7 @@ public class Circuit implements Printable {
 		}
 
 		// add truth tables
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof TruthTable) {
 				TruthTable tt = (TruthTable) el;
 				book.append(tt, format);
@@ -1755,7 +1765,7 @@ public class Circuit implements Printable {
 		}
 
 		// add subcircuits
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof SubCircuit) {
 				((SubCircuit) el).getSubCircuit().addToBook(book, format);
 			}

@@ -10,7 +10,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Put {
+public abstract sealed class Put
+		permits Input, Output {
 
 	// properties
 	protected String name;				// name
@@ -237,6 +238,14 @@ public abstract class Put {
 		g.fillOval(x-r,y-r,d,d);
 		g.setColor(inside);
 		g.fillOval(x-r+1,y-r+1,d-2,d-2);
+		if (touching) {
+			// second, color-independent channel (issue #76): an open
+			// ring around the point marks a connection lining up even
+			// when the touch color cannot be told apart
+			g.setColor(JLSInfo.wireZeroColor);
+			int rd = d+4;
+			g.drawOval(x-rd/2,y-rd/2,rd,rd);
+		}
 	} // end of draw method
 	
 	/**

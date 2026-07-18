@@ -15,7 +15,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class InputPin extends Pin implements TriProp {
+public final class InputPin extends Pin implements TriProp {
 	
 	/**
 	 * Create a new input pin.

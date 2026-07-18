@@ -11,6 +11,7 @@ import java.awt.EventQueue;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.print.Book;
@@ -37,12 +38,14 @@ import java.util.Vector;
 
 import javax.print.PrintService;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
@@ -98,6 +101,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private JSplitPane both;
 	private JTabbedPane edits;
 	private Circuit clipboard = new Circuit("clipboard");		// for cut and paste
+	private final UserPrefs prefs = UserPrefs.open();	// persistent user preferences (#76)
 
 	/**
 	 * Start up JLS.
@@ -210,9 +214,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			batchSim.displayOutcome();
 			displayResults(circ,"");
 
-			// print trace if requested
+			// print trace if requested (the AWT print surface lives
+			// GUI-side, outside the headless core - issue #77)
 			if (JLSInfo.printTrace) {
-				batchSim.printTrace(printer);
+				BatchTracePrinter.printTrace(
+						batchSim.getTraceSamples(),printer);
 			}
 
 			// write VCD waveform file if requested (issue #72)
@@ -751,6 +757,72 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of guiSessionRequested method
 
 	/**
+	 * The look-and-feel class name selected by the {@code jls.laf} JVM
+	 * property (issue #153). Unset, blank or {@code metal} keeps the
+	 * recorded "same everywhere" default, the cross-platform (Metal)
+	 * look-and-feel; {@code system} selects the platform's native
+	 * look-and-feel; any other value is taken as the fully qualified
+	 * class name of a {@link javax.swing.LookAndFeel} on the classpath.
+	 * The class-name form is the evaluation seam for third-party looks
+	 * such as FlatLaf: drop the jar on the classpath and name its class,
+	 * no rebuild needed. Package-visible for the headless policy tests.
+	 *
+	 * @return the class name of the selected look-and-feel.
+	 *
+	 * @see jls.LookAndFeelPolicyTest
+	 */
+	static String lookAndFeelClassName() {
+
+		String choice = System.getProperty("jls.laf", "metal").trim();
+		if (choice.isEmpty() || choice.equals("metal")) {
+			return UIManager.getCrossPlatformLookAndFeelClassName();
+		}
+		if (choice.equals("system")) {
+			return UIManager.getSystemLookAndFeelClassName();
+		}
+		return choice;
+	} // end of lookAndFeelClassName method
+
+	/**
+	 * Install the look-and-feel selected by {@code -Djls.laf}. A failing
+	 * explicit selection (misspelled class, jar missing from the
+	 * classpath, look-and-feel unsupported on this platform) is not
+	 * fatal: one {@code jls: warning:} line goes to stderr and the
+	 * cross-platform default is installed instead, so no experiment can
+	 * make JLS unlaunchable. Only a failure of the cross-platform
+	 * default itself reports failure, which the caller treats as fatal
+	 * exactly as before (issue #153). Package-visible for the headless
+	 * policy tests.
+	 *
+	 * @return true if a look-and-feel was installed.
+	 *
+	 * @see jls.LookAndFeelPolicyTest
+	 */
+	static boolean installLookAndFeel() {
+
+		String chosen = lookAndFeelClassName();
+		String fallback = UIManager.getCrossPlatformLookAndFeelClassName();
+		try {
+			UIManager.setLookAndFeel(chosen);
+			return true;
+		}
+		catch (Exception ex) {
+			if (chosen.equals(fallback)) {
+				return false;
+			}
+			System.err.println("jls: warning: can't set look and feel "
+					+ chosen + " (" + ex + "); using the default");
+		}
+		try {
+			UIManager.setLookAndFeel(fallback);
+			return true;
+		}
+		catch (Exception ex) {
+			return false;
+		}
+	} // end of installLookAndFeel method
+
+	/**
 	 * Act on one parsed flag.
 	 *
 	 * @param flag The flag name (guaranteed present in the flag table).
@@ -923,6 +995,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
 		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
+		text.append("JVM property -Djls.laf=metal|system|<class> selects the Swing look-and-feel (default metal)\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
@@ -933,15 +1006,18 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	public JLSStart() {
 
-		// make it look the same everywhere (especially MAC's).
-		try {
-			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-		}
-		catch (Exception ex) {
+		// install the selected look-and-feel: the recorded "same
+		// everywhere" cross-platform default, unless -Djls.laf picks
+		// another one (issue #153)
+		if (!installLookAndFeel()) {
 
 			TellUser.error(this, "Can't set cross platform look and feel", "Error");
 			System.exit(1);
 		}
+
+		// apply persisted user preferences (theme, colors) before any
+		// editor window exists (issue #76)
+		prefs.applyStartup();
 
 		// save reference for exceptions
 		exHandler.setJLS(this);
@@ -1036,6 +1112,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 			circ = sub.getCircuit();
 		}
 		interSim.setCircuit(circ);
+
+		// the newly selected editor's canvas takes keyboard focus, so
+		// canvas shortcuts work immediately without mousing over it
+		// (issue #75: focus follows tab selection and clicks, not hover)
+		ed.focusOnCanvas();
 	} // end of stateChanged method
 
 	/**
@@ -1077,11 +1158,20 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	public JMenu fileMenu() {
 
+		// menu accelerators are registered by Swing in the window's
+		// WHEN_IN_FOCUSED_WINDOW map, so every file operation works no
+		// matter which component has focus (issue #75); the platform
+		// modifier and the mnemonic come from MenuAcceleratorPolicy so
+		// the scheme is unit-testable headless
+		String osName = System.getProperty("os.name");
 		JMenu menu = new JMenu("File");
+		menu.setMnemonic(MenuAcceleratorPolicy.fileMenuMnemonic());
 
 		// new
 		JMenuItem newc = new JMenuItem("New");
 		newc.setToolTipText("create a new circuit");
+		newc.setAccelerator(MenuAcceleratorPolicy.newCircuit(osName));
+		newc.setMnemonic(KeyEvent.VK_N);
 		menu.add(newc);
 		newc.addActionListener(new ActionListener() {
 			/**
@@ -1098,6 +1188,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// open
 		JMenuItem open = new JMenuItem("Open");
 		open.setToolTipText("open an existing circuit file");
+		open.setAccelerator(MenuAcceleratorPolicy.open(osName));
+		open.setMnemonic(KeyEvent.VK_O);
 		menu.add(open);
 		open.addActionListener(new ActionListener() {
 			/**
@@ -1115,6 +1207,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// save
 		JMenuItem saveItem = new JMenuItem("Save");
 		saveItem.setToolTipText("save the currently visible circuit");
+		saveItem.setAccelerator(MenuAcceleratorPolicy.save(osName));
+		saveItem.setMnemonic(KeyEvent.VK_S);
 		menu.add(saveItem);
 		saveItem.addActionListener(new ActionListener() {
 			/**
@@ -1134,6 +1228,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// save as
 		JMenuItem saveAs = new JMenuItem("Save As");
 		saveAs.setToolTipText("save the currently visible circuit under a new name");
+		saveAs.setAccelerator(MenuAcceleratorPolicy.saveAs(osName));
+		saveAs.setMnemonic(KeyEvent.VK_A);
 		menu.add(saveAs);
 		saveAs.addActionListener(new ActionListener() {
 			/**
@@ -1152,6 +1248,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// print menu item
 		JMenu print = new JMenu("Print...");
+		print.setMnemonic(KeyEvent.VK_P);
 		JMenuItem printAll = new JMenuItem("Entire circuit");
 		printAll.setToolTipText("print the circuit and all subcircuits");
 		JMenuItem justThis = new JMenuItem("Just visible window");
@@ -1187,6 +1284,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// import from file menu item
 		JMenuItem importItem = new JMenuItem("Import");
 		importItem.setToolTipText("create a subcircuit from a circuit file");
+		importItem.setMnemonic(KeyEvent.VK_I);
 		menu.add(importItem);
 		importItem.addActionListener(new ActionListener() {
 			/**
@@ -1208,6 +1306,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// export circuit image menu item
 		JMenuItem exportItem = new JMenuItem("Export Image");
 		exportItem.setToolTipText("create a JPEG image file of the circuit");
+		exportItem.setMnemonic(KeyEvent.VK_E);
 		menu.add(exportItem);
 		exportItem.addActionListener(new ActionListener() {
 			/**
@@ -1229,8 +1328,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		// close menu item
+		// no accelerator on Close yet: the platform-conventional Cmd/Ctrl+W
+		// still starts a wire (or toggles a watch) when the canvas has
+		// focus, and issue #75's adjudication keeps that old binding as an
+		// alias, so advertising W here would promise a close the canvas
+		// would intercept; the wire-start rebinding owns that migration
 		JMenuItem close = new JMenuItem("Close");
 		close.setToolTipText("close the currently visible circuit");
+		close.setMnemonic(KeyEvent.VK_C);
 		menu.add(close);
 		close.addActionListener(new ActionListener() {
 			/**
@@ -1248,6 +1353,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// exit menu item
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.setToolTipText("terminate JLS");
+		exit.setAccelerator(MenuAcceleratorPolicy.exit(osName));
+		exit.setMnemonic(KeyEvent.VK_X);
 		menu.add(exit);
 		exit.addActionListener(new ActionListener() {
 			/**
@@ -1272,19 +1379,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu simMenu() {
 
 		JMenu menu = new JMenu("Simulator");
+		menu.setMnemonic(MenuAcceleratorPolicy.simulatorMenuMnemonic());
 		JMenuItem show = new JMenuItem("Show Simulator Window");
 		show.setToolTipText("make simulator window appear");
+		show.setMnemonic(KeyEvent.VK_S);
 		menu.add(show);
 		JMenuItem hide = new JMenuItem("Hide Simulator Window");
 		hide.setToolTipText("make simulator window disappear");
+		hide.setMnemonic(KeyEvent.VK_H);
 		menu.add(hide);
 		JMenuItem run = new JMenuItem("Run (in background)");
 		run.setToolTipText("run simulator, don't show window");
 		run.setAccelerator(KeyStroke.getKeyStroke("F5"));
+		run.setMnemonic(KeyEvent.VK_R);
 		menu.add(run);
 		JMenuItem stop = new JMenuItem("Stop (background simulator)");
 		stop.setToolTipText("stop runaway simulator");
 		stop.setAccelerator(KeyStroke.getKeyStroke("F7"));
+		stop.setMnemonic(KeyEvent.VK_T);
 		menu.add(stop);
 
 		run.addActionListener(new ActionListener() {
@@ -1357,8 +1469,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu globalMenu() {
 
 		JMenu menu = new JMenu("Global");
+		menu.setMnemonic(MenuAcceleratorPolicy.globalMenuMnemonic());
 
 		JMenuItem resetDelays = new JMenuItem("Reset all propagation delays");
+		resetDelays.setMnemonic(KeyEvent.VK_R);
 		menu.add(resetDelays);
 		resetDelays.addActionListener(new ActionListener() {
 			/**
@@ -1378,6 +1492,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem removeProbes = new JMenuItem("Remove all probes");
+		removeProbes.setMnemonic(KeyEvent.VK_P);
 		menu.add(removeProbes);
 		removeProbes.addActionListener(new ActionListener() {
 			/**
@@ -1397,6 +1512,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem clearWatches = new JMenuItem("Unwatch all elements");
+		clearWatches.setMnemonic(KeyEvent.VK_U);
 		menu.add(clearWatches);
 		clearWatches.addActionListener(new ActionListener() {
 			/**
@@ -1416,6 +1532,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem expand = new JMenuItem("Expand circuit drawing area by 10%");
+		expand.setMnemonic(KeyEvent.VK_E);
 		menu.add(expand);
 		expand.addActionListener(new ActionListener() {
 			/**
@@ -1433,7 +1550,33 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		});
 
+		JMenu scheme = new JMenu("Color scheme");
+		menu.add(scheme);
+		ButtonGroup schemeGroup = new ButtonGroup();
+		for (Theme theme : Theme.all()) {
+			JRadioButtonMenuItem item =
+					new JRadioButtonMenuItem(theme.name());
+			schemeGroup.add(item);
+			scheme.add(item);
+			item.setSelected(theme == Theme.active());
+			item.addActionListener(new ActionListener() {
+				/**
+				 * Apply and persist the chosen color scheme, then
+				 * repaint every open editor so it takes effect at once.
+				 *
+				 * @param event Unused.
+				 */
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					theme.apply();
+					prefs.rememberTheme(theme.name());
+					refreshEditorColors();
+				}
+			});
+		}
+
 		JMenuItem gridCol = new JMenuItem("Change editor window grid color");
+		gridCol.setMnemonic(KeyEvent.VK_G);
 		menu.add(gridCol);
 		gridCol.addActionListener(new ActionListener() {
 			/**
@@ -1445,8 +1588,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.gridColor);
-				if (newColor != null)
+				if (newColor != null) {
 					JLSInfo.gridColor = newColor;
+					prefs.rememberGridColor(newColor);
+				}
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
 					ed.repaint();
@@ -1455,6 +1600,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		JMenuItem editBkg = new JMenuItem("Change editor window background color");
+		editBkg.setMnemonic(KeyEvent.VK_B);
 		menu.add(editBkg);
 		editBkg.addActionListener(new ActionListener() {
 			/**
@@ -1466,8 +1612,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.backgroundColor);
-				if (newColor != null)
+				if (newColor != null) {
 					JLSInfo.backgroundColor = newColor;
+					prefs.rememberBackgroundColor(newColor);
+				}
 				Editor ed = (Editor)edits.getSelectedComponent();
 				if (ed != null) {
 					ed.changeBackgroundColor();
@@ -1480,6 +1628,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of globalMenu method
 
 	/**
+	 * Push the active theme's colors into every open editor tab and
+	 * repaint, so a color scheme change takes effect immediately.
+	 */
+	private void refreshEditorColors() {
+
+		for (int i = 0; i < edits.getTabCount(); i += 1) {
+			Component c = edits.getComponentAt(i);
+			if (c instanceof Editor) {
+				((Editor)c).changeBackgroundColor();
+				c.repaint();
+			}
+		}
+	} // end of refreshEditorColors method
+
+	/**
 	 * Create help menu.
 	 * 
 	 * @return the menu.
@@ -1487,9 +1650,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public JMenu helpMenu() {
 
 		JMenu help = new JMenu("Help");
+		help.setMnemonic(MenuAcceleratorPolicy.helpMenuMnemonic());
 
 		// set up about
 		JMenuItem about = new JMenuItem("About");
+		about.setMnemonic(KeyEvent.VK_A);
 		help.add(about);
 		about.addActionListener(new ActionListener() {
 			/**
@@ -1505,6 +1670,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// set up tutorial
 		JMenu tutorial = new JMenu("Tutorial");
+		tutorial.setMnemonic(KeyEvent.VK_T);
 		help.add(tutorial);
 		JMenuItem tutorial1 = new JMenuItem("Introduction");
 		String tip1 = "<html>This tutorial demonstrates the " +
@@ -1522,7 +1688,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial1.html",false);
+				new Tutorial(JLSInfo.frame,0);
 			}
 		});
 		JMenuItem tutorial2 = new JMenuItem("4-Bit Counter");
@@ -1538,7 +1704,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial2.html",false);
+				new Tutorial(JLSInfo.frame,1);
 			}
 		});
 		JMenuItem tutorial3 = new JMenuItem("Full Adder");
@@ -1553,7 +1719,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial3.html",false);
+				new Tutorial(JLSInfo.frame,2);
 			}
 		});
 		JMenuItem tutorial4 = new JMenuItem("Sign Extension");
@@ -1569,12 +1735,13 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				new Tutorial(JLSInfo.frame,"tutorial4.html",false);
+				new Tutorial(JLSInfo.frame,3);
 			}
 		});
 
 		// set up help contents viewer
 		JMenuItem contents = new JMenuItem("Contents");
+		contents.setMnemonic(KeyEvent.VK_C);
 		help.add(contents);
 		contents.addActionListener(new ActionListener() {
 			/**

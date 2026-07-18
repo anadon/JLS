@@ -9,7 +9,8 @@ import jls.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class DisplayElement extends Element {
+public abstract sealed class DisplayElement extends Element
+		permits Text {
 	
 	/**
 	 * Create a new display element within the given circuit.

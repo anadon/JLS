@@ -14,7 +14,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Stop extends LogicElement {
+public final class Stop extends LogicElement {
 
 	/**
 	 * Create a new stop element.

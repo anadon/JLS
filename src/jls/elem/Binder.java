@@ -21,7 +21,7 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public class Binder extends Group implements TriProp {
+public final class Binder extends Group implements TriProp {
 	
 	
 	/**

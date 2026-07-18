@@ -14,7 +14,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class NandGate extends Gate {
+public final class NandGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
 	private static final Kind KIND =

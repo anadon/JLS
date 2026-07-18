@@ -151,4 +151,99 @@ class DeterministicSaveTest {
 		assertNotEquals(before, first.stateHash(),
 				"a moved element must change the state hash");
 	}
+
+	// ---------------------------------------------------------------
+	// State machines (issue #180): StateMachine.save and State.save
+	// used to iterate HashSets whose members override no hashCode, so
+	// state and transition blocks were emitted in identity-hash order -
+	// per-run-variable bytes for the same machine. The fixture has
+	// three states declared out of name order, each with a conditional
+	// and an "else" transition declared out of canonical order, so any
+	// regression to set-order iteration shows up as a byte difference
+	// or a non-canonical block sequence.
+	// ---------------------------------------------------------------
+
+	/** A circuit whose one element is a three-state machine. */
+	private static String stateMachineFixtureText() {
+		StringBuilder text = new StringBuilder("CIRCUIT smdet\n")
+				.append("ELEMENT StateMachine\n")
+				.append(" int id 0\n int x 240\n int y 360\n")
+				.append(" int width 96\n int height 96\n")
+				.append(" String name \"sm0\"\n int delay 5\n int trig 1\n");
+		// declared SB, SA, SC - not name order - to expose ordering
+		appendState(text, "SB", 2, "SA", 140);
+		appendState(text, "SA", 3, "SC", 40);
+		appendState(text, "SC", 1, "SB", 240);
+		return text.append("END\nENDCIRCUIT\n").toString();
+	}
+
+	/** One state: output z, a conditional transition, an else self-loop. */
+	private static void appendState(StringBuilder text, String name,
+			long zValue, String next, int x) {
+		text.append(" String state \"").append(name).append("\"\n")
+				.append("  int x ").append(x).append("\n  int y 40\n")
+				.append("  int diameter 40\n  int init ")
+				.append(name.equals("SA") ? 1 : 0).append('\n')
+				.append("  String output \"z\"\n   long value ").append(zValue)
+				.append("\n   int bits 2\n")
+				// conditional before else: canonical save order is the
+				// reverse (unconditional, else, then conditionals)
+				.append("  String trans \"en\"\n   int eq 0\n   int value 1\n")
+				.append("   int bits 1\n   String next \"").append(next)
+				.append("\"\n")
+				.append("  String trans \"else\"\n   String next \"")
+				.append(name).append("\"\n");
+	}
+
+	@Test
+	void twoLoadsOfAStateMachineSaveByteIdentically() throws Exception {
+		String text = stateMachineFixtureText();
+		assertEquals(save(load(text)), save(load(text)),
+				"two load instances of the same state machine must save "
+						+ "byte-identically, states and transitions included");
+	}
+
+	@Test
+	void stateMachineSaveLoadSaveIsAByteFixedPoint() throws Exception {
+		String savedOnce = save(load(stateMachineFixtureText()));
+		String savedTwice = save(load(savedOnce));
+		assertEquals(savedOnce, savedTwice,
+				"save -> load -> save of a state machine must be "
+						+ "byte-identical");
+	}
+
+	@Test
+	void stateMachineSavesStatesInNameOrder() throws Exception {
+		String saved = save(load(stateMachineFixtureText()));
+		int sa = saved.indexOf(" String state \"SA\"");
+		int sb = saved.indexOf(" String state \"SB\"");
+		int sc = saved.indexOf(" String state \"SC\"");
+		assertTrue(sa >= 0 && sb >= 0 && sc >= 0,
+				"all three states must be saved");
+		assertTrue(sa < sb && sb < sc,
+				"state blocks must be saved in name order, got offsets SA="
+						+ sa + " SB=" + sb + " SC=" + sc);
+
+		// within each state block, "else" precedes the conditional
+		int[] starts = {sa, sb, sc};
+		int[] ends = {sb, sc, saved.length()};
+		for (int i = 0; i < starts.length; i++) {
+			String block = saved.substring(starts[i], ends[i]);
+			int elseAt = block.indexOf("String trans \"else\"");
+			int condAt = block.indexOf("String trans \"en\"");
+			assertTrue(elseAt >= 0 && condAt >= 0,
+					"each state must save both transitions");
+			assertTrue(elseAt < condAt,
+					"canonical transition order is else before "
+							+ "conditionals, violated in block " + i);
+		}
+	}
+
+	@Test
+	void stateMachineStateHashIsContentDetermined() throws Exception {
+		String text = stateMachineFixtureText();
+		assertEquals(load(text).stateHash(), load(text).stateHash(),
+				"identical state-machine content must hash identically "
+						+ "across instances");
+	}
 }

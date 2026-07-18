@@ -1,7 +1,6 @@
 package jls.elem;
 
 import jls.*;
-import jls.elem.Gate.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
 import java.awt.*;
@@ -20,7 +19,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class JumpStart extends LogicElement implements TriProp {
+public final class JumpStart extends LogicElement implements TriProp {
 	
 	// default value
 	private static final int defaultBits = 1; 

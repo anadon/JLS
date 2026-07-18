@@ -71,6 +71,18 @@
       <artifactId>org.jfree.svg</artifactId>
       <version>5.0.7</version>
     </dependency>
+    <!-- JSpecify 1.0 nullness annotations (issue #93): the type-use
+         annotations (@NullMarked/@Nullable) that make nullness a
+         compiler-checked contract, enforced by NullAway inside the
+         Error Prone profile below. Annotation-only artifact, zero
+         transitive dependencies; needed at compile scope because the
+         annotations appear in source that the default build also
+         compiles. -->
+    <dependency>
+      <groupId>org.jspecify</groupId>
+      <artifactId>jspecify</artifactId>
+      <version>1.0.0</version>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -131,10 +143,49 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.15.0</version>
         <configuration>
+          <!-- fork: Error Prone needs the add-exports javac-internal
+               access flags below on modern JDKs (issue #93) -->
+          <fork>true</fork>
           <compilerArgs>
             <arg>-Xlint:deprecation,removal,unchecked</arg>
             <arg>-Werror</arg>
+            <arg>-XDcompilePolicy=simple</arg>
+            <arg>--should-stop=ifError=FLOW</arg>
+            <!-- Nullness as a compile-time contract (issue #93): Error
+                 Prone runs on the default build with every check
+                 disabled EXCEPT NullAway, so the broader Error Prone
+                 catalog stays an opt-in trial (-Perrorprone, issue
+                 #157) while nullness gates every build. OnlyNullMarked:
+                 enforcement follows @NullMarked package-info
+                 declarations, package by package; a marked package
+                 never un-marks. JSpecifyMode gives full JSpecify 1.0
+                 semantics (type-use positions, generics) on JDK 25. -->
+            <arg>-Xplugin:ErrorProne -XepDisableAllChecks -Xep:NullAway:ERROR -XepOpt:NullAway:OnlyNullMarked=true -XepOpt:NullAway:JSpecifyMode=true</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+            <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+            <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+            <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
           </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.google.errorprone</groupId>
+              <artifactId>error_prone_core</artifactId>
+              <version>2.50.0</version>
+            </path>
+            <path>
+              <groupId>com.uber.nullaway</groupId>
+              <artifactId>nullaway</artifactId>
+              <version>0.13.7</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>
@@ -507,9 +558,11 @@
          patterns complementing SpotBugs' bytecode pass. Run with
            mvn -Perrorprone clean compile
          Deliberately a profile, not the default build: the default
-         build is -Werror and adopting Error Prone there needs the
-         baseline-or-fix pass recorded in the issue. NullAway (#93)
-         would ride this same plumbing. -->
+         build is -Werror and adopting the full Error Prone catalog
+         there needs the baseline-or-fix pass recorded in the issue.
+         NullAway (#93) now rides the default build (with every other
+         check disabled there); this profile additionally enables the
+         full check catalog, NullAway included. -->
     <profile>
       <id>errorprone</id>
       <build>
@@ -526,7 +579,14 @@
                 <arg>-Xlint:deprecation,removal,unchecked</arg>
                 <arg>-XDcompilePolicy=simple</arg>
                 <arg>--should-stop=ifError=FLOW</arg>
-                <arg>-Xplugin:ErrorProne</arg>
+                <!-- NullAway (issue #93): nullness enforced as an ERROR,
+                     but only inside packages that declare @NullMarked on
+                     their package-info (OnlyNullMarked mode) - the
+                     ratchet is the set of marked packages, and a marked
+                     package never un-marks. JSpecifyMode gives full
+                     JSpecify semantics (type-use annotation positions,
+                     generics) on the JDK 25 toolchain. -->
+                <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:OnlyNullMarked=true -XepOpt:NullAway:JSpecifyMode=true</arg>
                 <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
                 <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
                 <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
@@ -545,6 +605,11 @@
                   <groupId>com.google.errorprone</groupId>
                   <artifactId>error_prone_core</artifactId>
                   <version>2.50.0</version>
+                </path>
+                <path>
+                  <groupId>com.uber.nullaway</groupId>
+                  <artifactId>nullaway</artifactId>
+                  <version>0.13.7</version>
                 </path>
               </annotationProcessorPaths>
             </configuration>

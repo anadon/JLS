@@ -1,25 +1,33 @@
 name: CI
 
 # push is limited to master so a branch with an open PR builds once,
-# not twice (issue #47)
+# not twice (issue #47); the nightly cron runs ONLY the gui-wayland lane
+# (issue #101 P3: its 20-consecutive-runs stability record accrues on a
+# fixed cadence, independent of push traffic - every other job skips on
+# schedule events)
 on:
   push:
     branches: ["master"]
   pull_request:
+  schedule:
+    - cron: "17 4 * * *"
 
 # least-privilege token: the build only reads the repo (issue #68)
 permissions:
   contents: read
 
 # a new push to the same branch/PR cancels the still-running build of the
-# old head; release.yml deliberately has no concurrency group (issue #47)
+# old head; release.yml deliberately has no concurrency group (issue #47).
+# The nightly gets its own group so a cron firing never cancels (or is
+# cancelled by) an in-flight master build
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'schedule' && 'nightly' || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     name: Build (JDK ${{ matrix.java }})
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -105,6 +113,7 @@ jobs:
   # required once 20 consecutive runs show at most one failure).
   windows:
     name: Build (Windows, JDK 25)
+    if: github.event_name != 'schedule'
     runs-on: windows-latest
     continue-on-error: true
     steps:
@@ -128,6 +137,7 @@ jobs:
   # proof's modelling assumptions to the Java implementation.
   proofs:
     name: Verify Agda proofs
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -146,6 +156,11 @@ jobs:
   # JetBrains Runtime's experimental WLToolkit (Project Wakefield)
   # against a headless sway compositor - no X11 anywhere - and captures
   # a screenshot, the compositor tree, and JLS's stderr as artifacts.
+  # The rig first maps a minimal HelloSwingControl frame on the same
+  # runtime/compositor, so a failure is automatically classified as
+  # JLS-side (exit 1) or upstream JBR/sway (exit 2) per #101 section 9.
+  # Runs on every event including the nightly cron (which runs ONLY this
+  # job) so the #101 P3 stability record accrues daily.
   # continue-on-error while the lane stabilizes (#101 H2/P3: it becomes
   # a required check once 20 consecutive runs show at most one failure).
   gui-wayland:
@@ -165,7 +180,17 @@ jobs:
       #   curl -fsSL <JBR_URL> | sha256sum
       # Until then this placeholder fails the checksum on purpose and
       # the job skips with a notice rather than running unverified bits.
+      # (Re-verified 2026-07-18: cache-redirector.jetbrains.com is still
+      # an egress-policy denial from the authoring sandbox, and the hash
+      # is not published anywhere else reachable - GitHub release pages
+      # only link the CDN-hosted .checksum file.)
       JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
+      # ---- P2 pixel gate (#101) --------------------------------------
+      # 0 = record the AE metric without gating. TODO(maintainer): after
+      # the first green run, set this to ~10% of the observed AE value
+      # from the pixel-diff.txt artifact (decision recorded on #101:
+      # calibrate from measurement, not the blind 1% guess).
+      PIXEL_DIFF_MIN: "0"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -239,11 +264,25 @@ jobs:
       - name: Submit dependency graph
         uses: advanced-security/maven-dependency-submission-action@b275d12641ac2d2108b2cbb7598b154ad2f2cee8 # v5.0.0
 
-  # reproducible-builds check (#44): the pom pins
-  # project.build.outputTimestamp, so building the same commit twice must
-  # produce byte-identical jars — compare SHA256 of two clean builds
+  # Reproducible-builds gate (#44, upgraded by #185): the pom pins
+  # project.build.outputTimestamp, so the jar and BOM must be
+  # byte-identical across rebuilds.  Two checks, in escalating order:
+  #   1. same-runner pre-filter (#44): build twice back-to-back and
+  #      compare — catches wall-clock/ordering/randomness regressions
+  #      cheaply.
+  #   2. independent perturbed rebuild (#185): rebuild the same commit
+  #      from a differently-named workspace path with a shifted
+  #      timezone, a different locale, and a restrictive umask — the
+  #      environment axes the Reproducible Builds definition's "any
+  #      party ... build environment" clause covers.  Only the JDK
+  #      build is held fixed (identical bytecode requires the same
+  #      javac build; that constraint is recorded in the released
+  #      .buildinfo and docs/reproducibility.md, not hidden).
+  # A mismatch fails the job and uploads both jars so diffoscope can
+  # localize the offending input.
   reproducibility:
     name: Reproducible build check
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -255,14 +294,95 @@ jobs:
           java-version: 25
           cache: maven
 
-      - name: Build twice and compare jar checksums
+      - name: Build reference jar and BOM
         run: |
           mvn -B -DskipTests package
-          sha256sum target/jls-*.jar | sed 's|target/||' > first.sha256
+          ( cd target && sha256sum jls-*.jar bom.json ) > reference.sha256
+          mkdir -p "$RUNNER_TEMP/reference"
+          cp target/jls-*.jar target/bom.json "$RUNNER_TEMP/reference/"
+          echo "reference build:"; cat reference.sha256
+
+      - name: Same-runner rebuild (pre-filter, #44)
+        run: |
           rm -rf target
           mvn -B -DskipTests package
-          ( cd target && sha256sum jls-*.jar ) > second.sha256
+          ( cd target && sha256sum jls-*.jar bom.json ) > second.sha256
+          echo "second build:"; cat second.sha256
+          diff reference.sha256 second.sha256 \
+            || { echo "::error::build is not reproducible: checksums differ between two builds of the same commit on the same runner"; exit 1; }
+
+      - name: Independent perturbed rebuild (#185)
+        id: perturbed
+        run: |
+          # a deliberately different workspace path (build-path
+          # independence), plus shifted TZ, C locale instead of the
+          # runner's C.UTF-8, and umask 077 instead of the default 022
+          PERTURBED="$RUNNER_TEMP/independent-rebuild/JLS-Perturbed-Workspace"
+          mkdir -p "$PERTURBED"
+          git archive HEAD | tar -x -C "$PERTURBED"
+          cd "$PERTURBED"
+          umask 077
+          TZ=Pacific/Kiritimati LC_ALL=C LANG=C mvn -B -DskipTests package
+          ( cd target && sha256sum jls-*.jar bom.json ) > perturbed.sha256
+          echo "perturbed rebuild:"; cat perturbed.sha256
+          echo "reference:";        cat "$GITHUB_WORKSPACE/reference.sha256"
+          diff "$GITHUB_WORKSPACE/reference.sha256" perturbed.sha256 \
+            || { cp target/jls-*.jar "$RUNNER_TEMP/reference/perturbed-$(cd target && ls jls-*.jar)"; \
+                 echo "::error::build is not environment-independent: perturbed rebuild (path/TZ/locale/umask) differs from the reference — run diffoscope on the uploaded jars"; exit 1; }
+
+      # only populated with a second jar when the perturbed rebuild
+      # diverged; diffoscope on the pair names the offending input
+      - name: Upload jars for diffoscope
+        if: failure() && steps.perturbed.outcome == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reproducibility-diverged-jars
+          path: ${{ runner.temp }}/reference/
+
+  # Linux installer reproducibility gate (#189, parent #188): the deb, rpm,
+  # and AppImage must each be byte-identical across two builds of one
+  # commit.  Mirrors the #44 jar gate above; the jar itself is covered
+  # there, so the two installer builds share one jar via JLS_SKIP_BUILD and
+  # this job isolates the jlink/jpackage/appimagetool stages.  Installing
+  # rpm makes rpmbuild present, so the script's rpm leg (which is skipped
+  # when rpmbuild is absent) always runs — and is therefore gated — here.
+  installer-reproducibility:
+    name: Linux installer reproducibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # fakeroot + dpkg-deb for --type deb, rpm for --type rpm, and
+      # diffoscope to attribute any mismatch before failing
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm diffoscope-minimal
+
+      - name: Build installers twice and compare checksums
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && sha256sum * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && sha256sum * ) > second.sha256
           echo "first build:";  cat first.sha256
           echo "second build:"; cat second.sha256
-          diff first.sha256 second.sha256 \
-            || { echo "::error::build is not reproducible: jar checksums differ between two builds of the same commit"; exit 1; }
+          diff first.sha256 second.sha256 || {
+            for f in first-dist/*; do
+              echo "==> diffoscope $(basename "$f")"
+              diffoscope --max-text-report-size 500000 \
+                "$f" "target/installer/dist/$(basename "$f")" || true
+            done
+            echo "::error::Linux installers are not reproducible: checksums differ between two builds of the same commit"
+            exit 1
+          }

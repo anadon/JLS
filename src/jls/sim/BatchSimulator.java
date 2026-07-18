@@ -2,42 +2,34 @@ package jls.sim;
 
 import jls.*;
 import jls.elem.*;
-import jls.edit.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-import java.math.*;
-import javax.print.PrintService;
-import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Event driven circuit simulator.
+ *
+ * Headless by construction (issue #77): this class must not import
+ * AWT, Swing, or {@code jls.edit} - the HeadlessCoreRatchetTest
+ * enforces it. Trace printing, the one AWT concern it used to own,
+ * lives GUI-side in {@link jls.BatchTracePrinter} consuming
+ * {@link #getTraceSamples}.
  *
  * @author David A. Poplawski
  */
 public class BatchSimulator extends Simulator {
 
-	// for printing traces
-	/**
-	 * One recorded sample in a watched element's trace: the value the
-	 * element held starting at the given simulation time. The BitSet
-	 * width is the element's bit count plus one, with the extra top bit
-	 * set to mark a HiZ (undriven) value.
-	 */
-	private static class TrEvent {
-		public long time;
-		public BitSet value;
-	}
-	private Map<LogicElement,LinkedList<TrEvent>> eventTrace =
-		new HashMap<LogicElement,LinkedList<TrEvent>>();
+	/** Per watched element, its recorded samples in time order. */
+	private Map<LogicElement,List<TraceSample>> eventTrace =
+		new HashMap<LogicElement,List<TraceSample>>();
 
-	// VCD export (issue #72): the file to write, or null for no export.
-	// A non-null value enables trace accumulation in afterEvent even
-	// when the -r printer flag (JLSInfo.printTrace) is off.
-	private String vcdFileName = null;
+	/**
+	 * VCD export (issue #72): the file to write, or null for no export.
+	 * A non-null value enables trace accumulation in afterEvent even
+	 * when the -r printer flag (JLSInfo.printTrace) is off.
+	 */
+	private @Nullable String vcdFileName = null;
 
 	/**
 	 * Create a new Simulator object.
@@ -62,8 +54,6 @@ public class BatchSimulator extends Simulator {
 	 */
 	public BatchSimulator() {
 
-		// save a reference to itself
-		me = this;
 	} // end of constructor
 
 	/**
@@ -113,7 +103,7 @@ public class BatchSimulator extends Simulator {
 		initSimulation();
 
 		// find watched elements and set up trace map
-		findWatched(circuit);
+		findWatched(circuit());
 
 		// run the shared event loop (tracing happens in afterEvent)
 		runEventLoop();
@@ -140,7 +130,12 @@ public class BatchSimulator extends Simulator {
 
 			// get the event trace for this element,
 			// or create one if none yet
-			LinkedList<TrEvent> events = eventTrace.get(el);
+			// findWatched registered every watched element with a time-0
+			// entry before the event loop started, so an element without
+			// one has no trace to extend (issue #93)
+			List<TraceSample> events = eventTrace.get(el);
+			if (events == null)
+				return;
 
 			// create bitset for HiZ
 			BitSet off = new BitSet(el.getBits()+1);
@@ -155,14 +150,11 @@ public class BatchSimulator extends Simulator {
 
 			// add an event to the end of the event list
 			// (but not if the same value)
-			TrEvent prev = events.getLast();
-			if (!prev.value.equals(current)) {
+			TraceSample prev = events.getLast();
+			if (!prev.value().equals(current)) {
 
 				// add only if different
-				TrEvent p = new TrEvent();
-				p.time = event.getTime();
-				p.value = current;
-				events.add(p);
+				events.add(new TraceSample(event.getTime(),current));
 			}
 		}
 	} // end of afterEvent method
@@ -178,21 +170,23 @@ public class BatchSimulator extends Simulator {
 	public void addTestGen() {
 
 		// create test signal element if necessary
-		if (testFileName != null) {
-			TestGen gen = new TestGen(circuit);
-			circuit.addElement(gen);
-			gen.setFile(testFileName);
-			
+		String testFile = testFileName;
+		if (testFile != null) {
+			Circuit circ = circuit();
+			TestGen gen = new TestGen(circ);
+			circ.addElement(gen);
+			gen.setFile(testFile);
+
 			// remove any signal generators from this circuit
 			// (signal generators in subcircuits will disable themselves)
 			Set<Element> gens = new HashSet<Element>();
-			for (Element el : circuit.getElements()) {
+			for (Element el : circ.getElements()) {
 				if (el instanceof SigGen) {
 					gens.add(el);
 				}
 			}
 			for (Element el : gens) {
-				circuit.remove(el);
+				circ.remove(el);
 			}
 		}
 	} // end of addTestGen method
@@ -212,265 +206,37 @@ public class BatchSimulator extends Simulator {
 			}
 			else if (el.isWatched()) {
 				LogicElement lel = (LogicElement)el;
-				LinkedList<TrEvent> events = new LinkedList<TrEvent>();
-				TrEvent event = new TrEvent();
-				event.time = 0;
-				event.value = lel.getCurrentValue();
-				if (event.value == null) {
-					event.value = new BitSet(lel.getBits()+1);
-					event.value.set(lel.getBits());
+				List<TraceSample> events = new LinkedList<TraceSample>();
+				BitSet value = lel.getCurrentValue();
+				if (value == null) {
+					value = new BitSet(lel.getBits()+1);
+					value.set(lel.getBits());
 				}
-				events.add(event);
+				events.add(new TraceSample(0,value));
 				eventTrace.put(lel,events);
 			}
 		}
 	} // end of findWatched method
 
 	/**
-	 * Print trace.
-	 * 
-	 * @param printer The name of the printer to print to.
+	 * The recorded traces of every watched element, for consumers such
+	 * as the GUI-side trace printer ({@link jls.BatchTracePrinter}).
+	 * Each element's samples are ordered oldest first, starting with a
+	 * time-0 sample (findWatched guarantees it), with HiZ values
+	 * encoded as the marker BitSet described in {@link TraceSample}.
+	 *
+	 * Traces accumulate only when a consumer was enabled before runSim
+	 * (the -r printer flag or a VCD file).
+	 *
+	 * @return a read-only view of the trace map.
+	 *
+	 * @see jls.BatchTracePrinterTest#traceSamplesRecordTheWatchedRun()
+	 * @see jls.BatchTracePrinterTest#tracePrintableRendersTheRecordedSamples()
 	 */
-	public void printTrace(String printer) {
+	public Map<LogicElement,List<TraceSample>> getTraceSamples() {
 
-		// set up printer job
-		PrinterJob job = PrinterJob.getPrinterJob();
-		PrintService [] services = job.lookupPrintServices();
-		PrintService want = null;
-		if (printer == null) {
-			System.out.println("no printer specified, use -p");
-			return;
-		}
-		for (PrintService s : services) {
-			if (s.getName().equals(printer)) {
-				want = s;
-			}
-		}
-		if (want == null) {
-			System.out.println(printer + " is an invalid printer");
-			System.exit(1);
-		}
-		try {
-			job.setPrintService(want);
-		}
-		catch (PrinterException ex) {
-			System.out.println(printer + " is an invalid printer");
-		}
-		PageFormat format = job.defaultPage();
-		format.setOrientation(PageFormat.LANDSCAPE);
-
-		// printable object to do the work
-		Printable pr = new Printable() {
-
-			/**
-			 * Render the accumulated waveform traces onto the print page.
-			 *
-			 * @param g The graphics context to draw into.
-			 * @param format The page geometry.
-			 * @param pagenum The zero-based page number to render.
-			 *
-			 * @return PAGE_EXISTS if drawn, NO_SUCH_PAGE past the last page.
-			 */
-			@Override
-			public int print(Graphics g, PageFormat format, int pagenum) {
-
-				int HEIGHT = 40;
-
-				if (pagenum > 0) return Printable.NO_SUCH_PAGE;
-				Graphics2D gg = (Graphics2D)g;
-				gg.translate(format.getImageableX(),format.getImageableY());
-				double pageWidth = format.getImageableWidth();
-				double pageHeight = format.getImageableHeight();
-
-				FontMetrics fm = gg.getFontMetrics();
-				int ascent = fm.getAscent();
-				int descent = fm.getDescent();
-				int width = 0;
-				int height = 0;
-				long maxTime = 0;
-				Map<String,LogicElement> map = new TreeMap<String,LogicElement>();
-				for (LogicElement el : eventTrace.keySet()) {
-					String name = " " + el.getFullName();
-					width = Math.max(width,fm.stringWidth(name));
-					height += HEIGHT;
-					map.put(name, el);
-					maxTime = Math.max(maxTime,eventTrace.get(el).getLast().time);
-				}
-				width += 1000;
-				height += HEIGHT;
-				double timeScaleFactor = 1000.0/(maxTime+10);
-
-				double scale = 1.0;
-				if (width > pageWidth) {
-					scale = 1.0*pageWidth/width;
-				}
-				if (height > pageHeight) {
-					scale = Math.min(scale,1.0*pageHeight/height);
-				}
-				gg.scale(scale,scale);
-
-				// draw time scale
-				int inc = (int)(maxTime/10);
-				long time = 0;
-				gg.setColor(Color.gray);
-				for (int i=0; i<=10; i+=1) {
-					int xpos = (int)(time*timeScaleFactor);
-					g.drawLine(xpos, 0, xpos, height-HEIGHT/2);
-					g.drawString(time+"", xpos, height-descent);
-					time += inc;
-				}
-
-				// draw all traces
-				int top = 0;
-				int offset = (HEIGHT - (ascent+descent))/2 + ascent;
-				gg.setColor(Color.black);
-				for (String sig : map.keySet()) {
-
-					// draw signal history
-					LogicElement el = map.get(sig);
-					LinkedList<TrEvent> events = eventTrace.get(el);
-
-					if (el.getBits() == 1) {
-
-						// create bitset for HiZ
-						BitSet off = new BitSet(el.getBits()+1);
-						off.set(el.getBits());
-
-						// single bit signal
-						long prevValue = BitSetUtils.ToLong(events.getFirst().value);
-						if (events.getFirst().value.equals(off))
-							prevValue = -1;
-						int prevXpos = 0;
-						for (TrEvent event : events) {
-							int xpos = (int)(event.time*timeScaleFactor + 0.5);
-
-							// draw horizontal line
-							int ypos = 0;
-							if (prevValue == 0) {
-								gg.drawLine(prevXpos,top+30,xpos,top+30);
-								ypos = top+30;
-							}
-							else if (prevValue == 1){
-								gg.drawLine(prevXpos,top+10,xpos,top+10);
-								ypos = top+10;
-							}
-							else {
-								gg.drawLine(prevXpos,top+20,xpos,top+20);
-								ypos = top+20;
-							}
-
-							// update
-							prevValue = BitSetUtils.ToLong(event.value);
-							if (event.value.equals(off))
-								prevValue = -1;
-							prevXpos = xpos;
-
-							// draw vertical line
-							if (prevValue == 0) {
-								gg.drawLine(xpos,ypos,xpos,top+30);
-							}
-							else if (prevValue == 1) {
-								gg.drawLine(xpos,ypos,xpos,top+10);
-							}
-							else {
-								gg.drawLine(xpos,ypos,xpos,top+20);
-							}
-
-						}
-						if (prevValue == 0) {
-							gg.drawLine(prevXpos,top+30,1000,top+30);
-						}
-						else if (prevValue == 1) {
-							gg.drawLine(prevXpos,top+10,1000,top+10);
-						}
-						else {
-							gg.drawLine(prevXpos,top+20,1000,top+20);
-						}
-					}
-					else {
-
-						// create bitset for HiZ
-						BitSet off = new BitSet(el.getBits()+1);
-						off.set(el.getBits());
-
-						// multiple bit signal
-						BigInteger prevValue = BitSetUtils.ToBigInteger(events.getFirst().value);
-						if (events.getFirst().value.equals(off))
-							prevValue = null;
-						int prevXpos = 0;
-						for (TrEvent event : eventTrace.get(map.get(sig))) {
-							int xpos = (int)(event.time*timeScaleFactor + 0.5);
-
-							// draw horizontal line
-							if (prevValue != null) {
-								gg.drawLine(prevXpos,top+30,xpos,top+30);
-								gg.drawLine(prevXpos,top+10,xpos,top+10);
-							}
-							else {
-								gg.drawLine(prevXpos,top+20,xpos,top+20);
-							}
-
-							// draw vertical line
-							gg.drawLine(xpos,top+10,xpos,top+30);
-							
-							// draw signal value
-							if (prevValue != null) {
-								String val = String.format(" %s ", prevValue.toString(16));
-								int valWidth = fm.stringWidth(val);
-								if (valWidth <= xpos-prevXpos) {
-									gg.drawString(val, prevXpos,
-											top+(HEIGHT-ascent-descent)/2+ascent);
-								}
-							}
-
-							// update
-							prevValue = BitSetUtils.ToBigInteger(event.value);
-							if (event.value.equals(off))
-								prevValue = null;
-							prevXpos = xpos;
-						}
-						
-						// draw extra signal at end
-						if (prevValue != null) {
-							gg.drawLine(prevXpos,top+30,1000,top+30);
-							gg.drawLine(prevXpos,top+10,1000,top+10);
-						}
-						else {
-							gg.drawLine(prevXpos,top+20,1000,top+20);
-						}
-						if (prevValue != null) {
-							String val = String.format(" %s ", prevValue.toString(16));
-							int valWidth = fm.stringWidth(val);
-							if (valWidth <= 1000-prevXpos) {
-								gg.drawString(val, prevXpos,
-										top+(HEIGHT-ascent-descent)/2+ascent);
-							}
-						}
-					}
-
-					// draw signal name
-					gg.drawString(sig, 1000, top+offset);
-
-					top += HEIGHT;
-				}
-
-				return Printable.PAGE_EXISTS;
-			} // end of print method
-		};
-
-		// set up book
-		Book book = new Book();
-		book.append(pr,format);
-		job.setPageable(book);
-
-		// print the trace
-		try {
-			job.print();
-		}
-		catch (PrinterException ex) {
-			System.out.println("printing error: " + ex.getMessage());
-		}
-	} // end of printTrace method
+		return Collections.unmodifiableMap(eventTrace);
+	} // end of getTraceSamples method
 
 	/**
 	 * Set the VCD output file name, or null for no VCD export.
@@ -482,7 +248,7 @@ public class BatchSimulator extends Simulator {
 	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
-	public void setVcdFile(String fileName) {
+	public void setVcdFile(@Nullable String fileName) {
 
 		vcdFileName = fileName;
 	} // end of setVcdFile method
@@ -492,13 +258,20 @@ public class BatchSimulator extends Simulator {
 	 * given to setVcdFile, as IEEE 1364-2001 (section 18) VCD.
 	 *
 	 * @throws java.io.IOException if the file cannot be written.
+	 * @throws IllegalStateException if setVcdFile has not been called
+	 *         with a non-null file name.
 	 *
 	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 */
 	public void writeVcd() throws java.io.IOException {
 
+		String fileName = vcdFileName;
+		if (fileName == null) {
+			throw new IllegalStateException(
+					"setVcdFile was not called before writeVcd");
+		}
 		java.nio.file.Files.write(
-				java.nio.file.Paths.get(vcdFileName),
+				java.nio.file.Paths.get(fileName),
 				toVcd().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	} // end of writeVcd method
 
@@ -537,7 +310,7 @@ public class BatchSimulator extends Simulator {
 		// standard) so the same run always produces the same bytes
 		out.append("$comment JLS batch simulation trace $end\n");
 		out.append("$timescale 1 ns $end\n");
-		out.append("$scope module ").append(circuit.getName())
+		out.append("$scope module ").append(circuit().getName())
 			.append(" $end\n");
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
 			int bits = e.getValue().getBits();
@@ -560,9 +333,12 @@ public class BatchSimulator extends Simulator {
 		TreeSet<Long> times = new TreeSet<Long>();
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
 			TreeMap<Long,BitSet> byTime = new TreeMap<Long,BitSet>();
-			for (TrEvent ev : eventTrace.get(e.getValue())) {
-				byTime.put(ev.time, ev.value);
-				times.add(ev.time);
+			// the signal map was built from eventTrace's keys, so the
+			// trace list is always present
+			for (TraceSample ev
+					: Objects.requireNonNull(eventTrace.get(e.getValue()))) {
+				byTime.put(ev.time(), ev.value());
+				times.add(ev.time());
 			}
 			folded.put(e.getKey(), byTime);
 		}
@@ -572,8 +348,10 @@ public class BatchSimulator extends Simulator {
 		out.append("#0\n");
 		out.append("$dumpvars\n");
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-			BitSet value = folded.get(e.getKey()).get(0L);
-			out.append(vcdValue(e.getValue(), value, codes.get(e.getKey())))
+			BitSet value = Objects.requireNonNull(
+					Objects.requireNonNull(folded.get(e.getKey())).get(0L));
+			out.append(vcdValue(e.getValue(), value,
+					Objects.requireNonNull(codes.get(e.getKey()))))
 				.append('\n');
 		}
 		out.append("$end\n");
@@ -587,10 +365,12 @@ public class BatchSimulator extends Simulator {
 			}
 			out.append('#').append(t).append('\n');
 			for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-				BitSet value = folded.get(e.getKey()).get(t);
+				BitSet value =
+						Objects.requireNonNull(folded.get(e.getKey())).get(t);
 				if (value != null) {
 					out.append(vcdValue(e.getValue(), value,
-							codes.get(e.getKey()))).append('\n');
+							Objects.requireNonNull(codes.get(e.getKey()))))
+						.append('\n');
 				}
 			}
 			last = t;

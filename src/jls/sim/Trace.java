@@ -7,6 +7,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Draw the trace of a signal over time.
  * 
@@ -15,47 +17,77 @@ import java.util.*;
 public class Trace extends JPanel implements MouseListener, MouseMotionListener {
 	
 	// named constants
+	/** The pixel height of one trace row. */
 	protected final int HEIGHT = 40;
 
-	// how many changes each trace retains for scrollback (issue #121).
-	// This is the display-side bound (distinct from #20's simulation
-	// state bounds): at ~136 bytes per change (Change object + cloned
-	// BitSet + linked-list node) it caps a trace at roughly 14 MB.
+	/**
+	 * How many changes each trace retains for scrollback (issue #121).
+	 * This is the display-side bound (distinct from #20's simulation
+	 * state bounds): at ~136 bytes per change (Change object + cloned
+	 * BitSet + linked-list node) it caps a trace at roughly 14 MB.
+	 */
 	static final int MAX_RETAINED_CHANGES = 100_000;
-	
+
 	// structure to contain a change
 	/**
 	 * A single recorded signal value together with the simulation time at
 	 * which it took effect.  Traces keep these in a list ordered newest
 	 * first to draw and to look up the value in effect at any time.
+	 *
+	 * @param value The recorded value (a private snapshot, cloned at
+	 *              creation so later signal changes cannot alias into it).
+	 * @param when The simulation time at which the value took effect.
 	 */
-	private static class Change {
-		public BitSet value;
-		public long when;
-	};
-	
+	/**
+	 * A single recorded signal value with the simulation time it took
+	 * effect (issue #94: a record - Traces keep these newest-first).
+	 *
+	 * @param value The value taking effect (HiZ as the off marker).
+	 * @param when The simulation time it took effect.
+	 */
+	private record Change(BitSet value, long when) {}
+
 	// properties
+	/** The traced signal's display name. */
 	private String name;
+	/** The element whose output this trace records. */
 	private Element element;
+	/** The trace-window container this trace row belongs to. */
 	protected InteractiveSimulator.Traces parent;
-	// pendingChanges is written by the sim thread and copied by the EDT
-	// at commit; both methods are synchronized and the committed list is
-	// replaced, never mutated, so drawing iterates a stable snapshot
-	// (issue #49, finding M9)
+	/**
+	 * Changes recorded but not yet committed to the display.  Written
+	 * by the sim thread and copied by the EDT at commit; both methods
+	 * are synchronized and the committed list is replaced, never
+	 * mutated, so drawing iterates a stable snapshot (issue #49,
+	 * finding M9).
+	 */
 	private LinkedList<Change> pendingChanges = new LinkedList<Change>();
-	// ArrayList: paintComponent indexes into this list per change, which
-	// was O(n^2) on a LinkedList (issue #43)
+	/**
+	 * The committed changes drawing reads, newest first.  ArrayList:
+	 * paintComponent indexes into this list per change, which was
+	 * O(n^2) on a LinkedList (issue #43).
+	 */
 	private volatile java.util.ArrayList<Change> changes =
 			new java.util.ArrayList<Change>();
+	/** The latest committed simulation time. */
 	protected long now = 0;
+	/** Horizontal scale: simulation time units per pixel. */
 	private int scaleFactor = 1;
+	/** The drawable trace width in pixels. */
 	protected int width;
+	/** The traced signal's bit width. */
 	private int bits;
-	private BitSet previousValue = null;
+	/** The last committed value; null until the first arrives (#93). */
+	private @Nullable BitSet previousValue = null;
+	/** This trace, for inner-class callbacks. */
 	private Trace me;
+	/** The time-cursor slider position in pixels, or -1 if none. */
 	protected int sliderPos = -1;
+	/** The numeric base values are labeled in (2, 10, or 16). */
 	private int base = 10;
+	/** The HiZ sentinel: only the extra top bit (index bits) set. */
 	private BitSet off;
+	/** An all-ones sentinel; initialized but currently unread. */
 	private BitSet begin;
 	
 	/**
@@ -132,7 +164,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	/**
 	 * Add a value/time to the front of the pending changes list.
 	 *
-	 * @param value The value to add to the list.
+	 * @param value The value to add to the list, or null for HiZ.
 	 * @param when The time at which the value occurred.
 	 *
 	 * @see jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
@@ -142,8 +174,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
 	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
 	 */
-	public synchronized void addValue(BitSet value, long when) {
-		
+	public synchronized void addValue(@Nullable BitSet value, long when) {
+
 		// don't add if no change
 		if (value == null) {
 			value = off;
@@ -151,10 +183,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		if (value.equals(previousValue))
 			return;
 			
-		Change ch = new Change();
-		ch.value = (BitSet)value.clone();
+		Change ch = new Change((BitSet)value.clone(),when);
 		previousValue = (BitSet)value.clone();
-		ch.when = when;
 		pendingChanges.add(0,ch);
 		
 		// retain a bounded scrollback history (issue #121): the cap
@@ -273,10 +303,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			long tClip = now-(long)(width-clipHi-2)*scaleFactor;
 			ch = firstChangeAtOrBefore(snapshot,tClip);
 			if (ch > 0)
-				when = snapshot.get(ch-1).when;
+				when = snapshot.get(ch-1).when();
 		}
 		double pos = width-(double)(now-when)/scaleFactor;
-		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value : null;
+		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value() : null;
 		double leftEdge = Math.max(0,clipLo-2);
 
 		// draw until no longer visible
@@ -287,7 +317,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			if (ch >= snapshot.size())
 				break;
 			Change change = snapshot.get(ch);
-			double len = ((double)(when-change.when)/scaleFactor);
+			double len = ((double)(when-change.when())/scaleFactor);
 			int rpos = (int)Math.round(pos);
 			int rlen = (int)Math.round(len);
 			
@@ -295,17 +325,17 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			if (bits > 1) {
 				
 				// handle multi-bit value
-				if (change.value.equals(off)) {
+				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
 				}
 				else {
 					g.drawLine(rpos,top,rpos-rlen,top);
 					g.drawLine(rpos,bottom,rpos-rlen,bottom);
 				}
-				if (!change.value.equals(previousVal)) {
+				if (!change.value().equals(previousVal)) {
 					String val = "";
-					if (!change.value.equals(off))
-							val = BitSetUtils.ToString(change.value,base);
+					if (!change.value().equals(off))
+							val = BitSetUtils.ToString(change.value(),base);
 					int strlen = fm.stringWidth(val) + 2;
 					if (strlen <= rlen) {
 						g.drawString(val,rpos-rlen+(rlen-strlen)/2+1,baseline);
@@ -316,10 +346,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			else {
 				
 				// handle single-bit value
-				if (change.value.equals(off)) {
+				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
 				}
-				else if (change.value.get(0)) {
+				else if (change.value().get(0)) {
 					g.drawLine(rpos,top,rpos-rlen,top);
 				}
 				else {
@@ -328,19 +358,19 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			}
 			
 			// if value changed, draw vertical line
-			if (!change.value.equals(previousVal) && previousVal != null) {
+			if (!change.value().equals(previousVal) && previousVal != null) {
 				if (bits > 1) {
 					g.drawLine(rpos,top,rpos,bottom);
 				}
 				else if (previousVal.equals(off)) {
-					if (change.value.length() == 0) {
+					if (change.value().length() == 0) {
 						g.drawLine(rpos,middle,rpos,bottom);
 					}
 					else {
 						g.drawLine(rpos,middle,rpos,top);
 					}
 				}
-				else if (change.value.equals(off)) {
+				else if (change.value().equals(off)) {
 					if (previousVal.length() == 0) {
 						g.drawLine(rpos,bottom,rpos,middle);
 					}
@@ -352,12 +382,12 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					g.drawLine(rpos,top,rpos,bottom);
 				}
 			}
-			previousVal = change.value;
+			previousVal = change.value();
 			// recompute the position from the change time rather than
 			// accumulate, so a windowed repaint puts every segment
 			// exactly where a full repaint would (issue #121)
-			pos = width-(double)(now-change.when)/scaleFactor;
-			when = change.when;
+			pos = width-(double)(now-change.when())/scaleFactor;
+			when = change.when();
 			ch += 1;
 		}
 
@@ -376,8 +406,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					snapshot.size()-1);
 			Change lastChange = snapshot.get(at);
 			String val = "HiZ";
-			if (!lastChange.value.equals(off)) {
-				val = BitSetUtils.ToString(lastChange.value,base);
+			if (!lastChange.value().equals(off)) {
+				val = BitSetUtils.ToString(lastChange.value(),base);
 			}
 			int w = fm.stringWidth(val);
 			g.setColor(Color.white);
@@ -416,7 +446,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		int hi = list.size();
 		while (lo < hi) {
 			int mid = (lo+hi) >>> 1;
-			if (list.get(mid).when <= time)
+			if (list.get(mid).when() <= time)
 				hi = mid;
 			else
 				lo = mid+1;

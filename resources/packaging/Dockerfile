@@ -18,11 +18,28 @@
 # trims a runtime from it (the same recipe as scripts/build-installer.sh),
 # so the final image carries ~50 MB of JVM instead of a full JDK.
 
+# Reproducibility (issue #184): the base image is digest-pinned, and apt
+# installs come from the Ubuntu snapshot service (snapshot.ubuntu.com) at
+# a fixed archive state instead of the moving mirror head, so package
+# versions cannot float between two builds of the same commit.  apt's
+# vendor config maps archive.ubuntu.com/security/ports to the snapshot
+# host, covering amd64 and the arm64/riscv64 ports alike.  Bump
+# APT_SNAPSHOT deliberately (with the base-image digest) to take security
+# updates; the date mirrors the pom's project.build.outputTimestamp pin.
+# SOURCE_DATE_EPOCH is supplied by scripts/build-container.sh from the
+# HEAD commit time; BuildKit clamps image-config and history timestamps
+# to it (layer-tarball mtimes additionally need the push path's
+# rewrite-timestamp=true output option).
+ARG APT_SNAPSHOT=20260716T000000Z
+ARG SOURCE_DATE_EPOCH
+
 # binutils: the archive's JDK carries unstripped native libraries, so
 # jlink --strip-debug shells out to objcopy (Temurin's jmods come
 # pre-stripped, which is why the old Temurin build stage never needed it)
 FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb AS runtime
-RUN apt-get -o Acquire::Retries=3 update \
+ARG APT_SNAPSHOT
+RUN echo "APT::Snapshot \"${APT_SNAPSHOT}\";" > /etc/apt/apt.conf.d/50snapshot \
+    && apt-get -o Acquire::Retries=3 update \
     && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
         openjdk-25-jdk-headless binutils \
     && rm -rf /var/lib/apt/lists/*
@@ -36,10 +53,14 @@ RUN set -eux; \
 # (Acquire::Retries: the arm64/riscv64 ports mirror drops connections
 # often enough under QEMU-length builds that one retry pass is not enough)
 FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb
-RUN apt-get -o Acquire::Retries=3 update \
+ARG APT_SNAPSHOT
+# the snapshot pin is dropped after installing so derived images and
+# debugging shells get the normal moving archive, not a frozen one
+RUN echo "APT::Snapshot \"${APT_SNAPSHOT}\";" > /etc/apt/apt.conf.d/50snapshot \
+    && apt-get -o Acquire::Retries=3 update \
     && apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
         fontconfig fonts-dejavu-core \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/50snapshot
 
 # the source label links the ghcr package to the repository
 LABEL org.opencontainers.image.source="https://github.com/anadon/JLS" \

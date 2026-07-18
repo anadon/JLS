@@ -17,7 +17,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class SubCircuit extends LogicElement implements TriProp {
+public final class SubCircuit extends LogicElement implements TriProp {
 	
 	// properties
 	private Circuit subCircuit;		// the subcircuit
@@ -740,13 +740,13 @@ public class SubCircuit extends LogicElement implements TriProp {
 		super.initInputs();
 		
 		// initialize subcircuit's elements
-		for (Element element : subCircuit.getElements()) {
+		for (Element element : subCircuit.getElementsInStableOrder()) {
 			if (element instanceof LogicElement) {
 				LogicElement el = (LogicElement)element;
 				el.initInputs();
 			}
 		}
-		
+
 	} // end of initInputs method
 	
 	/**
@@ -766,13 +766,16 @@ public class SubCircuit extends LogicElement implements TriProp {
 				out.setValue(new BitSet());
 		}
 		
-		for (Element el : subCircuit.getElements()) {
+		// canonical seed order at every nesting depth (#181): the inner
+		// circuit's time-0 events must be posted in stable-id order for
+		// the same reason as Simulator.initSimulation's top-level walk
+		for (Element el : subCircuit.getElementsInStableOrder()) {
 			if (el instanceof LogicElement) {
 				LogicElement lel = (LogicElement)el;
 				lel.initSim(sim);
 			}
 		}
-		
+
 	} // end of initSim method
 	
 	/**

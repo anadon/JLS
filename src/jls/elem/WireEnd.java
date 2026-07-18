@@ -12,7 +12,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class WireEnd extends LogicElement {
+public final class WireEnd extends LogicElement {
 	
 	// properties
 	private WireNet net;							// the net it is a part of
@@ -229,6 +229,14 @@ public class WireEnd extends LogicElement {
 		g.fillOval(x-pr,y-pr,pd,pd);
 		g.setColor(inside);
 		g.fillOval(x-pr+1,y-pr+1,pd-2,pd-2);
+		if (touching) {
+			// second, color-independent channel (issue #76): an open
+			// ring around the point marks a connection lining up even
+			// when the touch color cannot be told apart
+			g.setColor(JLSInfo.wireZeroColor);
+			int rd = pd+4;
+			g.drawOval(x-rd/2,y-rd/2,rd,rd);
+		}
 	} // end of draw method
 	
 	/**

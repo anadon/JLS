@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -27,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -55,6 +56,7 @@ import javax.swing.SwingConstants;
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
+import jls.MenuAcceleratorPolicy;
 import jls.TellUser;
 import jls.Util;
 import jls.collab.op.AttachProbe;
@@ -115,36 +117,62 @@ import jls.elem.XorGate;
 public abstract class SimpleEditor extends JPanel {
 
 	// properties
-	protected Circuit circuit;			// the circuit being edited
-	protected EditWindow ew;			// the editor window
-	// volatile: written from the sim thread (enableEditor around a run),
-	// read by EDT mouse/key handlers (issue #49, finding H7)
-	protected volatile boolean enabled = true;	// disabled when editting a subcircuit
-	protected JTabbedPane tabbedParent;	// the tabbed pane it is in
-	private JScrollPane pane;			// the scroll page it is in
-	protected JPanel top;				// here so Editor class can display file menu
-	protected JLabel editable =
-			new JLabel(" ");				// to show if circuit editing is enabled
-	private JLabel message = 
-			new JLabel(" ");				// editing status message display
+	/** The circuit being edited. */
+	protected Circuit circuit;
+	/** The editor window. */
+	protected EditWindow ew;
+	/**
+	 * False while a subcircuit is being edited. Volatile: written from
+	 * the sim thread (enableEditor around a run), read by EDT mouse/key
+	 * handlers (issue #49, finding H7).
+	 */
+	protected volatile boolean enabled = true;
+	/** The tabbed pane the editor is in. */
+	protected JTabbedPane tabbedParent;
+	/** The scroll pane the editor is in. */
+	private JScrollPane pane;
+	/** Top panel; here so Editor class can display file menu. */
+	protected JPanel top;
+	/**
+	 * Prominent full-width banner explaining why editing is blocked
+	 * while a subcircuit tab is open (issue #86 H2). Hidden whenever
+	 * this editor is enabled; it replaces the old one-line top-bar
+	 * label, which was too easy to miss.
+	 */
+	private JLabel disabledBanner =
+			new JLabel(" ",SwingConstants.CENTER);
+	/** Editing status message display. */
+	private JLabel message =
+			new JLabel(" ");
+	/** Element information display. */
 	private JLabel info =
-			new JLabel(" ",SwingConstants.CENTER);	// element information display
-	private Circuit clipboard;			// for cut and paste
-	private JPopupMenu importMenu = 
-			new JPopupMenu();				// to display importable circuits
+			new JLabel(" ",SwingConstants.CENTER);
+	/** Holds cut/copied elements for cut and paste. */
+	private Circuit clipboard;
+	/** Displays importable circuits. */
+	private JPopupMenu importMenu =
+			new JPopupMenu();
+	/** This editor, for use inside listeners and dialogs. */
 	private SimpleEditor me;
-	private Stack<CircuitSnapshot> undos = new Stack<CircuitSnapshot>();
-	private Stack<CircuitSnapshot> redos = new Stack<CircuitSnapshot>();
-	private int check = JLSInfo.checkPointFreq+1;				// number of changes, used for checkpointing
+	/** Undo/redo stack policy, extracted from the inline stacks (#84). */
+	private final UndoManager undoManager =
+			new UndoManager();
+	/** Number of changes since the last checkpoint. */
+	private int check = JLSInfo.checkPointFreq+1;
+	/** Import-menu item for each importable circuit, by name. */
 	private Map<String,JMenuItem> menuMap = new HashMap<String,JMenuItem>();
+	/** Importable circuit for each import-menu item, by name. */
 	private Map<String,Circuit> circMap = new HashMap<String,Circuit>();
 
-	// Checkpoint writing happens off the event thread (#19): the latest
-	// serialized circuit per checkpoint file waits here, and a single
-	// writer thread drains it. If edits outrun the disk, intermediate
-	// checkpoints are superseded before being written (coalescing).
+	/**
+	 * Checkpoint writing happens off the event thread (#19): the latest
+	 * serialized circuit per checkpoint file waits here, and a single
+	 * writer thread drains it. If edits outrun the disk, intermediate
+	 * checkpoints are superseded before being written (coalescing).
+	 */
 	private static final ConcurrentHashMap<String,String> pendingCheckpoints =
 			new ConcurrentHashMap<String,String>();
+	/** The single background thread that drains pendingCheckpoints. */
 	private static final ExecutorService checkpointWriter =
 			Executors.newSingleThreadExecutor(new ThreadFactory() {
 				/**
@@ -378,12 +406,25 @@ public abstract class SimpleEditor extends JPanel {
 		top = new JPanel();
 		top.setLayout(new BorderLayout());
 		top.setBackground(Color.CYAN);
-		top.add(editable,BorderLayout.WEST);
 		top.add(message,BorderLayout.EAST);
 		message.setOpaque(true);
 		message.setBackground(Color.cyan);
 		top.add(info,BorderLayout.CENTER);
-		all.add(top,BorderLayout.NORTH);
+
+		// full-width warning banner above the status bar, shown only
+		// while an open subcircuit tab has this editor disabled
+		// (issue #86 H2)
+		disabledBanner.setName("subcircuitDisabledBanner");
+		disabledBanner.setOpaque(true);
+		disabledBanner.setBackground(new Color(255,204,0));
+		disabledBanner.setForeground(Color.BLACK);
+		disabledBanner.setFont(disabledBanner.getFont().deriveFont(Font.BOLD));
+		disabledBanner.setBorder(BorderFactory.createEmptyBorder(4,8,4,8));
+		disabledBanner.setVisible(false);
+		JPanel north = new JPanel(new BorderLayout());
+		north.add(disabledBanner,BorderLayout.NORTH);
+		north.add(top,BorderLayout.CENTER);
+		all.add(north,BorderLayout.NORTH);
 		ew = new EditWindow();
 		ew.setPreferredSize(new Dimension(JLSInfo.circuitsize,JLSInfo.circuitsize));
 		pane = new JScrollPane(ew);
@@ -417,6 +458,8 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Get reference to top so applet can put menu in.
+	 *
+	 * @return the top panel.
 	 */
 	public JPanel getTop() {
 
@@ -542,6 +585,17 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of changeBackgroundColor method
 
 	/**
+	 * Give keyboard focus to the editing canvas. Called when this
+	 * editor's tab is selected so canvas shortcuts work immediately;
+	 * together with the click-to-focus behavior in the canvas itself
+	 * this replaces the old focus-follows-mouse model (issue #75).
+	 */
+	public void focusOnCanvas() {
+
+		ew.requestFocusInWindow();
+	} // end of focusOnCanvas method
+
+	/**
 	 * Increase circuit drawing area size by 10%.
 	 */
 	public void increaseSize() {
@@ -588,6 +642,40 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of enableEditor method
 
 	/**
+	 * Disable this editor because the named subcircuit is being edited
+	 * in its own tab, and show a prominent banner saying so (issue #86
+	 * H2 - the old one-line status label was too easy to miss).
+	 * {@link jls.edit.Editor#enableEdits()} re-enables editing and
+	 * hides the banner when the subcircuit tab closes.
+	 *
+	 * @param subcircuitName The name of the subcircuit whose open tab
+	 *        blocks editing here.
+	 */
+	public void disableForSubcircuit(String subcircuitName) {
+
+		enabled = false;
+		disabledBanner.setText("Editing of \"" + circuit.getName()
+				+ "\" is disabled while subcircuit \"" + subcircuitName
+				+ "\" is open in its own tab - close that tab to resume editing here.");
+		disabledBanner.setVisible(true);
+		revalidate();
+		repaint();
+	} // end of disableForSubcircuit method
+
+	/**
+	 * Hide the banner shown by {@link #disableForSubcircuit(String)}.
+	 * Called when the subcircuit tab closes and this editor is
+	 * re-enabled.
+	 */
+	protected void hideDisabledBanner() {
+
+		disabledBanner.setText(" ");
+		disabledBanner.setVisible(false);
+		revalidate();
+		repaint();
+	} // end of hideDisabledBanner method
+
+	/**
 	 * Reset editor after finishing a quick edit.
 	 */
 	public void quickReset() {
@@ -613,15 +701,40 @@ public abstract class SimpleEditor extends JPanel {
 	 * element or wire (idle, chosen, placing, moving, selecting, selected,
 	 * option, startwire, drawire).
 	 */
-	enum State {idle, chosen, placing, moving, selecting, selected, option,
-		startwire, drawire};
+	enum State {
+		/** No gesture in progress. */
+		idle,
+		/** A new element has been chosen from the toolbar. */
+		chosen,
+		/** A new element is following the cursor to its place. */
+		placing,
+		/** Selected elements are being dragged. */
+		moving,
+		/** A selection rectangle is being dragged out. */
+		selecting,
+		/** A selection exists and awaits a command. */
+		selected,
+		/** The option popup menu is showing. */
+		option,
+		/** Wire drawing is armed, waiting for the first end. */
+		startwire,
+		/** A wire is being drawn from its initial end. */
+		drawire
+	};
 
 	/**
 	 * What the ctrl-W shortcut does, as a pure function of editor state
 	 * and selection size, so the dispatch is unit-testable headless
 	 * (issue #126; the injected-facts pattern of ToolkitPolicy).
 	 */
-	enum CtrlW {START_WIRE, TOGGLE_WATCH, NONE};
+	enum CtrlW {
+		/** Start drawing a wire. */
+		START_WIRE,
+		/** Toggle watched status of the selected element. */
+		TOGGLE_WATCH,
+		/** Do nothing. */
+		NONE
+	};
 
 	/**
 	 * Decide the ctrl-W gesture. From idle the shortcut always starts a
@@ -655,21 +768,11 @@ public abstract class SimpleEditor extends JPanel {
 	 * captured before the clear — keyed off the selection afterwards it
 	 * would always be true, because the new wire end becomes the
 	 * selection (the pitfall AmityWilder/JLS@b1f1573 fixed).
+	 *
+	 * @param end The new initial wire end.
+	 * @param hadSelection Whether a selection existed before it was cleared.
 	 */
-	static final class WireStart {
-		final WireEnd end;
-		final boolean hadSelection;
-		/**
-		 * Record the result of a wire-start gesture.
-		 *
-		 * @param end The new initial wire end.
-		 * @param hadSelection Whether a selection existed before it was cleared.
-		 */
-		WireStart(WireEnd end, boolean hadSelection) {
-			this.end = end;
-			this.hadSelection = hadSelection;
-		}
-	} // end of WireStart class
+	record WireStart(WireEnd end, boolean hadSelection) {} // end of WireStart record
 
 	/**
 	 * The model half of the idle-state wire-start gesture (#126): clear
@@ -713,53 +816,92 @@ public abstract class SimpleEditor extends JPanel {
 		private class EditWindow extends JPanel implements ActionListener,MouseListener,MouseMotionListener {
 
 			// popup menus
+			/** Right-click menu over an existing element or wire. */
 			private JPopupMenu optionMenu = new JPopupMenu();
-			private JMenuItem probe = new JMenuItem(""); // will get title when added to menu
-			private JMenuItem watch = new JMenuItem(""); // will get title when added to menu
+			/** Probe menu item; gets its title when added to the menu. */
+			private JMenuItem probe = new JMenuItem("");
+			/** Watch menu item; gets its title when added to the menu. */
+			private JMenuItem watch = new JMenuItem("");
+			/** Menu item to view/modify element details. */
 			private JMenuItem modify = new JMenuItem("Modify");
+			/** Menu item to change propagation delay or access time. */
 			private JMenuItem timing = new JMenuItem("Change Timing");
+			/** Menu item to view the current simulated value. */
 			private JMenuItem view = new JMenuItem("View Contents");
+			/** Menu item to undo the latest change. */
 			private JMenuItem undo = new JMenuItem("Undo");
+			/** Menu item to redo the latest undone change. */
 			private JMenuItem redo = new JMenuItem("Redo");
+			/** Menu item to cut the selection to the clipboard. */
 			private JMenuItem cut = new JMenuItem("Cut");
+			/** Menu item to copy the selection to the clipboard. */
 			private JMenuItem copy = new JMenuItem("Copy");
+			/** Menu item to delete the selection. */
 			private JMenuItem delete = new JMenuItem("Delete");
+			/** Menu item to make the selection uneditable. */
 			private JMenuItem lock = new JMenuItem("Lock");
 
+			/** Right-click menu over empty space. */
 			private JPopupMenu newMenu = new JPopupMenu();
+			/** Menu item to create a new wire. */
 			private JMenuItem connect = new JMenuItem("Wire(s)");
+			/** Menu item to paste the clipboard contents. */
 			private JMenuItem paste = new JMenuItem("Paste");
+			/** Menu item to select all elements. */
 			private JMenuItem selAll = new JMenuItem("Select All");
+			/** Menu item to close the popup menu. */
 			private JMenuItem close = new JMenuItem("Close");
 
+			/** Menu item to rotate the selection clockwise. */
 			private JMenuItem Crotate = new JMenuItem("Rotate Clockwise");
+			/** Menu item to rotate the selection counter-clockwise. */
 			private JMenuItem CCrotate = new JMenuItem("Rotate Counter-Clockwise");
+			/** Menu item to flip the selection. */
 			private JMenuItem flip = new JMenuItem("Flip");
+			/** Menu item to create the wire end matching a jump start. */
 			private JMenuItem matchJump = new JMenuItem("Create Matching End");
 
+			/** The element toolbar shown above the edit window. */
 			private JPanel toolbar;
+			/** The element menu backing the toolbar. */
 			private JMenu elements;
 
 			// properties
+			/** The editor's interaction mode. */
 			private State currentState = State.idle;
-			private boolean firstDraw = true;	// first paint pushes the undo base copy
-			private int x, y;					// latest actual cursor coordinates
-			private Rectangle selRect = null;	// selection rectangle
+			/** True until the first paint, which pushes the undo base copy. */
+			private boolean firstDraw = true;
+			/** Latest actual cursor x coordinate. */
+			private int x;
+			/** Latest actual cursor y coordinate. */
+			private int y;
+			/** Selection rectangle, or null when none is being dragged. */
+			private Rectangle selRect = null;
+			/** Currently selected elements. */
 			private Set<Element>selected =
-					new HashSet<Element>();			// currently selected elements
-			private WireEnd wireEnd;			// used for drawing wires
+					new HashSet<Element>();
+			/** The end of the wire being drawn. */
+			private WireEnd wireEnd;
+			/** The wire being drawn. */
 			private Wire wire;
+			/** The net the wire being drawn belongs to. */
 			private WireNet net;
+			/** The previous wire end while drawing a multi-segment wire. */
 			private WireEnd prev = null;
+			/** Elements to add during a connect. */
 			private Set<Element>adds =
-					new HashSet<Element>();			// for adding elements during a connect
+					new HashSet<Element>();
+			/** Elements to remove during a connect. */
 			private Set<Element>subs =
-					new HashSet<Element>();			// for removing elements during a connect
+					new HashSet<Element>();
+			/** Why the current placement overlaps, for the status line. */
 			private String overlapMessage = "";
+			/** Elements marked touching by overlap/connect. */
 			private Set<Element>touchedElements =
-					new HashSet<Element>();			// elements marked touching by overlap/connect
+					new HashSet<Element>();
+			/** Puts marked touching by overlap/connect. */
 			private Set<Put>touchedPuts =
-					new HashSet<Put>();				// puts marked touching by overlap/connect
+					new HashSet<Put>();
 
 			/**
 			 * Create a new edit window.
@@ -768,6 +910,13 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up GUI
 				setBackground(JLSInfo.backgroundColor);
+
+				// the canvas holds keyboard focus like any other component:
+				// it is focusable, takes focus on click (mousePressed) and
+				// on tab selection (focusOnCanvas), and never grabs focus
+				// on hover (issue #75 removed the mouseEntered grab that
+				// made shortcuts die when the pointer left the canvas)
+				setFocusable(true);
 
 				// add listeners for mouse activities
 				addMouseListener(this);
@@ -783,7 +932,10 @@ public abstract class SimpleEditor extends JPanel {
 				timing.setToolTipText("change propagation delay or access time");
 				timing.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 				view.setToolTipText("view current simulated value");
-				view.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// plain V, not menu-mask+S: the old stroke shadowed the
+				// menu bar's Save accelerator whenever the canvas had
+				// focus (#75)
+				view.setAccelerator(MenuAcceleratorPolicy.viewValueStroke());
 				cut.setToolTipText("cut all selected elements to clipboard");
 				cut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
 				copy.setToolTipText("copy all selected elements to clipboard");
@@ -792,6 +944,14 @@ public abstract class SimpleEditor extends JPanel {
 				delete.setAccelerator(DeleteKeyPolicy.menuAccelerator(System.getProperty("os.name")));
 				lock.setToolTipText("make selected elements uneditable (cannot be undone)");
 				lock.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+
+				// rotate/flip show the plain-key canvas bindings (#75)
+				Crotate.setToolTipText("rotate the selected element clockwise");
+				Crotate.setAccelerator(MenuAcceleratorPolicy.rotateCwStroke());
+				CCrotate.setToolTipText("rotate the selected element counter-clockwise");
+				CCrotate.setAccelerator(MenuAcceleratorPolicy.rotateCcwStroke());
+				flip.setToolTipText("flip the selected element");
+				flip.setAccelerator(MenuAcceleratorPolicy.flipStroke());
 
 				// TODO: Make an action for this.
 				//matchJump.setToolTipText("create the wire end to match this wire start");
@@ -818,7 +978,9 @@ public abstract class SimpleEditor extends JPanel {
 				newMenu.add(undo);
 
 				redo.setToolTipText("redo last undo");
-				redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// Shift+Cmd+Z on macOS (platform convention), Ctrl+Y
+				// elsewhere; the policy keeps Cmd+Y bound as an alias (#75)
+				redo.setAccelerator(MenuAcceleratorPolicy.redoDisplayed(System.getProperty("os.name")));
 				newMenu.add(redo);
 
 				makeElements();
@@ -876,14 +1038,14 @@ public abstract class SimpleEditor extends JPanel {
 							y = p.y;
 							WireStart start =
 									startWireGesture(circuit,selected,x,y);
-							wireEnd = start.end;
+							wireEnd = start.end();
 							wire = null;
 							net = wireEnd.getNet();
 
 							// a cleared selection was under the cursor, so
 							// report the (likely) overlap the same way wire
 							// dragging does
-							if (start.hadSelection) {
+							if (start.hadSelection()) {
 								if (overlap()) {
 									info.setText(overlapMessage);
 									info.setForeground(Color.red);
@@ -999,7 +1161,7 @@ public abstract class SimpleEditor extends JPanel {
 
 					}
 				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"view");
+				getInputMap().put(MenuAcceleratorPolicy.viewValueStroke(),"view");
 				getActionMap().put("view", see);
 
 				// set up modify key binding
@@ -1241,7 +1403,10 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Y,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do redo");
+				// every redo stroke the policy defines: the platform
+				// accelerator plus, on macOS, the historical Cmd+Y alias (#75)
+				for (KeyStroke stroke : MenuAcceleratorPolicy.redoBindings(System.getProperty("os.name")))
+					getInputMap().put(stroke,"do redo");
 				getActionMap().put("do redo", redoKey);
 
 				// set up lock key binding
@@ -1280,7 +1445,97 @@ public abstract class SimpleEditor extends JPanel {
 				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do lock");
 				getActionMap().put("do lock", lockKey);
 
+				// set up rotate/flip key bindings (#75): plain R, Shift+R,
+				// and F act on a single selected element, sharing the same
+				// code path as the popup menu items
+				Action rotateCwKey = new AbstractAction() {
+					/**
+					 * Handle the rotate-clockwise shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						rotateSelected(true);
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.rotateCwStroke(),"rotate cw");
+				getActionMap().put("rotate cw", rotateCwKey);
+				Action rotateCcwKey = new AbstractAction() {
+					/**
+					 * Handle the rotate-counter-clockwise shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						rotateSelected(false);
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.rotateCcwStroke(),"rotate ccw");
+				getActionMap().put("rotate ccw", rotateCcwKey);
+				Action flipKey = new AbstractAction() {
+					/**
+					 * Handle the flip shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						flipSelected();
+					}
+				};
+				getInputMap().put(MenuAcceleratorPolicy.flipStroke(),"do flip");
+				getActionMap().put("do flip", flipKey);
+
 			} // end of constructor
+
+			/**
+			 * Rotate the single selected element, if there is exactly one
+			 * and it can rotate. Shared by the popup menu items and the
+			 * R/Shift+R key bindings (#75).
+			 *
+			 * @param clockwise true to rotate clockwise, false for
+			 * counter-clockwise.
+			 */
+			private void rotateSelected(boolean clockwise) {
+
+				if (!enabled)
+					return;
+				if (selected.size() != 1)
+					return;
+				Element el = (Element)(selected.toArray()[0]);
+				if (!el.canRotate() || el.isUneditable())
+					return;
+
+				// #167: through the op entry point
+				submitOp(new RotateElement(el.getStableId(), clockwise));
+				clearSelected();
+				setState(State.idle);
+				repaint();
+			} // end of rotateSelected method
+
+			/**
+			 * Flip the single selected element, if there is exactly one and
+			 * it can flip. Shared by the popup menu item and the F key
+			 * binding (#75).
+			 */
+			private void flipSelected() {
+
+				if (!enabled)
+					return;
+				if (selected.size() != 1)
+					return;
+				Element el = (Element)(selected.toArray()[0]);
+				if (!el.canFlip() || el.isUneditable())
+					return;
+
+				// #167: through the op entry point
+				submitOp(new FlipElement(el.getStableId()));
+				clearSelected();
+				setState(State.idle);
+				repaint();
+			} // end of flipSelected method
 
 			/**
 			 * Create element tool bar and menu.
@@ -1814,6 +2069,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * Get image.
 			 * 
 			 * @param name Base name of image.
+			 * @return the icon, or null if the image resource is missing.
 			 */
 			public ImageIcon getImage(String name) {
 				URL image = getClass().getResource("images/" + name + ".gif");
@@ -1827,6 +2083,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * 
 			 * @param action The action for this element.
 			 * @param tip The tool tip for this element.
+			 * @return the toolbar button for the element.
 			 */
 			public JButton makeElement(Action action, String tip) {
 
@@ -2132,28 +2389,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				if(event.getSource() == Crotate)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new RotateElement(el.getStableId(), true));
-					clearSelected();
-					setState(State.idle);
-					repaint();
-
-
+					rotateSelected(true);
 				}
 
 				if(event.getSource() == CCrotate)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new RotateElement(el.getStableId(), false));
-					clearSelected();
-					setState(State.idle);
-					repaint();
+					rotateSelected(false);
 				}
 
 				if(event.getSource() == matchJump) {
@@ -2178,14 +2419,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				if(event.getSource() == flip)
 				{
-					if(!enabled)
-						return;
-					Element el = (Element)(selected.toArray()[0]);
-					// #167: through the op entry point
-					submitOp(new FlipElement(el.getStableId()));
-					clearSelected();
-					setState(State.idle);
-					repaint();
+					flipSelected();
 				}
 				// if connection, start drawing wires
 				else if (event.getSource() == connect) {
@@ -2216,6 +2450,11 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			@Override
 			public void mousePressed(MouseEvent event) {
+
+				// a click gives the canvas keyboard focus, the standard
+				// desktop focus model (issue #75); this replaces the old
+				// focus-follows-mouse grab in mouseEntered
+				requestFocusInWindow();
 
 				// do nothing if editor is disabled
 				if (!enabled)
@@ -2532,6 +2771,8 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Set up the options popup menu.
+			 * 
+			 * @param el The element the menu is being shown for.
 			 */
 			private void makeOptionMenu(Element el) {
 
@@ -2843,6 +3084,10 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * Accumulate a dirty-region rectangle (#17): the union of the
 			 * given rectangles, either of which may be null.
+			 * 
+			 * @param acc The accumulator rectangle, grown in place; may be null.
+			 * @param add The rectangle to add; may be null.
+			 * @return the union, or null when both inputs are null.
 			 */
 			private Rectangle union(Rectangle acc, Rectangle add) {
 
@@ -3068,15 +3313,15 @@ public abstract class SimpleEditor extends JPanel {
 			public void mouseClicked(MouseEvent event) {}
 
 			/**
-			 * Get focus for keyboard events.
-			 * 
+			 * Unused. Hover no longer grabs keyboard focus: the canvas
+			 * takes focus on click and on tab selection instead, so
+			 * shortcuts keep working when the pointer leaves the canvas
+			 * (issue #75).
+			 *
 			 * @param event Unused.
 			 */
 			@Override
-			public void mouseEntered(MouseEvent event) {
-
-				requestFocusInWindow(true);
-			} // end of mouseEntered method
+			public void mouseEntered(MouseEvent event) {}
 
 			/**
 			 * If in the idle state, unhighlight everything.
@@ -4339,9 +4584,10 @@ public abstract class SimpleEditor extends JPanel {
 							tabbedParent.add(tabName,ed);
 							tabbedParent.setSelectedComponent(ed);
 
-							// disable this editor while subcircuit it being editted
-							enabled = false;
-							editable.setText("editting is disabled while a subcircuit is being modified");
+							// disable this editor while the subcircuit is
+							// being editted, with a visible explanation
+							// (issue #86 H2)
+							disableForSubcircuit(sub.getName());
 						}
 
 						// otherwise element will change itself
@@ -4625,7 +4871,7 @@ public abstract class SimpleEditor extends JPanel {
 						pushCopy();
 
 						// clear redos
-						redos.clear();
+						undoManager.clearRedos();
 
 						// save checkpoint file (if it is time)
 						check += 1;
@@ -4697,74 +4943,38 @@ public abstract class SimpleEditor extends JPanel {
 
 					/**
 					 * Push a copy of the circuit being edited on the undo stack.
+					 * The snapshot is captured in the save format (#18); the
+					 * {@code UndoManager} drops it if it is identical to the
+					 * top of the stack (an aborted or no-op change) and
+					 * enforces the depth bound (#84).
 					 */
 					public void pushCopy() {
 
-						// snapshot the circuit in the save format (#18);
-						// an aborted or no-op change serializes identically
-						// to the top of the stack and is not pushed again
-						CircuitSnapshot snap = CircuitSnapshot.capture(circuit);
-						if (!undos.isEmpty() && undos.peek().sameAs(snap)) {
-							return;
-						}
-
-						// see if undo stack is full
-						if (undos.size() > JLSInfo.undoStackDepth) {
-
-							// delete bottom of stack
-							undos.remove(0);
-						}
-
-						// save for undo
-						undos.push(snap);
+						undoManager.push(CircuitSnapshot.capture(circuit));
 					} // end of pushCopy method
 
 					/**
 					 * Do undo. An in-flight gesture is cancelled first,
 					 * exactly as Esc would, so the restore always runs
 					 * against an idle editor (issue #39: cancel-then-apply).
+					 * The stack transitions live in {@code UndoManager}
+					 * (#84); restoring stays here in {@code finishDo}.
 					 */
 					public void undo() {
 
 						cancelGesture();
-
-						// no undo left if stack only has a copy of the original circuit
-						if (undos.size() <= 1) {
-							return;
-						}
-
-						// restore the previous snapshot first; only a
-						// successful restore may touch the stacks
-						CircuitSnapshot current = undos.get(undos.size() - 1);
-						CircuitSnapshot previous = undos.get(undos.size() - 2);
-						if (!finishDo(previous)) {
-							return;
-						}
-						undos.pop();
-						redos.push(current);
+						undoManager.undo(this::finishDo);
 					} // end of undo method
 
 					/**
 					 * Do redo. Cancels any in-flight gesture first, like
-					 * undo (issue #39).
+					 * undo (issue #39). Stack transitions live in
+					 * {@code UndoManager} (#84).
 					 */
 					public void redo() {
 
 						cancelGesture();
-
-						// if nothing on the redo stack, then there is nothing to do
-						if (redos.isEmpty()) {
-							return;
-						}
-
-						// restore the snapshot first; only a successful
-						// restore may touch the stacks
-						CircuitSnapshot next = redos.peek();
-						if (!finishDo(next)) {
-							return;
-						}
-						redos.pop();
-						undos.push(next);
+						undoManager.redo(this::finishDo);
 					} // end of redo method
 
 					/**

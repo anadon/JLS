@@ -12,11 +12,15 @@ import javax.swing.*;
 public final class MemTrace extends JFrame {
 	
 	// named constants
+	/** The trace window's initial width in pixels. */
 	private int WIDTH = 300;
+	/** The trace window's initial height in pixels. */
 	private int HEIGHT = 200;
-	
+
 	// properties
+	/** The memory element whose accesses this window displays. */
 	private Memory mem;
+	/** The text area the read/write lines are appended to. */
 	private JTextArea info = new JTextArea();
 	
 	/**

@@ -46,11 +46,20 @@ final class EditorGestureSupport implements AutoCloseable {
 	final JFrame frame;
 	final Editor editor;
 	final Circuit circuit;
+
+	/**
+	 * The clipboard circuit handed to the {@link Editor}. The editor's
+	 * Cut/Copy popup actions copy the selection into this circuit and
+	 * Paste reads it back, so tests assert clipboard state through here.
+	 */
+	final Circuit clipboardCircuit;
+
 	private final Component canvas;
 	private long when = 1_000_000L;
 
 	EditorGestureSupport(Circuit circuit) throws Exception {
 		this.circuit = circuit;
+		this.clipboardCircuit = new Circuit("clipboard");
 		// undo/redo restore snapshots through JLSInfo.sim, which only the
 		// full JLSStart GUI sets. The harness builds an Editor directly,
 		// so it must supply the simulator the editor's undo path expects
@@ -65,7 +74,7 @@ final class EditorGestureSupport implements AutoCloseable {
 			JFrame f = new JFrame("gesture-harness");
 			JTabbedPane tabs = new JTabbedPane();
 			Editor ed = new Editor(tabs, circuit, circuit.getName(),
-					new Circuit("clipboard"));
+					clipboardCircuit);
 			tabs.addTab(circuit.getName(), ed);
 			f.add(tabs);
 			f.setSize(1000, 800);
@@ -157,6 +166,30 @@ final class EditorGestureSupport implements AutoCloseable {
 	void rightPress(int x, int y) throws Exception {
 		dispatch(MouseEvent.MOUSE_PRESSED, x, y, MouseEvent.BUTTON3,
 				InputEvent.BUTTON3_DOWN_MASK, true);
+	}
+
+	/** A buttonless pointer move (drives the placing-state preview). */
+	void moveTo(int x, int y) throws Exception {
+		dispatch(MouseEvent.MOUSE_MOVED, x, y, MouseEvent.NOBUTTON, 0, false);
+	}
+
+	/**
+	 * Warp the real pointer to a canvas-relative point. The one editor
+	 * path synthetic events cannot drive is paste: it reads
+	 * {@code getMousePosition()} (the genuine pointer), not an event
+	 * coordinate, and aborts if the pointer is not over the canvas. Under
+	 * the #162 Xvfb substrate the virtual pointer is exclusively ours, so
+	 * a single XTEST warp keeps paste drivable without adopting
+	 * Robot-driven clicking anywhere else.
+	 *
+	 * @param x canvas-relative x to park the pointer at
+	 * @param y canvas-relative y to park the pointer at
+	 */
+	void warpPointerTo(int x, int y) throws Exception {
+		java.awt.Point base = canvas.getLocationOnScreen();
+		java.awt.Robot robot = new java.awt.Robot();
+		robot.mouseMove(base.x + x, base.y + y);
+		robot.waitForIdle();
 	}
 
 	/**

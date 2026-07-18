@@ -18,15 +18,18 @@ import jls.elem.AndGate;
 import jls.elem.Binder;
 import jls.elem.Clock;
 import jls.elem.Constant;
+import jls.elem.Decoder;
 import jls.elem.DelayGate;
 import jls.elem.Display;
 import jls.elem.Element;
 import jls.elem.Extend;
+import jls.elem.Gate;
 import jls.elem.Input;
 import jls.elem.InputPin;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
+import jls.elem.Mux;
 import jls.elem.NandGate;
 import jls.elem.NorGate;
 import jls.elem.NotGate;
@@ -61,7 +64,8 @@ import jls.elem.XorGate;
  * the gate family (AND, OR, NAND, NOR, XOR, NOT, DELAY); Extend;
  * TriState; Adder; Register (all three types, with initial value);
  * Clock (an input port to drive from a testbench); Binder and
- * Splitter (bit routing).</li>
+ * Splitter (bit routing); Mux and Decoder (selected assignments,
+ * the #59-adjudicated case/select templates).</li>
  * <li><b>Net topology, not instances</b>: Wire, WireEnd, JumpStart,
  * JumpEnd. Same-named jumps alias nets, so the net walk folds them
  * into one HDL net.</li>
@@ -69,9 +73,9 @@ import jls.elem.XorGate;
  * meaning): Display, SigGen, Pause, Stop, Text, TestGen. Each skip
  * produces a warning the caller surfaces.</li>
  * <li><b>Reject</b> (inexpressible in this version, §9 escalation):
- * SubCircuit, Memory, Mux, Decoder, StateMachine, TruthTable, and
- * anything unrecognized. Rejection lists <em>every</em> offender in
- * one message and nothing is written.</li>
+ * SubCircuit, Memory, StateMachine, TruthTable, and anything
+ * unrecognized. Rejection lists <em>every</em> offender in one
+ * message and nothing is written.</li>
  * </ul>
  *
  * <h2>Net walk</h2>
@@ -94,10 +98,13 @@ public final class HdlExporter {
 	/** What the exporter produced: text plus non-fatal warnings. */
 	public static final class Result {
 
+		/** The rendered target-language text. */
 		public final String text;
+		/** Non-fatal messages produced during the walk, unmodifiable. */
 		public final List<String> warnings;
 
 		/**
+		 * Captures one export's output.
 		 * @param text The rendered target-language text.
 		 * @param warnings Non-fatal messages; copied and made immutable.
 		 */
@@ -119,8 +126,10 @@ public final class HdlExporter {
 	 * @throws HdlExportException if the circuit contains elements the
 	 * exporter cannot express; the message names all of them.
 	 *
+	 * @see jls.hdl.HdlPolicyTest#decoderWithUnattachedInputConstantlyDrivesBitZero()
 	 * @see jls.hdl.HdlPolicyTest#displayIsSkippedWithAWarning()
 	 * @see jls.hdl.HdlPolicyTest#memoryIsRejectedByName()
+	 * @see jls.hdl.HdlPolicyTest#muxWithUnattachedSelectPassesInputZeroThrough()
 	 * @see jls.hdl.HdlPolicyTest#rejectionListsEveryOffenderInOneMessage()
 	 * @see jls.hdl.HdlPolicyTest#simulationControlElementsAreAllSkipped()
 	 * @see jls.hdl.HdlPolicyTest#subCircuitIsRejectedCleanly()
@@ -379,21 +388,25 @@ public final class HdlExporter {
 	// policy
 	// ------------------------------------------------------------------
 
+	/** Element classes with a direct HDL rendering. */
 	private static final Set<Class<?>> EXPORTED = Set.of(
 			InputPin.class, OutputPin.class, Constant.class,
 			AndGate.class, OrGate.class, NandGate.class, NorGate.class,
 			XorGate.class, NotGate.class, DelayGate.class, Extend.class,
 			TriState.class, Adder.class, Register.class, Clock.class,
-			Binder.class, Splitter.class);
+			Binder.class, Splitter.class, Mux.class, Decoder.class);
 
+	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
 			Display.class, SigGen.class, Pause.class, Stop.class,
 			Text.class, TestGen.class);
 
+	/** Element classes that are net topology, not instances. */
 	private static final Set<Class<?>> TOPOLOGY = Set.of(
 			Wire.class, WireEnd.class, JumpStart.class, JumpEnd.class);
 
 	/**
+	 * Tests the exported policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element has a direct HDL rendering.
 	 */
@@ -402,6 +415,7 @@ public final class HdlExporter {
 	}
 
 	/**
+	 * Tests the warn-and-skip policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element has no HDL meaning and is warn-and-skipped.
 	 */
@@ -410,6 +424,7 @@ public final class HdlExporter {
 	}
 
 	/**
+	 * Tests the net-topology policy bucket.
 	 * @param el The element to classify.
 	 * @return true if the element is net topology (wire/jump), not an instance.
 	 */
@@ -594,40 +609,92 @@ public final class HdlExporter {
 			return;
 		}
 
+		if (el instanceof Mux) {
+			int bits = Math.max(outs.get(0).getBits(), 1);
+			String target = target(model, el, 0, outs.get(0), bits, nets,
+					groups, names);
+			HdlModel.Operand select = operand(ins.get(0), nets, groups);
+			List<HdlModel.Operand> values =
+					new ArrayList<HdlModel.Operand>();
+			for (int k = 1; k < ins.size(); k += 1) {
+				values.add(operand(ins.get(k), nets, groups));
+			}
+			int ways = values.size();
+			if (!select.isNet()) {
+				// an unattached select reads 0 (JLS's absent-inputs rule),
+				// so the mux degenerates to a buffer of input0
+				model.addStatement(new HdlModel.GateStatement(
+						"Mux (" + ways + " inputs) at " + at(el)
+								+ "; select unattached, reads 0",
+						HdlModel.GateStatement.Op.BUFFER,
+						List.of(values.get(0)), target));
+				return;
+			}
+			model.addStatement(new HdlModel.SelectStatement(
+					"Mux (" + ways + " inputs) at " + at(el), select, values,
+					HdlModel.Operand.literal(BigInteger.ZERO, bits), target,
+					bits, names.synth("mux_" + el.getID())));
+			return;
+		}
+
+		if (el instanceof Decoder) {
+			int outBits = Math.max(outs.get(0).getBits(), 1);
+			int inBits = Math.max(ins.get(0).getBits(), 1);
+			String target = target(model, el, 0, outs.get(0), outBits, nets,
+					groups, names);
+			HdlModel.Operand select = operand(ins.get(0), nets, groups);
+			String what = "Decoder (" + inBits + " to " + outBits + ") at "
+					+ at(el);
+			if (!select.isNet()) {
+				// an unattached input reads 0 (JLS's absent-inputs rule),
+				// so exactly output bit 0 is set, constantly
+				model.addStatement(new HdlModel.ConstantStatement(
+						what + "; input unattached, reads 0", target, outBits,
+						BigInteger.ONE));
+				return;
+			}
+			List<HdlModel.Operand> values =
+					new ArrayList<HdlModel.Operand>();
+			for (int k = 0; k < outBits; k += 1) {
+				values.add(HdlModel.Operand.literal(
+						BigInteger.ONE.shiftLeft(k), outBits));
+			}
+			model.addStatement(new HdlModel.SelectStatement(what, select,
+					values, HdlModel.Operand.literal(BigInteger.ZERO, outBits),
+					target, outBits, names.synth("dec_" + el.getID())));
+			return;
+		}
+
 		// unreachable: the policy pass admits only the classes above
 		throw new IllegalStateException(
 				"no template for " + el.getClass().getName());
 	} // end of buildStatement method
 
 	/**
+	 * Map a gate-family element to its HDL operation. The switch is
+	 * exhaustive over the sealed {@link Gate} hierarchy (#95): a new gate
+	 * kind fails compilation here instead of silently exporting nothing.
+	 *
 	 * @param el The element to map.
 	 * @return the gate operation for a gate-family element, or null if the
-	 * element is not a gate.
+	 * element is not a boolean gate ({@link Extend} is gate-family but has
+	 * its own bit-extension template, handled before the gate branch).
 	 */
 	private static HdlModel.GateStatement.Op gateOp(Element el) {
 
-		if (el instanceof AndGate) {
-			return HdlModel.GateStatement.Op.AND;
+		if (!(el instanceof Gate gate)) {
+			return null;
 		}
-		if (el instanceof OrGate) {
-			return HdlModel.GateStatement.Op.OR;
-		}
-		if (el instanceof NandGate) {
-			return HdlModel.GateStatement.Op.NAND;
-		}
-		if (el instanceof NorGate) {
-			return HdlModel.GateStatement.Op.NOR;
-		}
-		if (el instanceof XorGate) {
-			return HdlModel.GateStatement.Op.XOR;
-		}
-		if (el instanceof NotGate) {
-			return HdlModel.GateStatement.Op.NOT;
-		}
-		if (el instanceof DelayGate) {
-			return HdlModel.GateStatement.Op.BUFFER;
-		}
-		return null;
+		return switch (gate) {
+		case AndGate _ -> HdlModel.GateStatement.Op.AND;
+		case OrGate _ -> HdlModel.GateStatement.Op.OR;
+		case NandGate _ -> HdlModel.GateStatement.Op.NAND;
+		case NorGate _ -> HdlModel.GateStatement.Op.NOR;
+		case XorGate _ -> HdlModel.GateStatement.Op.XOR;
+		case NotGate _ -> HdlModel.GateStatement.Op.NOT;
+		case DelayGate _ -> HdlModel.GateStatement.Op.BUFFER;
+		case Extend _ -> null;
+		};
 	} // end of gateOp method
 
 	// ------------------------------------------------------------------
@@ -637,17 +704,30 @@ public final class HdlExporter {
 	/** One fused electrical net (wire nets joined by jump aliases). */
 	private static final class Group {
 
+		/** Chosen HDL net name; null until the naming pass assigns one. */
 		String name = null;
+		/** Width in bits: the widest member wire net seen so far. */
 		int bits = 0;
+		/** True when the net is a module port, not an internal net. */
 		boolean isPort = false;
+
+		/** Creates an unnamed, zero-width, non-port group. */
+		Group() {
+		} // end of Group constructor
 	} // end of Group class
 
 	/** Union-find over WireNet identity. */
 	private static final class UnionFind {
 
+		/** Each net's parent in its set's tree; roots map to themselves. */
 		private final Map<WireNet, WireNet> parent =
 				new IdentityHashMap<WireNet, WireNet>();
+		/** All registered nets, in first-seen order. */
 		private final List<WireNet> order = new ArrayList<WireNet>();
+
+		/** Creates an empty forest with no registered nets. */
+		UnionFind() {
+		} // end of UnionFind constructor
 
 		/**
 		 * Add a net as its own singleton set, preserving first-seen order.
@@ -693,7 +773,10 @@ public final class HdlExporter {
 			parent.put(find(a), find(b));
 		}
 
-		/** @return all registered nets in first-seen order. */
+		/**
+		 * Gives every net this forest has seen.
+		 * @return all registered nets in first-seen order.
+		 */
 		List<WireNet> all() {
 			return order;
 		}
@@ -731,6 +814,11 @@ public final class HdlExporter {
 	 * The operand an element input reads: its fused net if attached,
 	 * else a zero literal of the put's width (JLS reads unattached
 	 * inputs as 0).
+	 *
+	 * @param in The element input to resolve.
+	 * @param nets Union-find over the circuit's wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @return the net-reference or zero-literal operand.
 	 */
 	private static HdlModel.Operand operand(Input in, UnionFind nets,
 			Map<WireNet, Group> groups) {
@@ -747,6 +835,16 @@ public final class HdlExporter {
 	 * The net an element output drives: its fused net if attached,
 	 * else a freshly declared dangling wire (unc_&lt;id&gt;_&lt;k&gt;)
 	 * so every template stays uniform.
+	 *
+	 * @param model The model being built; receives any dangling net.
+	 * @param el The driving element.
+	 * @param k The output's index on the element.
+	 * @param out The element output to resolve.
+	 * @param bits Width of any dangling net to declare.
+	 * @param nets Union-find over the circuit's wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @param names Identifier allocator for the dangling net.
+	 * @return the name of the net the output drives.
 	 */
 	private static String target(HdlModel model, Element el, int k,
 			Output out, int bits, UnionFind nets, Map<WireNet, Group> groups,
@@ -762,6 +860,7 @@ public final class HdlExporter {
 	} // end of target method
 
 	/**
+	 * Gives the aliasing name a jump element contributes.
 	 * @param el The element to inspect.
 	 * @return the jump name if the element is a JumpStart or JumpEnd (nets
 	 * sharing a name are fused), else null.
@@ -785,6 +884,9 @@ public final class HdlExporter {
 	 * All circuit elements in a stable order: save id first (unique in
 	 * every saved file), then class, name and position as tie-breaks
 	 * for programmatically built circuits.
+	 *
+	 * @param circ The circuit whose elements to order.
+	 * @return the elements, stably sorted.
 	 */
 	private static List<Element> orderedElements(Circuit circ) {
 
@@ -802,6 +904,7 @@ public final class HdlExporter {
 	 * All elements of the given type, sorted by name for deterministic port
 	 * ordering.
 	 *
+	 * @param <T> The element subtype to keep.
 	 * @param ordered The elements to filter.
 	 * @param type The element subtype to keep.
 	 * @return the matching elements, name-sorted.
@@ -821,6 +924,7 @@ public final class HdlExporter {
 	} // end of byName method
 
 	/**
+	 * Builds the identity bit-index mapping.
 	 * @param n The length.
 	 * @return the identity index array {@code {0, 1, ..., n-1}}.
 	 */
@@ -833,7 +937,11 @@ public final class HdlExporter {
 		return a;
 	} // end of ascending method
 
-	/** Type, name (when the element has one) and grid location. */
+	/**
+	 * Describes an element for diagnostics.
+	 * @param el The element to describe.
+	 * @return its type, name (when the element has one) and grid location.
+	 */
 	static String describe(Element el) {
 
 		StringBuilder sb = new StringBuilder(el.getClass().getSimpleName());
@@ -846,6 +954,7 @@ public final class HdlExporter {
 	} // end of describe method
 
 	/**
+	 * Formats an element's position for diagnostics.
 	 * @param el The element.
 	 * @return its grid location as {@code "(x,y)"} for diagnostics.
 	 */

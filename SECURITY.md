@@ -54,3 +54,72 @@ Threat model note: circuit files (`.jls`/`.jls~`) are routinely shared
 between students and instructors and are treated as untrusted input —
 parser crashes, resource exhaustion, or code execution reachable from a
 hostile circuit file are all in scope.
+
+## Collaboration transport (issue #168, Stage 1a)
+
+JLS is growing a peer-to-peer collaborative-editing mode (issue #163;
+threat model in `docs/collaborative-editing-research.md` §6). The
+session-security foundation lives in `jls.collab.net` and its rules
+are enforced by tests, not convention:
+
+- **Identity.** Each install generates a long-term Ed25519 keypair on
+  first collaborative use, stored at `jls/collab-identity` under the
+  XDG config base with owner-only permissions (mode 600 on POSIX).
+  The public-key fingerprint is the peer id; display names are labels
+  only. A malformed identity file is an error, never a silent
+  regeneration.
+- **Handshake.** Sessions are established by a three-message, mutually
+  authenticated key exchange shaped like TLS 1.3 with raw public keys
+  (the SIGMA sign-and-mac construction), built entirely from JDK
+  primitives — X25519 ephemerals, Ed25519 transcript signatures,
+  HKDF-SHA256, AES-256-GCM — no certificates, no CAs, no third
+  party, no new dependency. Every derived key binds the handshake
+  transcript hash.
+- **Human verification (SAS).** Both sides derive a 42-bit short
+  authentication string (seven named glyphs) from the full handshake
+  transcript and compare it out of band — the Signal safety-number
+  construction. A man-in-the-middle changes the transcript and thus
+  the glyphs on at least one side; the tamper-every-byte property test
+  in `HandshakeTest` verifies detection at every byte position of
+  every message. Verified keys persist in `jls/known-peers`;
+  reconnecting with a known key skips verification, and an unknown key
+  claiming a verified peer's name is surfaced as a loud key-change
+  warning, never silently.
+- **Frames.** All session traffic is length-prefixed, capped
+  (1 MiB/frame), and AEAD-encrypted per direction with counter
+  nonces; replayed, reordered, truncated, oversized, or tampered
+  frames are rejected with typed errors before any body allocation,
+  and a link that has seen one bad frame is poisoned for good.
+  Frames carry opaque bytes only — what they mean (the closed,
+  data-only op vocabulary, its allowlists and caps) is specified in
+  the research doc §6.1 and owned by the operation-layer work.
+- **No listener, provably.** No socket construction exists anywhere in
+  JLS today; `SocketConfinementRatchetTest` pins that socket code may
+  only ever appear under `jls.collab.net`, and that nothing under
+  `jls.collab` ever touches Java object serialization. Batch mode and
+  default GUI start cannot open a listener because no listener code
+  exists; when it lands, it must bind only on an explicit
+  "Start session" action (research doc §6.4).
+## Collaboration payloads (planned; issues #163/#170)
+
+The collaborative-editing program extends the untrusted-input surface
+from files to a stream of session-peer payloads. The content-level
+contract is `docs/collab-vocabulary.md`; the threat entries:
+
+- **Hostile payloads** (malformed, oversized, forged): every
+  network-delivered byte must parse to the closed vocabulary
+  (operations, snapshots) or be rejected with a typed error — no
+  best-effort repair. Element type tokens from a peer pass the
+  `ElementVocabulary` allowlist before any class lookup; Java object
+  serialization is banned repo-wide and socket code is confined to
+  `jls.collab.net`, both enforced by build-failing ratchet tests.
+- **Resource exhaustion** (flood, backlog, oversized frames): per-op
+  caps ship with the parser (issue #38 taxonomy); streaming caps
+  land with the transport layer (issue #168) and are in scope for
+  vulnerability reports once it exists.
+- **Vandalism with valid operations**: a malicious or compromised
+  peer issuing well-formed ops that wreck the circuit is explicitly
+  a *recovery* problem, not a prevention problem — the vocabulary
+  cannot distinguish vandalism from editing. Mitigations are
+  attribution, targeted revert, and eject (issue #169 / Stage 2),
+  not payload validation.

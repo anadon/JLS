@@ -42,7 +42,7 @@ The keys and their functions are:
     </tr>
 <tr>
     <td> Redo </td>
-    <td> ctrl-y </td>
+    <td> ctrl-y (shift-cmd-z on macOS; cmd-y also works) </td>
     </tr>
 <tr>
     <td> Start Wire </td>
@@ -54,7 +54,19 @@ The keys and their functions are:
     </tr>
 <tr>
     <td> View Element Contents </td>
-    <td> ctrl-s </td>
+    <td> v </td>
+    </tr>
+<tr>
+    <td> Rotate Element Clockwise </td>
+    <td> r </td>
+    </tr>
+<tr>
+    <td> Rotate Element Counter-Clockwise </td>
+    <td> shift-r </td>
+    </tr>
+<tr>
+    <td> Flip Element </td>
+    <td> f </td>
     </tr>
 <tr>
     <td> Watch/Unwatch Element </td>
@@ -84,6 +96,14 @@ on a wire, in "empty" space) - otherwise they have no effect.
 The ctrl-w key is context sensitive:
 if the cursor is on an element that can be modified the function is
 "Modify"; if it is in "empty" space the function is "Start Wire".
+
+<p>
+The editing area holds keyboard focus like any other component: click
+in it (or just select its tab) and the hot keys above work until you
+click somewhere else.  Focus no longer follows the mouse pointer.
+File operations (New, Open, Save, Save As, Exit) have their own menu
+accelerators, shown in the File menu, and those work no matter which
+part of the window has focus.
 
 </body>
 

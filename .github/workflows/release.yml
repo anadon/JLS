@@ -2,10 +2,13 @@ name: Release
 
 # Pushing a tag like v5.0.0 builds the self-contained jar, checks the tag
 # against the pom version, and publishes a GitHub Release with sha256
-# checksums, the CycloneDX SBOM, and build-provenance attestation
+# checksums, the CycloneDX SBOM, a Reproducible Builds .buildinfo record
+# (#185; see docs/reproducibility.md), and build-provenance attestation
 # (#8, hardened by #44; SBOM asset per #65).  A second job builds jpackage
 # installers (deb/rpm, msi, dmg) with a bundled jlink runtime and a .jls
-# file association, and attaches them to the same release (#82).
+# file association, and attaches them to the same release (#82).  The
+# Windows msi files are Authenticode-signed via SignPath before checksums
+# and attestation, once the maintainer has enrolled (#134).
 #
 # Manual runs (workflow_dispatch) are a dry-run (#44): they build, verify,
 # and produce checksums exactly like a tag push, but skip the tag↔pom guard,
@@ -21,6 +24,15 @@ on:
   # ref without touching a release -- the guard, attestation, and publish
   # steps are gated on the push event below.
   workflow_dispatch:
+    inputs:
+      # Dry-runs normally skip Authenticode signing (#134) so they stay
+      # free; a broken SignPath secret would otherwise surface only at
+      # release time.  Force-sign once after enrolling (or rotating the
+      # token) to prove the credentials against a throwaway artifact.
+      force-sign:
+        description: "Sign the Windows installers on this dry-run (exercises the SignPath secrets)"
+        type: boolean
+        default: false
 
 # Least privilege (#68): the workflow token is read-only by default and
 # each publishing job elevates only what it uses.
@@ -67,13 +79,20 @@ jobs:
               ;;
           esac
 
+      # The trailing artifact:buildinfo goal runs in the same Maven
+      # session, so the resulting target/jls-<version>.buildinfo records
+      # the checksums of the artifacts this very build attached (jar,
+      # BOM) plus the exact build environment (JDK vendor+version, Maven
+      # version) a third party needs to reproduce them bit-for-bit
+      # (#185; see docs/reproducibility.md).  The plugin is invoked by
+      # full coordinates so the pinned version is explicit.
       - name: Build and test
-        run: mvn -B verify
+        run: mvn -B verify org.apache.maven.plugins:maven-artifact-plugin:3.6.0:buildinfo
 
       - name: Generate sha256 checksums
         run: |
           cd target
-          sha256sum jls-*.jar bom.json > SHA256SUMS
+          sha256sum jls-*.jar bom.json jls-*.buildinfo > SHA256SUMS
           cat SHA256SUMS
 
       # Signed, verifiable statement that this exact jar was built by this
@@ -92,6 +111,7 @@ jobs:
           files: |
             target/jls-*.jar
             target/bom.json
+            target/*.buildinfo
             target/SHA256SUMS
           generate_release_notes: true
           fail_on_unmatched_files: true
@@ -232,7 +252,12 @@ jobs:
   # Verification status:
   #   - ubuntu-latest (x86_64 deb + rpm + AppImage): recipe verified
   #     end-to-end on Linux (deb installed, launcher ran, .jls
-  #     association files present).
+  #     association files present).  Per the #82 adjudication
+  #     (2026-07-17) the Linux legs bundle JetBrains Runtime (Wayland
+  #     WLToolkit) once the JBR sha256 pin in scripts/build-installer.sh
+  #     is armed (issue #101's placeholder convention); until then they
+  #     fall back to the build JDK's jlink image with a loud warning in
+  #     the build log.
   #   - windows-latest (msi) and macos-latest (dmg, Apple silicon — the
   #     macos-latest runners are arm64): built successfully in dry-runs;
   #     still continue-on-error until a real msi/dmg has been installed
@@ -275,6 +300,20 @@ jobs:
       # sign the per-installer provenance attestations (OIDC)
       id-token: write
       attestations: write
+      # the SignPath action's default github-token reads the job details
+      # and downloads the unsigned-msi artifact (#134); job-scoped
+      # permissions (#68) default everything unlisted to none
+      actions: read
+    env:
+      # Authenticode signing via SignPath.io's open-source program (#134).
+      # Both values come from the SignPath account; neither is private key
+      # material — SignPath holds the key.  Until the maintainer enrolls
+      # and sets the secrets, SIGNPATH_ENROLLED is 'false' and every
+      # signing/verification step below skips cleanly (unsigned msi, as
+      # today).  Signing runs on tag pushes, or on a dry-run when the
+      # force-sign input is set (to prove the secrets before a release).
+      SIGNPATH_ENROLLED: ${{ secrets.SIGNPATH_API_TOKEN != '' && secrets.SIGNPATH_ORGANIZATION_ID != '' }}
+      SIGNING_RUN: ${{ github.event_name == 'push' || inputs.force-sign == true }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -326,6 +365,55 @@ jobs:
         shell: bash
         run: mvn -B -q package -DskipTests
 
+      # GPG release signing (#136): the rpm gets an embedded rpmsign
+      # signature and the AppImage an embedded appimagetool --sign
+      # signature, so `rpm -K` and AppImage validators verify natively —
+      # the Sigstore attestation below proves origin but is invisible to
+      # that tooling.  Custody: the primary key stays offline with the
+      # maintainer; CI holds only a passphrase-protected signing subkey
+      # (secrets RELEASE_GPG_KEY = armored `gpg --export-secret-subkeys`
+      # output, RELEASE_GPG_PASSPHRASE).  Guarded on secret presence
+      # rather than event type: releases keep working unsigned until the
+      # key exists, and dry-runs exercise the signing path too (signing
+      # publishes nothing; the artifacts stay on the runner).
+      - name: Import release signing key
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          RELEASE_GPG_KEY: ${{ secrets.RELEASE_GPG_KEY }}
+          RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+        run: |
+          if [ -z "${RELEASE_GPG_KEY}" ]; then
+            echo "::notice::RELEASE_GPG_KEY secret not set; rpm and AppImage ship unsigned (#136)"
+            exit 0
+          fi
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          echo allow-preset-passphrase > "${GNUPGHOME}/gpg-agent.conf"
+          gpg --batch --import <<<"${RELEASE_GPG_KEY}"
+          FPR="$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr/{print $10; exit}')"
+          # the CI secret and the published public key must be the same
+          # key, or every signature made here would fail for users; on
+          # mismatch stop and audit the secret — do not release (#136)
+          if [ -f resources/packaging/RELEASE-KEY.asc ]; then
+            PUB="$(gpg --batch --with-colons --show-keys resources/packaging/RELEASE-KEY.asc | awk -F: '/^fpr/{print $10; exit}')"
+            if [ "${FPR}" != "${PUB}" ]; then
+              echo "::error::RELEASE_GPG_KEY (${FPR}) does not match resources/packaging/RELEASE-KEY.asc (${PUB}); audit the secret (#136)"
+              exit 1
+            fi
+          fi
+          # preset the passphrase in the ephemeral agent so rpmsign's
+          # and appimagetool's gpg invocations run unattended
+          gpgconf --launch gpg-agent
+          gpg --batch --with-colons --with-keygrip --list-secret-keys \
+            | awk -F: '$1 == "grp" {print $10}' \
+            | while read -r grip; do
+                "$(gpgconf --list-dirs libexecdir)/gpg-preset-passphrase" \
+                  --preset "${grip}" <<<"${RELEASE_GPG_PASSPHRASE}" || true
+              done
+          echo "GNUPGHOME=${GNUPGHOME}" >> "${GITHUB_ENV}"
+          echo "JLS_SIGN_KEY=${FPR}" >> "${GITHUB_ENV}"
+
       # jar -> jdeps -> jlink -> jpackage; produces target/installer/dist/
       # (deb and, where rpmbuild exists, rpm on Linux; msi on Windows --
       # WiX is preinstalled on windows-latest; dmg on macOS)
@@ -334,6 +422,102 @@ jobs:
         env:
           JLS_SKIP_BUILD: "1"
         run: bash scripts/build-installer.sh
+
+      # Predictions P1 and P3 from #136, enforced on every signed build:
+      # the rpm must verify against the public half of the signing key
+      # (`digests signatures OK`), the AppImage's .sha256_sig section
+      # must be filled in, and the signed AppImage must still launch
+      # (per #136's falsification criteria a signing failure stops the
+      # release; a broken launcher means appimagetool's signing damaged
+      # the runtime — ship unsigned and report the tool bug upstream).
+      - name: Verify release signatures
+        if: runner.os == 'Linux' && env.JLS_SIGN_KEY != ''
+        shell: bash
+        run: |
+          DB="$(mktemp -d)"
+          rpm --dbpath "${DB}" --initdb
+          gpg --batch --export --armor "${JLS_SIGN_KEY}" > "${DB}/pub.asc"
+          rpm --dbpath "${DB}" --import "${DB}/pub.asc"
+          for f in target/installer/dist/jls-*.rpm; do
+            out="$(rpm --dbpath "${DB}" -K "${f}")"
+            echo "${out}"
+            case "${out}" in
+              *"digests signatures OK") ;;
+              *) echo "::error::rpm signature verification failed for ${f} (#136)"; exit 1 ;;
+            esac
+          done
+          for f in target/installer/dist/JLS-*.AppImage; do
+            # the embedded signature lives in the runtime's .sha256_sig
+            # ELF section; still all-zero means nothing was signed
+            if readelf -x .sha256_sig "${f}" | awk '/^ *0x/ { for (i = 2; i <= 5 && i <= NF; i++) if ($i !~ /^0+$/) ok = 1 } END { exit !ok }'; then
+              echo "${f}: embedded GPG signature present"
+            else
+              echo "::error::${f} has no embedded signature (#136)"
+              exit 1
+            fi
+            "${f}" --appimage-extract-and-run -h > /dev/null
+            echo "${f}: launcher still works (-h)"
+          done
+
+      # ---- Authenticode signing of the msi (#134), Windows legs only ----
+      # SignPath fetches the artifact from this workflow run, signs it with
+      # the service-held key (publisher: "SignPath Foundation" on the OSS
+      # tier), and hands the signed file back, overwriting the unsigned msi
+      # in target/installer/dist — so the attestation, checksums, and
+      # release upload below all operate on the *signed* bytes (H2 in
+      # #134: signing mutates the file, so it must precede those steps).
+      #
+      # Enrollment (one-time, maintainer): apply at signpath.org for the
+      # OSS tier, create a project (slug: JLS) whose artifact configuration
+      # is rooted at <zip-file> containing the msi — upload-artifact wraps
+      # the file in a ZIP by default, and SignPath's GitHub-connector docs
+      # require the configuration root to match that — plus a signing
+      # policy (slug: release-signing) set to auto-approve requests (a
+      # manual-approval policy would time the action out at 600 s on an
+      # unattended release), link this repository as the trusted build
+      # system, then set the SIGNPATH_API_TOKEN and
+      # SIGNPATH_ORGANIZATION_ID repository secrets and prove them once
+      # via workflow_dispatch with force-sign.
+      - name: Upload unsigned msi for signing
+        id: unsigned-msi
+        if: runner.os == 'Windows' && env.SIGNING_RUN == 'true' && env.SIGNPATH_ENROLLED == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-msi-unsigned-${{ runner.arch }}
+          path: target/installer/dist/*.msi
+          if-no-files-found: error
+          # an intermediate SignPath consumes within minutes; keep it just
+          # long enough to debug a failed signing request
+          retention-days: 1
+
+      - name: Sign msi via SignPath
+        if: runner.os == 'Windows' && env.SIGNING_RUN == 'true' && env.SIGNPATH_ENROLLED == 'true'
+        uses: signpath/github-action-submit-signing-request@b9d91eadd323de506c0c81cf0c7fe7438f3360fd # v2.2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: JLS
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ steps.unsigned-msi.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: target/installer/dist
+
+      # feeds the verify-windows-signatures job below (osslsigncode runs
+      # on Linux; there is no need for a Windows host to check the result)
+      - name: Upload signed msi for verification
+        if: runner.os == 'Windows' && env.SIGNING_RUN == 'true' && env.SIGNPATH_ENROLLED == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-msi-signed-${{ runner.arch }}
+          path: target/installer/dist/*.msi
+          if-no-files-found: error
+
+      # visible breadcrumb on tag pushes while unenrolled: the release
+      # ships unsigned msi files exactly as before #134
+      - name: Note unsigned msi (SignPath not enrolled)
+        if: runner.os == 'Windows' && env.SIGNING_RUN == 'true' && env.SIGNPATH_ENROLLED != 'true'
+        shell: bash
+        run: echo "::notice::SIGNPATH_API_TOKEN / SIGNPATH_ORGANIZATION_ID are not set; the msi ships unsigned (#134)"
 
       # Same provenance statement as the jar, one per installer (#44).
       # Runs before the checksum step so the glob only matches installers.
@@ -371,3 +555,63 @@ jobs:
         with:
           files: target/installer/dist/*
           fail_on_unmatched_files: true
+
+  # Checks the Authenticode signature on both msi files from a Linux host
+  # (#134) — osslsigncode needs no Windows machine.  Runs whenever signing
+  # ran (tag pushes, or force-sign dry-runs); skips while the SignPath
+  # secrets are absent so an unenrolled repository stays green.  A missing
+  # or broken signature on a tag push fails this job — loudly, after the
+  # release published, since signing problems should never unpublish a
+  # working release.
+  #
+  # osslsigncode checks signature structure and digests; Windows policy is
+  # arbitrated by `signtool verify /pa JLS-<v>-<arch>.msi` on a real
+  # Windows machine (record that output in the first signed release's PR,
+  # per #134 §8).
+  #
+  # The exactly-two msi requirement doubles as a missing-asset alarm: the
+  # matrix marks both Windows legs experimental (continue-on-error), so a
+  # failed leg used to leave the run green with that installer silently
+  # absent from the release.  Once enrolled, the same failure turns this
+  # job red — deliberate, so a missing msi is noticed, but it does
+  # tighten the old experimental-leg tolerance on signing runs.
+  verify-windows-signatures:
+    needs: installers
+    if: github.event_name == 'push' || inputs.force-sign == true
+    runs-on: ubuntu-latest
+    env:
+      SIGNPATH_ENROLLED: ${{ secrets.SIGNPATH_API_TOKEN != '' && secrets.SIGNPATH_ORGANIZATION_ID != '' }}
+    steps:
+      - name: Download signed installers
+        if: env.SIGNPATH_ENROLLED == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: windows-msi-signed-*
+          merge-multiple: true
+          path: signed
+
+      # osslsigncode exits 0 only when the signature verifies, digests and
+      # certificate chain included (chain against the Linux CA bundle —
+      # should the CA SignPath issues under turn out to be missing from
+      # it, the force-sign dry-run surfaces that before any release, and
+      # the fix is passing -CAfile with the service's published chain).
+      # The grep for the ok-line is belt-and-braces on top of the exit
+      # status; `shell: bash` gives pipefail so the tee cannot mask a
+      # failure.
+      - name: Verify Authenticode signatures (osslsigncode)
+        if: env.SIGNPATH_ENROLLED == 'true'
+        shell: bash
+        run: |
+          sudo apt-get -yqq update
+          sudo apt-get -yqq install osslsigncode
+          shopt -s nullglob
+          files=(signed/*.msi)
+          if [ "${#files[@]}" -ne 2 ]; then
+            echo "::error::expected 2 signed msi files (x86_64 + aarch64), found ${#files[@]}"
+            exit 1
+          fi
+          for msi in "${files[@]}"; do
+            echo "== ${msi}"
+            osslsigncode verify -in "${msi}" | tee verify.out
+            grep -q "Signature verification: ok" verify.out
+          done

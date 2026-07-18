@@ -43,7 +43,7 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public class Display extends LogicElement {
+public final class Display extends LogicElement {
 	
 	// constants
 	private final int defaultBits = 1;

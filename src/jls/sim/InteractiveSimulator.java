@@ -11,6 +11,8 @@ import javax.swing.text.AbstractDocument;
 import java.util.concurrent.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Event driven circuit simulator.
  *
@@ -19,49 +21,82 @@ import java.util.*;
 public final class InteractiveSimulator extends Simulator {
 
 	// minimum size for trace window
+	/** The trace window's minimum width in pixels. */
 	private final int SWIDTH = 1000;
+	/** The trace window's minimum height in pixels. */
 	private final int SHEIGHT = 70;
 
 	// control state shared between the EDT, the animation timer thread,
 	// and the sim thread: volatile so Stop/Pause/Step cannot be missed
 	// under JIT hoisting (issue #49, finding H7)
+	/** How many time units one Step press advances. */
 	private volatile int stepAmount = 1;
+	/** The simulation time the current step run pauses at, or -1. */
 	private volatile long stepEnd = -1;
+	/** Whether the simulation is paused. */
 	private volatile boolean paused = false;
+	/** The sim thread blocks on this while paused. */
 	private Semaphore pauseSem = new Semaphore(0);
-	private volatile Thread sim = null;
-	// suppress UI updates for this run only ("run in background");
-	// replaces the racy JLSInfo.batch toggle (issue #49, finding M15)
+	/** The running simulation thread; null between runs (issue #93). */
+	private volatile @Nullable Thread sim = null;
+	/**
+	 * Suppress UI updates for this run only ("run in background");
+	 * replaces the racy JLSInfo.batch toggle (issue #49, finding M15).
+	 */
 	private volatile boolean quiet = false;
 
 	// GUI stuff
+	/** The button row at the top of the simulator window. */
 	private JPanel action = new JPanel(new FlowLayout(FlowLayout.LEFT));
+	/** Starts a simulation run. */
 	private JButton start = new JButton("  Start   ");
+	/** Advances the simulation by the step amount. */
 	private JButton step = new JButton("Step");
+	/** Runs the simulation with periodic display updates. */
 	private JButton animate = new JButton("Animate");
+	/** Runs the simulation to the time limit without animation. */
 	private JButton end = new JButton("End");
+	/** Pauses the running simulation. */
 	private JButton pause = new JButton("Pause");
+	/** Resumes a paused simulation. */
 	private JButton resume = new JButton("Resume");
+	/** Stops the running simulation. */
 	private JButton stop = new JButton("Stop");
+	/** Prints the traces. */
 	private JButton print = new JButton("Print");
+	/** Opens the simulator help topic. */
 	private JButton help = new JButton("Help");
+	/** The content pane the trace rows live in. */
 	private JPanel window = new JPanel();
+	/** The message label in the button row. */
 	private JLabel msg = new JLabel("");
+	/** The current-time display in the button row. */
 	private JLabel showClock = new JLabel("Time: 0");
+	/** The editable simulation time limit. */
 	private JTextField tlimit = new JTextField(maxTime+"",7);
+	/** The status bar at the bottom of the simulator window. */
 	private JPanel statusBar = new JPanel(new BorderLayout());
+	/** The status bar's message area. */
 	private JLabel statusMsg = new JLabel(" ");
+	/** The status bar's simulation-time display. */
 	private JLabel statusClock = new JLabel();
 
 	// for animation
-	volatile java.util.Timer timer;
+	/** The animation timer; null unless animating (issue #93). */
+	volatile java.util.@Nullable Timer timer;
 
 	// for showing traces in interactive mode
+	/** The container of all trace rows. */
 	private Traces traces = new Traces();
+	/** Per watched element, its trace row. */
 	private Map<Element,Trace> traceMap = new HashMap<Element,Trace>();
+	/** Per watched wire, its trace row. */
 	private Map<Wire,Trace> wireMap = new HashMap<Wire,Trace>();
+	/** Horizontal scale: simulation time units per pixel. */
 	private int scaleFactor = 1;
+	/** The open memory-trace popup windows. */
 	private Set<MemTrace> memTraces = new HashSet<MemTrace>();
+	/** The numeric base trace values are labeled in (2, 10, or 16). */
 	private int displayBase = 10;
 
 	/**
@@ -73,9 +108,6 @@ public final class InteractiveSimulator extends Simulator {
 	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public InteractiveSimulator() {
-
-		// save a reference to itself
-		me = this;
 
 		// if JLSInfo.batch, no GUI
 		if (JLSInfo.batch)
@@ -363,9 +395,11 @@ public final class InteractiveSimulator extends Simulator {
 							 */
 							@Override
 							public void run() {
-								
+
 								if (now >= maxTime) {
-									timer.cancel();
+									java.util.Timer t = timer;
+									if (t != null)
+										t.cancel();
 								}
 
 								// do a step
@@ -539,7 +573,8 @@ public final class InteractiveSimulator extends Simulator {
 	public void runSim(boolean background) {
 
 		// do nothing if no circuit
-		if (circuit == null)
+		final Circuit circ = circuit;
+		if (circ == null)
 			return;
 
 		quiet = background;
@@ -551,9 +586,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		// create test signal element
 		TestGen gen = null;
-		if (testFileName != null) {
-			gen = new TestGen(circuit);
-			gen.setFile(testFileName);
+		String testFile = testFileName;
+		if (testFile != null) {
+			gen = new TestGen(circ);
+			gen.setFile(testFile);
 		}
 
 		// reset clock/queues and initialize all elements; stale permits
@@ -566,7 +602,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		// initialize test generator, if there is one
 		if (gen != null) {
-			gen.initSim(me);
+			gen.initSim(this);
 		}
 
 		// find all probes and watched elements (if not batch/background)
@@ -579,7 +615,7 @@ public final class InteractiveSimulator extends Simulator {
 				mtr.dispose();
 			}
 			memTraces.clear();
-			findTraces(circuit);
+			findTraces(circ);
 			traces.setup();
 			traces.draw();
 		}
@@ -595,7 +631,7 @@ public final class InteractiveSimulator extends Simulator {
 			public void run() {
 
 				// disable circuit editor (if one)
-				Editor ed = circuit.getEditor();
+				Editor ed = circ.getEditor();
 				if (ed != null)
 					ed.enableEditor(false); // turn off listeners
 
@@ -604,8 +640,9 @@ public final class InteractiveSimulator extends Simulator {
 				runEventLoop();
 
 				// kill timer if there is one
-				if (timer != null) {
-					timer.cancel();
+				java.util.Timer t = timer;
+				if (t != null) {
+					t.cancel();
 				}
 
 				// determine reason for stopping BEFORE padding the clock,
@@ -696,7 +733,7 @@ public final class InteractiveSimulator extends Simulator {
 	@Override
 	protected boolean beforeEvent() {
 
-		Editor ed = circuit.getEditor();
+		Editor ed = circuit().getEditor();
 
 		// check for being paused
 		if (paused) {
@@ -770,8 +807,11 @@ public final class InteractiveSimulator extends Simulator {
 		return true;
 	} // end of beforeEvent method
 
-	// "Simulation Running" only needs to be set once per run, not per
-	// event from the sim thread (#49, H8)
+	/**
+	 * Whether the running message is already up: "Simulation Running"
+	 * only needs to be set once per run, not per event from the sim
+	 * thread (#49, H8).
+	 */
 	private volatile boolean runningMsgShown = false;
 
 	/**
@@ -1064,14 +1104,19 @@ public final class InteractiveSimulator extends Simulator {
 	public class Traces extends JPanel implements MouseMotionListener {
 
 		// properties
+		/** The displayed trace rows, top to bottom. */
 		private java.util.List<Trace> traceList = new LinkedList<Trace>();
+		/** Trace rows added since the last relayout. */
 		private java.util.List<Trace> newList = new LinkedList<Trace>();
+		/** The pixel width reserved for the signal-name column. */
 		private int nameSpace;
 
-		// hard ceiling on how wide the trace panels may grow (issue
-		// #121): keeps a very long run at a tiny scale factor from
-		// demanding an absurd component width; the retained history
-		// is bounded by Trace.MAX_RETAINED_CHANGES anyway
+		/**
+		 * Hard ceiling on how wide the trace panels may grow (issue
+		 * #121): keeps a very long run at a tiny scale factor from
+		 * demanding an absurd component width; the retained history
+		 * is bounded by Trace.MAX_RETAINED_CHANGES anyway.
+		 */
 		private static final int MAX_PANEL_WIDTH = 4_000_000;
 
 		/**
@@ -1357,6 +1402,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		/**
 		 * Call superclass constructor, supply null name.
+		 *
+		 * @param width The drawable trace width in pixels.
+		 * @param el The element the header row nominally traces.
+		 * @param parent The trace-window container this header belongs to.
 		 */
 		public Header(int width, Element el, InteractiveSimulator.Traces parent) {
 

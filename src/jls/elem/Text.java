@@ -15,7 +15,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class Text extends DisplayElement {
+public final class Text extends DisplayElement {
 
 	// named constants
 	private final int size = 500;	// width and height of dialog

@@ -28,21 +28,62 @@ self-contained installers with a bundled Java runtime — no JDK needed:
   assets do not fit NixOS; the flake builds from source instead.)
 - **Windows:** `JLS-<version>-x86_64.msi`, or `JLS-<version>-aarch64.msi`
   for Windows on ARM (per-user install, no admin rights needed).
-  SmartScreen will warn that the installer is from an unknown publisher
-  because the artifacts are unsigned — choose "More info" → "Run anyway".
-  Verify the download against `SHA256SUMS-installers-windows-<arch>`
-  first if you want the assurance signing would otherwise give.
+  The installers are Authenticode-signed through
+  [SignPath.io](https://signpath.io)'s open-source program, so the
+  publisher shown by Windows is **SignPath Foundation** — if an installer
+  names any other publisher, or none (releases before signing was
+  enabled), do not run it before verifying the download against
+  `SHA256SUMS-installers-windows-<arch>`.
 - **macOS:** `JLS-<version>-aarch64.dmg` (Apple silicon). The app is
-  unsigned, so Gatekeeper blocks a plain double-click the first time:
-  right-click (Control-click) the app and choose "Open", then confirm —
-  needed only once. Intel Macs: use the jar below.
+  unsigned by choice, not oversight — signing requires paid Apple
+  Developer Program enrollment, which this free university tool
+  deliberately forgoes (#128, #135). Gatekeeper therefore blocks a
+  plain double-click the first time: right-click (Control-click) the
+  app and choose "Open", then confirm — needed only once. Intel Macs:
+  use the jar below.
 - **RISC-V:** no installer (nothing exists to build one on), but the jar
   below runs on any riscv64 JDK 25+, and the container image ships a
   `linux/riscv64` variant.
 
 Installing associates `.jls` circuit files with JLS: double-click a `.jls`
 file and it opens in the editor. Each installer has a sha256 entry in the
-`SHA256SUMS-installers-<os>-<arch>` release asset.
+`SHA256SUMS-installers-<os>-<arch>` release asset, and each carries a
+signed build-provenance attestation, checkable with
+`gh attestation verify JLS-<version>-<arch>.<ext> --repo anadon/JLS`.
+Note the scope of each guarantee: the checksums identify the exact bytes
+that were published and the attestation proves those bytes came from this
+repository's release workflow at a given commit — but the installers are
+*not* byte-reproducible (the native packaging tools embed wall-clock
+state), so rebuilding the same commit yourself will produce different
+checksums. That is expected; the jar and `bom.json` are the
+byte-reproducible artifacts (CI rebuilds and re-checks them on every
+push), while installer integrity rests on the attestation.
+
+Releases cut after the JLS release signing key lands (#136) additionally
+carry embedded GPG signatures on the rpm and the AppImage; earlier
+releases are verified by the checksums and attestation alone. The key's
+public half will be committed at `resources/packaging/RELEASE-KEY.asc`
+(fingerprint: `FINGERPRINT-PENDING` — both filled in when the key is
+generated, #136). To verify a signed rpm, import the key once, then
+expect `digests signatures OK`:
+
+```sh
+rpm --import RELEASE-KEY.asc     # as root; once
+rpm -K jls-<version>-1.<arch>.rpm
+```
+
+The AppImage signature is embedded in the runtime (ELF sections
+`.sha256_sig`/`.sig_key`), where validators such as AppImageUpdate and
+appimagelint check it; display it with:
+
+```sh
+./JLS-<version>-<arch>.AppImage --appimage-signature
+```
+
+The deb intentionally carries no embedded signature — Debian tooling
+verifies signed *repository* metadata, not individual .deb files — so
+for the deb use the checksums and provenance attestation described
+below.
 
 ## Running JLS from the jar (no installer)
 
@@ -64,6 +105,10 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   `sha256sum -c SHA256SUMS`; releases additionally carry signed build
   provenance, checkable with
   `gh attestation verify jls-<version>.jar --repo anadon/JLS`.
+  The jar and BOM are bit-for-bit reproducible from the tagged source:
+  each release publishes a `.buildinfo` recording the exact build
+  environment, and [docs/reproducibility.md](docs/reproducibility.md)
+  gives the independent-rebuild recipe.
 
 - **From the Maven registry:** releases are also published to GitHub
   Packages (`maven.pkg.github.com/anadon/JLS`, artifact
@@ -134,6 +179,23 @@ boots the GUI on a JBR under a headless sway compositor and screenshots
 it via [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) (issue #101),
 which also reproduces the setup locally or in the dev container.
 
+The supported desktop matrix:
+
+| Desktop / session | AWT toolkit | Java runtime | Status |
+|---|---|---|---|
+| Windows | Win32 | any JDK 25+ | supported |
+| macOS | Cocoa | any JDK 25+ | supported |
+| Linux, X11 session | XToolkit | any JDK 25+ | supported |
+| Linux, Wayland via XWayland (`DISPLAY` set) | XToolkit | any JDK 25+ | supported |
+| Linux, Wayland-native (`DISPLAY` unset) | `WLToolkit` (experimental) | JBR / Wakefield builds | supported |
+| Headless (batch, image/Verilog export) | none | any JDK 25+ | supported |
+
+The Wayland-native row is verified two ways: CI's headless-sway lane on
+every push, and — because a headless software-rendered rig can diverge
+from real GPU-backed compositors — a scripted once-per-release
+spot-check on a physical GNOME (Mutter) or KDE (KWin) desktop:
+[`docs/wayland-desktop-checklist.md`](docs/wayland-desktop-checklist.md).
+
 ## Building from source
 
 The build uses Maven and JDK 25+:
@@ -202,11 +264,15 @@ java -Dawt.toolkit.name=WLToolkit -jar target/jls-*.jar
 ```
 
 [`scripts/wayland-rig.sh`](scripts/wayland-rig.sh) automates the whole
-first-light experiment (issue #101): headless sway up, JLS launched on a
-JBR (`JBR_HOME=...`), window presence asserted via `swaymsg`, screenshot
-and logs collected into an artifacts directory. CI's `gui-wayland` lane
-runs exactly this script. The development container below accepts a
-`JBR_URL` build argument to bake that runtime in.
+first-light experiment (issue #101): headless sway up, a minimal
+[`HelloSwingControl`](scripts/HelloSwingControl.java) frame mapped first
+(so a failure is classified as JLS-side — exit 1 — or upstream JBR/sway —
+exit 2), then JLS launched on a JBR (`JBR_HOME=...`), window presence
+asserted via `swaymsg`, screenshot and logs collected into an artifacts
+directory. CI's `gui-wayland` lane runs exactly this script — on every
+push/PR and on a nightly cron that runs only this lane. The development
+container below accepts a `JBR_URL` build argument to bake that runtime
+in.
 
 ### Development container
 

@@ -45,7 +45,7 @@ public final class MemTrace extends JFrame {
 	} // end of showit method
 	
 	/**
-	 *
+	 * Refresh the displayed text from the memory's activity trace.
 	 */
 	public void update() {
 		

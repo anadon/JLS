@@ -3270,7 +3270,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * @param end1 The wire end.
 			 * @param wire The wire.
 			 * 
-			 * @returns true if can connect, false if not.
+			 * @return true if can connect, false if not.
 			 */
 			public boolean canConnect(WireEnd end1, Wire wire) {
 

@@ -261,12 +261,6 @@ public class Adder extends LogicElement {
 		
 	} // end of draw method
 	
-	/**
-	 * Set an int instance variable value (during a load).
-	 * 
-	 * @param name The instance variable name.
-	 * @param value The instance variable value.
-	 */
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =

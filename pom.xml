@@ -397,6 +397,46 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- Documentation gate: every public and protected declaration
+             carries well-formed Javadoc (the #186 documentation pass
+             made this true tree-wide; this gate keeps the API half
+             true). doclint runs all groups except `reference`: the
+             generated @see tags point at the test tree, which is
+             deliberately not on the javadoc sourcepath, so reference
+             resolution cannot succeed there - those tags are
+             regenerated attribution, not an enforced invariant. Any
+             other warning fails the build.
+             Scope note, verified empirically: the gate runs at the
+             default protected visibility because under -private the
+             standard doclet itself (independent of doclint, so the
+             -reference exclusion cannot reach it) warns on every
+             test-tree @see target; private-level completeness stays a
+             convention of the periodic documentation pass.
+             -Xmaxwarns lifts javadoc's default 100-warning cap so a
+             regression cannot hide behind truncated output. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.12.0</version>
+        <executions>
+          <execution>
+            <id>doclint-gate</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doclint>all,-reference</doclint>
+          <failOnWarnings>true</failOnWarnings>
+          <quiet>true</quiet>
+          <additionalOptions>
+            <additionalOption>-Xmaxwarns</additionalOption>
+            <additionalOption>10000</additionalOption>
+          </additionalOptions>
+        </configuration>
+      </plugin>
+      <plugin>
         <!-- CycloneDX SBOM with every build: target/bom.json/.xml
              (issue #65; publishing with releases rides #44) -->
         <groupId>org.cyclonedx</groupId>

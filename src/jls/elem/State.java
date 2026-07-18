@@ -676,7 +676,7 @@ public class State {
 	 * Set a pair of int instance variable values (during a load).
 	 * 
 	 * @param v1 The first value.
-	 * @param v1 The second value.
+	 * @param v2 The second value.
 	 */
 	public void setTransPair(int v1, int v2) {
 

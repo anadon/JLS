@@ -50,6 +50,20 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Documentation is now build-enforced: `mvn verify` runs a javadoc
+  doclint gate (all groups except unresolvable-by-design test
+  references) over the public/protected API with warnings as
+  failures, and a new package-info ratchet requires every package in
+  both trees to carry a package comment. The gate is scoped to API
+  visibility because under `-private` the standard doclet warns on
+  every test-tree `@see` target in a way doclint exclusions cannot
+  reach (verified empirically; recorded in the pom comment).
+  Fixed en route: eleven malformed doc comments the #186 pass left
+  behind - duplicated `@param v1` tags in five files, three stale
+  javadoc blocks orphaned above attribute tables by the #23
+  refactor, a mistyped `@returns`, two empty comments, and a VCD
+  format description whose angle-bracket placeholders parsed as
+  unclosed HTML.
 - Per-package coverage floors (#159): the JaCoCo ratchet now guards
   `jls`, `jls.sim`, `jls.elem`, and the new `jls.collab.op` package
   individually (instruction, line, and branch), so a regression in

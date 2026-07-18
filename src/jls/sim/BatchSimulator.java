@@ -627,9 +627,11 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * One VCD value-change entry. JLS values are two-state plus HiZ,
 	 * so only 0, 1 and z ever appear ('x' never does): a single-bit
-	 * signal becomes 0<code>, 1<code> or z<code>; a multi-bit signal
-	 * becomes a binary vector b<value> <code> with leading zeros
-	 * omitted, or bz <code> when the whole signal is HiZ.
+	 * signal becomes its value directly followed by the identifier
+	 * code ({@code 0c}, {@code 1c} or {@code zc}); a multi-bit signal
+	 * becomes a binary vector {@code b<value> <code>} with leading
+	 * zeros omitted, or {@code bz <code>} when the whole signal is
+	 * HiZ.
 	 *
 	 * @param el The signal's element (for its bit width).
 	 * @param value The recorded value, with HiZ encoded as the trace's

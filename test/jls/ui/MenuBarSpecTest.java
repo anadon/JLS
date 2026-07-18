@@ -66,17 +66,17 @@ class MenuBarSpecTest {
 	 */
 	private static final String EXPECTED_MENU_TREE = """
 			File
-			\tNew
-			\tOpen
-			\tSave
-			\tSave As
+			\tNew [Ctrl+N]
+			\tOpen [Ctrl+O]
+			\tSave [Ctrl+S]
+			\tSave As [Ctrl+Shift+S]
 			\tPrint...
 			\t\tEntire circuit
 			\t\tJust visible window
 			\tImport
 			\tExport Image
 			\tClose
-			\tExit
+			\tExit [Ctrl+Q]
 			Simulator
 			\tShow Simulator Window
 			\tHide Simulator Window
@@ -87,6 +87,9 @@ class MenuBarSpecTest {
 			\tRemove all probes
 			\tUnwatch all elements
 			\tExpand circuit drawing area by 10%
+			\tColor scheme
+			\t\tdefault
+			\t\tclassic
 			\tChange editor window grid color
 			\tChange editor window background color
 			Help

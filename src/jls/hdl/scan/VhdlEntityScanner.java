@@ -845,7 +845,15 @@ public final class VhdlEntityScanner {
 			Token t = toks.get(at);
 			if (t.kind == Kind.NUM) {
 				at += 1;
-				return Long.parseLong(t.text.replace("_", ""));
+				try {
+					return Long.parseLong(t.text.replace("_", ""));
+				} catch (NumberFormatException overflow) {
+					// digits are guaranteed by the tokenizer, so only
+					// a value past Long.MAX_VALUE lands here - reject
+					// with the typed error, never a raw runtime one
+					throw new HdlScanException(
+							"numeric literal out of range", t.line);
+				}
 			}
 			if (isPunct(t, "(")) {
 				at += 1;

@@ -2,6 +2,7 @@ package jls;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Graphics2D;
@@ -318,8 +319,15 @@ class FileFormatSpecTest {
 			assertFalse(Modifier.isAbstract(c.getModifiers()),
 					tag + " must be concrete");
 			try {
-				c.getConstructor(Circuit.class);
-			} catch (NoSuchMethodException ex) {
+				Class<? extends Element> c = Class.forName("jls.elem." + tag)
+						.asSubclass(Element.class);
+				assertFalse(Modifier.isAbstract(c.getModifiers()),
+						tag + " must be concrete");
+				// existence probe: throws if the (Circuit) constructor
+				// is missing; the assert uses the value (Error Prone
+				// ReturnValueIgnored, via the #93 NullAway wiring)
+				assertNotNull(c.getConstructor(Circuit.class));
+			} catch (ReflectiveOperationException | ClassCastException ex) {
 				broken.add(tag + " (" + ex + ")");
 			}
 		}

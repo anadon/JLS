@@ -7,6 +7,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Draw the trace of a signal over time.
  * 
@@ -33,14 +35,23 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * first to draw and to look up the value in effect at any time.
 	 */
 	private static class Change {
-		/** The recorded signal value (null for HiZ). */
-		public BitSet value;
+		/** The value taking effect (HiZ as the off marker, never null). */
+		public final BitSet value;
 		/** The simulation time the value took effect. */
-		public long when;
+		public final long when;
 
-		/** Create an empty change; the recorder fills the fields. */
-		Change() {
-		}
+		/**
+		 * Record one signal change.
+		 *
+		 * @param value The value taking effect (HiZ encoded as the
+		 *        off marker BitSet, never null).
+		 * @param when The simulation time it took effect.
+		 */
+		public Change(BitSet value, long when) {
+
+			this.value = value;
+			this.when = when;
+		} // end of constructor
 	};
 
 	// properties
@@ -73,8 +84,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	protected int width;
 	/** The traced signal's bit width. */
 	private int bits;
-	/** The last committed value, to suppress no-change samples. */
-	private BitSet previousValue = null;
+	/** The last committed value; null until the first arrives (#93). */
+	private @Nullable BitSet previousValue = null;
 	/** This trace, for inner-class callbacks. */
 	private Trace me;
 	/** The time-cursor slider position in pixels, or -1 if none. */
@@ -160,7 +171,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	/**
 	 * Add a value/time to the front of the pending changes list.
 	 *
-	 * @param value The value to add to the list.
+	 * @param value The value to add to the list, or null for HiZ.
 	 * @param when The time at which the value occurred.
 	 *
 	 * @see jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
@@ -170,20 +181,17 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
 	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
 	 */
-	public synchronized void addValue(BitSet value, long when) {
-		
+	public synchronized void addValue(@Nullable BitSet value, long when) {
+
 		// don't add if no change
 		if (value == null) {
 			value = off;
 		}
 		if (value.equals(previousValue))
 			return;
-			
-		Change ch = new Change();
-		ch.value = (BitSet)value.clone();
+
 		previousValue = (BitSet)value.clone();
-		ch.when = when;
-		pendingChanges.add(0,ch);
+		pendingChanges.add(0,new Change((BitSet)value.clone(),when));
 		
 		// retain a bounded scrollback history (issue #121): the cap
 		// used to be the panel width, which discarded everything a

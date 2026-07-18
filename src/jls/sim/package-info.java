@@ -9,5 +9,12 @@
  * animate, pause, and stop controls. Supporting classes render signal
  * waveforms over time ({@link jls.sim.Trace}) and display memory activity
  * ({@link jls.sim.MemTrace}).
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated {@code @Nullable}, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.sim;
+
+import org.jspecify.annotations.NullMarked;

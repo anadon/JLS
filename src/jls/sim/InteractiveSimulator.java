@@ -11,6 +11,8 @@ import javax.swing.text.AbstractDocument;
 import java.util.concurrent.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Event driven circuit simulator.
  *
@@ -35,8 +37,8 @@ public final class InteractiveSimulator extends Simulator {
 	private volatile boolean paused = false;
 	/** The sim thread blocks on this while paused. */
 	private Semaphore pauseSem = new Semaphore(0);
-	/** The running simulation thread, or null when not running. */
-	private volatile Thread sim = null;
+	/** The running simulation thread; null between runs (issue #93). */
+	private volatile @Nullable Thread sim = null;
 	/**
 	 * Suppress UI updates for this run only ("run in background");
 	 * replaces the racy JLSInfo.batch toggle (issue #49, finding M15).
@@ -80,8 +82,8 @@ public final class InteractiveSimulator extends Simulator {
 	private JLabel statusClock = new JLabel();
 
 	// for animation
-	/** The animation timer, or null when not animating. */
-	volatile java.util.Timer timer;
+	/** The animation timer; null unless animating (issue #93). */
+	volatile java.util.@Nullable Timer timer;
 
 	// for showing traces in interactive mode
 	/** The container of all trace rows. */
@@ -106,9 +108,6 @@ public final class InteractiveSimulator extends Simulator {
 	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public InteractiveSimulator() {
-
-		// save a reference to itself
-		me = this;
 
 		// if JLSInfo.batch, no GUI
 		if (JLSInfo.batch)
@@ -396,9 +395,11 @@ public final class InteractiveSimulator extends Simulator {
 							 */
 							@Override
 							public void run() {
-								
+
 								if (now >= maxTime) {
-									timer.cancel();
+									java.util.Timer t = timer;
+									if (t != null)
+										t.cancel();
 								}
 
 								// do a step
@@ -572,7 +573,8 @@ public final class InteractiveSimulator extends Simulator {
 	public void runSim(boolean background) {
 
 		// do nothing if no circuit
-		if (circuit == null)
+		final Circuit circ = circuit;
+		if (circ == null)
 			return;
 
 		quiet = background;
@@ -584,9 +586,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		// create test signal element
 		TestGen gen = null;
-		if (testFileName != null) {
-			gen = new TestGen(circuit);
-			gen.setFile(testFileName);
+		String testFile = testFileName;
+		if (testFile != null) {
+			gen = new TestGen(circ);
+			gen.setFile(testFile);
 		}
 
 		// reset clock/queues and initialize all elements; stale permits
@@ -599,7 +602,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		// initialize test generator, if there is one
 		if (gen != null) {
-			gen.initSim(me);
+			gen.initSim(this);
 		}
 
 		// find all probes and watched elements (if not batch/background)
@@ -612,7 +615,7 @@ public final class InteractiveSimulator extends Simulator {
 				mtr.dispose();
 			}
 			memTraces.clear();
-			findTraces(circuit);
+			findTraces(circ);
 			traces.setup();
 			traces.draw();
 		}
@@ -628,7 +631,7 @@ public final class InteractiveSimulator extends Simulator {
 			public void run() {
 
 				// disable circuit editor (if one)
-				Editor ed = circuit.getEditor();
+				Editor ed = circ.getEditor();
 				if (ed != null)
 					ed.enableEditor(false); // turn off listeners
 
@@ -637,8 +640,9 @@ public final class InteractiveSimulator extends Simulator {
 				runEventLoop();
 
 				// kill timer if there is one
-				if (timer != null) {
-					timer.cancel();
+				java.util.Timer t = timer;
+				if (t != null) {
+					t.cancel();
 				}
 
 				// determine reason for stopping BEFORE padding the clock,
@@ -729,7 +733,7 @@ public final class InteractiveSimulator extends Simulator {
 	@Override
 	protected boolean beforeEvent() {
 
-		Editor ed = circuit.getEditor();
+		Editor ed = circuit().getEditor();
 
 		// check for being paused
 		if (paused) {

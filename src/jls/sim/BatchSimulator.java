@@ -5,6 +5,8 @@ import jls.elem.*;
 
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Event driven circuit simulator.
  *
@@ -27,7 +29,7 @@ public class BatchSimulator extends Simulator {
 	 * A non-null value enables trace accumulation in afterEvent even
 	 * when the -r printer flag (JLSInfo.printTrace) is off.
 	 */
-	private String vcdFileName = null;
+	private @Nullable String vcdFileName = null;
 
 	/**
 	 * Create a new Simulator object.
@@ -52,8 +54,6 @@ public class BatchSimulator extends Simulator {
 	 */
 	public BatchSimulator() {
 
-		// save a reference to itself
-		me = this;
 	} // end of constructor
 
 	/**
@@ -103,7 +103,7 @@ public class BatchSimulator extends Simulator {
 		initSimulation();
 
 		// find watched elements and set up trace map
-		findWatched(circuit);
+		findWatched(circuit());
 
 		// run the shared event loop (tracing happens in afterEvent)
 		runEventLoop();
@@ -130,7 +130,12 @@ public class BatchSimulator extends Simulator {
 
 			// get the event trace for this element,
 			// or create one if none yet
+			// findWatched registered every watched element with a time-0
+			// entry before the event loop started, so an element without
+			// one has no trace to extend (issue #93)
 			List<TraceSample> events = eventTrace.get(el);
+			if (events == null)
+				return;
 
 			// create bitset for HiZ
 			BitSet off = new BitSet(el.getBits()+1);
@@ -165,21 +170,23 @@ public class BatchSimulator extends Simulator {
 	public void addTestGen() {
 
 		// create test signal element if necessary
-		if (testFileName != null) {
-			TestGen gen = new TestGen(circuit);
-			circuit.addElement(gen);
-			gen.setFile(testFileName);
-			
+		String testFile = testFileName;
+		if (testFile != null) {
+			Circuit circ = circuit();
+			TestGen gen = new TestGen(circ);
+			circ.addElement(gen);
+			gen.setFile(testFile);
+
 			// remove any signal generators from this circuit
 			// (signal generators in subcircuits will disable themselves)
 			Set<Element> gens = new HashSet<Element>();
-			for (Element el : circuit.getElements()) {
+			for (Element el : circ.getElements()) {
 				if (el instanceof SigGen) {
 					gens.add(el);
 				}
 			}
 			for (Element el : gens) {
-				circuit.remove(el);
+				circ.remove(el);
 			}
 		}
 	} // end of addTestGen method
@@ -241,7 +248,7 @@ public class BatchSimulator extends Simulator {
 	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
-	public void setVcdFile(String fileName) {
+	public void setVcdFile(@Nullable String fileName) {
 
 		vcdFileName = fileName;
 	} // end of setVcdFile method
@@ -251,13 +258,20 @@ public class BatchSimulator extends Simulator {
 	 * given to setVcdFile, as IEEE 1364-2001 (section 18) VCD.
 	 *
 	 * @throws java.io.IOException if the file cannot be written.
+	 * @throws IllegalStateException if setVcdFile has not been called
+	 *         with a non-null file name.
 	 *
 	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 */
 	public void writeVcd() throws java.io.IOException {
 
+		String fileName = vcdFileName;
+		if (fileName == null) {
+			throw new IllegalStateException(
+					"setVcdFile was not called before writeVcd");
+		}
 		java.nio.file.Files.write(
-				java.nio.file.Paths.get(vcdFileName),
+				java.nio.file.Paths.get(fileName),
 				toVcd().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 	} // end of writeVcd method
 
@@ -296,7 +310,7 @@ public class BatchSimulator extends Simulator {
 		// standard) so the same run always produces the same bytes
 		out.append("$comment JLS batch simulation trace $end\n");
 		out.append("$timescale 1 ns $end\n");
-		out.append("$scope module ").append(circuit.getName())
+		out.append("$scope module ").append(circuit().getName())
 			.append(" $end\n");
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
 			int bits = e.getValue().getBits();
@@ -319,7 +333,10 @@ public class BatchSimulator extends Simulator {
 		TreeSet<Long> times = new TreeSet<Long>();
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
 			TreeMap<Long,BitSet> byTime = new TreeMap<Long,BitSet>();
-			for (TraceSample ev : eventTrace.get(e.getValue())) {
+			// the signal map was built from eventTrace's keys, so the
+			// trace list is always present
+			for (TraceSample ev
+					: Objects.requireNonNull(eventTrace.get(e.getValue()))) {
 				byTime.put(ev.time(), ev.value());
 				times.add(ev.time());
 			}
@@ -331,8 +348,10 @@ public class BatchSimulator extends Simulator {
 		out.append("#0\n");
 		out.append("$dumpvars\n");
 		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-			BitSet value = folded.get(e.getKey()).get(0L);
-			out.append(vcdValue(e.getValue(), value, codes.get(e.getKey())))
+			BitSet value = Objects.requireNonNull(
+					Objects.requireNonNull(folded.get(e.getKey())).get(0L));
+			out.append(vcdValue(e.getValue(), value,
+					Objects.requireNonNull(codes.get(e.getKey()))))
 				.append('\n');
 		}
 		out.append("$end\n");
@@ -346,10 +365,12 @@ public class BatchSimulator extends Simulator {
 			}
 			out.append('#').append(t).append('\n');
 			for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-				BitSet value = folded.get(e.getKey()).get(t);
+				BitSet value =
+						Objects.requireNonNull(folded.get(e.getKey())).get(t);
 				if (value != null) {
 					out.append(vcdValue(e.getValue(), value,
-							codes.get(e.getKey()))).append('\n');
+							Objects.requireNonNull(codes.get(e.getKey()))))
+						.append('\n');
 				}
 			}
 			last = t;

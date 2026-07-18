@@ -1,6 +1,7 @@
 package jls.elem;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -45,7 +46,10 @@ class ElementConstructorContractTest {
 				continue; // never saved as ELEMENT; rebuilt from WireEnd refs
 			checked++;
 			try {
-				c.getConstructor(Circuit.class);
+				// existence probe: throws if the (Circuit) constructor
+				// is missing; the assert uses the value (Error Prone
+				// ReturnValueIgnored, via the #93 NullAway wiring)
+				assertNotNull(c.getConstructor(Circuit.class));
 			} catch (NoSuchMethodException ex) {
 				violations.add(c.getName());
 			}

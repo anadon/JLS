@@ -5,6 +5,8 @@ import jls.elem.*;
 
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Event driven circuit simulator.
  *
@@ -23,8 +25,13 @@ public abstract class Simulator {
 	protected PriorityQueue<SimEvent> eventQueue = new PriorityQueue<SimEvent>();
 	/** The pending events, for duplicate suppression in post(). */
 	protected Set<SimEvent>dupCheck = new HashSet<SimEvent>();
-	/** The circuit being simulated. */
-	protected Circuit circuit = null;
+	/**
+	 * The circuit being simulated. Two-phase lifecycle (issue #93):
+	 * null until setCircuit is called, which every simulation entry
+	 * point requires; dereference through circuit() for the checked
+	 * non-null view.
+	 */
+	protected @Nullable Circuit circuit = null;
 	/** The current simulation time. */
 	protected long now = 0;
 	/** The simulation time limit. */
@@ -35,14 +42,12 @@ public abstract class Simulator {
 	 * finding H7).
 	 */
 	protected volatile boolean stopping = false;
-	/** This simulator, as passed to element initSim/react callbacks. */
-	protected Simulator me = null;
-	/** The test-vector file name, or null if none. */
-	protected String testFileName = null;
+	/** The test-vector file name; null when none was requested (#93). */
+	protected @Nullable String testFileName = null;
 
 	/**
-	 * Create a simulator. Subclasses set {@link #me} so element
-	 * callbacks receive the concrete simulator.
+	 * Create a simulator. Element callbacks receive the concrete
+	 * simulator as {@code this} (issue #93 removed the me alias).
 	 */
 	protected Simulator() {
 	} // end of constructor
@@ -109,10 +114,31 @@ public abstract class Simulator {
 	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
 	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
-	public void setTestFile(String name) {
+	public void setTestFile(@Nullable String name) {
 
 		testFileName = name;
 	} // end of setTestFile method
+
+	/**
+	 * Get the circuit being simulated, checked non-null.
+	 * The circuit field follows a two-phase lifecycle (issue #93):
+	 * callers must invoke setCircuit before any simulation entry
+	 * point, so a null circuit here is a caller bug, reported
+	 * eagerly instead of as a NullPointerException later.
+	 *
+	 * @return the circuit set by setCircuit.
+	 *
+	 * @throws IllegalStateException if setCircuit has not been called.
+	 */
+	protected final Circuit circuit() {
+
+		Circuit circ = circuit;
+		if (circ == null) {
+			throw new IllegalStateException(
+					"setCircuit was not called before simulating");
+		}
+		return circ;
+	} // end of circuit method
 
 	/**
 	 * Initialize all inputs in the circuit.
@@ -156,8 +182,10 @@ public abstract class Simulator {
 		eventQueue.clear();
 		dupCheck.clear();
 
+		Circuit circ = circuit();
+
 		// initialize all input points
-		initInputs(circuit);
+		initInputs(circ);
 
 		// initialize all elements, in the circuit's canonical stable-id
 		// order (#181): initSim posts the time-0 events, and same-time
@@ -166,10 +194,10 @@ public abstract class Simulator {
 		// cross-coupled latches, multi-driver nets - settle differently
 		// between runs. Stable-id order makes the seed, and with it
 		// every simulated value, a pure function of circuit content.
-		for (Element el : circuit.getElementsInStableOrder()) {
+		for (Element el : circ.getElementsInStableOrder()) {
 			if (el instanceof LogicElement) {
 				LogicElement lel = (LogicElement)el;
-				lel.initSim(me);
+				lel.initSim(this);
 			}
 		}
 	} // end of initSimulation method
@@ -210,7 +238,7 @@ public abstract class Simulator {
 			beforeReact();
 
 			// make the event happen
-			event.getCallBack().react(now,me,event.getTodo());
+			event.getCallBack().react(now,this,event.getTodo());
 
 			afterEvent(event);
 		}

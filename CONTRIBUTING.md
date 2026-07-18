@@ -32,6 +32,15 @@ follows the current LTS and is revisited each LTS cycle). Sources live in
   (threshold High). Do not add blanket entries to
   `config/spotbugs-exclude.xml`; new entries need a `Class` scope and a
   justification.
+- **Nullness is a compiler-checked contract** (issue #93): the default
+  build runs [NullAway](https://github.com/uber/NullAway) with
+  [JSpecify](https://jspecify.dev/) annotations, enforced only inside
+  packages whose `package-info.java` declares `@NullMarked`. The ratchet
+  convention: a `@NullMarked` package never becomes unmarked (the list in
+  `test/jls/NullMarkedRatchetTest.java` only grows), and new packages are
+  born `@NullMarked`. Prefer honest `@Nullable` annotations and explicit
+  checks over `@SuppressWarnings("NullAway")`; every suppression needs a
+  justification comment.
 - **Pull requests must also pass CodeQL code scanning**, which runs
   automatically on every PR. Findings appear as a check on the PR and
   under the repository's **Security tab → Code scanning** (alert details

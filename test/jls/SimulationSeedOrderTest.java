@@ -53,10 +53,6 @@ class SimulationSeedOrderTest {
 	/** A simulator exposing the protected seed phase. */
 	private static final class SeedSimulator extends Simulator {
 
-		SeedSimulator() {
-			me = this;
-		}
-
 		void seed() {
 			initSimulation();
 		}

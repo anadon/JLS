@@ -13,7 +13,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Extend extends Gate implements TriProp {
+public final class Extend extends Gate implements TriProp {
 	
 	// identity (#22); previous-settings unused: Extend has no repeat button
 	private static final Kind KIND =

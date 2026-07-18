@@ -12,7 +12,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class WireEnd extends LogicElement {
+public final class WireEnd extends LogicElement {
 	
 	// properties
 	private WireNet net;							// the net it is a part of

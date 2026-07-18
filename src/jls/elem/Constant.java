@@ -20,7 +20,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Constant extends LogicElement implements ActionListener {
+public final class Constant extends LogicElement implements ActionListener {
 	
 	// named constants
 	private static final BigInteger defaultValue = BigInteger.ZERO;

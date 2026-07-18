@@ -14,7 +14,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class Mux extends LogicElement {
+public final class Mux extends LogicElement {
 
 	// default values
 	private static final int defaultInputs = 2;

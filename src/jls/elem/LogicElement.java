@@ -12,7 +12,10 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class LogicElement extends Element implements Reacts {
+public abstract sealed class LogicElement extends Element implements Reacts
+		permits Adder, Clock, Constant, Decoder, Display, Gate, Group, JumpEnd,
+		JumpStart, Memory, Mux, Pause, Pin, Register, ShiftRegister, SigSim,
+		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd {
 	
 	// run time properties
 	private int lx;					// position if not snapped to grid line

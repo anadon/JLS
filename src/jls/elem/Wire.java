@@ -14,7 +14,7 @@ import javax.swing.JLabel;
  * 
  * @author David A. Poplawski
  */
-public class Wire extends Element {
+public final class Wire extends Element {
 	
 	// properties
 	private WireNet net;		// the wire net it is a part of

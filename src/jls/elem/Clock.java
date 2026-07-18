@@ -16,7 +16,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class Clock extends LogicElement {
+public final class Clock extends LogicElement {
 	
 	// default values
 	private static int defaultCycleTime = 2;

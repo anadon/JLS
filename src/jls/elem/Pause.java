@@ -16,7 +16,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Pause extends LogicElement {
+public final class Pause extends LogicElement {
 
 	/**
 	 * Create a new pause element.

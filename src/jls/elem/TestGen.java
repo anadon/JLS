@@ -18,7 +18,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class TestGen extends SigSim {
+public final class TestGen extends SigSim {
 	
 	// properties
 	private String file = null;

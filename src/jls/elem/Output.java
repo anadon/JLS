@@ -9,7 +9,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Output extends Put {
+public final class Output extends Put {
 	
 	// properties
 	private boolean triState = false;

@@ -17,7 +17,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class SubCircuit extends LogicElement implements TriProp {
+public final class SubCircuit extends LogicElement implements TriProp {
 	
 	// properties
 	private Circuit subCircuit;		// the subcircuit

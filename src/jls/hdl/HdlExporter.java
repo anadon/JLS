@@ -23,6 +23,7 @@ import jls.elem.DelayGate;
 import jls.elem.Display;
 import jls.elem.Element;
 import jls.elem.Extend;
+import jls.elem.Gate;
 import jls.elem.Input;
 import jls.elem.InputPin;
 import jls.elem.JumpEnd;
@@ -670,35 +671,30 @@ public final class HdlExporter {
 	} // end of buildStatement method
 
 	/**
-	 * Maps a gate-family element class to its model operation.
+	 * Map a gate-family element to its HDL operation. The switch is
+	 * exhaustive over the sealed {@link Gate} hierarchy (#95): a new gate
+	 * kind fails compilation here instead of silently exporting nothing.
+	 *
 	 * @param el The element to map.
 	 * @return the gate operation for a gate-family element, or null if the
-	 * element is not a gate.
+	 * element is not a boolean gate ({@link Extend} is gate-family but has
+	 * its own bit-extension template, handled before the gate branch).
 	 */
 	private static HdlModel.GateStatement.Op gateOp(Element el) {
 
-		if (el instanceof AndGate) {
-			return HdlModel.GateStatement.Op.AND;
+		if (!(el instanceof Gate gate)) {
+			return null;
 		}
-		if (el instanceof OrGate) {
-			return HdlModel.GateStatement.Op.OR;
-		}
-		if (el instanceof NandGate) {
-			return HdlModel.GateStatement.Op.NAND;
-		}
-		if (el instanceof NorGate) {
-			return HdlModel.GateStatement.Op.NOR;
-		}
-		if (el instanceof XorGate) {
-			return HdlModel.GateStatement.Op.XOR;
-		}
-		if (el instanceof NotGate) {
-			return HdlModel.GateStatement.Op.NOT;
-		}
-		if (el instanceof DelayGate) {
-			return HdlModel.GateStatement.Op.BUFFER;
-		}
-		return null;
+		return switch (gate) {
+		case AndGate _ -> HdlModel.GateStatement.Op.AND;
+		case OrGate _ -> HdlModel.GateStatement.Op.OR;
+		case NandGate _ -> HdlModel.GateStatement.Op.NAND;
+		case NorGate _ -> HdlModel.GateStatement.Op.NOR;
+		case XorGate _ -> HdlModel.GateStatement.Op.XOR;
+		case NotGate _ -> HdlModel.GateStatement.Op.NOT;
+		case DelayGate _ -> HdlModel.GateStatement.Op.BUFFER;
+		case Extend _ -> null;
+		};
 	} // end of gateOp method
 
 	// ------------------------------------------------------------------

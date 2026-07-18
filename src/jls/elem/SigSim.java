@@ -14,7 +14,8 @@ import jls.sim.*;
  * specification source; this class parses it and posts the resulting timed
  * events to the simulator.
  */
-public abstract class SigSim extends LogicElement {
+public abstract sealed class SigSim extends LogicElement
+		permits SigGen, TestGen {
 
 	/**
 	 * Create new element.

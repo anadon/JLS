@@ -20,7 +20,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class DelayGate extends Gate {
+public final class DelayGate extends Gate {
 	
 	// identity (#22); previous-settings unused: DELAY has its own dialog
 	private static final Kind KIND =

@@ -212,9 +212,10 @@ class UiHarnessPilotTest {
 		@Test
 		void onGridFails() throws Exception {
 			// LogicElement setXY/move snap, so logic elements hold the
-			// grid invariant by construction; a base Element does not
-			// snap, which is exactly the state this assertion must catch
-			jls.elem.Element raw = new jls.elem.Element(load(wiredFixture()));
+			// grid invariant by construction; a display element inherits
+			// the base non-snapping setXY (Element is abstract since the
+			// #95 sealing), which is exactly the state this must catch
+			jls.elem.Element raw = new jls.elem.Text(load(wiredFixture()));
 			raw.setXY(61, 60);
 			assertThrows(AssertionError.class, () -> assertOnGrid(raw));
 		}

@@ -19,7 +19,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public class Memory extends LogicElement {
+public final class Memory extends LogicElement {
 	
 	// types
 	/**

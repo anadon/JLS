@@ -17,7 +17,8 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Pin extends LogicElement {
+public abstract sealed class Pin extends LogicElement
+		permits InputPin, OutputPin {
 	
 	// saved properties
 	protected String name;

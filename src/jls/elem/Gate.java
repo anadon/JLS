@@ -22,7 +22,9 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Gate extends LogicElement {
+public abstract sealed class Gate extends LogicElement
+		permits AndGate, DelayGate, Extend, NandGate, NorGate, NotGate,
+		OrGate, XorGate {
 	
 	// named constants
 	// gates share the one JLSInfo.Orientation enum (issue #78 H3); only

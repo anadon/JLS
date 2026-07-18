@@ -14,7 +14,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class AndGate extends Gate {
+public final class AndGate extends Gate {
 	
 	// identity and shared previous-settings state (#22)
 	private static final Kind KIND =

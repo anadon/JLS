@@ -14,7 +14,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public class OutputPin extends Pin implements TriProp {
+public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Create a new output pin.

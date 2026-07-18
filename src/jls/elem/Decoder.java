@@ -43,7 +43,7 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public class Decoder extends LogicElement {
+public final class Decoder extends LogicElement {
 	
 	// default values
 	private static final int defaultBits = 1;

@@ -28,7 +28,7 @@ import java.util.BitSet;
  *
  * @author David A. Poplawski
  */
-public class ShiftRegister extends LogicElement {
+public final class ShiftRegister extends LogicElement {
 
 	/** The shift-kind rule, shared by the dialog and the loader
 	 *  (issue #52 pattern: one string, two surfaces). */

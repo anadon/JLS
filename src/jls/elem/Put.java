@@ -10,7 +10,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public abstract class Put {
+public abstract sealed class Put
+		permits Input, Output {
 
 	// properties
 	protected String name;				// name

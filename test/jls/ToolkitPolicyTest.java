@@ -40,10 +40,10 @@ class ToolkitPolicyTest {
 	/** Assert the error line honors the CLI contract (#42): exactly one
 	 * line, "jls: error:" prefix, no stack trace. */
 	private static void assertErrorLine(ToolkitPolicy.Decision d) {
-		assertEquals(ToolkitPolicy.Action.FAIL_WITH_MESSAGE, d.action);
-		assertTrue(d.message.startsWith("jls: error: "), d.message);
-		assertFalse(d.message.contains("\n"),
-				"error must be a single line: " + d.message);
+		assertEquals(ToolkitPolicy.Action.FAIL_WITH_MESSAGE, d.action());
+		assertTrue(d.message().startsWith("jls: error: "), d.message());
+		assertFalse(d.message().contains("\n"),
+				"error must be a single line: " + d.message());
 	}
 
 	// ---- Wayland-only sessions (the case this policy exists for) ----
@@ -52,8 +52,8 @@ class ToolkitPolicyTest {
 	void waylandOnlyWithWlToolkitSelectsIt() {
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", null,
 				null, false, HAS_WLTOOLKIT);
-		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action);
-		assertNull(d.message);
+		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action());
+		assertNull(d.message());
 	}
 
 	@Test
@@ -63,17 +63,17 @@ class ToolkitPolicyTest {
 		assertErrorLine(d);
 		// the two actual ways out, by name: XWayland via DISPLAY, or a
 		// Wakefield-capable runtime
-		assertTrue(d.message.contains("DISPLAY"), d.message);
-		assertTrue(d.message.contains("XWayland"), d.message);
-		assertTrue(d.message.contains("JBR")
-				|| d.message.contains("Wakefield"), d.message);
+		assertTrue(d.message().contains("DISPLAY"), d.message());
+		assertTrue(d.message().contains("XWayland"), d.message());
+		assertTrue(d.message().contains("JBR")
+				|| d.message().contains("Wakefield"), d.message());
 	}
 
 	@Test
 	void emptyDisplayCountsAsWaylandOnly() {
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", "",
 				null, false, HAS_WLTOOLKIT);
-		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action);
+		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action());
 	}
 
 	// ---- sessions the policy must leave alone ----
@@ -82,7 +82,7 @@ class ToolkitPolicyTest {
 	void x11SessionIsUntouched() {
 		ToolkitPolicy.Decision d = decide("Linux", null, ":0",
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
@@ -91,7 +91,7 @@ class ToolkitPolicyTest {
 		// declares Wayland parity
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", ":0",
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
@@ -100,14 +100,14 @@ class ToolkitPolicyTest {
 		// HeadlessException message is the truthful one
 		ToolkitPolicy.Decision d = decide("Linux", null, null,
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
 	void emptyWaylandDisplayIsNotAWaylandSession() {
 		ToolkitPolicy.Decision d = decide("Linux", "", null,
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
@@ -117,28 +117,28 @@ class ToolkitPolicyTest {
 		// OpenJDK (#105 P3)
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", null,
 				null, true, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
 	void windowsIsUntouchedEvenWithWaylandVariables() {
 		ToolkitPolicy.Decision d = decide("Windows 11", "wayland-1", null,
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
 	void macosIsUntouchedEvenWithWaylandVariables() {
 		ToolkitPolicy.Decision d = decide("Mac OS X", "wayland-1", null,
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
 	void unknownOsIsUntouched() {
 		ToolkitPolicy.Decision d = decide(null, "wayland-1", null,
 				null, false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	// ---- the -Djls.toolkit escape hatch forces the branch (#105 P4) ----
@@ -147,21 +147,21 @@ class ToolkitPolicyTest {
 	void forcedDefaultBypassesDetectionOnWaylandOnly() {
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", null,
 				"default", false, MUST_NOT_PROBE);
-		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action);
+		assertEquals(ToolkitPolicy.Action.DEFAULT, d.action());
 	}
 
 	@Test
 	void forcedWaylandSelectsWlToolkitEvenOnX11() {
 		ToolkitPolicy.Decision d = decide("Linux", null, ":0",
 				"wayland", false, HAS_WLTOOLKIT);
-		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action);
+		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action());
 	}
 
 	@Test
 	void forcedWaylandOverridesTheHeadlessCarveOut() {
 		ToolkitPolicy.Decision d = decide("Linux", "wayland-1", null,
 				"wayland", true, HAS_WLTOOLKIT);
-		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action);
+		assertEquals(ToolkitPolicy.Action.SET_WLTOOLKIT, d.action());
 	}
 
 	@Test
@@ -169,9 +169,9 @@ class ToolkitPolicyTest {
 		ToolkitPolicy.Decision d = decide("Linux", null, ":0",
 				"wayland", false, NO_WLTOOLKIT);
 		assertErrorLine(d);
-		assertTrue(d.message.contains("jls.toolkit"), d.message);
-		assertTrue(d.message.contains(ToolkitPolicy.WLTOOLKIT_CLASS),
-				d.message);
+		assertTrue(d.message().contains("jls.toolkit"), d.message());
+		assertTrue(d.message().contains(ToolkitPolicy.WLTOOLKIT_CLASS),
+				d.message());
 	}
 
 	@Test
@@ -179,9 +179,9 @@ class ToolkitPolicyTest {
 		ToolkitPolicy.Decision d = decide("Linux", null, ":0",
 				"cocoa", false, MUST_NOT_PROBE);
 		assertErrorLine(d);
-		assertTrue(d.message.contains("cocoa"), d.message);
-		assertTrue(d.message.contains("default"), d.message);
-		assertTrue(d.message.contains("wayland"), d.message);
+		assertTrue(d.message().contains("cocoa"), d.message());
+		assertTrue(d.message().contains("default"), d.message());
+		assertTrue(d.message().contains("wayland"), d.message());
 	}
 
 	// ---- the runtime probe ----

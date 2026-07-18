@@ -33,26 +33,19 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * A single recorded signal value together with the simulation time at
 	 * which it took effect.  Traces keep these in a list ordered newest
 	 * first to draw and to look up the value in effect at any time.
+	 *
+	 * @param value The recorded value (a private snapshot, cloned at
+	 *              creation so later signal changes cannot alias into it).
+	 * @param when The simulation time at which the value took effect.
 	 */
-	private static class Change {
-		/** The value taking effect (HiZ as the off marker, never null). */
-		public final BitSet value;
-		/** The simulation time the value took effect. */
-		public final long when;
-
-		/**
-		 * Record one signal change.
-		 *
-		 * @param value The value taking effect (HiZ encoded as the
-		 *        off marker BitSet, never null).
-		 * @param when The simulation time it took effect.
-		 */
-		public Change(BitSet value, long when) {
-
-			this.value = value;
-			this.when = when;
-		} // end of constructor
-	};
+	/**
+	 * A single recorded signal value with the simulation time it took
+	 * effect (issue #94: a record - Traces keep these newest-first).
+	 *
+	 * @param value The value taking effect (HiZ as the off marker).
+	 * @param when The simulation time it took effect.
+	 */
+	private record Change(BitSet value, long when) {}
 
 	// properties
 	/** The traced signal's display name. */
@@ -189,9 +182,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		}
 		if (value.equals(previousValue))
 			return;
-
+			
+		Change ch = new Change((BitSet)value.clone(),when);
 		previousValue = (BitSet)value.clone();
-		pendingChanges.add(0,new Change((BitSet)value.clone(),when));
+		pendingChanges.add(0,ch);
 		
 		// retain a bounded scrollback history (issue #121): the cap
 		// used to be the panel width, which discarded everything a
@@ -309,10 +303,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			long tClip = now-(long)(width-clipHi-2)*scaleFactor;
 			ch = firstChangeAtOrBefore(snapshot,tClip);
 			if (ch > 0)
-				when = snapshot.get(ch-1).when;
+				when = snapshot.get(ch-1).when();
 		}
 		double pos = width-(double)(now-when)/scaleFactor;
-		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value : null;
+		BitSet previousVal = ch > 0 ? snapshot.get(ch-1).value() : null;
 		double leftEdge = Math.max(0,clipLo-2);
 
 		// draw until no longer visible
@@ -323,7 +317,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			if (ch >= snapshot.size())
 				break;
 			Change change = snapshot.get(ch);
-			double len = ((double)(when-change.when)/scaleFactor);
+			double len = ((double)(when-change.when())/scaleFactor);
 			int rpos = (int)Math.round(pos);
 			int rlen = (int)Math.round(len);
 			
@@ -331,17 +325,17 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			if (bits > 1) {
 				
 				// handle multi-bit value
-				if (change.value.equals(off)) {
+				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
 				}
 				else {
 					g.drawLine(rpos,top,rpos-rlen,top);
 					g.drawLine(rpos,bottom,rpos-rlen,bottom);
 				}
-				if (!change.value.equals(previousVal)) {
+				if (!change.value().equals(previousVal)) {
 					String val = "";
-					if (!change.value.equals(off))
-							val = BitSetUtils.ToString(change.value,base);
+					if (!change.value().equals(off))
+							val = BitSetUtils.ToString(change.value(),base);
 					int strlen = fm.stringWidth(val) + 2;
 					if (strlen <= rlen) {
 						g.drawString(val,rpos-rlen+(rlen-strlen)/2+1,baseline);
@@ -352,10 +346,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			else {
 				
 				// handle single-bit value
-				if (change.value.equals(off)) {
+				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
 				}
-				else if (change.value.get(0)) {
+				else if (change.value().get(0)) {
 					g.drawLine(rpos,top,rpos-rlen,top);
 				}
 				else {
@@ -364,19 +358,19 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			}
 			
 			// if value changed, draw vertical line
-			if (!change.value.equals(previousVal) && previousVal != null) {
+			if (!change.value().equals(previousVal) && previousVal != null) {
 				if (bits > 1) {
 					g.drawLine(rpos,top,rpos,bottom);
 				}
 				else if (previousVal.equals(off)) {
-					if (change.value.length() == 0) {
+					if (change.value().length() == 0) {
 						g.drawLine(rpos,middle,rpos,bottom);
 					}
 					else {
 						g.drawLine(rpos,middle,rpos,top);
 					}
 				}
-				else if (change.value.equals(off)) {
+				else if (change.value().equals(off)) {
 					if (previousVal.length() == 0) {
 						g.drawLine(rpos,bottom,rpos,middle);
 					}
@@ -388,12 +382,12 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					g.drawLine(rpos,top,rpos,bottom);
 				}
 			}
-			previousVal = change.value;
+			previousVal = change.value();
 			// recompute the position from the change time rather than
 			// accumulate, so a windowed repaint puts every segment
 			// exactly where a full repaint would (issue #121)
-			pos = width-(double)(now-change.when)/scaleFactor;
-			when = change.when;
+			pos = width-(double)(now-change.when())/scaleFactor;
+			when = change.when();
 			ch += 1;
 		}
 
@@ -412,8 +406,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					snapshot.size()-1);
 			Change lastChange = snapshot.get(at);
 			String val = "HiZ";
-			if (!lastChange.value.equals(off)) {
-				val = BitSetUtils.ToString(lastChange.value,base);
+			if (!lastChange.value().equals(off)) {
+				val = BitSetUtils.ToString(lastChange.value(),base);
 			}
 			int w = fm.stringWidth(val);
 			g.setColor(Color.white);
@@ -452,7 +446,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		int hi = list.size();
 		while (lo < hi) {
 			int mid = (lo+hi) >>> 1;
-			if (list.get(mid).when <= time)
+			if (list.get(mid).when() <= time)
 				hi = mid;
 			else
 				lo = mid+1;

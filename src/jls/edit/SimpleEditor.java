@@ -768,23 +768,11 @@ public abstract class SimpleEditor extends JPanel {
 	 * captured before the clear — keyed off the selection afterwards it
 	 * would always be true, because the new wire end becomes the
 	 * selection (the pitfall AmityWilder/JLS@b1f1573 fixed).
+	 *
+	 * @param end The new initial wire end.
+	 * @param hadSelection Whether a selection existed before it was cleared.
 	 */
-	static final class WireStart {
-		/** The new initial wire end. */
-		final WireEnd end;
-		/** Whether a selection existed before it was cleared. */
-		final boolean hadSelection;
-		/**
-		 * Record the result of a wire-start gesture.
-		 *
-		 * @param end The new initial wire end.
-		 * @param hadSelection Whether a selection existed before it was cleared.
-		 */
-		WireStart(WireEnd end, boolean hadSelection) {
-			this.end = end;
-			this.hadSelection = hadSelection;
-		}
-	} // end of WireStart class
+	record WireStart(WireEnd end, boolean hadSelection) {} // end of WireStart record
 
 	/**
 	 * The model half of the idle-state wire-start gesture (#126): clear
@@ -1050,14 +1038,14 @@ public abstract class SimpleEditor extends JPanel {
 							y = p.y;
 							WireStart start =
 									startWireGesture(circuit,selected,x,y);
-							wireEnd = start.end;
+							wireEnd = start.end();
 							wire = null;
 							net = wireEnd.getNet();
 
 							// a cleared selection was under the cursor, so
 							// report the (likely) overlap the same way wire
 							// dragging does
-							if (start.hadSelection) {
+							if (start.hadSelection()) {
 								if (overlap()) {
 									info.setText(overlapMessage);
 									info.setForeground(Color.red);

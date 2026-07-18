@@ -28,6 +28,14 @@ follows the current LTS and is revisited each LTS cycle). Sources live in
 - **Match the surrounding style.** The codebase keeps the original
   author's layout (tabs, `// end of X method` trailers); new code should
   read like the code around it.
+- **Value semantics by default** (#94): in new and touched code, fields
+  and locals are `final` unless mutation is the point; standalone value
+  carriers (all fields assigned once, no identity semantics, no
+  supertype) are `record`s; collection-returning accessors hand out
+  `List.copyOf`/unmodifiable views rather than internal state. Do not
+  make a class a record if its `equals`/`hashCode` are intentionally
+  non-structural (see `jls.sim.SimEvent`), and never land a repo-wide
+  `final`/formatting sweep — churn hides real diffs.
 - `mvn verify` must be green: it runs the test suite and SpotBugs
   (threshold High). Do not add blanket entries to
   `config/spotbugs-exclude.xml`; new entries need a `Class` scope and a

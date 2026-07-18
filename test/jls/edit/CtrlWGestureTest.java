@@ -134,15 +134,15 @@ class CtrlWGestureTest {
 
 		// the new wire end is the selection, in the circuit, where asked
 		assertEquals(1, selected.size(), "wire end must be sole selection");
-		assertTrue(selected.contains(start.end));
-		assertTrue(circuit.getElements().contains(start.end),
+		assertTrue(selected.contains(start.end()));
+		assertTrue(circuit.getElements().contains(start.end()),
 				"wire end must be added to the circuit");
-		assertEquals(120, start.end.getX());
-		assertEquals(60, start.end.getY());
+		assertEquals(120, start.end().getX());
+		assertEquals(60, start.end().getY());
 
 		// and it is on a fresh net of its own
-		assertNotNull(start.end.getNet(), "wire end must get a net");
-		assertEquals(Set.of(start.end), start.end.getNet().getAllEnds());
+		assertNotNull(start.end().getNet(), "wire end must get a net");
+		assertEquals(Set.of(start.end()), start.end().getNet().getAllEnds());
 	}
 
 	/** The overlap-feedback key must reflect the selection before the
@@ -157,15 +157,15 @@ class CtrlWGestureTest {
 		Set<Element> selected = new HashSet<Element>();
 		hoverSelect(circuit, selected);
 		assertTrue(SimpleEditor.startWireGesture(circuit, selected, 60, 60)
-				.hadSelection, "a cleared selection must request feedback");
+				.hadSelection(), "a cleared selection must request feedback");
 
 		// without one: no feedback, even though the selection is
 		// non-empty (it holds the new wire end) after the call
 		Set<Element> empty = new HashSet<Element>();
 		WireStart start = SimpleEditor.startWireGesture(circuit, empty,
 				180, 60);
-		assertTrue(empty.contains(start.end));
-		assertFalse(start.hadSelection,
+		assertTrue(empty.contains(start.end()));
+		assertFalse(start.hadSelection(),
 				"an empty selection must not request feedback");
 	}
 
@@ -180,9 +180,9 @@ class CtrlWGestureTest {
 				240, 120);
 
 		assertEquals(1, selected.size());
-		assertTrue(selected.contains(start.end));
-		assertTrue(circuit.getElements().contains(start.end));
-		assertTrue(start.end instanceof WireEnd);
-		assertEquals(Set.of(start.end), start.end.getNet().getAllEnds());
+		assertTrue(selected.contains(start.end()));
+		assertTrue(circuit.getElements().contains(start.end()));
+		assertTrue(start.end() instanceof WireEnd);
+		assertEquals(Set.of(start.end()), start.end().getNet().getAllEnds());
 	}
 }

@@ -59,22 +59,16 @@ final class ToolkitPolicy {
 		FAIL_WITH_MESSAGE
 	}
 
-	/** A decision: an action, plus the error line when the action is
-	 * FAIL_WITH_MESSAGE (null otherwise). */
-	static final class Decision {
-
-		final Action action;
-		final String message;
-
-		/**
-		 * @param action  what the policy decided to do.
-		 * @param message the single-line error, or null unless the action
-		 *                is FAIL_WITH_MESSAGE.
-		 */
-		private Decision(Action action, String message) {
-			this.action = action;
-			this.message = message;
-		}
+	/**
+	 * A decision: an action, plus the error line when the action is
+	 * FAIL_WITH_MESSAGE (null otherwise). A record (issue #94): built
+	 * through the factories below, never mutated after construction.
+	 *
+	 * @param action  what the policy decided to do.
+	 * @param message the single-line error, or null unless the action
+	 *                is FAIL_WITH_MESSAGE.
+	 */
+	record Decision(Action action, String message) {
 
 		/**
 		 * A non-failing decision that carries no message.
@@ -95,7 +89,7 @@ final class ToolkitPolicy {
 		private static Decision fail(String message) {
 			return new Decision(Action.FAIL_WITH_MESSAGE, message);
 		}
-	} // end of Decision class
+	} // end of Decision record
 
 	/** Not instantiable: the policy is static-use only. */
 	private ToolkitPolicy() {
@@ -223,14 +217,14 @@ final class ToolkitPolicy {
 				System.getProperty(OVERRIDE_PROPERTY),
 				headlessRun,
 				ToolkitPolicy::runtimeHasWlToolkit);
-		switch (d.action) {
+		switch (d.action()) {
 		case SET_WLTOOLKIT:
 			System.setProperty(AWT_TOOLKIT_PROPERTY, "WLToolkit");
 			break;
 		case FAIL_WITH_MESSAGE:
 			// CLI contract (#42): one line on stderr, exit 1 for a
 			// runtime failure, no stack trace, no dialog
-			System.err.println(d.message);
+			System.err.println(d.message());
 			System.exit(1);
 			break;
 		case DEFAULT:

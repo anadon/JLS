@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -154,10 +153,9 @@ public abstract class SimpleEditor extends JPanel {
 			new JPopupMenu();
 	/** This editor, for use inside listeners and dialogs. */
 	private SimpleEditor me;
-	/** Snapshots to restore on undo, newest on top. */
-	private Stack<CircuitSnapshot> undos = new Stack<CircuitSnapshot>();
-	/** Snapshots to restore on redo, newest on top. */
-	private Stack<CircuitSnapshot> redos = new Stack<CircuitSnapshot>();
+	/** Undo/redo stack policy, extracted from the inline stacks (#84). */
+	private final UndoManager undoManager =
+			new UndoManager();
 	/** Number of changes since the last checkpoint. */
 	private int check = JLSInfo.checkPointFreq+1;
 	/** Import-menu item for each importable circuit, by name. */
@@ -4778,7 +4776,7 @@ public abstract class SimpleEditor extends JPanel {
 						pushCopy();
 
 						// clear redos
-						redos.clear();
+						undoManager.clearRedos();
 
 						// save checkpoint file (if it is time)
 						check += 1;
@@ -4850,74 +4848,38 @@ public abstract class SimpleEditor extends JPanel {
 
 					/**
 					 * Push a copy of the circuit being edited on the undo stack.
+					 * The snapshot is captured in the save format (#18); the
+					 * {@code UndoManager} drops it if it is identical to the
+					 * top of the stack (an aborted or no-op change) and
+					 * enforces the depth bound (#84).
 					 */
 					public void pushCopy() {
 
-						// snapshot the circuit in the save format (#18);
-						// an aborted or no-op change serializes identically
-						// to the top of the stack and is not pushed again
-						CircuitSnapshot snap = CircuitSnapshot.capture(circuit);
-						if (!undos.isEmpty() && undos.peek().sameAs(snap)) {
-							return;
-						}
-
-						// see if undo stack is full
-						if (undos.size() > JLSInfo.undoStackDepth) {
-
-							// delete bottom of stack
-							undos.remove(0);
-						}
-
-						// save for undo
-						undos.push(snap);
+						undoManager.push(CircuitSnapshot.capture(circuit));
 					} // end of pushCopy method
 
 					/**
 					 * Do undo. An in-flight gesture is cancelled first,
 					 * exactly as Esc would, so the restore always runs
 					 * against an idle editor (issue #39: cancel-then-apply).
+					 * The stack transitions live in {@code UndoManager}
+					 * (#84); restoring stays here in {@code finishDo}.
 					 */
 					public void undo() {
 
 						cancelGesture();
-
-						// no undo left if stack only has a copy of the original circuit
-						if (undos.size() <= 1) {
-							return;
-						}
-
-						// restore the previous snapshot first; only a
-						// successful restore may touch the stacks
-						CircuitSnapshot current = undos.get(undos.size() - 1);
-						CircuitSnapshot previous = undos.get(undos.size() - 2);
-						if (!finishDo(previous)) {
-							return;
-						}
-						undos.pop();
-						redos.push(current);
+						undoManager.undo(this::finishDo);
 					} // end of undo method
 
 					/**
 					 * Do redo. Cancels any in-flight gesture first, like
-					 * undo (issue #39).
+					 * undo (issue #39). Stack transitions live in
+					 * {@code UndoManager} (#84).
 					 */
 					public void redo() {
 
 						cancelGesture();
-
-						// if nothing on the redo stack, then there is nothing to do
-						if (redos.isEmpty()) {
-							return;
-						}
-
-						// restore the snapshot first; only a successful
-						// restore may touch the stacks
-						CircuitSnapshot next = redos.peek();
-						if (!finishDo(next)) {
-							return;
-						}
-						redos.pop();
-						undos.push(next);
+						undoManager.redo(this::finishDo);
 					} // end of redo method
 
 					/**

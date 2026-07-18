@@ -21,7 +21,8 @@
  * AssertJ-Swing was rejected (unmaintained fork chain); Cacio-tta was
  * rejected (JDK-internals coupling). See
  * {@code DialogConstructionSmokeTest}, {@code EditorGestureTest},
- * {@code KeyPadDismissalTest}; new helpers for this layer belong in this
+ * {@code KeyPadDismissalTest}, {@code MenuBarSpecTest} (the P3
+ * menu-bar expectation table); new helpers for this layer belong in this
  * package and must not be required by Layer-1 tests.</li>
  *
  * <li><b>Layer 3 (future):</b> rendering assertions -- paint to a

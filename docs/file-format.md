@@ -266,20 +266,27 @@ quoted value.
 
 ## 7. Element type tags
 
-<!-- Loader routing: Circuit.load resolves a tag by
-     Class.forName("jls.elem." + tag) and instantiating the
-     (Circuit) constructor; unknown tags fail the load with
-     UNKNOWN_ELEMENT. Writers: each element class's save() prints
-     "ELEMENT <tag>"; the gate family prints its Kind saveName
-     (Gate.java, "must match the class name"). -->
+<!-- Loader routing: Circuit.load resolves a tag through the
+     frozen tag table jls.elem.SaveTags (canonical tags + alias
+     map, issue #79) and instantiates the (Circuit) constructor;
+     unknown tags fail the load with UNKNOWN_ELEMENT. Writers:
+     each element class's save() prints "ELEMENT <tag>" as a
+     string literal; the gate family prints its Kind saveName
+     (Gate.java). FileFormatSpecTest holds this table, SaveTags,
+     and the writers' real output in lock-step. -->
 
-A tag is resolved by the reference reader to the Java class
-`jls.elem.<tag>` — the tag namespace is currently the loader's class
-namespace, so **tags are case-sensitive and exactly the simple class
-names below**. A reader implementing this specification only needs
-this table; a tag not in it (and not a documented later addition)
-MUST fail the load with a diagnostic naming the tag, and SHOULD
-suggest that the file may need a newer reader.
+Tags are **case-sensitive frozen identifiers** — this table, not any
+implementation's class names, defines the namespace. (Historically
+each tag was the simple name of the Java class implementing the
+element, and the reference reader resolved tags by reflection; the
+tags below are those names, frozen forever as format data. The
+reference implementation now routes tags through an explicit table
+with an alias map, `jls.elem.SaveTags`, so renaming a class can
+never change or break a tag.) A reader implementing this
+specification only needs this table; a tag not in it (and not a
+documented later addition) MUST fail the load with a diagnostic
+naming the tag, and SHOULD suggest that the file may need a newer
+reader.
 
 Version-1 and version-2 writers emit exactly these 32 tags:
 
@@ -329,9 +336,9 @@ Additional notes:
 - **Gate `pair`/sequence-free types**: for every type except
   `StateMachine`, items are order-independent; `pair` items are
   applied in file order.
-- **`TestGen`** resolves through the same routing (it is a loadable
-  class) but is never written by a conformant writer; it exists for
-  the batch test facility. Readers MAY reject it.
+- **`TestGen`** is a loadable-but-not-writable tag: the reference
+  reader accepts it (it exists for the batch test facility) but a
+  conformant writer never emits it. Readers MAY reject it.
 - `SubCircuit` nested blocks recurse: the nested circuit uses this
   same grammar minus the `FORMAT` line, and its elements may include
   further `SubCircuit`s.
@@ -445,11 +452,18 @@ circuit. Writers SHOULD therefore prefer a version bump over an
 "ignorable" attribute whenever dropping the attribute would change
 simulation behavior.
 
-Historical note: tags are Java simple class names today (§7), which
-is why the `edu.mtu.cs.jls` → `jls` package rename did not break the
-format. Decoupling tags from class names via a registry with an alias
-table is planned (issue #79 method, item 3); when it lands, this
-section will record every historical alias.
+**Tag stability** (issue #79): tags are frozen identifiers decoupled
+from implementation class names (§7). The reference implementation
+routes tags through an explicit table with an alias map
+(`jls.elem.SaveTags`); the canonical write-tag for every type is
+frozen forever, so renaming an implementation class is an
+implementation detail — never a format change and never a version
+bump (no old reader ever sees a new tag). If a class whose old name
+was itself once written as a tag is ever renamed, the old tag joins
+the alias map and this section records it. Historical aliases to
+date: **none** (tags began as Java simple class names, which is why
+the `edu.mtu.cs.jls` → `jls` package rename did not break the
+format — simple names were untouched).
 
 ---
 

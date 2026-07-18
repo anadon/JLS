@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 import jls.elem.Element;
+import jls.elem.SaveTags;
 
 /**
  * Drift tests between docs/file-format.md (the normative save-format
@@ -38,9 +39,10 @@ import jls.elem.Element;
  *    documented (nested subcircuit CIRCUIT blocks carry no FORMAT);
  * 3. the spec's element tag table matches exactly the set of tags a
  *    full-coverage circuit actually saves, and every documented tag
- *    resolves through the loader's routing rule
- *    (jls.elem.&lt;tag&gt;, concrete Element subclass, (Circuit)
- *    constructor);
+ *    resolves through the loader's routing rule (the frozen tag
+ *    table {@link SaveTags}, then a concrete Element subclass with
+ *    a (Circuit) constructor) - and the spec table and the code
+ *    table never drift apart;
  * 4. string escaping on disk is the documented writer transform, and
  *    it round-trips.
  */
@@ -208,8 +210,9 @@ class FileFormatSpecTest {
 
 	/**
 	 * The tag table of spec §7: markdown rows "| `Tag` | ... |". Tags
-	 * are class simple names, so the leading capital distinguishes them
-	 * from the (lowercase) attribute-name tables elsewhere in the spec.
+	 * begin with a capital (they were frozen from class simple names,
+	 * #79), which distinguishes them from the (lowercase)
+	 * attribute-name tables elsewhere in the spec.
 	 */
 	private static Set<String> documentedTags(String spec) {
 		Set<String> tags = new TreeSet<String>();
@@ -303,23 +306,36 @@ class FileFormatSpecTest {
 
 	@Test
 	void everyDocumentedTagResolvesLikeTheLoader() throws Exception {
-		// the loader's routing rule: jls.elem.<tag>, a concrete Element
-		// subclass, constructible from a (Circuit) constructor
+		// the loader's routing rule (#79): the frozen tag table, then
+		// a concrete Element subclass with a (Circuit) constructor
 		List<String> broken = new ArrayList<String>();
 		for (String tag : documentedTags(spec())) {
+			Class<? extends Element> c = SaveTags.resolve(tag);
+			if (c == null) {
+				broken.add(tag + " (not in the tag table)");
+				continue;
+			}
+			assertFalse(Modifier.isAbstract(c.getModifiers()),
+					tag + " must be concrete");
 			try {
-				Class<? extends Element> c = Class.forName("jls.elem." + tag)
-						.asSubclass(Element.class);
-				assertFalse(Modifier.isAbstract(c.getModifiers()),
-						tag + " must be concrete");
 				c.getConstructor(Circuit.class);
-			} catch (ReflectiveOperationException | ClassCastException ex) {
+			} catch (NoSuchMethodException ex) {
 				broken.add(tag + " (" + ex + ")");
 			}
 		}
 		assertTrue(broken.isEmpty(),
 				"documented tags that do not resolve through the loader's"
 						+ " routing rule: " + broken);
+	}
+
+	@Test
+	void specTagTableAndCodeTagTableAgree() throws Exception {
+		// §7 is normative and jls.elem.SaveTags is the reference
+		// reader's copy of it - they must never drift apart
+		assertEquals(documentedTags(spec()),
+				new TreeSet<String>(SaveTags.writableTags()),
+				"spec §7's tag table and SaveTags.writableTags() must"
+						+ " match exactly (fix whichever is wrong)");
 	}
 
 	// ------------------------------------------------------------------

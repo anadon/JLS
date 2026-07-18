@@ -62,8 +62,8 @@ public abstract class Gate extends LogicElement {
 	protected static final class Kind {
 		
 		private final String displayName;	// e.g. "AND"
-		private final String saveName;		// e.g. "AndGate" (must match the
-											// class name Circuit.load resolves)
+		private final String saveName;		// e.g. "AndGate" (a frozen tag:
+											// must match SaveTags / spec §7)
 		private final int fixedInputs;		// forced input count, or -1 if the
 											// user chooses
 		private final int defaultDelay;
@@ -75,7 +75,8 @@ public abstract class Gate extends LogicElement {
 		 * Create a kind descriptor for one gate class.
 		 *
 		 * @param displayName The human-readable name (e.g. "AND").
-		 * @param saveName The save-file name (must match the loading class name).
+		 * @param saveName The save-file tag (frozen; must match the
+		 *                 SaveTags table and spec §7).
 		 * @param fixedInputs The forced input count, or -1 if the user chooses.
 		 * @param defaultDelay The default propagation delay for this kind.
 		 */

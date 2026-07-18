@@ -36,6 +36,7 @@ import jls.elem.Element;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
 import jls.elem.Output;
+import jls.elem.SaveTags;
 import jls.elem.StateMachine;
 import jls.elem.SubCircuit;
 import jls.elem.TruthTable;
@@ -872,18 +873,15 @@ public class Circuit implements Printable {
 							TRUNCATED_HINT);
 				}
 
-				// get element type and create element; select the
-				// (Circuit) constructor explicitly - getConstructors()
-				// returns constructors in no specified order (issue #55)
+				// get element type and create element; the tag routes
+				// through the frozen tag table, never reflection on the
+				// tag text (issue #79), and the (Circuit) constructor is
+				// selected explicitly - getConstructors() returns
+				// constructors in no specified order (issue #55)
 				String elementType = input.next();
-				Element newElement = null;
-				try {
-					Class<? extends Element> c =
-							Class.forName("jls.elem." + elementType)
-									.asSubclass(Element.class);
-					newElement = c.getConstructor(Circuit.class)
-							.newInstance(this);
-				} catch (ClassNotFoundException ex) {
+				Class<? extends Element> elementClass =
+						SaveTags.resolve(elementType);
+				if (elementClass == null) {
 					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
 							"this version of JLS has no element type "
 									+ "named '" + elementType + "'",
@@ -891,11 +889,11 @@ public class Circuit implements Printable {
 									+ "version of JLS - upgrade JLS, or "
 									+ "remove the unrecognized element "
 									+ "from the file.");
-				} catch (ClassCastException ex) {
-					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
-							"'" + elementType + "' is not a circuit "
-									+ "element type",
-							NOT_JLS_HINT);
+				}
+				Element newElement = null;
+				try {
+					newElement = elementClass.getConstructor(Circuit.class)
+							.newInstance(this);
 				} catch (NoSuchMethodException ex) {
 					return failLoad(LoadError.Category.UNKNOWN_ELEMENT,
 							"'" + elementType + "' cannot be created "

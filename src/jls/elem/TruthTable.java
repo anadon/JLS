@@ -801,8 +801,23 @@ public final class TruthTable extends LogicElement implements Printable {
 	} // end of TTEditor class
 
 	/**
+	 * Relayout and repaint the table display, if one exists.
+	 * The display panel is created by the edit dialog (or lazily by the
+	 * print path); the table-model mutators below run identically with
+	 * or without one, which is what lets the headless model tests (issue
+	 * #159) exercise them without a dialog.
+	 */
+	private void refreshDisplay() {
+
+		if (disp == null)
+			return;
+		disp.doLayout(inputNames,outputNames,table,null);
+		disp.repaint();
+	} // end of refreshDisplay method
+
+	/**
 	 * Add a new input signal to the truth table.
-	 * 
+	 *
 	 * @param signal The new input signal name.
 	 */
 	public void addInput(String signal) {
@@ -841,8 +856,7 @@ public final class TruthTable extends LogicElement implements Printable {
 			// finish up
 			rows = 2;
 			cols = 1;
-			disp.doLayout(inputNames,outputNames,table,null);
-			disp.repaint();
+			refreshDisplay();
 			anyChanges = true;
 			return;
 		}
@@ -888,8 +902,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		table = newTable;
 		cols = newCols;
 		rows = newRows;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of addInput method
 
@@ -943,8 +956,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// finish up
 		table = newTable;
 		cols += 1;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of addOutput method
 
@@ -1006,8 +1018,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		table = newTable;
 		rows = newRows;
 		cols -= 1;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of removeInput method
 
@@ -1043,8 +1054,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// finish up
 		table = newTable;
 		cols -= 1;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of removeOutput method
 
@@ -1057,8 +1067,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	public void toggleOutput(int row, int col) {
 
 		table[row][col] = (table[row][col] + 1) % 3;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of toggleOutput method
 
@@ -1097,8 +1106,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		removeRow(maxRow);
 
 		// finish up
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of makeDontCare method
 
@@ -1229,8 +1237,7 @@ public final class TruthTable extends LogicElement implements Printable {
 				// finish up
 				table = newTable;
 				rows += 1;
-				disp.doLayout(inputNames,outputNames,table,null);
-				disp.repaint();
+				refreshDisplay();
 				return;
 			}
 		}
@@ -1256,8 +1263,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		// finish up
 		table = newTable;
 		rows += 1;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 	} // end of undoDontCare method
 
 	/**
@@ -1293,8 +1299,7 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		int pos = inputNames.indexOf(signal);
 		inputNames.set(pos,newSignal);
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of renameInput method
 
@@ -1311,8 +1316,7 @@ public final class TruthTable extends LogicElement implements Printable {
 
 		int pos = outputNames.indexOf(signal);
 		outputNames.set(pos,newSignal);
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of renameOutput method
 
@@ -1384,8 +1388,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		}
 
 		// finish up
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of moveOutputLeft method
 
@@ -1415,8 +1418,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		}
 
 		// finish up
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of moveOutputRight method
 
@@ -1448,8 +1450,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		reorderRows();
 
 		// finish up
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of moveInputLeft method
 
@@ -1481,8 +1482,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		reorderRows();
 
 		// finish up
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		refreshDisplay();
 		anyChanges = true;
 	} // end of moveInputRight method
 

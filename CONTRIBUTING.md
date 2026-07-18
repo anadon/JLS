@@ -56,6 +56,38 @@ follows the current LTS and is revisited each LTS cycle). Sources live in
   Fix real findings; if one is a false positive, say so in the PR so a
   maintainer can dismiss it with a recorded reason.
 
+## Coverage ratchet
+
+`mvn verify` enforces a JaCoCo coverage ratchet (issues #66 and #159):
+bundle-wide floors for the INSTRUCTION, LINE, and BRANCH counters, plus
+per-package floors that keep the tested core (`jls`, `jls.sim`,
+`jls.elem`, `jls.collab.op`) un-regressable. The current floor values
+live in `pom.xml` under the `coverage-ratchet` execution — that comment
+block, not this file, is the source of truth for the numbers.
+
+The climb convention:
+
+- **Floors only ever move up.** A PR that raises coverage should also
+  raise the nearest floor (bundle and/or package) to just below the new
+  measurement, so the gain cannot silently erode later. "Just below"
+  means a small margin (a few tenths of a point) to absorb JDK jitter.
+- **Raise floors from headless numbers only.** The floors are pinned to
+  a plain `mvn verify` with no display so the build passes anywhere.
+  CI's display-substrate run (`xvfb-run` with `-Djls.test.headless=false`)
+  exercises the dialog and editor suites too and measures higher — do
+  not copy those numbers into the floors.
+- **Use `mvn clean verify` when touching floors.** The JaCoCo agent
+  appends to `target/jacoco.exec`, so an unclean rerun unions with
+  prior coverage and a floor that should trip never will. Relatedly, a
+  floor that has never been seen to fail should be assumed vacuous: rule
+  `include` patterns must be dot-form package names (`jls.collab.op`,
+  not `jls/collab/op` — the slash form silently matches nothing).
+- `jls.edit` is deliberately unfloored until the editor decomposition
+  work (#84/#91) makes that code testable headlessly; do not add a
+  floor there that would either bind at ~0% or block unrelated PRs.
+- Milestone: when the headless bundle LINE ratio crosses 0.50, the PIT
+  mutation-testing evaluation (#161) is unblocked.
+
 ## Reporting bugs
 
 Use the issue tracker. Include the JLS version (Help → About), your OS

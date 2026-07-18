@@ -120,4 +120,60 @@ class ArchitectureRulesTest {
 						+ " construction (issues #163/#167)")
 				.check(classes);
 	}
+
+	/**
+	 * Collaboration layering rule 1 from issue #163: the transport
+	 * package moves opaque signed frames and knows nothing of
+	 * circuits. It must not depend on the circuit model, the editor,
+	 * the simulator, or any collab layer above it - not even the
+	 * operation vocabulary, which reaches the wire only as bytes
+	 * inside a frame. The package does not exist yet (issue #168
+	 * creates it); allowEmptyShould pins the rule now so the package
+	 * is born clean, the same way collabLayersAreHeadless predated
+	 * everything but jls.collab.op.
+	 */
+	@Test
+	void transportKnowsNothingOfCircuits() {
+		noClasses()
+				.that().resideInAPackage("jls.collab.net..")
+				.should().dependOnClassesThat()
+				.resideInAnyPackage("jls.elem..", "jls.edit..",
+						"jls.sim..", "jls.collab.op..",
+						"jls.collab.session..", "jls.collab.crdt..",
+						"jls.collab.ui..")
+				.orShould().dependOnClassesThat()
+				.haveFullyQualifiedName("jls.Circuit")
+				.because("jls.collab.net moves opaque signed frames"
+						+ " and imports nothing of the circuit model"
+						+ " or the layers above it (issue #163 rule 1,"
+						+ " built by #168)")
+				.allowEmptyShould(true)
+				.check(classes);
+	}
+
+	/**
+	 * Collaboration layering rule 2 from issue #163: the replication
+	 * stack (session roster/presence/token, CRDT merge/op log) sits
+	 * between the operation vocabulary and the transport. It depends
+	 * downward on jls.collab.op and jls.collab.net only - never on
+	 * the editor or on jls.collab.ui; UI effects route through
+	 * listeners that jls.collab.ui marshals onto the EDT. Swing
+	 * itself is already forbidden by collabLayersAreHeadless. The
+	 * packages do not exist yet (issues #169/#171 create them);
+	 * allowEmptyShould pins the rule so they are born clean.
+	 */
+	@Test
+	void replicationStackDependsDownwardOnly() {
+		noClasses()
+				.that().resideInAnyPackage("jls.collab.session..",
+						"jls.collab.crdt..")
+				.should().dependOnClassesThat()
+				.resideInAnyPackage("jls.edit..", "jls.collab.ui..")
+				.because("session and CRDT code depends downward on"
+						+ " the op vocabulary and the transport only;"
+						+ " UI effects go through listeners (issue"
+						+ " #163 rule 2, built by #169/#171)")
+				.allowEmptyShould(true)
+				.check(classes);
+	}
 }

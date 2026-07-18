@@ -44,6 +44,11 @@ import jls.elem.Element;
  * for the whole test, so a modal dialog opened on the EDT (which
  * pumps its own event loop) always comes back down; it also swats
  * any stray JOptionPane a dialog might raise on the way out.
+ *
+ * The whole sweep runs with {@link EdtViolationDetector} installed
+ * (issue #162, prediction P2): any dialog whose construction or
+ * teardown touches Swing's paint pipeline off the EDT fails its test
+ * with the offending stack.
  */
 @Tag("display")
 class DialogConstructionSmokeTest {
@@ -53,11 +58,13 @@ class DialogConstructionSmokeTest {
 
 	private volatile boolean closing;
 	private Thread closer;
+	private EdtViolationDetector detector;
 
 	@BeforeEach
 	void requireDisplayAndStartCloser() {
 		Assumptions.assumeFalse(GraphicsEnvironment.isHeadless(),
 				"display suite: skipped in headless runs");
+		detector = EdtViolationDetector.install();
 		closing = true;
 		closer = new Thread(() -> {
 			while (closing) {
@@ -91,24 +98,32 @@ class DialogConstructionSmokeTest {
 				w.dispose();
 			}
 		});
+		if (detector != null) {
+			detector.uninstall();
+			detector.assertClean("dialog sweep (issue #162 P2)");
+		}
 	}
 
 	/**
 	 * Instantiate the element and run its setup() - the create-dialog
-	 * entry point - on the EDT, as the editor does. The watcher cancels
-	 * the dialog; setup returning (either verdict) is the assertion.
+	 * entry point - on the EDT, as the editor does: the palette click
+	 * handler (SimpleEditor's actionPerformed) constructs the element
+	 * there too, and some element constructors build Swing state
+	 * (Constant's quick-change menu), which the EDT-violation detector
+	 * rightly flags if built anywhere else. The watcher cancels the
+	 * dialog; setup returning (either verdict) is the assertion.
 	 */
 	private void constructAndCancel(String elementClass) throws Exception {
 		Circuit circuit = new Circuit("golden");
-		Element el = (Element) Class.forName("jls.elem." + elementClass)
-				.getConstructor(Circuit.class).newInstance(circuit);
-
 		BufferedImage img = new BufferedImage(400, 300,
 				BufferedImage.TYPE_INT_RGB);
 		CountDownLatch done = new CountDownLatch(1);
 		Throwable[] thrown = new Throwable[1];
 		SwingUtilities.invokeLater(() -> {
 			try {
+				Element el = (Element) Class
+						.forName("jls.elem." + elementClass)
+						.getConstructor(Circuit.class).newInstance(circuit);
 				el.setup(img.createGraphics(), new JPanel(), 100, 100);
 			} catch (Throwable t) {
 				thrown[0] = t;

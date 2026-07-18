@@ -282,6 +282,115 @@
                     </limit>
                   </limits>
                 </rule>
+                <!-- Per-package floors (issue #159): the bundle floor
+                     alone lets a regression in a tested package hide
+                     behind gains elsewhere. These make the tested core
+                     un-regressable. Floors sit just under the headless
+                     measurement of 2026-07-18 (jls 52.5/50.9/56.6,
+                     jls.sim 45.0/44.6/35.3, jls.elem 42.6/41.6/36.3,
+                     jls.collab.op 90.9/92.2/74.0 - instruction/line/
+                     branch). jls.edit is deliberately unfloored until
+                     the #91/#84 work makes editor code testable; the
+                     same raise-with-your-PR convention applies here as
+                     to the bundle floors. Two verified-the-hard-way
+                     notes: include patterns must be dot-form package
+                     names (slash form silently matches nothing), and
+                     any floor experiment needs `mvn clean verify` -
+                     the agent appends to target/jacoco.exec, so an
+                     unclean rerun unions with prior coverage and
+                     floors can never trip. -->
+                <rule>
+                  <element>PACKAGE</element>
+                  <includes>
+                    <include>jls</include>
+                  </includes>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.510</minimum>
+                    </limit>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.495</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.550</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+                <rule>
+                  <element>PACKAGE</element>
+                  <includes>
+                    <include>jls.sim</include>
+                  </includes>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.435</minimum>
+                    </limit>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.430</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.340</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+                <rule>
+                  <element>PACKAGE</element>
+                  <includes>
+                    <include>jls.elem</include>
+                  </includes>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.410</minimum>
+                    </limit>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.400</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.350</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+                <rule>
+                  <element>PACKAGE</element>
+                  <includes>
+                    <include>jls.collab.op</include>
+                  </includes>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.880</minimum>
+                    </limit>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.890</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.700</minimum>
+                    </limit>
+                  </limits>
+                </rule>
               </rules>
             </configuration>
           </execution>

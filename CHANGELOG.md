@@ -50,6 +50,14 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- Per-package coverage floors (#159): the JaCoCo ratchet now guards
+  `jls`, `jls.sim`, `jls.elem`, and the new `jls.collab.op` package
+  individually (instruction, line, and branch), so a regression in
+  the tested core can no longer hide behind coverage gains elsewhere
+  in the bundle - verified by a synthetic regression (deleting the
+  op-layer test class) that the bundle instruction/line floors do not
+  catch but the package floors do. `jls.edit` stays deliberately
+  unfloored until the UI-harness work makes editor code testable.
 - Operation layer, first slice (#167, collaboration stage 0b): a new
   `jls.collab.op` package reifies editor mutations as a closed, sealed
   vocabulary of validated, invertible, serializable commands

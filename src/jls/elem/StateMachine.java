@@ -398,7 +398,14 @@ public final class StateMachine extends LogicElement implements Printable {
 
 		output.println("ELEMENT StateMachine");
 		super.save(output);
-		for (State state : states) {
+		// canonical state order (#180): the state set is a HashSet and
+		// State has no hashCode override, so iterating it directly would
+		// emit the state blocks in identity-hash order - different bytes
+		// per run for the same machine, breaking canonical serialization
+		// (#166) and stateHash (#163). Sort by the states' own content.
+		java.util.List<State> ordered = new java.util.ArrayList<State>(states);
+		ordered.sort(State.saveOrder());
+		for (State state : ordered) {
 			state.save(output);
 		}
 		output.println("END");

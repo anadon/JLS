@@ -8,6 +8,40 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Fixed
+- State machines now save deterministically (#180): `StateMachine.save`
+  and `State.save` iterated `HashSet`s whose members override no
+  `hashCode`, so state and transition blocks were emitted in
+  identity-hash order — per-run-variable bytes for the same machine,
+  breaking canonical serialization (#166) and the `stateHash`
+  convergence oracle (#163). States now save sorted by name (grid
+  position tie-break) and transitions unconditional-first, then
+  `else`, then conditionals by (signal, eq, value, bits, next) — a
+  total order drawn from the data itself.
+- Simulation results are now reproducible for order-sensitive
+  circuits (#181): the time-0 event seed (`Simulator.initSimulation`,
+  `SubCircuit.initSim` at every nesting depth) iterated the element
+  `HashSet`, so same-time event sequence numbers — the tie-breaker
+  that decides which of two simultaneous drivers a cross-coupled
+  latch or plain multi-driver net settles on — were assigned in
+  identity-hash order, varying between runs and machines. The seed
+  now walks the circuit's canonical stable-id order
+  (`Circuit.getElementsInStableOrder`), making every simulated value
+  a pure function of circuit content.
+- Printed page order is now deterministic (#182): `Circuit.addToBook`
+  collected state-machine, truth-table, and subcircuit pages by
+  iterating the element `HashSet`, so successive prints of one
+  circuit could order those pages differently. All three passes now
+  follow the canonical stable-id order.
+- Circuits built from scratch now save reproducibly (#183): the
+  replica half of every freshly minted stable id was a random UUID
+  drawn once per JVM, so a never-yet-saved circuit produced different
+  `sid` bytes on every process. The replica is now per-install: an
+  explicit `jls.replicaId` system property / `JLS_REPLICA_ID`
+  environment override (the deterministic knob for CI and
+  reproducible export) wins, then a value persisted in
+  `$XDG_CONFIG_HOME/jls/replica-id` (`~/.config/jls/replica-id`),
+  then a fresh draw persisted for later starts. Loaded-file saves,
+  the `legacy` minting path, and identity semantics are unchanged.
 - Circuits saved on Windows are now byte-identical to the same
   circuits saved on Linux (#111): `Circuit.save` pins `\n` line
   endings whatever the platform separator is, which the

@@ -356,7 +356,17 @@ preserved by every save, load, undo restore, and checkpoint
 recovery. The value is `replica:counter`, where the replica id is
 1–64 characters of `[0-9a-z]` naming where the element was created
 and the counter is a non-negative decimal. Copying an element mints
-a fresh id — a paste is a new element. Stable ids MUST be unique
+a fresh id — a paste is a new element. The replica id of freshly
+minted ids is per-install, not per-process (issue #183): it resolves
+as the `jls.replicaId` system property or `JLS_REPLICA_ID`
+environment variable when set (the deterministic knob for CI byte
+comparison and reproducible export), else the value persisted in the
+install's config file (`$XDG_CONFIG_HOME/jls/replica-id`, defaulting
+to `~/.config/jls/replica-id`), else a fresh random draw that is
+persisted for later starts. One install therefore keeps one replica
+across runs, making even from-scratch (never previously saved)
+circuits save reproducibly; two installs still differ, exactly as
+two independently-authored files should. Stable ids MUST be unique
 within their `CIRCUIT` block; a reader MUST refuse a file that
 declares the same `sid` twice in one block. Elements in files that
 predate `sid` (or hand-edited blocks without one) get an id minted
@@ -372,10 +382,15 @@ by stable id.
 blocks sorted by stable id and assigns the save-time `id`s in that
 same order, making the serialized form a pure function of circuit
 content — two circuits with identical content save byte-identically,
-whatever their load/edit history. A reader MUST NOT rely on this
-order (block order is not significant, §5), but tools MAY rely on
-JLS saves being deterministic, and JLS uses the canonical bytes as
-its convergence oracle and state hash for collaboration.
+whatever their load/edit history. The same principle reaches inside
+`StateMachine` blocks (issue #180): state sub-records are emitted
+sorted by state name (grid position as tie-break), and each state's
+transitions sorted unconditional first, then `else`, then
+conditionals by (signal, eq flag, value, bits), tie-broken by the
+next state's name. A reader MUST NOT rely on any of these orders
+(block order is not significant, §5), but tools MAY rely on JLS
+saves being deterministic, and JLS uses the canonical bytes as its
+convergence oracle and state hash for collaboration.
 
 ---
 

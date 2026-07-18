@@ -14,8 +14,12 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <ul>
  * <li>{@link #mintFresh()} - for elements created in this process
- * (editor placement, paste, programmatic construction): a per-process
- * random replica id plus a process-wide counter. When per-install
+ * (editor placement, paste, programmatic construction): this install's
+ * replica id plus a process-wide counter. The replica id persists in
+ * the per-install config file and can be pinned with the
+ * {@code jls.replicaId} system property or {@code JLS_REPLICA_ID}
+ * environment variable (issue #183), so from-scratch saves are
+ * reproducible per install and byte-pinnable in CI. When per-install
  * identity keys land (issue #168), the replica id becomes the install's
  * identity.</li>
  * <li>{@link #legacy(long)} - for elements read from files that predate
@@ -35,16 +39,146 @@ public final class ElementId implements Comparable<ElementId> {
 	private static final String LEGACY_REPLICA = "legacy";
 
 	/**
-	 * This process's replica id: 32 hex digits, drawn once per process
-	 * (a random UUID, which is itself SecureRandom-backed). Hex cannot
-	 * collide with the reserved "legacy" replica (it has no letter past
-	 * 'f').
+	 * This install's replica id (issue #183). Resolved once, at class
+	 * load, by {@link #resolveReplica(String, String, java.nio.file.Path)}:
+	 * an explicit override (the {@code jls.replicaId} system property or
+	 * {@code JLS_REPLICA_ID} environment variable) wins, then a value
+	 * persisted in the per-install config file, then - only when neither
+	 * exists - a fresh random draw (32 hex digits from a UUID, which is
+	 * SecureRandom-backed; hex cannot collide with the reserved "legacy"
+	 * replica, which has letters past 'f'). Persisting the draw makes
+	 * from-scratch saves reproducible run-to-run on one install; the
+	 * override makes them byte-pinnable in CI and reproducible exports.
+	 * Mutable only through {@link #pinForTesting(String, long)}.
 	 */
-	private static final String PROCESS_REPLICA =
-			java.util.UUID.randomUUID().toString().replace("-", "");
+	private static volatile String processReplica = resolveReplica(
+			System.getProperty("jls.replicaId"),
+			System.getenv("JLS_REPLICA_ID"),
+			defaultReplicaFile());
 
 	/** The process-wide creation counter for {@link #mintFresh()}. */
 	private static final AtomicLong NEXT_COUNTER = new AtomicLong();
+
+	/**
+	 * Where this install persists its replica id: {@code
+	 * jls/replica-id} under the XDG config base ({@code $XDG_CONFIG_HOME},
+	 * or {@code ~/.config} when unset - the same convention every
+	 * XDG-aware Linux tool follows, and a harmless dot-directory
+	 * elsewhere).
+	 *
+	 * @return the per-install replica id file path.
+	 */
+	private static java.nio.file.Path defaultReplicaFile() {
+
+		String xdg = System.getenv("XDG_CONFIG_HOME");
+		java.nio.file.Path base = xdg == null || xdg.isEmpty()
+				? java.nio.file.Path.of(
+						System.getProperty("user.home"), ".config")
+				: java.nio.file.Path.of(xdg);
+		return base.resolve("jls").resolve("replica-id");
+	} // end of defaultReplicaFile method
+
+	/**
+	 * Resolve the replica id (issue #183): explicit override first
+	 * (system property, then environment), then the persisted
+	 * per-install value, then a fresh draw - which is persisted for the
+	 * next start, so one install keeps one replica across runs. Invalid
+	 * candidates (not 1-64 characters of {@code [0-9a-z]}, or equal to
+	 * the reserved {@code legacy} replica) are skipped rather than
+	 * fatal: identity minting must never prevent startup. Unreadable or
+	 * unwritable config likewise degrades to a per-process draw - the
+	 * pre-#183 behavior.
+	 *
+	 * @param override The {@code jls.replicaId} system property, or null.
+	 * @param env The {@code JLS_REPLICA_ID} environment variable, or null.
+	 * @param persisted The per-install replica id file.
+	 *
+	 * @return the resolved replica id.
+	 *
+	 * @see jls.elem.ElementIdReplicaTest#overrideWinsOverEverything()
+	 * @see jls.elem.ElementIdReplicaTest#environmentBeatsPersistedConfig()
+	 * @see jls.elem.ElementIdReplicaTest#persistedReplicaIsReadBack()
+	 * @see jls.elem.ElementIdReplicaTest#freshDrawIsPersistedAndReused()
+	 * @see jls.elem.ElementIdReplicaTest#invalidCandidatesAreSkipped()
+	 */
+	static String resolveReplica(String override, String env,
+			java.nio.file.Path persisted) {
+
+		if (isValidReplica(override)) {
+			return override;
+		}
+		if (isValidReplica(env)) {
+			return env;
+		}
+		try {
+			if (java.nio.file.Files.isRegularFile(persisted)) {
+				String stored = java.nio.file.Files.readString(persisted,
+						java.nio.charset.StandardCharsets.UTF_8).trim();
+				if (isValidReplica(stored)) {
+					return stored;
+				}
+			}
+		} catch (java.io.IOException unreadable) {
+			// fall through to a fresh draw
+		}
+		String fresh =
+				java.util.UUID.randomUUID().toString().replace("-", "");
+		try {
+			java.nio.file.Files.createDirectories(persisted.getParent());
+			java.nio.file.Files.writeString(persisted, fresh + "\n",
+					java.nio.charset.StandardCharsets.UTF_8);
+		} catch (java.io.IOException unwritable) {
+			// the draw still serves this process; the next start redraws
+		}
+		return fresh;
+	} // end of resolveReplica method
+
+	/**
+	 * Whether a candidate replica id is usable: 1-64 characters of
+	 * {@code [0-9a-z]} (the {@link #parse(String)} grammar) and not the
+	 * reserved {@code legacy} replica, which would collide fresh mints
+	 * with ids minted deterministically from pre-#165 files.
+	 *
+	 * @param candidate The candidate replica id, or null.
+	 *
+	 * @return true if the candidate can serve as the replica id.
+	 */
+	private static boolean isValidReplica(String candidate) {
+
+		return candidate != null && !candidate.equals(LEGACY_REPLICA)
+				&& candidate.matches("[0-9a-z]{1,64}");
+	} // end of isValidReplica method
+
+	/**
+	 * Pin the replica id and creation counter to fixed values for a
+	 * test, restoring them on close. This reproduces, inside one JVM,
+	 * what two processes started with the same {@code jls.replicaId}
+	 * override observe: each starts its counter at the same point, so
+	 * identical construction sequences mint identical ids and
+	 * from-scratch saves become byte-identical (issue #183). On close
+	 * the counter never moves backwards past its pre-pin value, so ids
+	 * minted after the pin cannot collide with ids minted before it.
+	 *
+	 * @param replica The replica id to pin.
+	 * @param counter The next counter value to mint from.
+	 *
+	 * @return a handle that restores the previous replica and counter.
+	 *
+	 * @see jls.elem.ElementIdReplicaTest#pinnedConstructionMintsReproducibleIds()
+	 * @see jls.elem.ElementIdReplicaTest#pinnedFromScratchSavesAreByteIdentical()
+	 */
+	static AutoCloseable pinForTesting(String replica, long counter) {
+
+		final String previousReplica = processReplica;
+		final long previousCounter = NEXT_COUNTER.get();
+		processReplica = replica;
+		NEXT_COUNTER.set(counter);
+		return () -> {
+			processReplica = previousReplica;
+			NEXT_COUNTER.getAndUpdate(
+					current -> Math.max(current, previousCounter));
+		};
+	} // end of pinForTesting method
 
 	private final String replica;
 	private final long counter;
@@ -73,7 +207,7 @@ public final class ElementId implements Comparable<ElementId> {
 	 */
 	public static ElementId mintFresh() {
 
-		return new ElementId(PROCESS_REPLICA, NEXT_COUNTER.getAndIncrement());
+		return new ElementId(processReplica, NEXT_COUNTER.getAndIncrement());
 	} // end of mintFresh method
 
 	/**

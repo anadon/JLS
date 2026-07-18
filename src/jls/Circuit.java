@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -425,6 +426,29 @@ public class Circuit implements Printable {
 
 		return Collections.unmodifiableSet(elements);
 	} // end of getElements method
+
+	/**
+	 * Get the elements in the circuit's canonical order: sorted by
+	 * stable id (#165/#166). {@link #getElements()} iterates in hash
+	 * order, which depends on identity hashes and so varies between
+	 * runs and machines; any consumer whose iteration order reaches
+	 * observable output - the simulation event seed (#181), the
+	 * printed page sequence (#182) - must iterate this list instead,
+	 * so the output is a pure function of circuit content.
+	 *
+	 * @return a fresh list of every element, sorted by stable id.
+	 *
+	 * @see jls.PrintPageOrderTest#bookedPagesFollowStableIdOrder()
+	 * @see jls.SimulationSeedOrderTest#stableOrderIsSortedByStableId()
+	 * @see jls.SimulationSeedOrderTest#initSimIsSeededInStableIdOrder()
+	 */
+	public java.util.List<Element> getElementsInStableOrder() {
+
+		java.util.List<Element> ordered =
+				new java.util.ArrayList<Element>(elements);
+		ordered.sort(java.util.Comparator.comparing(Element::getStableId));
+		return ordered;
+	} // end of getElementsInStableOrder method
 
 	/**
 	 * Mark the spatial index stale after a geometry change the incremental
@@ -1735,8 +1759,13 @@ public class Circuit implements Printable {
 		// add this circuit
 		book.append(this, format);
 
+		// canonical page order (#182): iterating the element HashSet
+		// would order the pages by identity hash, which varies between
+		// runs - two prints of one circuit could page differently
+		List<Element> ordered = getElementsInStableOrder();
+
 		// add state machines
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof StateMachine) {
 				StateMachine sm = (StateMachine) el;
 				book.append(sm, format);
@@ -1747,7 +1776,7 @@ public class Circuit implements Printable {
 		}
 
 		// add truth tables
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof TruthTable) {
 				TruthTable tt = (TruthTable) el;
 				book.append(tt, format);
@@ -1755,7 +1784,7 @@ public class Circuit implements Printable {
 		}
 
 		// add subcircuits
-		for (Element el : elements) {
+		for (Element el : ordered) {
 			if (el instanceof SubCircuit) {
 				((SubCircuit) el).getSubCircuit().addToBook(book, format);
 			}

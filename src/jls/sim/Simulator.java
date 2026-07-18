@@ -107,7 +107,7 @@ public abstract class Simulator {
 	 */
 	public void initInputs(Circuit circuit) {
 
-		for (Element element : circuit.getElements()) {
+		for (Element element : circuit.getElementsInStableOrder()) {
 			if (element instanceof LogicElement) {
 				LogicElement el = (LogicElement)element;
 				el.initInputs();
@@ -144,8 +144,14 @@ public abstract class Simulator {
 		// initialize all input points
 		initInputs(circuit);
 
-		// initialize all elements
-		for (Element el : circuit.getElements()) {
+		// initialize all elements, in the circuit's canonical stable-id
+		// order (#181): initSim posts the time-0 events, and same-time
+		// events fire in posting order (SimEvent seq), so seeding from
+		// the element HashSet would make order-sensitive circuits -
+		// cross-coupled latches, multi-driver nets - settle differently
+		// between runs. Stable-id order makes the seed, and with it
+		// every simulated value, a pure function of circuit content.
+		for (Element el : circuit.getElementsInStableOrder()) {
 			if (el instanceof LogicElement) {
 				LogicElement lel = (LogicElement)el;
 				lel.initSim(me);

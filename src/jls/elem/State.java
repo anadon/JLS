@@ -494,8 +494,50 @@ public class State {
 	} // end of linkTrans method
 
 	/**
+	 * The canonical order state blocks are saved in (#180): by state
+	 * name - unique within a machine, the create/rename dialogs enforce
+	 * it - tie-broken by grid position, so even a hand-edited file with
+	 * a duplicated name still gets a total, content-derived order. The
+	 * state set is a HashSet, so without this order two loads of one
+	 * machine would save its states in different, identity-hash orders.
+	 *
+	 * @return the comparator ordering states for save.
+	 *
+	 * @see jls.DeterministicSaveTest#stateMachineSavesStatesInNameOrder()
+	 * @see jls.DeterministicSaveTest#stateMachineStateHashIsContentDetermined()
+	 */
+	static java.util.Comparator<State> saveOrder() {
+
+		return java.util.Comparator.comparing((State state) -> state.name)
+				.thenComparingInt(state -> state.x)
+				.thenComparingInt(state -> state.y);
+	} // end of saveOrder method
+
+	/**
+	 * The canonical order a state's transition blocks are saved in
+	 * (#180): unconditional ("always") first, then "else", then
+	 * conditionals by (signal, eq flag, value, bits), tie-broken by the
+	 * next state's name. The transition dialog forbids two conditionals
+	 * on the same signal and value, so the key is a total order for any
+	 * machine the editor can produce.
+	 *
+	 * @return the comparator ordering transitions for save.
+	 */
+	private static java.util.Comparator<Transition> transitionSaveOrder() {
+
+		return java.util.Comparator
+				.comparingInt((Transition tr) ->
+						tr.unconditional ? 0 : tr.other ? 1 : 2)
+				.thenComparing(tr -> tr.signal)
+				.thenComparingInt(tr -> tr.equal ? 0 : 1)
+				.thenComparingInt(tr -> tr.value)
+				.thenComparingInt(tr -> tr.bits)
+				.thenComparing(tr -> tr.nextState.getName());
+	} // end of transitionSaveOrder method
+
+	/**
 	 * Save information about this state.
-	 * 
+	 *
 	 * @param output The PrintWriter to write to.
 	 */
 	public void save(PrintWriter output) {
@@ -510,7 +552,14 @@ public class State {
 			output.println("   long value " + out.value);
 			output.println("   int bits " + out.bits);
 		}
-		for (Transition tr : trans) {
+		// canonical transition order (#180): trans is a HashSet and
+		// Transition has no hashCode override, so direct iteration would
+		// write the trans blocks in identity-hash order. Sort by the
+		// transitions' own content instead.
+		java.util.List<Transition> orderedTrans =
+				new java.util.ArrayList<Transition>(trans);
+		orderedTrans.sort(transitionSaveOrder());
+		for (Transition tr : orderedTrans) {
 			if (tr.unconditional)
 				output.println("  String trans \"always\"");
 			else if (tr.other)

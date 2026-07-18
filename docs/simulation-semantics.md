@@ -82,7 +82,13 @@ Ordering (`SimEvent.compareTo`): events fire in ascending **time**;
 events at the same time fire in ascending **sequence number**, a
 global counter assigned at construction. Since events are constructed
 at their `post` site, same-time events fire in the order they were
-posted — FIFO within a timestamp. Ordering is fully deterministic.
+posted — FIFO within a timestamp. FIFO makes ordering deterministic
+only if the *posting* order is itself content-determined, which for
+the time-0 events means the `initSim` seed order: the seed walks the
+circuit's canonical stable-id order
+(`Circuit.getElementsInStableOrder`, issue #181), not the element
+set's hash order, at every nesting depth. With that, ordering is
+fully deterministic — a pure function of circuit content.
 
 **Duplicate suppression** (`Simulator.post` +
 `SimEvent.equals`/`hashCode`): posting an event equal in
@@ -133,10 +139,14 @@ every simulation:
    walk and recurses into its inner circuit, so initialization is
    depth-uniform (pinned by
    `SimulationSemanticsRegressionTest.initInputsReachesInsideSubcircuits`).
-3. `initSim(sim)` on every top-level `LogicElement`.
+3. `initSim(sim)` on every top-level `LogicElement`, in canonical
+   stable-id order (issue #181; pinned by
+   `SimulationSeedOrderTest.initSimIsSeededInStableIdOrder`).
    `SubCircuit.initSim` recurses into its inner circuit
-   (`src/jls/elem/SubCircuit.java`), so every element at every depth
-   is initialized.
+   (`src/jls/elem/SubCircuit.java`) in the same order, so every
+   element at every depth is initialized, and the time-0 events are
+   posted — and therefore fire — in an order determined by circuit
+   content alone (§3), not by identity hashes that vary between runs.
 
 The `initSim` conventions:
 
@@ -432,6 +442,7 @@ this document alone. The mapping:
 | spec section | pinned by |
 |---|---|
 | §2 value domain, HiZ | `VcdExportGoldenTest` (0/1/z, never x; `bz` for HiZ) |
+| §3/§5 canonical seed order | `SimulationSeedOrderTest.initSimIsSeededInStableIdOrder` (issue #181) |
 | §5 initialization | `SequentialGoldenTest.registerInitialValueAppearsBeforeAnyClockEdge`; `BatchSimulationGoldenTest.notGateInverts` |
 | §6–7 delays settle within limit | every `BatchSimulationGoldenTest` truth-table golden |
 | §8.1 register | all four register goldens in `SequentialGoldenTest` (worked derivation in §8.1) |

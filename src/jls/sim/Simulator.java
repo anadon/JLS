@@ -37,6 +37,23 @@ public abstract class Simulator {
 	 * Set the circuit that will be simulated.
 	 * 
 	 * @param circ The circuit.
+	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @see jls.ElementSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#simulate()
+	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public void setCircuit(Circuit circ) {
 
@@ -47,6 +64,22 @@ public abstract class Simulator {
 	 * Set the time limit for the simulation.
 	 * 
 	 * @param limit The time limit.
+	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @see jls.BatchSimulationGoldenTest#simulate()
+	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @see jls.ElementSimulationGoldenTest#simulate()
+	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @see jls.SequentialGoldenTest#simulate()
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.ShiftRegisterTest#simulate()
+	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public void setTimeLimit(long limit) {
 
@@ -57,6 +90,9 @@ public abstract class Simulator {
 	 * Set the simulation test input file name.
 	 * 
 	 * @param name The test file name, or null if none.
+	 * @see jls.SequentialGoldenTest#simulateWithVectors()
+	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public void setTestFile(String name) {
 
@@ -67,6 +103,7 @@ public abstract class Simulator {
 	 * Initialize all inputs in the circuit.
 	 * 
 	 * @param circuit The circuit to initialize.
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
 	public void initInputs(Circuit circuit) {
 
@@ -82,6 +119,8 @@ public abstract class Simulator {
 	 * Enqueue an event.
 	 *
 	 * @param event The event to enqueue.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest.CountingSimulator#post()
 	 */
 	public void post(SimEvent event) {
 

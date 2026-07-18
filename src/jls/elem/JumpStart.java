@@ -203,14 +203,34 @@ public class JumpStart extends LogicElement implements TriProp {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/**
+			 * Read the name of the given jump start for saving.
+			 *
+			 * @param el The jump start being saved.
+			 * @return the jump start's name.
+			 */
 			@Override
 			protected String get(Element el) { return ((JumpStart)el).name; }
+			/**
+			 * Store a loaded name into the given jump start and register
+			 * it with the circuit.
+			 *
+			 * @param el The jump start being loaded.
+			 * @param v The name read from the file.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((JumpStart)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			/**
+			 * Copy the name field from one jump start to another without
+			 * registering the name with the circuit.
+			 *
+			 * @param from The jump start to copy from.
+			 * @param to The jump start to copy into.
+			 */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
@@ -219,22 +239,59 @@ public class JumpStart extends LogicElement implements TriProp {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit width of the given jump start for saving.
+			 *
+			 * @param el The jump start being saved.
+			 * @return the jump start's bit width.
+			 */
 			@Override
 			protected int get(Element el) { return ((JumpStart)el).bits; }
+			/**
+			 * Store a loaded bit width into the given jump start.
+			 *
+			 * @param el The jump start being loaded.
+			 * @param v The bit width read from the file.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((JumpStart)el).bits = v; }
 		},
 		new Attribute.IntAttribute("watch") {
+			/**
+			 * Read the watched flag of the given jump start as 1 or 0 for
+			 * saving.
+			 *
+			 * @param el The jump start being saved.
+			 * @return 1 if watched, 0 otherwise.
+			 */
 			@Override
 			protected int get(Element el) { return ((JumpStart)el).watched ? 1 : 0; }
+			/**
+			 * Store a loaded watched flag into the given jump start.
+			 *
+			 * @param el The jump start being loaded.
+			 * @param v Non-zero to mark it watched, zero otherwise.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((JumpStart)el).watched = v != 0; }
 		},
 		new Attribute.OrientationAttribute("orientation") {
+			/**
+			 * Read the orientation of the given jump start for saving.
+			 *
+			 * @param el The jump start being saved.
+			 * @return the jump start's orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((JumpStart)el).orientation;
 			}
+			/**
+			 * Store a loaded orientation into the given jump start.
+			 *
+			 * @param el The jump start being loaded.
+			 * @param o The orientation read from the file.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((JumpStart)el).orientation = o;
@@ -283,6 +340,7 @@ public class JumpStart extends LogicElement implements TriProp {
 	 * Get the name of this jumpstart.
 	 * 
 	 * @return the name.
+	 * @see jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
 	public String getName() {

@@ -11,6 +11,11 @@ public class HdlExportException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Creates the exception with a message naming every offending element.
+	 *
+	 * @param message the full description of the unexportable elements.
+	 */
 	public HdlExportException(String message) {
 
 		super(message);

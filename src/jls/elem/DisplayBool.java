@@ -184,12 +184,32 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	} // end of mousePressed method
 
 	// remaining methods not used
+	/**
+	 * Unused MouseListener callback; no action on mouse released.
+	 *
+	 * @param event The event object.
+	 */
 	@Override
 	public void mouseReleased(MouseEvent event) {}
+	/**
+	 * Unused MouseListener callback; no action on mouse clicked.
+	 *
+	 * @param event The event object.
+	 */
 	@Override
 	public void mouseClicked(MouseEvent event) {}
+	/**
+	 * Unused MouseListener callback; no action on mouse entered.
+	 *
+	 * @param event The event object.
+	 */
 	@Override
 	public void mouseEntered(MouseEvent event) {}
+	/**
+	 * Unused MouseListener callback; no action on mouse exited.
+	 *
+	 * @param event The event object.
+	 */
 	@Override
 	public void mouseExited(MouseEvent event) {}
 

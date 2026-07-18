@@ -32,6 +32,8 @@ public abstract class Group extends LogicElement {
 	 * @param bits The proposed number of bundled bits.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -181,6 +183,7 @@ public abstract class Group extends LogicElement {
 	/**
 	 * This method will flip a group
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
+	 * @see jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
 	public void flip(Graphics g)
@@ -197,6 +200,7 @@ public abstract class Group extends LogicElement {
 	 * Subclasses re-run init to rebuild the puts on the new axes.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
+	 * @see jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
@@ -219,6 +223,8 @@ public abstract class Group extends LogicElement {
 	 * Tells if a Group is capable of rotating: the same no-attachments
 	 * constraint as flipping, since both rebuild every put.
 	 * @return False if any input or output has a wire attached, True otherwise
+	 * @see jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
+	 * @see jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
 	public boolean canRotate()
@@ -229,6 +235,8 @@ public abstract class Group extends LogicElement {
 	/**
 	 * Tells if a Group is capable of flippiing, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
+	 * @see jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
+	 * @see jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
 	public boolean canFlip()
@@ -319,6 +327,8 @@ public abstract class Group extends LogicElement {
 	 * Save this element.
 	 *
 	 * @param output The output writer.
+	 *
+	 * @see jls.elem.GroupOrientationTest#orientOf()
 	 */
 	@Override
 	public void save(PrintWriter output) {
@@ -611,6 +621,10 @@ public abstract class Group extends LogicElement {
 			
 			// set up automatic disabling of already-bundled bits
 			choose.setCellRenderer(new DefaultListCellRenderer() {
+				/**
+				 * Render an already-bundled bit as unselectable so it cannot
+				 * be picked into a second group.
+				 */
 				@Override
 				public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 					boolean allow = true;
@@ -936,6 +950,13 @@ public abstract class Group extends LogicElement {
 			return toCircuitString() + p;
 		} // end of toString method
 		
+		/**
+		 * Render this entry's indices as a circuit-facing label: a single
+		 * number when it holds one bit, a "max-min" range when the indices
+		 * are contiguous, or a comma-separated list of runs otherwise.
+		 *
+		 * @return the label string.
+		 */
 		public String toCircuitString() {
 			if(getMin() == getMax()) {
 				return String.valueOf(getMin());	

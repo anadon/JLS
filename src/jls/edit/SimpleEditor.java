@@ -139,6 +139,12 @@ public abstract class SimpleEditor extends JPanel {
 			new ConcurrentHashMap<String,String>();
 	private static final ExecutorService checkpointWriter =
 			Executors.newSingleThreadExecutor(new ThreadFactory() {
+				/**
+				 * Create the daemon thread that drains queued checkpoint writes.
+				 *
+				 * @param r The task the writer thread runs.
+				 * @return the new daemon thread.
+				 */
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = new Thread(r, "JLS-checkpoint-writer");
@@ -155,12 +161,19 @@ public abstract class SimpleEditor extends JPanel {
 	 *
 	 * @param fileName Absolute path of the .jls~ checkpoint file.
 	 * @param circuitText The serialized circuit.
+	 * @see jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
+	 * @see jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
+	 * @see jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
+	 * @see jls.edit.CheckpointWriterTest#newerCheckpointSupersedesQueuedOne()
 	 */
 	static void writeCheckpointInBackground(final String fileName, String circuitText) {
 
 		if (pendingCheckpoints.put(fileName, circuitText) != null)
 			return;	// a queued task will pick up this newer text
 		checkpointWriter.execute(new Runnable() {
+			/**
+			 * Write the newest pending checkpoint text for the queued file.
+			 */
 			@Override
 			public void run() {
 				String content = pendingCheckpoints.remove(fileName);
@@ -184,11 +197,16 @@ public abstract class SimpleEditor extends JPanel {
 	 * so quitting right after a save cannot leave a stale checkpoint behind.
 	 *
 	 * @param fileName Absolute path of the .jls~ checkpoint file.
+	 * @see jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
+	 * @see jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
 	 */
 	static void cancelCheckpoint(final String fileName) {
 
 		pendingCheckpoints.remove(fileName);
 		Future<?> deleted = checkpointWriter.submit(new Runnable() {
+			/**
+			 * Delete the checkpoint file, ordered after any in-flight write.
+			 */
 			@Override
 			public void run() {
 				new File(fileName).delete();
@@ -222,6 +240,13 @@ public abstract class SimpleEditor extends JPanel {
 	 *
 	 * @return true if put belongs to a bundle and the attach would mix
 	 *         tri-state and normal wires, false otherwise.
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToNormalBundle()
+	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @see jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
+	 * @see jls.edit.TriStateBundleConnectTest#normalDrivenWireIsStillRefusedOnTriStateBundle()
+	 * @see jls.edit.TriStateBundleConnectTest#normalWireMayAttachToNormalBundle()
+	 * @see jls.edit.TriStateBundleConnectTest#triStateWireIsStillRefusedOnNormalBundle()
+	 * @see jls.edit.TriStateBundleConnectTest#triStateWireMayAttachToTriStateBundle()
 	 */
 	static boolean mixesTriStateAndNormal(WireEnd end, Put put) {
 
@@ -288,6 +313,12 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param wire The wire to check.
 	 *
 	 * @return true if the wire collides along its span.
+	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @see jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
+	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @see jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
+	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
 	 */
 	static boolean wireCollidesAlongSpan(Circuit circuit,
 			Set<Element> selected, Element sel, Wire wire) {
@@ -363,6 +394,11 @@ public abstract class SimpleEditor extends JPanel {
 		corner.setToolTipText("expand circuit drawing area by 10%");
 		pane.setCorner(JScrollPane.LOWER_RIGHT_CORNER, corner);
 		corner.addActionListener(new ActionListener() {
+			/**
+			 * Expand the circuit drawing area when the corner button is pressed.
+			 *
+			 * @param event The triggering action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				me.increaseSize();
@@ -383,6 +419,7 @@ public abstract class SimpleEditor extends JPanel {
 	 * Get the circuit being editted by this editor.
 	 * 
 	 * @return the circuit.
+	 * @see jls.ui.EditorGestureSupport#currentCircuit()
 	 */
 	public Circuit getCircuit() {
 
@@ -397,6 +434,11 @@ public abstract class SimpleEditor extends JPanel {
 	public void addToImportMenu(Circuit subCirc) {
 
 		Action act = new AbstractAction(subCirc.getName()) {
+			/**
+			 * Import the subcircuit named by this menu item.
+			 *
+			 * @param event The triggering action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				ew.doImport((String)(this.getValue(Action.NAME)));
@@ -440,6 +482,13 @@ public abstract class SimpleEditor extends JPanel {
 		}
 	} // end of refreshInImportMenu method
 
+	/**
+	 * Rename a circuit in the import menu, updating the menu item
+	 * label and the name maps.
+	 *
+	 * @param oldname The current name.
+	 * @param newname The new name.
+	 */
 	public void changeInImportMenu(String oldname, String newname) {
 
 		JMenuItem item = menuMap.get(oldname);
@@ -448,6 +497,11 @@ public abstract class SimpleEditor extends JPanel {
 		menuMap.put(newname,item);
 
 		Action act = new AbstractAction(newname) {
+			/**
+			 * Import the subcircuit named by this renamed menu item.
+			 *
+			 * @param event The triggering action event.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				ew.doImport((String)(this.getValue(Action.NAME)));
@@ -566,6 +620,11 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param state The current editor state.
 	 * @param selectionSize The number of currently selected elements.
 	 * @return the gesture to perform.
+	 * @see jls.edit.CtrlWGestureTest#idleStartsWireDespiteMultiSelection()
+	 * @see jls.edit.CtrlWGestureTest#idleStartsWireDespiteSingleSelection()
+	 * @see jls.edit.CtrlWGestureTest#idleStartsWireWithEmptySelection()
+	 * @see jls.edit.CtrlWGestureTest#otherStatesDoNothing()
+	 * @see jls.edit.CtrlWGestureTest#watchToggleStillReachableFromSelectedState()
 	 */
 	static CtrlW ctrlWGesture(State state, int selectionSize) {
 
@@ -586,6 +645,12 @@ public abstract class SimpleEditor extends JPanel {
 	static final class WireStart {
 		final WireEnd end;
 		final boolean hadSelection;
+		/**
+		 * Record the result of a wire-start gesture.
+		 *
+		 * @param end The new initial wire end.
+		 * @param hadSelection Whether a selection existed before it was cleared.
+		 */
 		WireStart(WireEnd end, boolean hadSelection) {
 			this.end = end;
 			this.hadSelection = hadSelection;
@@ -605,6 +670,9 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param x The x-coordinate for the wire end.
 	 * @param y The y-coordinate for the wire end.
 	 * @return the new wire end and the pre-clear selection state.
+	 * @see jls.edit.CtrlWGestureTest#overlapFeedbackKeyedOffPreClearSelection()
+	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
 	 */
 	static WireStart startWireGesture(Circuit circuit, Set<Element> selected,
 			int x, int y) {
@@ -765,6 +833,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up ctrl-w (new wire / watch) key binding
 				Action ctrlw = new AbstractAction() {
+					/**
+					 * Handle ctrl-W: start a wire from idle, otherwise toggle the watch
+					 * on a single selected element.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -841,6 +915,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up end wire key binding
 				Action endWire = new AbstractAction() {
+					/**
+					 * Handle Escape: abandon a wire being drawn and return to idle.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -881,6 +960,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up view key binding
 				Action see = new AbstractAction() {
+					/**
+					 * Handle the view shortcut: show the single selected element's
+					 * current value.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -910,6 +995,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up modify key binding
 				Action modify = new AbstractAction() {
+					/**
+					 * Handle the modify shortcut: modify the single selected element.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -929,6 +1019,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up probe key binding
 				Action probe = new AbstractAction() {
+					/**
+					 * Handle the probe shortcut: toggle a probe on the single selected
+					 * wire.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -953,6 +1049,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up timing key binding
 				Action timing = new AbstractAction() {
+					/**
+					 * Handle the timing shortcut: change timing on the single selected
+					 * element that has it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -977,6 +1079,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up selectAll key binding
 				Action selectAll = new AbstractAction() {
+					/**
+					 * Handle the select-all shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -992,6 +1099,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up close window key binding
 				Action closeWin = new AbstractAction() {
+					/**
+					 * Handle the close-window shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						close();
@@ -1002,6 +1114,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up delete key binding
 				Action deleteKey = new AbstractAction() {
+					/**
+					 * Handle the delete shortcut: remove the selected elements.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1019,6 +1136,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up cut key binding
 				Action cutKey = new AbstractAction() {
+					/**
+					 * Handle the cut shortcut: copy then remove the selected elements.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1036,6 +1158,12 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up copy key binding
 				Action copyKey = new AbstractAction() {
+					/**
+					 * Handle the copy shortcut: copy the selected elements to the
+					 * clipboard.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1051,6 +1179,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up paste key binding
 				Action pasteKey = new AbstractAction() {
+					/**
+					 * Handle the paste shortcut: paste the clipboard contents.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1068,6 +1201,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up undo key binding
 				Action undoKey = new AbstractAction() {
+					/**
+					 * Handle the undo shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1081,6 +1219,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up redo key binding
 				Action redoKey = new AbstractAction() {
+					/**
+					 * Handle the redo shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1094,6 +1237,11 @@ public abstract class SimpleEditor extends JPanel {
 
 				// set up lock key binding
 				Action lockKey = new AbstractAction() {
+					/**
+					 * Handle the lock shortcut: make the selected elements uneditable.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (enabled) {
@@ -1139,6 +1287,11 @@ public abstract class SimpleEditor extends JPanel {
 				ImageIcon image = getImage("and");
 				String text = image == null ? "AND" : "";
 				Action act = new AbstractAction(text,image) {
+					/**
+					 * Create a new AND gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new AndGate(circuit),event.getSource() instanceof JButton);
@@ -1149,6 +1302,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("or");
 				text = image == null ? "OR" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new OR gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new OrGate(circuit),event.getSource() instanceof JButton);
@@ -1159,6 +1317,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("not");
 				text = image == null ? "NOT" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new NOT gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NotGate(circuit),event.getSource() instanceof JButton);
@@ -1169,6 +1332,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("xor");
 				text = image == null ? "XOR" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new exclusive-OR gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new XorGate(circuit),event.getSource() instanceof JButton);
@@ -1179,6 +1347,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("nand");
 				text = image == null ? "NAND" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new NAND gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NandGate(circuit),event.getSource() instanceof JButton);
@@ -1189,6 +1362,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("nor");
 				text = image == null ? "NOR" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new NOR gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new NorGate(circuit),event.getSource() instanceof JButton);
@@ -1199,6 +1377,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("delay");
 				text = image == null ? "DELAY" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new delay gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new DelayGate(circuit),event.getSource() instanceof JButton);
@@ -1209,6 +1392,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("tristate");
 				text = image == null ? "TriState" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new tri-state gate and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new TriState(circuit),event.getSource() instanceof JButton);
@@ -1225,6 +1413,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("jumpstart");
 				text = image == null ? "START" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new named-wire (jump start) and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new JumpStart(circuit),event.getSource() instanceof JButton);
@@ -1235,6 +1428,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("jumpend");
 				text = image == null ? "END" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new jump end and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new JumpEnd(circuit),event.getSource() instanceof JButton);
@@ -1245,6 +1443,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("ipin");
 				text = image == null ? "I-PIN" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new input pin and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new InputPin(circuit),event.getSource() instanceof JButton);
@@ -1255,6 +1458,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("opin");
 				text = image == null ? "O-PIN" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new output pin and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new OutputPin(circuit),event.getSource() instanceof JButton);
@@ -1265,6 +1473,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("split");
 				text = image == null ? "SPLIT" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new splitter and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Splitter(circuit),event.getSource() instanceof JButton);
@@ -1275,6 +1488,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("bind");
 				text = image == null ? "BIND" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new binder and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Binder(circuit),event.getSource() instanceof JButton);
@@ -1285,6 +1503,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("const");
 				text = image == null ? "CONST" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new constant and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Constant(circuit),event.getSource() instanceof JButton);
@@ -1295,6 +1518,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("extend");
 				text = image == null ? "1-to-N" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new extend element and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Extend(circuit),event.getSource() instanceof JButton);
@@ -1311,6 +1539,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("register");
 				text = image == null ? "REG" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new register and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Register(circuit),event.getSource() instanceof JButton);
@@ -1321,6 +1554,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("memory");
 				text = image == null ? "MEMORY" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new memory and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Memory(circuit),event.getSource() instanceof JButton);
@@ -1337,6 +1575,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("mux");
 				text = image == null ? "MUX" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new multiplexor and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Mux(circuit),event.getSource() instanceof JButton);
@@ -1347,6 +1590,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("decoder");
 				text = image == null ? "DEC" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new decoder and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Decoder(circuit),event.getSource() instanceof JButton);
@@ -1357,6 +1605,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("shiftregister");
 				text = image == null ? "SHIFT" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new shift register and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new ShiftRegister(circuit),event.getSource() instanceof JButton);
@@ -1367,6 +1620,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("adder");
 				text = image == null ? "ADDER" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new adder and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Adder(circuit),event.getSource() instanceof JButton);
@@ -1377,6 +1635,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("clock");
 				text = image == null ? "CLOCK" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new clock and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Clock(circuit),event.getSource() instanceof JButton);
@@ -1392,6 +1655,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("pause");
 				text = image == null ? "PAUSE" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new pause and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Pause(circuit),event.getSource() instanceof JButton);
@@ -1402,6 +1670,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("stop");
 				text = image == null ? "STOP" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new stop and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Stop(circuit),event.getSource() instanceof JButton);
@@ -1418,6 +1691,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("siggen");
 				text = image == null ? "SIGGEN" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new signal generator and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new SigGen(circuit),event.getSource() instanceof JButton);
@@ -1428,6 +1706,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("display");
 				text = image == null ? "DISPLAY" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new display and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new jls.elem.Display(circuit),
@@ -1445,6 +1728,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("statemachine");
 				text = image == null ? "ST. MAC." : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new state machine and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new StateMachine(circuit),event.getSource() instanceof JButton);
@@ -1455,6 +1743,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("truth");
 				text = image == null ? "Truth Table" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new truth table and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new TruthTable(circuit),event.getSource() instanceof JButton);
@@ -1469,6 +1762,11 @@ public abstract class SimpleEditor extends JPanel {
 				image = getImage("text");
 				text = image == null ? "TEXT" : "";
 				act = new AbstractAction(text,image) {
+					/**
+					 * Create a new text element and begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						setup(new Text(circuit),event.getSource() instanceof JButton);
@@ -1486,6 +1784,11 @@ public abstract class SimpleEditor extends JPanel {
 				toolbar.add(imp);
 
 				imp.addActionListener(new ActionListener() {
+					/**
+					 * Show the import menu below the Import button when it has entries.
+					 *
+					 * @param event The triggering action event.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						if (importMenu.getComponentCount() > 0) {

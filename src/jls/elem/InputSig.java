@@ -22,24 +22,36 @@ public final class InputSig extends SigEntry {
 		super(ttelem,signal,g);
 	} // end of constructor
 
+	/**
+	 * Remove this input signal from the truth table.
+	 */
 	@Override
 	protected void doRemove() {
 
 		ttelem.removeInput(signal);
 	} // end of doRemove method
 
+	/**
+	 * Rename this input signal in the truth table.
+	 */
 	@Override
 	protected void doRename() {
 
 		ttelem.renameInput(signal);
 	} // end of doRename method
 
+	/**
+	 * Move this input signal one position to the left in the truth table.
+	 */
 	@Override
 	protected void doMoveLeft() {
 
 		ttelem.moveInputLeft(signal);
 	} // end of doMoveLeft method
 
+	/**
+	 * Move this input signal one position to the right in the truth table.
+	 */
 	@Override
 	protected void doMoveRight() {
 

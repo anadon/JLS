@@ -44,6 +44,8 @@ public class ShiftRegister extends LogicElement {
 	 * @param bits The proposed data width.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -233,10 +235,25 @@ public class ShiftRegister extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("type") {
+			/**
+			 * Read the shift kind as its save-file name.
+			 *
+			 * @param el The shift register to read.
+			 *
+			 * @return the shift kind's enum name.
+			 */
 			@Override
 			protected String get(Element el) {
 				return ((ShiftRegister)el).type.name();
 			}
+			/**
+			 * Set the shift kind from its save-file name.
+			 *
+			 * @param el The shift register to modify.
+			 * @param v The shift kind's enum name.
+			 *
+			 * @throws IllegalArgumentException if the name is not a known kind.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// an unknown kind is rejected, not guessed (issue #122
@@ -251,8 +268,23 @@ public class ShiftRegister extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the data width.
+			 *
+			 * @param el The shift register to read.
+			 *
+			 * @return the number of data bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((ShiftRegister)el).bits; }
+			/**
+			 * Validate and set the data width.
+			 *
+			 * @param el The shift register to modify.
+			 * @param v The proposed number of data bits.
+			 *
+			 * @throws IllegalArgumentException if the width is below the minimum.
+			 */
 			@Override
 			protected void set(Element el, int v) {
 				String violated = checkBits(v);
@@ -263,26 +295,65 @@ public class ShiftRegister extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation delay.
+			 *
+			 * @param el The shift register to read.
+			 *
+			 * @return the propagation delay.
+			 */
 			@Override
 			protected int get(Element el) { return ((ShiftRegister)el).propDelay; }
+			/**
+			 * Set the propagation delay.
+			 *
+			 * @param el The shift register to modify.
+			 * @param v The new propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((ShiftRegister)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("iOrient") {
+			/**
+			 * Read the output orientation.
+			 *
+			 * @param el The shift register to read.
+			 *
+			 * @return the output orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).outputOrientation;
 			}
+			/**
+			 * Set the output orientation.
+			 *
+			 * @param el The shift register to modify.
+			 * @param o The new output orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((ShiftRegister)el).outputOrientation = o;
 			}
 		},
 		new Attribute.OrientationAttribute("sOrient") {
+			/**
+			 * Read the amount-input orientation.
+			 *
+			 * @param el The shift register to read.
+			 *
+			 * @return the amount-input orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).amountOrientation;
 			}
+			/**
+			 * Set the amount-input orientation.
+			 *
+			 * @param el The shift register to modify.
+			 * @param o The new amount-input orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((ShiftRegister)el).amountOrientation = o;

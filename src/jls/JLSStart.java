@@ -393,6 +393,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			// start up GUI
 			Runnable mainwindow = new Runnable() {
 
+				/**
+				 * Build the main JLS window on the event dispatch thread,
+				 * reporting a headless display as a fatal startup error.
+				 */
 				@Override
 				public void run() {
 					try {new JLSStart();}
@@ -491,6 +495,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 *
 	 * @param circ The circuit to find watched elements in.
 	 * @param qual Qualified name of subcircuit.
+	 *
+	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
 	 */
 	public static void displayResults(Circuit circ, String qual) {
 
@@ -547,6 +553,15 @@ public class JLSStart extends JFrame implements ChangeListener {
 		final String operandWhat;
 		final String description;
 
+		/**
+		 * Create one flag-table row.
+		 *
+		 * @param flag The flag name (without the leading '-').
+		 * @param arity Whether the flag takes no, a required, or an optional operand.
+		 * @param operandName The operand's name in the usage text, or null.
+		 * @param operandWhat The operand phrase for "requires ..." errors, or null.
+		 * @param description The usage description for this flag.
+		 */
 		FlagSpec(String flag, Arity arity, String operandName,
 				String operandWhat, String description) {
 			this.flag = flag;
@@ -597,6 +612,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * Package-visible for the documentation drift test (issue #71).
 	 *
 	 * @return a fresh array of the accepted flag names.
+	 *
+	 * @see jls.CliFlagTableTest#tableFlags()
 	 */
 	static String[] commandLineFlags() {
 
@@ -875,6 +892,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * Package-visible for the documentation drift test.
 	 *
 	 * @return the complete usage message.
+	 *
+	 * @see jls.CliFlagTableTest#helpPrintsTheGeneratedUsageAndExitsZero()
+	 * @see jls.CliFlagTableTest#usageDocumentsExactlyTheParserFlags()
+	 * @see jls.WaylandStartupCliTest#helpIsUnaffectedAndDocumentsTheEscapeHatch()
 	 */
 	static String usageText() {
 
@@ -923,6 +944,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		addWindowListener (
 				new WindowAdapter() {
+					/**
+					 * Begin an orderly JLS shutdown when the window's
+					 * close box is used.
+					 *
+					 * @param e Unused.
+					 */
 					@Override
 					public void windowClosing(WindowEvent e) {
 						shutdown();
@@ -1048,6 +1075,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		newc.setToolTipText("create a new circuit");
 		menu.add(newc);
 		newc.addActionListener(new ActionListener() {
+			/**
+			 * Create a new circuit when the New menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				newCircuit();
@@ -1059,6 +1091,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		open.setToolTipText("open an existing circuit file");
 		menu.add(open);
 		open.addActionListener(new ActionListener() {
+			/**
+			 * Prompt for and open an existing circuit when the Open menu
+			 * item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				open(null);
@@ -1070,6 +1108,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		saveItem.setToolTipText("save the currently visible circuit");
 		menu.add(saveItem);
 		saveItem.addActionListener(new ActionListener() {
+			/**
+			 * Save the currently visible circuit when the Save menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
@@ -1083,6 +1127,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		saveAs.setToolTipText("save the currently visible circuit under a new name");
 		menu.add(saveAs);
 		saveAs.addActionListener(new ActionListener() {
+			/**
+			 * Save the currently visible circuit under a new name when the
+			 * Save As menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
@@ -1101,12 +1151,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 		print.add(printAll);
 		print.add(justThis);
 		printAll.addActionListener(new ActionListener() {
+			/**
+			 * Print the entire circuit when the "Entire circuit" menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				print(true);
 			}
 		});
 		justThis.addActionListener(new ActionListener() {
+			/**
+			 * Print only the visible window when the "Just visible window"
+			 * menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				print(false);
@@ -1118,6 +1180,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		importItem.setToolTipText("create a subcircuit from a circuit file");
 		menu.add(importItem);
 		importItem.addActionListener(new ActionListener() {
+			/**
+			 * Import a circuit from a file when the Import menu item is
+			 * chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				try {
@@ -1133,6 +1201,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		exportItem.setToolTipText("create a JPEG image file of the circuit");
 		menu.add(exportItem);
 		exportItem.addActionListener(new ActionListener() {
+			/**
+			 * Export a circuit image when the Export Image menu item is
+			 * chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				try {
@@ -1150,6 +1224,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		close.setToolTipText("close the currently visible circuit");
 		menu.add(close);
 		close.addActionListener(new ActionListener() {
+			/**
+			 * Close the currently visible editor when the Close menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				closeVisibleEditor();
@@ -1161,6 +1241,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		exit.setToolTipText("terminate JLS");
 		menu.add(exit);
 		exit.addActionListener(new ActionListener() {
+			/**
+			 * Terminate JLS when the Exit menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				shutdown();
@@ -1194,6 +1279,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		menu.add(stop);
 
 		run.addActionListener(new ActionListener() {
+			/**
+			 * Run the simulator in the background when the Run menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.setBottomComponent(interSim.getStatusBar());
@@ -1206,6 +1297,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		stop.addActionListener(new ActionListener() {
+			/**
+			 * Stop a runaway background simulator when the Stop menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				interSim.stop();
@@ -1213,6 +1310,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		show.addActionListener(new ActionListener() {
+			/**
+			 * Make the simulator window appear when the Show menu item is
+			 * chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.setDividerLocation(0.7);
@@ -1221,6 +1324,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		});
 
 		hide.addActionListener(new ActionListener() {
+			/**
+			 * Make the simulator window disappear when the Hide menu item
+			 * is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				both.remove(interSim.getWindow());
@@ -1243,6 +1352,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem resetDelays = new JMenuItem("Reset all propagation delays");
 		menu.add(resetDelays);
 		resetDelays.addActionListener(new ActionListener() {
+			/**
+			 * Reset all propagation delays in the visible circuit when the
+			 * menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
@@ -1256,6 +1371,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem removeProbes = new JMenuItem("Remove all probes");
 		menu.add(removeProbes);
 		removeProbes.addActionListener(new ActionListener() {
+			/**
+			 * Remove all probes from the visible circuit when the menu
+			 * item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
@@ -1269,6 +1390,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem clearWatches = new JMenuItem("Unwatch all elements");
 		menu.add(clearWatches);
 		clearWatches.addActionListener(new ActionListener() {
+			/**
+			 * Unwatch all elements in the visible circuit when the menu
+			 * item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
@@ -1282,6 +1409,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem expand = new JMenuItem("Expand circuit drawing area by 10%");
 		menu.add(expand);
 		expand.addActionListener(new ActionListener() {
+			/**
+			 * Enlarge the visible circuit's drawing area when the Expand
+			 * menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)edits.getSelectedComponent();
@@ -1294,6 +1427,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem gridCol = new JMenuItem("Change editor window grid color");
 		menu.add(gridCol);
 		gridCol.addActionListener(new ActionListener() {
+			/**
+			 * Prompt for and apply a new editor grid color when the menu
+			 * item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.gridColor);
@@ -1309,6 +1448,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem editBkg = new JMenuItem("Change editor window background color");
 		menu.add(editBkg);
 		editBkg.addActionListener(new ActionListener() {
+			/**
+			 * Prompt for and apply a new editor background color when the
+			 * menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.backgroundColor);
@@ -1338,6 +1483,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem about = new JMenuItem("About");
 		help.add(about);
 		about.addActionListener(new ActionListener() {
+			/**
+			 * Show the About dialog when the About menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				new About();
@@ -1356,6 +1506,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial1.setToolTipText(tip1);
 		tutorial.add(tutorial1);
 		tutorial1.addActionListener(new ActionListener() {
+			/**
+			 * Open the introduction tutorial when its menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial1.html",false);
@@ -1367,6 +1522,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial2.setToolTipText(tip2);
 		tutorial.add(tutorial2);
 		tutorial2.addActionListener(new ActionListener() {
+			/**
+			 * Open the 4-bit counter tutorial when its menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial2.html",false);
@@ -1377,6 +1537,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial3.setToolTipText(tip3);
 		tutorial.add(tutorial3);
 		tutorial3.addActionListener(new ActionListener() {
+			/**
+			 * Open the full adder tutorial when its menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial3.html",false);
@@ -1388,6 +1553,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		tutorial4.setToolTipText(tip4);
 		tutorial.add(tutorial4);
 		tutorial4.addActionListener(new ActionListener() {
+			/**
+			 * Open the sign extension tutorial when its menu item is chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				new Tutorial(JLSInfo.frame,"tutorial4.html",false);
@@ -1398,6 +1568,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuItem contents = new JMenuItem("Contents");
 		help.add(contents);
 		contents.addActionListener(new ActionListener() {
+			/**
+			 * Open the help contents viewer when the Contents menu item is
+			 * chosen.
+			 *
+			 * @param event Unused.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Help.showTopic("top");
@@ -1453,11 +1629,24 @@ public class JLSStart extends JFrame implements ChangeListener {
 			
 			javax.swing.filechooser.FileFilter filter =
 				new javax.swing.filechooser.FileFilter() {
+				/**
+				 * Accept JLS circuit files and directories in the open
+				 * dialog.
+				 *
+				 * @param f The file to test.
+				 *
+				 * @return true if f is a .jls/.jls~ file or a directory.
+				 */
 				@Override
 				public boolean accept(File f) {
 					return f.getName().endsWith(".jls") || f.getName().endsWith(".jls~")
 					|| f.isDirectory();
 				}
+				/**
+				 * The open dialog file filter description.
+				 *
+				 * @return the description text.
+				 */
 				@Override
 				public String getDescription() {
 					return "JLS Circuit Files";
@@ -1664,10 +1853,23 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			/**
+			 * Accept JLS circuit files and directories in the import
+			 * dialog.
+			 *
+			 * @param f The file to test.
+			 *
+			 * @return true if f is a .jls file or a directory.
+			 */
 			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			/**
+			 * The import dialog file filter description.
+			 *
+			 * @return the description text.
+			 */
 			@Override
 			public String getDescription() {
 				return "JLS Circuit Files";
@@ -2151,10 +2353,23 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JFileChooser chooser = new JFileChooser(Util.defaultDirectory());
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			/**
+			 * Accept JPEG image files and directories in the export
+			 * dialog.
+			 *
+			 * @param f The file to test.
+			 *
+			 * @return true if f is a .jpg file or a directory.
+			 */
 			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jpg") || f.isDirectory();
 			}
+			/**
+			 * The export image dialog file filter description.
+			 *
+			 * @return the description text.
+			 */
 			@Override
 			public String getDescription() {
 				return "JLS Circuit Images";

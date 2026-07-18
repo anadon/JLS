@@ -41,6 +41,7 @@ public final class Help {
 	private static JTree toc = null;
 	private static Map<String,TreePath> topicToTocPath = null;
 
+	/** No instances: this is a static utility. */
 	private Help() {
 	}
 
@@ -82,6 +83,12 @@ public final class Help {
 		window.toFront();
 	} // end of showTopic method
 
+	/**
+	 * Display a help page in the viewer, or an inline "not found" notice
+	 * if the resource is missing from this build.
+	 *
+	 * @param url The help-relative page name (a Map.jhm url value).
+	 */
 	private static void showPage(String url) {
 
 		URL resource = Help.class.getResource("/help/" + url);
@@ -147,6 +154,12 @@ public final class Help {
 		return root;
 	} // end of loadToc method
 
+	/**
+	 * Read a bundled classpath resource as ISO-8859-1 text.
+	 *
+	 * @param path The absolute classpath resource path.
+	 * @return The resource contents, or "" if absent or unreadable.
+	 */
 	private static String readResource(String path) {
 
 		try (InputStream in = Help.class.getResourceAsStream(path)) {
@@ -165,22 +178,30 @@ public final class Help {
 		final String text;
 		final String topic;
 
+		/**
+		 * @param text  The label shown in the contents tree.
+		 * @param topic The topic id to open when selected, or null.
+		 */
 		TocEntry(String text, String topic) {
 			this.text = text;
 			this.topic = topic;
 		}
 
+		/** The display text, so the tree renders the label directly. */
 		@Override
 		public String toString() {
 			return text;
 		}
 	}
 
+	/** Build the help window: the contents tree, the page viewer, and the
+	 *  topic-to-tree-path index, all lazily on first use. */
 	private static void buildWindow() {
 
 		page = new JEditorPane();
 		page.setEditable(false);
 		page.addHyperlinkListener(new HyperlinkListener() {
+			/** Follow an activated hyperlink to its target page. */
 			@Override
 			public void hyperlinkUpdate(HyperlinkEvent event) {
 				if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED
@@ -202,6 +223,7 @@ public final class Help {
 		toc.setShowsRootHandles(true);
 		toc.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		toc.addTreeSelectionListener(new TreeSelectionListener() {
+			/** Show the page for the newly selected contents-tree node. */
 			@Override
 			public void valueChanged(TreeSelectionEvent event) {
 				TreePath path = toc.getSelectionPath();

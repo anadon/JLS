@@ -25,6 +25,9 @@ import javax.swing.JTextField;
 public final class NumericField {
 
 	// no instances; static helper in the TellUser/TextFilter family
+	/**
+	 * Prevents instantiation; this is a static-only helper.
+	 */
 	private NumericField() { }
 
 	/**
@@ -42,6 +45,13 @@ public final class NumericField {
 	 *
 	 * @return the parsed-and-clamped value, or previous if the text was
 	 *         not a parsable int.
+	 *
+	 * @see jls.NumericFieldTest#emptyTextMeansTheMinimum()
+	 * @see jls.NumericFieldTest#lonelyMinusSignKeepsThePreviousValueAndReports()
+	 * @see jls.NumericFieldTest#negativeValuesClampToTheMinimumWithoutError()
+	 * @see jls.NumericFieldTest#unparsableTextKeepsThePreviousValueAndReports()
+	 * @see jls.NumericFieldTest#validTextParsesAndNormalizesTheField()
+	 * @see jls.NumericFieldTest#valuesBelowTheMinimumClampSilently()
 	 */
 	public static int parse(Component parent, JTextField field, int minimum,
 			int previous, String description) {

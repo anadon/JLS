@@ -35,6 +35,8 @@ public final class Editor extends SimpleEditor {
 	 * @param circuit The circuit it will edit.
 	 * @param name The name of the circuit.
 	 * @param clipboard The clipboard.
+	 *
+	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public Editor(JTabbedPane pane, Circuit circuit, String name, Circuit clipboard) {
 
@@ -105,10 +107,21 @@ public final class Editor extends SimpleEditor {
 		// forks without an XZ reader; both save under the .jls name
 		javax.swing.filechooser.FileFilter filter =
 			new javax.swing.filechooser.FileFilter() {
+			/**
+			 * Accept .jls files and directories in the Save As chooser.
+			 *
+			 * @param f The file being offered to the filter.
+			 * @return true to show f in the chooser.
+			 */
 			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			/**
+			 * Label for the XZ (default) container choice in the chooser.
+			 *
+			 * @return the filter's description text.
+			 */
 			@Override
 			public String getDescription() {
 				return "JLS Circuit Files (XZ compressed, the default)";
@@ -116,10 +129,21 @@ public final class Editor extends SimpleEditor {
 		};
 		javax.swing.filechooser.FileFilter textFilter =
 			new javax.swing.filechooser.FileFilter() {
+			/**
+			 * Accept .jls files and directories in the Save As chooser.
+			 *
+			 * @param f The file being offered to the filter.
+			 * @return true to show f in the chooser.
+			 */
 			@Override
 			public boolean accept(File f) {
 				return f.getName().endsWith(".jls") || f.isDirectory();
 			}
+			/**
+			 * Label for the plain-text container choice in the chooser.
+			 *
+			 * @return the filter's description text.
+			 */
 			@Override
 			public String getDescription() {
 				return "JLS Circuit Files (plain text: diffable, fork-readable)";
@@ -199,6 +223,12 @@ public final class Editor extends SimpleEditor {
 	 * @param edited The circuits open in sibling editors, including self.
 	 *
 	 * @return true if another editor's circuit already has the name.
+	 *
+	 * @see jls.edit.SaveAsNameCheckTest#distinctSiblingWithSameNameIsStillACollision()
+	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @see jls.edit.SaveAsNameCheckTest#savingUnderAnotherEditorsNameIsACollision()
+	 * @see jls.edit.SaveAsNameCheckTest#savingUnderOwnCurrentNameIsNotACollision()
+	 * @see jls.edit.SaveAsNameCheckTest#unusedNameIsNotACollision()
 	 */
 	static boolean nameUsedByAnotherEditor(String name, Circuit self,
 			Iterable<Circuit> edited) {

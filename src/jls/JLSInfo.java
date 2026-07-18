@@ -17,6 +17,14 @@ public final class JLSInfo {
 
 	public static final String version = "JLS " + versionString;
 
+	/**
+	 * Read the project version single-sourced from the build-filtered
+	 * jls/version.properties resource, falling back to "dev" when the
+	 * resource is missing, unreadable, or still holds the unfiltered
+	 * "${...}" placeholder (issue #36).
+	 *
+	 * @return the resolved version string, or "dev" if none is available.
+	 */
 	private static String loadVersion() {
 
 		try (java.io.InputStream in =

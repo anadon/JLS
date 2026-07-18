@@ -11,6 +11,11 @@ import jls.*;
  */
 public abstract class DisplayElement extends Element {
 	
+	/**
+	 * Create a new display element within the given circuit.
+	 *
+	 * @param circuit the circuit this element belongs to.
+	 */
 	public DisplayElement(Circuit circuit) {
 		
 		super(circuit);

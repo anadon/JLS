@@ -67,6 +67,14 @@ public abstract class Gate extends LogicElement {
 		private int previousBits = defaultBits;
 		private Orientation previousOrientation = defaultOrientation;
 		
+		/**
+		 * Create a kind descriptor for one gate class.
+		 *
+		 * @param displayName The human-readable name (e.g. "AND").
+		 * @param saveName The save-file name (must match the loading class name).
+		 * @param fixedInputs The forced input count, or -1 if the user chooses.
+		 * @param defaultDelay The default propagation delay for this kind.
+		 */
 		protected Kind(String displayName, String saveName, int fixedInputs,
 				int defaultDelay) {
 			
@@ -352,22 +360,41 @@ public abstract class Gate extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bits (gate width) attribute from a gate.
+			 */
 			@Override
 			protected int get(Element el) { return ((Gate)el).bits; }
+			/**
+			 * Write the bits (gate width) attribute into a gate.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Gate)el).bits = v; }
 		},
 		new Attribute.IntAttribute("numInputs") {
+			/**
+			 * Read the input-count attribute from a gate.
+			 */
 			@Override
 			protected int get(Element el) { return ((Gate)el).numInputs; }
+			/**
+			 * Write the input-count attribute into a gate.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Gate)el).numInputs = v; }
 		},
 		new Attribute.StringAttribute("orientation") {
+			/**
+			 * Read the orientation attribute from a gate as its enum name.
+			 */
 			@Override
 			protected String get(Element el) {
 				return ((Gate)el).orientation.toString();
 			}
+			/**
+			 * Set a gate's orientation from a saved enum name, leaving it
+			 * unchanged if the name is not recognized.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// gates use their own lowercase orientation enum;
@@ -380,8 +407,14 @@ public abstract class Gate extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation-delay attribute from a gate.
+			 */
 			@Override
 			protected int get(Element el) { return ((Gate)el).propDelay; }
+			/**
+			 * Write the propagation-delay attribute into a gate.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Gate)el).propDelay = v; }
 		}
@@ -481,6 +514,7 @@ public abstract class Gate extends LogicElement {
 	 * or 1/2 space wider on each side (for up/down gates).
 	 * 
 	 * @return a rectangle that bounds the element on the screen.
+	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	@Override
 	public Rectangle getRect() {

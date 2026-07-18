@@ -477,14 +477,23 @@ public class Register extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
+			/**
+			 * Read the register's name for saving.
+			 */
 			@Override
 			protected String get(Element el) { return ((Register)el).name; }
+			/**
+			 * Load the register's name and register it with the circuit.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// loading a name registers it with the circuit
 				((Register)el).name = v;
 				el.getCircuit().addName(v);
 			}
+			/**
+			 * Copy the register's name field without re-registering it.
+			 */
 			@Override
 			public void copy(Element from, Element to) {
 				// the handwritten copy assigned the field without
@@ -493,16 +502,28 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the register's bit width for saving.
+			 */
 			@Override
 			protected int get(Element el) { return ((Register)el).bits; }
+			/**
+			 * Load the register's bit width.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Register)el).bits = v; }
 		},
 		new Attribute.BigIntAttribute("init") {
+			/**
+			 * Read the register's initial value for saving.
+			 */
 			@Override
 			protected BigInteger get(Element el) {
 				return ((Register)el).initialValue;
 			}
+			/**
+			 * Load the initial value and reset the displayed current value.
+			 */
 			@Override
 			protected void set(Element el, BigInteger v) {
 				// the handwritten loader (and copy) also reset the
@@ -513,22 +534,37 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.OrientationAttribute("orient") {
+			/**
+			 * Read the register's orientation for saving.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((Register)el).orientation;
 			}
+			/**
+			 * Load the register's orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((Register)el).orientation = o;
 			}
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the register's propagation delay for saving.
+			 */
 			@Override
 			protected int get(Element el) { return ((Register)el).propDelay; }
+			/**
+			 * Load the register's propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Register)el).propDelay = v; }
 		},
 		new Attribute.StringAttribute("type") {
+			/**
+			 * Read the register's type as its save-file name for saving.
+			 */
 			@Override
 			protected String get(Element el) {
 				switch (((Register)el).type) {
@@ -537,6 +573,9 @@ public class Register extends LogicElement {
 				default: return "latch";
 				}
 			}
+			/**
+			 * Load the register's type from its save-file name.
+			 */
 			@Override
 			protected void set(Element el, String v) {
 				// unknown strings leave the type unchanged, as the
@@ -550,8 +589,14 @@ public class Register extends LogicElement {
 			}
 		},
 		new Attribute.IntAttribute("watch") {
+			/**
+			 * Read the register's watched flag (1/0) for saving.
+			 */
 			@Override
 			protected int get(Element el) { return ((Register)el).watched ? 1 : 0; }
+			/**
+			 * Load the register's watched flag.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((Register)el).watched = v != 0; }
 		}
@@ -1249,6 +1294,7 @@ public class Register extends LogicElement {
 	 * Get the current value stored in this register.
 	 * 
 	 * @return the current value.
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
 	@Override
 	public BitSet getCurrentValue() {
@@ -1263,6 +1309,7 @@ public class Register extends LogicElement {
 	 * Initialize this element by setting its output pin and to-be value to 0.
 	 * 
 	 * @param sim Unused.
+	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
 	@Override
 	public void initSim(Simulator sim) {

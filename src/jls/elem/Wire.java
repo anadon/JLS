@@ -29,6 +29,9 @@ public class Wire extends Element {
 	 * 
 	 * @param e1 One end of the wire.
 	 * @param e2 The other end of the wire.
+	 *
+	 * @see jls.edit.WireSweepSymmetryTest#wire()
+	 * @see jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public Wire(WireEnd e1, WireEnd e2) {
 		
@@ -62,6 +65,15 @@ public class Wire extends Element {
 	 * Get one end of this wire.
 	 * 
 	 * @return one end.
+	 *
+	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @see jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
+	 * @see jls.edit.WireSweepSymmetryTest#endsOf()
+	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @see jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
+	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
 	 */
 	public WireEnd getEnd() {
 		
@@ -74,6 +86,9 @@ public class Wire extends Element {
 	 * @param end One end of the wire.
 	 * 
 	 * @return the other end of the wire.
+	 *
+	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @see jls.edit.WireSweepSymmetryTest#endsOf()
 	 */
 	public WireEnd getOtherEnd(WireEnd end) {
 		

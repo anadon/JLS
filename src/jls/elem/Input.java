@@ -48,6 +48,9 @@ public class Input extends Put {
 	 * Set the value of this input.
 	 * 
 	 * @param value The new value.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public void setValue(BitSet value) {
 		
@@ -58,6 +61,8 @@ public class Input extends Put {
 	 * Get the current value of this input.
 	 * 
 	 * @return the current value.
+	 *
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
 	public BitSet getValue() {
 		

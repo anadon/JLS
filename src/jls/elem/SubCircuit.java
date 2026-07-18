@@ -69,6 +69,8 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * Create a new subcircuit element.
 	 * 
 	 * @param circuit The circuit this element is part of.
+	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @see jls.elem.HollowVsFilledCollisionTest#probe()
 	 */
 	public SubCircuit(Circuit circuit) {
 		
@@ -89,6 +91,7 @@ public class SubCircuit extends LogicElement implements TriProp {
 	 * Get the subcircuit this element represents.
 	 * 
 	 * @return the subcircuit.
+	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
 	public Circuit getSubCircuit() {
 		
@@ -175,6 +178,15 @@ public class SubCircuit extends LogicElement implements TriProp {
 		
 		// create sorted lists of input pins and output pins
 		Comparator<Pin> cmp = new Comparator<Pin>() {
+			/**
+			 * Order two pins alphabetically by name.
+			 *
+			 * @param s1 The first pin.
+			 * @param s2 The second pin.
+			 *
+			 * @return negative, zero or positive as s1's name orders before,
+			 *         equal to or after s2's name.
+			 */
 			@Override
 			public int compare(Pin s1, Pin s2) {
 				return (s1.getName()).compareTo(s2.getName());

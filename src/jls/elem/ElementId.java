@@ -49,6 +49,14 @@ public final class ElementId implements Comparable<ElementId> {
 	private final String replica;
 	private final long counter;
 
+	/**
+	 * Bind a replica id and creation counter into an identity. Private:
+	 * callers mint through {@link #mintFresh()}, {@link #legacy(long)}, or
+	 * {@link #parse(String)}.
+	 *
+	 * @param replica The replica id (this process, "legacy", or parsed).
+	 * @param counter The creation counter within that replica.
+	 */
 	private ElementId(String replica, long counter) {
 
 		this.replica = replica;
@@ -60,6 +68,8 @@ public final class ElementId implements Comparable<ElementId> {
 	 * process. Every call returns a distinct id.
 	 *
 	 * @return the new identity.
+	 *
+	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
 	 */
 	public static ElementId mintFresh() {
 
@@ -91,6 +101,10 @@ public final class ElementId implements Comparable<ElementId> {
 	 * @throws IllegalArgumentException if the text is not a well-formed
 	 *             stable id (the loader reports this as an element error,
 	 *             issue #52 taxonomy).
+	 *
+	 * @see jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
+	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @see jls.StableElementIdTest#parseIsTheInverseOfToString()
 	 */
 	public static ElementId parse(String text) {
 
@@ -120,6 +134,9 @@ public final class ElementId implements Comparable<ElementId> {
 
 	/**
 	 * The canonical order (issue #166): by replica id, then by counter.
+	 *
+	 * @see jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
+	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
 	 */
 	@Override
 	public int compareTo(ElementId other) {
@@ -131,6 +148,14 @@ public final class ElementId implements Comparable<ElementId> {
 		return Long.compare(counter, other.counter);
 	} // end of compareTo method
 
+	/**
+	 * Two ids are equal when their replica id and counter both match.
+	 *
+	 * @param other The object to compare against.
+	 *
+	 * @return true if other is an ElementId with the same replica and
+	 *         counter.
+	 */
 	@Override
 	public boolean equals(Object other) {
 
@@ -141,6 +166,12 @@ public final class ElementId implements Comparable<ElementId> {
 		return counter == id.counter && replica.equals(id.replica);
 	} // end of equals method
 
+	/**
+	 * A hash derived from the replica id and counter, consistent with
+	 * {@link #equals(Object)}.
+	 *
+	 * @return the hash code.
+	 */
 	@Override
 	public int hashCode() {
 
@@ -149,6 +180,10 @@ public final class ElementId implements Comparable<ElementId> {
 
 	/**
 	 * The string form persisted in saved files: {@code replica:counter}.
+	 *
+	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @see jls.StableElementIdTest#parseIsTheInverseOfToString()
+	 * @see jls.StableElementIdTest#sidsByLogicalElement()
 	 */
 	@Override
 	public String toString() {

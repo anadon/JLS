@@ -35,6 +35,9 @@ import javax.swing.KeyStroke;
  */
 final class DeleteKeyPolicy {
 
+	/**
+	 * Prevents instantiation; the class holds only static policy methods.
+	 */
 	private DeleteKeyPolicy() {
 		// static use only
 	}
@@ -45,6 +48,10 @@ final class DeleteKeyPolicy {
 	 * modifiers.
 	 *
 	 * @return the canvas delete bindings.
+	 *
+	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindingsAreExactlyTheTwoUnmodifiedKeys()
+	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindsPlainBackspace()
+	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindsPlainDelete()
 	 */
 	static List<KeyStroke> canvasBindings() {
 
@@ -61,6 +68,9 @@ final class DeleteKeyPolicy {
 	 * @param osName value of the os.name system property (null-safe).
 	 *
 	 * @return the accelerator to display.
+	 *
+	 * @see jls.edit.DeleteKeyPolicyTest#macMenuShowsBackspace()
+	 * @see jls.edit.DeleteKeyPolicyTest#otherPlatformsMenuShowsDelete()
 	 */
 	static KeyStroke menuAccelerator(String osName) {
 
@@ -76,6 +86,8 @@ final class DeleteKeyPolicy {
 	 * @param osName value of the os.name system property, or null.
 	 *
 	 * @return true for macOS.
+	 *
+	 * @see jls.edit.DeleteKeyPolicyTest#isMacRecognizesAppleOsNames()
 	 */
 	static boolean isMac(String osName) {
 

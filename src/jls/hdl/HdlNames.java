@@ -100,6 +100,14 @@ final class HdlNames {
 		return renames;
 	} // end of renames method
 
+	/**
+	 * Step 4 of the rule: claim {@code id} if free, otherwise append
+	 * {@code _2}, {@code _3}, ... until an unused name is found.
+	 *
+	 * @param id The already-sanitized candidate identifier.
+	 *
+	 * @return the claimed (now-used) identifier.
+	 */
 	private String unique(String id) {
 
 		String candidate = id;

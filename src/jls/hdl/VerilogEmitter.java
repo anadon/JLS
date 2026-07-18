@@ -16,6 +16,12 @@ import java.util.Map;
  */
 public final class VerilogEmitter implements HdlEmitter {
 
+	/**
+	 * Renders the elaborated model as one complete Verilog module.
+	 * @param model the HDL model (ports, nets, statements) to export
+	 * @return the module source text, deterministic and self-contained
+	 * @see jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
+	 */
 	@Override
 	public String emit(HdlModel model) {
 
@@ -31,6 +37,10 @@ public final class VerilogEmitter implements HdlEmitter {
 		return out.toString();
 	} // end of emit method
 
+	/**
+	 * The file extension for Verilog output.
+	 * @return {@code "v"}
+	 */
 	@Override
 	public String fileExtension() {
 
@@ -41,6 +51,12 @@ public final class VerilogEmitter implements HdlEmitter {
 	// module framing
 	// ------------------------------------------------------------------
 
+	/**
+	 * Emits the leading comment banner: module name, source circuit,
+	 * the determinism/state note, and the name-legalization legend.
+	 * @param out the buffer the module text is appended to
+	 * @param model the model supplying names and renames
+	 */
 	private static void header(StringBuilder out, HdlModel model) {
 
 		out.append("// ").append(model.moduleName)
@@ -61,6 +77,11 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 	} // end of header method
 
+	/**
+	 * Emits the {@code module name (ports);} declaration line.
+	 * @param out the buffer the module text is appended to
+	 * @param model the model supplying the module name and port list
+	 */
 	private static void moduleHeader(StringBuilder out, HdlModel model) {
 
 		out.append("module ").append(model.moduleName);
@@ -75,6 +96,11 @@ public final class VerilogEmitter implements HdlEmitter {
 		out.append(";\n");
 	} // end of moduleHeader method
 
+	/**
+	 * Emits one {@code input}/{@code output} declaration per port.
+	 * @param out the buffer the module text is appended to
+	 * @param model the model supplying the ports
+	 */
 	private static void portDeclarations(StringBuilder out, HdlModel model) {
 
 		for (HdlModel.Port port : model.ports()) {
@@ -90,6 +116,12 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 	} // end of portDeclarations method
 
+	/**
+	 * Emits a {@code wire} declaration for each internal net; a no-op
+	 * when the model has none.
+	 * @param out the buffer the module text is appended to
+	 * @param model the model supplying the nets
+	 */
 	private static void netDeclarations(StringBuilder out, HdlModel model) {
 
 		if (model.nets().isEmpty()) {
@@ -112,6 +144,12 @@ public final class VerilogEmitter implements HdlEmitter {
 	// statements
 	// ------------------------------------------------------------------
 
+	/**
+	 * Emits any leading comment then dispatches the statement to the
+	 * Verilog template for its concrete kind (double-dispatch visitor).
+	 * @param out the buffer the module text is appended to
+	 * @param statement the statement to render
+	 */
 	private static void statement(StringBuilder out,
 			HdlModel.Statement statement) {
 
@@ -121,30 +159,37 @@ public final class VerilogEmitter implements HdlEmitter {
 		// dispatch by double-dispatch: a new statement kind fails to
 		// compile until this visitor grows a template for it
 		statement.accept(new HdlModel.StatementVisitor() {
+			/** Routes a gate statement to {@link #gate}. */
 			@Override
 			public void visit(HdlModel.GateStatement s) {
 				gate(out, s);
 			}
+			/** Routes a replicate statement to {@link #replicate}. */
 			@Override
 			public void visit(HdlModel.ReplicateStatement s) {
 				replicate(out, s);
 			}
+			/** Routes a constant statement to {@link #constant}. */
 			@Override
 			public void visit(HdlModel.ConstantStatement s) {
 				constant(out, s);
 			}
+			/** Routes a tri-state statement to {@link #triState}. */
 			@Override
 			public void visit(HdlModel.TriStateStatement s) {
 				triState(out, s);
 			}
+			/** Routes an adder statement to {@link #adder}. */
 			@Override
 			public void visit(HdlModel.AdderStatement s) {
 				adder(out, s);
 			}
+			/** Routes a register statement to {@link #register}. */
 			@Override
 			public void visit(HdlModel.RegisterStatement s) {
 				register(out, s);
 			}
+			/** Routes a bit-map statement to {@link #bitMap}. */
 			@Override
 			public void visit(HdlModel.BitMapStatement s) {
 				bitMap(out, s);
@@ -152,6 +197,12 @@ public final class VerilogEmitter implements HdlEmitter {
 		});
 	} // end of statement method
 
+	/**
+	 * Emits a continuous {@code assign} for a logic-gate statement,
+	 * choosing the Verilog operator for the gate's operation.
+	 * @param out the buffer the module text is appended to
+	 * @param s the gate statement (operation, inputs, output net)
+	 */
 	private static void gate(StringBuilder out, HdlModel.GateStatement s) {
 
 		String joined;
@@ -182,6 +233,12 @@ public final class VerilogEmitter implements HdlEmitter {
 				.append(";\n");
 	} // end of gate method
 
+	/**
+	 * Emits a continuous {@code assign} replicating a single input a
+	 * given number of times ({@code {n{x}}}).
+	 * @param out the buffer the module text is appended to
+	 * @param s the replicate statement (input, repeat count, output)
+	 */
 	private static void replicate(StringBuilder out,
 			HdlModel.ReplicateStatement s) {
 
@@ -189,6 +246,11 @@ public final class VerilogEmitter implements HdlEmitter {
 				.append('{').append(operand(s.input)).append("}};\n");
 	} // end of replicate method
 
+	/**
+	 * Emits a continuous {@code assign} of a sized literal value.
+	 * @param out the buffer the module text is appended to
+	 * @param s the constant statement (value, width, output net)
+	 */
 	private static void constant(StringBuilder out,
 			HdlModel.ConstantStatement s) {
 
@@ -196,6 +258,12 @@ public final class VerilogEmitter implements HdlEmitter {
 				.append(literal(s.value, s.bits)).append(";\n");
 	} // end of constant method
 
+	/**
+	 * Emits a continuous {@code assign} of a tri-state driver: the input
+	 * when the control is high, high-impedance ({@code 'bz}) otherwise.
+	 * @param out the buffer the module text is appended to
+	 * @param s the tri-state statement (control, input, output net)
+	 */
 	private static void triState(StringBuilder out,
 			HdlModel.TriStateStatement s) {
 
@@ -205,6 +273,12 @@ public final class VerilogEmitter implements HdlEmitter {
 				.append("'bz;\n");
 	} // end of triState method
 
+	/**
+	 * Emits a continuous {@code assign} summing the two operands and the
+	 * carry-in into the concatenated {@code {carryOut, sum}}.
+	 * @param out the buffer the module text is appended to
+	 * @param s the adder statement (operands, carry-in/out, sum net)
+	 */
 	private static void adder(StringBuilder out, HdlModel.AdderStatement s) {
 
 		out.append("  assign {").append(s.carryOut).append(", ")
@@ -213,6 +287,13 @@ public final class VerilogEmitter implements HdlEmitter {
 				.append(operand(s.carryIn)).append(";\n");
 	} // end of adder method
 
+	/**
+	 * Emits a register: its {@code reg} declaration with initial value,
+	 * an {@code always} block for the clock kind (posedge/negedge/latch,
+	 * or a comment when no clock is connected), and the q/notQ assigns.
+	 * @param out the buffer the module text is appended to
+	 * @param s the register statement (clock, kind, data, outputs)
+	 */
 	private static void register(StringBuilder out,
 			HdlModel.RegisterStatement s) {
 
@@ -278,6 +359,14 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 	} // end of bitMap method
 
+	/**
+	 * Renders the source side of a bit-map run: a net part-select, or a
+	 * sized literal slice when the source is a constant.
+	 * @param s the bit-map statement whose source is being read
+	 * @param lo the low source bit index of the run
+	 * @param hi the high source bit index of the run
+	 * @return the Verilog expression for that source slice
+	 */
 	private static String sourceSelect(HdlModel.BitMapStatement s, int lo,
 			int hi) {
 
@@ -305,6 +394,11 @@ public final class VerilogEmitter implements HdlEmitter {
 	// operands
 	// ------------------------------------------------------------------
 
+	/**
+	 * Renders an operand as either its net name or a sized literal.
+	 * @param o the operand (net reference or constant value)
+	 * @return the Verilog expression for the operand
+	 */
 	private static String operand(HdlModel.Operand o) {
 
 		return o.isNet() ? o.netName() : literal(o.literalValue(), o.bits());
@@ -318,6 +412,12 @@ public final class VerilogEmitter implements HdlEmitter {
 		return bits + "'h" + value.and(mask).toString(16);
 	} // end of literal method
 
+	/**
+	 * Renders a list of operands joined by a separator.
+	 * @param operands the operands to render, in order
+	 * @param separator the text placed between rendered operands
+	 * @return the concatenated expression string
+	 */
 	private static String join(List<HdlModel.Operand> operands,
 			String separator) {
 

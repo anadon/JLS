@@ -37,6 +37,7 @@ public class TriState extends LogicElement {
 	 * Subclass constructors do most of the work.
 	 * 
 	 * @param circuit
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public TriState(Circuit circuit) {
 		
@@ -79,6 +80,7 @@ public class TriState extends LogicElement {
 	 * Sets up size, inputs and output.
 	 * 
 	 * @param g Unused.
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void init(Graphics g) {
@@ -187,32 +189,80 @@ public class TriState extends LogicElement {
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
+			/**
+			 * Read the bit-width from a tri-state element.
+			 *
+			 * @param el The tri-state element to read from.
+			 * @return the number of bits.
+			 */
 			@Override
 			protected int get(Element el) { return ((TriState)el).bits; }
+			/**
+			 * Set the bit-width on a tri-state element.
+			 *
+			 * @param el The tri-state element to modify.
+			 * @param v The new bit-width.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((TriState)el).bits = v; }
 		},
 		new Attribute.IntAttribute("delay") {
+			/**
+			 * Read the propagation delay from a tri-state element.
+			 *
+			 * @param el The tri-state element to read from.
+			 * @return the propagation delay.
+			 */
 			@Override
 			protected int get(Element el) { return ((TriState)el).propDelay; }
+			/**
+			 * Set the propagation delay on a tri-state element.
+			 *
+			 * @param el The tri-state element to modify.
+			 * @param v The new propagation delay.
+			 */
 			@Override
 			protected void set(Element el, int v) { ((TriState)el).propDelay = v; }
 		},
 		new Attribute.OrientationAttribute("Gorient") {
+			/**
+			 * Read the gate orientation from a tri-state element.
+			 *
+			 * @param el The tri-state element to read from.
+			 * @return the gate orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((TriState)el).gateOrientation;
 			}
+			/**
+			 * Set the gate orientation on a tri-state element.
+			 *
+			 * @param el The tri-state element to modify.
+			 * @param o The new gate orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((TriState)el).gateOrientation = o;
 			}
 		},
 		new Attribute.OrientationAttribute("Corient") {
+			/**
+			 * Read the control orientation from a tri-state element.
+			 *
+			 * @param el The tri-state element to read from.
+			 * @return the control orientation.
+			 */
 			@Override
 			protected JLSInfo.Orientation getOrientation(Element el) {
 				return ((TriState)el).controlOrientation;
 			}
+			/**
+			 * Set the control orientation on a tri-state element.
+			 *
+			 * @param el The tri-state element to modify.
+			 * @param o The new control orientation.
+			 */
 			@Override
 			protected void setOrientation(Element el, JLSInfo.Orientation o) {
 				((TriState)el).controlOrientation = o;
@@ -627,6 +677,7 @@ public class TriState extends LogicElement {
 	 * Initialize this element by setting its output pin to off (null).
 	 *
 	 * @param sim Unused.
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void initSim(Simulator sim) {
@@ -644,6 +695,7 @@ public class TriState extends LogicElement {
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void react(long now, Simulator sim, Object todo) {

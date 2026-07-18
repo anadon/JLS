@@ -44,6 +44,8 @@ public class Memory extends LogicElement {
 	 * @param capacity The proposed capacity in words.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkCapacity(int capacity) {
 
@@ -56,6 +58,8 @@ public class Memory extends LogicElement {
 	 * @param bits The proposed bits per word.
 	 *
 	 * @return the violated constraint message, or null if valid.
+	 *
+	 * @see jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -401,6 +405,11 @@ public class Memory extends LogicElement {
 	 * @param text The initial-memory text.
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
+	 *
+	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @see jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
+	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String encodeInitRLE(String text) {
 
@@ -420,6 +429,8 @@ public class Memory extends LogicElement {
 	 * @param maxWords Upper bound on encoded addresses (exclusive).
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
+	 *
+	 * @see jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
 	 */
 	static String encodeInitRLE(String text, long maxWords) {
 
@@ -508,6 +519,12 @@ public class Memory extends LogicElement {
 	 *
 	 * @throws IllegalArgumentException if the encoding is malformed (the
 	 *             loader reports a load error).
+	 *
+	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsGarbage()
+	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
+	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String decodeInitRLE(String rle) {
 
@@ -523,6 +540,8 @@ public class Memory extends LogicElement {
 	 * @param maxWords Upper bound on decoded addresses (exclusive).
 	 *
 	 * @return the canonical text.
+	 *
+	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
 	 */
 	static String decodeInitRLE(String rle, long maxWords) {
 
@@ -978,6 +997,12 @@ public class Memory extends LogicElement {
 				window.add(pane);
 				
 				Action okAction = new AbstractAction("ok") {
+					/**
+					 * Accept the edited initial-contents text, validate it,
+					 * and close the built-in dialog.
+					 *
+					 * @param event The event object for this action.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						tempInit = area.getText();
@@ -992,6 +1017,11 @@ public class Memory extends LogicElement {
 					}
 				};
 				Action cancelAction = new AbstractAction("cancel") {
+					/**
+					 * Discard the edits and close the built-in dialog.
+					 *
+					 * @param event The event object for this action.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						init.dispose();
@@ -1287,16 +1317,33 @@ public class Memory extends LogicElement {
 		private final long[] words;
 		private final BitSet present;
 
+		/**
+		 * Allocate dense storage for the full capacity, all words absent.
+		 *
+		 * @param capacity The number of words to reserve.
+		 */
 		DenseWordStore(int capacity) {
 			words = new long[capacity];
 			present = new BitSet(capacity);
 		}
 
+		/**
+		 * Copy constructor: an independent snapshot of another store.
+		 *
+		 * @param from The store to copy.
+		 */
 		private DenseWordStore(DenseWordStore from) {
 			words = from.words.clone();
 			present = (BitSet)from.present.clone();
 		}
 
+		/**
+		 * The stored word, or null if this address was never set.
+		 *
+		 * @param addr The word address.
+		 *
+		 * @return the word, or null if absent.
+		 */
 		@Override
 		public BitSet get(int addr) {
 			if (!present.get(addr))
@@ -1304,6 +1351,12 @@ public class Memory extends LogicElement {
 			return BitSet.valueOf(new long[] { words[addr] });
 		}
 
+		/**
+		 * Store a word at an address and mark it present.
+		 *
+		 * @param addr The word address.
+		 * @param value The word to store.
+		 */
 		@Override
 		public void put(int addr, BitSet value) {
 			long[] asLongs = value.toLongArray();
@@ -1311,6 +1364,11 @@ public class Memory extends LogicElement {
 			present.set(addr);
 		}
 
+		/**
+		 * Addresses that have been set, in ascending order.
+		 *
+		 * @return the present addresses.
+		 */
 		@Override
 		public SortedSet<Integer> addresses() {
 			SortedSet<Integer> addrs = new TreeSet<Integer>();
@@ -1320,6 +1378,11 @@ public class Memory extends LogicElement {
 			return addrs;
 		}
 
+		/**
+		 * An independent copy of this store.
+		 *
+		 * @return the copy.
+		 */
 		@Override
 		public WordStore copy() {
 			return new DenseWordStore(this);
@@ -1335,29 +1398,60 @@ public class Memory extends LogicElement {
 
 		private final Map<Integer,BitSet> map;
 
+		/**
+		 * Create an empty sparse store.
+		 */
 		SparseWordStore() {
 			map = new HashMap<Integer,BitSet>();
 		}
 
+		/**
+		 * Copy constructor: an independent snapshot of another store.
+		 *
+		 * @param from The store to copy.
+		 */
 		private SparseWordStore(SparseWordStore from) {
 			map = new HashMap<Integer,BitSet>(from.map);
 		}
 
+		/**
+		 * The stored word, or null if this address was never set.
+		 *
+		 * @param addr The word address.
+		 *
+		 * @return the word, or null if absent.
+		 */
 		@Override
 		public BitSet get(int addr) {
 			return map.get(addr);
 		}
 
+		/**
+		 * Store a word at an address.
+		 *
+		 * @param addr The word address.
+		 * @param value The word to store.
+		 */
 		@Override
 		public void put(int addr, BitSet value) {
 			map.put(addr, value);
 		}
 
+		/**
+		 * Addresses that have been set, in ascending order.
+		 *
+		 * @return the present addresses.
+		 */
 		@Override
 		public SortedSet<Integer> addresses() {
 			return new TreeSet<Integer>(map.keySet());
 		}
 
+		/**
+		 * An independent copy of this store.
+		 *
+		 * @return the copy.
+		 */
 		@Override
 		public WordStore copy() {
 			return new SparseWordStore(this);
@@ -1368,6 +1462,12 @@ public class Memory extends LogicElement {
 	// words (32 MB of longs) assume sparse use and fall back to the map
 	private static final int DENSE_CAPACITY_LIMIT = 1 << 22;
 
+	/**
+	 * Pick a word store sized for this memory: dense for narrow words and
+	 * modest capacities, sparse otherwise.
+	 *
+	 * @return a new, empty word store.
+	 */
 	private WordStore newWordStore() {
 
 		if (bits <= 64 && capacity <= DENSE_CAPACITY_LIMIT)
@@ -1628,6 +1728,8 @@ public class Memory extends LogicElement {
 	 * @param loc The location.
 	 * 
 	 * @return the value at that location.
+	 *
+	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 */
 	public BitSet getCurrentValue(int loc){
 		
@@ -1686,6 +1788,11 @@ public class Memory extends LogicElement {
 		window.add(pane,BorderLayout.CENTER);
 		JButton ok = new JButton("ok");
 		ok.addActionListener(new ActionListener() {
+			/**
+			 * Close the memory-contents dialog.
+			 *
+			 * @param event The event object for this action.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				contents.dispose();

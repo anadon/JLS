@@ -36,6 +36,12 @@ import java.util.Set;
  */
 public final class VhdlEmitter implements HdlEmitter {
 
+	/**
+	 * Renders the model as one complete VHDL source file: comment header,
+	 * ieee use clauses, entity and structural architecture.
+	 * @param model the exporter-prepared circuit model to render
+	 * @return the full VHDL source text
+	 */
 	@Override
 	public String emit(HdlModel model) {
 
@@ -59,6 +65,7 @@ public final class VhdlEmitter implements HdlEmitter {
 		return out.toString();
 	} // end of emit method
 
+	/** The output file extension for VHDL, without a leading dot. */
 	@Override
 	public String fileExtension() {
 
@@ -69,6 +76,13 @@ public final class VhdlEmitter implements HdlEmitter {
 	// design-unit framing
 	// ------------------------------------------------------------------
 
+	/**
+	 * Writes the comment header: module title, JLS version, the two-state
+	 * note, and every documented name legalization.
+	 * @param out sink for the generated text
+	 * @param model the circuit model being rendered
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void header(StringBuilder out, HdlModel model,
 			Names names) {
 
@@ -90,6 +104,12 @@ public final class VhdlEmitter implements HdlEmitter {
 		}
 	} // end of header method
 
+	/**
+	 * Writes the entity declaration with its port list.
+	 * @param out sink for the generated text
+	 * @param model the circuit model whose ports are declared
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void entity(StringBuilder out, HdlModel model,
 			Names names) {
 
@@ -116,6 +136,15 @@ public final class VhdlEmitter implements HdlEmitter {
 		out.append("end entity ").append(names.moduleName).append(";\n\n");
 	} // end of entity method
 
+	/**
+	 * Writes the architecture: net signal declarations, the collected
+	 * helper declarations, then the concurrent/process body.
+	 * @param out sink for the generated text
+	 * @param model the circuit model whose nets are declared
+	 * @param names the legalized-identifier table for this model
+	 * @param declarations declarative-part text gathered while rendering
+	 * @param body architecture-body text gathered while rendering
+	 */
 	private static void architecture(StringBuilder out, HdlModel model,
 			Names names, StringBuilder declarations, StringBuilder body) {
 
@@ -143,6 +172,14 @@ public final class VhdlEmitter implements HdlEmitter {
 	// statements
 	// ------------------------------------------------------------------
 
+	/**
+	 * Dispatches one model statement to the matching VHDL template,
+	 * appending to the declarative part and/or the architecture body.
+	 * @param declarations sink for declarative-part text
+	 * @param body sink for architecture-body text
+	 * @param statement the model statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void statement(StringBuilder declarations,
 			StringBuilder body, HdlModel.Statement statement, Names names) {
 
@@ -152,30 +189,37 @@ public final class VhdlEmitter implements HdlEmitter {
 		// dispatch by double-dispatch: a new statement kind fails to
 		// compile until this visitor grows a template for it
 		statement.accept(new HdlModel.StatementVisitor() {
+			/** Renders a gate statement into the body. */
 			@Override
 			public void visit(HdlModel.GateStatement s) {
 				gate(body, s, names);
 			}
+			/** Renders a replicate statement into the body. */
 			@Override
 			public void visit(HdlModel.ReplicateStatement s) {
 				replicate(body, s, names);
 			}
+			/** Renders a constant statement into the body. */
 			@Override
 			public void visit(HdlModel.ConstantStatement s) {
 				constant(body, s, names);
 			}
+			/** Renders a tri-state statement into the body. */
 			@Override
 			public void visit(HdlModel.TriStateStatement s) {
 				triState(body, s, names);
 			}
+			/** Renders an adder statement into declarations and body. */
 			@Override
 			public void visit(HdlModel.AdderStatement s) {
 				adder(declarations, body, s, names);
 			}
+			/** Renders a register statement into declarations and body. */
 			@Override
 			public void visit(HdlModel.RegisterStatement s) {
 				register(declarations, body, s, names);
 			}
+			/** Renders a bit-map statement into the body. */
 			@Override
 			public void visit(HdlModel.BitMapStatement s) {
 				bitMap(body, s, names);
@@ -183,6 +227,14 @@ public final class VhdlEmitter implements HdlEmitter {
 		});
 	} // end of statement method
 
+	/**
+	 * Emits a concurrent assignment for a logic gate; NAND and NOR are
+	 * rendered as negated conjunctions/disjunctions because VHDL's nand
+	 * and nor operators do not chain across more than two operands.
+	 * @param out sink for the architecture-body text
+	 * @param s the gate statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void gate(StringBuilder out, HdlModel.GateStatement s,
 			Names names) {
 
@@ -217,6 +269,13 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(joined).append(";\n");
 	} // end of gate method
 
+	/**
+	 * Emits a concurrent assignment that fans one input bit out across
+	 * the full output width.
+	 * @param out sink for the architecture-body text
+	 * @param s the replicate statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void replicate(StringBuilder out,
 			HdlModel.ReplicateStatement s, Names names) {
 
@@ -231,6 +290,12 @@ public final class VhdlEmitter implements HdlEmitter {
 		out.append(";\n");
 	} // end of replicate method
 
+	/**
+	 * Emits a concurrent assignment driving the output with a literal.
+	 * @param out sink for the architecture-body text
+	 * @param s the constant statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void constant(StringBuilder out,
 			HdlModel.ConstantStatement s, Names names) {
 
@@ -238,6 +303,13 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(literal(s.value, s.bits)).append(";\n");
 	} // end of constant method
 
+	/**
+	 * Emits a conditional assignment driving the input while the control
+	 * is '1', otherwise high-impedance ('Z').
+	 * @param out sink for the architecture-body text
+	 * @param s the tri-state statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void triState(StringBuilder out,
 			HdlModel.TriStateStatement s, Names names) {
 
@@ -248,6 +320,15 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(";\n");
 	} // end of triState method
 
+	/**
+	 * Emits the adder: a helper unsigned signal holds the bits+1-wide
+	 * sum, whose low slice feeds the sum output and whose top bit feeds
+	 * carry-out, since VHDL has no concatenated-target assignment.
+	 * @param declarations sink for the helper signal declaration
+	 * @param body sink for the architecture-body text
+	 * @param s the adder statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void adder(StringBuilder declarations, StringBuilder body,
 			HdlModel.AdderStatement s, Names names) {
 
@@ -274,6 +355,15 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(full).append('(').append(s.bits).append(");\n");
 	} // end of adder method
 
+	/**
+	 * Emits a register: an initialized state signal, its clocking process
+	 * (rising/falling edge or transparent latch) or a hold comment when
+	 * no clock is connected, and the q and notQ output assignments.
+	 * @param declarations sink for the state-signal declaration
+	 * @param body sink for the process and output assignments
+	 * @param s the register statement to render
+	 * @param names the legalized-identifier table for this model
+	 */
 	private static void register(StringBuilder declarations,
 			StringBuilder body, HdlModel.RegisterStatement s, Names names) {
 
@@ -353,6 +443,15 @@ public final class VhdlEmitter implements HdlEmitter {
 		}
 	} // end of bitMap method
 
+	/**
+	 * The source side of a bit-map run: a slice of the source net, or a
+	 * right-shifted sized literal when the source is a constant.
+	 * @param s the bit-map statement being rendered
+	 * @param lo low bit index of the run (inclusive)
+	 * @param hi high bit index of the run (inclusive)
+	 * @param names the legalized-identifier table for this model
+	 * @return the VHDL expression for the selected source bits
+	 */
 	private static String sourceSelect(HdlModel.BitMapStatement s, int lo,
 			int hi, Names names) {
 
@@ -381,6 +480,13 @@ public final class VhdlEmitter implements HdlEmitter {
 	// operands
 	// ------------------------------------------------------------------
 
+	/**
+	 * An operand as an ordinary VHDL expression: a net's identifier or a
+	 * width-sized literal.
+	 * @param o the operand to render
+	 * @param names the legalized-identifier table for this model
+	 * @return the VHDL expression for the operand
+	 */
 	private static String operand(HdlModel.Operand o, Names names) {
 
 		return o.isNet() ? names.of(o.netName())
@@ -420,6 +526,13 @@ public final class VhdlEmitter implements HdlEmitter {
 		return sb.toString();
 	} // end of bitString method
 
+	/**
+	 * The operands rendered and concatenated with the given separator.
+	 * @param operands the operands to render
+	 * @param separator the text placed between rendered operands
+	 * @param names the legalized-identifier table for this model
+	 * @return the joined VHDL expression
+	 */
 	private static String join(List<HdlModel.Operand> operands,
 			String separator, Names names) {
 
@@ -483,6 +596,12 @@ public final class VhdlEmitter implements HdlEmitter {
 				new LinkedHashMap<String, String>();
 		private final Set<String> used = new HashSet<String>(); // lowercased
 
+		/**
+		 * Claims VHDL identifiers for the module, ports, nets and register
+		 * state variables, in that fixed order, so the mapping (and hence
+		 * the output) is deterministic.
+		 * @param model the model whose identifiers are legalized
+		 */
 		Names(HdlModel model) {
 
 			moduleName = unique(sanitize(model.moduleName));
@@ -516,6 +635,10 @@ public final class VhdlEmitter implements HdlEmitter {
 			return unique(sanitize(base));
 		} // end of synth method
 
+		/**
+		 * Records a fresh VHDL identifier for a model name.
+		 * @param modelName the model identifier to legalize and record
+		 */
 		private void claim(String modelName) {
 
 			map.put(modelName, unique(sanitize(modelName)));
@@ -554,6 +677,12 @@ public final class VhdlEmitter implements HdlEmitter {
 			return documented;
 		} // end of documentedRenames method
 
+		/**
+		 * The identifier, suffixed "_2", "_3", ... until its lowercased
+		 * form is not already taken (VHDL is case-insensitive).
+		 * @param id the candidate identifier
+		 * @return a case-insensitively unique identifier
+		 */
 		private String unique(String id) {
 
 			String candidate = id;

@@ -24,6 +24,9 @@ public abstract class Attribute {
 	/** The attribute name as it appears in saved files. */
 	protected final String name;
 
+	/**
+	 * @param name The attribute name as it appears in saved files.
+	 */
 	protected Attribute(String name) {
 
 		this.name = name;
@@ -80,13 +83,28 @@ public abstract class Attribute {
 	 */
 	public abstract static class IntAttribute extends Attribute {
 
+		/**
+		 * @param name The attribute name as it appears in saved files.
+		 */
 		protected IntAttribute(String name) {
 
 			super(name);
 		} // end of constructor
 
+		/**
+		 * Read the int value from the element.
+		 *
+		 * @param el The element to read from.
+		 * @return the current value.
+		 */
 		protected abstract int get(Element el);
 
+		/**
+		 * Write the int value onto the element.
+		 *
+		 * @param el The element to write to.
+		 * @param value The value to store.
+		 */
 		protected abstract void set(Element el, int value);
 
 		/** Override to skip the save line (defaults, recomputed values). */
@@ -95,6 +113,9 @@ public abstract class Attribute {
 			return false;
 		} // end of omitted method
 
+		/**
+		 * Write the " int name value" save line, unless omitted.
+		 */
 		@Override
 		public void save(Element el, PrintWriter output) {
 
@@ -103,12 +124,18 @@ public abstract class Attribute {
 			}
 		} // end of save method
 
+		/**
+		 * Copy the int value from one element to another.
+		 */
 		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		/**
+		 * Consume a loaded int value if its name matches this attribute.
+		 */
 		@Override
 		public boolean setInt(Element el, String name, int value) {
 
@@ -128,27 +155,51 @@ public abstract class Attribute {
 	 */
 	public abstract static class BigIntAttribute extends Attribute {
 
+		/**
+		 * @param name The attribute name as it appears in saved files.
+		 */
 		protected BigIntAttribute(String name) {
 
 			super(name);
 		} // end of constructor
 
+		/**
+		 * Read the BigInteger value from the element.
+		 *
+		 * @param el The element to read from.
+		 * @return the current value.
+		 */
 		protected abstract BigInteger get(Element el);
 
+		/**
+		 * Write the BigInteger value onto the element.
+		 *
+		 * @param el The element to write to.
+		 * @param value The value to store.
+		 */
 		protected abstract void set(Element el, BigInteger value);
 
+		/**
+		 * Write the " Int name value" save line.
+		 */
 		@Override
 		public void save(Element el, PrintWriter output) {
 
 			output.println(" Int " + name + " " + get(el).toString());
 		} // end of save method
 
+		/**
+		 * Copy the BigInteger value from one element to another.
+		 */
 		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		/**
+		 * Consume a loaded BigInteger value if its name matches this attribute.
+		 */
 		@Override
 		public boolean setBigInt(Element el, String name, BigInteger value) {
 
@@ -159,6 +210,9 @@ public abstract class Attribute {
 			return true;
 		} // end of setBigInt method
 
+		/**
+		 * Consume a loaded long value (from old files) if its name matches.
+		 */
 		@Override
 		public boolean setLong(Element el, String name, long value) {
 
@@ -177,13 +231,28 @@ public abstract class Attribute {
 	 */
 	public abstract static class StringAttribute extends Attribute {
 
+		/**
+		 * @param name The attribute name as it appears in saved files.
+		 */
 		protected StringAttribute(String name) {
 
 			super(name);
 		} // end of constructor
 
+		/**
+		 * Read the String value from the element.
+		 *
+		 * @param el The element to read from.
+		 * @return the current value.
+		 */
 		protected abstract String get(Element el);
 
+		/**
+		 * Write the String value onto the element.
+		 *
+		 * @param el The element to write to.
+		 * @param value The value to store.
+		 */
 		protected abstract void set(Element el, String value);
 
 		/** Override to skip the save line. */
@@ -192,6 +261,10 @@ public abstract class Attribute {
 			return false;
 		} // end of omitted method
 
+		/**
+		 * Write the " String name \"value\"" save line with escaping, unless
+		 * omitted.
+		 */
 		@Override
 		public void save(Element el, PrintWriter output) {
 
@@ -204,12 +277,18 @@ public abstract class Attribute {
 			output.println(" String " + name + " \"" + str + "\"");
 		} // end of save method
 
+		/**
+		 * Copy the String value from one element to another.
+		 */
 		@Override
 		public void copy(Element from, Element to) {
 
 			set(to, get(from));
 		} // end of copy method
 
+		/**
+		 * Consume a loaded String value if its name matches this attribute.
+		 */
 		@Override
 		public boolean setString(Element el, String name, String value) {
 
@@ -229,22 +308,43 @@ public abstract class Attribute {
 	 */
 	public abstract static class OrientationAttribute extends StringAttribute {
 
+		/**
+		 * @param name The attribute name as it appears in saved files.
+		 */
 		protected OrientationAttribute(String name) {
 
 			super(name);
 		} // end of constructor
 
+		/**
+		 * Read the orientation from the element.
+		 *
+		 * @param el The element to read from.
+		 * @return the current orientation.
+		 */
 		protected abstract jls.JLSInfo.Orientation getOrientation(Element el);
 
+		/**
+		 * Write the orientation onto the element.
+		 *
+		 * @param el The element to write to.
+		 * @param value The orientation to store.
+		 */
 		protected abstract void setOrientation(Element el,
 				jls.JLSInfo.Orientation value);
 
+		/**
+		 * The orientation's enum name, for the String save line.
+		 */
 		@Override
 		protected String get(Element el) {
 
 			return getOrientation(el).toString();
 		} // end of get method
 
+		/**
+		 * Parse a saved orientation name, leaving it unchanged if unknown.
+		 */
 		@Override
 		protected void set(Element el, String value) {
 

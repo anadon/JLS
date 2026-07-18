@@ -66,6 +66,11 @@ public final class InteractiveSimulator extends Simulator {
 
 	/**
 	 * Create a new Simulator object.
+	 *
+	 * @see jls.sim.InteractiveSimulatorFieldTest#buildSimulatorPanel()
+	 * @see jls.sim.TraceRetentionTest#parent()
+	 * @see jls.sim.TraceWindowingTest#parent()
+	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public InteractiveSimulator() {
 
@@ -174,6 +179,10 @@ public final class InteractiveSimulator extends Simulator {
 		params.add(getScale);
 		getScale.addActionListener(
 				new ActionListener() {
+					/**
+					 * Apply the typed scale factor to the traces, redrawing
+					 * an in-progress run.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						scaleFactor = NumericField.parse(window,scaleField,
@@ -202,6 +211,10 @@ public final class InteractiveSimulator extends Simulator {
 		b10.setBackground(Color.gray);
 		b16.setBackground(Color.lightGray);
 		ActionListener blist = new ActionListener() {
+			/**
+			 * Select the trace display base (2, 10 or 16) and highlight the
+			 * chosen button.
+			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				int newBase = 0;
@@ -239,6 +252,10 @@ public final class InteractiveSimulator extends Simulator {
 		// handle window events
 		window.addComponentListener(
 				new ComponentAdapter() {
+					/**
+					 * Re-layout the window and resize the traces when the
+					 * panel changes size.
+					 */
 					@Override
 					public void componentResized(ComponentEvent event) {
 						window.doLayout();
@@ -250,6 +267,10 @@ public final class InteractiveSimulator extends Simulator {
 		// handle start button push
 		start.addActionListener(
 				new ActionListener() {
+					/**
+					 * Start a fresh simulation run when the Start button is
+					 * pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
@@ -268,6 +289,10 @@ public final class InteractiveSimulator extends Simulator {
 		// handle step button push
 		step.addActionListener(
 				new ActionListener() {
+					/**
+					 * Advance the simulation by the step amount when the Step
+					 * button is pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
@@ -309,6 +334,10 @@ public final class InteractiveSimulator extends Simulator {
 		// handle animate button push
 		animate.addActionListener(
 				new ActionListener() {
+					/**
+					 * Begin repeating a step every second when the Animate
+					 * button is pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 
@@ -328,6 +357,10 @@ public final class InteractiveSimulator extends Simulator {
 						// create step object (TimerTask)
 						TimerTask tc = new TimerTask() {
 
+							/**
+							 * Perform one animation step, cancelling the timer
+							 * at the time limit.
+							 */
 							@Override
 							public void run() {
 								
@@ -364,6 +397,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		end.addActionListener(
 				new ActionListener() {
+					/**
+					 * Stop animation and hand control back to the step
+					 * controls.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
@@ -384,6 +421,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		pause.addActionListener(
 				new ActionListener() {
+					/**
+					 * Pause the running simulation when the Pause button is
+					 * pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
@@ -401,6 +442,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		resume.addActionListener(
 				new ActionListener() {
+					/**
+					 * Resume the paused simulation when the Resume button is
+					 * pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						action.removeAll();
@@ -419,6 +464,10 @@ public final class InteractiveSimulator extends Simulator {
 
 		stop.addActionListener(
 				new ActionListener() {
+					/**
+					 * Stop the running simulation when the Stop button is
+					 * pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						stop();
@@ -428,6 +477,9 @@ public final class InteractiveSimulator extends Simulator {
 
 		print.addActionListener(
 				new ActionListener() {
+					/**
+					 * Print the trace window when the Print button is pushed.
+					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
 						printTraces();
@@ -444,6 +496,9 @@ public final class InteractiveSimulator extends Simulator {
 	 * Get the simulator JPanel.
 	 * 
 	 * @return the JPanel that displays the simulator
+	 *
+	 * @see jls.sim.InteractiveSimulatorFieldTest#button()
+	 * @see jls.sim.InteractiveSimulatorFieldTest#fieldWithColumns()
 	 */
 	public JPanel getWindow() {
 
@@ -452,6 +507,9 @@ public final class InteractiveSimulator extends Simulator {
 
 	/**
 	 * Set the time limit from the tlimit text field.
+	 *
+	 * @see jls.sim.InteractiveSimulatorFieldTest#setMaxTimeRejectsHugeNegativeAndKeepsPreviousLimit()
+	 * @see jls.sim.InteractiveSimulatorFieldTest#setMaxTimeStillAcceptsValidLimits()
 	 */
 	public void setMaxTime() {
 
@@ -529,6 +587,10 @@ public final class InteractiveSimulator extends Simulator {
 		// create new thread for the simulator
 		sim = new Thread("Runner") {
 
+			/**
+			 * Run the event loop on the simulator thread, then post the
+			 * run's UI epilogue to the EDT.
+			 */
 			@Override
 			public void run() {
 
@@ -577,6 +639,10 @@ public final class InteractiveSimulator extends Simulator {
 				final String reasonText = reason;
 				final Editor edRef = ed;
 				SwingUtilities.invokeLater(new Runnable() {
+					/**
+					 * Update traces, clock and buttons on the EDT after the
+					 * run ends.
+					 */
 					@Override
 					public void run() {
 						if (!isQuiet()) {
@@ -638,6 +704,10 @@ public final class InteractiveSimulator extends Simulator {
 			final long pausedAt = now;
 			// UI updates on the EDT, not the sim thread (#49, H8)
 			SwingUtilities.invokeLater(new Runnable() {
+				/**
+				 * Refresh the trace display and message on the EDT while
+				 * paused.
+				 */
 				@Override
 				public void run() {
 					if (!isQuiet()) {
@@ -675,6 +745,10 @@ public final class InteractiveSimulator extends Simulator {
 			final long steppedTo = now;
 			final Editor edRef = ed;
 			SwingUtilities.invokeLater(new Runnable() {
+				/**
+				 * Advance the clock and traces on the EDT at the end of a
+				 * step.
+				 */
 				@Override
 				public void run() {
 					showClock.setText("Time: "+steppedTo);
@@ -700,12 +774,19 @@ public final class InteractiveSimulator extends Simulator {
 	// event from the sim thread (#49, H8)
 	private volatile boolean runningMsgShown = false;
 
+	/**
+	 * Post the "Simulation Running" message once per run, on the EDT
+	 * (issue #49, finding H8).
+	 */
 	private void setMsgOnceRunning() {
 
 		if (runningMsgShown)
 			return;
 		runningMsgShown = true;
 		SwingUtilities.invokeLater(new Runnable() {
+			/**
+			 * Set the running message on the EDT.
+			 */
 			@Override
 			public void run() {
 				msg.setText("Simulation Running");
@@ -720,6 +801,10 @@ public final class InteractiveSimulator extends Simulator {
 	 */
 	private volatile long lastClockUpdate = 0;
 
+	/**
+	 * Update the clock display at a bounded rate before an event reacts,
+	 * dispatching the label change to the EDT (issue #49, finding H8).
+	 */
 	@Override
 	protected void beforeReact() {
 
@@ -731,6 +816,9 @@ public final class InteractiveSimulator extends Simulator {
 		lastClockUpdate = nowMillis;
 		final long simTime = now;
 		SwingUtilities.invokeLater(new Runnable() {
+			/**
+			 * Push the current time and status bar to the EDT.
+			 */
 			@Override
 			public void run() {
 				showClock.setText("Time: "+simTime);
@@ -789,6 +877,9 @@ public final class InteractiveSimulator extends Simulator {
 			// called from inside react() on the sim thread (the Pause
 			// element); route the button swap to the EDT (#49, H8)
 			SwingUtilities.invokeLater(new Runnable() {
+				/**
+				 * Swap the toolbar to the paused button set on the EDT.
+				 */
 				@Override
 				public void run() {
 					action.removeAll();
@@ -927,6 +1018,9 @@ public final class InteractiveSimulator extends Simulator {
 
 		Printable pr = new Printable() {
 
+			/**
+			 * Render the trace window scaled to fit a single printed page.
+			 */
 			@Override
 			public int print(Graphics g, PageFormat format, int pagenum) {
 
@@ -982,6 +1076,9 @@ public final class InteractiveSimulator extends Simulator {
 
 		/**
 		 * Set up the window.
+		 *
+		 * @see jls.sim.TraceRetentionTest#parent()
+		 * @see jls.sim.TraceWindowingTest#parent()
 		 */
 		public Traces() {
 
@@ -1097,6 +1194,9 @@ public final class InteractiveSimulator extends Simulator {
 
 			if (!SwingUtilities.isEventDispatchThread()) {
 				SwingUtilities.invokeLater(new Runnable() {
+					/**
+					 * Re-dispatch the draw onto the EDT.
+					 */
 					@Override
 					public void run() {
 						draw();
@@ -1135,6 +1235,10 @@ public final class InteractiveSimulator extends Simulator {
 			if (atEnd && port != null) {
 				final JViewport p = port;
 				SwingUtilities.invokeLater(new Runnable() {
+					/**
+					 * Scroll the viewport to follow the newest activity after
+					 * re-layout.
+					 */
 					@Override
 					public void run() {
 						p.setViewPosition(new Point(
@@ -1236,6 +1340,9 @@ public final class InteractiveSimulator extends Simulator {
 		} // end of mouseMoved method
 
 		// unused
+		/**
+		 * Ignore mouse drags in the trace window.
+		 */
 		@Override
 		public void mouseDragged(MouseEvent event) {}
 

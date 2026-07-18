@@ -9,7 +9,7 @@ import javax.crypto.AEADBadTagException;
 /**
  * The encrypted point-to-point channel a completed {@link Handshake}
  * yields (issue #168): opaque payload frames, each sealed with
- * ChaCha20-Poly1305 under a per-direction key with a strictly
+ * AES-256-GCM under a per-direction key with a strictly
  * incrementing counter nonce. The wire form of a frame is a four-byte
  * big-endian ciphertext length followed by the ciphertext; payloads
  * are capped at {@value #MAX_PAYLOAD_BYTES} bytes and an over-cap

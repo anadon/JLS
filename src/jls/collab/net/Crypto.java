@@ -13,15 +13,14 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KDF;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.HKDFParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
  * The JDK-primitive crypto operations shared by {@link Handshake} and
  * {@link SecureLink} (issue #168): HKDF-SHA256 key derivation (JEP 478
- * {@code javax.crypto.KDF}), ChaCha20-Poly1305 AEAD with counter
+ * {@code javax.crypto.KDF}), AES-256-GCM AEAD with counter
  * nonces, HMAC-SHA256, and SHA-256. Everything here is a thin,
  * deterministic wrapper - no algorithm choices are made outside this
  * file, and no crypto is hand-rolled: the one construction assembled
@@ -39,6 +38,9 @@ final class Crypto {
 
 	/** The AEAD key length, in bytes. */
 	static final int KEY_BYTES = 32;
+
+	/** The GCM authentication-tag length in bits, from TAG_BYTES. */
+	private static final int TAG_BITS = TAG_BYTES * 8;
 
 	private Crypto() {
 
@@ -68,11 +70,10 @@ final class Crypto {
 		try {
 			KDF hkdf = KDF.getInstance("HKDF-SHA256");
 			HKDFParameterSpec spec = HKDFParameterSpec.ofExtract()
-					.addIKM(new SecretKeySpec(ikm, "Generic"))
+					.addIKM(ikm)
 					.addSalt(salt)
 					.thenExpand(info, length);
-			SecretKey derived = hkdf.deriveKey("Generic", spec);
-			return derived.getEncoded();
+			return hkdf.deriveData(spec);
 		} catch (NoSuchAlgorithmException
 				| InvalidAlgorithmParameterException missing) {
 			throw new IllegalStateException(
@@ -81,7 +82,7 @@ final class Crypto {
 	} // end of hkdf method
 
 	/**
-	 * Encrypt and authenticate with ChaCha20-Poly1305.
+	 * Encrypt and authenticate with AES-256-GCM.
 	 *
 	 * @param key The 32-byte AEAD key.
 	 * @param counter The nonce counter (must never repeat per key).
@@ -94,16 +95,16 @@ final class Crypto {
 			byte[] plaintext) {
 
 		try {
-			Cipher aead = Cipher.getInstance("ChaCha20-Poly1305");
+			Cipher aead = Cipher.getInstance("AES/GCM/NoPadding");
 			aead.init(Cipher.ENCRYPT_MODE,
-					new SecretKeySpec(key, "ChaCha20"),
-					new IvParameterSpec(nonce(counter)));
+					new SecretKeySpec(key, "AES"),
+					new GCMParameterSpec(TAG_BITS, nonce(counter)));
 			aead.updateAAD(aad);
 			return aead.doFinal(plaintext);
 		} catch (NoSuchAlgorithmException
 				| NoSuchPaddingException missing) {
 			throw new IllegalStateException(
-					"this JVM lacks ChaCha20-Poly1305 support", missing);
+					"this JVM lacks AES-GCM support", missing);
 		} catch (InvalidKeyException
 				| InvalidAlgorithmParameterException
 				| IllegalBlockSizeException
@@ -116,7 +117,7 @@ final class Crypto {
 	} // end of aeadSeal method
 
 	/**
-	 * Decrypt and verify ChaCha20-Poly1305 ciphertext.
+	 * Decrypt and verify AES-256-GCM ciphertext.
 	 *
 	 * @param key The 32-byte AEAD key.
 	 * @param counter The expected nonce counter.
@@ -132,10 +133,10 @@ final class Crypto {
 			byte[] ciphertext) throws AEADBadTagException {
 
 		try {
-			Cipher aead = Cipher.getInstance("ChaCha20-Poly1305");
+			Cipher aead = Cipher.getInstance("AES/GCM/NoPadding");
 			aead.init(Cipher.DECRYPT_MODE,
-					new SecretKeySpec(key, "ChaCha20"),
-					new IvParameterSpec(nonce(counter)));
+					new SecretKeySpec(key, "AES"),
+					new GCMParameterSpec(TAG_BITS, nonce(counter)));
 			aead.updateAAD(aad);
 			return aead.doFinal(ciphertext);
 		} catch (AEADBadTagException bad) {
@@ -143,14 +144,14 @@ final class Crypto {
 		} catch (NoSuchAlgorithmException
 				| NoSuchPaddingException missing) {
 			throw new IllegalStateException(
-					"this JVM lacks ChaCha20-Poly1305 support", missing);
+					"this JVM lacks AES-GCM support", missing);
 		} catch (InvalidKeyException
 				| InvalidAlgorithmParameterException
 				| IllegalBlockSizeException
 				| BadPaddingException structural) {
-			// ChaCha20-Poly1305 is a stream AEAD: the only decryption
-			// failure it reports is the bad tag caught above; anything
-			// else means this file misused the API
+			// GCM is a counter-mode AEAD: the only decryption failure
+			// it reports is the bad tag caught above; anything else
+			// means this file misused the API
 			throw new IllegalStateException(
 					"AEAD opening failed", structural);
 		}

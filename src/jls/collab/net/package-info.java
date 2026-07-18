@@ -3,7 +3,7 @@
  * #168, collab Stage 1a): per-install identity, mutually authenticated
  * key exchange, short-authentication-string verification, and capped
  * AEAD framing - built entirely from JDK primitives (X25519, Ed25519,
- * HKDF-SHA256 via JEP 478, ChaCha20-Poly1305), with no new dependency
+ * HKDF-SHA256 via JEP 478, AES-256-GCM), with no new dependency
  * and no circuit semantics whatsoever: a {@link
  * jls.collab.net.SecureLink} carries opaque byte payloads only.
  *

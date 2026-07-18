@@ -72,7 +72,7 @@ are enforced by tests, not convention:
   authenticated key exchange shaped like TLS 1.3 with raw public keys
   (the SIGMA sign-and-mac construction), built entirely from JDK
   primitives — X25519 ephemerals, Ed25519 transcript signatures,
-  HKDF-SHA256, ChaCha20-Poly1305 — no certificates, no CAs, no third
+  HKDF-SHA256, AES-256-GCM — no certificates, no CAs, no third
   party, no new dependency. Every derived key binds the handshake
   transcript hash.
 - **Human verification (SAS).** Both sides derive a 42-bit short

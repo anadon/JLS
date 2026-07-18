@@ -23,7 +23,7 @@ import javax.crypto.KeyAgreement;
  * TLS-1.3-with-raw-public-keys-shaped handshake (the SIGMA
  * sign-and-mac construction TLS 1.3 instantiates) built entirely from
  * JDK primitives - X25519 ephemerals, Ed25519 identity signatures,
- * HKDF-SHA256, ChaCha20-Poly1305 - with no certificates and no new
+ * HKDF-SHA256, AES-256-GCM - with no certificates and no new
  * dependency. This class is transport-agnostic: it turns received
  * message bytes into reply bytes, and the caller moves them (a socket
  * later; byte arrays in the loopback tests now).

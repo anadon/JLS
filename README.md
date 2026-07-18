@@ -28,10 +28,12 @@ self-contained installers with a bundled Java runtime — no JDK needed:
   assets do not fit NixOS; the flake builds from source instead.)
 - **Windows:** `JLS-<version>-x86_64.msi`, or `JLS-<version>-aarch64.msi`
   for Windows on ARM (per-user install, no admin rights needed).
-  SmartScreen will warn that the installer is from an unknown publisher
-  because the artifacts are unsigned — choose "More info" → "Run anyway".
-  Verify the download against `SHA256SUMS-installers-windows-<arch>`
-  first if you want the assurance signing would otherwise give.
+  The installers are Authenticode-signed through
+  [SignPath.io](https://signpath.io)'s open-source program, so the
+  publisher shown by Windows is **SignPath Foundation** — if an installer
+  names any other publisher, or none (releases before signing was
+  enabled), do not run it before verifying the download against
+  `SHA256SUMS-installers-windows-<arch>`.
 - **macOS:** `JLS-<version>-aarch64.dmg` (Apple silicon). The app is
   unsigned by choice, not oversight — signing requires paid Apple
   Developer Program enrollment, which this free university tool

@@ -25,9 +25,10 @@
 #   JLS_JBR_HOME=path  Linux only: bundle this JetBrains Runtime root
 #                      (must contain bin/java) instead of downloading
 #                      the pinned one — see the JBR block below
-#   SOURCE_DATE_EPOCH  pin all embedded timestamps to this Unix time
-#                      (defaults to the commit date; see the deterministic
-#                      timestamps section below)
+#   SOURCE_DATE_EPOCH  override the build timestamp (seconds since the
+#                      epoch); defaults to the pom's
+#                      project.build.outputTimestamp so installers and
+#                      jar share one source-derived clock (#44, #188)
 #
 # Outputs land in target/installer/dist/.
 
@@ -73,27 +74,50 @@ esac
 
 echo "==> version ${VERSION} (installer version ${APP_VERSION}, arch ${ARCH})"
 
-# --- deterministic timestamps (#188/#189) ----------------------------------
-# Byte-reproducible installers need every embedded timestamp pinned to the
-# commit being built instead of the wall clock.  An externally supplied
-# SOURCE_DATE_EPOCH (https://reproducible-builds.org/specs/source-date-epoch/)
-# wins so release tooling can pin the whole pipeline at once; otherwise the
-# commit date is used, with 0 (the epoch) as a deterministic last resort
-# outside a git checkout.  dpkg-deb, rpmbuild, and appimagetool's bundled
-# mksquashfs (squashfs-tools 4.6.1) all honor the exported value by clamping
-# member timestamps to it.
+# --- reproducibility plumbing (#188) ----------------------------------------
+# Byte-reproducibility needs every timestamp the packagers see to be derived
+# from the source, not the build wall clock.  Single source of truth is the
+# pom's project.build.outputTimestamp — the same stamp that already makes the
+# jar reproducible (#44) — exported as SOURCE_DATE_EPOCH, the cross-tool
+# convention (https://reproducible-builds.org/specs/source-date-epoch/) that
+# dpkg-deb, rpmbuild, mksquashfs (inside appimagetool) and friends honor.
+# A caller-supplied SOURCE_DATE_EPOCH wins, so a release lane can pin the
+# tag's commit date instead.
 if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
-	SOURCE_DATE_EPOCH="$(git -C "$ROOT" log -1 --pretty=%ct 2>/dev/null || echo 0)"
+	POM_STAMP="$(mvn -B -q help:evaluate \
+		-Dexpression=project.build.outputTimestamp -DforceStdout)"
+	case "$POM_STAMP" in
+		# Maven also accepts a raw epoch-seconds value for the property
+		'' | null)
+			echo "project.build.outputTimestamp missing from pom" >&2
+			exit 1
+			;;
+		*[!0-9]*)
+			# ISO-8601 (e.g. 2026-07-16T00:00:00Z): GNU date parses it
+			# with -d; BSD date (macOS) needs -j -f with the layout
+			SOURCE_DATE_EPOCH="$(date -u -d "$POM_STAMP" +%s 2>/dev/null \
+				|| date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$POM_STAMP" +%s)"
+			;;
+		*)
+			SOURCE_DATE_EPOCH="$POM_STAMP"
+			;;
+	esac
 fi
 export SOURCE_DATE_EPOCH
 echo "==> SOURCE_DATE_EPOCH ${SOURCE_DATE_EPOCH}"
 
-# Clamp every mtime under the given directories to SOURCE_DATE_EPOCH so no
-# archiver can pick up build-time file times; -h retargets symlinks (AppRun,
-# .DirIcon) themselves rather than their targets.  GNU touch only — called
-# solely on the Linux lane.
+# touch -t is the portable clamp (GNU and BSD both take it; -d @epoch is
+# GNU-only), so render the epoch once in touch's CCYYMMDDhhmm.SS format
+CLAMP_STAMP="$(date -u -d "@${SOURCE_DATE_EPOCH}" +%Y%m%d%H%M.%S 2>/dev/null \
+	|| date -u -r "${SOURCE_DATE_EPOCH}" +%Y%m%d%H%M.%S)"
+
+# Clamp every mtime under the given trees to SOURCE_DATE_EPOCH.  The staged
+# input/, runtime/, and app-image trees are (re)created at build time, so
+# without this each build hands the native packagers fresh wall-clock mtimes
+# — the archive members of deb/rpm/AppImage would differ every run.  -h
+# clamps symlinks themselves (AppRun, .DirIcon) instead of chasing targets.
 clamp_mtimes() {
-	find "$@" -depth -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+	find "$@" -exec touch -h -t "$CLAMP_STAMP" {} +
 }
 
 # --- shaded jar -------------------------------------------------------------
@@ -129,6 +153,10 @@ jlink \
 	--compress zip-6 \
 	--output "$RUNTIME"
 echo "==> runtime size: $(du -sh "$RUNTIME" | cut -f1)"
+
+# jlink writes wall-clock mtimes (and the copied jar keeps its own); clamp
+# the whole staged tree before any packager sees it (#188)
+clamp_mtimes "$INPUT" "$RUNTIME"
 
 # --- jpackage ---------------------------------------------------------------
 package() {
@@ -198,9 +226,9 @@ build_appimage() {
 		Terminal=false
 	EOF
 
-	# appimagetool's mksquashfs clamps squashfs inode times and the
-	# superblock mkfs time to SOURCE_DATE_EPOCH; clamping the AppDir
-	# itself keeps the staged tree deterministic as well (#189)
+	# the AppDir is assembled fresh each build (jpackage copy + the files
+	# above): clamp it so mksquashfs inside appimagetool — which honors
+	# SOURCE_DATE_EPOCH for the filesystem timestamp — sees stable mtimes
 	clamp_mtimes "$appdir"
 
 	local tool="${APPIMAGETOOL:-}"

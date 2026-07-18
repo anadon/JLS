@@ -31,10 +31,38 @@ Serialized form:
 OP <kind>
  String id "<replica:counter>"     (repeatable where the kind takes a group)
  String name "<escaped>"           (AttachProbe)
+ String block "<escaped>"          (AddElements, repeatable: one whole
+                                    element save block per line)
  int dx <n>  /  int dy <n>         (MoveElements)
  int cw <0|1>                      (RotateElement)
 END
 ```
+
+## Element transplant
+
+`ElementBlocks` is the transplant helper: it serializes one element as
+the exact bytes the element's own `save` method writes (canonical
+`'\n'` line endings, #166), and loads such a block back through the
+exact reader the file loader uses (`Circuit.loadElement`), against a
+scratch circuit so the target's load bookkeeping is never touched. An
+added element is therefore indistinguishable from a loaded one, and
+`AddElements`/`RemoveElements` are exact mutual inverses:
+
+- `AddElements(blocks)` validates atomically against the editor's paste
+  rules (blocks must load; stable ids must be new; names must not
+  collide within the op or with the circuit; a jump start's name must
+  be free; a jump end must have a source already present or arriving in
+  the same op) before anything is added. Wire, wire-end, and
+  subcircuit blocks are rejected - those travel through their own op
+  kinds - so an added element always arrives unwired.
+- `RemoveElements(ids)` computes a true, byte-exact inverse (the
+  removed elements' blocks), not a snapshot fallback. It rejects
+  elements with wires attached to their puts (detaching would mutate
+  wire state the inverse could not restore) and requires a jump start
+  to bring every one of its jump ends along, because the editor's
+  removal cascades that way. Wired selections stay on the inline
+  delete path, under the snapshot-undo safety net, until the wiring
+  vocabulary lands.
 
 ## Mutation-site inventory (§7 step 1)
 
@@ -52,10 +80,10 @@ the migration commit.
 | Flip, context menu | `FlipElement` | **migrated** |
 | Probe attach/remove, context menu | `AttachProbe` / `RemoveProbe` (name prompt stays in the gesture; ops are pure data) | **migrated** |
 | Move-selection commit (mouse release) | `MoveElements` | op implemented + tested; gesture still inline (live drag must become preview-then-commit) |
-| Placement drop (fixPosition + connect) | `AddElement` (+ implicit wiring) | deferred — needs the element-transplant machinery |
-| Matching JumpEnd creation, context menu | `AddElement` | deferred — same machinery |
-| Delete selection | `RemoveElements` | deferred — inverse must restore elements *and* their wires; snapshot-fallback inverse is the sanctioned interim (#167 §9) |
-| Paste | `PasteGroup` | deferred — same restore machinery as delete's inverse |
+| Placement drop (fixPosition + connect) | `AddElements` (+ implicit wiring) | op implemented + tested for the unwired case; gesture still inline (the drop's `connect()` needs the wiring vocabulary, and placement must become preview-then-commit) |
+| Matching JumpEnd creation, context menu | `AddElements` | op implemented + tested (jump-source validation included); gesture still inline (the created end stays mouse-attached in `chosen` state, so the commit point is the later drop) |
+| Delete selection | `RemoveElements` | op implemented + tested with a **true inverse** (the removed elements' blocks) for unwired selections; wired selections stay inline until the wiring vocabulary lands (#167 §9's fallback narrowed to just that case). Gesture still inline |
+| Paste | `AddElements` | op machinery in place (multi-block add with paste's name/jump validation); gesture still inline (pasted wires need the wiring vocabulary) |
 | Wire-attach finish (mouse) | `AddWire` | deferred — wiring gestures become commit-time ops |
 | Wire-draw cancel (right button / end-wire key, two sites) | none — gesture-local cleanup of the in-progress wire; these `markChanged` calls compensate for live mutation and disappear when wiring is commit-time | deferred |
 | Quick attribute edit commit (`quickReset`) | `SetAttributes` (element-state replace) | deferred — dialog commits mutate in place today |
@@ -78,11 +106,13 @@ rule 2; only the future `jls.collab.ui` may touch Swing).
 
 ## What lands next
 
-1. The element-transplant helper (serialize one element, load it into
-   a target circuit), which unlocks `AddElement`, `RemoveElements`
-   with true inverses, and `PasteGroup`.
-2. Preview-then-commit for the move and wiring gestures, anchored by
-   the #91 gesture harness (`EditorGestureTest`).
+1. The wiring vocabulary (`AddWire`/`RemoveWire` over wire ends,
+   segments, and attachments), which unlocks the wired cases of
+   delete/paste and the wire-drawing gesture's commit-time op.
+2. Preview-then-commit for the move, placement, and wiring gestures,
+   anchored by the #91 gesture harness (`EditorGestureTest`) - the
+   step that migrates the gestures whose ops already exist
+   (`MoveElements`, `AddElements`, `RemoveElements`).
 3. `SetAttributes` from the dialog-commit paths.
 4. Op-inverse (precise) undo activation is explicitly *not* this
    stage: snapshot undo stays user-facing until Stage 2 (#163).

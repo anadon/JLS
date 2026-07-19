@@ -73,14 +73,21 @@ public abstract sealed class Gate extends LogicElement
 	 */
 	protected static final class Kind {
 		
+		/** The human-readable name of this gate kind. */
 		private final String displayName;	// e.g. "AND"
+		/** The save-file tag of this gate kind. */
 		private final String saveName;		// e.g. "AndGate" (a frozen tag:
 											// must match SaveTags / spec §7)
+		/** The forced input count, or -1 if the user chooses. */
 		private final int fixedInputs;		// forced input count, or -1 if the
 											// user chooses
+		/** The default propagation delay for this gate kind. */
 		private final int defaultDelay;
+		/** Input count of the previously created gate of this kind. */
 		private int previousInputs = defaultInputs;
+		/** Bits (gate count) of the previously created gate of this kind. */
 		private int previousBits = defaultBits;
+		/** Orientation of the previously created gate of this kind. */
 		private Orientation previousOrientation = defaultOrientation;
 		
 		/**
@@ -368,6 +375,7 @@ public abstract sealed class Gate extends LogicElement
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by every gate kind.
+	/** The persistence attributes shared by every gate kind. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -434,6 +442,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 	);
 
+	/** Base attributes plus the shared gate attributes, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -936,6 +945,7 @@ public abstract sealed class Gate extends LogicElement
 // Simulation
 //-------------------------------------------------------------------------------
 
+	/** The output value currently propagating through this gate. */
 	private BitSet toBeValue;
 
 	/**

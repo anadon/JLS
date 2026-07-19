@@ -24,28 +24,50 @@ public final class Register extends LogicElement {
 	 * The triggering modes a register can have: Latch (level triggered),
 	 * PosFF (positive-edge triggered), and NegFF (negative-edge triggered).
 	 */
-	private enum Type {Latch, PosFF, NegFF};
-	
+	private enum Type {
+		/** Transparent latch (level triggered). */
+		Latch,
+		/** Positive-edge triggered flip-flop. */
+		PosFF,
+		/** Negative-edge triggered flip-flop. */
+		NegFF};
+
 	// default values
+	/** Default register name (empty until the user supplies one). */
 	private static final String defaultName = "";
+	/** Default trigger type (level-triggered latch). */
 	private static final Register.Type defaultType = Type.Latch;
+	/** Default number of bits. */
 	private static final int defaultBits = 1;
+	/** Default initial value (zero). */
 	private static final BigInteger defaultInitValue = BigInteger.ZERO;
+	/** Default radix for displaying/entering the initial value. */
 	private static final int defaultBase = 10;
-	private static final int defaultPropDelay = 50; 
-	
+	/** Default propagation delay in simulation time units. */
+	private static final int defaultPropDelay = 50;
+
 	// saved properties
+	/** The name of this register. */
 	private String name = defaultName;
+	/** The trigger type of this register (latch, pos-edge or neg-edge FF). */
 	private Type type = defaultType;
+	/** The number of bits in this register. */
 	private int bits = defaultBits;
+	/** The value this register holds when simulation starts. */
 	private BigInteger initialValue = defaultInitValue;
+	/** The radix used to display/enter the initial value in the edit dialog. */
 	private int base = defaultBase;
+	/** The propagation delay of this register. */
 	private int propDelay = defaultPropDelay;
+	/** True if this register's value is watched during simulation. */
 	private boolean watched = false;
+	/** The direction this register faces (position of D/C inputs vs Q outputs). */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
+
 	// running properties
+	/** True if the user cancelled the create/modify dialog. */
 	private boolean cancelled;
+	/** True if a modify dialog changed the name to one that no longer fits the box. */
 	private boolean nameChanged;
 	
 	/**
@@ -478,6 +500,7 @@ public final class Register extends LogicElement {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes (name, bits, init, orient, delay, type, watch). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -606,6 +629,7 @@ public final class Register extends LogicElement {
 		}
 	);
 
+	/** Base element attributes followed by this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -873,21 +897,37 @@ public final class Register extends LogicElement {
 	private class RegisterEdit extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Text field for the register's name. */
 		private JTextField nameField = new JTextField(name);
+		/** Text field for the number of bits. */
 		private JTextField bitsField = new JTextField(bits+"");
+		/** Text field for the initial value. */
 		private JTextField valueField = new JTextField("");
+		/** Keypad for entering the number of bits. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,bits,this);
+		/** Keypad for entering the initial value. */
 		private KeyPad valuePad = new KeyPad(valueField,16,initialValue.longValue(),this);
+		/** Radio button selecting binary display of the initial value. */
 		private JRadioButton base2 = new JRadioButton("2");
+		/** Radio button selecting decimal display of the initial value. */
 		private JRadioButton base10 = new JRadioButton("10");
+		/** Radio button selecting hexadecimal display of the initial value. */
 		private JRadioButton base16 = new JRadioButton("16");
+		/** Radio button selecting a level-triggered latch. */
 		private JRadioButton latch = new JRadioButton("Level-Trig");
+		/** Radio button selecting a positive-edge triggered flip-flop. */
 		private JRadioButton posFF = new JRadioButton("Pos-Trig");
+		/** Radio button selecting a negative-edge triggered flip-flop. */
 		private JRadioButton negFF = new JRadioButton("Neg-Trig");
+		/** Radio button selecting leftward orientation. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Radio button selecting rightward orientation. */
 		private JRadioButton right = new JRadioButton("Right");
+		/** Radio button selecting upward orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Radio button selecting downward orientation. */
 		private JRadioButton down = new JRadioButton("Down");
+		/** True if creating a new register, false if modifying an existing one. */
 		private boolean creating;
 		
 		/**
@@ -1186,6 +1226,7 @@ public final class Register extends LogicElement {
 		return true;
 	} // end of canChange method
 	
+	/** Graphics object saved by change() for use by the valueFits method. */
 	private Graphics saveg;
 
 	/**
@@ -1290,8 +1331,11 @@ public final class Register extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The value scheduled to appear on the outputs after the propagation delay. */
 	private BitSet toBeValue;
+	/** The value currently stored in this register. */
 	private BitSet currentValue = new BitSet();
+	/** The most recent value seen on the clock (C) input. */
 	private int currentC;
 	
 	/**

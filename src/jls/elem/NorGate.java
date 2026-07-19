@@ -17,6 +17,7 @@ import javax.swing.*;
 public final class NorGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
+	/** This gate type's identity and shared previous-settings state (#22). */
 	private static final Kind KIND =
 			new Kind("NOR","NorGate",-1,5);
 	

@@ -408,6 +408,7 @@ public final class VerilogHeaderScanner {
 	} // end of expand method
 
 	/**
+	 * Tests whether a character may appear in a Verilog identifier.
 	 * @param c the character to classify
 	 * @return true if c may appear in a Verilog identifier
 	 */
@@ -921,6 +922,7 @@ public final class VerilogHeaderScanner {
 	} // end of expectPunct method
 
 	/**
+	 * Tests the next token against a punctuation without consuming it.
 	 * @param punct the punctuation to test for
 	 * @return true if the next token is exactly that punctuation
 	 */
@@ -930,6 +932,7 @@ public final class VerilogHeaderScanner {
 	} // end of atPunct method
 
 	/**
+	 * Tests whether a token is a given punctuation.
 	 * @param t the token to test
 	 * @param punct the punctuation text
 	 * @return true if t is that punctuation
@@ -1089,6 +1092,7 @@ public final class VerilogHeaderScanner {
 	} // end of skipToTopLevelComma method
 
 	/**
+	 * Tells whether a port list declares directions inline.
 	 * @param slice the port-list tokens
 	 * @return true if any direction keyword appears (ANSI style)
 	 */
@@ -1102,6 +1106,7 @@ public final class VerilogHeaderScanner {
 	} // end of containsDirection method
 
 	/**
+	 * Tests whether an identifier is a direction keyword.
 	 * @param word an identifier
 	 * @return true if it is a Verilog direction keyword
 	 */
@@ -1111,6 +1116,7 @@ public final class VerilogHeaderScanner {
 	} // end of isDirection method
 
 	/**
+	 * Maps a direction keyword to a scanned-port direction.
 	 * @param word a Verilog direction keyword
 	 * @return the corresponding scanned-port direction
 	 */

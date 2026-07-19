@@ -53,22 +53,33 @@ import jls.elem.WireNet;
 public class Circuit implements Printable {
 
 	// properties
+	/** The circuit name (becomes the file name after appending .jls). */
 	private String name = null; // will be the file name after appending .jls
+	/** The directory the circuit's file is in. */
 	private String dir = ""; // the directory the file is in
+	/** All elements (logic elements, wires and wire ends) in this circuit. */
 	private Set<Element> elements = new HashSet<Element>();
+	/** The subcircuit element referring to this circuit, or null if none. */
 	private SubCircuit subElement = null; // the element referring to this
 											// circuit
+	/** This circuit's editor, or null if it has none. */
 	private Editor editor = null; // this circuit's editor (null if none)
+	/** All element names in use, so element names can be kept unique. */
 	private Set<String> namesUsed = new HashSet<String>(); // so element names
 															// can be unique
+	/** The jump starts in this circuit, keyed and sorted by name. */
 	private SortedMap<String, JumpStart> starts = new TreeMap<String, JumpStart>(); // jumpstarts
+	/** True when the circuit has been modified since the last save. */
 	private boolean changed = false;
+	/** The on-disk container format saves of this circuit use (#129). */
 	private FileAbstractor.Container saveContainer =
 			FileAbstractor.Container.XZ; // on-disk container saves use (#129)
 
+	/** Grid index over element bounds (#3, #17). */
 	private final SpatialIndex index = new SpatialIndex(); // grid index over
 															// element bounds
 															// (#3, #17)
+	/** The elements currently drawn highlighted. */
 	private final Set<Element> highlighted = new HashSet<Element>(); // elements
 																		// currently
 																		// drawn
@@ -76,13 +87,17 @@ public class Circuit implements Printable {
 
 	// insertion (file) order, so wire-net construction in finishLoad -
 	// and with it multi-driver resolution - is deterministic (#98, S1)
+	/** Elements read from the file so far, in file order. */
 	private Set<Element> loadedElements = new LinkedHashSet<Element>(); // for loading
+	/** True once a draw-time finishLoad failure has been reported (#58). */
 	private boolean deferredFinishReported = false; // draw-time finishLoad failure (#58)
 																	// from file
+	/** Map from file-local element id to element, used while loading from a file. */
 	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for
 																				// loading
 																				// from
 																				// file
+	/** The current line number, to report errors when reading a circuit file. */
 	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
@@ -499,6 +514,8 @@ public class Circuit implements Printable {
 	/**
 	 * Refresh one moved element in the index, along with the wires whose
 	 * bounds follow it if it is a wire end.
+	 *
+	 * @param el The element that moved.
 	 */
 	private void reindexMoved(Element el) {
 
@@ -1486,6 +1503,10 @@ public class Circuit implements Printable {
 	 * Wrap a writer so println terminates lines with '\n' whatever the
 	 * platform line separator is. PrintWriter(Writer) adds no buffering,
 	 * so writes pass straight through to the wrapped writer.
+	 *
+	 * @param output The writer to wrap.
+	 *
+	 * @return the wrapping writer.
 	 */
 	private static PrintWriter canonicalNewlines(PrintWriter output) {
 
@@ -1654,6 +1675,11 @@ public class Circuit implements Printable {
 	/**
 	 * Whether an element could draw inside the clip. The margin generously
 	 * covers labels drawn near (but outside) an element's bounds.
+	 *
+	 * @param el The element to test.
+	 * @param clip The clip rectangle.
+	 *
+	 * @return true if the element's margin-padded bounds intersect the clip.
 	 */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 

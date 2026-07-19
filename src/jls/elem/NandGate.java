@@ -17,6 +17,7 @@ import javax.swing.*;
 public final class NandGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
+	/** The kind descriptor for NAND gates (identity and shared previous settings). */
 	private static final Kind KIND =
 			new Kind("NAND","NandGate",-1,5);
 	

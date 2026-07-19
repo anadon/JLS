@@ -149,6 +149,7 @@ public abstract sealed class Pin extends LogicElement
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by both pins.
+	/** The saved attributes shared by both pin types, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -200,6 +201,7 @@ public abstract sealed class Pin extends LogicElement
 		}
 	);
 
+	/** Base attributes plus the shared pin attributes, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -501,12 +503,19 @@ public abstract sealed class Pin extends LogicElement
 	private class PinCreate extends ElementDialog {
 		
 		// properties
+		/** The text field for the pin name. */
 		private JTextField nameField = new JTextField("",12);
+		/** The text field for the bit width. */
 		private JTextField bitsField = new JTextField("1",5);
+		/** The key pad for entering the bit width. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
+		/** Selects left orientation. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Selects right orientation (the default). */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Selects up orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Selects down orientation. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**

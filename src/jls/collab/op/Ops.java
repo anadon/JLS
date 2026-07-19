@@ -13,6 +13,9 @@ import jls.elem.ElementId;
  */
 final class Ops {
 
+	/**
+	 * Prevent instantiation; this class only has static helpers.
+	 */
 	private Ops() {
 
 	} // end of constructor

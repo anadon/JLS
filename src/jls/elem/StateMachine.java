@@ -67,19 +67,26 @@ import jls.util.Placement;
 public final class StateMachine extends LogicElement implements Printable {
 
 	// default values
+	/** Propagation delay a new state machine starts with. */
 	private static final int defaultPropDelay = 30;
+	/** Trigger edge a new state machine starts with. */
 	private static int defaultTrigger = 1;	// 1=rising, -1=falling
 
 	// the initial-state rule (issue #52, M13), stated once: the editor
 	// refuses to close without an initial state, and simulation start
 	// falls back benignly when a hand-edited file lacks one
+	/** The user-visible message when the initial-state rule is violated. */
 	static final String INITIAL_STATE_CONSTRAINT =
 			"A state machine needs an initial state - mark one before closing";
 
 	// saved properties
+	/** Time units between a triggering clock edge and the new output values. */
 	private int propDelay = defaultPropDelay;
+	/** The states of this machine. */
 	private Set<State> states = new HashSet<State>();
+	/** Triggering clock edge: 1 for rising, -1 for falling. */
 	private int trigger = defaultTrigger;
+	/** The name of this state machine. */
 	private String name = "";
 	
 	// for loading from file
@@ -87,14 +94,29 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * Parser state while reading a state machine from a file, naming which
 	 * kind of element the loader is currently building.
 	 */
-	private enum LoadState {machine, newState, newOutput, newTransition};
+	private enum LoadState {
+		/** Reading the machine's own attributes. */
+		machine,
+		/** The last line read started a new state. */
+		newState,
+		/** The last line read set an output of the state being built. */
+		newOutput,
+		/** The last line read set a transition of the state being built. */
+		newTransition
+	};
+	/** Where the file loader is in the state/output/transition structure. */
 	private LoadState loadState = LoadState.machine;
+	/** The state currently being built by the file loader. */
 	private State buildState;
 	
 	// running properties
+	/** True if the user cancelled the edit dialog. */
 	private boolean canceled;
+	/** The open editor dialog, used as the owner of child dialogs. */
 	private JDialog currentDialog;
+	/** The bounding box of all states, computed for scaled printing. */
 	private Rectangle bounds;
+	/** A copy of this machine made before editing, restored on cancel. */
 	private StateMachine original;
 
 	/**
@@ -416,6 +438,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	// list (state/output/trans/next/pair lines) is structured data and
 	// stays handwritten in save(), the setValue load state machine and
 	// copy().
+	/** This element's own saved attributes (name, delay, trig). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -456,6 +479,7 @@ public final class StateMachine extends LogicElement implements Printable {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -888,8 +912,24 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * is currently doing (idle, placing or moving states, drawing transitions,
 	 * selecting, etc.) so mouse events are handled accordingly.
 	 */
-	private enum DrawState {idle, created, placing, selecting, selected, moving,
-		newTrans, pointMoving};
+	private enum DrawState {
+		/** No gesture in progress. */
+		idle,
+		/** A new state has just been created. */
+		created,
+		/** A new state is following the cursor to its place. */
+		placing,
+		/** A selection rectangle is being dragged out. */
+		selecting,
+		/** A selection exists and awaits a command. */
+		selected,
+		/** Selected states are being dragged. */
+		moving,
+		/** A new transition is being drawn. */
+		newTrans,
+		/** A transition corner point is being dragged. */
+		pointMoving
+	};
 	
 	/**
 	 * Create dialog.
@@ -899,31 +939,57 @@ public final class StateMachine extends LogicElement implements Printable {
 		implements ActionListener, MouseListener, MouseMotionListener {
 
 		// properties
+		/** The drawing area the states are edited in. */
 		private JPanel editArea;
+		/** Message display at the top of the dialog. */
 		private JLabel msgLabel = new JLabel("");
+		/** Shows the current interaction mode at the top right. */
 		private JLabel stateLabel = new JLabel(" ");
+		/** The current interaction mode of the drawing area. */
 		private DrawState drawState = DrawState.idle;
+		/** The latest mouse x-coordinate. */
 		private int x;
+		/** The latest mouse y-coordinate. */
 		private int y;
+		/** The selection rectangle being dragged out, or null if none. */
 		private Rectangle selrect = null;
+		/** The currently selected states. */
 		private Set<State> selected = new HashSet<State>();
+		/** The state under the most recent mouse press, or null if none. */
 		private State on;
+		/** Selects triggering on the rising clock edge. */
 		private JRadioButton rising = new JRadioButton("rising edge");
+		/** Selects triggering on the falling clock edge. */
 		private JRadioButton falling = new JRadioButton("falling edge");
+		/** Expands the drawing area. */
 		private JButton enlarge = new JButton("+");
+		/** Input field for the state machine's name. */
 		private JTextField nameField = new JTextField(30);
+		/** Popup menu item to rename a state. */
 		private JMenuItem changeName = new JMenuItem("change name");
+		/** Popup menu item to make a state the initial state. */
 		private JMenuItem makeInit = new JMenuItem("make initial state");
+		/** Popup menu item to start a new transition from a state. */
 		private JMenuItem addTrans = new JMenuItem("add transition");
+		/** Popup menu item to delete all transitions from a state. */
 		private JMenuItem deleteAllTrans = new JMenuItem("delete all transitions");
+		/** Popup menu item to edit a state's outputs. */
 		private JMenuItem editOutputs = new JMenuItem("edit outputs");
+		/** Popup menu item to view a state's outputs. */
 		private JMenuItem showOutputs = new JMenuItem("view outputs");
+		/** Popup menu item to delete the selected state(s). */
 		private JMenuItem delete = new JMenuItem("delete state(s)");
+		/** Popup menu item to align the selected states horizontally. */
 		private JMenuItem alignHor = new JMenuItem("align states horizontally");
+		/** Popup menu item to align the selected states vertically. */
 		private JMenuItem alignVer = new JMenuItem("align states vertically");
+		/** Midpoints of the transition being drawn; the last entry is the current end point. */
 		private Vector<Point> points = new Vector<Point>();
+		/** The transition corner point being dragged. */
 		private Point movingPoint;
+		/** True if the machine's name was changed when the dialog was accepted. */
 		private boolean nameChange;
+		/** The state machine being edited. */
 		private StateMachine machine;
 
 		/**
@@ -1888,14 +1954,18 @@ public final class StateMachine extends LogicElement implements Printable {
 	@SuppressWarnings("serial")
 	private class CreateState extends ElementDialog {
 
+		/** The accepted state name. */
 		private String name;
+		/** Input field for the state name. */
 		private JTextField nameField = new JTextField(10);
+		/** True if the user cancelled this dialog. */
 		private boolean stateCancelled;
 
 		/**
 		 * Create a new state.
 		 *
 		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
+		 * @param currentName The name the name field starts with.
 		 */
 		public CreateState(String title, String currentName) {
 
@@ -2071,9 +2141,13 @@ public final class StateMachine extends LogicElement implements Printable {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The most recently seen clock input value. */
 	private int oldClock;
+	/** True between a triggering clock edge and the new output values. */
 	private boolean busy = false;	// true between edge and outputs value
+	/** The state the machine is currently in. */
 	private State currentState;
+	/** True once the no-matching-transition warning has been shown. */
 	private boolean noMatchReported = false;	// no-matching-transition warned already? (#98, S5)
 	
 	/**

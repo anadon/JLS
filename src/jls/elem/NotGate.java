@@ -16,6 +16,7 @@ import java.util.*;
 public final class NotGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
+	/** Kind descriptor for NOT gates: display name "NOT", save tag "NotGate", one fixed input, default delay 5. */
 	private static final Kind KIND =
 			new Kind("NOT","NotGate",1,5);
 

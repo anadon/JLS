@@ -49,6 +49,7 @@ public final class LoadError {
 		/** The file blows past a hostile-input cap (issue #38). */
 		LIMIT_EXCEEDED("expansion limit exceeded");
 
+		/** The user-visible label for this category. */
 		private final String label;
 
 		/**
@@ -72,10 +73,15 @@ public final class LoadError {
 		}
 	} // end of Category enum
 
+	/** Which kind of failure this is. */
 	private final Category category;
+	/** What went wrong, in words a student can read. */
 	private final String detail;
+	/** The 1-based line the loader had reached, or 0 if unknown. */
 	private final int line;
+	/** The element being read, or null if no element is in play. */
 	private final String element;
+	/** One actionable next-step sentence, or null. */
 	private final String hint;
 
 	/**

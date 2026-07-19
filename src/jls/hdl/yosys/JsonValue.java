@@ -32,7 +32,18 @@ public final class JsonValue {
 
 	/** The kinds of JSON value. */
 	private enum Kind {
-		OBJECT, ARRAY, STRING, NUMBER, BOOLEAN, NULL
+		/** An object (insertion-ordered map of string keys to values). */
+		OBJECT,
+		/** An array of values. */
+		ARRAY,
+		/** A string. */
+		STRING,
+		/** An integer number. */
+		NUMBER,
+		/** A true or false literal. */
+		BOOLEAN,
+		/** The null literal. */
+		NULL
 	} // end of Kind enum
 
 	/** Which kind of value this is. */

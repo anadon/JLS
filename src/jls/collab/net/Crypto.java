@@ -42,6 +42,7 @@ final class Crypto {
 	/** The GCM authentication-tag length in bits, from TAG_BYTES. */
 	private static final int TAG_BITS = TAG_BYTES * 8;
 
+	/** No instances: this is a static utility. */
 	private Crypto() {
 
 	} // end of constructor

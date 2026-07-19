@@ -25,9 +25,13 @@ public abstract class SigEntry extends Entry implements ActionListener {
 	protected String signal;
 
 	// menu items
+	/** Menu item to delete this signal's column. */
 	private JMenuItem remove = new JMenuItem("delete");
+	/** Menu item to rename this signal. */
 	private JMenuItem rename = new JMenuItem("rename");
+	/** Menu item to move this signal's column left. */
 	private JMenuItem moveLeft = new JMenuItem("move left");
+	/** Menu item to move this signal's column right. */
 	private JMenuItem moveRight = new JMenuItem("move right");
 
 	/**

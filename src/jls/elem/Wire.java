@@ -17,11 +17,17 @@ import javax.swing.JLabel;
 public final class Wire extends Element {
 	
 	// properties
+	/** The wire net this wire is a part of. */
 	private WireNet net;		// the wire net it is a part of
+	/** One end of this wire. */
 	private WireEnd end1;		// the wire ends
+	/** The other end of this wire. */
 	private WireEnd end2;
+	/** Traversal flag used when partitioning a wire net into new nets. */
 	private boolean marked;		// used to partition wire net
+	/** True if the mouse is currently touching this wire, so it highlights. */
 	private boolean touching;	// touching a wire end?
+	/** The name of the probe on this wire, or null if it has no probe. */
 	private String probeName = null;
 	
 	/**

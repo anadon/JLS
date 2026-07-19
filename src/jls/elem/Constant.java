@@ -23,19 +23,29 @@ import java.util.*;
 public final class Constant extends LogicElement implements ActionListener {
 	
 	// named constants
+	/** Default constant value. */
 	private static final BigInteger defaultValue = BigInteger.ZERO;
+	/** Default display radix. */
 	private static final int defaultBase = 10;
 	
 	// saved properties
+	/** The value this constant outputs. */
 	private BigInteger value = defaultValue;
+	/** The radix the value is displayed in (2, 10 or 16). */
 	private int base = defaultBase;
+	/** Which way this constant faces. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
 	
 	// running properties
+	/** Value of the previously created constant. */
 	private static BigInteger previousValue = defaultValue;
+	/** Display radix of the previously created constant. */
 	private static int previousBase = defaultBase;
+	/** Orientation of the previously created constant. */
 	private static JLSInfo.Orientation previousOrientation = JLSInfo.Orientation.RIGHT;
+	/** True if the creation or change dialog was cancelled. */
 	private boolean cancelled;
+	/** True if a changed value no longer fits, so the element must resize. */
 	private boolean changed;
 	
 	/**
@@ -173,6 +183,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** The persistence attributes specific to constants. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.BigIntAttribute("value") {
@@ -242,6 +253,7 @@ public final class Constant extends LogicElement implements ActionListener {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -392,15 +404,25 @@ public final class Constant extends LogicElement implements ActionListener {
 	private class ConstantCreate extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Button to repeat the previously created constant's settings. */
 		private JButton repeat;
+		/** Text field for the constant's value. */
 		private JTextField valueField = new JTextField(defaultValue+"",defaultBase);
+		/** Keypad for the value field. */
 		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
+		/** Binary radix choice. */
 		private JRadioButton base2 = new JRadioButton("2");
+		/** Decimal radix choice. */
 		private JRadioButton base10 = new JRadioButton("10");
+		/** Hexadecimal radix choice. */
 		private JRadioButton base16 = new JRadioButton("16");
+		/** Left orientation choice. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Right orientation choice. */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Up orientation choice. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Down orientation choice. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**
@@ -644,6 +666,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	
 	} // end of change method
 	
+	/** Graphics object saved by the change method for use by valueFits. */
 	private Graphics saveg;	// saved by change method, used by valueFits method
 	
 	/**
@@ -671,10 +694,15 @@ public final class Constant extends LogicElement implements ActionListener {
 	private class ConstantChange extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Text field for the constant's new value. */
 		private JTextField valueField = new JTextField(Util.convert(value,base,false),10);
+		/** Keypad for the value field. */
 		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
+		/** Binary radix choice. */
 		private JRadioButton base2 = new JRadioButton("2");
+		/** Decimal radix choice. */
 		private JRadioButton base10 = new JRadioButton("10");
+		/** Hexadecimal radix choice. */
 		private JRadioButton base16 = new JRadioButton("16");
 		
 		/**
@@ -831,12 +859,19 @@ public final class Constant extends LogicElement implements ActionListener {
 		return true;
 	} // end of quickChange method
 	
+	/** The editor to reset after a quick change. */
 	private SimpleEditor sed;
+	/** Quick-change shortcut menu. */
 	private JMenu quick = new JMenu("shortcuts");
+	/** Menu item to set the value to 0. */
 	private JMenuItem zero = new JMenuItem("0");
+	/** Menu item to set the value to 1. */
 	private JMenuItem one = new JMenuItem("1");
+	/** Menu item to add 1 to the value. */
 	private JMenuItem plus = new JMenuItem("add 1");
+	/** Menu item to subtract 1 from the value (but not below 0). */
 	private JMenuItem minus = new JMenuItem("subtract 1");
+	/** True once the quick-change menu has been built. */
 	private boolean menuMade = false;
 	
 	/**

@@ -10,6 +10,7 @@ package jls.hdl.layout;
  */
 public class LayoutException extends Exception {
 
+	/** Serialization version. */
 	private static final long serialVersionUID = 1L;
 
 	/**

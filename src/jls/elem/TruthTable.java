@@ -51,12 +51,16 @@ import jls.sim.Simulator;
 public final class TruthTable extends LogicElement implements Printable {
 
 	// default values
-	private static final int defaultDelay = 30; 
+	/** Default propagation delay (simulation time units). */
+	private static final int defaultDelay = 30;
+	/** Initial width of the edit dialog, in pixels. */
 	private static final int dialogWidth = 300;
+	/** Initial height of the edit dialog, in pixels. */
 	private static final int dialogHeight = 500;
 
 	// dialog-side constraint (issue #52): a table with no signals cannot
 	// compute anything
+	/** Error message shown when the table has no input or no output signal. */
 	static final String SIGNALS_CONSTRAINT =
 			"Must have at least one input signal and one output signal";
 
@@ -79,24 +83,41 @@ public final class TruthTable extends LogicElement implements Printable {
 	} // end of entryConstraint method
 
 	// properties
+	/** The name of this truth table element. */
 	private String name = "";
+	/** Propagation delay from an input change to the outputs (simulation time units). */
 	private int propDelay = defaultDelay;
+	/** Names of the input signals, in column order. */
 	private Vector<String>inputNames = new Vector<String>();
+	/** Names of the output signals, in column order. */
 	private Vector<String>outputNames = new Vector<String>();
+	/** Table entries, indexed by row then column (inputs first, then outputs); 0, 1 or 2 (don't care). */
 	private int[][] table = new int[0][0];
 
 	// running properties
+	/** True if the user cancelled the edit dialog. */
 	private boolean cancelled;
+	/** True if the edit dialog changed the element's name. */
 	private boolean nameChanged;
+	/** True if the edit dialog changed the signals or table entries. */
 	private boolean anyChanges;
+	/** The current edit dialog (parent for error popups). */
 	TTEditor edit;
+	/** The panel that draws the truth table in the edit dialog and when printing. */
 	DisplayBool disp;
+	/** Number of rows in the table. */
 	private int rows;
+	/** Number of columns in the table (inputs plus outputs). */
 	private int cols;
+	/** Row of the next table entry read from a file. */
 	private int irow = 0;	// for reading from a file
+	/** Column of the next table entry read from a file. */
 	private int icol = 0;
+	/** Copy of the input names saved before an edit, restored on cancel. */
 	private Vector<String>iNCopy = new Vector<String>();
+	/** Copy of the output names saved before an edit, restored on cancel. */
 	private Vector<String>oNCopy = new Vector<String>();
+	/** Copy of the table entries saved before an edit, restored on cancel. */
 	private int[][] tcopy = new int[0][0];
 
 	/**
@@ -286,6 +307,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	// dispatch, and copy for this element's simple attributes. The
 	// repeated " String input"/" String output" and " pair" lines are
 	// list-valued and stay handwritten in save(), setValue and setPair.
+	/** Declarations of this element's own saved attributes, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -339,6 +361,7 @@ public final class TruthTable extends LogicElement implements Printable {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -648,12 +671,17 @@ public final class TruthTable extends LogicElement implements Printable {
 	private class TTEditor extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Text field for typing the name of a new input signal. */
 		private JTextField inputField = new JTextField(10);
+		/** Text field for typing the name of a new output signal. */
 		private JTextField outputField = new JTextField(10);
+		/** Text field for editing the element's name. */
 		private JTextField nameField = new JTextField(10);
 
 		/**
 		 * Initialize and show dialog.
+		 *
+		 * @param ttelem The truth table element being created or edited.
 		 */
 		public TTEditor(TruthTable ttelem) {
 
@@ -1571,6 +1599,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	// Simulation
 	//-------------------------------------------------------------------------------
 
+	/** The value (0 or 1) each output will have once its pending event fires, indexed by output position. */
 	private int[] toBeValue;
 	/**
 	 * A pending output change carried through the simulator: an output pin's
@@ -1578,8 +1607,16 @@ public final class TruthTable extends LogicElement implements Printable {
 	 * should take on when the scheduled event fires.
 	 */
 	static class Out {
+		/** Index of the output pin in the outputs list. */
 		int position;
+		/** The value the output pin should take on. */
 		BitSet value;
+
+		/**
+		 * Create a pending output change.
+		 */
+		Out() {
+		}
 	}
 
 	/**

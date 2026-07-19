@@ -19,13 +19,17 @@ import javax.swing.*;
 public final class Clock extends LogicElement {
 	
 	// default values
+	/** The cycle time offered by the creation dialog's keypad. */
 	private static int defaultCycleTime = 2;
+	/** The one time offered by the creation dialog's keypad. */
 	private static int defaultOneTime = defaultCycleTime/2;
-	
+
 	// one constraint string, two surfaces: dialog and loader (issue #52);
 	// non-positive times cause a zero-delay repost livelock at t=0
+	/** Constraint message for a non-positive cycle time. */
 	static final String CYCLE_CONSTRAINT =
 			"Cycle time must be a positive number of time units";
+	/** Constraint message for an invalid one time. */
 	static final String ONE_CONSTRAINT =
 			"One time must be positive and less than the cycle time";
 
@@ -61,9 +65,13 @@ public final class Clock extends LogicElement {
 	} // end of checkOneTime method
 
 	// properties
+	/** The clock period, in simulated time units. */
 	private int cycleTime = defaultCycleTime;
+	/** The number of time units per cycle the output is 1. */
 	private int oneTime = defaultOneTime;
+	/** Which way the output pin faces. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	/** Whether the user cancelled the creation or change dialog. */
 	private boolean cancelled;
 	
 	/**
@@ -213,6 +221,7 @@ public final class Clock extends LogicElement {
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes: cycle, one, orient (#23). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("cycle") {
@@ -293,6 +302,7 @@ public final class Clock extends LogicElement {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order (#23). */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -424,13 +434,21 @@ public final class Clock extends LogicElement {
 	private class ClockCreate extends ElementDialog {
 
 		// properties
+		/** Field to enter the cycle time. */
 		private JTextField cycleTimeField = new JTextField(cycleTime+"",10);
+		/** Field to enter the one time. */
 		private JTextField oneTimeField = new JTextField(oneTime+"",10);
+		/** Keypad for the cycle time field. */
 		private KeyPad cycleTimePad = new KeyPad(cycleTimeField,10,defaultCycleTime,this);
+		/** Keypad for the one time field. */
 		private KeyPad oneTimePad = new KeyPad(oneTimeField,10,defaultOneTime,this);
+		/** Button selecting the left orientation. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Button selecting the right orientation (the default). */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Button selecting the up orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Button selecting the down orientation. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**

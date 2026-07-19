@@ -21,15 +21,22 @@ import javax.swing.*;
 public final class TriState extends LogicElement {
 	
 	// defaults
+	/** Default number of bits (gates). */
 	private static final int defaultBits = 1;
+	/** Default propagation delay. */
 	private static final int defaultPropDelay = 5;
-	
+
 	// saved properties
+	/** The number of bits (parallel tri-state gates). */
 	private int bits = defaultBits;
+	/** The propagation delay of this element. */
 	private int propDelay = defaultPropDelay;
+	/** The direction the output points. */
 	private JLSInfo.Orientation gateOrientation = JLSInfo.Orientation.RIGHT;
+	/** The side the control input is on. */
 	private JLSInfo.Orientation controlOrientation = JLSInfo.Orientation.DOWN;
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
 	
 	/**
@@ -105,6 +112,8 @@ public final class TriState extends LogicElement {
 	/**
 	 * The transform from canonical geometry (gate RIGHT, control DOWN)
 	 * to the current orientation pair.
+	 *
+	 * @return the transform for the current orientation pair.
 	 */
 	private GridTransform.Chain placement() {
 
@@ -186,6 +195,7 @@ public final class TriState extends LogicElement {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes (bits, delay, orientations). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -270,6 +280,7 @@ public final class TriState extends LogicElement {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -468,16 +479,27 @@ public final class TriState extends LogicElement {
 	private class TriStateCreate extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Text field for the number of bits (gates). */
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
+		/** Keypad for entering the number of bits. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Output orientation choice: left. */
 		private JRadioButton oLeft = new JRadioButton("Left");
+		/** Output orientation choice: right (the default). */
 		private JRadioButton oRight = new JRadioButton("Right", true);
+		/** Output orientation choice: up. */
 		private JRadioButton oUp = new JRadioButton("Up");
+		/** Output orientation choice: down. */
 		private JRadioButton oDown = new JRadioButton("Down");
+		/** Control orientation choice: left. */
 		private JRadioButton sLeft = new JRadioButton("Left");
+		/** Control orientation choice: right. */
 		private JRadioButton sRight = new JRadioButton("Right");
+		/** Control orientation choice: up. */
 		private JRadioButton sUp = new JRadioButton("Up");
+		/** Control orientation choice: down (the default). */
 		private JRadioButton sDown = new JRadioButton("Down",true);
+		/** Label for the control orientation choices. */
 		private JLabel olbl2 = new JLabel("Control Orientation");
 		
 		/**
@@ -671,6 +693,7 @@ public final class TriState extends LogicElement {
 
 	// the value scheduled to reach the output, null meaning off (HiZ);
 	// used to suppress redundant output events (issue #98, S6)
+	/** The value scheduled to reach the output, null meaning off (HiZ). */
 	private BitSet toBeValue;
 
 	/**

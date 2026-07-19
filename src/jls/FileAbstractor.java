@@ -164,6 +164,9 @@ public final class FileAbstractor {
 	/**
 	 * Whether a probe failure means the hostile-input size cap was hit,
 	 * rather than a format mismatch.
+	 *
+	 * @param ex The exception a format probe rejected the file with.
+	 * @return true if the failure was the circuit size limit, false otherwise.
 	 */
 	private static boolean isOverLimit(IOException ex) {
 
@@ -241,6 +244,8 @@ public final class FileAbstractor {
 	/**
 	 * Read the file as XZ-compressed text.
 	 *
+	 * @param file The file to read.
+	 * @return a Scanner over the decompressed circuit text.
 	 * @throws IOException if the file is not XZ or holds no text.
 	 */
 	static Scanner readXZ(File file) throws IOException {
@@ -280,6 +285,8 @@ public final class FileAbstractor {
 	 * ZipFile closes every stream obtained from it, which used to
 	 * truncate any circuit larger than the Scanner's buffer (issue #2).
 	 *
+	 * @param file The file to read.
+	 * @return a Scanner over the extracted circuit text.
 	 * @throws IOException if the file is not a zip or has no circuit entry.
 	 *
 	 * @jls.testedby jls.FileFormatSupport#openAsZip()
@@ -308,6 +315,8 @@ public final class FileAbstractor {
 	/**
 	 * Read the file as plain circuit text.
 	 *
+	 * @param file The file to read.
+	 * @return a Scanner over the circuit text.
 	 * @throws IOException if the file cannot be read or is empty.
 	 */
 	static Scanner readText(File file) throws IOException {
@@ -339,6 +348,7 @@ public final class FileAbstractor {
 	 */
 	private static final class BoundedInputStream extends java.io.FilterInputStream {
 
+		/** The number of bytes this stream may still hand out. */
 		private long remaining = MAX_CIRCUIT_TEXT_BYTES;
 
 		/**

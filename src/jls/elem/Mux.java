@@ -17,18 +17,27 @@ import javax.swing.*;
 public final class Mux extends LogicElement {
 
 	// default values
+	/** Default number of data inputs. */
 	private static final int defaultInputs = 2;
+	/** Default number of bits per input. */
 	private static final int defaultBits = 1;
-	private static final int defaultPropDelay = 25; 
-	
+	/** Default propagation delay. */
+	private static final int defaultPropDelay = 25;
+
 	// saved properties
+	/** The number of data inputs. */
 	private int numInputs = defaultInputs;
+	/** The number of bits in each input and the output. */
 	private int bits = defaultBits;
+	/** The propagation delay of this element. */
 	private int propDelay = defaultPropDelay;
+	/** The direction the output points. */
 	private JLSInfo.Orientation outputOrientation = JLSInfo.Orientation.RIGHT;
+	/** The side the selector input is on. */
 	private JLSInfo.Orientation selectorOrientation = JLSInfo.Orientation.DOWN;
-	
+
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
 
 	/**
@@ -123,6 +132,8 @@ public final class Mux extends LogicElement {
 	/**
 	 * The transform from canonical geometry (output RIGHT) to the current
 	 * output orientation.
+	 *
+	 * @return the transform for the current output orientation.
 	 */
 	private GridTransform.Chain placement() {
 
@@ -241,6 +252,7 @@ public final class Mux extends LogicElement {
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes (inputs, bits, delay, orientations). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("inputs") {
@@ -343,6 +355,7 @@ public final class Mux extends LogicElement {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -781,6 +794,7 @@ public final class Mux extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The value scheduled to reach the output, to suppress redundant events. */
 	private BitSet toBeValue;
 	
 	/**

@@ -140,10 +140,14 @@ public final class GridTransform {
 	 */
 	public static final class Chain {
 
+		/** Operation codes for the chained transforms. */
 		private static final int CW = 0, CCW = 1, R180 = 2, MX = 3, MY = 4;
 
+		/** The canonical box width. */
 		private final int canonicalWidth;
+		/** The canonical box height. */
 		private final int canonicalHeight;
+		/** The chained operation codes, in application order. */
 		private final java.util.List<Integer> ops =
 				new java.util.ArrayList<Integer>();
 

@@ -13,9 +13,13 @@ import java.util.*;
 public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHandler {
 	
 	// properties
+	/** True once an exception is being handled, so a second one just exits. */
 	private boolean recovering = false;
+	/** Reference to the main class, or null when running in batch mode. */
 	private JLSStart jls = null;
+	/** The circuit to dump with the stack trace, if any. */
 	private Circuit circuit = null;
+	/** Memory released when handling an OutOfMemoryError so recovery can proceed. */
 	private int [] extraSpace = new int[10000];
 
 	/**

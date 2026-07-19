@@ -15,10 +15,15 @@ public class WireNet {
 	// properties
 	// insertion order (file order for a loaded circuit) makes the
 	// multi-driver resolution in propagate deterministic (issue #98, S1)
+	/** The wire ends in this net, in insertion order. */
 	private Set<WireEnd>ends = new LinkedHashSet<WireEnd>();	// the wire ends in this net
+	/** The wires in this net, in insertion order. */
 	private Set<Wire>wires = new LinkedHashSet<Wire>();	// the wires in this net
+	/** The number of bits (0=not connected). */
 	private int bits = 0;								// the number of bits (0=not connected)
+	/** True once this net is connected to an Output. */
 	private boolean hasinput = false;					// connected to an Output yet?
+	/** True if this net is tri-stated. */
 	private boolean triState = false;					// true if tri-stated
 
 	/**
@@ -388,7 +393,9 @@ public class WireNet {
 // Simulation
 //-------------------------------------------------------------------------------
 		
+	/** The current value on this net (null when tri-stated off). */
 	private BitSet value = new BitSet(1);
+	/** True once a bus conflict has been reported, until it clears. */
 	private boolean conflictReported = false;	// bus-conflict warned already? (#98, S1)
 
 	/**

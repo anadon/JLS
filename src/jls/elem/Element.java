@@ -22,8 +22,11 @@ public abstract sealed class Element
 		permits DisplayElement, LogicElement, Wire {
 
 	// saved properties
+	/** The file-local reference index, reassigned on every save. */
 	private int id; 						// file-local reference index, reassigned on every save
+	/** The permanent identity of this element (#165). */
 	private ElementId stableId = ElementId.mintFresh(); // permanent identity (#165)
+	/** Whether stableId was declared by the loaded file. */
 	private boolean stableIdFromFile = false; // whether stableId was declared by the loaded file
 	/** The x-coordinate of the upper left corner of this element. */
 	protected int x; 						// upper left corner of element
@@ -33,13 +36,17 @@ public abstract sealed class Element
 	protected int width = 0; 				// size of element
 	/** The height of this element in pixels. */
 	protected int height = 0;
+	/** Whether editing of this element is disallowed. */
 	private boolean uneditable = false;		// to keep others from editing this element
+	/** The position of this element in the signal trace (-1 if none). */
 	private int tracePosition = -1;			// position in signal trace (-1 if none)
 
 	// running properties
 	/** Whether this element should be drawn highlighted. */
 	protected boolean highlight = false;	// whether the elements should be drawn highlighted
+	/** The saved x-coordinate, restored after an aborted move. */
 	private int savex;						// so it can be put back after an aborted move
+	/** The saved y-coordinate, restored after an aborted move. */
 	private int savey;
 	/** The circuit this element is part of. */
 	protected Circuit circuit;				// the circuit this element is part of
@@ -183,6 +190,7 @@ public abstract sealed class Element
 
 	// The attributes every element saves, in their historical save order
 	// (#23). One declaration drives save, copy, and load dispatch.
+	/** The attributes every element saves, in historical save order (#23). */
 	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("id") {
@@ -945,7 +953,9 @@ public abstract sealed class Element
 	private class DelayChange extends ElementDialog {
 
 		// properties
+		/** Field to enter the delay or access time. */
 		private JTextField delayField = new JTextField(10);
+		/** Keypad for the delay field. */
 		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
 
 		/**

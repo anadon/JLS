@@ -20,10 +20,15 @@ import java.util.*;
 public final class SubCircuit extends LogicElement implements TriProp {
 	
 	// properties
+	/** The imported subcircuit this element represents. */
 	private Circuit subCircuit;		// the subcircuit
+	/** The name this subcircuit has in the circuit it was imported into. */
 	private String name;			// the name in the circuit imported into
+	/** Map from this element's inputs to the corresponding input pins in the subcircuit. */
 	private Map<Input,InputPin> inmap = new HashMap<Input,InputPin>();
+	/** Map from the subcircuit's output pins to this element's corresponding outputs. */
 	private Map<OutputPin,Output> outmap = new HashMap<OutputPin,Output>();
+	/** The direction this element faces (side its inputs are on). */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
 	
 	// editing properties
@@ -544,6 +549,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	
 	// used by setTriState to avoid infinite recursion when an
 	// input of this elements is connected to a tri-state propagating output
+	/** Input pins already visited by setTriState, to avoid infinite recursion. */
 	private Set<InputPin> pinsChecked = new HashSet<InputPin>();
 	
 	/**
@@ -635,8 +641,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 */
 	private class SubCreate extends ElementDialog {
 			// properties
+			/** Text field for the subcircuit's name in this circuit. */
 			private JTextField nameField = new JTextField("",12);
+			/** Radio button selecting leftward orientation. */
 			private JRadioButton left = new JRadioButton("Left");
+			/** Radio button selecting rightward orientation. */
 			private JRadioButton right = new JRadioButton("Right",true);
 			
 			/**

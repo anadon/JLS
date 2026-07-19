@@ -12,6 +12,7 @@ import java.util.*;
 public final class Output extends Put {
 	
 	// properties
+	/** True if this output is tri-state (can be electrically disconnected). */
 	private boolean triState = false;
 
 	/**

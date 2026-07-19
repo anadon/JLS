@@ -178,6 +178,7 @@ public final class Pause extends LogicElement {
 	//	Simulation
 	//	-------------------------------------------------------------------------------
 
+	/** The input value assumed at simulation start: all zeros, or null when the input net is tri-state. */
 	private BitSet currentValue = new BitSet();
 
 	/**

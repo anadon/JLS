@@ -49,13 +49,21 @@ import jls.sim.Simulator;
 public class State {
 
 	// properties
+	/** the state machine this state is in. */
 	private StateMachine machine;	// the state machine this state is in
+	/** the name of this state. */
 	private String name;
+	/** true if this is the initial state of the machine. */
 	private boolean initial = false;
+	/** the outputs asserted by this state. */
 	private Vector<Out> outs = new Vector<Out>();
+	/** the transitions from this state. */
 	private Set<Transition> trans = new HashSet<Transition>();
+	/** the x-coordinate of the center of this state. */
 	private int x;
+	/** the y-coordinate of the center of this state. */
 	private int y;
+	/** the diameter of the circle representing this state. */
 	private int diameter;
 	/**
 	 * Tracks the bit width and direction of a signal used within this state,
@@ -64,19 +72,35 @@ public class State {
 	 * removed from the bitmap when it drops to zero.
 	 */
 	private static class Check {
+		/** the bit width of the signal. */
 		public int bits;
+		/** true if the signal is an input, false if an output. */
 		public boolean isInput;	// false if output
+		/** the number of outputs/transitions using the signal. */
 		public int refs; // delete from map when 0
+
+		/**
+		 * Create an empty check record.
+		 */
+		private Check() {
+		}
 	};
+	/** signal names mapped to bit width/direction info, for consistency checks. */
 	private Map <String,Check> bitmap = new HashMap<String,Check>();
 	// signal names to number of bits, for consistency check
 
 	// other temporary properties
+	/** the saved x-coordinate, for restoring the position after a move. */
 	private int savex;
+	/** the saved y-coordinate, for restoring the position after a move. */
 	private int savey;
+	/** true if this state is drawn highlighted. */
 	private boolean highlight;
+	/** the most recently highlighted transition, so it can be deleted. */
 	private Transition lastHighlighted;
+	/** the output currently being constructed during a load. */
 	private Out buildOut;
+	/** the transition currently being constructed during a load. */
 	private Transition buildTrans;
 
 	/**
@@ -84,9 +108,18 @@ public class State {
 	 */
 	private static class Out {
 
+		/** the output signal name. */
 		public String signal;
+		/** the number of bits in the output signal. */
 		public int bits;
+		/** the value the signal is set to in this state. */
 		public long value;
+
+		/**
+		 * Create an empty output.
+		 */
+		private Out() {
+		}
 
 		/**
 		 * Text representation of this output.
@@ -102,17 +135,34 @@ public class State {
 	 */
 	private static class Transition {
 
+		/** the input signal tested by the condition (empty if none). */
 		public String signal = "";
+		/** the number of bits in the condition signal. */
 		public int bits = 1;
+		/** true if the condition tests for equality, false for inequality. */
 		public boolean equal = true;
+		/** the value the condition signal is compared with. */
 		public int value = 0;
+		/** true if this transition is always taken. */
 		public boolean unconditional = true;
+		/** true if this transition is taken when no other condition holds. */
 		public boolean other = false;
+		/** the state this transition goes to. */
 		public State nextState;
+		/** the name of the state this transition goes to. */
 		public String nextStateName = null; // temporarily used during load
+		/** the intermediate points the transition line is drawn through. */
 		public Vector<Point>points = new Vector<Point>();
+		/** the corner point currently highlighted, or null if none. */
 		public Point highlight = null;
+		/** true if this transition is drawn highlighted. */
 		public boolean highlighted;
+
+		/**
+		 * Create a transition with default (unconditional) settings.
+		 */
+		private Transition() {
+		}
 	} // end of Transition class
 
 	/**
@@ -1375,23 +1425,36 @@ public class State {
 	private class CreateTrans extends ElementDialog implements ActionListener {
 
 		// properties
+		/** the transition being created or edited. */
 		private Transition trans;
+		/** the state the transition is from. */
 		private State myState;
+		/** input field for the condition signal name. */
 		private JTextField signalField = new JTextField(10);
+		/** button to toggle the condition between = and !=. */
 		private JButton equalOrNot = new JButton("=");
+		/** input field for the condition value. */
 		private JTextField valueField = new JTextField(10);
+		/** keypad for entering the condition value. */
 		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
+		/** input field for the number of bits in the condition signal. */
 		private JTextField bitsField = new JTextField(10);
+		/** keypad for entering the number of bits. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
+		/** selects a conditional transition. */
 		private JRadioButton conditional = new JRadioButton("conditional");
+		/** selects an unconditional transition. */
 		private JRadioButton unconditional = new JRadioButton("unconditional");
+		/** selects a transition taken when no other condition holds. */
 		private JRadioButton otherwise = new JRadioButton("if no other condition");
+		/** true if the dialog was cancelled. */
 		private boolean cancelled;
 
 		/**
 		 * Initialize dialog.
-		 * 
+		 *
 		 * @param tr The transition to edit.
+		 * @param st The state the transition is from.
 		 */
 		public CreateTrans(Transition tr, State st) {
 
@@ -1723,15 +1786,25 @@ public class State {
 	private class EditOutputs extends ElementDialog implements ActionListener {
 
 		// properties
+		/** displays the outputs of this state. */
 		private JList<Out> outList;
+		/** the list model backing the output list. */
 		DefaultListModel<Out> model;
+		/** button to add a new output. */
 		private JButton add = new JButton("add new output");
+		/** button to delete the selected output. */
 		private JButton delete = new JButton("delete selected output");
+		/** input field for the output signal name. */
 		private JTextField signalField = new JTextField(10);
+		/** input field for the output value. */
 		private JTextField valueField = new JTextField("1");
+		/** keypad for entering the output value. */
 		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
+		/** input field for the number of bits in the output signal. */
 		private JTextField bitsField = new JTextField("1");
+		/** keypad for entering the number of bits. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
+		/** true if the dialog was cancelled. */
 		private boolean cancelled;
 
 		/**

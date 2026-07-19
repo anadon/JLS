@@ -21,6 +21,7 @@ import java.util.*;
 public final class TestGen extends SigSim {
 	
 	// properties
+	/** The name of the file to read test inputs from. */
 	private String file = null;
 	
 	/**

@@ -180,7 +180,9 @@ public final class ElementId implements Comparable<ElementId> {
 		};
 	} // end of pinForTesting method
 
+	/** The replica id that minted this identity. */
 	private final String replica;
+	/** The creation counter within the minting replica. */
 	private final long counter;
 
 	/**

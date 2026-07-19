@@ -22,6 +22,7 @@ import javax.swing.*;
 public final class JumpEnd extends LogicElement {
 	
 	// default value
+	/** Default number of bits in the named wire. */
 	private static final int defaultBits = 1;
 
 	/**
@@ -32,13 +33,18 @@ public final class JumpEnd extends LogicElement {
 			"No named wires exist. Name a wire with START first.";
 	
 	// saved properties
+	/** Number of bits in the named wire. */
 	private int bits = defaultBits;
+	/** Name of the named wire this end connects to. */
 	private String name;
-	
+
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
+	/** True if the saved file marked the output tri-state. */
 	private boolean loadTriState = false;
-	
+
+	/** Which way the element points. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
 	
 	/**
@@ -237,6 +243,7 @@ public final class JumpEnd extends LogicElement {
 	// " int tristate 1" line reflects derived output state, not a plain
 	// field, so it stays hand-printed in save() and hand-loaded in
 	// setValue below.
+	/** This element's own saved attributes, in save order (#23). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -317,6 +324,7 @@ public final class JumpEnd extends LogicElement {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order (#23). */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -456,8 +464,11 @@ public final class JumpEnd extends LogicElement {
 	private class EndCreate extends ElementDialog {
 
 		// properties
+		/** List of named wire (jump start) names to pick from. */
 		private JList starts;
+		/** Selects leftward orientation. */
 		private JRadioButton left = new JRadioButton("left");
+		/** Selects rightward orientation. */
 		private JRadioButton right = new JRadioButton("right");
 		
 		/**
@@ -549,6 +560,7 @@ public final class JumpEnd extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The value currently on the output, or null when tri-stated off. */
 	private BitSet currentValue = new BitSet();
 	
 	/**

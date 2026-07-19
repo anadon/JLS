@@ -22,11 +22,15 @@ public abstract sealed class Put
 	protected int xr;					// x-coordinate of center relative to element
 	/** The y-coordinate of the center of this put relative to the element. */
 	protected int yr;					// y-coordinate of center relative to element
+	/** The x-coordinate saved by savePosition, for restorePosition. */
 	private int savex;
+	/** The y-coordinate saved by savePosition, for restorePosition. */
 	private int savey;
 	/** The number of bits in this put (0 implies arbitrary). */
 	protected int bits;					// number of bits
+	/** True if this put is touching a WireEnd. */
 	private boolean touching = false;	// touching a WireEnd?
+	/** The WireEnd this put is attached to, or null if unattached. */
 	private WireEnd wireEnd = null;		// the WireEnd this put attached to
 	/** The copy of this put, to help cut/paste. */
 	protected Put myCopy;				// to help cut/paste

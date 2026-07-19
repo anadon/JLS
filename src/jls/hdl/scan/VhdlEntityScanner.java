@@ -562,6 +562,8 @@ public final class VhdlEntityScanner {
 	// ------------------------------------------------------------------
 
 	/**
+	 * Tests whether a token is a particular punctuation mark.
+	 *
 	 * @param t the token to test
 	 * @param punct the punctuation text
 	 * @return true if t is that punctuation

@@ -582,6 +582,8 @@ public final class HdlModel {
 		public final String helperName;
 
 		/**
+		 * Create a selected-assignment statement.
+		 *
 		 * @param comment identifies the source element
 		 * @param selector the (always net) selector value
 		 * @param values value taken per selector index (defensively copied)

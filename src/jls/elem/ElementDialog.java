@@ -76,7 +76,9 @@ public abstract class ElementDialog extends JDialog {
 	 */
 	protected static final class Violation {
 
+		/** The constraint message, stated in domain terms. */
 		private final String message;
+		/** The offending form field, or null for a structural violation. */
 		private final JComponent field;
 
 		/**

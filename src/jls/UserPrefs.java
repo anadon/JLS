@@ -25,14 +25,19 @@ import java.util.prefs.Preferences;
 public final class UserPrefs {
 
 	// preference keys
+	/** The key the color theme name is stored under. */
 	private static final String THEME_KEY = "theme";
+	/** The key the grid color override is stored under. */
 	private static final String GRID_KEY = "gridColor";
+	/** The key the background color override is stored under. */
 	private static final String BACKGROUND_KEY = "backgroundColor";
 
 	// the backing node, or null when only the in-memory map is used
+	/** The backing preferences node, or null when only the in-memory map is used. */
 	private final Preferences node;
 
 	// in-memory fallback (and write-through cache) for sandboxed runs
+	/** In-memory fallback (and write-through cache) for sandboxed runs. */
 	private final Map<String, String> memory = new HashMap<String, String>();
 
 	/**

@@ -135,7 +135,17 @@ All notable changes to JLS are documented here. The format follows
   the disarmed gate had accumulated (missing member comments, missing
   `@param`/`@return`/`@throws`, undocumented default constructors)
   are all retired; the gate is verified green and verified to fail on
-  a single reintroduced warning.
+  a single reintroduced warning. With that in hand the gate is
+  tightened from protected to private visibility (#192's endgame):
+  the remaining 684 private/package-private-scope warnings are
+  retired, so every declaration in the main tree down to private
+  members now carries well-formed Javadoc, enforced on every build.
+  A third silent-disarm vector found and closed en route: the
+  plugin's stale-data up-to-date check compares only the javadoc
+  argument list (never source contents), so with unchanged options a
+  rerun after a source edit skipped generation and reported vacuous
+  success; a per-build nonce in the -bottom text now forces a real
+  javadoc run every time.
 - Per-package coverage floors (#159): the JaCoCo ratchet now guards
   `jls`, `jls.sim`, `jls.elem`, and the new `jls.collab.op` package
   individually (instruction, line, and branch), so a regression in

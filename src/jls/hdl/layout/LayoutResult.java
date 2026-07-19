@@ -75,9 +75,12 @@ public final class LayoutResult {
 		}
 	} // end of Point class
 
+	/** The placement problem this result solves. */
 	private final LayoutGraph graph;
+	/** Placed top-left corner of each element, keyed by node id. */
 	private final Map<String, Point> positions =
 			new LinkedHashMap<String, Point>();
+	/** Waypoint chain of each routed connection, keyed by edge identity. */
 	private final Map<LayoutGraph.Edge, List<Point>> routes =
 			new IdentityHashMap<LayoutGraph.Edge, List<Point>>();
 

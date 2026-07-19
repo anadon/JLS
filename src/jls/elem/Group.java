@@ -20,10 +20,13 @@ public abstract sealed class Group extends LogicElement
 		permits Binder, Splitter {
 	
 	// default values
+	/** The bundled-side width a new binder/splitter starts with. */
 	private static final int defaultBits = 2;
 
 	// one constraint string, two surfaces: dialog and loader (issue #52)
+	/** The bundle-width rule, shared by the dialog and the loader. */
 	static final String BITS_CONSTRAINT = "Must be at least 2 bits";
+	/** The wire-index rule, shared by the dialog and the loader. */
 	static final String INDEX_CONSTRAINT =
 			"group wire indices must be non-negative";
 
@@ -871,7 +874,9 @@ public abstract sealed class Group extends LogicElement
 		// properties
 		//private int from;
 		//private int to;
+		/** The bit indices this entry covers, in stored order. */
 		private int[] values;
+		/** True once these bits have been bundled (so they can't be picked again). */
 		private boolean picked;
 		
 		/**

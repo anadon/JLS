@@ -8,6 +8,7 @@ package jls.collab.op;
  */
 public class OpRejected extends Exception {
 
+	/** Serialization version identifier. */
 	private static final long serialVersionUID = 1L;
 
 	/**

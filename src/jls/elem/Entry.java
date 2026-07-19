@@ -10,7 +10,9 @@ import java.awt.*;
 public abstract class Entry {
 	
 	// named constants
+	/** The default (and minimum) width of an entry. */
 	private final int defaultWidth = 10;
+	/** The default (and minimum) height of an entry. */
 	private final int defaultHeight = 10;
 	
 	// properties

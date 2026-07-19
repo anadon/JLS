@@ -106,10 +106,15 @@ public final class LayoutMetrics {
 	/** One axis-aligned wire segment, endpoints normalized. */
 	private static final class Segment {
 
+		/** The net this segment belongs to. */
 		final String netName;
+		/** The smaller x endpoint coordinate. */
 		final int x1;
+		/** The smaller y endpoint coordinate. */
 		final int y1;
+		/** The larger x endpoint coordinate. */
 		final int x2;
+		/** The larger y endpoint coordinate. */
 		final int y2;
 
 		/**
@@ -128,12 +133,20 @@ public final class LayoutMetrics {
 			this.y2 = Math.max(from.y, to.y);
 		}
 
-		/** @return true if the segment is horizontal */
+		/**
+		 * Tells whether this segment runs horizontally.
+		 *
+		 * @return true if the segment is horizontal
+		 */
 		boolean horizontal() {
 			return y1 == y2;
 		}
 
-		/** @return the segment's Manhattan length in pixels */
+		/**
+		 * The length of this segment.
+		 *
+		 * @return the segment's Manhattan length in pixels
+		 */
 		long length() {
 			return (long) (x2 - x1) + (y2 - y1);
 		}

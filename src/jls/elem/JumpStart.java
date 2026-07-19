@@ -22,17 +22,24 @@ import java.util.*;
 public final class JumpStart extends LogicElement implements TriProp {
 	
 	// default value
-	private static final int defaultBits = 1; 
-	
+	/** The default bit width for a new jump start. */
+	private static final int defaultBits = 1;
+
 	// saved properties
+	/** The wire name (shared with the matching jump ends). */
 	private String name;
+	/** The bit width of the wire. */
 	private int bits = defaultBits;
+	/** True if this jump start's value is watched during simulation. */
 	private boolean watched = false;
-	
+
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
+	/** A reference to this jump start, for use inside the dialog inner class. */
 	private JumpStart me;
-	
+
+	/** Which direction the element faces. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.LEFT;
 	
 	/**
@@ -199,6 +206,7 @@ public final class JumpStart extends LogicElement implements TriProp {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -298,6 +306,7 @@ public final class JumpStart extends LogicElement implements TriProp {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -483,10 +492,15 @@ public final class JumpStart extends LogicElement implements TriProp {
 	private class StartCreate extends ElementDialog {
 
 		// properties
+		/** The text field for the wire name. */
 		private JTextField nameField = new JTextField("",12);
+		/** The text field for the bit width. */
 		private JTextField bitsField = new JTextField("1",5);
+		/** The key pad for entering the bit width. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
+		/** Selects left orientation. */
 		private JRadioButton left = new JRadioButton("left");
+		/** Selects right orientation. */
 		private JRadioButton right = new JRadioButton("right");
 		
 		/**
@@ -616,7 +630,9 @@ public final class JumpStart extends LogicElement implements TriProp {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The current value of the named wire during simulation. */
 	private BitSet currentValue = new BitSet();
+	/** The jump ends with a matching name, built at simulation start. */
 	private Set<JumpEnd> jumpEnds = new HashSet<JumpEnd>();
 	
 	/**

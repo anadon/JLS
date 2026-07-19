@@ -18,9 +18,13 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd {
 	
 	// run time properties
+	/** The x-coordinate before snapping to a grid line. */
 	private int lx;					// position if not snapped to grid line
+	/** The y-coordinate before snapping to a grid line. */
 	private int ly;
+	/** The x-coordinate to return to if a move ends in a bad placement. */
 	private int savex;				// position to return to if bad placement
+	/** The y-coordinate to return to if a move ends in a bad placement. */
 	private int savey;
 	/** The element's input connection points. */
 	protected Vector<Input> inputs = new Vector<Input>();

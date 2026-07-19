@@ -83,19 +83,31 @@ import jls.sim.InteractiveSimulator;
 public class JLSStart extends JFrame implements ChangeListener {
 
 	// properties
+	/** Simulation time limit (-d flag), defaulting to JLSInfo.defaultTimeLimit. */
 	private static long timeLimit = JLSInfo.defaultTimeLimit;
+	/** Startup parameter file name (-s flag), or null if none given. */
 	private static String paramFile = null;
+	/** Test input file name (-t flag), or null if none given. */
 	private static String testFile = null;
+	/** Circuit (.jls) file named on the command line, or null if none given. */
 	private static String startFile = null;
+	/** Image export output file name (-i flag operand), or null to derive it from the circuit name. */
 	private static String imageFile = null;
+	/** VCD waveform output file name (-vcd flag), or null if none given. */
 	private static String vcdFile = null;
+	/** HDL export output file name (-export flag), or null if none given. */
 	private static String exportFile = null;
+	/** Plain-text re-save output file name (-savetext flag), or null if none given. */
 	private static String textSaveFile = null;
+	/** True if -p or -v asked for the circuit to be printed. */
 	private static boolean printCircuit = false;
+	/** True to print only the top level (-v) rather than all subcircuits (-p). */
 	private static boolean printCircuitTop;
+	/** Printer name from -p, -v or -r, or null if none given. */
 	private static String printer = null;
 	/** The interactive simulator, shared by all open circuit editors. */
 	private InteractiveSimulator interSim;
+	/** The default exception handler, saved by start() and kept aware of the current circuit. */
 	private static DefaultExceptionHandler exHandler = null;
 
 	/** The frame's content pane. */
@@ -558,7 +570,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/**
 	 * Operand arity of a command-line flag (issue #71).
 	 */
-	private enum Arity { NONE, REQUIRED, OPTIONAL }
+	private enum Arity {
+		/** The flag takes no operand. */
+		NONE,
+		/** The flag requires an operand. */
+		REQUIRED,
+		/** The flag may take an operand but need not. */
+		OPTIONAL
+	}
 
 	/**
 	 * One row of the command-line flag table: the flag name (one or
@@ -568,10 +587,15 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private static final class FlagSpec {
 
+		/** The flag name, without the leading '-'. */
 		final String flag;
+		/** Whether the flag takes no, a required, or an optional operand. */
 		final Arity arity;
+		/** The operand's name in the usage text, or null if the flag takes none. */
 		final String operandName;
+		/** The operand phrase for "requires ..." errors, or null if the flag takes none. */
 		final String operandWhat;
+		/** The usage description for this flag. */
 		final String description;
 
 		/**

@@ -60,6 +60,8 @@ public class TellUser {
 	 * Whether a dialog can and should actually be shown. In batch mode
 	 * (-b) dialogs are forbidden by the CLI contract even if a display
 	 * exists; in headless mode they would throw HeadlessException.
+	 *
+	 * @return true if a dialog may be shown.
 	 */
 	static private boolean interactive() {
 		return !JLSInfo.batch && !GraphicsEnvironment.isHeadless();
@@ -69,6 +71,10 @@ public class TellUser {
 	 * The component to parent a dialog on: the caller's component if it
 	 * gave one, else the application frame (never a bare null, which
 	 * can center the dialog on the wrong monitor).
+	 *
+	 * @param parent The caller's component, or null for the application frame.
+	 *
+	 * @return the component to parent the dialog on.
 	 */
 	static private Component parentFor(Component parent) {
 		return parent != null ? parent : JLSInfo.frame;

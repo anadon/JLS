@@ -17,6 +17,7 @@ import javax.swing.*;
 public final class AndGate extends Gate {
 	
 	// identity and shared previous-settings state (#22)
+	/** The kind descriptor and shared previous-settings state for AND gates. */
 	private static final Kind KIND =
 			new Kind("AND","AndGate",-1,10);
 	

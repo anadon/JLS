@@ -45,8 +45,11 @@ public final class SpatialIndex {
 	 */
 	private static final int CELL = 4 * JLSInfo.spacing;
 
+	/** Grid cells, keyed by packed cell coordinates, holding the elements that overlap them. */
 	private final Map<Long, List<Element>> cells = new HashMap<Long, List<Element>>();
+	/** The bounds each tracked element was indexed under. */
 	private final Map<Element, Rectangle> indexed = new HashMap<Element, Rectangle>();
+	/** True when the index is stale and must be rebuilt before answering queries. */
 	private boolean dirty = true;
 
 	/**
@@ -56,7 +59,14 @@ public final class SpatialIndex {
 	public SpatialIndex() {
 	} // end of constructor
 
-	/** Pack a cell coordinate pair into a map key. */
+	/**
+	 * Pack a cell coordinate pair into a map key.
+	 *
+	 * @param cx The cell x-coordinate.
+	 * @param cy The cell y-coordinate.
+	 *
+	 * @return a single long combining both coordinates.
+	 */
 	private static long key(int cx, int cy) {
 
 		return ((long) cx << 32) ^ (cy & 0xffffffffL);
@@ -215,6 +225,11 @@ public final class SpatialIndex {
 	 * Rectangle intersection that, unlike Rectangle.intersects, also counts
 	 * zero-area contact (shared edges, zero-width wires): put-alignment
 	 * checks depend on edge-touching elements being candidates.
+	 *
+	 * @param a The first rectangle.
+	 * @param b The second rectangle.
+	 *
+	 * @return true if the rectangles overlap or touch, false otherwise.
 	 */
 	private static boolean boundsTouch(Rectangle a, Rectangle b) {
 

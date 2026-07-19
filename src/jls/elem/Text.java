@@ -18,19 +18,29 @@ import javax.swing.*;
 public final class Text extends DisplayElement {
 
 	// named constants
+	/** Width and height of the text edit dialog, in pixels. */
 	private final int size = 500;	// width and height of dialog
 
 	// saved properties
+	/** The text to display, lines separated by newlines. */
 	private String text = "";
+	/** The font family name; empty until set from a file or from defaults. */
 	private String fontName = "";
+	/** The font point size; 0 until set from a file or from defaults. */
 	private int fontSize = 0;
+	/** True if the text is drawn in bold. */
 	private boolean isBold = false;
+	/** True if the text is drawn in italics. */
 	private boolean isItalic = false;
+	/** The color the text is drawn in. */
 	private Color color = Color.black;
 
 	// running properties
+	/** The text split into individual display lines. */
 	private Vector<String> lines = new Vector<String>();
+	/** True if the user cancelled the creation or edit dialog. */
 	private boolean cancelled = false;
+	/** True if the user changed font, size, style or color in the dialog. */
 	private boolean changed;
 
 	/**
@@ -139,6 +149,7 @@ public final class Text extends DisplayElement {
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes, in save order (#23). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("text") {
@@ -251,6 +262,7 @@ public final class Text extends DisplayElement {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order (#23). */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -382,20 +394,33 @@ public final class Text extends DisplayElement {
 	private class TextEdit extends ElementDialog implements ActionListener {
 
 		// GUI elements
+		/** Font family selector. */
 		private JComboBox<String> fonts;
+		/** Choices offered by the font size selector. */
 		private String [] fontSizes = {"8","9","10","11","12","13","14","15","16","17","18","19","20","24","28","32","36","40","48","56","64","72"};
+		/** Font size selector. */
 		private JComboBox<String> fontSz = new JComboBox<String>(fontSizes);
+		/** Button selecting bold text. */
 		private JRadioButton bold = new JRadioButton("Bold");
+		/** Button selecting italic text. */
 		private JRadioButton italic = new JRadioButton("Italic");
+		/** Button that brings up the color chooser. */
 		private JButton colorButton = new JButton("Color");
+		/** Area the user types the text into. */
 		private JTextArea textArea = new JTextArea();
 
 		// properties
+		/** The text as accepted by the dialog. */
 		private String result = "";
+		/** The currently selected font family name. */
 		private String fn = "";
+		/** The currently selected font size. */
 		private int fs = 0;
+		/** True if bold is currently selected. */
 		private boolean isB = false;
+		/** True if italic is currently selected. */
 		private boolean isI = false;
+		/** The currently chosen text color. */
 		private Color col = Color.black;
 
 		/**

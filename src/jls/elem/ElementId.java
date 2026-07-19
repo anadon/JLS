@@ -95,11 +95,11 @@ public final class ElementId implements Comparable<ElementId> {
 	 *
 	 * @return the resolved replica id.
 	 *
-	 * @see jls.elem.ElementIdReplicaTest#overrideWinsOverEverything()
-	 * @see jls.elem.ElementIdReplicaTest#environmentBeatsPersistedConfig()
-	 * @see jls.elem.ElementIdReplicaTest#persistedReplicaIsReadBack()
-	 * @see jls.elem.ElementIdReplicaTest#freshDrawIsPersistedAndReused()
-	 * @see jls.elem.ElementIdReplicaTest#invalidCandidatesAreSkipped()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#overrideWinsOverEverything()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#environmentBeatsPersistedConfig()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#persistedReplicaIsReadBack()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#freshDrawIsPersistedAndReused()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#invalidCandidatesAreSkipped()
 	 */
 	static String resolveReplica(String override, String env,
 			java.nio.file.Path persisted) {
@@ -164,8 +164,8 @@ public final class ElementId implements Comparable<ElementId> {
 	 *
 	 * @return a handle that restores the previous replica and counter.
 	 *
-	 * @see jls.elem.ElementIdReplicaTest#pinnedConstructionMintsReproducibleIds()
-	 * @see jls.elem.ElementIdReplicaTest#pinnedFromScratchSavesAreByteIdentical()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#pinnedConstructionMintsReproducibleIds()
+	 * @jls.testedby jls.elem.ElementIdReplicaTest#pinnedFromScratchSavesAreByteIdentical()
 	 */
 	static AutoCloseable pinForTesting(String replica, long counter) {
 
@@ -180,7 +180,9 @@ public final class ElementId implements Comparable<ElementId> {
 		};
 	} // end of pinForTesting method
 
+	/** The replica id that minted this identity. */
 	private final String replica;
+	/** The creation counter within the minting replica. */
 	private final long counter;
 
 	/**
@@ -203,7 +205,7 @@ public final class ElementId implements Comparable<ElementId> {
 	 *
 	 * @return the new identity.
 	 *
-	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @jls.testedby jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
 	 */
 	public static ElementId mintFresh() {
 
@@ -236,9 +238,9 @@ public final class ElementId implements Comparable<ElementId> {
 	 *             stable id (the loader reports this as an element error,
 	 *             issue #52 taxonomy).
 	 *
-	 * @see jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
-	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
-	 * @see jls.StableElementIdTest#parseIsTheInverseOfToString()
+	 * @jls.testedby jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
+	 * @jls.testedby jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @jls.testedby jls.StableElementIdTest#parseIsTheInverseOfToString()
 	 */
 	public static ElementId parse(String text) {
 
@@ -269,8 +271,8 @@ public final class ElementId implements Comparable<ElementId> {
 	/**
 	 * The canonical order (issue #166): by replica id, then by counter.
 	 *
-	 * @see jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
-	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @jls.testedby jls.DeterministicSaveTest#savedBlocksAreSortedByStableId()
+	 * @jls.testedby jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
 	 */
 	@Override
 	public int compareTo(ElementId other) {
@@ -315,9 +317,9 @@ public final class ElementId implements Comparable<ElementId> {
 	/**
 	 * The string form persisted in saved files: {@code replica:counter}.
 	 *
-	 * @see jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
-	 * @see jls.StableElementIdTest#parseIsTheInverseOfToString()
-	 * @see jls.StableElementIdTest#sidsByLogicalElement()
+	 * @jls.testedby jls.StableElementIdTest#freshMintsAreDistinctAndOrdered()
+	 * @jls.testedby jls.StableElementIdTest#parseIsTheInverseOfToString()
+	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
 	 */
 	@Override
 	public String toString() {

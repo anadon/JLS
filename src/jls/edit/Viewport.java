@@ -47,7 +47,7 @@ import java.awt.geom.Point2D;
  * object; device-scale (HiDPI) factors compose here as well when that
  * work lands.
  *
- * @see jls.edit.ViewportTest
+ * @jls.testedby jls.edit.ViewportTest
  */
 final class Viewport {
 

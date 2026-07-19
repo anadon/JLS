@@ -16,6 +16,7 @@ import javax.swing.*;
 public final class OrGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
+	/** The kind descriptor shared by all OR gates (#22). */
 	private static final Kind KIND =
 			new Kind("OR","OrGate",-1,10);
 	

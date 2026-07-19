@@ -14,6 +14,7 @@ import java.awt.Graphics;
 public abstract class ValEntry extends Entry {
 
 	// properties
+	/** The value displayed in this cell: 0 or 1, or 2 for don't-care. */
 	int value = 0;  // 0 or 1, 2 = don't care
 
 	/**

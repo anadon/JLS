@@ -448,23 +448,24 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Documentation gate: every public and protected declaration
-             carries well-formed Javadoc (the #186 documentation pass
-             made this true tree-wide; this gate keeps the API half
-             true). doclint runs all groups except `reference`: the
-             generated @see tags point at the test tree, which is
-             deliberately not on the javadoc sourcepath, so reference
-             resolution cannot succeed there - those tags are
-             regenerated attribution, not an enforced invariant. Any
-             other warning fails the build.
-             Scope note, verified empirically: the gate runs at the
-             default protected visibility because under -private the
-             standard doclet itself (independent of doclint, so the
-             -reference exclusion cannot reach it) warns on every
-             test-tree @see target; private-level completeness stays a
-             convention of the periodic documentation pass.
-             -Xmaxwarns lifts javadoc's default 100-warning cap so a
-             regression cannot hide behind truncated output. -->
+        <!-- Documentation gate: every declaration down to private
+             members carries well-formed Javadoc; any javadoc warning
+             fails the build. Two mechanisms make that binding (#192):
+             - javadoc's own -Werror turns any warning into a nonzero
+               exit, which fails the goal on the exit code. The plugin's
+               failOnWarnings alone is NOT sufficient: it detects
+               warnings by regex-matching the last output line against
+               `\d+ warnings?`, and javadoc 25 digit-groups the summary
+               ("1,422 warnings"), so any count >= 1,000 slipped through
+               unseen. failOnWarnings stays as a second net for counts
+               the regex does still catch.
+             - doclint runs ALL groups including `reference`: test
+               attribution uses the custom @jls.testedby block tag
+               (registered below), whose content is plain text, so it
+               needs no reference resolution against the test tree and
+               real broken @see/@link references are caught again.
+             -Xmaxwarns lifts javadoc's default 100-warning cap so the
+             full regression list is always visible in the log. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.12.0</version>
@@ -478,13 +479,34 @@
           </execution>
         </executions>
         <configuration>
-          <doclint>all,-reference</doclint>
+          <doclint>all</doclint>
+          <show>private</show>
           <failOnWarnings>true</failOnWarnings>
           <quiet>true</quiet>
+          <tags>
+            <tag>
+              <name>jls.testedby</name>
+              <placement>a</placement>
+              <head>Tested by:</head>
+            </tag>
+          </tags>
           <additionalOptions>
+            <additionalOption>-Werror</additionalOption>
             <additionalOption>-Xmaxwarns</additionalOption>
             <additionalOption>10000</additionalOption>
           </additionalOptions>
+          <!-- The build timestamp in -bottom is a per-build nonce that
+               defeats the plugin's stale-data up-to-date check. That
+               check compares only the javadoc argument list (never
+               source contents or mtimes), so with unchanged options a
+               rerun after a source edit skips generation entirely and
+               reports vacuous success - the same class of silent
+               disarm as the failOnWarnings regex. A varying argument
+               forces a real javadoc run every time. The bottom text
+               only appears in the throwaway gate output under
+               target/reports/apidocs; no release artifact contains
+               it. -->
+          <bottom>Copyright &#169; 2026. All rights reserved. Doclint gate run ${maven.build.timestamp}.</bottom>
         </configuration>
       </plugin>
       <plugin>

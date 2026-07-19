@@ -22,15 +22,21 @@ import java.util.*;
 public final class Adder extends LogicElement {
 	
 	// default values
+	/** The default number of bits. */
 	private static final int defaultBits = 1;
-	private static final int defaultPropDelay = 30; 
-	
+	/** The default propagation delay per bit. */
+	private static final int defaultPropDelay = 30;
+
 	// saved properties
+	/** The number of bits in each addend and the sum. */
 	private int bits = defaultBits;
+	/** The propagation delay, in simulated time units. */
 	private int propDelay = defaultPropDelay;
+	/** Which way the adder faces. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
+
 	// running properties
+	/** Whether the user cancelled the creation dialog. */
 	private boolean cancelled;
 
 	/**
@@ -105,6 +111,8 @@ public final class Adder extends LogicElement {
 	/**
 	 * The transform from canonical geometry (RIGHT) to the current
 	 * orientation.
+	 *
+	 * @return the transform chain for the current orientation.
 	 */
 	private GridTransform.Chain placement() {
 
@@ -263,6 +271,7 @@ public final class Adder extends LogicElement {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes: bits, delay, orient (#23). */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -325,6 +334,7 @@ public final class Adder extends LogicElement {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order (#23). */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -487,11 +497,17 @@ public final class Adder extends LogicElement {
 	private class AdderCreate extends ElementDialog {
 		
 		// properties
+		/** Field to enter the number of bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
+		/** Keypad for the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Button selecting the left orientation. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Button selecting the right orientation (the default). */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Button selecting the up orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Button selecting the down orientation. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**
@@ -599,6 +615,7 @@ public final class Adder extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The sum-and-carry value currently propagating through the adder. */
 	private BitSet toBeValue;
 	
 	/**

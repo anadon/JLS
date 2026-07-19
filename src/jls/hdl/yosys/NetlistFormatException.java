@@ -16,6 +16,7 @@ package jls.hdl.yosys;
  */
 public class NetlistFormatException extends Exception {
 
+	/** Serialization version. */
 	private static final long serialVersionUID = 1L;
 
 	/**

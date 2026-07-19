@@ -118,7 +118,7 @@ final class ToolkitPolicy {
 	 *
 	 * @return the decision.
 	 *
-	 * @see jls.ToolkitPolicyTest#decide()
+	 * @jls.testedby jls.ToolkitPolicyTest#decide()
 	 */
 	static Decision decide(String osName, String waylandDisplay,
 			String display, String override, boolean headlessRun,
@@ -187,8 +187,8 @@ final class ToolkitPolicy {
 	 *
 	 * @return true if the WLToolkit class exists in this runtime.
 	 *
-	 * @see jls.ToolkitPolicyTest#wlToolkitProbeNeverInitializesAwtAndAnswersFalseOnStockJdk()
-	 * @see jls.WaylandStartupCliTest#assumeStockJdk()
+	 * @jls.testedby jls.ToolkitPolicyTest#wlToolkitProbeNeverInitializesAwtAndAnswersFalseOnStockJdk()
+	 * @jls.testedby jls.WaylandStartupCliTest#assumeStockJdk()
 	 */
 	static boolean runtimeHasWlToolkit() {
 

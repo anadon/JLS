@@ -21,12 +21,17 @@ public abstract sealed class Pin extends LogicElement
 		permits InputPin, OutputPin {
 	
 	// saved properties
+	/** The name of this pin. */
 	protected String name;
+	/** The number of bits in this pin. */
 	protected int bits;
+	/** Whether this pin is watched (shown in the signal trace). */
 	protected boolean watched = false;
+	/** The direction this pin faces. */
 	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
+
 	// editting properties
+	/** Whether the setup dialog was cancelled. */
 	protected boolean cancelled;
 	
 	/**
@@ -54,12 +59,12 @@ public abstract sealed class Pin extends LogicElement
 	 * Get the name of this pin.
 	 * 
 	 * @return the name.
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#pinValue()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#pinValue()
-	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#pinValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
 	 */
 	@Override
 	public String getName() {
@@ -144,6 +149,7 @@ public abstract sealed class Pin extends LogicElement
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by both pins.
+	/** The saved attributes shared by both pin types, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("name") {
@@ -195,6 +201,7 @@ public abstract sealed class Pin extends LogicElement
 		}
 	);
 
+	/** Base attributes plus the shared pin attributes, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -232,6 +239,8 @@ public abstract sealed class Pin extends LogicElement
 
 	/**
 	 * The pin kind for user-facing messages ("Input" or "Output").
+	 *
+	 * @return the pin kind, "Input" or "Output".
 	 */
 	protected abstract String pinKind();
 
@@ -453,19 +462,20 @@ public abstract sealed class Pin extends LogicElement
 	// Simulation state shared by both pins
 	// -----------------------------------------------------------------
 
+	/** The current simulated value of this pin. */
 	protected BitSet currentValue = new BitSet();
 
 	/**
 	 * Get the current value.
 	 *
 	 * @return the current value.
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#pinValue()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#pinValue()
-	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
-	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#pinValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	@Override
 	public BitSet getCurrentValue() {
@@ -493,12 +503,19 @@ public abstract sealed class Pin extends LogicElement
 	private class PinCreate extends ElementDialog {
 		
 		// properties
+		/** The text field for the pin name. */
 		private JTextField nameField = new JTextField("",12);
+		/** The text field for the bit width. */
 		private JTextField bitsField = new JTextField("1",5);
+		/** The key pad for entering the bit width. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
+		/** Selects left orientation. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Selects right orientation (the default). */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Selects up orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Selects down orientation. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**

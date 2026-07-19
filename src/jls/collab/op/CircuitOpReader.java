@@ -26,10 +26,16 @@ public final class CircuitOpReader {
 
 	/** Hostile-input caps (issue #38 discipline). */
 	private static final int MAX_IDS = 10_000;
+	/** Longest escaped string value accepted for ordinary fields, in characters. */
 	private static final int MAX_STRING = 10_000;
+	/** Most element blocks accepted in one op block. */
 	private static final int MAX_BLOCKS = 1_000;
+	/** Most lines accepted in one op block before its END line. */
 	private static final int MAX_LINES = MAX_IDS + 16;
 
+	/**
+	 * Prevent instantiation: this class is all static methods.
+	 */
 	private CircuitOpReader() {
 
 	} // end of constructor

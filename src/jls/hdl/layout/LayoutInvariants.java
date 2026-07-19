@@ -18,6 +18,9 @@ import jls.JLSInfo;
  */
 public final class LayoutInvariants {
 
+	/**
+	 * Not instantiable; this class offers static checks only.
+	 */
 	private LayoutInvariants() {
 		// static checks only
 	}
@@ -150,6 +153,8 @@ public final class LayoutInvariants {
 	}
 
 	/**
+	 * Tests whether a pixel coordinate lies on the snap grid.
+	 *
 	 * @param coordinate a pixel coordinate
 	 *
 	 * @return true if the coordinate lies on the snap grid

@@ -53,22 +53,33 @@ import jls.elem.WireNet;
 public class Circuit implements Printable {
 
 	// properties
+	/** The circuit name (becomes the file name after appending .jls). */
 	private String name = null; // will be the file name after appending .jls
+	/** The directory the circuit's file is in. */
 	private String dir = ""; // the directory the file is in
+	/** All elements (logic elements, wires and wire ends) in this circuit. */
 	private Set<Element> elements = new HashSet<Element>();
+	/** The subcircuit element referring to this circuit, or null if none. */
 	private SubCircuit subElement = null; // the element referring to this
 											// circuit
+	/** This circuit's editor, or null if it has none. */
 	private Editor editor = null; // this circuit's editor (null if none)
+	/** All element names in use, so element names can be kept unique. */
 	private Set<String> namesUsed = new HashSet<String>(); // so element names
 															// can be unique
+	/** The jump starts in this circuit, keyed and sorted by name. */
 	private SortedMap<String, JumpStart> starts = new TreeMap<String, JumpStart>(); // jumpstarts
+	/** True when the circuit has been modified since the last save. */
 	private boolean changed = false;
+	/** The on-disk container format saves of this circuit use (#129). */
 	private FileAbstractor.Container saveContainer =
 			FileAbstractor.Container.XZ; // on-disk container saves use (#129)
 
+	/** Grid index over element bounds (#3, #17). */
 	private final SpatialIndex index = new SpatialIndex(); // grid index over
 															// element bounds
 															// (#3, #17)
+	/** The elements currently drawn highlighted. */
 	private final Set<Element> highlighted = new HashSet<Element>(); // elements
 																		// currently
 																		// drawn
@@ -76,13 +87,17 @@ public class Circuit implements Printable {
 
 	// insertion (file) order, so wire-net construction in finishLoad -
 	// and with it multi-driver resolution - is deterministic (#98, S1)
+	/** Elements read from the file so far, in file order. */
 	private Set<Element> loadedElements = new LinkedHashSet<Element>(); // for loading
+	/** True once a draw-time finishLoad failure has been reported (#58). */
 	private boolean deferredFinishReported = false; // draw-time finishLoad failure (#58)
 																	// from file
+	/** Map from file-local element id to element, used while loading from a file. */
 	private Map<Integer, Element> elementMap = new HashMap<Integer, Element>(); // for
 																				// loading
 																				// from
 																				// file
+	/** The current line number, to report errors when reading a circuit file. */
 	private static int lineNumber; // to report errors when reading circuit file
 
 	/**
@@ -104,87 +119,87 @@ public class Circuit implements Printable {
 	 * @param name
 	 *            The name of this circuit.
 	 *
-	 * @see jls.AllElementsRoundTripTest#load()
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
-	 * @see jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
-	 * @see jls.CircuitChangedFlagTest#newCircuitStartsUnchanged()
-	 * @see jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
-	 * @see jls.CircuitLoadErrorTest#rejectAndGetError()
-	 * @see jls.CircuitLoadErrorTest#unknownElementTypeIsRejected()
-	 * @see jls.CircuitRoundTripTest#load()
-	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
-	 * @see jls.ContainerMutationFuzzTest#loadMutant()
-	 * @see jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
-	 * @see jls.DeterministicSaveTest#load()
-	 * @see jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
-	 * @see jls.ElementDrawSmokeTest#load()
-	 * @see jls.ElementSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
-	 * @see jls.FileAbstractorTest#aFreshCircuitDefaultsToTheXZContainer()
-	 * @see jls.FileFormatSpecTest#load()
-	 * @see jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
-	 * @see jls.FormatHeaderTest#failToLoad()
-	 * @see jls.FormatHeaderTest#load()
-	 * @see jls.GenerativeRoundTripFuzzTest#loadClassified()
-	 * @see jls.LoadErrorReportingTest#loadErrorIsResetBetweenLoads()
-	 * @see jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
-	 * @see jls.LoadErrorReportingTest#reject()
-	 * @see jls.LoadErrorReportingTest#unknownElementTypeReportsItsOwnError()
-	 * @see jls.PrintPathSmokeTest#load()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#load()
-	 * @see jls.SimulationSemanticsRegressionTest#load()
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
-	 * @see jls.SizeMeasurement#measure()
-	 * @see jls.SpatialIndexTest#loadWired()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.StableElementIdTest#duplicateFileIdsAreRejected()
-	 * @see jls.StableElementIdTest#load()
-	 * @see jls.StableElementIdTest#malformedIdsAreClassifiedNotThrown()
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.SvgExportTest#load()
-	 * @see jls.UntrustedFileHardeningTest#rleIsBoundedByDeclaredCapacity()
-	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
-	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
-	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
-	 * @see jls.UtilFunctionsTest#source()
-	 * @see jls.VcdExportGoldenTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
-	 * @see jls.edit.CtrlWGestureTest#oneConstant()
-	 * @see jls.edit.DragCandidateBoundTest#grid()
-	 * @see jls.edit.SaveAsNameCheckTest#distinctSiblingWithSameNameIsStillACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
-	 * @see jls.edit.SaveAsNameCheckTest#savingUnderAnotherEditorsNameIsACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#savingUnderOwnCurrentNameIsNotACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#unusedNameIsNotACollision()
-	 * @see jls.edit.TriStateBundleConnectTest#load()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
-	 * @see jls.edit.WireSweepSymmetryTest#withConstant()
-	 * @see jls.elem.AttributePersistenceTest#load()
-	 * @see jls.elem.DialogValidationTest#loadExpectingFailure()
-	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
-	 * @see jls.elem.GroupOrientationTest#load()
-	 * @see jls.elem.HollowVsFilledCollisionTest#build()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
-	 * @see jls.elem.MemoryInitEncodingTest#load()
-	 * @see jls.elem.MuxSymbolTest#render()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.elem.ParameterValidationTest#loadExpectingFailure()
-	 * @see jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
-	 * @see jls.elem.ParameterValidationTest#validValuesStillLoad()
-	 * @see jls.hdl.HdlCircuitBuilder#load()
-	 * @see jls.ui.DialogConstructionSmokeTest#constructAndCancel()
-	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
-	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
-	 * @see jls.ui.EditorGestureTest#oneGate()
-	 * @see jls.ui.UiHarnessPilotTest#load()
+	 * @jls.testedby jls.AllElementsRoundTripTest#load()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @jls.testedby jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#newCircuitStartsUnchanged()
+	 * @jls.testedby jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
+	 * @jls.testedby jls.CircuitLoadErrorTest#rejectAndGetError()
+	 * @jls.testedby jls.CircuitLoadErrorTest#unknownElementTypeIsRejected()
+	 * @jls.testedby jls.CircuitRoundTripTest#load()
+	 * @jls.testedby jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#loadMutant()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
+	 * @jls.testedby jls.DeterministicSaveTest#load()
+	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
+	 * @jls.testedby jls.ElementDrawSmokeTest#load()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.FileAbstractorTest#aFreshCircuitDefaultsToTheXZContainer()
+	 * @jls.testedby jls.FileFormatSpecTest#load()
+	 * @jls.testedby jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
+	 * @jls.testedby jls.FormatHeaderTest#failToLoad()
+	 * @jls.testedby jls.FormatHeaderTest#load()
+	 * @jls.testedby jls.GenerativeRoundTripFuzzTest#loadClassified()
+	 * @jls.testedby jls.LoadErrorReportingTest#loadErrorIsResetBetweenLoads()
+	 * @jls.testedby jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
+	 * @jls.testedby jls.LoadErrorReportingTest#reject()
+	 * @jls.testedby jls.LoadErrorReportingTest#unknownElementTypeReportsItsOwnError()
+	 * @jls.testedby jls.PrintPathSmokeTest#load()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#load()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#load()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SizeMeasurement#measure()
+	 * @jls.testedby jls.SpatialIndexTest#loadWired()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.StableElementIdTest#duplicateFileIdsAreRejected()
+	 * @jls.testedby jls.StableElementIdTest#load()
+	 * @jls.testedby jls.StableElementIdTest#malformedIdsAreClassifiedNotThrown()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.SvgExportTest#load()
+	 * @jls.testedby jls.UntrustedFileHardeningTest#rleIsBoundedByDeclaredCapacity()
+	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @jls.testedby jls.UtilFunctionsTest#source()
+	 * @jls.testedby jls.VcdExportGoldenTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#oneConstant()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#grid()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#distinctSiblingWithSameNameIsStillACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#savingUnderAnotherEditorsNameIsACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#savingUnderOwnCurrentNameIsNotACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#unusedNameIsNotACollision()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#load()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#withConstant()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#load()
+	 * @jls.testedby jls.elem.DialogValidationTest#loadExpectingFailure()
+	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.elem.GroupOrientationTest#load()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#build()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#load()
+	 * @jls.testedby jls.elem.MuxSymbolTest#render()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.elem.ParameterValidationTest#loadExpectingFailure()
+	 * @jls.testedby jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
+	 * @jls.testedby jls.elem.ParameterValidationTest#validValuesStillLoad()
+	 * @jls.testedby jls.hdl.HdlCircuitBuilder#load()
+	 * @jls.testedby jls.ui.DialogConstructionSmokeTest#constructAndCancel()
+	 * @jls.testedby jls.ui.EditorGestureSupport#EditorGestureSupport()
+	 * @jls.testedby jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
+	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
 	public Circuit(String name) {
 
@@ -217,9 +232,9 @@ public class Circuit implements Printable {
 	 * 
 	 * @return the name of this circuit.
 	 *
-	 * @see jls.FormatHeaderTest#headerlessLegacyTextStillLoads()
-	 * @see jls.ui.CircuitAssert#assertElementPresent()
-	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
+	 * @jls.testedby jls.FormatHeaderTest#headerlessLegacyTextStillLoads()
+	 * @jls.testedby jls.ui.CircuitAssert#assertElementPresent()
+	 * @jls.testedby jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public String getName() {
 
@@ -243,7 +258,7 @@ public class Circuit implements Printable {
 	 *
 	 * @return the save container.
 	 *
-	 * @see jls.FileAbstractorTest#aFreshCircuitDefaultsToTheXZContainer()
+	 * @jls.testedby jls.FileAbstractorTest#aFreshCircuitDefaultsToTheXZContainer()
 	 */
 	public FileAbstractor.Container getSaveContainer() {
 
@@ -269,10 +284,10 @@ public class Circuit implements Printable {
 	 * 
 	 * @return true if the circuit has changed, false if not.
 	 *
-	 * @see jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
-	 * @see jls.CircuitChangedFlagTest#newCircuitStartsUnchanged()
-	 * @see jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
-	 * @see jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#newCircuitStartsUnchanged()
+	 * @jls.testedby jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
 	 */
 	public boolean hasChanged() {
 
@@ -283,9 +298,9 @@ public class Circuit implements Printable {
 	 * Mark this circuit as changed. If it is a subcircuit, mark the circuit it
 	 * is in as changed too. If a simulator is running, stop it.
 	 *
-	 * @see jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
-	 * @see jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
-	 * @see jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#serializationDoesNotClearChangedFlag()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
 	 */
 	public void markChanged() {
 
@@ -304,7 +319,7 @@ public class Circuit implements Printable {
 	 * actually been written to disk, so a failed write keeps the
 	 * unsaved-changes protection alive.
 	 *
-	 * @see jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
+	 * @jls.testedby jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
 	 */
 	public void clearChanged() {
 
@@ -329,12 +344,12 @@ public class Circuit implements Printable {
 	 * @param el
 	 *            The element to add.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wire()
-	 * @see jls.elem.HollowVsFilledCollisionTest#build()
-	 * @see jls.elem.HollowVsFilledCollisionTest#corner()
-	 * @see jls.elem.HollowVsFilledCollisionTest#edge()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#build()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#corner()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public void addElement(Element el) {
 
@@ -362,67 +377,69 @@ public class Circuit implements Printable {
 	 * iterates; mutation goes through addElement/remove so the circuit
 	 * controls its own membership (and future indexes stay coherent).
 	 *
-	 * @see jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.CircuitRoundTripTest#assertLoadsViaSniffer()
-	 * @see jls.CircuitRoundTripTest#saveLoadIsAFixedPoint()
-	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
-	 * @see jls.DeterministicSaveTest#stateHashIsContentDetermined()
-	 * @see jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
-	 * @see jls.ElementDrawSmokeTest#theFixtureCoversEveryDrawableElementType()
-	 * @see jls.ElementSimulationGoldenTest#pinValue()
-	 * @see jls.FormatHeaderTest#headeredTextLoads()
-	 * @see jls.FormatHeaderTest#headerlessLegacyTextStillLoads()
-	 * @see jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
-	 * @see jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#forkAuthoredCircuitLoadsWiresAndSimulatesEquivalently()
-	 * @see jls.ShiftRegisterTest#pinValue()
-	 * @see jls.SimulationSemanticsRegressionTest#find()
-	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
-	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
-	 * @see jls.SpatialIndexTest#bruteForceNear()
-	 * @see jls.SpatialIndexTest#everyContainingElementIsACandidate()
-	 * @see jls.SpatialIndexTest#everyInsideElementIsACandidate()
-	 * @see jls.SpatialIndexTest#queriesMatchBruteForceOnWiredCircuit()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
-	 * @see jls.StableElementIdTest#copyMintsAFreshId()
-	 * @see jls.StableElementIdTest#idsAreUniqueWithinACircuit()
-	 * @see jls.StableElementIdTest#mintedIdsSkipIdsTheFileAlreadyUses()
-	 * @see jls.StableElementIdTest#sidsByLogicalElement()
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
-	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
-	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
-	 * @see jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
-	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
-	 * @see jls.edit.CtrlWGestureTest#hoverSelect()
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
-	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
-	 * @see jls.edit.DragCandidateBoundTest#candidateSetPerNetEndIsBoundedIndependentOfCircuitSize()
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
-	 * @see jls.edit.DragCandidateBoundTest#putLocations()
-	 * @see jls.edit.TriStateBundleConnectTest#elementAt()
-	 * @see jls.edit.WireSweepSymmetryTest#constantIn()
-	 * @see jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
-	 * @see jls.elem.AttributePersistenceTest#defaultsAreOmittedExactlyAsBefore()
-	 * @see jls.elem.AttributePersistenceTest#legacyLongValueStillLoads()
-	 * @see jls.elem.AttributePersistenceTest#savedBytesMatchTheHandwrittenFormat()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
-	 * @see jls.elem.GroupOrientationTest#group()
-	 * @see jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
-	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
-	 * @see jls.elem.MuxSymbolTest#render()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.ui.CircuitAssert#assertElementPresent()
-	 * @see jls.ui.CircuitAssert#reaches()
-	 * @see jls.ui.EditorGestureTest#rightClickDeleteRemovesTheElement()
-	 * @see jls.ui.EditorGestureTest#undoRestoresADeletedElementAndRedoRemovesItAgain()
+	 * @return an unmodifiable view of the circuit's element set.
+	 *
+	 * @jls.testedby jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.CircuitRoundTripTest#assertLoadsViaSniffer()
+	 * @jls.testedby jls.CircuitRoundTripTest#saveLoadIsAFixedPoint()
+	 * @jls.testedby jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @jls.testedby jls.DeterministicSaveTest#stateHashIsContentDetermined()
+	 * @jls.testedby jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
+	 * @jls.testedby jls.ElementDrawSmokeTest#theFixtureCoversEveryDrawableElementType()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+	 * @jls.testedby jls.FormatHeaderTest#headeredTextLoads()
+	 * @jls.testedby jls.FormatHeaderTest#headerlessLegacyTextStillLoads()
+	 * @jls.testedby jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
+	 * @jls.testedby jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#forkAuthoredCircuitLoadsWiresAndSimulatesEquivalently()
+	 * @jls.testedby jls.ShiftRegisterTest#pinValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#find()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @jls.testedby jls.SpatialIndexTest#bruteForceNear()
+	 * @jls.testedby jls.SpatialIndexTest#everyContainingElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#queriesMatchBruteForceOnWiredCircuit()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @jls.testedby jls.StableElementIdTest#copyMintsAFreshId()
+	 * @jls.testedby jls.StableElementIdTest#idsAreUniqueWithinACircuit()
+	 * @jls.testedby jls.StableElementIdTest#mintedIdsSkipIdsTheFileAlreadyUses()
+	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#hoverSelect()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#candidateSetPerNetEndIsBoundedIndependentOfCircuitSize()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#putLocations()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#elementAt()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#constantIn()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#defaultsAreOmittedExactlyAsBefore()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#legacyLongValueStillLoads()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#savedBytesMatchTheHandwrittenFormat()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.elem.GroupOrientationTest#group()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+	 * @jls.testedby jls.elem.MuxSymbolTest#render()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.ui.CircuitAssert#assertElementPresent()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.ui.EditorGestureTest#rightClickDeleteRemovesTheElement()
+	 * @jls.testedby jls.ui.EditorGestureTest#undoRestoresADeletedElementAndRedoRemovesItAgain()
 	 */
 	public Set<Element> getElements() {
 
@@ -440,9 +457,9 @@ public class Circuit implements Printable {
 	 *
 	 * @return a fresh list of every element, sorted by stable id.
 	 *
-	 * @see jls.PrintPageOrderTest#bookedPagesFollowStableIdOrder()
-	 * @see jls.SimulationSeedOrderTest#stableOrderIsSortedByStableId()
-	 * @see jls.SimulationSeedOrderTest#initSimIsSeededInStableIdOrder()
+	 * @jls.testedby jls.PrintPageOrderTest#bookedPagesFollowStableIdOrder()
+	 * @jls.testedby jls.SimulationSeedOrderTest#stableOrderIsSortedByStableId()
+	 * @jls.testedby jls.SimulationSeedOrderTest#initSimIsSeededInStableIdOrder()
 	 */
 	public java.util.List<Element> getElementsInStableOrder() {
 
@@ -457,7 +474,7 @@ public class Circuit implements Printable {
 	 * paths don't cover (rotate, flip, size change, aborted move). The next
 	 * spatial query rebuilds it in one pass.
 	 *
-	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @jls.testedby jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
 	 */
 	public void invalidateIndex() {
 
@@ -472,8 +489,8 @@ public class Circuit implements Printable {
 	 *
 	 * @param moved The elements the editor just moved.
 	 *
-	 * @see jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
-	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @jls.testedby jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
+	 * @jls.testedby jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
 	 */
 	public void reindexAfterMove(Set<Element> moved) {
 
@@ -497,6 +514,8 @@ public class Circuit implements Printable {
 	/**
 	 * Refresh one moved element in the index, along with the wires whose
 	 * bounds follow it if it is a wire end.
+	 *
+	 * @param el The element that moved.
 	 */
 	private void reindexMoved(Element el) {
 
@@ -521,12 +540,12 @@ public class Circuit implements Printable {
 	 *
 	 * @return the candidate elements.
 	 *
-	 * @see jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
-	 * @see jls.SpatialIndexTest#assertQueryParity()
-	 * @see jls.SpatialIndexTest#everyInsideElementIsACandidate()
-	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
-	 * @see jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
-	 * @see jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
+	 * @jls.testedby jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
+	 * @jls.testedby jls.SpatialIndexTest#assertQueryParity()
+	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
 	 */
 	public Set<Element> elementsNear(Rectangle rect) {
 
@@ -546,10 +565,10 @@ public class Circuit implements Printable {
 	 *
 	 * @return the candidate elements.
 	 *
-	 * @see jls.SpatialIndexTest#everyContainingElementIsACandidate()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
-	 * @see jls.edit.DragCandidateBoundTest#worstCandidateCount()
+	 * @jls.testedby jls.SpatialIndexTest#everyContainingElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#worstCandidateCount()
 	 */
 	public Set<Element> elementsAt(int x, int y) {
 
@@ -579,7 +598,7 @@ public class Circuit implements Printable {
 	 *
 	 * @return the highlighted elements at this moment.
 	 *
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	public Set<Element> getHighlighted() {
 
@@ -594,66 +613,66 @@ public class Circuit implements Printable {
 	 * 
 	 * @return false if there were problems, true if load was successful.
 	 *
-	 * @see jls.AllElementsRoundTripTest#load()
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
-	 * @see jls.CircuitLoadErrorTest#rejectAndGetError()
-	 * @see jls.CircuitLoadErrorTest#unknownElementTypeIsRejected()
-	 * @see jls.CircuitRoundTripTest#load()
-	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
-	 * @see jls.ContainerMutationFuzzTest#loadMutant()
-	 * @see jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
-	 * @see jls.DeterministicSaveTest#load()
-	 * @see jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
-	 * @see jls.ElementDrawSmokeTest#load()
-	 * @see jls.ElementSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
-	 * @see jls.FileFormatSpecTest#load()
-	 * @see jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
-	 * @see jls.FormatHeaderTest#failToLoad()
-	 * @see jls.FormatHeaderTest#load()
-	 * @see jls.GenerativeRoundTripFuzzTest#loadClassified()
-	 * @see jls.LoadErrorReportingTest#loadErrorIsResetBetweenLoads()
-	 * @see jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
-	 * @see jls.LoadErrorReportingTest#reject()
-	 * @see jls.LoadErrorReportingTest#unknownElementTypeReportsItsOwnError()
-	 * @see jls.PrintPathSmokeTest#load()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#load()
-	 * @see jls.SimulationSemanticsRegressionTest#load()
-	 * @see jls.SizeMeasurement#measure()
-	 * @see jls.SpatialIndexTest#loadWired()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.StableElementIdTest#duplicateFileIdsAreRejected()
-	 * @see jls.StableElementIdTest#load()
-	 * @see jls.StableElementIdTest#malformedIdsAreClassifiedNotThrown()
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.SvgExportTest#load()
-	 * @see jls.UntrustedFileHardeningTest#rleIsBoundedByDeclaredCapacity()
-	 * @see jls.UtilFunctionsTest#source()
-	 * @see jls.VcdExportGoldenTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
-	 * @see jls.edit.CtrlWGestureTest#oneConstant()
-	 * @see jls.edit.DragCandidateBoundTest#grid()
-	 * @see jls.edit.TriStateBundleConnectTest#load()
-	 * @see jls.edit.WireSweepSymmetryTest#withConstant()
-	 * @see jls.elem.AttributePersistenceTest#load()
-	 * @see jls.elem.DialogValidationTest#loadExpectingFailure()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
-	 * @see jls.elem.GroupOrientationTest#load()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
-	 * @see jls.elem.MemoryInitEncodingTest#load()
-	 * @see jls.elem.MuxSymbolTest#render()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.elem.ParameterValidationTest#loadExpectingFailure()
-	 * @see jls.elem.ParameterValidationTest#validValuesStillLoad()
-	 * @see jls.hdl.HdlCircuitBuilder#load()
-	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
-	 * @see jls.ui.EditorGestureTest#oneGate()
-	 * @see jls.ui.UiHarnessPilotTest#load()
+	 * @jls.testedby jls.AllElementsRoundTripTest#load()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @jls.testedby jls.CircuitLoadErrorTest#rejectAndGetError()
+	 * @jls.testedby jls.CircuitLoadErrorTest#unknownElementTypeIsRejected()
+	 * @jls.testedby jls.CircuitRoundTripTest#load()
+	 * @jls.testedby jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#loadMutant()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
+	 * @jls.testedby jls.DeterministicSaveTest#load()
+	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
+	 * @jls.testedby jls.ElementDrawSmokeTest#load()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.FileFormatSpecTest#load()
+	 * @jls.testedby jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
+	 * @jls.testedby jls.FormatHeaderTest#failToLoad()
+	 * @jls.testedby jls.FormatHeaderTest#load()
+	 * @jls.testedby jls.GenerativeRoundTripFuzzTest#loadClassified()
+	 * @jls.testedby jls.LoadErrorReportingTest#loadErrorIsResetBetweenLoads()
+	 * @jls.testedby jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
+	 * @jls.testedby jls.LoadErrorReportingTest#reject()
+	 * @jls.testedby jls.LoadErrorReportingTest#unknownElementTypeReportsItsOwnError()
+	 * @jls.testedby jls.PrintPathSmokeTest#load()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#load()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#load()
+	 * @jls.testedby jls.SizeMeasurement#measure()
+	 * @jls.testedby jls.SpatialIndexTest#loadWired()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.StableElementIdTest#duplicateFileIdsAreRejected()
+	 * @jls.testedby jls.StableElementIdTest#load()
+	 * @jls.testedby jls.StableElementIdTest#malformedIdsAreClassifiedNotThrown()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.SvgExportTest#load()
+	 * @jls.testedby jls.UntrustedFileHardeningTest#rleIsBoundedByDeclaredCapacity()
+	 * @jls.testedby jls.UtilFunctionsTest#source()
+	 * @jls.testedby jls.VcdExportGoldenTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#oneConstant()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#grid()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#load()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#withConstant()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#load()
+	 * @jls.testedby jls.elem.DialogValidationTest#loadExpectingFailure()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.elem.GroupOrientationTest#load()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#load()
+	 * @jls.testedby jls.elem.MuxSymbolTest#render()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.elem.ParameterValidationTest#loadExpectingFailure()
+	 * @jls.testedby jls.elem.ParameterValidationTest#validValuesStillLoad()
+	 * @jls.testedby jls.hdl.HdlCircuitBuilder#load()
+	 * @jls.testedby jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
+	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
 	public boolean load(Scanner input) {
 
@@ -940,7 +959,9 @@ public class Circuit implements Printable {
 	 * 
 	 * @param el
 	 *            An empty object to load.
-	 * 
+	 * @param input
+	 *            The scanner to read the element's values from.
+	 *
 	 * @return false if the file is not in the right format, true if it is.
 	 */
 	public boolean loadElement(Element el, Scanner input) {
@@ -1211,55 +1232,57 @@ public class Circuit implements Printable {
 	 * 
 	 * @return false if any exceptions occur
 	 * @throws Exception
+	 *             declared for callers; assembly problems are in fact
+	 *             caught and reported by returning false.
 	 *
-	 * @see jls.AllElementsRoundTripTest#load()
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
-	 * @see jls.CircuitRoundTripTest#load()
-	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
-	 * @see jls.ContainerMutationFuzzTest#loadMutant()
-	 * @see jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
-	 * @see jls.DeterministicSaveTest#load()
-	 * @see jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
-	 * @see jls.ElementDrawSmokeTest#load()
-	 * @see jls.ElementSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
-	 * @see jls.FileFormatSpecTest#load()
-	 * @see jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
-	 * @see jls.FormatHeaderTest#load()
-	 * @see jls.GenerativeRoundTripFuzzTest#loadClassified()
-	 * @see jls.PrintPathSmokeTest#load()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#load()
-	 * @see jls.SimulationSemanticsRegressionTest#load()
-	 * @see jls.SizeMeasurement#measure()
-	 * @see jls.SpatialIndexTest#loadWired()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.StableElementIdTest#duplicateFileIdsAreRejected()
-	 * @see jls.StableElementIdTest#load()
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.SvgExportTest#load()
-	 * @see jls.UtilFunctionsTest#source()
-	 * @see jls.VcdExportGoldenTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#load()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
-	 * @see jls.edit.CtrlWGestureTest#oneConstant()
-	 * @see jls.edit.DragCandidateBoundTest#grid()
-	 * @see jls.edit.TriStateBundleConnectTest#load()
-	 * @see jls.edit.WireSweepSymmetryTest#withConstant()
-	 * @see jls.elem.AttributePersistenceTest#load()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
-	 * @see jls.elem.GroupOrientationTest#load()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
-	 * @see jls.elem.MemoryInitEncodingTest#load()
-	 * @see jls.elem.MuxSymbolTest#render()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.hdl.HdlCircuitBuilder#load()
-	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
-	 * @see jls.ui.EditorGestureTest#oneGate()
-	 * @see jls.ui.UiHarnessPilotTest#load()
+	 * @jls.testedby jls.AllElementsRoundTripTest#load()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @jls.testedby jls.CircuitRoundTripTest#load()
+	 * @jls.testedby jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#loadMutant()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
+	 * @jls.testedby jls.DeterministicSaveTest#load()
+	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
+	 * @jls.testedby jls.ElementDrawSmokeTest#load()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.FileFormatSpecTest#load()
+	 * @jls.testedby jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
+	 * @jls.testedby jls.FormatHeaderTest#load()
+	 * @jls.testedby jls.GenerativeRoundTripFuzzTest#loadClassified()
+	 * @jls.testedby jls.PrintPathSmokeTest#load()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#load()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#load()
+	 * @jls.testedby jls.SizeMeasurement#measure()
+	 * @jls.testedby jls.SpatialIndexTest#loadWired()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.StableElementIdTest#duplicateFileIdsAreRejected()
+	 * @jls.testedby jls.StableElementIdTest#load()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.SvgExportTest#load()
+	 * @jls.testedby jls.UtilFunctionsTest#source()
+	 * @jls.testedby jls.VcdExportGoldenTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#load()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#oneConstant()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#grid()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#load()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#withConstant()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#load()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.elem.GroupOrientationTest#load()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#circuitWithNamedWire()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#load()
+	 * @jls.testedby jls.elem.MuxSymbolTest#render()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.hdl.HdlCircuitBuilder#load()
+	 * @jls.testedby jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
+	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
 	public boolean finishLoad(Graphics g) throws Exception {
 
@@ -1413,19 +1436,19 @@ public class Circuit implements Printable {
 	 * @param output
 	 *            The file to write to.
 	 *
-	 * @see jls.AllElementsRoundTripTest#save()
-	 * @see jls.CircuitChangedFlagTest#serialize()
-	 * @see jls.CircuitRoundTripTest#save()
-	 * @see jls.DeterministicSaveTest#canonicalBytesAreIdenticalWhateverThePlatformNewline()
-	 * @see jls.DeterministicSaveTest#save()
-	 * @see jls.FileFormatSpecTest#save()
-	 * @see jls.FormatHeaderTest#save()
-	 * @see jls.GenerativeRoundTripFuzzTest#save()
-	 * @see jls.SizeMeasurement#measure()
-	 * @see jls.StableElementIdTest#save()
-	 * @see jls.edit.CircuitSnapshotTest#save()
-	 * @see jls.elem.GroupOrientationTest#save()
-	 * @see jls.elem.MemoryInitEncodingTest#save()
+	 * @jls.testedby jls.AllElementsRoundTripTest#save()
+	 * @jls.testedby jls.CircuitChangedFlagTest#serialize()
+	 * @jls.testedby jls.CircuitRoundTripTest#save()
+	 * @jls.testedby jls.DeterministicSaveTest#canonicalBytesAreIdenticalWhateverThePlatformNewline()
+	 * @jls.testedby jls.DeterministicSaveTest#save()
+	 * @jls.testedby jls.FileFormatSpecTest#save()
+	 * @jls.testedby jls.FormatHeaderTest#save()
+	 * @jls.testedby jls.GenerativeRoundTripFuzzTest#save()
+	 * @jls.testedby jls.SizeMeasurement#measure()
+	 * @jls.testedby jls.StableElementIdTest#save()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#save()
+	 * @jls.testedby jls.elem.GroupOrientationTest#save()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#save()
 	 */
 	public void save(PrintWriter output) {
 
@@ -1480,6 +1503,10 @@ public class Circuit implements Printable {
 	 * Wrap a writer so println terminates lines with '\n' whatever the
 	 * platform line separator is. PrintWriter(Writer) adds no buffering,
 	 * so writes pass straight through to the wrapped writer.
+	 *
+	 * @param output The writer to wrap.
+	 *
+	 * @return the wrapping writer.
 	 */
 	private static PrintWriter canonicalNewlines(PrintWriter output) {
 
@@ -1503,7 +1530,7 @@ public class Circuit implements Printable {
 	 *
 	 * @return the SHA-256 of the canonical save text, in lowercase hex.
 	 *
-	 * @see jls.DeterministicSaveTest#stateHashIsContentDetermined()
+	 * @jls.testedby jls.DeterministicSaveTest#stateHashIsContentDetermined()
 	 */
 	public String stateHash() {
 
@@ -1558,8 +1585,10 @@ public class Circuit implements Printable {
 	 * @param ed
 	 *            The editor window doing the drawing.
 	 * @throws Exception
+	 *             if an unexpected problem stops the deferred
+	 *             finish-load or the drawing pass.
 	 *
-	 * @see jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
+	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
 	 */
 	public void draw(Graphics g, Set<Element> second, SimpleEditor ed)
 			throws Exception {
@@ -1646,6 +1675,11 @@ public class Circuit implements Printable {
 	/**
 	 * Whether an element could draw inside the clip. The margin generously
 	 * covers labels drawn near (but outside) an element's bounds.
+	 *
+	 * @param el The element to test.
+	 * @param clip The clip rectangle.
+	 *
+	 * @return true if the element's margin-padded bounds intersect the clip.
 	 */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 
@@ -1666,7 +1700,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return Printable.PAGE_EXISTS.
 	 *
-	 * @see jls.PrintPathSmokeTest#printingTheCircuitDirectlyRenders()
+	 * @jls.testedby jls.PrintPathSmokeTest#printingTheCircuitDirectlyRenders()
 	 */
 	@Override
 	public int print(Graphics g, PageFormat format, int pagenum) {
@@ -1733,7 +1767,7 @@ public class Circuit implements Printable {
 	 * @param format
 	 *            The page format to use.
 	 *
-	 * @see jls.PrintPathSmokeTest#everyBookedPagePrintsIntoAGraphics()
+	 * @jls.testedby jls.PrintPathSmokeTest#everyBookedPagePrintsIntoAGraphics()
 	 */
 	public void addToBook(Book book, PageFormat format) {
 
@@ -1778,11 +1812,12 @@ public class Circuit implements Printable {
 	 * @param file
 	 *            The name of the file to write to.
 	 * @throws Exception
+	 *             if the image file cannot be written.
 	 *
-	 * @see jls.ElementDrawSmokeTest#everyElementDrawsOnTheRasterExportPath()
-	 * @see jls.ElementDrawSmokeTest#everyElementDrawsOnTheSvgExportPath()
-	 * @see jls.SvgExportTest#exportingTwiceIsByteIdentical()
-	 * @see jls.SvgExportTest#theDocumentIsAnSvgImageWithDrawnContent()
+	 * @jls.testedby jls.ElementDrawSmokeTest#everyElementDrawsOnTheRasterExportPath()
+	 * @jls.testedby jls.ElementDrawSmokeTest#everyElementDrawsOnTheSvgExportPath()
+	 * @jls.testedby jls.SvgExportTest#exportingTwiceIsByteIdentical()
+	 * @jls.testedby jls.SvgExportTest#theDocumentIsAnSvgImageWithDrawnContent()
 	 */
 	public void exportImage(String file) throws Exception {
 
@@ -1948,7 +1983,7 @@ public class Circuit implements Printable {
 	 *            The SubCircuit element in the main circuit that refers to this
 	 *            subcircuit.
 	 *
-	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
 	 */
 	public void setImported(SubCircuit sub) {
 
@@ -2103,6 +2138,8 @@ public class Circuit implements Printable {
 	/**
 	 * Get the current line number of the loaded circuit file. Used when an
 	 * error occurs so a meaningful error message can be printed.
+	 *
+	 * @return the line number the loader has reached in the circuit file.
 	 */
 	public int getLineNumber() {
 

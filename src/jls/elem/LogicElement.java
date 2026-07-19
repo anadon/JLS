@@ -18,15 +18,23 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd {
 	
 	// run time properties
+	/** The x-coordinate before snapping to a grid line. */
 	private int lx;					// position if not snapped to grid line
+	/** The y-coordinate before snapping to a grid line. */
 	private int ly;
+	/** The x-coordinate to return to if a move ends in a bad placement. */
 	private int savex;				// position to return to if bad placement
+	/** The y-coordinate to return to if a move ends in a bad placement. */
 	private int savey;
+	/** The element's input connection points. */
 	protected Vector<Input> inputs = new Vector<Input>();
+	/** The element's output connection points. */
 	protected Vector<Output> outputs = new Vector<Output>();
-	
+
 	/**
 	 * Construct a new logic element.
+	 *
+	 * @param circuit The circuit this element is part of.
 	 */
 	public LogicElement(Circuit circuit) {
 		
@@ -39,11 +47,11 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * @param x Initial x-coordinate.
 	 * @param y Initial y-coordinate.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wire()
-	 * @see jls.elem.HollowVsFilledCollisionTest#corner()
-	 * @see jls.elem.HollowVsFilledCollisionTest#probe()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#corner()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#probe()
 	 */
 	@Override
 	public void setXY(int x, int y) {
@@ -295,7 +303,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 *
 	 * @return a set of all inputs and outputs.
 	 *
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	@Override
 	public Set<Put> getAllPuts() {
@@ -313,9 +321,9 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 *
 	 * @return an unmodifiable view of the inputs, in order.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
-	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public java.util.List<Input> getInputList() {
 
@@ -340,8 +348,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * 
 	 * @return the put, or null if no such put.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
-	 * @see jls.ui.CircuitAssert#assertPutBits()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.ui.CircuitAssert#assertPutBits()
 	 */
 	@Override
 	public Put getPut(String name) {
@@ -435,7 +443,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	/**
 	 * Initialize all inputs to 0.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public void initInputs() {
 		
@@ -465,8 +473,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * Get the name of this element.
 	 * Overridden in elements that have names.
 	 *
-	 * @see jls.ui.CircuitAssert#assertElementPresent()
-	 * @see jls.ui.CircuitAssert#describe()
+	 * @jls.testedby jls.ui.CircuitAssert#assertElementPresent()
+	 * @jls.testedby jls.ui.CircuitAssert#describe()
 	 */
 	@Override
 	public String getName() {
@@ -514,7 +522,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 *
 	 * @throws UnsupportedOperationException always, on the base element.
 	 *
-	 * @see jls.ui.CircuitAssert#assertBits()
+	 * @jls.testedby jls.ui.CircuitAssert#assertBits()
 	 */
 	public int getBits() {
 		

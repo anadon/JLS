@@ -30,25 +30,34 @@ public abstract sealed class Gate extends LogicElement
 	// gates share the one JLSInfo.Orientation enum (issue #78 H3); only
 	// their persistence differs - lowercase names, kept byte-identical
 	// by the "orientation" attribute below
+	/** Default number of inputs. */
 	protected static final int defaultInputs = 2;
+	/** Default number of gates (bits). */
 	protected static final int defaultBits = 1;
+	/** Default orientation. */
 	protected static final Orientation defaultOrientation = Orientation.RIGHT;
-	
+
 	// saved properties
+	/** Number of inputs to this gate. */
 	protected int numInputs = defaultInputs;
+	/** Number of gates (bits). */
 	protected int bits = defaultBits;
+	/** Which way this gate faces. */
 	protected Orientation orientation = defaultOrientation;
+	/** Propagation delay of this gate. */
 	protected int propDelay;
-	
+
 	// running properties
+	/** Outline shape of this gate, set by the subclass. */
 	protected GeneralPath gateShape;
+	/** True if the creation dialog was cancelled. */
 	protected boolean cancelled;
 	
 	/**
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
 	 * 
-	 * @param circuit
+	 * @param circuit The circuit this element is part of.
 	 */
 	public Gate(Circuit circuit) {
 		
@@ -64,14 +73,21 @@ public abstract sealed class Gate extends LogicElement
 	 */
 	protected static final class Kind {
 		
+		/** The human-readable name of this gate kind. */
 		private final String displayName;	// e.g. "AND"
+		/** The save-file tag of this gate kind. */
 		private final String saveName;		// e.g. "AndGate" (a frozen tag:
 											// must match SaveTags / spec §7)
+		/** The forced input count, or -1 if the user chooses. */
 		private final int fixedInputs;		// forced input count, or -1 if the
 											// user chooses
+		/** The default propagation delay for this gate kind. */
 		private final int defaultDelay;
+		/** Input count of the previously created gate of this kind. */
 		private int previousInputs = defaultInputs;
+		/** Bits (gate count) of the previously created gate of this kind. */
 		private int previousBits = defaultBits;
+		/** Orientation of the previously created gate of this kind. */
 		private Orientation previousOrientation = defaultOrientation;
 		
 		/**
@@ -359,6 +375,7 @@ public abstract sealed class Gate extends LogicElement
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by every gate kind.
+	/** The persistence attributes shared by every gate kind. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -425,6 +442,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 	);
 
+	/** Base attributes plus the shared gate attributes, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -519,7 +537,7 @@ public abstract sealed class Gate extends LogicElement
 	 * or 1/2 space wider on each side (for up/down gates).
 	 * 
 	 * @return a rectangle that bounds the element on the screen.
-	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	@Override
 	public Rectangle getRect() {
@@ -549,6 +567,8 @@ public abstract sealed class Gate extends LogicElement
 	
 	/**
 	 * Get default propagation delay for this gate kind.
+	 *
+	 * @return the default propagation delay.
 	 */
 	public int getDefaultDelay() {
 		
@@ -697,15 +717,25 @@ public abstract sealed class Gate extends LogicElement
 	protected class GateCreate extends ElementDialog implements ActionListener {
 		
 		// properties
+		/** Button to repeat the previously created gate's settings. */
 		private JButton repeat;
+		/** Text field for the number of inputs. */
 		private JTextField inputsField = new JTextField(defaultInputs+"",5);
+		/** Text field for the number of gates (bits). */
 		private JTextField gatesField = new JTextField(defaultBits+"",5);
+		/** Keypad for the inputs field. */
 		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
+		/** Keypad for the gates field. */
 		private KeyPad gatesPad = new KeyPad(gatesField,10,defaultBits,this);
+		/** Left orientation choice. */
 		private JRadioButton left = new JRadioButton("left");
+		/** Up orientation choice. */
 		private JRadioButton up = new JRadioButton("up");
+		/** Down orientation choice. */
 		private JRadioButton down = new JRadioButton("down");
+		/** Right orientation choice. */
 		private JRadioButton right = new JRadioButton("right");
+		/** The type of gate (e.g. "AND"). */
 		private String type;
 		
 		/**
@@ -915,6 +945,7 @@ public abstract sealed class Gate extends LogicElement
 // Simulation
 //-------------------------------------------------------------------------------
 
+	/** The output value currently propagating through this gate. */
 	private BitSet toBeValue;
 
 	/**

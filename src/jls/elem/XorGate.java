@@ -16,6 +16,7 @@ import javax.swing.*;
 public final class XorGate extends Gate {
 
 	// identity and shared previous-settings state (#22)
+	/** The kind descriptor and shared previous-settings state for XOR gates. */
 	private static final Kind KIND =
 			new Kind("XOR","XorGate",-1,10);
 	

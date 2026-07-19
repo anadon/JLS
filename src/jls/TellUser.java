@@ -9,6 +9,8 @@ import java.awt.GraphicsEnvironment;
 import javax.swing.JOptionPane;
 
 /**
+ * All communication from JLS to the user funnels through this class.
+ *
  * @author Josh Marshall
  *
  * The single seam through which JLS talks to the user (issue #81):
@@ -35,16 +37,31 @@ import javax.swing.JOptionPane;
 public class TellUser {
 
 	/**
+	 * Create a TellUser. Never needed: every method is static.
+	 */
+	public TellUser() {
+	}
+
+	/**
 	 * The answer to a three-way (yes/no/cancel) question. Closing the
 	 * dialog counts as CANCEL: an unanswered question must never take
 	 * the destructive branch.
 	 */
-	public enum Answer { YES, NO, CANCEL }
+	public enum Answer {
+		/** The user said yes. */
+		YES,
+		/** The user said no. */
+		NO,
+		/** The user cancelled or closed the dialog, or the run is batch/headless. */
+		CANCEL
+	}
 
 	/**
 	 * Whether a dialog can and should actually be shown. In batch mode
 	 * (-b) dialogs are forbidden by the CLI contract even if a display
 	 * exists; in headless mode they would throw HeadlessException.
+	 *
+	 * @return true if a dialog may be shown.
 	 */
 	static private boolean interactive() {
 		return !JLSInfo.batch && !GraphicsEnvironment.isHeadless();
@@ -54,6 +71,10 @@ public class TellUser {
 	 * The component to parent a dialog on: the caller's component if it
 	 * gave one, else the application frame (never a bare null, which
 	 * can center the dialog on the wrong monitor).
+	 *
+	 * @param parent The caller's component, or null for the application frame.
+	 *
+	 * @return the component to parent the dialog on.
 	 */
 	static private Component parentFor(Component parent) {
 		return parent != null ? parent : JLSInfo.frame;

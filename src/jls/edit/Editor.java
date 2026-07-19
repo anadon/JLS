@@ -36,7 +36,7 @@ public final class Editor extends SimpleEditor {
 	 * @param name The name of the circuit.
 	 * @param clipboard The clipboard.
 	 *
-	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
+	 * @jls.testedby jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public Editor(JTabbedPane pane, Circuit circuit, String name, Circuit clipboard) {
 
@@ -224,11 +224,11 @@ public final class Editor extends SimpleEditor {
 	 *
 	 * @return true if another editor's circuit already has the name.
 	 *
-	 * @see jls.edit.SaveAsNameCheckTest#distinctSiblingWithSameNameIsStillACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
-	 * @see jls.edit.SaveAsNameCheckTest#savingUnderAnotherEditorsNameIsACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#savingUnderOwnCurrentNameIsNotACollision()
-	 * @see jls.edit.SaveAsNameCheckTest#unusedNameIsNotACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#distinctSiblingWithSameNameIsStillACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#savingUnderAnotherEditorsNameIsACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#savingUnderOwnCurrentNameIsNotACollision()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#unusedNameIsNotACollision()
 	 */
 	static boolean nameUsedByAnotherEditor(String name, Circuit self,
 			Iterable<Circuit> edited) {

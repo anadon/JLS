@@ -35,10 +35,15 @@ import javax.swing.tree.TreeSelectionModel;
  */
 public final class Help {
 
+	/** Topic id to help page name, parsed from help/Map.jhm on first use. */
 	private static Map<String,String> topicToUrl = null;
+	/** The single help window, built lazily on first use. */
 	private static JFrame window = null;
+	/** The HTML viewer pane showing the current help page. */
 	private static JEditorPane page = null;
+	/** The table-of-contents tree shown beside the page viewer. */
 	private static JTree toc = null;
+	/** Topic id to its path in the contents tree, for selection sync. */
 	private static Map<String,TreePath> topicToTocPath = null;
 
 	/** No instances: this is a static utility. */
@@ -129,6 +134,8 @@ public final class Help {
 	/**
 	 * Parse help/JLSHelpTOC.xml into a tree. The format is nested
 	 * {@code <tocitem text="..." [target="..."]>} elements.
+	 *
+	 * @return The root node of the contents tree.
 	 */
 	private static DefaultMutableTreeNode loadToc() {
 
@@ -175,10 +182,14 @@ public final class Help {
 	/** A TOC tree node: display text plus optional topic id. */
 	private static final class TocEntry {
 
+		/** The label shown in the contents tree. */
 		final String text;
+		/** The topic id to open when this entry is selected, or null. */
 		final String topic;
 
 		/**
+		 * Create a contents-tree entry.
+		 *
 		 * @param text  The label shown in the contents tree.
 		 * @param topic The topic id to open when selected, or null.
 		 */

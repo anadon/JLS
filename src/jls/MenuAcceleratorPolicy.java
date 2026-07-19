@@ -41,7 +41,7 @@ import javax.swing.KeyStroke;
  * {@code Toolkit.getMenuShortcutKeyMaskEx()} reports on those
  * platforms at runtime.
  *
- * @see jls.MenuAcceleratorPolicyTest
+ * @jls.testedby jls.MenuAcceleratorPolicyTest
  */
 public final class MenuAcceleratorPolicy {
 
@@ -61,7 +61,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return true for macOS.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#isMacRecognizesAppleOsNames()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#isMacRecognizesAppleOsNames()
 	 */
 	public static boolean isMac(String osName) {
 
@@ -80,7 +80,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the extended modifier mask for menu accelerators.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#macUsesCommandOthersUseControl()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#macUsesCommandOthersUseControl()
 	 */
 	public static int menuMask(String osName) {
 
@@ -95,7 +95,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
 	 */
 	public static KeyStroke newCircuit(String osName) {
 
@@ -109,7 +109,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
 	 */
 	public static KeyStroke open(String osName) {
 
@@ -123,7 +123,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
 	 */
 	public static KeyStroke save(String osName) {
 
@@ -138,7 +138,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#saveAsIsShiftedSave()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#saveAsIsShiftedSave()
 	 */
 	public static KeyStroke saveAs(String osName) {
 
@@ -155,7 +155,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#fileAcceleratorsUseThePlatformMask()
 	 */
 	public static KeyStroke exit(String osName) {
 
@@ -171,8 +171,8 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the accelerator to display.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#macRedoIsShiftCommandZ()
-	 * @see jls.MenuAcceleratorPolicyTest#otherPlatformsRedoStaysControlY()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#macRedoIsShiftCommandZ()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#otherPlatformsRedoStaysControlY()
 	 */
 	public static KeyStroke redoDisplayed(String osName) {
 
@@ -195,8 +195,8 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the redo bindings, displayed accelerator first.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#macRedoKeepsTheOldBindingAsAnAlias()
-	 * @see jls.MenuAcceleratorPolicyTest#otherPlatformsRedoStaysControlY()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#macRedoKeepsTheOldBindingAsAnAlias()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#otherPlatformsRedoStaysControlY()
 	 */
 	public static List<KeyStroke> redoBindings(String osName) {
 
@@ -214,7 +214,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the rotate-clockwise keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
 	 */
 	public static KeyStroke rotateCwStroke() {
 
@@ -227,7 +227,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the rotate-counter-clockwise keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
 	 */
 	public static KeyStroke rotateCcwStroke() {
 
@@ -241,7 +241,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the flip keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#rotateAndFlipArePlainKeys()
 	 */
 	public static KeyStroke flipStroke() {
 
@@ -259,7 +259,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the view-value keystroke.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#viewValueIsPlainVNotMaskedS()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#viewValueIsPlainVNotMaskedS()
 	 */
 	public static KeyStroke viewValueStroke() {
 
@@ -272,7 +272,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the File menu mnemonic key code.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
 	 */
 	public static int fileMenuMnemonic() {
 
@@ -284,7 +284,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the Simulator menu mnemonic key code.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
 	 */
 	public static int simulatorMenuMnemonic() {
 
@@ -296,7 +296,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the Global menu mnemonic key code.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
 	 */
 	public static int globalMenuMnemonic() {
 
@@ -308,7 +308,7 @@ public final class MenuAcceleratorPolicy {
 	 *
 	 * @return the Help menu mnemonic key code.
 	 *
-	 * @see jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
 	 */
 	public static int helpMenuMnemonic() {
 

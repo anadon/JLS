@@ -15,19 +15,30 @@ import javax.swing.*;
 public final class WireEnd extends LogicElement {
 	
 	// properties
+	/** The wire net this end is a part of. */
 	private WireNet net;							// the net it is a part of
 	// insertion order keeps wire-net construction (and so multi-driver
 	// resolution) deterministic (issue #98, S1)
+	/** The wires this end is connected to, in insertion order. */
 	private Set<Wire> wires = new LinkedHashSet<Wire>();	// the wires it is connected to
+	/** The input or output this end is attached to, if any. */
 	private Put put = null;							// the put it is attached to
+	/** True when this end overlaps something it could connect to. */
 	private boolean touching = false;				// touching something (can connect)?
+	/** Visit flag used when partitioning a wire net. */
 	private boolean marked;							// used to partition wire net
+	/** The copy of this end made during cut/paste. */
 	private WireEnd myCopy;							// for cut/paste
+	/** Saved id of the element this end is attached to, while loading. */
 	private int loadAttach;							// for loading circuit
+	/** Saved name of the put this end is attached to, while loading. */
 	private String loadPut = null;					// for loading circuit
+	/** Saved tri-state flag of this end's net, while loading. */
 	private boolean loadTriState = false;			// for loading circuit
+	/** Saved ids of the wire ends this end is wired to, in file order, while loading. */
 	private Set<Integer> loadWires = 				// for loading circuit
 		new LinkedHashSet<Integer>();				// (file order - #98, S1)
+	/** Saved probe names, keyed by the other wire end's id, while loading. */
 	private Map<Integer,String> probeMap =			// for loading circuit
 		new HashMap<Integer,String>();
 	
@@ -47,10 +58,10 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @param circuit The circuit the wire end is in.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wire()
-	 * @see jls.elem.HollowVsFilledCollisionTest#corner()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#corner()
 	 */
 	public WireEnd(Circuit circuit) {
 		
@@ -73,7 +84,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @param circ The circuit this wire end is in.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void init(Circuit circ) {
 		
@@ -133,7 +144,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return The x-coordinate.
 	 *
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getX() {
@@ -146,7 +157,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return The y-coordinate.
 	 *
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getY() {
@@ -159,8 +170,8 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @param wire The wire to add.
 	 *
-	 * @see jls.edit.WireSweepSymmetryTest#wire()
-	 * @see jls.elem.HollowVsFilledCollisionTest#edge()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public void addWire(Wire wire) {
 		
@@ -256,6 +267,8 @@ public final class WireEnd extends LogicElement {
 	
 	/**
 	 * Remove wire from this wire end, and do nothing else.
+	 *
+	 * @param wire The wire to remove.
 	 */
 	public void remove(Wire wire) {
 		
@@ -321,8 +334,8 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return the put attached to.
 	 *
-	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public Put getPut() {
 		
@@ -334,7 +347,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return true if it is, false if not.
 	 *
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
 		
@@ -399,8 +412,8 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return true if it is, false if it is not.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#danglingEnd()
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#danglingEnd()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
 	 */
 	public boolean isTriState() {
 		
@@ -469,7 +482,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @param net The new wire net.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void setNet(WireNet net) {
 		
@@ -481,10 +494,10 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return This wire end's wire net.
 	 *
-	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
-	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public WireNet getNet() {
 		
@@ -496,7 +509,7 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return true if dangling, false if not.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#danglingEnd()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#danglingEnd()
 	 */
 	public boolean isDangling() {
 		

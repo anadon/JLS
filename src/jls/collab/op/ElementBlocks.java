@@ -27,6 +27,9 @@ final class ElementBlocks {
 	 */
 	static final int MAX_BLOCK = 100_000;
 
+	/**
+	 * Prevents instantiation; this class holds only static helpers.
+	 */
 	private ElementBlocks() {
 
 	} // end of constructor

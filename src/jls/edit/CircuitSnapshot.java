@@ -47,13 +47,13 @@ public final class CircuitSnapshot {
 	 *
 	 * @return the snapshot.
 	 *
-	 * @see jls.StableElementIdTest#undoRestorePreservesIds()
-	 * @see jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
-	 * @see jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
-	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
-	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
-	 * @see jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
+	 * @jls.testedby jls.StableElementIdTest#undoRestorePreservesIds()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#capturePreservesTheChangedFlag()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
 	 */
 	public static CircuitSnapshot capture(Circuit circuit) {
 
@@ -75,10 +75,10 @@ public final class CircuitSnapshot {
 	 * @return the restored circuit, or null if the snapshot did not load
 	 *         (JLSInfo.loadError says why).
 	 *
-	 * @see jls.StableElementIdTest#undoRestorePreservesIds()
-	 * @see jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
-	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.StableElementIdTest#undoRestorePreservesIds()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#captureRestoreReproducesTheCircuit()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
 	 */
 	public Circuit restore(String name, Graphics g) {
 
@@ -109,9 +109,9 @@ public final class CircuitSnapshot {
 	 *
 	 * @return true if the serialized content is identical.
 	 *
-	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
-	 * @see jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
-	 * @see jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#unchangedCircuitSnapshotsIdentically()
 	 */
 	public boolean sameAs(CircuitSnapshot other) {
 
@@ -123,7 +123,7 @@ public final class CircuitSnapshot {
 	 *
 	 * @return the deflated byte count.
 	 *
-	 * @see jls.edit.CircuitSnapshotTest#snapshotIsCompact()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
 	 */
 	public int retainedBytes() {
 

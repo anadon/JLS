@@ -46,16 +46,21 @@ import jls.util.Placement;
 public final class Display extends LogicElement {
 	
 	// constants
+	/** The input width a new display starts with. */
 	private final int defaultBits = 1;
 	
 	// properties
+	/** The width of the displayed input, in bits. */
 	private int bits = defaultBits;
+	/** The radix (2, 10 or 16) the value is displayed in. */
 	private int base = 10;
 	
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled = false;
 	
 	// legacy
+	/** Legacy single-input orientation marker; -1 means "new save format". */
 	int orient = -1;
 	
 	/**
@@ -239,6 +244,7 @@ public final class Display extends LogicElement {
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own persisted attributes, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -298,6 +304,7 @@ public final class Display extends LogicElement {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -388,10 +395,15 @@ public final class Display extends LogicElement {
 	protected class DispCreate extends ElementDialog {
 
 		// properties
+		/** Text field for entering the number of input bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
+		/** Pop-up keypad for the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Radio button selecting base 2 (binary) display. */
 		private JRadioButton b2 = new JRadioButton("2");
+		/** Radio button selecting base 10 (decimal) display. */
 		private JRadioButton b10 = new JRadioButton("10");
+		/** Radio button selecting base 16 (hexadecimal) display. */
 		private JRadioButton b16 = new JRadioButton("16");
 		
 		/**
@@ -482,6 +494,7 @@ public final class Display extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The value being displayed; null shows as HiZ. */
 	private BitSet currentValue = new BitSet();
 	
 	/**

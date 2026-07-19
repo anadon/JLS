@@ -23,6 +23,7 @@ import java.util.*;
 public final class DelayGate extends Gate {
 	
 	// identity (#22); previous-settings unused: DELAY has its own dialog
+	/** The kind descriptor (names and pin counts) for DELAY gates. */
 	private static final Kind KIND =
 			new Kind("DELAY","DelayGate",1,0);
 	
@@ -36,6 +37,7 @@ public final class DelayGate extends Gate {
 	} // end of kind method
 	
 	// default values
+	/** Default propagation delay shown in the creation dialog. */
 	private static final int defaultPropDelay = 1;
 	
 	/**
@@ -121,13 +123,21 @@ public final class DelayGate extends Gate {
 	private class DelayCreate extends ElementDialog {
 
 			// properties
+			/** Text field for the propagation delay. */
 			private JTextField delayField = new JTextField(defaultPropDelay+"",5);
+			/** Text field for the number of gates (bits). */
 			private JTextField gatesField = new JTextField(defaultBits+"",5);
+			/** Pop-up keypad for the delay field. */
 			private KeyPad delayPad = new KeyPad(delayField,10,defaultPropDelay,this);
+			/** Pop-up keypad for the gates field. */
 			private KeyPad gatesPad = new KeyPad(gatesField,10,defaultBits,this);
+			/** Button selecting leftward orientation. */
 			private JRadioButton left = new JRadioButton("left");
+			/** Button selecting upward orientation. */
 			private JRadioButton up = new JRadioButton("up");
+			/** Button selecting downward orientation. */
 			private JRadioButton down = new JRadioButton("down");
+			/** Button selecting rightward orientation. */
 			private JRadioButton right = new JRadioButton("right");
 
 			/**

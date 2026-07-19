@@ -46,18 +46,26 @@ import jls.util.Placement;
 public final class Decoder extends LogicElement {
 	
 	// default values
+	/** Default number of input bits. */
 	private static final int defaultBits = 1;
+	/** Default propagation delay. */
 	private static final int defaultPropDelay = 15; 
 	
 	// saved properties
+	/** Number of input bits (the decoder has 2^bits outputs). */
 	private int bits = defaultBits;
+	/** Propagation delay of this decoder. */
 	private int propDelay = defaultPropDelay;
 	//Orientation is based off of where the inputs are
+	/** Which side the input is on. */
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.LEFT;
 	
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
+	/** The "decoder" label drawn on the element, abbreviated to "dec" if it doesn't fit. */
 	private String dec;
+	/** The input/output width label drawn on the element (e.g. "1-n"), oriented to match the element. */
 	private String inout;
 	
 	/**
@@ -242,6 +250,7 @@ public final class Decoder extends LogicElement {
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
+	/** This element's own saved attributes: bits, delay and orientation. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("bits") {
@@ -304,6 +313,7 @@ public final class Decoder extends LogicElement {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -464,11 +474,17 @@ public final class Decoder extends LogicElement {
 	private class DecoderCreate extends ElementDialog {
 
 		// properties
+		/** Text field for the number of input bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
+		/** Pop-up numeric keypad attached to the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Selects input-on-the-left orientation (the default). */
 		private JRadioButton left = new JRadioButton("Left", true);
+		/** Selects input-on-the-right orientation. */
 		private JRadioButton right = new JRadioButton("Right");
+		/** Selects input-on-top orientation. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Selects input-on-the-bottom orientation. */
 		private JRadioButton down = new JRadioButton("Down");
 		
 		/**
@@ -573,6 +589,7 @@ public final class Decoder extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The output value this decoder will take on once its propagation delay elapses. */
 	private BitSet toBeValue;
 	
 	/**

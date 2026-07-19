@@ -46,6 +46,12 @@ public final class CausalBuffer {
 	private long duplicatesDropped;
 
 	/**
+	 * Create an empty buffer: nothing delivered yet, nothing pending.
+	 */
+	public CausalBuffer() {
+	}
+
+	/**
 	 * Present one arriving envelope and collect everything that is now
 	 * deliverable: possibly nothing (the envelope was early, or a
 	 * duplicate), possibly the envelope alone, possibly a cascade of

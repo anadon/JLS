@@ -62,6 +62,7 @@ public abstract class ElementDialog extends JDialog {
 	/** Inline validation-error message; hidden until an OK is rejected. */
 	private final JLabel errorLabel = new JLabel();
 
+	/** The help topic id for the Help button, or null for no Help button. */
 	private final String helpTopic;
 
 	/** True once finishDialog packed the window (so error messages repack). */
@@ -75,7 +76,9 @@ public abstract class ElementDialog extends JDialog {
 	 */
 	protected static final class Violation {
 
+		/** The constraint message, stated in domain terms. */
 		private final String message;
+		/** The offending form field, or null for a structural violation. */
 		private final JComponent field;
 
 		/**
@@ -91,6 +94,8 @@ public abstract class ElementDialog extends JDialog {
 		} // end of constructor
 
 		/**
+		 * Get the constraint message.
+		 *
 		 * @return the constraint message.
 		 */
 		public String getMessage() {
@@ -99,6 +104,8 @@ public abstract class ElementDialog extends JDialog {
 		} // end of getMessage method
 
 		/**
+		 * Get the form field holding the offending value.
+		 *
 		 * @return the offending form field, or null.
 		 */
 		public JComponent getField() {

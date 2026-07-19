@@ -17,11 +17,17 @@ import javax.swing.JLabel;
 public final class Wire extends Element {
 	
 	// properties
+	/** The wire net this wire is a part of. */
 	private WireNet net;		// the wire net it is a part of
+	/** One end of this wire. */
 	private WireEnd end1;		// the wire ends
+	/** The other end of this wire. */
 	private WireEnd end2;
+	/** Traversal flag used when partitioning a wire net into new nets. */
 	private boolean marked;		// used to partition wire net
+	/** True if the mouse is currently touching this wire, so it highlights. */
 	private boolean touching;	// touching a wire end?
+	/** The name of the probe on this wire, or null if it has no probe. */
 	private String probeName = null;
 	
 	/**
@@ -30,8 +36,8 @@ public final class Wire extends Element {
 	 * @param e1 One end of the wire.
 	 * @param e2 The other end of the wire.
 	 *
-	 * @see jls.edit.WireSweepSymmetryTest#wire()
-	 * @see jls.elem.HollowVsFilledCollisionTest#edge()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public Wire(WireEnd e1, WireEnd e2) {
 		
@@ -66,14 +72,14 @@ public final class Wire extends Element {
 	 * 
 	 * @return one end.
 	 *
-	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
-	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
-	 * @see jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
-	 * @see jls.edit.WireSweepSymmetryTest#endsOf()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
-	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
-	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
+	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#endsOf()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
 	 */
 	public WireEnd getEnd() {
 		
@@ -87,8 +93,8 @@ public final class Wire extends Element {
 	 * 
 	 * @return the other end of the wire.
 	 *
-	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
-	 * @see jls.edit.WireSweepSymmetryTest#endsOf()
+	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#endsOf()
 	 */
 	public WireEnd getOtherEnd(WireEnd end) {
 		

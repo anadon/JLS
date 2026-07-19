@@ -78,7 +78,7 @@ final class UndoManager {
 	 *              exactly from the pre-extraction code so undo capacity
 	 *              does not change).
 	 *
-	 * @see jls.edit.UndoManagerTest#pushClampsToTheConfiguredDepth()
+	 * @jls.testedby jls.edit.UndoManagerTest#pushClampsToTheConfiguredDepth()
 	 */
 	UndoManager(IntSupplier depth) {
 
@@ -94,8 +94,8 @@ final class UndoManager {
 	 *
 	 * @param snap The snapshot to push.
 	 *
-	 * @see jls.edit.UndoManagerTest#pushDropsNoOpSnapshots()
-	 * @see jls.edit.UndoManagerTest#pushClampsToTheConfiguredDepth()
+	 * @jls.testedby jls.edit.UndoManagerTest#pushDropsNoOpSnapshots()
+	 * @jls.testedby jls.edit.UndoManagerTest#pushClampsToTheConfiguredDepth()
 	 */
 	public void push(CircuitSnapshot snap) {
 
@@ -120,7 +120,7 @@ final class UndoManager {
 	 * Discard all redo states. Called when a new edit is made: the
 	 * undone future it invalidates can no longer be redone.
 	 *
-	 * @see jls.edit.UndoManagerTest#clearRedosEmptiesTheRedoStack()
+	 * @jls.testedby jls.edit.UndoManagerTest#clearRedosEmptiesTheRedoStack()
 	 */
 	public void clearRedos() {
 
@@ -133,7 +133,7 @@ final class UndoManager {
 	 *
 	 * @return true if a call to {@link #undo} can restore a prior state.
 	 *
-	 * @see jls.edit.UndoManagerTest#undoRequiresMoreThanTheBaseSnapshot()
+	 * @jls.testedby jls.edit.UndoManagerTest#undoRequiresMoreThanTheBaseSnapshot()
 	 */
 	public boolean canUndo() {
 
@@ -145,7 +145,7 @@ final class UndoManager {
 	 *
 	 * @return true if a call to {@link #redo} can reapply an undone state.
 	 *
-	 * @see jls.edit.UndoManagerTest#undoRestoresThePreviousSnapshotAndEnablesRedo()
+	 * @jls.testedby jls.edit.UndoManagerTest#undoRestoresThePreviousSnapshotAndEnablesRedo()
 	 */
 	public boolean canRedo() {
 
@@ -162,8 +162,8 @@ final class UndoManager {
 	 * @return true if a state was restored, false if there was nothing
 	 *         to undo or the restore failed.
 	 *
-	 * @see jls.edit.UndoManagerTest#undoRestoresThePreviousSnapshotAndEnablesRedo()
-	 * @see jls.edit.UndoManagerTest#failedRestoreLeavesTheStacksUntouched()
+	 * @jls.testedby jls.edit.UndoManagerTest#undoRestoresThePreviousSnapshotAndEnablesRedo()
+	 * @jls.testedby jls.edit.UndoManagerTest#failedRestoreLeavesTheStacksUntouched()
 	 */
 	public boolean undo(Restorer restorer) {
 
@@ -193,8 +193,8 @@ final class UndoManager {
 	 * @return true if a state was restored, false if there was nothing
 	 *         to redo or the restore failed.
 	 *
-	 * @see jls.edit.UndoManagerTest#redoReappliesTheUndoneSnapshot()
-	 * @see jls.edit.UndoManagerTest#redoWithNothingUndoneDoesNothing()
+	 * @jls.testedby jls.edit.UndoManagerTest#redoReappliesTheUndoneSnapshot()
+	 * @jls.testedby jls.edit.UndoManagerTest#redoWithNothingUndoneDoesNothing()
 	 */
 	public boolean redo(Restorer restorer) {
 

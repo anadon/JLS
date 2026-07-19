@@ -27,9 +27,9 @@ public final class Util {
 	 * 
 	 * @return the point of minimum x,y coordinates of all elements.
 	 *
-	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
-	 * @see jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
-	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
+	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
 	 */
 	public static Point copy(Set<Element> from, Circuit to) {
 
@@ -136,7 +136,7 @@ public final class Util {
 	 * 
 	 * @param circ The circuit to partition.
 	 *
-	 * @see jls.UtilFunctionsTest#partitionRebuildsWireNets()
+	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
 	 */
 	public static void partition(Circuit circ) {
 		
@@ -211,7 +211,7 @@ public final class Util {
 	 * 
 	 * @return true if the name is valid, false if not.
 	 *
-	 * @see jls.UtilFunctionsTest#nameValidationAcceptsIdentifiersOnly()
+	 * @jls.testedby jls.UtilFunctionsTest#nameValidationAcceptsIdentifiersOnly()
 	 */
 	public static boolean isValidName(String str) {
 		
@@ -240,7 +240,7 @@ public final class Util {
 	 * 
 	 * @return the base name (minus directory prefix) if valid, or null if not valid.
 	 *
-	 * @see jls.UtilFunctionsTest#fileNameValidationStripsDirectoriesOnBothSeparators()
+	 * @jls.testedby jls.UtilFunctionsTest#fileNameValidationStripsDirectoriesOnBothSeparators()
 	 */
 	public static String isValidFileName(String str) {
 
@@ -272,9 +272,9 @@ public final class Util {
 	 *
 	 * @return the user's home directory.
 	 *
-	 * @see jls.SeedDirectoryTest#defaultDirectoryIsUserHome()
-	 * @see jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
-	 * @see jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
+	 * @jls.testedby jls.SeedDirectoryTest#defaultDirectoryIsUserHome()
+	 * @jls.testedby jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
+	 * @jls.testedby jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
 	 */
 	public static String defaultDirectory() {
 
@@ -292,9 +292,9 @@ public final class Util {
 	 * @return remembered if non-null and non-empty, otherwise
 	 * defaultDirectory().
 	 *
-	 * @see jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
-	 * @see jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
-	 * @see jls.SeedDirectoryTest#rememberedDirectoryWins()
+	 * @jls.testedby jls.SeedDirectoryTest#emptyRememberedFallsBackToDefault()
+	 * @jls.testedby jls.SeedDirectoryTest#nullRememberedFallsBackToDefault()
+	 * @jls.testedby jls.SeedDirectoryTest#rememberedDirectoryWins()
 	 */
 	public static String seedDirectory(String remembered) {
 
@@ -312,7 +312,7 @@ public final class Util {
 	 * 
 	 * @return the string.
 	 *
-	 * @see jls.UtilFunctionsTest#baseConversionMatchesItsDisplayContract()
+	 * @jls.testedby jls.UtilFunctionsTest#baseConversionMatchesItsDisplayContract()
 	 */
 	public static String convert(BigInteger value, int base, boolean extra) {
 		

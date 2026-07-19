@@ -19,13 +19,17 @@ import jls.util.Placement;
 public final class SigGen extends SigSim {
 	
 	// named constants
+	/** Title drawn inside the element's box. */
 	private final String title = " Signal Generator ";
+	/** Width and height of the edit dialog's text pane, in pixels. */
 	private final int size = 300;	// width and height of dialog
 	
 	// saved properties
+	/** The signal specification text entered by the user. */
 	private String signals = "";
 	
 	// running properties
+	/** True if the user cancelled the edit dialog or made no change. */
 	private boolean cancelled = false;
 
 	/**
@@ -140,6 +144,7 @@ public final class SigGen extends SigSim {
 	// dispatch, and copy for this element's own attributes. The
 	// handwritten save escaped backslash, quote and newline exactly as
 	// Attribute.StringAttribute does.
+	/** Declarations of this element's own saved attributes, in save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("signals") {
@@ -162,6 +167,7 @@ public final class SigGen extends SigSim {
 		}
 	);
 
+	/** Base attributes followed by this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -226,6 +232,7 @@ public final class SigGen extends SigSim {
 	private class EditSignals extends ElementDialog {
 
 		// properties
+		/** Text area holding the signal specification. */
 		private JTextArea textArea = new JTextArea();
 
 		/**

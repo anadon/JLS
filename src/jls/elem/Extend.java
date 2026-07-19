@@ -16,6 +16,7 @@ import java.util.*;
 public final class Extend extends Gate implements TriProp {
 	
 	// identity (#22); previous-settings unused: Extend has no repeat button
+	/** The kind descriptor shared by all Extend gates. */
 	private static final Kind KIND =
 			new Kind("Extend","Extend",1,0);
 	
@@ -29,6 +30,7 @@ public final class Extend extends Gate implements TriProp {
 	} // end of kind method
 	
 	// properties
+	/** Saved tri-state flag from the circuit file, applied when loading finishes. */
 	private boolean loadTriState = false;
 
 	/**

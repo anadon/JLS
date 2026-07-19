@@ -26,19 +26,32 @@ public final class Memory extends LogicElement {
 	 * The two kinds of memory this element can be configured as: RAM
 	 * (readable and writable) or ROM (read-only).
 	 */
-	private static enum Type {RAM,ROM};
+	private static enum Type {
+		/** Readable and writable memory. */
+		RAM,
+		/** Read-only memory. */
+		ROM};
 	
 	// default values
+	/** The default element name (empty until the user supplies one). */
 	private static final String defaultName = "";
+	/** The default memory type. */
 	private static final Type defaultType = Type.RAM;
+	/** The default number of bits per word. */
 	private static final int defaultBits = 1;
+	/** The default capacity, in words. */
 	private static final int defaultCapacity = 2;
+	/** The default initialization file name (empty means no file). */
 	private static final String defaultFileName = "";
+	/** The default access time, in simulation time units. */
 	private static final int defaultAccessTime = 100; 
+	/** The default built-in initial value text (empty means all zeros). */
 	private static final String defaultInitialValue = "";
 	
 	// one constraint string, two surfaces: dialog and loader (issue #52)
+	/** Message reported when a proposed capacity is less than 1 word. */
 	static final String CAPACITY_CONSTRAINT = "Capacity must be at least 1";
+	/** Message reported when a proposed word size is less than 1 bit. */
 	static final String BITS_CONSTRAINT = "Must have at least 1 bit";
 
 	/**
@@ -49,7 +62,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkCapacity(int capacity) {
 
@@ -63,7 +76,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -71,21 +84,33 @@ public final class Memory extends LogicElement {
 	} // end of checkBits method
 
 	// absolute cap on RLE-decoded initial-memory words (issue #38)
+	/** The most words an RLE-encoded initialization is allowed to expand to. */
 	static final long MAX_INIT_WORDS = 1L << 24;
 
 	// saved properties
+	/** The name of this memory element. */
 	private String name = defaultName;
+	/** Whether this memory is RAM or ROM. */
 	private Type type = defaultType;
+	/** The number of bits per word. */
 	private int bits = defaultBits;
+	/** The capacity of this memory, in words. */
 	private int capacity = defaultCapacity;
+	/** The initialization file name, or empty if initialized internally. */
 	private String fileName = defaultFileName;
+	/** The access time (read/write delay), in simulation time units. */
 	private int accessTime = defaultAccessTime;
+	/** The built-in initial value text, or empty if none. */
 	private String initialValue = defaultInitialValue;
+	/** True if this memory is being watched during simulation. */
 	private boolean watched = false;
-	
+
 	// running properties
+	/** True if the user cancelled the create/change dialog. */
 	private boolean cancelled;
+	/** True if a change dialog altered the element so it must be resized. */
 	private boolean changed;
+	/** The "capacity x bits" type description drawn inside the element. */
 	private String specs;
 	
 	/**
@@ -410,10 +435,10 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
-	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
-	 * @see jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
-	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String encodeInitRLE(String text) {
 
@@ -434,7 +459,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
 	 */
 	static String encodeInitRLE(String text, long maxWords) {
 
@@ -524,11 +549,11 @@ public final class Memory extends LogicElement {
 	 * @throws IllegalArgumentException if the encoding is malformed (the
 	 *             loader reports a load error).
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsGarbage()
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
-	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
-	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsGarbage()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String decodeInitRLE(String rle) {
 
@@ -545,7 +570,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the canonical text.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
 	 */
 	static String decodeInitRLE(String rle, long maxWords) {
 
@@ -747,16 +772,27 @@ public final class Memory extends LogicElement {
 	private class MemoryEdit extends ElementDialog implements ActionListener {
 		
 		// properties
+		/** Input field for the element name. */
 		private JTextField nameField = new JTextField(name);
+		/** Input field for the number of bits per word. */
 		private JTextField bitsField = new JTextField(bits+"",10);
+		/** Input field for the capacity in words. */
 		private JTextField capacityField = new JTextField(defaultCapacity+"",10);
+		/** Keypad for entering the bits per word. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,bits,this);
+		/** Keypad for entering the capacity. */
 		private KeyPad capacityPad = new KeyPad(capacityField,10,defaultCapacity,this);
+		/** Radio button selecting the RAM type. */
 		private JRadioButton ram = new JRadioButton("RAM");
+		/** Radio button selecting the ROM type. */
 		private JRadioButton rom = new JRadioButton("ROM");
+		/** Button choosing initialization from a file. */
 		private JButton fromFile = new JButton("from File");
+		/** Button choosing built-in initialization. */
 		private JButton builtIn = new JButton("Built In");
+		/** True if creating a new memory element, false if changing one. */
 		private boolean create;
+		/** Working copy of the built-in initial value text, committed on OK. */
 		String tempInit = initialValue;
 		
 		/**
@@ -1082,6 +1118,7 @@ public final class Memory extends LogicElement {
 		return true;
 	} // end of canChange method
 	
+	/** Graphics object saved by change() so the dialog can measure name widths. */
 	private Graphics saveg;
 	
 	/**
@@ -1273,8 +1310,11 @@ public final class Memory extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
+	/** The running memory contents during simulation. */
 	private WordStore mem;
+	/** The initial memory image, copied to the running memory at simulation start. */
 	private WordStore initMem;
+	/** The value currently driven on the output, or null if none. */
 	private BitSet currentValue;
 	/**
 	 * One entry in the write history: the value written (what), the address
@@ -1282,15 +1322,26 @@ public final class Memory extends LogicElement {
 	 * to populate the activity dialog.
 	 */
 	private static class WriteRecord {
+		/** The value written. */
 		BitSet what;
+		/** The address written to. */
 		int where;
+		/** The simulation time of the write. */
 		long when;
+
+		/**
+		 * Create an empty record; the caller fills in the fields.
+		 */
+		private WriteRecord() {
+		}
 	};
 
 	// The write history exists to feed the activity dialog; letting it
 	// grow with every write made long simulations leak (#20), so it is
 	// bounded to the newest records.
+	/** The maximum number of write records kept in the history. */
 	private static final int ACTIVITY_LIMIT = 10_000;
+	/** The most recent writes, newest first, bounded by ACTIVITY_LIMIT. */
 	private LinkedList<WriteRecord> activity =
 		new LinkedList<WriteRecord>();
 
@@ -1303,16 +1354,35 @@ public final class Memory extends LogicElement {
 	 */
 	private interface WordStore {
 
-		/** The stored word, or null if this address was never set. */
+		/**
+		 * The stored word, or null if this address was never set.
+		 *
+		 * @param addr The word address.
+		 *
+		 * @return the word, or null if absent.
+		 */
 		BitSet get(int addr);
 
-		/** Store a word at an address. */
+		/**
+		 * Store a word at an address.
+		 *
+		 * @param addr The word address.
+		 * @param value The word to store.
+		 */
 		void put(int addr, BitSet value);
 
-		/** Addresses that have been set, in ascending order. */
+		/**
+		 * Addresses that have been set, in ascending order.
+		 *
+		 * @return the set addresses.
+		 */
 		SortedSet<Integer> addresses();
 
-		/** An independent copy (the running memory starts as a copy of the initial image). */
+		/**
+		 * An independent copy (the running memory starts as a copy of the initial image).
+		 *
+		 * @return the copy.
+		 */
 		WordStore copy();
 	}
 
@@ -1323,7 +1393,9 @@ public final class Memory extends LogicElement {
 	 */
 	private static final class DenseWordStore implements WordStore {
 
+		/** The stored words, one long per address. */
 		private final long[] words;
+		/** One bit per address: set if that address holds a word. */
 		private final BitSet present;
 
 		/**
@@ -1405,6 +1477,7 @@ public final class Memory extends LogicElement {
 	 */
 	private static final class SparseWordStore implements WordStore {
 
+		/** The stored words, keyed by address. */
 		private final Map<Integer,BitSet> map;
 
 		/**
@@ -1469,6 +1542,7 @@ public final class Memory extends LogicElement {
 
 	// dense storage allocates the full capacity eagerly; past this many
 	// words (32 MB of longs) assume sparse use and fall back to the map
+	/** The largest capacity, in words, given dense storage. */
 	private static final int DENSE_CAPACITY_LIMIT = 1 << 22;
 
 	/**
@@ -1570,7 +1644,13 @@ public final class Memory extends LogicElement {
 	 * The memory operation implied by the current input signals: WRITE a
 	 * word, READ a word, or OFF when the chip is not selected.
 	 */
-	private static enum MemoryAction {WRITE,READ,OFF};
+	private static enum MemoryAction {
+		/** Write a word to memory. */
+		WRITE,
+		/** Read a word from memory. */
+		READ,
+		/** The chip is not selected; drive no value. */
+		OFF};
 	
 	/**
 	 * React to an event.
@@ -1746,7 +1826,7 @@ public final class Memory extends LogicElement {
 	 * 
 	 * @return the value at that location.
 	 *
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 */
 	public BitSet getCurrentValue(int loc){
 		

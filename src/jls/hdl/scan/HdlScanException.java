@@ -36,6 +36,8 @@ public class HdlScanException extends Exception {
 	} // end of two-argument HdlScanException constructor
 
 	/**
+	 * Gets the source line the problem was found on.
+	 *
 	 * @return the 1-based source line of the problem, or 0 if unknown
 	 */
 	public int line() {

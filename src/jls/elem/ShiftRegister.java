@@ -45,7 +45,7 @@ public final class ShiftRegister extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -60,21 +60,37 @@ public final class ShiftRegister extends LogicElement {
 	 * sign fill (arithmetic). Each constant's name is also its save-file
 	 * tag, so the names must not change.
 	 */
-	private enum Type {LogicalLeft, LogicalRight, ArithmeticRight};
+	private enum Type {
+		/** Shift toward the high bit, filling with zeros. */
+		LogicalLeft,
+		/** Shift toward the low bit, filling with zeros. */
+		LogicalRight,
+		/** Shift toward the low bit, filling with copies of the sign bit. */
+		ArithmeticRight
+	};
 
 	// default values
+	/** The shift kind a new instance starts with. */
 	private static final Type defaultType = Type.LogicalLeft;
+	/** The data width a new instance starts with. */
 	private static final int defaultBits = 8;
+	/** The propagation delay a new instance starts with. */
 	private static final int defaultPropDelay = 25;
 
 	// saved properties
+	/** The shift kind of this instance. */
 	private Type type = defaultType;
+	/** The width of the data input and output, in bits. */
 	private int bits = defaultBits;
+	/** The propagation delay of this instance. */
 	private int propDelay = defaultPropDelay;
+	/** Which side of the element the output is on. */
 	private JLSInfo.Orientation outputOrientation = JLSInfo.Orientation.RIGHT;
+	/** Which side of the element the amount input is on. */
 	private JLSInfo.Orientation amountOrientation = JLSInfo.Orientation.DOWN;
 
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
 
 	/**
@@ -169,6 +185,8 @@ public final class ShiftRegister extends LogicElement {
 	/**
 	 * The transform from canonical geometry (output RIGHT) to the current
 	 * output orientation.
+	 *
+	 * @return the transform chain mapping canonical points to displayed points.
 	 */
 	private GridTransform.Chain placement() {
 
@@ -238,6 +256,7 @@ public final class ShiftRegister extends LogicElement {
 	// dispatch, and copy for this element's own attributes. The names
 	// and save order are the fork's, so 4.6-era fork files load
 	// unchanged (issue #122 H2).
+	/** This element's own persisted attributes, in the fork's save order. */
 	private static final java.util.List<Attribute> OWN_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.StringAttribute("type") {
@@ -367,6 +386,7 @@ public final class ShiftRegister extends LogicElement {
 		}
 	);
 
+	/** Base attributes plus this element's own, in save order. */
 	private static final java.util.List<Attribute> ALL_ATTRIBUTES =
 			concatAttributes(OWN_ATTRIBUTES);
 
@@ -562,31 +582,45 @@ public final class ShiftRegister extends LogicElement {
 			implements java.awt.event.ActionListener {
 
 		// properties
+		/** Input field for the number of data bits. */
 		private javax.swing.JTextField bitsField =
 				new javax.swing.JTextField(defaultBits+"",5);
+		/** Keypad for entering the number of data bits. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Selects logical left shift. */
 		private javax.swing.JRadioButton shiftLeft =
 				new javax.swing.JRadioButton("Shift Left",true);
+		/** Selects logical right shift. */
 		private javax.swing.JRadioButton shiftRight =
 				new javax.swing.JRadioButton("Shift Right");
+		/** Selects arithmetic right shift. */
 		private javax.swing.JRadioButton shiftRightArith =
 				new javax.swing.JRadioButton("Shift Right Arithmetic");
+		/** Puts the output on the left side. */
 		private javax.swing.JRadioButton oLeft =
 				new javax.swing.JRadioButton("Left");
+		/** Puts the output on the right side. */
 		private javax.swing.JRadioButton oRight =
 				new javax.swing.JRadioButton("Right", true);
+		/** Puts the output on the top side. */
 		private javax.swing.JRadioButton oUp =
 				new javax.swing.JRadioButton("Up");
+		/** Puts the output on the bottom side. */
 		private javax.swing.JRadioButton oDown =
 				new javax.swing.JRadioButton("Down");
+		/** Puts the amount input on the left side. */
 		private javax.swing.JRadioButton sLeft =
 				new javax.swing.JRadioButton("Left");
+		/** Puts the amount input on the right side. */
 		private javax.swing.JRadioButton sRight =
 				new javax.swing.JRadioButton("Right");
+		/** Puts the amount input on the top side. */
 		private javax.swing.JRadioButton sUp =
 				new javax.swing.JRadioButton("Up");
+		/** Puts the amount input on the bottom side. */
 		private javax.swing.JRadioButton sDown =
 				new javax.swing.JRadioButton("Down",true);
+		/** Label above the amount orientation buttons. */
 		private javax.swing.JLabel olbl2 =
 				new javax.swing.JLabel("Amount Orientation");
 
@@ -820,6 +854,7 @@ public final class ShiftRegister extends LogicElement {
 //	Simulation
 //	-------------------------------------------------------------------------------
 
+	/** The value currently propagating toward the output. */
 	private BitSet toBeValue;
 
 	/**

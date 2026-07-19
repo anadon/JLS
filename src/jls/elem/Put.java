@@ -14,15 +14,25 @@ public abstract sealed class Put
 		permits Input, Output {
 
 	// properties
+	/** The name of this put. */
 	protected String name;				// name
+	/** The element this put is a part of. */
 	protected LogicElement element;		// the element it is a part of
+	/** The x-coordinate of the center of this put relative to the element. */
 	protected int xr;					// x-coordinate of center relative to element
+	/** The y-coordinate of the center of this put relative to the element. */
 	protected int yr;					// y-coordinate of center relative to element
+	/** The x-coordinate saved by savePosition, for restorePosition. */
 	private int savex;
+	/** The y-coordinate saved by savePosition, for restorePosition. */
 	private int savey;
+	/** The number of bits in this put (0 implies arbitrary). */
 	protected int bits;					// number of bits
+	/** True if this put is touching a WireEnd. */
 	private boolean touching = false;	// touching a WireEnd?
+	/** The WireEnd this put is attached to, or null if unattached. */
 	private WireEnd wireEnd = null;		// the WireEnd this put attached to
+	/** The copy of this put, to help cut/paste. */
 	protected Put myCopy;				// to help cut/paste
 	
 	/**
@@ -61,9 +71,9 @@ public abstract sealed class Put
 	 * 
 	 * @return the put's name.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public String getName() {
 		
@@ -75,10 +85,10 @@ public abstract sealed class Put
 	 * 
 	 * @return The x-coordinate.
 	 *
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
-	 * @see jls.edit.DragCandidateBoundTest#putLocations()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#putLocations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getX() {
 		
@@ -90,10 +100,10 @@ public abstract sealed class Put
 	 * 
 	 * @return The y-coordinate.
 	 *
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
-	 * @see jls.edit.DragCandidateBoundTest#putLocations()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#putLocations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getY() {
 		
@@ -105,7 +115,7 @@ public abstract sealed class Put
 	 * 
 	 * @return the number of bits.
 	 *
-	 * @see jls.ui.CircuitAssert#assertPutBits()
+	 * @jls.testedby jls.ui.CircuitAssert#assertPutBits()
 	 */
 	public int getBits() {
 		
@@ -117,8 +127,8 @@ public abstract sealed class Put
 	 * 
 	 * @return the element.
 	 *
-	 * @see jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public LogicElement getElement() {
 		
@@ -128,8 +138,10 @@ public abstract sealed class Put
 	/**
 	 * Get wire end this put is attached to, or null if not attached.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @return the wire end this put is attached to, or null if not attached.
+	 *
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public WireEnd getWireEnd() {
 		
@@ -141,10 +153,10 @@ public abstract sealed class Put
 	 * 
 	 * @return true if it is attached, false if not.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
-	 * @see jls.edit.TriStateBundleConnectTest#freeInput()
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freeInput()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
 		
@@ -281,6 +293,7 @@ public abstract sealed class Put
 // Simulation
 //-------------------------------------------------------------------------------
 		
+	/** The current simulated value of this put. */
 	protected BitSet currentValue;
 	
 } // end of Put class

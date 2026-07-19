@@ -197,10 +197,10 @@ public abstract class SimpleEditor extends JPanel {
 	 *
 	 * @param fileName Absolute path of the .jls~ checkpoint file.
 	 * @param circuitText The serialized circuit.
-	 * @see jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
-	 * @see jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
-	 * @see jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
-	 * @see jls.edit.CheckpointWriterTest#newerCheckpointSupersedesQueuedOne()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#newerCheckpointSupersedesQueuedOne()
 	 */
 	static void writeCheckpointInBackground(final String fileName, String circuitText) {
 
@@ -233,8 +233,8 @@ public abstract class SimpleEditor extends JPanel {
 	 * so quitting right after a save cannot leave a stale checkpoint behind.
 	 *
 	 * @param fileName Absolute path of the .jls~ checkpoint file.
-	 * @see jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
-	 * @see jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#cancelSupersedesQueuedCheckpointAndDeletesFile()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#checkpointAfterCancelIsStillWritten()
 	 */
 	static void cancelCheckpoint(final String fileName) {
 
@@ -276,13 +276,13 @@ public abstract class SimpleEditor extends JPanel {
 	 *
 	 * @return true if put belongs to a bundle and the attach would mix
 	 *         tri-state and normal wires, false otherwise.
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToNormalBundle()
-	 * @see jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
-	 * @see jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
-	 * @see jls.edit.TriStateBundleConnectTest#normalDrivenWireIsStillRefusedOnTriStateBundle()
-	 * @see jls.edit.TriStateBundleConnectTest#normalWireMayAttachToNormalBundle()
-	 * @see jls.edit.TriStateBundleConnectTest#triStateWireIsStillRefusedOnNormalBundle()
-	 * @see jls.edit.TriStateBundleConnectTest#triStateWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToNormalBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#normalDrivenWireIsStillRefusedOnTriStateBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#normalWireMayAttachToNormalBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#triStateWireIsStillRefusedOnNormalBundle()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#triStateWireMayAttachToTriStateBundle()
 	 */
 	static boolean mixesTriStateAndNormal(WireEnd end, Put put) {
 
@@ -349,12 +349,12 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param wire The wire to check.
 	 *
 	 * @return true if the wire collides along its span.
-	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
-	 * @see jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
-	 * @see jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
-	 * @see jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
-	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
-	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#elementsMovingWithTheSelectionAreSkipped()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#landingOnAStationaryWireEndStillCollides()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireCrossingWireStaysLegal()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
 	 */
 	static boolean wireCollidesAlongSpan(Circuit circuit,
 			Set<Element> selected, Element sel, Wire wire) {
@@ -470,7 +470,7 @@ public abstract class SimpleEditor extends JPanel {
 	 * Get the circuit being editted by this editor.
 	 * 
 	 * @return the circuit.
-	 * @see jls.ui.EditorGestureSupport#currentCircuit()
+	 * @jls.testedby jls.ui.EditorGestureSupport#currentCircuit()
 	 */
 	public Circuit getCircuit() {
 
@@ -747,11 +747,11 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param state The current editor state.
 	 * @param selectionSize The number of currently selected elements.
 	 * @return the gesture to perform.
-	 * @see jls.edit.CtrlWGestureTest#idleStartsWireDespiteMultiSelection()
-	 * @see jls.edit.CtrlWGestureTest#idleStartsWireDespiteSingleSelection()
-	 * @see jls.edit.CtrlWGestureTest#idleStartsWireWithEmptySelection()
-	 * @see jls.edit.CtrlWGestureTest#otherStatesDoNothing()
-	 * @see jls.edit.CtrlWGestureTest#watchToggleStillReachableFromSelectedState()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireDespiteMultiSelection()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireDespiteSingleSelection()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireWithEmptySelection()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#otherStatesDoNothing()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#watchToggleStillReachableFromSelectedState()
 	 */
 	static CtrlW ctrlWGesture(State state, int selectionSize) {
 
@@ -787,9 +787,9 @@ public abstract class SimpleEditor extends JPanel {
 	 * @param x The x-coordinate for the wire end.
 	 * @param y The y-coordinate for the wire end.
 	 * @return the new wire end and the pre-clear selection state.
-	 * @see jls.edit.CtrlWGestureTest#overlapFeedbackKeyedOffPreClearSelection()
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
-	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#overlapFeedbackKeyedOffPreClearSelection()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
 	 */
 	static WireStart startWireGesture(Circuit circuit, Set<Element> selected,
 			int x, int y) {

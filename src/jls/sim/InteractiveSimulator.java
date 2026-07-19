@@ -102,10 +102,10 @@ public final class InteractiveSimulator extends Simulator {
 	/**
 	 * Create a new Simulator object.
 	 *
-	 * @see jls.sim.InteractiveSimulatorFieldTest#buildSimulatorPanel()
-	 * @see jls.sim.TraceRetentionTest#parent()
-	 * @see jls.sim.TraceWindowingTest#parent()
-	 * @see jls.ui.EditorGestureSupport#EditorGestureSupport()
+	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#buildSimulatorPanel()
+	 * @jls.testedby jls.sim.TraceRetentionTest#parent()
+	 * @jls.testedby jls.sim.TraceWindowingTest#parent()
+	 * @jls.testedby jls.ui.EditorGestureSupport#EditorGestureSupport()
 	 */
 	public InteractiveSimulator() {
 
@@ -531,8 +531,8 @@ public final class InteractiveSimulator extends Simulator {
 	 * 
 	 * @return the JPanel that displays the simulator
 	 *
-	 * @see jls.sim.InteractiveSimulatorFieldTest#button()
-	 * @see jls.sim.InteractiveSimulatorFieldTest#fieldWithColumns()
+	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#button()
+	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#fieldWithColumns()
 	 */
 	public JPanel getWindow() {
 
@@ -542,8 +542,8 @@ public final class InteractiveSimulator extends Simulator {
 	/**
 	 * Set the time limit from the tlimit text field.
 	 *
-	 * @see jls.sim.InteractiveSimulatorFieldTest#setMaxTimeRejectsHugeNegativeAndKeepsPreviousLimit()
-	 * @see jls.sim.InteractiveSimulatorFieldTest#setMaxTimeStillAcceptsValidLimits()
+	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#setMaxTimeRejectsHugeNegativeAndKeepsPreviousLimit()
+	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#setMaxTimeStillAcceptsValidLimits()
 	 */
 	public void setMaxTime() {
 
@@ -1122,8 +1122,8 @@ public final class InteractiveSimulator extends Simulator {
 		/**
 		 * Set up the window.
 		 *
-		 * @see jls.sim.TraceRetentionTest#parent()
-		 * @see jls.sim.TraceWindowingTest#parent()
+		 * @jls.testedby jls.sim.TraceRetentionTest#parent()
+		 * @jls.testedby jls.sim.TraceWindowingTest#parent()
 		 */
 		public Traces() {
 

@@ -81,6 +81,7 @@ public final class LayoutGraph {
 		public final int width;
 		/** Element height in pixels (a positive multiple of the grid). */
 		public final int height;
+		/** The element's ports by name, in declaration order. */
 		private final Map<String, Port> ports =
 				new LinkedHashMap<String, Port>();
 
@@ -116,6 +117,8 @@ public final class LayoutGraph {
 		}
 
 		/**
+		 * Lists this element's ports.
+		 *
 		 * @return the node's ports in declaration order, unmodifiable
 		 */
 		public List<Port> ports() {
@@ -189,9 +192,18 @@ public final class LayoutGraph {
 		}
 	} // end of Edge class
 
+	/** The graph's elements by id, in insertion order. */
 	private final Map<String, Node> nodes =
 			new LinkedHashMap<String, Node>();
+	/** The graph's connections, in insertion order. */
 	private final List<Edge> edges = new ArrayList<Edge>();
+
+	/**
+	 * Creates an empty graph; the builder populates it with
+	 * {@link #add} and {@link #connect}.
+	 */
+	public LayoutGraph() {
+	}
 
 	/**
 	 * Adds an element to the graph.
@@ -251,6 +263,8 @@ public final class LayoutGraph {
 	}
 
 	/**
+	 * Lists the elements to place.
+	 *
 	 * @return the elements in insertion order, unmodifiable
 	 */
 	public List<Node> nodes() {
@@ -276,6 +290,8 @@ public final class LayoutGraph {
 	}
 
 	/**
+	 * Lists the point-to-point connections.
+	 *
 	 * @return the connections in insertion order, unmodifiable
 	 */
 	public List<Edge> edges() {

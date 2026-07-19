@@ -34,23 +34,23 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Create a new Simulator object.
 	 *
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
-	 * @see jls.ElementSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#simulate()
-	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
-	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
-	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
-	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
-	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
-	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
-	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
-	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
-	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#simulate()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @jls.testedby jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public BatchSimulator() {
 
@@ -80,22 +80,22 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Run the simulator.
 	 *
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
-	 * @see jls.ElementSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#simulate()
-	 * @see jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
-	 * @see jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
-	 * @see jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
-	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
-	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
-	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
-	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
-	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#watchedElementsPrintInNameOrder()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#simulate()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#agreeingTriStateDriversDoNotWarn()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#constantValueIsMaskedToTheNetWidth()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#multiDriverConflictResolvesDeterministicallyAndWarnsOnce()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @jls.testedby jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	public void runSim() {
 
@@ -163,9 +163,9 @@ public class BatchSimulator extends Simulator {
 	 * Create and add TestGen element to circuit.
 	 * Remove any SigGen's in the circuit.
 	 *
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
-	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
+	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public void addTestGen() {
 
@@ -230,8 +230,8 @@ public class BatchSimulator extends Simulator {
 	 *
 	 * @return a read-only view of the trace map.
 	 *
-	 * @see jls.BatchTracePrinterTest#traceSamplesRecordTheWatchedRun()
-	 * @see jls.BatchTracePrinterTest#tracePrintableRendersTheRecordedSamples()
+	 * @jls.testedby jls.BatchTracePrinterTest#traceSamplesRecordTheWatchedRun()
+	 * @jls.testedby jls.BatchTracePrinterTest#tracePrintableRendersTheRecordedSamples()
 	 */
 	public Map<LogicElement,List<TraceSample>> getTraceSamples() {
 
@@ -245,8 +245,8 @@ public class BatchSimulator extends Simulator {
 	 *
 	 * @param fileName The VCD file to write, or null.
 	 *
-	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
-	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @jls.testedby jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public void setVcdFile(@Nullable String fileName) {
 
@@ -261,7 +261,7 @@ public class BatchSimulator extends Simulator {
 	 * @throws IllegalStateException if setVcdFile has not been called
 	 *         with a non-null file name.
 	 *
-	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @jls.testedby jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
 	 */
 	public void writeVcd() throws java.io.IOException {
 
@@ -285,8 +285,8 @@ public class BatchSimulator extends Simulator {
 	 *
 	 * @return the complete VCD text.
 	 *
-	 * @see jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
-	 * @see jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
+	 * @jls.testedby jls.VcdExportGoldenTest#clockedRegisterVcdMatchesGoldenByteForByte()
+	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 */
 	public String toVcd() {
 
@@ -443,7 +443,7 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Display reason for stopping and the time at which it stopped.
 	 *
-	 * @see jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#stopHaltsTheSimulationEarly()
 	 */
 	public void displayOutcome() {
 

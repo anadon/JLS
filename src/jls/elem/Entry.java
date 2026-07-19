@@ -10,16 +10,25 @@ import java.awt.*;
 public abstract class Entry {
 	
 	// named constants
+	/** The default (and minimum) width of an entry. */
 	private final int defaultWidth = 10;
+	/** The default (and minimum) height of an entry. */
 	private final int defaultHeight = 10;
 	
 	// properties
+	/** The TruthTable object this entry is a part of. */
 	protected TruthTable ttelem;
+	/** The x-coordinate of this entry. */
 	protected int x;
+	/** The y-coordinate of this entry. */
 	protected int y;
+	/** The minimum width of this entry. */
 	protected int minWidth = defaultWidth;
+	/** The minimum height of this entry. */
 	protected int minHeight = defaultHeight;
+	/** The width of this entry. */
 	protected int width = defaultWidth;
+	/** The height of this entry. */
 	protected int height = defaultHeight;
 	
 	/**

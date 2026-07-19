@@ -22,20 +22,33 @@ public abstract sealed class Element
 		permits DisplayElement, LogicElement, Wire {
 
 	// saved properties
+	/** The file-local reference index, reassigned on every save. */
 	private int id; 						// file-local reference index, reassigned on every save
+	/** The permanent identity of this element (#165). */
 	private ElementId stableId = ElementId.mintFresh(); // permanent identity (#165)
+	/** Whether stableId was declared by the loaded file. */
 	private boolean stableIdFromFile = false; // whether stableId was declared by the loaded file
+	/** The x-coordinate of the upper left corner of this element. */
 	protected int x; 						// upper left corner of element
+	/** The y-coordinate of the upper left corner of this element. */
 	protected int y;						//   (snap-to position for most elements)
+	/** The width of this element in pixels. */
 	protected int width = 0; 				// size of element
+	/** The height of this element in pixels. */
 	protected int height = 0;
+	/** Whether editing of this element is disallowed. */
 	private boolean uneditable = false;		// to keep others from editing this element
+	/** The position of this element in the signal trace (-1 if none). */
 	private int tracePosition = -1;			// position in signal trace (-1 if none)
 
 	// running properties
+	/** Whether this element should be drawn highlighted. */
 	protected boolean highlight = false;	// whether the elements should be drawn highlighted
+	/** The saved x-coordinate, restored after an aborted move. */
 	private int savex;						// so it can be put back after an aborted move
+	/** The saved y-coordinate, restored after an aborted move. */
 	private int savey;
+	/** The circuit this element is part of. */
 	protected Circuit circuit;				// the circuit this element is part of
 
 	/**
@@ -43,7 +56,7 @@ public abstract sealed class Element
 	 * 
 	 * @param circuit The circuit this element is part of.
 	 *
-	 * @see jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
+	 * @jls.testedby jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
 	 */
 	public Element(Circuit circuit) {
 
@@ -53,7 +66,14 @@ public abstract sealed class Element
 	/**
 	 * Set up this element (overridden by most elements).
 	 *
-	 * @see jls.ui.DialogConstructionSmokeTest#constructAndCancel()
+	 * @param g The Graphics object to use to initialize sizes.
+	 * @param editWindow The editor window this element will be displayed in.
+	 * @param x The x-coordinate of the last known mouse position.
+	 * @param y The y-coordinate of the last known mouse position.
+	 *
+	 * @return false if cancelled, true otherwise (this default implementation always returns false).
+	 *
+	 * @jls.testedby jls.ui.DialogConstructionSmokeTest#constructAndCancel()
 	 */
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
 
@@ -66,7 +86,7 @@ public abstract sealed class Element
 	 * @param x The x-coordinate of the upper left corner of this element.
 	 * @param y The y-coordinate of the upper left corner of this element.
 	 *
-	 * @see jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
+	 * @jls.testedby jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
 	 */
 	public void setXY(int x, int y) {
 
@@ -109,17 +129,17 @@ public abstract sealed class Element
 	 * 
 	 * @return the x-coordinate.
 	 *
-	 * @see jls.StableElementIdTest#sidsByLogicalElement()
-	 * @see jls.edit.TriStateBundleConnectTest#elementAt()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.ui.CircuitAssert#describe()
-	 * @see jls.ui.EditorGestureTest#centerX()
-	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
-	 * @see jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
-	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
-	 * @see jls.ui.GeometryAssert#assertElementAt()
-	 * @see jls.ui.GeometryAssert#assertOnGrid()
+	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#elementAt()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.ui.CircuitAssert#describe()
+	 * @jls.testedby jls.ui.EditorGestureTest#centerX()
+	 * @jls.testedby jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @jls.testedby jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
+	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @jls.testedby jls.ui.GeometryAssert#assertElementAt()
+	 * @jls.testedby jls.ui.GeometryAssert#assertOnGrid()
 	 */
 	public int getX() {
 
@@ -131,17 +151,17 @@ public abstract sealed class Element
 	 * 
 	 * @return the y-coordinate.
 	 *
-	 * @see jls.StableElementIdTest#sidsByLogicalElement()
-	 * @see jls.edit.TriStateBundleConnectTest#elementAt()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.ui.CircuitAssert#describe()
-	 * @see jls.ui.EditorGestureTest#centerY()
-	 * @see jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
-	 * @see jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
-	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
-	 * @see jls.ui.GeometryAssert#assertElementAt()
-	 * @see jls.ui.GeometryAssert#assertOnGrid()
+	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#elementAt()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.ui.CircuitAssert#describe()
+	 * @jls.testedby jls.ui.EditorGestureTest#centerY()
+	 * @jls.testedby jls.ui.EditorGestureTest#movingOneOfTwoElementsLeavesTheOtherPut()
+	 * @jls.testedby jls.ui.EditorGestureTest#pressAndDragMovesAnElement()
+	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @jls.testedby jls.ui.GeometryAssert#assertElementAt()
+	 * @jls.testedby jls.ui.GeometryAssert#assertOnGrid()
 	 */
 	public int getY() {
 
@@ -170,6 +190,7 @@ public abstract sealed class Element
 
 	// The attributes every element saves, in their historical save order
 	// (#23). One declaration drives save, copy, and load dispatch.
+	/** The attributes every element saves, in historical save order (#23). */
 	private static final java.util.List<Attribute> BASE_ATTRIBUTES =
 			java.util.List.of(
 		new Attribute.IntAttribute("id") {
@@ -380,8 +401,10 @@ public abstract sealed class Element
 
 	/**
 	 * Initialize internal information for this element.
-	 * 
+	 *
 	 * @param g The graphics object to use.
+	 *
+	 * @throws Exception always, unless overridden by a subclass.
 	 */
 	public void init(Graphics g) throws Exception{
 		throw new Exception("ERROR: using undefined function from " + this.getName());
@@ -390,9 +413,11 @@ public abstract sealed class Element
 	/**
 	 * Placeholder for element copies.
 	 *
-	 * @see jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
-	 * @see jls.StableElementIdTest#copyMintsAFreshId()
-	 * @see jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
+	 * @return a copy of this element, or null from this placeholder implementation.
+	 *
+	 * @jls.testedby jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
+	 * @jls.testedby jls.StableElementIdTest#copyMintsAFreshId()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
 	 */
 	public Element copy() {
 
@@ -435,11 +460,11 @@ public abstract sealed class Element
 	 * @param dx Distance to move in the x-direction.
 	 * @param dy Distance to move in the y-direction.
 	 *
-	 * @see jls.DeterministicSaveTest#stateHashIsContentDetermined()
-	 * @see jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
-	 * @see jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
-	 * @see jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
-	 * @see jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
+	 * @jls.testedby jls.DeterministicSaveTest#stateHashIsContentDetermined()
+	 * @jls.testedby jls.DrawCullingParityTest#culledCandidatesMatchFullScan()
+	 * @jls.testedby jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
+	 * @jls.testedby jls.SpatialIndexTest#staysExactAfterMovesAndInvalidation()
+	 * @jls.testedby jls.edit.CircuitSnapshotTest#changedCircuitSnapshotsDifferently()
 	 */
 	public void move(int dx, int dy) {
 
@@ -462,10 +487,10 @@ public abstract sealed class Element
 	 * 
 	 * @return true if the point is in the display area, false if not.
 	 *
-	 * @see jls.SpatialIndexTest#everyContainingElementIsACandidate()
-	 * @see jls.SpatialIndexTest#reportsIndexVsScanTiming()
-	 * @see jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
-	 * @see jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
+	 * @jls.testedby jls.SpatialIndexTest#everyContainingElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#reportsIndexVsScanTiming()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
 	 */
 	public boolean contains(int x, int y) {
 
@@ -480,14 +505,14 @@ public abstract sealed class Element
 	 *
 	 * @return true if this element intersects the other, false if not.
 	 *
-	 * @see jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
-	 * @see jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
-	 * @see jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
-	 * @see jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
-	 * @see jls.elem.HollowVsFilledCollisionTest#cornerCollisionIsAttributedToTheWireEnd()
-	 * @see jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
-	 * @see jls.elem.HollowVsFilledCollisionTest#edgeCrossingCollidesWithThatWireOnly()
-	 * @see jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#clearWireCollidesInNeitherDirection()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireHangingOffAnElementDoesNotCollideWithIt()
+	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#containerInteriorDoesCollide()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#cornerCollisionIsAttributedToTheWireEnd()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edgeCrossingCollidesWithThatWireOnly()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#hollowInteriorDoesNotCollide()
 	 */
 	public boolean intersects(Element other) {
 
@@ -519,7 +544,7 @@ public abstract sealed class Element
 	 * 
 	 * @return true if the element is inside, false if not.
 	 *
-	 * @see jls.SpatialIndexTest#everyInsideElementIsACandidate()
+	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
 	 */
 	public boolean isInside(Rectangle rect) {
 
@@ -532,7 +557,7 @@ public abstract sealed class Element
 	 * 
 	 * @param light True if item should be highlighted, false otherwise.
 	 *
-	 * @see jls.edit.CtrlWGestureTest#hoverSelect()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#hoverSelect()
 	 */
 	public void setHighlight(boolean light) {
 
@@ -547,7 +572,7 @@ public abstract sealed class Element
 	 *
 	 * @return true if highlighted.
 	 *
-	 * @see jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
+	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	public boolean isHighlighted() {
 
@@ -559,11 +584,11 @@ public abstract sealed class Element
 	 *
 	 * @param id The id.
 	 *
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
-	 * @see jls.elem.AttributePersistenceTest#savedBytesMatchTheHandwrittenFormat()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
-	 * @see jls.elem.GroupOrientationTest#orientOf()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#savedBytesMatchTheHandwrittenFormat()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.elem.GroupOrientationTest#orientOf()
 	 */
 	public void setID(int id) {
 
@@ -577,10 +602,10 @@ public abstract sealed class Element
 	 *
 	 * @return the stable id.
 	 *
-	 * @see jls.StableElementIdTest#copyMintsAFreshId()
-	 * @see jls.StableElementIdTest#idsAreUniqueWithinACircuit()
-	 * @see jls.StableElementIdTest#mintedIdsSkipIdsTheFileAlreadyUses()
-	 * @see jls.StableElementIdTest#sidsByLogicalElement()
+	 * @jls.testedby jls.StableElementIdTest#copyMintsAFreshId()
+	 * @jls.testedby jls.StableElementIdTest#idsAreUniqueWithinACircuit()
+	 * @jls.testedby jls.StableElementIdTest#mintedIdsSkipIdsTheFileAlreadyUses()
+	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
 	 */
 	public ElementId getStableId() {
 
@@ -617,10 +642,10 @@ public abstract sealed class Element
 	 * 
 	 * @param output The print writer to use.
 	 *
-	 * @see jls.AllElementsRoundTripTest#saveElement()
-	 * @see jls.StringEscapeRoundTripTest#roundTrip()
-	 * @see jls.elem.AttributePersistenceTest#saveElement()
-	 * @see jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
+	 * @jls.testedby jls.AllElementsRoundTripTest#saveElement()
+	 * @jls.testedby jls.StringEscapeRoundTripTest#roundTrip()
+	 * @jls.testedby jls.elem.AttributePersistenceTest#saveElement()
+	 * @jls.testedby jls.elem.DisplayLegacyOrientTest#loadAndSaveElement()
 	 */
 	public void save(PrintWriter output) {
 
@@ -649,7 +674,7 @@ public abstract sealed class Element
 	 * 
 	 * @param g The Graphics object to draw with.
 	 *
-	 * @see jls.elem.MuxSymbolTest#render()
+	 * @jls.testedby jls.elem.MuxSymbolTest#render()
 	 */
 	public void draw(Graphics g) {
 
@@ -674,7 +699,13 @@ public abstract sealed class Element
 	/**
 	 * Get put near given x,y position (if one) - overridden.
 	 *
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @param x The x-coordinate of the position.
+	 * @param y The y-coordinate of the position.
+	 *
+	 * @return the put near the given position, or null if there is none
+	 * 		(this default implementation always returns null).
+	 *
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
 	 */
 	public Put getPut(int x, int y) {
 
@@ -693,6 +724,8 @@ public abstract sealed class Element
 	/**
 	 * See if this element is touching (for possible connections).
 	 * This is overridden in wire ends.
+	 *
+	 * @return true if touching, false if not (this default implementation always returns false).
 	 */
 	public boolean isTouching() {
 
@@ -710,10 +743,10 @@ public abstract sealed class Element
 	 * 
 	 * @return a set of all inputs and outputs.
 	 *
-	 * @see jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
-	 * @see jls.edit.DragCandidateBoundTest#putLocations()
-	 * @see jls.elem.GroupOrientationTest#puts()
-	 * @see jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
+	 * @jls.testedby jls.edit.DragCandidateBoundTest#putLocations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public Set<Put> getAllPuts() { return new HashSet<Put>(); }
 
@@ -722,18 +755,18 @@ public abstract sealed class Element
 	 *  
 	 * @return the bounding rectangle.
 	 *
-	 * @see jls.elem.GroupOrientationTest#horizontalGeometryIsUnchanged()
-	 * @see jls.elem.GroupOrientationTest#verticalBinderLoadsWithVerticalGeometry()
-	 * @see jls.elem.GroupOrientationTest#verticalSplitterLoadsWithVerticalGeometry()
-	 * @see jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
-	 * @see jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
-	 * @see jls.elem.OrientationGeometryTest#describe()
-	 * @see jls.ui.EditorGestureTest#centerX()
-	 * @see jls.ui.EditorGestureTest#centerY()
-	 * @see jls.ui.GeometryAssert#assertAbove()
-	 * @see jls.ui.GeometryAssert#assertDimensions()
-	 * @see jls.ui.GeometryAssert#assertLeftOf()
-	 * @see jls.ui.GeometryAssert#assertWithinGridUnits()
+	 * @jls.testedby jls.elem.GroupOrientationTest#horizontalGeometryIsUnchanged()
+	 * @jls.testedby jls.elem.GroupOrientationTest#verticalBinderLoadsWithVerticalGeometry()
+	 * @jls.testedby jls.elem.GroupOrientationTest#verticalSplitterLoadsWithVerticalGeometry()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
+	 * @jls.testedby jls.ui.EditorGestureTest#centerX()
+	 * @jls.testedby jls.ui.EditorGestureTest#centerY()
+	 * @jls.testedby jls.ui.GeometryAssert#assertAbove()
+	 * @jls.testedby jls.ui.GeometryAssert#assertDimensions()
+	 * @jls.testedby jls.ui.GeometryAssert#assertLeftOf()
+	 * @jls.testedby jls.ui.GeometryAssert#assertWithinGridUnits()
 	 */
 	public Rectangle getRect() {
 
@@ -749,10 +782,10 @@ public abstract sealed class Element
 	 *
 	 * @return the index bounds.
 	 *
-	 * @see jls.DrawCullingParityTest#mayBeVisible()
-	 * @see jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
-	 * @see jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
-	 * @see jls.SpatialIndexTest#bruteForceNear()
+	 * @jls.testedby jls.DrawCullingParityTest#mayBeVisible()
+	 * @jls.testedby jls.ProofBridgeTest#a1IndexIntervalsAreNonEmpty()
+	 * @jls.testedby jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
+	 * @jls.testedby jls.SpatialIndexTest#bruteForceNear()
 	 */
 	public Rectangle getIndexBounds() {
 
@@ -774,8 +807,8 @@ public abstract sealed class Element
 	 * 
 	 * @return The put.
 	 *
-	 * @see jls.edit.TriStateBundleConnectTest#freeInput()
-	 * @see jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freeInput()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
 	 */
 	public Put getPut(String name) {
 
@@ -826,8 +859,10 @@ public abstract sealed class Element
 	 * Overridden by elements that can do it.
 	 * Should never be called.
 	 * 
+	 * @param sed The simple editor the menu item will be used in.
+	 *
 	 * @return a menu item (can be a menu with submenu items)
-	 * 
+	 *
 	 * @throws UnsupportedOperationException if called and not overridden.
 	 */
 	public JMenuItem setupQuickMenu(SimpleEditor sed) {
@@ -918,7 +953,9 @@ public abstract sealed class Element
 	private class DelayChange extends ElementDialog {
 
 		// properties
+		/** Field to enter the delay or access time. */
 		private JTextField delayField = new JTextField(10);
+		/** Keypad for the delay field. */
 		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
 
 		/**
@@ -1019,7 +1056,7 @@ public abstract sealed class Element
 	 * 
 	 * @return false.
 	 *
-	 * @see jls.ui.CircuitAssert#assertWatched()
+	 * @jls.testedby jls.ui.CircuitAssert#assertWatched()
 	 */
 	public boolean isWatched() {
 

@@ -45,6 +45,9 @@ public final class ElementVocabulary {
 			"StateMachine", "Stop", "SubCircuit", "Text", "TriState",
 			"TruthTable", "WireEnd", "XorGate");
 
+	/**
+	 * Not instantiable - this class is only a vocabulary of static members.
+	 */
 	private ElementVocabulary() {
 
 	} // end of constructor

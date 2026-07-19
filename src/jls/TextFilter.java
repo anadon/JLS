@@ -14,8 +14,11 @@ import javax.swing.text.DocumentFilter;
 public final class TextFilter extends DocumentFilter {
 
 	// properties
+	/** The text field being filtered, read to build an edit's resulting content. */
 	private JTextField target;
+	/** The base (radix) numbers in the field are parsed in. */
 	private int base = 10;
+	/** The largest value the field may hold. */
 	private BigInteger max = null; // null means no maximum
 
 	/**

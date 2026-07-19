@@ -25,6 +25,8 @@ public abstract class Attribute {
 	protected final String name;
 
 	/**
+	 * Create a new attribute declaration.
+	 *
 	 * @param name The attribute name as it appears in saved files.
 	 */
 	protected Attribute(String name) {
@@ -53,6 +55,9 @@ public abstract class Attribute {
 	/**
 	 * Offer an int value from the loader.
 	 *
+	 * @param el The element to write to.
+	 * @param name The attribute name read from the file.
+	 * @param value The loaded value.
 	 * @return true if this attribute consumed it.
 	 */
 	public boolean setInt(Element el, String name, int value) {
@@ -60,19 +65,40 @@ public abstract class Attribute {
 		return false;
 	} // end of setInt method
 
-	/** Offer a long value from the loader. */
+	/**
+	 * Offer a long value from the loader.
+	 *
+	 * @param el The element to write to.
+	 * @param name The attribute name read from the file.
+	 * @param value The loaded value.
+	 * @return true if this attribute consumed it.
+	 */
 	public boolean setLong(Element el, String name, long value) {
 
 		return false;
 	} // end of setLong method
 
-	/** Offer a BigInteger value from the loader. */
+	/**
+	 * Offer a BigInteger value from the loader.
+	 *
+	 * @param el The element to write to.
+	 * @param name The attribute name read from the file.
+	 * @param value The loaded value.
+	 * @return true if this attribute consumed it.
+	 */
 	public boolean setBigInt(Element el, String name, BigInteger value) {
 
 		return false;
 	} // end of setBigInt method
 
-	/** Offer a String value from the loader. */
+	/**
+	 * Offer a String value from the loader.
+	 *
+	 * @param el The element to write to.
+	 * @param name The attribute name read from the file.
+	 * @param value The loaded value.
+	 * @return true if this attribute consumed it.
+	 */
 	public boolean setString(Element el, String name, String value) {
 
 		return false;
@@ -84,6 +110,8 @@ public abstract class Attribute {
 	public abstract static class IntAttribute extends Attribute {
 
 		/**
+		 * Create a new int-typed attribute declaration.
+		 *
 		 * @param name The attribute name as it appears in saved files.
 		 */
 		protected IntAttribute(String name) {
@@ -107,7 +135,12 @@ public abstract class Attribute {
 		 */
 		protected abstract void set(Element el, int value);
 
-		/** Override to skip the save line (defaults, recomputed values). */
+		/**
+		 * Override to skip the save line (defaults, recomputed values).
+		 *
+		 * @param el The element to read from.
+		 * @return true if the save line should be omitted.
+		 */
 		protected boolean omitted(Element el) {
 
 			return false;
@@ -156,6 +189,8 @@ public abstract class Attribute {
 	public abstract static class BigIntAttribute extends Attribute {
 
 		/**
+		 * Create a new BigInteger-typed attribute declaration.
+		 *
 		 * @param name The attribute name as it appears in saved files.
 		 */
 		protected BigIntAttribute(String name) {
@@ -232,6 +267,8 @@ public abstract class Attribute {
 	public abstract static class StringAttribute extends Attribute {
 
 		/**
+		 * Create a new String-typed attribute declaration.
+		 *
 		 * @param name The attribute name as it appears in saved files.
 		 */
 		protected StringAttribute(String name) {
@@ -255,7 +292,12 @@ public abstract class Attribute {
 		 */
 		protected abstract void set(Element el, String value);
 
-		/** Override to skip the save line. */
+		/**
+		 * Override to skip the save line.
+		 *
+		 * @param el The element to read from.
+		 * @return true if the save line should be omitted.
+		 */
 		protected boolean omitted(Element el) {
 
 			return false;
@@ -309,6 +351,8 @@ public abstract class Attribute {
 	public abstract static class OrientationAttribute extends StringAttribute {
 
 		/**
+		 * Create a new orientation attribute declaration.
+		 *
 		 * @param name The attribute name as it appears in saved files.
 		 */
 		protected OrientationAttribute(String name) {

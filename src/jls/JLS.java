@@ -16,6 +16,13 @@ package jls;
 public final class JLS  {
 
 	/**
+	 * Create a JLS instance. The class is stateless: all work happens
+	 * in the static {@link #main} entry point.
+	 */
+	public JLS() {
+	} // end of constructor
+
+	/**
 	 * Set up exception handler, then start up JLS.
 	 *
 	 * @param args Command line arguments.

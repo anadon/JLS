@@ -29,7 +29,12 @@ public final class GridTransform {
 	 * Rotate a point 90 degrees clockwise within a w-by-h box; the result
 	 * lives in an h-by-w box.
 	 *
-	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
+	 * @param px the point's x offset within the box.
+	 * @param py the point's y offset within the box.
+	 * @param height the height of the box the point lives in.
+	 * @return the rotated point, as an offset in the h-by-w box.
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotateCW(int px, int py, int height) {
 
@@ -40,8 +45,13 @@ public final class GridTransform {
 	 * Rotate a point 90 degrees counter-clockwise within a w-by-h box; the
 	 * result lives in an h-by-w box.
 	 *
-	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
-	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
+	 * @param px the point's x offset within the box.
+	 * @param py the point's y offset within the box.
+	 * @param width the width of the box the point lives in.
+	 * @return the rotated point, as an offset in the h-by-w box.
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
+	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotateCCW(int px, int py, int width) {
 
@@ -51,7 +61,13 @@ public final class GridTransform {
 	/**
 	 * Rotate a point 180 degrees within a w-by-h box.
 	 *
-	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
+	 * @param px the point's x offset within the box.
+	 * @param py the point's y offset within the box.
+	 * @param width the width of the box the point lives in.
+	 * @param height the height of the box the point lives in.
+	 * @return the rotated point, as an offset in the same box.
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Point rotate180(int px, int py, int width, int height) {
 
@@ -61,8 +77,13 @@ public final class GridTransform {
 	/**
 	 * Mirror a point across the box's vertical axis (flip left/right).
 	 *
-	 * @see jls.elem.GridTransformTest#adderLeftIsMirrorOfRight()
-	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
+	 * @param px the point's x offset within the box.
+	 * @param py the point's y offset within the box.
+	 * @param width the width of the box the point lives in.
+	 * @return the mirrored point, as an offset in the same box.
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#adderLeftIsMirrorOfRight()
+	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
 	public static Point mirrorX(int px, int py, int width) {
 
@@ -72,7 +93,12 @@ public final class GridTransform {
 	/**
 	 * Mirror a point across the box's horizontal axis (flip up/down).
 	 *
-	 * @see jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
+	 * @param px the point's x offset within the box.
+	 * @param py the point's y offset within the box.
+	 * @param height the height of the box the point lives in.
+	 * @return the mirrored point, as an offset in the same box.
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
 	public static Point mirrorY(int px, int py, int height) {
 
@@ -82,7 +108,11 @@ public final class GridTransform {
 	/**
 	 * The dimensions of a box after a quarter-turn rotation.
 	 *
-	 * @see jls.elem.GridTransformTest#quarterTurnsCompose()
+	 * @param width the box width before rotation.
+	 * @param height the box height before rotation.
+	 * @return the rotated dimensions (width and height swapped).
+	 *
+	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
 	public static Dimension rotatedSize(int width, int height) {
 
@@ -92,6 +122,10 @@ public final class GridTransform {
 	/**
 	 * Start a composed transform from a canonical box of the given size.
 	 * Operations are applied in the order they are chained.
+	 *
+	 * @param width the canonical box width.
+	 * @param height the canonical box height.
+	 * @return a new, empty chain over the canonical box.
 	 */
 	public static Chain chain(int width, int height) {
 
@@ -185,6 +219,10 @@ public final class GridTransform {
 		/**
 		 * Map a point from canonical coordinates through every chained
 		 * transform.
+		 *
+		 * @param px the point's x offset in the canonical box.
+		 * @param py the point's y offset in the canonical box.
+		 * @return the point's offset in the transformed box.
 		 */
 		public Point map(int px, int py) {
 
@@ -217,6 +255,9 @@ public final class GridTransform {
 
 		/**
 		 * The box dimensions after every chained transform.
+		 *
+		 * @return the canonical dimensions, with width and height swapped
+		 *         once per quarter-turn rotation in the chain.
 		 */
 		public Dimension size() {
 
@@ -233,6 +274,14 @@ public final class GridTransform {
 		/**
 		 * Draw a line whose endpoints are canonical coordinates, mapped
 		 * through the chain and offset by the element position.
+		 *
+		 * @param g the graphics object to draw on.
+		 * @param originX the x coordinate of the element's origin.
+		 * @param originY the y coordinate of the element's origin.
+		 * @param x1 the first endpoint's canonical x offset.
+		 * @param y1 the first endpoint's canonical y offset.
+		 * @param x2 the second endpoint's canonical x offset.
+		 * @param y2 the second endpoint's canonical y offset.
 		 */
 		public void drawLine(java.awt.Graphics g, int originX, int originY,
 				int x1, int y1, int x2, int y2) {

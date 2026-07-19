@@ -41,9 +41,9 @@ public final class Placement {
 	 *
 	 * @return the anchor point, in canvas coordinates.
 	 *
-	 * @see jls.util.PlacementTest#anchorPrefersTheKnownPositionOverTheCanvas()
-	 * @see jls.util.PlacementTest#missingCanvasAndPositionNeverCrashes()
-	 * @see jls.util.PlacementTest#partiallyUnknownPositionAlsoFallsBack()
+	 * @jls.testedby jls.util.PlacementTest#anchorPrefersTheKnownPositionOverTheCanvas()
+	 * @jls.testedby jls.util.PlacementTest#missingCanvasAndPositionNeverCrashes()
+	 * @jls.testedby jls.util.PlacementTest#partiallyUnknownPositionAlsoFallsBack()
 	 */
 	public static Point anchor(Component canvas, int x, int y) {
 
@@ -71,10 +71,10 @@ public final class Placement {
 	 *
 	 * @return the top left corner for the element, in canvas coordinates.
 	 *
-	 * @see jls.util.PlacementTest#dropCentersElementOnLastKnownPosition()
-	 * @see jls.util.PlacementTest#dropUsesIntegerCenteringForOddSizes()
-	 * @see jls.util.PlacementTest#originIsAValidKnownPosition()
-	 * @see jls.util.PlacementTest#unknownPositionFallsBackToCanvasCenter()
+	 * @jls.testedby jls.util.PlacementTest#dropCentersElementOnLastKnownPosition()
+	 * @jls.testedby jls.util.PlacementTest#dropUsesIntegerCenteringForOddSizes()
+	 * @jls.testedby jls.util.PlacementTest#originIsAValidKnownPosition()
+	 * @jls.testedby jls.util.PlacementTest#unknownPositionFallsBackToCanvasCenter()
 	 */
 	public static Point dropPoint(Component canvas, int x, int y,
 			int width, int height) {

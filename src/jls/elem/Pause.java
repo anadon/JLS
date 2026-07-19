@@ -185,7 +185,7 @@ public final class Pause extends LogicElement {
 	 * 
 	 * @param sim The simulator.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
 	public void initSim(Simulator sim) {
@@ -209,7 +209,7 @@ public final class Pause extends LogicElement {
 	 * @param sim The simulator to post events to.
 	 * @param todo Should be null.
 	 *
-	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
 	public void react(long now, Simulator sim, Object todo) {

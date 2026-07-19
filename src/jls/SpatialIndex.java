@@ -49,6 +49,13 @@ public final class SpatialIndex {
 	private final Map<Element, Rectangle> indexed = new HashMap<Element, Rectangle>();
 	private boolean dirty = true;
 
+	/**
+	 * Create an empty index. It starts dirty, so the first query pays
+	 * one rebuild pass over the authoritative element set.
+	 */
+	public SpatialIndex() {
+	} // end of constructor
+
 	/** Pack a cell coordinate pair into a map key. */
 	private static long key(int cx, int cy) {
 
@@ -57,6 +64,9 @@ public final class SpatialIndex {
 
 	/**
 	 * Whether the index needs a rebuild before it can answer queries.
+	 *
+	 * @return true if the index is stale and must be rebuilt, false if
+	 *         it is current.
 	 */
 	public boolean isDirty() {
 

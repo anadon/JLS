@@ -42,6 +42,8 @@ public final class ScannedModule {
 	} // end of ScannedModule constructor
 
 	/**
+	 * Lists the module's ports.
+	 *
 	 * @return the ports in declaration order, unmodifiable
 	 */
 	public List<ScannedPort> ports() {
@@ -49,6 +51,8 @@ public final class ScannedModule {
 	} // end of ports method
 
 	/**
+	 * Lists the module's parameter/generic defaults.
+	 *
 	 * @return evaluated parameter/generic defaults in declaration
 	 *         order, unmodifiable
 	 */

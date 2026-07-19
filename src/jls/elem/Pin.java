@@ -21,12 +21,17 @@ public abstract sealed class Pin extends LogicElement
 		permits InputPin, OutputPin {
 	
 	// saved properties
+	/** The name of this pin. */
 	protected String name;
+	/** The number of bits in this pin. */
 	protected int bits;
+	/** Whether this pin is watched (shown in the signal trace). */
 	protected boolean watched = false;
+	/** The direction this pin faces. */
 	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
+
 	// editting properties
+	/** Whether the setup dialog was cancelled. */
 	protected boolean cancelled;
 	
 	/**
@@ -54,12 +59,12 @@ public abstract sealed class Pin extends LogicElement
 	 * Get the name of this pin.
 	 * 
 	 * @return the name.
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#pinValue()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#pinValue()
-	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#pinValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
 	 */
 	@Override
 	public String getName() {
@@ -232,6 +237,8 @@ public abstract sealed class Pin extends LogicElement
 
 	/**
 	 * The pin kind for user-facing messages ("Input" or "Output").
+	 *
+	 * @return the pin kind, "Input" or "Output".
 	 */
 	protected abstract String pinKind();
 
@@ -453,19 +460,20 @@ public abstract sealed class Pin extends LogicElement
 	// Simulation state shared by both pins
 	// -----------------------------------------------------------------
 
+	/** The current simulated value of this pin. */
 	protected BitSet currentValue = new BitSet();
 
 	/**
 	 * Get the current value.
 	 *
 	 * @return the current value.
-	 * @see jls.BatchSimulationGoldenTest#simulate()
-	 * @see jls.ElementSimulationGoldenTest#pinValue()
-	 * @see jls.SequentialGoldenTest#simulate()
-	 * @see jls.SequentialGoldenTest#simulateWithVectors()
-	 * @see jls.ShiftRegisterTest#pinValue()
-	 * @see jls.SimulationSemanticsRegressionTest#pinValue()
-	 * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+	 * @jls.testedby jls.SequentialGoldenTest#simulate()
+	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+	 * @jls.testedby jls.ShiftRegisterTest#pinValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	@Override
 	public BitSet getCurrentValue() {

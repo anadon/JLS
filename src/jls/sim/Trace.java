@@ -99,13 +99,13 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @param width The current width of the trace area.
 	 * @param parent The parent object of this one.
 	 *
-	 * @see jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
-	 * @see jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
-	 * @see jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
-	 * @see jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
+	 * @jls.testedby jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
+	 * @jls.testedby jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
+	 * @jls.testedby jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
+	 * @jls.testedby jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
 	 */
 	public Trace(String name, Element el, int bits, int width,
 			InteractiveSimulator.Traces parent) {
@@ -153,8 +153,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @param factor The scale factor.
 	 *
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
 	 */
 	public void setScaleFactor(int factor) {
 		
@@ -167,12 +167,12 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @param value The value to add to the list, or null for HiZ.
 	 * @param when The time at which the value occurred.
 	 *
-	 * @see jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
-	 * @see jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
-	 * @see jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
-	 * @see jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
+	 * @jls.testedby jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
+	 * @jls.testedby jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
+	 * @jls.testedby jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
+	 * @jls.testedby jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
 	 */
 	public synchronized void addValue(@Nullable BitSet value, long when) {
 
@@ -200,13 +200,13 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @param time The current time.
 	 *
-	 * @see jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
-	 * @see jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
-	 * @see jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
-	 * @see jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
-	 * @see jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
+	 * @jls.testedby jls.sim.TraceRetentionTest#historyBeyondThePanelWidthSurvivesForScrollback()
+	 * @jls.testedby jls.sim.TraceRetentionTest#retentionIsBoundedAtTheDocumentedCap()
+	 * @jls.testedby jls.sim.TraceRetentionTest#unchangedValuesAreStillDeduplicated()
+	 * @jls.testedby jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForAMultiBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForASingleBitTrace()
+	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
 	 */
 	public synchronized void commit(long time) {
 
@@ -219,8 +219,8 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * 
 	 * @param g The Graphics object to draw with.
 	 *
-	 * @see jls.sim.TraceRetentionTest#paint()
-	 * @see jls.sim.TraceWindowingTest#paint()
+	 * @jls.testedby jls.sim.TraceRetentionTest#paint()
+	 * @jls.testedby jls.sim.TraceWindowingTest#paint()
 	 */
 	@Override
 	public void paintComponent(Graphics g) {
@@ -462,7 +462,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 *
 	 * @return See firstChangeAtOrBefore(list,time).
 	 *
-	 * @see jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
+	 * @jls.testedby jls.sim.TraceWindowingTest#firstChangeAtOrBeforeMatchesTheLinearScan()
 	 */
 	int firstChangeAtOrBefore(long time) {
 

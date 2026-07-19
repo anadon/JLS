@@ -102,8 +102,8 @@ public final class StateMachine extends LogicElement implements Printable {
 	 *
 	 * @param circuit The circuit this element is part of.
 	 *
-	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
-	 * @see jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
+	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @jls.testedby jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
 	 */
 	public StateMachine(Circuit circuit) {
 
@@ -133,7 +133,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @return the violated constraint message, or null if an initial
 	 *         state exists.
 	 *
-	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	String checkInitialState() {
 
@@ -474,7 +474,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 *
-	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	@Override
 	public void setValue(String name, String value) {
@@ -548,7 +548,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 *
-	 * @see jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
+	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
 	@Override
 	public void setValue(String name, int value) {
@@ -2082,7 +2082,7 @@ public final class StateMachine extends LogicElement implements Printable {
 	 *
 	 * @param sim Unused.
 	 *
-	 * @see jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
+	 * @jls.testedby jls.elem.ParameterValidationTest#stateMachineWithoutInitialStateSurvivesSimInit()
 	 */
 	@Override
 	public void initSim(Simulator sim) {

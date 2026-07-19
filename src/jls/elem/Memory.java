@@ -49,7 +49,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkCapacity(int capacity) {
 
@@ -63,7 +63,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -410,10 +410,10 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
-	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
-	 * @see jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
-	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String encodeInitRLE(String text) {
 
@@ -434,7 +434,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the encoded form, or null to use the raw encoding.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
 	 */
 	static String encodeInitRLE(String text, long maxWords) {
 
@@ -524,11 +524,11 @@ public final class Memory extends LogicElement {
 	 * @throws IllegalArgumentException if the encoding is malformed (the
 	 *             loader reports a load error).
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsGarbage()
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
-	 * @see jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
-	 * @see jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#bigValuesSurvive()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsGarbage()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#encodesRunsCompactly()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
 	static String decodeInitRLE(String rle) {
 
@@ -545,7 +545,7 @@ public final class Memory extends LogicElement {
 	 *
 	 * @return the canonical text.
 	 *
-	 * @see jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
+	 * @jls.testedby jls.elem.MemoryInitEncodingTest#decodeRejectsHostileRuns()
 	 */
 	static String decodeInitRLE(String rle, long maxWords) {
 
@@ -1746,7 +1746,7 @@ public final class Memory extends LogicElement {
 	 * 
 	 * @return the value at that location.
 	 *
-	 * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 */
 	public BitSet getCurrentValue(int loc){
 		

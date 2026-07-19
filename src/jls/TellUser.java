@@ -9,6 +9,8 @@ import java.awt.GraphicsEnvironment;
 import javax.swing.JOptionPane;
 
 /**
+ * All communication from JLS to the user funnels through this class.
+ *
  * @author Josh Marshall
  *
  * The single seam through which JLS talks to the user (issue #81):
@@ -35,11 +37,24 @@ import javax.swing.JOptionPane;
 public class TellUser {
 
 	/**
+	 * Create a TellUser. Never needed: every method is static.
+	 */
+	public TellUser() {
+	}
+
+	/**
 	 * The answer to a three-way (yes/no/cancel) question. Closing the
 	 * dialog counts as CANCEL: an unanswered question must never take
 	 * the destructive branch.
 	 */
-	public enum Answer { YES, NO, CANCEL }
+	public enum Answer {
+		/** The user said yes. */
+		YES,
+		/** The user said no. */
+		NO,
+		/** The user cancelled or closed the dialog, or the run is batch/headless. */
+		CANCEL
+	}
 
 	/**
 	 * Whether a dialog can and should actually be shown. In batch mode

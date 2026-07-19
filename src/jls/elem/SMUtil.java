@@ -14,6 +14,12 @@ import jls.*;
 public class SMUtil {
 
 	/**
+	 * Creates a helper instance; all functionality is in static methods.
+	 */
+	public SMUtil() {
+	} // end of constructor
+
+	/**
 	 * Compute angle given a height and width of a rectangle.
 	 * 
 	 * @param w The width.

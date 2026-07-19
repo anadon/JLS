@@ -46,12 +46,12 @@ public final class NumericField {
 	 * @return the parsed-and-clamped value, or previous if the text was
 	 *         not a parsable int.
 	 *
-	 * @see jls.NumericFieldTest#emptyTextMeansTheMinimum()
-	 * @see jls.NumericFieldTest#lonelyMinusSignKeepsThePreviousValueAndReports()
-	 * @see jls.NumericFieldTest#negativeValuesClampToTheMinimumWithoutError()
-	 * @see jls.NumericFieldTest#unparsableTextKeepsThePreviousValueAndReports()
-	 * @see jls.NumericFieldTest#validTextParsesAndNormalizesTheField()
-	 * @see jls.NumericFieldTest#valuesBelowTheMinimumClampSilently()
+	 * @jls.testedby jls.NumericFieldTest#emptyTextMeansTheMinimum()
+	 * @jls.testedby jls.NumericFieldTest#lonelyMinusSignKeepsThePreviousValueAndReports()
+	 * @jls.testedby jls.NumericFieldTest#negativeValuesClampToTheMinimumWithoutError()
+	 * @jls.testedby jls.NumericFieldTest#unparsableTextKeepsThePreviousValueAndReports()
+	 * @jls.testedby jls.NumericFieldTest#validTextParsesAndNormalizesTheField()
+	 * @jls.testedby jls.NumericFieldTest#valuesBelowTheMinimumClampSilently()
 	 */
 	public static int parse(Component parent, JTextField field, int minimum,
 			int previous, String description) {

@@ -36,8 +36,8 @@ public final class TriState extends LogicElement {
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
 	 * 
-	 * @param circuit
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @param circuit The circuit this element is part of.
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public TriState(Circuit circuit) {
 		
@@ -80,7 +80,7 @@ public final class TriState extends LogicElement {
 	 * Sets up size, inputs and output.
 	 * 
 	 * @param g Unused.
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void init(Graphics g) {
@@ -677,7 +677,7 @@ public final class TriState extends LogicElement {
 	 * Initialize this element by setting its output pin to off (null).
 	 *
 	 * @param sim Unused.
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void initSim(Simulator sim) {
@@ -695,7 +695,7 @@ public final class TriState extends LogicElement {
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
 	public void react(long now, Simulator sim, Object todo) {

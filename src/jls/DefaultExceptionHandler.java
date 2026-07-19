@@ -17,7 +17,14 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	private JLSStart jls = null;
 	private Circuit circuit = null;
 	private int [] extraSpace = new int[10000];
-	
+
+	/**
+	 * Create a handler with no JLS window or circuit attached yet;
+	 * setJLS and setCircuit supply them once they exist.
+	 */
+	public DefaultExceptionHandler() {
+	} // end of constructor
+
 	/**
 	 * Save reference to JLS in case circuit(s) can be saved.
 	 * 

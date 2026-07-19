@@ -102,7 +102,7 @@ public final class BatchTracePrinter {
 	 *
 	 * @return a Printable rendering all traces onto a single page.
 	 *
-	 * @see jls.BatchTracePrinterTest#tracePrintableRendersTheRecordedSamples()
+	 * @jls.testedby jls.BatchTracePrinterTest#tracePrintableRendersTheRecordedSamples()
 	 */
 	static Printable tracePrintable(
 			final Map<LogicElement,List<TraceSample>> eventTrace) {

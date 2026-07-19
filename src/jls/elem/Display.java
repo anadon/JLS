@@ -388,10 +388,15 @@ public final class Display extends LogicElement {
 	protected class DispCreate extends ElementDialog {
 
 		// properties
+		/** Text field for entering the number of input bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
+		/** Pop-up keypad for the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Radio button selecting base 2 (binary) display. */
 		private JRadioButton b2 = new JRadioButton("2");
+		/** Radio button selecting base 10 (decimal) display. */
 		private JRadioButton b10 = new JRadioButton("10");
+		/** Radio button selecting base 16 (hexadecimal) display. */
 		private JRadioButton b16 = new JRadioButton("16");
 		
 		/**

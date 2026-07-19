@@ -24,11 +24,11 @@ public final class BitSetUtils {
 	 * 
 	 * @throws IllegalArgumentException if value is negative
 	 *
-	 * @see jls.BitSetUtilsCreateTest#assertRoundTrip()
-	 * @see jls.BitSetUtilsCreateTest#negativeValuesAreRejected()
-	 * @see jls.BitSetUtilsCreateTest#zeroYieldsEmptyBitSet()
-	 * @see jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
-	 * @see jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
+	 * @jls.testedby jls.BitSetUtilsCreateTest#assertRoundTrip()
+	 * @jls.testedby jls.BitSetUtilsCreateTest#negativeValuesAreRejected()
+	 * @jls.testedby jls.BitSetUtilsCreateTest#zeroYieldsEmptyBitSet()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public static BitSet Create(long value) {
 		
@@ -141,17 +141,17 @@ public final class BitSetUtils {
      * 
      * @return the corresponding long.
      *
-     * @see jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
-     * @see jls.BatchSimulationGoldenTest#simulate()
-     * @see jls.BitSetUtilsCreateTest#assertRoundTrip()
-     * @see jls.ElementSimulationGoldenTest#pinValue()
-     * @see jls.SequentialGoldenTest#simulate()
-     * @see jls.SequentialGoldenTest#simulateWithVectors()
-     * @see jls.ShiftRegisterTest#pinValue()
-     * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
-     * @see jls.SimulationSemanticsRegressionTest#pinValue()
-     * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
-     * @see jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
+     * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
+     * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
+     * @jls.testedby jls.BitSetUtilsCreateTest#assertRoundTrip()
+     * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
+     * @jls.testedby jls.SequentialGoldenTest#simulate()
+     * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
+     * @jls.testedby jls.ShiftRegisterTest#pinValue()
+     * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+     * @jls.testedby jls.SimulationSemanticsRegressionTest#pinValue()
+     * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+     * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
      */
     public static long ToLong(BitSet bs) {
     	

@@ -36,7 +36,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkCycleTime(int cycleTime) {
 
@@ -53,7 +53,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkOneTime(int cycleTime, int oneTime) {
 

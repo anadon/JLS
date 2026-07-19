@@ -46,7 +46,14 @@ public final class FileAbstractor {
 	 * without an XZ decoder (the 4.6-4.10 fork lineage) can open the
 	 * file. Reading needs no counterpart: openCircuit sniffs both.
 	 */
-	public enum Container { XZ, PLAIN_TEXT }
+	public enum Container {
+
+		/** The default save container: XZ-compressed UTF-8 circuit text. */
+		XZ,
+
+		/** The opt-in interchange container: bare UTF-8 circuit text. */
+		PLAIN_TEXT
+	}
 
 	/**
 	 * Upper bound on the circuit text a container may expand to. Circuit
@@ -70,23 +77,23 @@ public final class FileAbstractor {
 	 * @return a Scanner over the circuit text, or null with
 	 *         JLSInfo.loadError describing why every format probe failed.
 	 *
-	 * @see jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
-	 * @see jls.ContainerMutationFuzzTest#loadMutant()
-	 * @see jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
-	 * @see jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
-	 * @see jls.FileAbstractorTest#emptyFileIsRejectedNotReturnedEmpty()
-	 * @see jls.FileAbstractorTest#invalidCircuitNameIsRejected()
-	 * @see jls.FileAbstractorTest#missingFileReportsWhy()
-	 * @see jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
-	 * @see jls.FileAbstractorTest#unreadableFileReportsPerFormatReasons()
-	 * @see jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
-	 * @see jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
-	 * @see jls.FileFormatSupport#openWithFormatSniffer()
-	 * @see jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
-	 * @see jls.UntrustedFileHardeningTest#oversizedZipEntryIsRejected()
-	 * @see jls.UntrustedFileHardeningTest#sniffingCascadeDoesNotLeakFileDescriptors()
-	 * @see jls.edit.CheckpointWriterTest#awaitWritten()
-	 * @see jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
+	 * @jls.testedby jls.CliTextSaveTest#theConvertedFileHoldsTheSameCircuit()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#loadMutant()
+	 * @jls.testedby jls.ContainerMutationFuzzTest#theUnmutatedBaselinesActuallyLoad()
+	 * @jls.testedby jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
+	 * @jls.testedby jls.FileAbstractorTest#emptyFileIsRejectedNotReturnedEmpty()
+	 * @jls.testedby jls.FileAbstractorTest#invalidCircuitNameIsRejected()
+	 * @jls.testedby jls.FileAbstractorTest#missingFileReportsWhy()
+	 * @jls.testedby jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
+	 * @jls.testedby jls.FileAbstractorTest#unreadableFileReportsPerFormatReasons()
+	 * @jls.testedby jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
+	 * @jls.testedby jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
+	 * @jls.testedby jls.FileFormatSupport#openWithFormatSniffer()
+	 * @jls.testedby jls.FileHandleReleaseTest#assertOpenReleasesTheFile()
+	 * @jls.testedby jls.UntrustedFileHardeningTest#oversizedZipEntryIsRejected()
+	 * @jls.testedby jls.UntrustedFileHardeningTest#sniffingCascadeDoesNotLeakFileDescriptors()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#awaitWritten()
+	 * @jls.testedby jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
 	 */
 	public static Scanner openCircuit(String filePath) {
 
@@ -173,10 +180,13 @@ public final class FileAbstractor {
 	 * @param target      The file to (re)place.
 	 * @param circuitText The complete circuit text, as produced by Circuit.save.
 	 *
-	 * @see jls.FileAbstractorTest#defaultWriteIsStillXZCompressed()
-	 * @see jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
-	 * @see jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
-	 * @see jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
+	 * @throws IOException if the temp file cannot be written or renamed
+	 *         over the target.
+	 *
+	 * @jls.testedby jls.FileAbstractorTest#defaultWriteIsStillXZCompressed()
+	 * @jls.testedby jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
+	 * @jls.testedby jls.FileAbstractorTest#writeCircuitReplacesExistingFileAndLeavesNoTemp()
+	 * @jls.testedby jls.FileAbstractorTest#writeCircuitRoundTripsThroughTheSniffer()
 	 */
 	public static void writeCircuit(File target, String circuitText) throws IOException {
 
@@ -194,9 +204,12 @@ public final class FileAbstractor {
 	 * @param circuitText The complete circuit text, as produced by Circuit.save.
 	 * @param container   The on-disk container to wrap the text in.
 	 *
-	 * @see jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
-	 * @see jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
-	 * @see jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
+	 * @throws IOException if the temp file cannot be written or renamed
+	 *         over the target.
+	 *
+	 * @jls.testedby jls.FileAbstractorTest#bothContainersLoadTheSameCircuitText()
+	 * @jls.testedby jls.FileAbstractorTest#plainTextWriteIsTheBareCircuitText()
+	 * @jls.testedby jls.FileAbstractorTest#plainTextWriteReplacesAnXZFileAtomically()
 	 */
 	public static void writeCircuit(File target, String circuitText,
 			Container container) throws IOException {
@@ -269,7 +282,7 @@ public final class FileAbstractor {
 	 *
 	 * @throws IOException if the file is not a zip or has no circuit entry.
 	 *
-	 * @see jls.FileFormatSupport#openAsZip()
+	 * @jls.testedby jls.FileFormatSupport#openAsZip()
 	 */
 	static Scanner readZip(File file) throws IOException {
 

@@ -110,19 +110,32 @@ All notable changes to JLS are documented here. The format follows
 
 ### Added
 - Documentation is now build-enforced: `mvn verify` runs a javadoc
-  doclint gate (all groups except unresolvable-by-design test
-  references) over the public/protected API with warnings as
+  doclint gate over the public/protected API with warnings as
   failures, and a new package-info ratchet requires every package in
-  both trees to carry a package comment. The gate is scoped to API
-  visibility because under `-private` the standard doclet warns on
-  every test-tree `@see` target in a way doclint exclusions cannot
-  reach (verified empirically; recorded in the pom comment).
+  both trees to carry a package comment.
   Fixed en route: eleven malformed doc comments the #186 pass left
   behind - duplicated `@param v1` tags in five files, three stale
   javadoc blocks orphaned above attribute tables by the #23
   refactor, a mistyped `@returns`, two empty comments, and a VCD
   format description whose angle-bracket placeholders parsed as
   unclosed HTML.
+- The doclint gate is now actually binding (#192): as shipped it was
+  disarmed from birth — maven-javadoc-plugin's `failOnWarnings`
+  detects warnings by regex-matching javadoc's last output line
+  against `\d+ warnings?`, and javadoc 25 digit-groups the summary
+  ("1,509 warnings" at the gate's introduction), so any count of
+  1,000 or more passed silently. The gate now passes javadoc's own
+  `-Werror`, which fails on the tool's exit code and cannot be
+  defeated by output formatting. The 878 generated test-attribution
+  `@see` tags became a registered custom block tag (`@jls.testedby`,
+  rendered "Tested by:"), removing the 1,130 unresolvable-reference
+  warnings that had crossed the digit-grouping cliff — so doclint's
+  `reference` group is enforced again, and real broken `@see`/`@link`
+  references fail the build. The 292 genuine protected-scope warnings
+  the disarmed gate had accumulated (missing member comments, missing
+  `@param`/`@return`/`@throws`, undocumented default constructors)
+  are all retired; the gate is verified green and verified to fail on
+  a single reintroduced warning.
 - Per-package coverage floors (#159): the JaCoCo ratchet now guards
   `jls`, `jls.sim`, `jls.elem`, and the new `jls.collab.op` package
   individually (instruction, line, and branch), so a regression in

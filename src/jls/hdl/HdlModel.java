@@ -219,7 +219,10 @@ public final class HdlModel {
 		 * @param statement the statement to emit
 		 */
 		void visit(BitMapStatement statement);
-		/** Emit a selected-assignment (Mux/Decoder) statement. */
+		/**
+		 * Emit a selected-assignment (Mux/Decoder) statement.
+		 * @param statement the statement to emit
+		 */
 		void visit(SelectStatement statement);
 	} // end of StatementVisitor interface
 
@@ -559,10 +562,15 @@ public final class HdlModel {
 	 */
 	public static final class SelectStatement extends Statement {
 
+		/** The (always net) selector value. */
 		public final Operand selector;
+		/** Value taken per selector index. */
 		public final List<Operand> values;
+		/** Value taken for any other selector value. */
 		public final Operand defaultValue;
+		/** Net driven by the selection. */
 		public final String target;
+		/** Width of the target and every value in bits. */
 		public final int bits;
 		/**
 		 * State-variable name for emitters whose selected assignment
@@ -646,7 +654,7 @@ public final class HdlModel {
 	/**
 	 * Gives the internal nets.
 	 * @return the internal nets, unmodifiable
-	 * @see jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
 	 */
 	public List<Net> nets() {
 		return Collections.unmodifiableList(nets);

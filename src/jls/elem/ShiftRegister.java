@@ -45,7 +45,7 @@ public final class ShiftRegister extends LogicElement {
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 

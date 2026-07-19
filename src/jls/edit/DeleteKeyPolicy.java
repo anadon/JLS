@@ -49,9 +49,9 @@ final class DeleteKeyPolicy {
 	 *
 	 * @return the canvas delete bindings.
 	 *
-	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindingsAreExactlyTheTwoUnmodifiedKeys()
-	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindsPlainBackspace()
-	 * @see jls.edit.DeleteKeyPolicyTest#canvasBindsPlainDelete()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#canvasBindingsAreExactlyTheTwoUnmodifiedKeys()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#canvasBindsPlainBackspace()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#canvasBindsPlainDelete()
 	 */
 	static List<KeyStroke> canvasBindings() {
 
@@ -69,8 +69,8 @@ final class DeleteKeyPolicy {
 	 *
 	 * @return the accelerator to display.
 	 *
-	 * @see jls.edit.DeleteKeyPolicyTest#macMenuShowsBackspace()
-	 * @see jls.edit.DeleteKeyPolicyTest#otherPlatformsMenuShowsDelete()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#macMenuShowsBackspace()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#otherPlatformsMenuShowsDelete()
 	 */
 	static KeyStroke menuAccelerator(String osName) {
 
@@ -87,7 +87,7 @@ final class DeleteKeyPolicy {
 	 *
 	 * @return true for macOS.
 	 *
-	 * @see jls.edit.DeleteKeyPolicyTest#isMacRecognizesAppleOsNames()
+	 * @jls.testedby jls.edit.DeleteKeyPolicyTest#isMacRecognizesAppleOsNames()
 	 */
 	static boolean isMac(String osName) {
 

@@ -27,6 +27,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
 	
 	// editing properties
+	/** True if the user cancelled the most recent dialog. */
 	protected boolean cancelled;
 	
 	/**
@@ -69,8 +70,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * Create a new subcircuit element.
 	 * 
 	 * @param circuit The circuit this element is part of.
-	 * @see jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
-	 * @see jls.elem.HollowVsFilledCollisionTest#probe()
+	 * @jls.testedby jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
+	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#probe()
 	 */
 	public SubCircuit(Circuit circuit) {
 		
@@ -91,7 +92,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * Get the subcircuit this element represents.
 	 * 
 	 * @return the subcircuit.
-	 * @see jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
 	public Circuit getSubCircuit() {
 		

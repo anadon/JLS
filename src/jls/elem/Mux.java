@@ -540,18 +540,31 @@ public final class Mux extends LogicElement {
 	protected class MuxCreate extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Text field for the number of inputs. */
 		private JTextField inputsField = new JTextField(defaultInputs+"",5);
+		/** Text field for the number of bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",5);
+		/** Keypad for the inputs field. */
 		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
+		/** Keypad for the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Left output orientation choice. */
 		private JRadioButton oLeft = new JRadioButton("Left");
+		/** Right output orientation choice. */
 		private JRadioButton oRight = new JRadioButton("Right", true);
+		/** Up output orientation choice. */
 		private JRadioButton oUp = new JRadioButton("Up");
+		/** Down output orientation choice. */
 		private JRadioButton oDown = new JRadioButton("Down");
+		/** Left selector orientation choice. */
 		private JRadioButton sLeft = new JRadioButton("Left");
+		/** Right selector orientation choice. */
 		private JRadioButton sRight = new JRadioButton("Right");
+		/** Up selector orientation choice. */
 		private JRadioButton sUp = new JRadioButton("Up");
+		/** Down selector orientation choice. */
 		private JRadioButton sDown = new JRadioButton("Down",true);
+		/** Label for the selector orientation panel. */
 		private JLabel olbl2 = new JLabel("Selector Orientation");
 		
 		/**

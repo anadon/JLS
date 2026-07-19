@@ -20,7 +20,14 @@ public class WireNet {
 	private int bits = 0;								// the number of bits (0=not connected)
 	private boolean hasinput = false;					// connected to an Output yet?
 	private boolean triState = false;					// true if tri-stated
-	
+
+	/**
+	 * Create an empty wire net; wires and wire ends are added as they
+	 * are connected.
+	 */
+	public WireNet() {
+	} // end of constructor
+
 	/**
 	 * Make a copy of this element.
 	 * Wirenets are not copied.
@@ -35,7 +42,7 @@ public class WireNet {
 	 * Add a new wire end.
 	 * 
 	 * @param end The new wire end.
-	 * @see jls.edit.TriStateBundleConnectTest#freshEnd()
+	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void add(WireEnd end) {
 		
@@ -313,9 +320,9 @@ public class WireNet {
 	 * Get all wire ends in this net.
 	 * 
 	 * @return all wire ends.
-	 * @see jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
-	 * @see jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
-	 * @see jls.ui.CircuitAssert#reaches()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
+	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
+	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public Set<WireEnd> getAllEnds() {
 		

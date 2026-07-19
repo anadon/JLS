@@ -24,7 +24,7 @@ public final class VerilogEmitter implements HdlEmitter {
 	 * Renders the elaborated model as one complete Verilog module.
 	 * @param model the HDL model (ports, nets, statements) to export
 	 * @return the module source text, deterministic and self-contained
-	 * @see jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
 	 */
 	@Override
 	public String emit(HdlModel model) {

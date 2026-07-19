@@ -65,7 +65,7 @@ public final class LoadError {
 		 *
 		 * @return the label, e.g. "malformed file".
 		 *
-		 * @see jls.elem.OrientationGeometryTest#errorCategory()
+		 * @jls.testedby jls.elem.OrientationGeometryTest#errorCategory()
 		 */
 		public String label() {
 			return label;
@@ -114,18 +114,20 @@ public final class LoadError {
 	} // end of of method
 
 	/**
+	 * Get which kind of failure this is.
+	 *
 	 * @return the failure category.
 	 *
-	 * @see jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
-	 * @see jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
-	 * @see jls.FormatHeaderTest#truncatedFormatHeaderFailsAsMalformed()
-	 * @see jls.LoadErrorReportingTest#badElementParameterNamesElementLineAndConstraint()
-	 * @see jls.LoadErrorReportingTest#garbageBytesAreReportedAsNotACircuitFile()
-	 * @see jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
-	 * @see jls.LoadErrorReportingTest#nonIntegerAttributeValueReportsAttributeAndLine()
-	 * @see jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
-	 * @see jls.LoadErrorReportingTest#unknownElementTagNamesTagCategoryAndUpgradeHint()
-	 * @see jls.elem.OrientationGeometryTest#errorCategory()
+	 * @jls.testedby jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
+	 * @jls.testedby jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
+	 * @jls.testedby jls.FormatHeaderTest#truncatedFormatHeaderFailsAsMalformed()
+	 * @jls.testedby jls.LoadErrorReportingTest#badElementParameterNamesElementLineAndConstraint()
+	 * @jls.testedby jls.LoadErrorReportingTest#garbageBytesAreReportedAsNotACircuitFile()
+	 * @jls.testedby jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
+	 * @jls.testedby jls.LoadErrorReportingTest#nonIntegerAttributeValueReportsAttributeAndLine()
+	 * @jls.testedby jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
+	 * @jls.testedby jls.LoadErrorReportingTest#unknownElementTagNamesTagCategoryAndUpgradeHint()
+	 * @jls.testedby jls.elem.OrientationGeometryTest#errorCategory()
 	 */
 	public Category getCategory() {
 
@@ -133,6 +135,8 @@ public final class LoadError {
 	} // end of getCategory method
 
 	/**
+	 * Get the human-readable detail of the failure.
+	 *
 	 * @return what went wrong, in words.
 	 */
 	public String getDetail() {
@@ -141,9 +145,11 @@ public final class LoadError {
 	} // end of getDetail method
 
 	/**
+	 * Get the line number where the failure hit.
+	 *
 	 * @return the 1-based line the loader had reached, or 0 if unknown.
 	 *
-	 * @see jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
+	 * @jls.testedby jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
 	 */
 	public int getLine() {
 
@@ -151,6 +157,8 @@ public final class LoadError {
 	} // end of getLine method
 
 	/**
+	 * Get the element the loader was reading, if any.
+	 *
 	 * @return the element being read when the failure hit, or null.
 	 */
 	public String getElement() {
@@ -159,6 +167,8 @@ public final class LoadError {
 	} // end of getElement method
 
 	/**
+	 * Get the actionable next step, if any.
+	 *
 	 * @return the next-step sentence, or null.
 	 */
 	public String getHint() {
@@ -174,9 +184,9 @@ public final class LoadError {
 	 *
 	 * @return the full user-visible message.
 	 *
-	 * @see jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
-	 * @see jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
-	 * @see jls.StableElementIdTest#duplicateFileIdsAreRejected()
+	 * @jls.testedby jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
+	 * @jls.testedby jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
+	 * @jls.testedby jls.StableElementIdTest#duplicateFileIdsAreRejected()
 	 */
 	public String render() {
 

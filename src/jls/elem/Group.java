@@ -34,7 +34,7 @@ public abstract sealed class Group extends LogicElement
 	 *
 	 * @return the violated constraint message, or null if valid.
 	 *
-	 * @see jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
+	 * @jls.testedby jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
 	 */
 	static String checkBits(int bits) {
 
@@ -42,15 +42,22 @@ public abstract sealed class Group extends LogicElement
 	} // end of checkBits method
 
 	// saved properties
+	/** The number of bits on the bundled side. */
 	protected int bits = defaultBits;
 	//protected SortedSet<GetRanges.Entry> ranges;
+	/** The bit groups, one entry per put on the narrow side. */
 	protected ArrayList<Entry> ranges;
+	/** True if the bundled wire is tri-state. */
 	protected boolean triState = false;
+	/** Which way the element faces (the direction of the bundled side). */
 	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
+
 	// running properties
+	/** True if the user cancelled the creation dialog. */
 	protected boolean cancelled;
+	/** True if the save file being loaded says the bundle is tri-state. */
 	protected boolean loadTriState = false;
+	/** True if loaded from the newer save format that allows non-contiguous bit groups. */
 	protected boolean noncontig = false; // False only for legacy saves
 	
 	/**
@@ -184,7 +191,7 @@ public abstract sealed class Group extends LogicElement
 	/**
 	 * This method will flip a group
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
-	 * @see jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
 	public void flip(Graphics g)
@@ -201,7 +208,7 @@ public abstract sealed class Group extends LogicElement
 	 * Subclasses re-run init to rebuild the puts on the new axes.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
-	 * @see jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
 	public void rotate(JLSInfo.Orientation direction, Graphics g)
@@ -224,8 +231,8 @@ public abstract sealed class Group extends LogicElement
 	 * Tells if a Group is capable of rotating: the same no-attachments
 	 * constraint as flipping, since both rebuild every put.
 	 * @return False if any input or output has a wire attached, True otherwise
-	 * @see jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
-	 * @see jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
+	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
 	public boolean canRotate()
@@ -236,8 +243,8 @@ public abstract sealed class Group extends LogicElement
 	/**
 	 * Tells if a Group is capable of flippiing, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
-	 * @see jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
-	 * @see jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
+	 * @jls.testedby jls.elem.GroupOrientationTest#attachedGroupRefusesRotateAndFlip()
+	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
 	public boolean canFlip()
@@ -329,7 +336,7 @@ public abstract sealed class Group extends LogicElement
 	 *
 	 * @param output The output writer.
 	 *
-	 * @see jls.elem.GroupOrientationTest#orientOf()
+	 * @jls.testedby jls.elem.GroupOrientationTest#orientOf()
 	 */
 	@Override
 	public void save(PrintWriter output) {
@@ -405,19 +412,29 @@ public abstract sealed class Group extends LogicElement
 	protected class GroupCreate extends ElementDialog {
 
 		// properties
+		/** Input field for the number of bundled bits. */
 		private JTextField bitsField = new JTextField(defaultBits+"",10);
+		/** Pop-up keypad for the bits field. */
 		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
+		/** Choice to split the bundle into single bits. */
 		private JRadioButton single = new JRadioButton("Single Bits");
+		/** Choice to pick bit groups by hand. */
 		private JRadioButton group = new JRadioButton("Group Bits");
+		/** Orientation choice: element faces left. */
 		private JRadioButton left = new JRadioButton("Left");
+		/** Orientation choice: element faces right (the default). */
 		private JRadioButton right = new JRadioButton("Right", true);
+		/** Orientation choice: element faces up. */
 		private JRadioButton up = new JRadioButton("Up");
+		/** Orientation choice: element faces down. */
 		private JRadioButton down = new JRadioButton("Down");
+		/** Either "Bundler" or "Unbundler". */
 		private String type;
-		
+
 		/**
 		 * Set up create dialog window.
-		 * 
+		 *
+		 * @param type Either "Bundler" or "Unbundler".
 		 */
 		protected GroupCreate(String type) {
 
@@ -572,16 +589,27 @@ public abstract sealed class Group extends LogicElement
 	protected class GetRanges extends ElementDialog implements ActionListener {
 
 		// properties
+		/** Model of single bits available to choose from. */
 		private DefaultListModel<Entry> pick = new DefaultListModel<Entry>();
+		/** The "choose from" list display. */
 		private JList<Entry> choose = new JList<Entry>(pick); // LeftList?
+		/** Model of the bit groups chosen so far. */
 		private DefaultListModel<Entry> picked = new DefaultListModel<Entry>();
+		/** The "chosen" list display. */
 		private JList<Entry> chosen = new JList<Entry>(picked);
+		/** Button to bundle the selected bits into a new group. */
 		private JButton add = new JButton(">>");
+		/** Button to remove the selected group. */
 		private JButton remove = new JButton("<<");
+		/** Button to move the selected group to the top. */
 		private JButton upjumper = new JButton("Move bundle to top");
+		/** Button to move the selected group up one place. */
 		private JButton upshifter = new JButton("Move bundle up");
+		/** Button to move the selected group down one place. */
 		private JButton downshifter = new JButton("Move bundle down");
+		/** Button to move the selected group to the bottom. */
 		private JButton downjumper = new JButton("Move bundle to bottom");
+		/** Either "Bundler" or "Unbundler". */
 		private String type;
 		
 		/**
@@ -910,6 +938,8 @@ public abstract sealed class Group extends LogicElement
 		
 		/**
 		 * Return number of stored elements
+		 *
+		 * @return the number of stored indices
 		 */
 		public int getSize() {
 			return values.length;

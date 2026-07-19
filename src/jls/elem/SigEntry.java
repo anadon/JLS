@@ -21,6 +21,7 @@ import javax.swing.JPopupMenu;
 public abstract class SigEntry extends Entry implements ActionListener {
 
 	// properties
+	/** The name of this signal. */
 	protected String signal;
 
 	// menu items

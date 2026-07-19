@@ -15,9 +15,13 @@ import java.util.*;
 public final class DisplayBool extends JPanel implements MouseListener {
 
 	// properties
+	/** The truth table element this display is a part of. */
 	private TruthTable ttelem;
+	/** The displayed entries, indexed by row and column. */
 	private Entry [][] dtable;
+	/** Number of rows in the displayed table. */
 	private int rows;
+	/** Number of columns in the displayed table. */
 	private int cols;
 	
 	/**

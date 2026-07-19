@@ -118,7 +118,8 @@ public class State {
 	/**
 	 * Create a new state.
 	 * Make its diameter large enough to contain the name.
-	 * 
+	 *
+	 * @param machine The state machine element this state is part of.
 	 * @param name The name of the state.
 	 * @param g The Graphics object to use.
 	 */
@@ -503,8 +504,8 @@ public class State {
 	 *
 	 * @return the comparator ordering states for save.
 	 *
-	 * @see jls.DeterministicSaveTest#stateMachineSavesStatesInNameOrder()
-	 * @see jls.DeterministicSaveTest#stateMachineStateHashIsContentDetermined()
+	 * @jls.testedby jls.DeterministicSaveTest#stateMachineSavesStatesInNameOrder()
+	 * @jls.testedby jls.DeterministicSaveTest#stateMachineStateHashIsContentDetermined()
 	 */
 	static java.util.Comparator<State> saveOrder() {
 
@@ -808,8 +809,10 @@ public class State {
 
 	/**
 	 * See if this state overlaps another state.
-	 * 
+	 *
 	 * @param other the other state
+	 *
+	 * @return true if the states overlap, false if not.
 	 */
 	public boolean overlaps(State other) {
 
@@ -932,9 +935,11 @@ public class State {
 
 	/**
 	 * Change the name of this state if it fits.
-	 * 
+	 *
 	 * @param name The new name.
 	 * @param g The Graphics object to use.
+	 *
+	 * @return true if the name fits and was changed, false if not.
 	 */
 	public boolean changeName(String name, Graphics g) {
 
@@ -954,6 +959,7 @@ public class State {
 	 * 
 	 * @param to The state the transition is to.
 	 * @param points The list of points in the transition (the last one will not be used).
+	 * @param mainDialog The dialog to display error messages in.
 	 */
 	public void newTransition(State to, Vector<Point> points, JDialog mainDialog) {
 

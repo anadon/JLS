@@ -70,7 +70,7 @@ public final class TruthTable extends LogicElement implements Printable {
 	 *
 	 * @return the constraint message for that entry.
 	 *
-	 * @see jls.elem.DialogValidationTest#truthTableEntryRuleHasOneWording()
+	 * @jls.testedby jls.elem.DialogValidationTest#truthTableEntryRuleHasOneWording()
 	 */
 	static String entryConstraint(int row, int col) {
 
@@ -1517,6 +1517,8 @@ public final class TruthTable extends LogicElement implements Printable {
 
 	/**
 	 * Get default propagation delay.
+	 *
+	 * @return the default propagation delay.
 	 */
 	public int getDefaultDelay() {
 

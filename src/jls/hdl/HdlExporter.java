@@ -126,18 +126,18 @@ public final class HdlExporter {
 	 * @throws HdlExportException if the circuit contains elements the
 	 * exporter cannot express; the message names all of them.
 	 *
-	 * @see jls.hdl.HdlPolicyTest#decoderWithUnattachedInputConstantlyDrivesBitZero()
-	 * @see jls.hdl.HdlPolicyTest#displayIsSkippedWithAWarning()
-	 * @see jls.hdl.HdlPolicyTest#memoryIsRejectedByName()
-	 * @see jls.hdl.HdlPolicyTest#muxWithUnattachedSelectPassesInputZeroThrough()
-	 * @see jls.hdl.HdlPolicyTest#rejectionListsEveryOffenderInOneMessage()
-	 * @see jls.hdl.HdlPolicyTest#simulationControlElementsAreAllSkipped()
-	 * @see jls.hdl.HdlPolicyTest#subCircuitIsRejectedCleanly()
-	 * @see jls.hdl.HdlPolicyTest#unconnectedOutputPinWarnsAndLeavesThePortUndriven()
-	 * @see jls.hdl.VerilogExportGoldenTest#assertGolden()
-	 * @see jls.hdl.VhdlEmitterPolicyTest#export()
-	 * @see jls.hdl.VhdlEmitterPolicyTest#verilogAndVhdlShareOneModelWalk()
-	 * @see jls.hdl.VhdlExportGoldenTest#assertGolden()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#decoderWithUnattachedInputConstantlyDrivesBitZero()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#displayIsSkippedWithAWarning()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#memoryIsRejectedByName()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#muxWithUnattachedSelectPassesInputZeroThrough()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#rejectionListsEveryOffenderInOneMessage()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#simulationControlElementsAreAllSkipped()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#subCircuitIsRejectedCleanly()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#unconnectedOutputPinWarnsAndLeavesThePortUndriven()
+	 * @jls.testedby jls.hdl.VerilogExportGoldenTest#assertGolden()
+	 * @jls.testedby jls.hdl.VhdlEmitterPolicyTest#export()
+	 * @jls.testedby jls.hdl.VhdlEmitterPolicyTest#verilogAndVhdlShareOneModelWalk()
+	 * @jls.testedby jls.hdl.VhdlExportGoldenTest#assertGolden()
 	 */
 	public static Result export(Circuit circ, HdlEmitter emitter)
 			throws HdlExportException {
@@ -155,7 +155,7 @@ public final class HdlExporter {
 	 *
 	 * @throws HdlExportException on inexpressible elements.
 	 *
-	 * @see jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
+	 * @jls.testedby jls.hdl.HdlPolicyTest#twoNetsBridgedByJumpsBecomeOneVerilogNet()
 	 */
 	public static HdlModel buildModel(Circuit circ)
 			throws HdlExportException {

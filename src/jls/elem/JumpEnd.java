@@ -46,9 +46,9 @@ public final class JumpEnd extends LogicElement {
 	 * 
 	 * @param circuit The circuit this element is part of.
 	 *
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	public JumpEnd(Circuit circuit) {
 		
@@ -65,9 +65,9 @@ public final class JumpEnd extends LogicElement {
 	 * 
 	 * @return false if cancelled, true otherwise.
 	 *
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
-	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	@Override
 	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
@@ -377,7 +377,7 @@ public final class JumpEnd extends LogicElement {
 	 * 
 	 * @return the name.
 	 *
-	 * @see jls.ui.CircuitAssert#jumpAlias()
+	 * @jls.testedby jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
 	public String getName() {
@@ -604,7 +604,7 @@ public final class JumpEnd extends LogicElement {
 	 *
 	 * @param newName The wire name to attach to.
 	 *
-	 * @see jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
+	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	public void setName(String newName) {
 		name = newName;

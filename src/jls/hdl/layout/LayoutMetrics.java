@@ -412,6 +412,8 @@ public final class LayoutMetrics {
 	}
 
 	/**
+	 * Tells whether the layout passes the quality rubric.
+	 *
 	 * @return true if the layout meets every numeric launch threshold
 	 */
 	public boolean meetsRubric() {

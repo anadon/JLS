@@ -116,6 +116,8 @@ public final class LayoutGraph {
 		}
 
 		/**
+		 * Lists this element's ports.
+		 *
 		 * @return the node's ports in declaration order, unmodifiable
 		 */
 		public List<Port> ports() {
@@ -194,6 +196,13 @@ public final class LayoutGraph {
 	private final List<Edge> edges = new ArrayList<Edge>();
 
 	/**
+	 * Creates an empty graph; the builder populates it with
+	 * {@link #add} and {@link #connect}.
+	 */
+	public LayoutGraph() {
+	}
+
+	/**
 	 * Adds an element to the graph.
 	 *
 	 * @param node the element to add
@@ -251,6 +260,8 @@ public final class LayoutGraph {
 	}
 
 	/**
+	 * Lists the elements to place.
+	 *
 	 * @return the elements in insertion order, unmodifiable
 	 */
 	public List<Node> nodes() {
@@ -276,6 +287,8 @@ public final class LayoutGraph {
 	}
 
 	/**
+	 * Lists the point-to-point connections.
+	 *
 	 * @return the connections in insertion order, unmodifiable
 	 */
 	public List<Edge> edges() {

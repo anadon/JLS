@@ -339,7 +339,7 @@ public final class JumpStart extends LogicElement implements TriProp {
 	 * Get the name of this jumpstart.
 	 * 
 	 * @return the name.
-	 * @see jls.ui.CircuitAssert#jumpAlias()
+	 * @jls.testedby jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
 	public String getName() {

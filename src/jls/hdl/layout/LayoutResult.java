@@ -95,6 +95,8 @@ public final class LayoutResult {
 	}
 
 	/**
+	 * Gets the graph this result was built for.
+	 *
 	 * @return the placement problem this result solves
 	 */
 	public LayoutGraph graph() {
@@ -203,6 +205,8 @@ public final class LayoutResult {
 	}
 
 	/**
+	 * Tells whether the layouter has finished filling this result.
+	 *
 	 * @return true once every node is placed and every edge routed
 	 */
 	public boolean isComplete() {

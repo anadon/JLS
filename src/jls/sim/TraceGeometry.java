@@ -30,11 +30,11 @@ public final class TraceGeometry {
 	 *
 	 * @return The tic increment, in simulation time units.
 	 *
-	 * @see jls.sim.TraceGeometryTest#adjacentLabelsNeverOverlap()
-	 * @see jls.sim.TraceGeometryTest#labeledTicsStayDense()
-	 * @see jls.sim.TraceGeometryTest#realisticHeaderLabelsClearEachOtherInRealFontMetrics()
-	 * @see jls.sim.TraceGeometryTest#ticIncrementMatchesTheInlineOriginal()
-	 * @see jls.sim.TraceGeometryTest#ticPitchIsAtLeastFiftyPixelsAtEveryScaleFactor()
+	 * @jls.testedby jls.sim.TraceGeometryTest#adjacentLabelsNeverOverlap()
+	 * @jls.testedby jls.sim.TraceGeometryTest#labeledTicsStayDense()
+	 * @jls.testedby jls.sim.TraceGeometryTest#realisticHeaderLabelsClearEachOtherInRealFontMetrics()
+	 * @jls.testedby jls.sim.TraceGeometryTest#ticIncrementMatchesTheInlineOriginal()
+	 * @jls.testedby jls.sim.TraceGeometryTest#ticPitchIsAtLeastFiftyPixelsAtEveryScaleFactor()
 	 */
 	public static int ticIncrement(int scaleFactor) {
 
@@ -72,9 +72,9 @@ public final class TraceGeometry {
 	 *
 	 * @return The stride (at least 1) between labeled tics.
 	 *
-	 * @see jls.sim.TraceGeometryTest#adjacentLabelsNeverOverlap()
-	 * @see jls.sim.TraceGeometryTest#labeledTicsStayDense()
-	 * @see jls.sim.TraceGeometryTest#realisticHeaderLabelsClearEachOtherInRealFontMetrics()
+	 * @jls.testedby jls.sim.TraceGeometryTest#adjacentLabelsNeverOverlap()
+	 * @jls.testedby jls.sim.TraceGeometryTest#labeledTicsStayDense()
+	 * @jls.testedby jls.sim.TraceGeometryTest#realisticHeaderLabelsClearEachOtherInRealFontMetrics()
 	 */
 	public static int labelStride(int labelWidth, double ticPitch) {
 

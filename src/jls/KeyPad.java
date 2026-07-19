@@ -15,16 +15,27 @@ import java.net.*;
 public final class KeyPad extends JButton implements ActionListener {
 	
 	// properties
+	/** The digit buttons, 0-9 (and a-f when the base is 16). */
 	private JButton [] digits = new JButton[16];
+	/** The button that resets the text field to the default value. */
 	private JButton reset = new JButton("C");
+	/** The button that hides the keypad window. */
 	private JButton hide = new JButton(); 
+	/** The text field the keypad fills. */
 	private JTextField target;
+	/** The number base (10 or 16), hence how many digit buttons work. */
 	private int base;
+	/** The value the reset button puts back into the text field. */
 	private long defaultValue;
+	/** True if the next digit replaces the text instead of appending. */
 	private boolean firstChange = true;
+	/** The undecorated window containing the keypad buttons. */
 	private JDialog win;
+	/** True when the keypad window is showing. */
 	private boolean winVisible = false;
+	/** When the keypad was last auto-hidden by focus loss, in milliseconds. */
 	private long autoHidden = 0;
+	/** The document filter restricting the text field to digits in the base. */
 	TextFilter filter;
 	
 	/**

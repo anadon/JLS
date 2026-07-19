@@ -1298,7 +1298,7 @@ public final class Register extends LogicElement {
 	 * Get the current value stored in this register.
 	 * 
 	 * @return the current value.
-	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
 	@Override
 	public BitSet getCurrentValue() {
@@ -1313,7 +1313,7 @@ public final class Register extends LogicElement {
 	 * Initialize this element by setting its output pin and to-be value to 0.
 	 * 
 	 * @param sim Unused.
-	 * @see jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
+	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
 	@Override
 	public void initSim(Simulator sim) {

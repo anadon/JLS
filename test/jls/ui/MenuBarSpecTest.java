@@ -92,6 +92,7 @@ class MenuBarSpecTest {
 			\t\tclassic
 			\tChange editor window grid color
 			\tChange editor window background color
+			\tChange undo depth
 			Help
 			\tAbout
 			\tTutorial

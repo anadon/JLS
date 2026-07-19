@@ -16,9 +16,10 @@ import java.util.prefs.Preferences;
  * for example in a sandboxed environment - so callers never see an
  * exception, they just lose persistence.
  *
- * Stored today: the color theme name, and the user's grid and
- * background color overrides.  The two color overrides are cleared
- * whenever a theme is chosen, so picking a theme takes full effect.
+ * Stored today: the color theme name, the user's grid and
+ * background color overrides, and the user's undo depth.  The two
+ * color overrides are cleared whenever a theme is chosen, so picking a
+ * theme takes full effect.
  *
  * @author David A. Poplawski
  */
@@ -31,6 +32,8 @@ public final class UserPrefs {
 	private static final String GRID_KEY = "gridColor";
 	/** The key the background color override is stored under. */
 	private static final String BACKGROUND_KEY = "backgroundColor";
+	/** The key the undo depth override is stored under. */
+	private static final String UNDO_DEPTH_KEY = "undoDepth";
 
 	// the backing node, or null when only the in-memory map is used
 	/** The backing preferences node, or null when only the in-memory map is used. */
@@ -78,7 +81,19 @@ public final class UserPrefs {
 		Theme.byName(get(THEME_KEY)).apply();
 		overrideColors(parseColor(get(GRID_KEY)),
 				parseColor(get(BACKGROUND_KEY)));
+		applyUndoDepth(get(UNDO_DEPTH_KEY));
 	} // end of applyStartup method
+
+	/**
+	 * Lay the user's stored undo depth (if any) over the current
+	 * default.
+	 *
+	 * @param stored The stored undo-depth string, or null for none.
+	 */
+	private static void applyUndoDepth(String stored) {
+
+		JLSInfo.undoStackDepth = parseUndoDepth(stored);
+	} // end of applyUndoDepth method
 
 	/**
 	 * Lay the user's stored color overrides (if any) over the colors
@@ -129,6 +144,16 @@ public final class UserPrefs {
 
 		put(BACKGROUND_KEY, Integer.toString(color.getRGB()));
 	} // end of rememberBackgroundColor method
+
+	/**
+	 * Persist the user's undo depth choice.
+	 *
+	 * @param depth The new undo depth.
+	 */
+	public void rememberUndoDepth(int depth) {
+
+		put(UNDO_DEPTH_KEY, Integer.toString(depth));
+	} // end of rememberUndoDepth method
 
 	/**
 	 * The stored value for a key, from the backing node when present,
@@ -212,5 +237,27 @@ public final class UserPrefs {
 			return null;
 		}
 	} // end of parseColor method
+
+	/**
+	 * Decode a value stored by {@code rememberUndoDepth}.
+	 *
+	 * @param value The stored string, or null.
+	 *
+	 * @return the undo depth, or the current
+	 *         {@link JLSInfo#undoStackDepth} when the value is missing or
+	 *         corrupt.
+	 */
+	private static int parseUndoDepth(String value) {
+
+		if (value == null) {
+			return JLSInfo.undoStackDepth;
+		}
+		try {
+			return Integer.parseInt(value);
+		}
+		catch (NumberFormatException ex) {
+			return JLSInfo.undoStackDepth;
+		}
+	} // end of parseUndoDepth method
 
 } // end of UserPrefs class

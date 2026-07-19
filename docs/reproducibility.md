@@ -15,12 +15,15 @@ environment a third party needs, and gives the verification recipes.
 | Application jar | `jls-<version>.jar` | **Yes** — bit-for-bit |
 | CycloneDX SBOM | `bom.json` (also built: `bom.xml`) | **Yes** — bit-for-bit |
 | Maven pom | (GitHub Packages) | **Yes** — it is source |
-| Native installers (`deb`, `rpm`, `msi`, `dmg`, AppImage) | `SHA256SUMS-installers-*` assets | **No** — see §5 |
+| Native installers — `deb`/`rpm`/AppImage (Linux x86_64) | `SHA256SUMS-installers-*` assets | **Yes** — gated by CI, see §5 |
+| Native installers — `msi`, `dmg`, and the Linux aarch64 leg | `SHA256SUMS-installers-*` assets | **No** — see §5 |
 | Container image | `ghcr.io/anadon/jls` | **No** — see §5 |
 
-The reproducibility claim covers exactly the **jar and the BOM**. Nothing
-in this document should be read as claiming the installers or the
-container image reproduce; their integrity story is different (§5).
+The reproducibility claim covers the **jar, the BOM, and the Linux
+x86_64 `deb`/`rpm`/AppImage installers**. Nothing in this document
+should be read as claiming the `msi`, the `dmg`, the Linux aarch64
+installers, or the container image reproduce; their integrity story is
+different (§5).
 
 ## 2. Build environment record: the `.buildinfo`
 
@@ -143,22 +146,59 @@ supporting the hypothesis that `project.build.outputTimestamp` already
 normalizes every environment-sensitive input except the JDK build
 itself.
 
-## 5. Out of scope: installers and the container image (issue #184)
+## 5. Installers and the container image (issue #188)
 
-The jpackage installers embed build wall-clock and signing metadata, and
-the container image installs distribution packages at build time; today
-they are **not** reproducible, and this document deliberately does not
-claim otherwise. Their integrity model is *attestation-backed* instead:
-per-file SHA-256 checksums (`SHA256SUMS-installers-*`), build-provenance
-attestations (`gh attestation verify`), and — for the image — a keyless
-cosign signature on the manifest digest. Making those artifacts
-reproducible (apt pinning, `SOURCE_DATE_EPOCH`) is owned by issue #184;
-as that lands, the table in §1 expands.
+`scripts/build-installer.sh` derives `SOURCE_DATE_EPOCH` from the pom's
+`project.build.outputTimestamp` (the same stamp that already makes the
+jar reproducible, §4) and exports it for every native packager to
+honor. A `clamp_mtimes()` helper then re-stamps the staged `input/`,
+`runtime/`, and app-image trees to that epoch before `jpackage` and
+friends see them, so archive members no longer carry build wall-clock
+mtimes. On Linux, the rpm leg additionally stages a `.rpmmacros` that
+pins `%_buildhost`, `%use_source_date_epoch_as_buildtime`, and
+`%clamp_mtime_to_source_date_epoch`, closing the remaining rpm-specific
+timestamp sources.
+
+With that plumbing in place, the `deb`, `rpm`, and AppImage installers
+built on Linux x86_64 **are** reproducible: the `installer-reproducibility`
+job in `.github/workflows/ci.yml` builds all three twice from the same
+commit and diffs the SHA-256 of every artifact, failing (and running
+`diffoscope`) on any mismatch. This is the CI gate the table in §1
+refers to.
+
+The `msi` and `dmg` installers, and the Linux aarch64 leg, are **not**
+yet reproducible, and this document deliberately does not claim
+otherwise:
+
+- **`msi`** (owned by issue #190): `scripts/normalize-msi.py` rewrites
+  the known volatile bytes (the WiX package-code GUID, SummaryInformation
+  FILETIMEs, CFB directory timestamps, cabinet member times) in place,
+  but no double-build gate has run on a real Windows runner yet — see
+  `docs/windows-msi-determinism.md`.
+- **`dmg`** (owned by issue #191): the variance inventory and a
+  measurement harness exist (`docs/dmg-reproducibility.md`), but no
+  normalization has been implemented and no measurement has been
+  recorded.
+- **Linux aarch64** (owned by issue #189): the same `SOURCE_DATE_EPOCH`
+  derivation and `clamp_mtimes()` apply on this architecture, but only
+  the report-only probe (`.github/workflows/repro-installers.yml`)
+  exercises it — there is no hard double-build gate for aarch64, so no
+  reproducibility claim is made for it.
+
+Their integrity model, in the meantime, is *attestation-backed*: per-file
+SHA-256 checksums (`SHA256SUMS-installers-*`) and build-provenance
+attestations (`gh attestation verify`). The container image is unchanged
+by #188 and remains out of scope: it installs distribution packages at
+build time and is not reproducible; its integrity model is the same
+checksum/attestation story plus a keyless cosign signature on the
+manifest digest. As `msi`/`dmg`/aarch64 reproducibility and the
+container image land, the table in §1 expands further.
 
 ## 6. Future work
 
 - Submit a rebuild recipe to
   [reproducible-central](https://github.com/jvm-repo-rebuild/reproducible-central)
   once a conforming release has shipped with its `.buildinfo`.
-- Extend the specified-artifact set as #184 makes the installers and
-  image deterministic.
+- Extend the specified-artifact set as #189/#190/#191 make the
+  remaining installers (msi, dmg, Linux aarch64) deterministic, and as
+  #184 makes the container image deterministic.

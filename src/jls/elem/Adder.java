@@ -127,7 +127,7 @@ public final class Adder extends LogicElement {
 		case DOWN:
 			t.rotateCW().mirrorX();
 			break;
-		default: // UP
+		case UP:
 			t.rotateCW().mirrorX().mirrorY();
 			break;
 		}

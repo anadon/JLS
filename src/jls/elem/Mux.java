@@ -148,7 +148,7 @@ public final class Mux extends LogicElement {
 		case UP:
 			t.rotateCCW();
 			break;
-		default: // DOWN
+		case DOWN:
 			t.rotateCCW().mirrorY();
 			break;
 		}

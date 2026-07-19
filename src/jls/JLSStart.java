@@ -1654,6 +1654,40 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		});
 
+		JMenuItem undoDepth = new JMenuItem("Change undo depth");
+		undoDepth.setMnemonic(KeyEvent.VK_D);
+		menu.add(undoDepth);
+		undoDepth.addActionListener(new ActionListener() {
+			/**
+			 * Prompt for and apply a new undo depth when the menu item is
+			 * chosen.
+			 *
+			 * @param event Unused.
+			 */
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				String input = TellUser.prompt(JLSStart.this, "Enter new undo depth",
+						Integer.toString(JLSInfo.undoStackDepth));
+				if (input != null) {
+					try {
+						int newDepth = Integer.parseInt(input);
+						if (newDepth > 0) {
+							JLSInfo.undoStackDepth = newDepth;
+							prefs.rememberUndoDepth(newDepth);
+						}
+						else {
+							TellUser.error(JLSStart.this, "Undo depth must be positive.",
+									"Invalid undo depth");
+						}
+					}
+					catch (NumberFormatException ex) {
+						TellUser.error(JLSStart.this, "Undo depth must be an integer.",
+								"Invalid undo depth");
+					}
+				}
+			}
+		});
+
 		return menu;
 	} // end of globalMenu method
 

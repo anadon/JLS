@@ -201,7 +201,7 @@ public final class ShiftRegister extends LogicElement {
 		case UP:
 			t.rotateCCW();
 			break;
-		default: // DOWN
+		case DOWN:
 			t.rotateCCW().mirrorY();
 			break;
 		}

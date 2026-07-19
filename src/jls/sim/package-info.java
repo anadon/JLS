@@ -8,7 +8,7 @@
  * {@link jls.sim.InteractiveSimulator} adds a Swing GUI with start, step,
  * animate, pause, and stop controls. Supporting classes render signal
  * waveforms over time ({@link jls.sim.Trace}) and display memory activity
- * ({@link jls.sim.MemTrace}).
+ * ({@link jls.edit.MemTrace}).
  *
  * <p>Null-marked (issue #93): every reference in this package is
  * non-null unless annotated {@code @Nullable}, and NullAway enforces

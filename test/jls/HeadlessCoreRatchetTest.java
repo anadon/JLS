@@ -133,7 +133,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/WireEnd.java",
 			"src/jls/elem/XorGate.java",
 			"src/jls/sim/InteractiveSimulator.java",
-			"src/jls/sim/MemTrace.java",
 			"src/jls/sim/Trace.java");
 
 	@Test

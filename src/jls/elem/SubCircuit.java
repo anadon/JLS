@@ -49,7 +49,6 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		case LEFT: result += "left"; break;
 		case UP: result += "up"; break;
 		case DOWN: result += "down"; break;
-		default: result += "unknown"; break;
 		}
 		result += ",inputs={";
 		boolean firstTime = true;

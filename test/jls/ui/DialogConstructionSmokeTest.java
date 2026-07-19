@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import jls.Circuit;
+import jls.elem.AndGate;
 import jls.elem.Element;
 
 /**
@@ -264,5 +265,33 @@ class DialogConstructionSmokeTest {
 	void subCircuitCreateDialog() throws Exception {
 		// cancelled at the SubCreate dialog, before any file chooser
 		constructAndCancel("SubCircuit");
+	}
+
+	@Test
+	void elementDelayChangeDialog() throws Exception {
+		// the edit-time "Change Timing" dialog (Element.changeTiming(),
+		// issue #162): unlike the other cases, this isn't a create
+		// dialog opened via setup() - it's opened on a placed element,
+		// so construct the element directly and call changeTiming()
+		// on the EDT under the same watcher/detector harness.
+		Circuit circuit = new Circuit("golden");
+		CountDownLatch done = new CountDownLatch(1);
+		Throwable[] thrown = new Throwable[1];
+		SwingUtilities.invokeLater(() -> {
+			try {
+				Element el = new AndGate(circuit);
+				el.changeTiming();
+			} catch (Throwable t) {
+				thrown[0] = t;
+			} finally {
+				done.countDown();
+			}
+		});
+		assertTrue(done.await(DIALOG_TIMEOUT_SECONDS, TimeUnit.SECONDS),
+				"Element.changeTiming(): dialog did not come back down -"
+						+ " stuck modal window");
+		if (thrown[0] != null) {
+			fail("Element.changeTiming(): threw", thrown[0]);
+		}
 	}
 }

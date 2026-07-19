@@ -179,24 +179,13 @@ public final class Help {
 		}
 	} // end of readResource method
 
-	/** A TOC tree node: display text plus optional topic id. */
-	private static final class TocEntry {
-
-		/** The label shown in the contents tree. */
-		final String text;
-		/** The topic id to open when this entry is selected, or null. */
-		final String topic;
-
-		/**
-		 * Create a contents-tree entry.
-		 *
-		 * @param text  The label shown in the contents tree.
-		 * @param topic The topic id to open when selected, or null.
-		 */
-		TocEntry(String text, String topic) {
-			this.text = text;
-			this.topic = topic;
-		}
+	/**
+	 * A TOC tree node: display text plus optional topic id.
+	 *
+	 * @param text  The label shown in the contents tree.
+	 * @param topic The topic id to open when selected, or null.
+	 */
+	private record TocEntry(String text, String topic) {
 
 		/** The display text, so the tree renders the label directly. */
 		@Override
@@ -242,8 +231,8 @@ public final class Help {
 					return;
 				DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
 				TocEntry entry = (TocEntry)node.getUserObject();
-				if (entry.topic != null) {
-					String url = topicToUrl.get(entry.topic);
+				if (entry.topic() != null) {
+					String url = topicToUrl.get(entry.topic());
 					if (url != null)
 						showPage(url);
 				}
@@ -259,8 +248,8 @@ public final class Help {
 		while (all.hasMoreElements()) {
 			DefaultMutableTreeNode node = (DefaultMutableTreeNode)all.nextElement();
 			TocEntry entry = (TocEntry)node.getUserObject();
-			if (entry.topic != null && !topicToTocPath.containsKey(entry.topic)) {
-				topicToTocPath.put(entry.topic, new TreePath(node.getPath()));
+			if (entry.topic() != null && !topicToTocPath.containsKey(entry.topic())) {
+				topicToTocPath.put(entry.topic(), new TreePath(node.getPath()));
 			}
 		}
 

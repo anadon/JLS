@@ -71,6 +71,17 @@
       <artifactId>org.jfree.svg</artifactId>
       <version>5.0.7</version>
     </dependency>
+    <!-- FlatLaf: the default Swing look-and-feel (issue #153, evaluation
+         in docs/flatlaf-evaluation-2026-07.md). Apache-2.0; a single
+         ~1 MB jar with zero transitive dependencies. FlatLightLaf is the
+         interactive default installed by JLSStart.installLookAndFeel();
+         -Djls.laf=metal remains the escape hatch and Metal the automatic
+         fallback if FlatLaf can't be set. A dark default is #76 follow-up. -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.7.2</version>
+    </dependency>
     <!-- JSpecify 1.0 nullness annotations (issue #93): the type-use
          annotations (@NullMarked/@Nullable) that make nullness a
          compiler-checked contract, enforced by NullAway inside the

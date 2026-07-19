@@ -787,14 +787,26 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of guiSessionRequested method
 
 	/**
+	 * The fully qualified class name of the default look-and-feel: FlatLaf
+	 * light, adopted by issue #153 (evaluation in
+	 * {@code docs/flatlaf-evaluation-2026-07.md}), superseding the recorded
+	 * "force cross-platform Metal, same everywhere" decision. Named as a
+	 * string rather than referenced directly so this seam stays decoupled
+	 * from the FlatLaf jar, exactly as {@code -Djls.laf=<class>} does.
+	 */
+	static final String DEFAULT_LOOK_AND_FEEL =
+			"com.formdev.flatlaf.FlatLightLaf";
+
+	/**
 	 * The look-and-feel class name selected by the {@code jls.laf} JVM
-	 * property (issue #153). Unset, blank or {@code metal} keeps the
-	 * recorded "same everywhere" default, the cross-platform (Metal)
-	 * look-and-feel; {@code system} selects the platform's native
-	 * look-and-feel; any other value is taken as the fully qualified
-	 * class name of a {@link javax.swing.LookAndFeel} on the classpath.
-	 * The class-name form is the evaluation seam for third-party looks
-	 * such as FlatLaf: drop the jar on the classpath and name its class,
+	 * property (issue #153). Unset or blank installs the default,
+	 * {@linkplain #DEFAULT_LOOK_AND_FEEL FlatLaf light}; {@code metal}
+	 * keeps the older recorded cross-platform (Metal) look as the
+	 * documented escape hatch; {@code system} selects the platform's
+	 * native look-and-feel; any other value is taken as the fully
+	 * qualified class name of a {@link javax.swing.LookAndFeel} on the
+	 * classpath. The class-name form is the evaluation seam for further
+	 * third-party looks: drop the jar on the classpath and name its class,
 	 * no rebuild needed. Package-visible for the headless policy tests.
 	 *
 	 * @return the class name of the selected look-and-feel.
@@ -803,8 +815,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	static String lookAndFeelClassName() {
 
-		String choice = System.getProperty("jls.laf", "metal").trim();
-		if (choice.isEmpty() || choice.equals("metal")) {
+		String choice = System.getProperty("jls.laf", "").trim();
+		if (choice.isEmpty()) {
+			return DEFAULT_LOOK_AND_FEEL;
+		}
+		if (choice.equals("metal")) {
 			return UIManager.getCrossPlatformLookAndFeelClassName();
 		}
 		if (choice.equals("system")) {
@@ -1025,7 +1040,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		text.append("operands may also be attached to the flag: -tfile, -d10000\n");
 		text.append("'--' ends flag processing so operands may begin with '-'\n");
 		text.append("JVM property -Djls.toolkit=default|wayland overrides Wayland toolkit auto-selection\n");
-		text.append("JVM property -Djls.laf=metal|system|<class> selects the Swing look-and-feel (default metal)\n");
+		text.append("JVM property -Djls.laf=metal|system|<class> selects the Swing look-and-feel (default FlatLaf light)\n");
 		text.append("exit status: 0 success, 1 runtime failure, 2 usage error\n");
 		text.append("example: jls -b -sstartup -d10000 counter.jls\n");
 		return text.toString();
@@ -1036,9 +1051,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	public JLSStart() {
 
-		// install the selected look-and-feel: the recorded "same
-		// everywhere" cross-platform default, unless -Djls.laf picks
-		// another one (issue #153)
+		// install the selected look-and-feel: FlatLaf light by default
+		// (issue #153), unless -Djls.laf picks another one; a failing
+		// FlatLaf falls back to the cross-platform default inside
+		// installLookAndFeel, so only a failure of that fallback is fatal
 		if (!installLookAndFeel()) {
 
 			TellUser.error(this, "Can't set cross platform look and feel", "Error");

@@ -167,6 +167,10 @@ jobs:
   # a required check once 20 consecutive runs show at most one failure).
   gui-wayland:
     name: GUI first light (Wayland, JBR)
+    # first-light is exploratory (issue #101) and self-arms the JBR download
+    # via TOFU until a maintainer pins JBR_SHA256; run it on the nightly cron
+    # and on demand rather than gating every PR on an unpinned external fetch
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     continue-on-error: true
     env:
@@ -436,7 +440,9 @@ jobs:
   # of #188 §10 still holds — a red leg means a byte still varies.
   installer-reproducibility-aarch64:
     name: Linux installer reproducibility (aarch64)
-    if: github.event_name != 'schedule'
+    # heavyweight cross-platform double-build: needs a real runner and
+    # iteration; run on demand (issue #189/#190/#191), not on every PR
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04-arm
     continue-on-error: true
     steps:
@@ -490,7 +496,9 @@ jobs:
   # #188 §10 still holds — a red leg means a byte still varies.
   windows-installer-reproducibility:
     name: Windows installer reproducibility (msi)
-    if: github.event_name != 'schedule'
+    # heavyweight cross-platform double-build: needs a real runner and
+    # iteration; run on demand (issue #189/#190/#191), not on every PR
+    if: github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     continue-on-error: true
     steps:
@@ -544,7 +552,9 @@ jobs:
   # validated and byte-identical.  macOS lacks sha256sum (uses shasum).
   macos-installer-reproducibility:
     name: macOS installer reproducibility (dmg)
-    if: github.event_name != 'schedule'
+    # heavyweight cross-platform double-build: needs a real runner and
+    # iteration; run on demand (issue #189/#190/#191), not on every PR
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     continue-on-error: true
     steps:

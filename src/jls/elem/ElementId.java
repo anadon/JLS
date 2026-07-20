@@ -295,10 +295,9 @@ public final class ElementId implements Comparable<ElementId> {
 	@Override
 	public boolean equals(Object other) {
 
-		if (!(other instanceof ElementId)) {
+		if (!(other instanceof ElementId id)) {
 			return false;
 		}
-		ElementId id = (ElementId) other;
 		return counter == id.counter && replica.equals(id.replica);
 	} // end of equals method
 

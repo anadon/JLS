@@ -179,9 +179,8 @@ public final class Wire extends Element {
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		if (g instanceof Graphics2D) {
+		if (g instanceof Graphics2D g2) {
 			// value state is also carried by the stroke (issue #76)
-			Graphics2D g2 = (Graphics2D)g;
 			Stroke saved = g2.getStroke();
 			g2.setStroke(strokeFor(value));
 			g2.drawLine(x1,y1,x2,y2);

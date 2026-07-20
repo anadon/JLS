@@ -84,11 +84,9 @@ public final class SimEvent implements Comparable<SimEvent> {
 	@Override
 	public boolean equals(Object other) {
 
-		if (!(other instanceof SimEvent))
+		if (!(other instanceof SimEvent oth))
 			return false;
 
-		SimEvent oth = (SimEvent) other;
-		
 		if (this.time != oth.time)
 			return false;
 		if (this.callBack != oth.callBack)

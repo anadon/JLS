@@ -11,5 +11,12 @@
  * subsystems live in the subpackages this package coordinates: {@code jls.edit}
  * (interactive editors), {@code jls.elem} (logic elements), {@code jls.sim}
  * (the simulator), and {@code jls.hdl} (Verilog/VHDL export).
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated {@code @Nullable}, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls;
+
+import org.jspecify.annotations.NullMarked;

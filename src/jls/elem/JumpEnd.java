@@ -172,9 +172,8 @@ public final class JumpEnd extends LogicElement {
 		
 		// highlight if corresponding start is selected
 		for (Element el : circuit.getElements()) {
-			if (!(el instanceof JumpStart))
+			if (!(el instanceof JumpStart jstart))
 				continue;
-			JumpStart jstart = (JumpStart)el;
 			if (name.equals(jstart.getName())) {
 				if (el.highlight) {
 					g.setColor(Color.orange);

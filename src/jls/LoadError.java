@@ -1,5 +1,7 @@
 package jls;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A structured description of a single circuit-load failure (issue #58
  * addendum). Every failure carries four parts a reader can act on:
@@ -12,8 +14,22 @@ package jls;
  * derived view, so every existing front end (GUI dialogs, the batch
  * "jls: error:" contract, import, checkpoint recovery) shows the same
  * message without change.
+ *
+ * <p>A record (issue #94): an immutable value carrier whose components
+ * are read through the canonical accessors {@link #category()},
+ * {@link #detail()}, {@link #line()}, {@link #element()}, and
+ * {@link #hint()}.</p>
+ *
+ * @param category Which kind of failure this is (never null).
+ * @param detail   What went wrong, in words a student can read.
+ * @param line     The 1-based line the loader had reached, or 0 if
+ *                 no line is known (e.g. the file never opened).
+ * @param element  The element being read, e.g. "'mem' (Memory)", or
+ *                 null if no element is in play.
+ * @param hint     One actionable next-step sentence, or null.
  */
-public final class LoadError {
+public record LoadError(Category category, String detail, int line,
+		@Nullable String element, @Nullable String hint) {
 
 	/**
 	 * The fixed failure taxonomy. Tests assert on these labels, keeping
@@ -73,38 +89,6 @@ public final class LoadError {
 		}
 	} // end of Category enum
 
-	/** Which kind of failure this is. */
-	private final Category category;
-	/** What went wrong, in words a student can read. */
-	private final String detail;
-	/** The 1-based line the loader had reached, or 0 if unknown. */
-	private final int line;
-	/** The element being read, or null if no element is in play. */
-	private final String element;
-	/** One actionable next-step sentence, or null. */
-	private final String hint;
-
-	/**
-	 * Create a load error.
-	 *
-	 * @param category Which kind of failure this is (never null).
-	 * @param detail   What went wrong, in words a student can read.
-	 * @param line     The 1-based line the loader had reached, or 0 if
-	 *                 no line is known (e.g. the file never opened).
-	 * @param element  The element being read, e.g. "'mem' (Memory)", or
-	 *                 null if no element is in play.
-	 * @param hint     One actionable next-step sentence, or null.
-	 */
-	public LoadError(Category category, String detail, int line,
-			String element, String hint) {
-
-		this.category = category;
-		this.detail = detail;
-		this.line = line;
-		this.element = element;
-		this.hint = hint;
-	} // end of constructor
-
 	/**
 	 * Create a load error with no line or element context.
 	 *
@@ -114,73 +98,11 @@ public final class LoadError {
 	 *
 	 * @return the new load error.
 	 */
-	public static LoadError of(Category category, String detail, String hint) {
+	public static LoadError of(Category category, String detail,
+			@Nullable String hint) {
 
 		return new LoadError(category, detail, 0, null, hint);
 	} // end of of method
-
-	/**
-	 * Get which kind of failure this is.
-	 *
-	 * @return the failure category.
-	 *
-	 * @jls.testedby jls.FormatHeaderTest#malformedFormatVersionFailsAsMalformed()
-	 * @jls.testedby jls.FormatHeaderTest#newerFormatVersionFailsAsNeedsNewerJls()
-	 * @jls.testedby jls.FormatHeaderTest#truncatedFormatHeaderFailsAsMalformed()
-	 * @jls.testedby jls.LoadErrorReportingTest#badElementParameterNamesElementLineAndConstraint()
-	 * @jls.testedby jls.LoadErrorReportingTest#garbageBytesAreReportedAsNotACircuitFile()
-	 * @jls.testedby jls.LoadErrorReportingTest#midStreamIOExceptionIsReportedAsIOError()
-	 * @jls.testedby jls.LoadErrorReportingTest#nonIntegerAttributeValueReportsAttributeAndLine()
-	 * @jls.testedby jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
-	 * @jls.testedby jls.LoadErrorReportingTest#unknownElementTagNamesTagCategoryAndUpgradeHint()
-	 * @jls.testedby jls.elem.OrientationGeometryTest#errorCategory()
-	 */
-	public Category getCategory() {
-
-		return category;
-	} // end of getCategory method
-
-	/**
-	 * Get the human-readable detail of the failure.
-	 *
-	 * @return what went wrong, in words.
-	 */
-	public String getDetail() {
-
-		return detail;
-	} // end of getDetail method
-
-	/**
-	 * Get the line number where the failure hit.
-	 *
-	 * @return the 1-based line the loader had reached, or 0 if unknown.
-	 *
-	 * @jls.testedby jls.LoadErrorReportingTest#truncatedFileNamesCategoryLineElementAndNextStep()
-	 */
-	public int getLine() {
-
-		return line;
-	} // end of getLine method
-
-	/**
-	 * Get the element the loader was reading, if any.
-	 *
-	 * @return the element being read when the failure hit, or null.
-	 */
-	public String getElement() {
-
-		return element;
-	} // end of getElement method
-
-	/**
-	 * Get the actionable next step, if any.
-	 *
-	 * @return the next-step sentence, or null.
-	 */
-	public String getHint() {
-
-		return hint;
-	} // end of getHint method
 
 	/**
 	 * Render the four-part message: category (why), location (where),
@@ -230,4 +152,4 @@ public final class LoadError {
 		return render();
 	} // end of toString method
 
-} // end of LoadError class
+} // end of LoadError record

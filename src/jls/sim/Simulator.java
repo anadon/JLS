@@ -75,7 +75,7 @@ public abstract class Simulator {
 	 * @jls.testedby jls.VcdExportGoldenTest#testVectorStimulusVcdMatchesGoldenAndCoversHiZ()
 	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
-	public void setCircuit(Circuit circ) {
+	public void setCircuit(@Nullable Circuit circ) {
 
 		circuit = circ;
 	} // end of setCircuit method
@@ -149,8 +149,7 @@ public abstract class Simulator {
 	public void initInputs(Circuit circuit) {
 
 		for (Element element : circuit.getElementsInStableOrder()) {
-			if (element instanceof LogicElement) {
-				LogicElement el = (LogicElement)element;
+			if (element instanceof LogicElement el) {
 				el.initInputs();
 			}
 		}
@@ -195,8 +194,7 @@ public abstract class Simulator {
 		// between runs. Stable-id order makes the seed, and with it
 		// every simulated value, a pure function of circuit content.
 		for (Element el : circ.getElementsInStableOrder()) {
-			if (el instanceof LogicElement) {
-				LogicElement lel = (LogicElement)el;
+			if (el instanceof LogicElement lel) {
 				lel.initSim(this);
 			}
 		}

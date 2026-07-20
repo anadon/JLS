@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Persistent user preferences (issue #76).
  *
@@ -37,7 +39,7 @@ public final class UserPrefs {
 
 	// the backing node, or null when only the in-memory map is used
 	/** The backing preferences node, or null when only the in-memory map is used. */
-	private final Preferences node;
+	private final @Nullable Preferences node;
 
 	// in-memory fallback (and write-through cache) for sandboxed runs
 	/** In-memory fallback (and write-through cache) for sandboxed runs. */
@@ -49,7 +51,7 @@ public final class UserPrefs {
 	 *
 	 * @param node The backing node, or null for in-memory-only.
 	 */
-	UserPrefs(Preferences node) {
+	UserPrefs(@Nullable Preferences node) {
 
 		this.node = node;
 	} // end of constructor
@@ -90,7 +92,7 @@ public final class UserPrefs {
 	 *
 	 * @param stored The stored undo-depth string, or null for none.
 	 */
-	private static void applyUndoDepth(String stored) {
+	private static void applyUndoDepth(@Nullable String stored) {
 
 		JLSInfo.undoStackDepth = parseUndoDepth(stored);
 	} // end of applyUndoDepth method
@@ -102,7 +104,7 @@ public final class UserPrefs {
 	 * @param grid The stored grid color, or null for none.
 	 * @param background The stored background color, or null for none.
 	 */
-	private static void overrideColors(Color grid, Color background) {
+	private static void overrideColors(@Nullable Color grid, @Nullable Color background) {
 
 		if (grid != null) {
 			JLSInfo.gridColor = grid;
@@ -163,7 +165,7 @@ public final class UserPrefs {
 	 *
 	 * @return the stored value, or null when none is stored.
 	 */
-	private String get(String key) {
+	private @Nullable String get(String key) {
 
 		if (node != null) {
 			try {
@@ -225,7 +227,7 @@ public final class UserPrefs {
 	 *
 	 * @return the color, or null when the value is missing or corrupt.
 	 */
-	private static Color parseColor(String value) {
+	private static @Nullable Color parseColor(@Nullable String value) {
 
 		if (value == null) {
 			return null;
@@ -247,7 +249,7 @@ public final class UserPrefs {
 	 *         {@link JLSInfo#undoStackDepth} when the value is missing or
 	 *         corrupt.
 	 */
-	private static int parseUndoDepth(String value) {
+	private static int parseUndoDepth(@Nullable String value) {
 
 		if (value == null) {
 			return JLSInfo.undoStackDepth;

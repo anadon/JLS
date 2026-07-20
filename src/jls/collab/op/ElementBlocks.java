@@ -126,7 +126,7 @@ final class ElementBlocks {
 			LoadError err = JLSInfo.lastLoadError;
 			throw new OpRejected("the block for element type '" + type
 					+ "' does not load"
-					+ (err == null ? "" : ": " + err.getDetail()));
+					+ (err == null ? "" : ": " + err.detail()));
 		}
 		if (in.hasNext()) {
 			throw new OpRejected("the block for element type '" + type

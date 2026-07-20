@@ -163,10 +163,10 @@ public final class Sas {
 	@Override
 	public boolean equals(Object other) {
 
-		if (!(other instanceof Sas)) {
+		if (!(other instanceof Sas sas)) {
 			return false;
 		}
-		return java.util.Arrays.equals(glyphs, ((Sas) other).glyphs);
+		return java.util.Arrays.equals(glyphs, sas.glyphs);
 	} // end of equals method
 
 	/**

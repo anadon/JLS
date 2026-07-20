@@ -368,8 +368,8 @@ public abstract class SimpleEditor extends JPanel {
 		for (Element elm : circuit.elementsNear(span)) {
 			if (sel == elm)
 				continue;
-			if (elm instanceof WireEnd) {
-				if (wire.touches((WireEnd)elm)) {
+			if (elm instanceof WireEnd wend) {
+				if (wire.touches(wend)) {
 					return true;
 				}
 				continue;
@@ -2907,8 +2907,7 @@ public abstract class SimpleEditor extends JPanel {
 									return;
 
 								// drag wire means drag both ends
-								if (el instanceof Wire) {
-									Wire dragWire = (Wire)el;
+								if (el instanceof Wire dragWire) {
 									WireEnd end1 = dragWire.getEnd();
 									if (end1.isAttached())
 										continue;
@@ -2926,7 +2925,7 @@ public abstract class SimpleEditor extends JPanel {
 								}
 
 								// can't select an attached wire end
-								if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+								if (el instanceof WireEnd wend && wend.isAttached())
 									continue;
 
 								// select it and begin moving
@@ -2955,7 +2954,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (el.contains(x,y)) {
 
 								// can't display menu on attached wire end
-								if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+								if (el instanceof WireEnd wend && wend.isAttached())
 									continue;
 
 								makeOptionMenu(el);
@@ -3240,8 +3239,7 @@ public abstract class SimpleEditor extends JPanel {
 						optionMenu.add(matchJump);
 					}
 				}
-				if (el instanceof Wire) {
-					Wire wire = (Wire)el;
+				if (el instanceof Wire wire) {
 					if (wire.hasProbe()) {
 						probe.setText("Remove Probe");
 					}
@@ -3281,7 +3279,7 @@ public abstract class SimpleEditor extends JPanel {
 						if (el.contains(x,y)) {
 
 							// can't display menu on attached wire end
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+							if (el instanceof WireEnd wend && wend.isAttached())
 								continue;
 
 							makeOptionMenu(el);
@@ -3332,8 +3330,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// fix up wire end attached to imaginary puts
 						for (Element el : selected) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached() && end.getPut().getElement() == null) {
 									end.setPut(null);
 								}
@@ -3492,7 +3489,7 @@ public abstract class SimpleEditor extends JPanel {
 					Set<Element> attachedInside = new HashSet<Element>();
 					for (Element el : circuit.elementsNear(selRect)) {
 						if (el.isInside(selRect)) {
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+							if (el instanceof WireEnd wend && wend.isAttached()) {
 								attachedInside.add(el);
 								continue;
 							}
@@ -3564,8 +3561,8 @@ public abstract class SimpleEditor extends JPanel {
 				Rectangle acc = null;
 				for (Element el : selected) {
 					acc = union(acc, el.getRect());
-					if (el instanceof WireEnd) {
-						for (Wire w : ((WireEnd)el).getWires()) {
+					if (el instanceof WireEnd wend) {
+						for (Wire w : wend.getWires()) {
 							acc = union(acc, w.getRect());
 						}
 					}
@@ -3662,7 +3659,7 @@ public abstract class SimpleEditor extends JPanel {
 					Set<Element> attachedUnder = new HashSet<Element>();
 					for (Element el : circuit.elementsAt(nx,ny)) {
 						if (el.contains(nx,ny)) {
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+							if (el instanceof WireEnd wend && wend.isAttached()) {
 								attachedUnder.add(el);
 								continue;
 							}
@@ -4023,8 +4020,7 @@ public abstract class SimpleEditor extends JPanel {
 				// make sure not multiple ends connecting to this wire
 				int count = 0;
 				for (Element el : selected) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
+					if (el instanceof WireEnd end) {
 						if (wire.contains(end.getX(),end.getY())) {
 							count += 1;
 						}
@@ -4150,8 +4146,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// can't attach if put is an output and wire end has an input
 				// unless both are tristate
-				if (put instanceof Output && end.getNet().hasInput()) {
-					Output out = (Output)put;
+				if (put instanceof Output out && end.getNet().hasInput()) {
 					if (!(out.isTriState() && end.isTriState())) {
 						overlapMessage = "Wire already has an input";
 						return false;
@@ -4179,8 +4174,7 @@ public abstract class SimpleEditor extends JPanel {
 						continue;
 					for (Element el : circuit.elementsAt(otherEnd.getX(),otherEnd.getY())) {
 						Put p = el.getPut(otherEnd.getX(),otherEnd.getY());
-						if (p != null && p instanceof Output) {
-							Output out = (Output)p;
+						if (p != null && p instanceof Output out) {
 							if (out.isTriState()) {
 								triCount += 1;
 							}
@@ -4219,16 +4213,14 @@ public abstract class SimpleEditor extends JPanel {
 				if (net.getBits() == 0) {
 					net.setBits(put.getBits());
 				}
-				if (put instanceof Output) {
+				if (put instanceof Output out) {
 					net.setInput();
-					Output out = (Output)put;
 					if (out.isTriState()) {
 						net.setTriState(true);
 					}
 				}
 				else if (put instanceof Input && net.isTriState()) {
-					if (put.getElement() instanceof TriProp) {
-						TriProp pin = (TriProp)put.getElement();
+					if (put.getElement() instanceof TriProp pin) {
 						pin.setTriState(true);
 					}
 				}
@@ -4264,9 +4256,7 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// can't connect output to output unless both are tristate
-				if (p1 instanceof Output && p2 instanceof Output) {
-					Output out1 = (Output)p1;
-					Output out2 = (Output)p2;
+				if (p1 instanceof Output out1 && p2 instanceof Output out2) {
 					if (!(out1.isTriState() && out2.isTriState())) {
 						overlapMessage = "Can't connect output to output";
 						return false;
@@ -4333,20 +4323,18 @@ public abstract class SimpleEditor extends JPanel {
 				p2.getElement().fixPosition();
 
 				// make net tristate if either put is a tristate output
-				if (p1 instanceof Output && ((Output)p1).isTriState()) {
+				if (p1 instanceof Output o1 && o1.isTriState()) {
 					net.setTriState(true);
 				}
-				else if (p2 instanceof Output && ((Output)p2).isTriState()) {
+				else if (p2 instanceof Output o2 && o2.isTriState()) {
 					net.setTriState(true);
 				}
 
 				// make output pin tristate if appropriate
-				if (net.isTriState() && p1.getElement() instanceof TriProp) {
-					TriProp pin = (TriProp)p1.getElement();
+				if (net.isTriState() && p1.getElement() instanceof TriProp pin) {
 					pin.setTriState(true);
 				}
-				else if (net.isTriState() && p2.getElement() instanceof TriProp) {
-					TriProp pin = (TriProp)p2.getElement();
+				else if (net.isTriState() && p2.getElement() instanceof TriProp pin) {
 					pin.setTriState(true);
 				}
 			}
@@ -4376,8 +4364,7 @@ public abstract class SimpleEditor extends JPanel {
 							// (wireCollidesAlongSpan; the element predicate
 							// is the same one the reverse drag direction
 							// uses); these checks depend only on sel
-							if (sel instanceof WireEnd) {
-								WireEnd end = (WireEnd)sel;
+							if (sel instanceof WireEnd end) {
 								for (Wire wire : end.getWires()) {
 									if (wireCollidesAlongSpan(circuit,selected,sel,wire)) {
 										overlapMessage = "overlap";
@@ -4415,14 +4402,12 @@ public abstract class SimpleEditor extends JPanel {
 									boolean ok = false;
 
 									// if selected is a wire end ...
-									if (sel instanceof WireEnd) {
+									if (sel instanceof WireEnd end) {
 
-										WireEnd end = (WireEnd)sel;
 
-										if (el instanceof WireEnd) {
+										if (el instanceof WireEnd otherEnd) {
 
 											// wire end to wire end
-											WireEnd otherEnd = (WireEnd)el;
 											if (!canConnect(end,otherEnd)) {
 												untouchAll();
 												return true;
@@ -4431,10 +4416,9 @@ public abstract class SimpleEditor extends JPanel {
 											touch(otherEnd);
 											ok = true;
 										}
-										else if (el instanceof Wire) {
+										else if (el instanceof Wire wire) {
 
 											// wire end to wire
-											Wire wire = (Wire)el;
 											if (!canConnect(end,wire)) {
 												untouchAll();
 												return true;
@@ -4491,9 +4475,8 @@ public abstract class SimpleEditor extends JPanel {
 										for (Put put : sel.getAllPuts()) {
 
 											// if not a wire end, ignore
-											if (!(el instanceof WireEnd))
+											if (!(el instanceof WireEnd end))
 												continue;
-											WireEnd end = (WireEnd)el;
 
 											// if don't line up, ignore
 											if (put.getX() != end.getX() || put.getY() != end.getY()) {
@@ -4611,14 +4594,12 @@ public abstract class SimpleEditor extends JPanel {
 									boolean ok = false;
 
 									// if a wire end ...
-									if (sel instanceof WireEnd) {
+									if (sel instanceof WireEnd end) {
 
-										WireEnd end = (WireEnd)sel;
 
-										if (el instanceof WireEnd) {
+										if (el instanceof WireEnd otherEnd) {
 
 											// wire end to wire end
-											WireEnd otherEnd = (WireEnd)el;
 											WireEnd endLeft = connect(end,otherEnd);
 											connected = true;
 											if (currentState == State.startwire) {
@@ -4627,10 +4608,9 @@ public abstract class SimpleEditor extends JPanel {
 											}
 											ok = true;
 										}
-										else if (el instanceof Wire) {
+										else if (el instanceof Wire wire) {
 
 											// wire end to wire
-											Wire wire = (Wire)el;
 											WireEnd it = connect(end,wire);
 											connected = true;
 											if (currentState == State.startwire) {
@@ -4670,9 +4650,8 @@ public abstract class SimpleEditor extends JPanel {
 										for (Put put : sel.getAllPuts()) {
 
 											// if not a wire end, ignore
-											if (!(el instanceof WireEnd))
+											if (!(el instanceof WireEnd end))
 												continue;
-											WireEnd end = (WireEnd)el;
 
 											// if don't line up, ignore
 											if (put.getX() != end.getX() || put.getY() != end.getY()) {
@@ -4816,8 +4795,7 @@ public abstract class SimpleEditor extends JPanel {
 								continue;
 
 							// or attached wire ends
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -4933,17 +4911,15 @@ public abstract class SimpleEditor extends JPanel {
 							cel.setHighlight(true);
 
 							// if a jump start, add name to start list
-							if (cel instanceof JumpStart) {
-								JumpStart j = (JumpStart)cel;
+							if (cel instanceof JumpStart j) {
 								circuit.addJumpStart(j.getName(),j);
 							}
 						}
 
 						// now copy all wire ends, checking for those attached to puts
 						for (Element el : from.getElements()) {
-							if (!(el instanceof WireEnd))
+							if (!(el instanceof WireEnd oldEnd))
 								continue;
-							WireEnd oldEnd = (WireEnd)el;
 							WireEnd newEnd = (WireEnd)(el.copy());
 							newEnd.fixPosition();
 							newEnd.move(x,y);
@@ -4961,9 +4937,8 @@ public abstract class SimpleEditor extends JPanel {
 
 						// add wires
 						for (Element el : from.getElements()) {
-							if (!(el instanceof Wire))
+							if (!(el instanceof Wire wire))
 								continue;
-							Wire wire = (Wire)el;
 							WireEnd end1 = wire.getEnd();
 							WireEnd end2 = wire.getOtherEnd(end1);
 
@@ -5010,8 +4985,7 @@ public abstract class SimpleEditor extends JPanel {
 						clearSelected();
 						selRect = null;
 						for (Element el : circuit.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -5040,10 +5014,9 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// if it is a subcircuit...
-						if (el instanceof SubCircuit) {
+						if (el instanceof SubCircuit sub) {
 
 							// get circuit and set up editor for it
-							SubCircuit sub = (SubCircuit)el;
 							Circuit subcirc = sub.getSubCircuit();
 							String tabName = sub.getName() + " in " + circuit.getName();
 							for (int e=0; e<tabbedParent.getTabCount(); e+=1) {
@@ -5064,9 +5037,8 @@ public abstract class SimpleEditor extends JPanel {
 
 							// set up import menu
 							for (Component edit : tabbedParent.getComponents()) {
-								if (!(edit instanceof Editor))
+								if (!(edit instanceof Editor otherEditor))
 									continue;
-								Editor otherEditor = (Editor)edit;
 								if (!otherEditor.getCircuit().isImported())
 									ed.addToImportMenu(otherEditor.getCircuit());
 							}
@@ -5337,8 +5309,7 @@ public abstract class SimpleEditor extends JPanel {
 						Circuit source = circMap.get(name);
 						Set<Element> elements = new HashSet<Element>();
 						for (Element el : source.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -5570,9 +5541,9 @@ public abstract class SimpleEditor extends JPanel {
 						// the discarded circuit (issue #39, finding M8)
 						if (tabbedParent != null) {
 							for (Component tab : tabbedParent.getComponents()) {
-								if (tab instanceof SimpleEditor
+								if (tab instanceof SimpleEditor se
 										&& tab != SimpleEditor.this) {
-									((SimpleEditor)tab)
+									se
 											.refreshInImportMenu(circuit);
 								}
 							}
@@ -5593,9 +5564,8 @@ public abstract class SimpleEditor extends JPanel {
 
 							// propagate tri-state to outputs
 							for (Element el : circuit.getElements()) {
-								if (!(el instanceof OutputPin))
+								if (!(el instanceof OutputPin pin))
 									continue;
-								OutputPin pin = (OutputPin)el;
 								SubCircuit subc = pin.getCircuit().getSubElement();
 								Output put = (Output)subc.getPut(pin.getName());
 								Input input = pin.getInput("input");
@@ -5619,12 +5589,10 @@ public abstract class SimpleEditor extends JPanel {
 					private void updateJumpStarts(Circuit circ) {
 
 						for (Element el : circ.getElements()) {
-							if (el instanceof JumpStart) {
-								JumpStart j = (JumpStart)el;
+							if (el instanceof JumpStart j) {
 								circ.addJumpStart(j.getName(),j);
 							}
-							else if (el instanceof SubCircuit) {
-								SubCircuit sc = (SubCircuit)el;
+							else if (el instanceof SubCircuit sc) {
 								updateJumpStarts(sc.getSubCircuit());
 							}
 						}
@@ -5645,8 +5613,7 @@ public abstract class SimpleEditor extends JPanel {
 							}
 							// not an else: subcircuits are named, so the
 							// recursion never ran as an else-if (#51)
-							if (el instanceof SubCircuit) {
-								SubCircuit sc = (SubCircuit)el;
+							if (el instanceof SubCircuit sc) {
 								updateNamesUsed(sc.getSubCircuit());
 							}
 						}

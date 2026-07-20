@@ -3,6 +3,8 @@ package jls;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Startup toolkit selection policy (issue #105).
  *
@@ -68,7 +70,7 @@ final class ToolkitPolicy {
 	 * @param message the single-line error, or null unless the action
 	 *                is FAIL_WITH_MESSAGE.
 	 */
-	record Decision(Action action, String message) {
+	record Decision(Action action, @Nullable String message) {
 
 		/**
 		 * A non-failing decision that carries no message.

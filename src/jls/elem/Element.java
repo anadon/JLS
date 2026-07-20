@@ -517,8 +517,7 @@ public abstract sealed class Element
 	public boolean intersects(Element other) {
 
 		// special case for intersecting with a wire
-		if (other instanceof Wire) {
-			Wire wire = (Wire)other;
+		if (other instanceof Wire wire) {
 			WireEnd end1 = wire.getEnd();
 			WireEnd end2 = wire.getOtherEnd(end1);
 

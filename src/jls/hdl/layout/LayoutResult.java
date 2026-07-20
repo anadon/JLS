@@ -51,10 +51,9 @@ public final class LayoutResult {
 		 */
 		@Override
 		public boolean equals(Object other) {
-			if (!(other instanceof Point)) {
+			if (!(other instanceof Point point)) {
 				return false;
 			}
-			Point point = (Point) other;
 			return x == point.x && y == point.y;
 		}
 

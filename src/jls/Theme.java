@@ -3,6 +3,8 @@ package jls;
 import java.awt.Color;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A named set of semantic editor colors (issue #76).
  *
@@ -116,7 +118,7 @@ public record Theme(String name, Color touch, Color highlight,
 	 *
 	 * @return the named theme, or the default theme as a fallback.
 	 */
-	public static Theme byName(String name) {
+	public static Theme byName(@Nullable String name) {
 
 		for (Theme theme : ALL) {
 			if (theme.name.equals(name)) {

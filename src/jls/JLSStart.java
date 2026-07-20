@@ -70,6 +70,8 @@ import jls.elem.SubCircuit;
 import jls.sim.BatchSimulator;
 import jls.sim.InteractiveSimulator;
 
+import org.jspecify.annotations.Nullable;
+
 
 /**
  * Application entry point and main window of JLS. Parses the command line,
@@ -87,29 +89,29 @@ public class JLSStart extends JFrame implements ChangeListener {
 	/** Simulation time limit (-d flag), defaulting to JLSInfo.defaultTimeLimit. */
 	private static long timeLimit = JLSInfo.defaultTimeLimit;
 	/** Startup parameter file name (-s flag), or null if none given. */
-	private static String paramFile = null;
+	private static @Nullable String paramFile = null;
 	/** Test input file name (-t flag), or null if none given. */
-	private static String testFile = null;
+	private static @Nullable String testFile = null;
 	/** Circuit (.jls) file named on the command line, or null if none given. */
-	private static String startFile = null;
+	private static @Nullable String startFile = null;
 	/** Image export output file name (-i flag operand), or null to derive it from the circuit name. */
-	private static String imageFile = null;
+	private static @Nullable String imageFile = null;
 	/** VCD waveform output file name (-vcd flag), or null if none given. */
-	private static String vcdFile = null;
+	private static @Nullable String vcdFile = null;
 	/** HDL export output file name (-export flag), or null if none given. */
-	private static String exportFile = null;
+	private static @Nullable String exportFile = null;
 	/** Plain-text re-save output file name (-savetext flag), or null if none given. */
-	private static String textSaveFile = null;
+	private static @Nullable String textSaveFile = null;
 	/** True if -p or -v asked for the circuit to be printed. */
 	private static boolean printCircuit = false;
 	/** True to print only the top level (-v) rather than all subcircuits (-p). */
 	private static boolean printCircuitTop;
 	/** Printer name from -p, -v or -r, or null if none given. */
-	private static String printer = null;
+	private static @Nullable String printer = null;
 	/** The interactive simulator, shared by all open circuit editors. */
 	private InteractiveSimulator interSim;
 	/** The default exception handler, saved by start() and kept aware of the current circuit. */
-	private static DefaultExceptionHandler exHandler = null;
+	private static @Nullable DefaultExceptionHandler exHandler = null;
 
 	/** The frame's content pane. */
 	private Container window;
@@ -149,6 +151,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (startFile == null) {
 				System.err.println("jls: error: batch mode requires a circuit file");
 				System.exit(1);
+				return;
 			}
 
 			// open file and create scanner
@@ -163,6 +166,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.err.println("jls: error: " + startFile
 						+ " is not a valid circuit file name");
 				System.exit(1);
+				return;
 			}
 
 			Scanner input = FileAbstractor.openCircuit(startFile);
@@ -170,6 +174,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.err.println("jls: error: can't open " + startFile
 						+ ": " + JLSInfo.loadError);
 				System.exit(1);
+				return;
 			}
 
 			// create new circuit
@@ -259,6 +264,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (startFile == null) {
 				System.err.println("jls: error: image export requires a circuit file");
 				System.exit(1);
+				return;
 			}
 
 			// open file and create scanner
@@ -274,12 +280,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.err.println("jls: error: " + startFile
 						+ " is not a valid circuit file name");
 				System.exit(1);
+				return;
 			}
 			Scanner input = FileAbstractor.openCircuit(startFile);
 			if (input == null) {
 				System.err.println("jls: error: can't open " + startFile
 						+ ": " + JLSInfo.loadError);
 				System.exit(1);
+				return;
 			}
 
 			// create new circuit
@@ -338,6 +346,12 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (startFile == null) {
 				System.err.println("jls: error: HDL export requires a circuit file");
 				System.exit(1);
+				return;
+			}
+			if (exportFile == null) {
+				System.err.println("jls: error: HDL export requires an output file");
+				System.exit(1);
+				return;
 			}
 			Circuit circ = loadCircuitHeadless(startFile);
 
@@ -397,13 +411,26 @@ public class JLSStart extends JFrame implements ChangeListener {
 			if (startFile == null) {
 				System.err.println("jls: error: plain-text save requires a circuit file");
 				System.exit(1);
+				return;
+			}
+			if (textSaveFile == null) {
+				System.err.println("jls: error: plain-text save requires an output file");
+				System.exit(1);
+				return;
 			}
 			Circuit circ = loadCircuitHeadless(startFile);
 
 			// like Save As, the circuit takes the output file's name, so
 			// the file name and its CIRCUIT line cannot disagree
-			circ.setName(Util.isValidFileName(
-					textSaveFile.replaceAll("\\.jls$", "")));
+			String textSaveName = Util.isValidFileName(
+					textSaveFile.replaceAll("\\.jls$", ""));
+			if (textSaveName == null) {
+				System.err.println("jls: error: " + textSaveFile
+						+ " is not a valid circuit file name");
+				System.exit(1);
+				return;
+			}
+			circ.setName(textSaveName);
 
 			// serialize and write uncompressed; writeCircuit keeps the
 			// temp-file/atomic-rename guarantee of ordinary saves
@@ -472,6 +499,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			System.err.println("jls: error: " + file
 					+ " is not a valid circuit file name");
 			System.exit(1);
+			throw new AssertionError("unreachable after System.exit");
 		}
 
 		Scanner input = FileAbstractor.openCircuit(file);
@@ -479,6 +507,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			System.err.println("jls: error: can't open " + file
 					+ ": " + JLSInfo.loadError);
 			System.exit(1);
+			throw new AssertionError("unreachable after System.exit");
 		}
 
 		Circuit circ = new Circuit(cname);
@@ -539,21 +568,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 				(Element el) -> el.getName() == null ? "" : el.getName()));
 		for (Element el : ordered) {
 			if (el.isWatched()) {
-				if (el instanceof Register) {
-					Register reg = (Register)el;
-					reg.printValue(qual);
-				}
-				else if (el instanceof Memory) {
-					Memory mem = (Memory)el;
-					mem.printChangedValues(qual);
-				}
-				else if (el instanceof OutputPin) {
-					OutputPin pin = (OutputPin)el;
-					pin.printValue(qual);
+				switch (el) {
+					case Register reg -> reg.printValue(qual);
+					case Memory mem -> mem.printChangedValues(qual);
+					case OutputPin pin -> pin.printValue(qual);
+					default -> { }
 				}
 			}
-			else if (el instanceof SubCircuit) {
-				SubCircuit sel = (SubCircuit)el;
+			else if (el instanceof SubCircuit sel) {
 				Circuit subCirc = sel.getSubCircuit();
 				String subQual = "";
 				if (qual.isEmpty()) {
@@ -593,9 +615,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 		/** Whether the flag takes no, a required, or an optional operand. */
 		final Arity arity;
 		/** The operand's name in the usage text, or null if the flag takes none. */
-		final String operandName;
+		final @Nullable String operandName;
 		/** The operand phrase for "requires ..." errors, or null if the flag takes none. */
-		final String operandWhat;
+		final @Nullable String operandWhat;
 		/** The usage description for this flag. */
 		final String description;
 
@@ -608,8 +630,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		 * @param operandWhat The operand phrase for "requires ..." errors, or null.
 		 * @param description The usage description for this flag.
 		 */
-		FlagSpec(String flag, Arity arity, String operandName,
-				String operandWhat, String description) {
+		FlagSpec(String flag, Arity arity, @Nullable String operandName,
+				@Nullable String operandWhat, String description) {
 			this.flag = flag;
 			this.arity = arity;
 			this.operandName = operandName;
@@ -723,6 +745,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				}
 				if (spec == null) {
 					usageError("unknown option " + arg);
+					return;
 				}
 				String attached = body.substring(spec.flag.length());
 				String opnd = null;
@@ -874,7 +897,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * @param flag The flag name (guaranteed present in the flag table).
 	 * @param opnd Its operand, or null for flags without one.
 	 */
-	private static void apply(String flag, String opnd) {
+	private static void apply(String flag, @Nullable String opnd) {
 
 		switch (flag) {
 		case "h":
@@ -996,7 +1019,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * @return the operand.
 	 */
 	private static String operand(String[] args, int pos, String flag,
-			String what) {
+			@Nullable String what) {
 
 		if (pos + 1 >= args.length || args[pos + 1].isEmpty()
 				|| args[pos + 1].charAt(0) == '-') {
@@ -1067,7 +1090,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		prefs.applyStartup();
 
 		// save reference for exceptions
-		exHandler.setJLS(this);
+		if (exHandler != null)
+			exHandler.setJLS(this);
 
 		// save reference for dialogs
 		JLSInfo.frame = this;
@@ -1155,8 +1179,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 			return;
 		}
 		Circuit circ = ed.getCircuit();
-		while (circ.isImported()) {
-			SubCircuit sub = circ.getSubElement();
+		SubCircuit sub;
+		while ((sub = circ.getSubElement()) != null) {
 			circ = sub.getCircuit();
 		}
 		interSim.setCircuit(circ);
@@ -1176,8 +1200,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		boolean cancel = false;
 		for (Component comp : edits.getComponents()) {
-			if (comp instanceof Editor) {
-				Editor editor = (Editor)(comp);
+			if (comp instanceof Editor editor) {
 				if (!editor.shutdown()) {
 					cancel = true;
 					break;
@@ -1787,8 +1810,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		for (int i = 0; i < edits.getTabCount(); i += 1) {
 			Component c = edits.getComponentAt(i);
-			if (c instanceof Editor) {
-				((Editor)c).changeBackgroundColor();
+			if (c instanceof Editor ec) {
+				ec.changeBackgroundColor();
 				c.repaint();
 			}
 		}
@@ -1933,7 +1956,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// create circuit and set up editor
 		Circuit circ = new Circuit(name);
 		circ.setDirectory(Util.defaultDirectory());
-		exHandler.setCircuit(circ);
+		if (exHandler != null)
+			exHandler.setCircuit(circ);
 		setupEditor(circ,name);
 	} // end of newCircuit method
 
@@ -1946,7 +1970,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * @param filePath The name of the circuit.  If null, then prompt user for
 	 * the name.
 	 */
-	private void open(String filePath) {
+	private void open(@Nullable String filePath) {
 
 		File file = null;
 		String dir = "";
@@ -2043,7 +2067,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 		new File(dir, cname + ".jls~").delete();
 
 		// create editor
-		exHandler.setCircuit(circ);
+		if (exHandler != null)
+			exHandler.setCircuit(circ);
 		setupEditor(circ,cname);
 	} // end of open method
 
@@ -2061,9 +2086,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// update all import menus
 		for (Component edit : edits.getComponents()) {
-			if (!(edit instanceof Editor))
+			if (!(edit instanceof Editor otherEditor))
 				continue;
-			Editor otherEditor = (Editor)edit;
 
 			// add this circuit to another circuit's import menu
 			otherEditor.addToImportMenu(circ);
@@ -2097,13 +2121,17 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// get newly visible editor (if one) and tell exception handler
 		ed = (Editor)(edits.getSelectedComponent());
-		if (ed == null)
-			exHandler.setCircuit(null);
+		if (ed == null) {
+			if (exHandler != null)
+				exHandler.setCircuit(null);
+		}
 		else {
 			Circuit c = ed.getCircuit();
-			while (c.isImported())
-				c = c.getSubElement().getCircuit();
-			exHandler.setCircuit(c);
+			SubCircuit sub;
+			while ((sub = c.getSubElement()) != null)
+				c = sub.getCircuit();
+			if (exHandler != null)
+				exHandler.setCircuit(c);
 		}
 	} // end of close method
 
@@ -2122,7 +2150,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 *        item).
 	 * @return The assembled book, or null if no editor tab is selected.
 	 */
-	Book assemblePrintBook(boolean all) {
+	@Nullable Book assemblePrintBook(boolean all) {
 
 		// get the currently selected editor, return if none
 		Editor ed = (Editor)(edits.getSelectedComponent());
@@ -2315,6 +2343,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 						System.out.print(paramFile + ": expected element type,");
 						System.out.println(" got \"" + type + "\"");
 						System.exit(1);
+						return;
 					}
 					if (!LogicElement.class.isAssignableFrom(cl)) {
 						// e.g. TYPE Wire used to crash on an unguarded
@@ -2376,6 +2405,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 					if (qualifiedName == null) {
 						System.out.println(paramFile + ": invalid element name " + name);
 						System.exit(1);
+						return;
 					}
 
 					// run down into subcircuits
@@ -2385,8 +2415,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 						for (String sub : qualifiedName) {
 							Circuit next = null;
 							for (Element el : circ.getElements()) {
-								if (el instanceof SubCircuit) {
-									SubCircuit lel = (SubCircuit)el;
+								if (el instanceof SubCircuit lel) {
 									if (sub.equals(lel.getName())) {
 										next = lel.getSubCircuit();
 										break;
@@ -2396,6 +2425,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 							if (next == null) {
 								System.out.println(paramFile + ": no such element name " + name);
 								System.exit(1);
+								return;
 							}
 							circ = next;
 						}
@@ -2404,8 +2434,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 					// look for element in the appropriate circuit or subcircuit
 					LogicElement element = null;
 					for (Element el : circ.getElements()) {
-						if (el instanceof LogicElement) {
-							LogicElement lel = (LogicElement)el;
+						if (el instanceof LogicElement lel) {
 							if (elementName.equals(lel.getName())) {
 								element = lel;
 								break;
@@ -2416,6 +2445,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 						System.out.print(paramFile + ": no such element named");
 						System.out.println(" \"" + name + "\"");
 						System.exit(1);
+						return;
 					}
 					if (!scan.hasNext()) {
 						System.out.print(paramFile + ": expected element property,");
@@ -2588,13 +2618,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	public static void setPropDelays(Circuit circ, Class<?> cl, int delay) {
 
 		for (Element el : circ.getElements()) {
-			if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)el;
+			if (el instanceof SubCircuit sub) {
 				Circuit c = sub.getSubCircuit();
 				setPropDelays(c,cl,delay);
 			}
-			else if (el.getClass() == cl && el instanceof LogicElement) {
-				LogicElement lel = (LogicElement)el;
+			else if (el.getClass() == cl && el instanceof LogicElement lel) {
 				lel.setDelay(delay);
 			}
 		}
@@ -2607,6 +2635,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private static void printCirc(boolean justTop) {
 
+		if (startFile == null) {
+			System.err.println("jls: error: printing requires a circuit file");
+			System.exit(1);
+			return;
+		}
 		String name = startFile.replaceAll("\\.jls$","");
 
 		// open and load the named file through the standard sniffing
@@ -2617,6 +2650,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			System.err.println("can't open " + startFile
 					+ ": " + JLSInfo.loadError);
 			System.exit(1);
+			return;
 		}
 		Circuit circ = new Circuit(name);
 		boolean loadOK = circ.load(input);
@@ -2756,7 +2790,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 * 
 	 * @return the components of the name, or null if the name is not valid.
 	 */
-	public static Vector<String> parseName(String name) {
+	public static @Nullable Vector<String> parseName(String name) {
 
 		Vector<String> comp = new Vector<String>();
 		int first = 0;

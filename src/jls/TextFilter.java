@@ -6,6 +6,8 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Make sure everything in a text field is numeric.
  * 
@@ -19,7 +21,7 @@ public final class TextFilter extends DocumentFilter {
 	/** The base (radix) numbers in the field are parsed in. */
 	private int base = 10;
 	/** The largest value the field may hold. */
-	private BigInteger max = null; // null means no maximum
+	private @Nullable BigInteger max = null; // null means no maximum
 
 	/**
 	 * Construct filter.

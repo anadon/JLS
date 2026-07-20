@@ -973,8 +973,7 @@ public final class InteractiveSimulator extends Simulator {
 		for (Element element : circ.getElements()) {
 
 			// if a wire, check for a probe
-			if (element instanceof Wire) {
-				Wire wire = (Wire)element;
+			if (element instanceof Wire wire) {
 				if (wire.hasProbe()) {
 					String name = wire.getEnd().getFullName() + wire.getProbe();
 					Trace tr = new Trace(name,element,wire.getBits(),traces.getWidth(),traces);
@@ -986,15 +985,13 @@ public final class InteractiveSimulator extends Simulator {
 			}
 
 			// if a subcircuit, recursively find all traces in it
-			else if (element instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)element;
+			else if (element instanceof SubCircuit sub) {
 				Circuit c = sub.getSubCircuit();
 				findTraces(c);
 			}
 
 			// if a watched element
-			else if (element instanceof LogicElement) {
-				LogicElement el = (LogicElement)element;
+			else if (element instanceof LogicElement el) {
 				if (el.isWatched()) {
 
 					// set up trace window
@@ -1006,8 +1003,7 @@ public final class InteractiveSimulator extends Simulator {
 					traceMap.put(el,tr);
 
 					// set up memory trace if it is a memory element
-					if (el instanceof Memory) {
-						Memory mem = (Memory)el;
+					if (el instanceof Memory mem) {
 						MemTrace mtr = new MemTrace(mem);
 						mtr.showit(window);
 						memTraces.add(mtr);

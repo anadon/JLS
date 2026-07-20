@@ -212,9 +212,10 @@ public final class SpatialIndex {
 					continue;
 				}
 				for (Element el : cell) {
-					if (boundsTouch(indexed.get(el), rect)) {
-						result.add(el);
-					}
+					Rectangle bounds = indexed.get(el);
+						if (bounds != null && boundsTouch(bounds, rect)) {
+							result.add(el);
+						}
 				}
 			}
 		}

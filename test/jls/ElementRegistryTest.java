@@ -101,7 +101,7 @@ class ElementRegistryTest {
 				"'Wire' has no (Circuit) constructor and must not be a "
 						+ "loadable tag");
 		assertEquals(LoadError.Category.UNKNOWN_ELEMENT,
-				JLSInfo.lastLoadError.getCategory(),
+				JLSInfo.lastLoadError.category(),
 				"an unregistered tag must report UNKNOWN_ELEMENT");
 	}
 

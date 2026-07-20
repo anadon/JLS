@@ -123,10 +123,9 @@ public record RemoveElements(List<ElementId> ids) implements CircuitOp {
 		}
 		Set<Element> group = new HashSet<Element>(targets);
 		for (Element el : circuit.getElements()) {
-			if (!(el instanceof WireEnd)) {
+			if (!(el instanceof WireEnd end)) {
 				continue;
 			}
-			WireEnd end = (WireEnd) el;
 			if (end.isAttached()
 					&& group.contains(end.getPut().getElement())) {
 				throw new OpRejected("element '"

@@ -126,7 +126,7 @@ class FormatHeaderTest {
 				"999", "999999999999"}) {
 			LoadError error =
 					failToLoad("FORMAT " + version + "\n" + LEGACY_TEXT);
-			assertSame(LoadError.Category.NEWER_FORMAT, error.getCategory(),
+			assertSame(LoadError.Category.NEWER_FORMAT, error.category(),
 					"FORMAT " + version + " must be refused as too new, "
 							+ "got: " + error);
 			assertTrue(error.render().contains("newer version of JLS"),
@@ -141,7 +141,7 @@ class FormatHeaderTest {
 	@Test
 	void malformedFormatVersionFailsAsMalformed() {
 		LoadError error = failToLoad("FORMAT banana\n" + LEGACY_TEXT);
-		assertSame(LoadError.Category.MALFORMED, error.getCategory(),
+		assertSame(LoadError.Category.MALFORMED, error.category(),
 				"a non-numeric FORMAT version must be malformed, got: "
 						+ error);
 		assertTrue(error.render().contains("banana"),
@@ -151,7 +151,7 @@ class FormatHeaderTest {
 	@Test
 	void truncatedFormatHeaderFailsAsMalformed() {
 		LoadError error = failToLoad("FORMAT");
-		assertSame(LoadError.Category.MALFORMED, error.getCategory(),
+		assertSame(LoadError.Category.MALFORMED, error.category(),
 				"a FORMAT header with no version must be malformed, got: "
 						+ error);
 	}

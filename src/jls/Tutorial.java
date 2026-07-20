@@ -3,6 +3,7 @@ package jls;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Frame;
+import org.jspecify.annotations.Nullable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public final class Tutorial extends JDialog {
 	 * @param page Index of the page to open at (0 to
 	 *		{@code pageCount()-1}); out-of-range values are clamped.
 	 */
-	public Tutorial(Frame frame, int page) {
+	public Tutorial(@Nullable Frame frame, int page) {
 
 		super(frame, "JLS Tutorial", false);
 

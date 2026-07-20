@@ -214,7 +214,7 @@ public final class JLSInfo {
 	 *
 	 * @param error The load error, or null to clear the state.
 	 */
-	public static void setLoadError(LoadError error) {
+	public static void setLoadError(@Nullable LoadError error) {
 
 		lastLoadError = error;
 		loadError = error == null ? "" : error.render();

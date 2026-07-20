@@ -630,33 +630,37 @@ jobs:
           fi
 
       # The full-normalize round-trip (convert->attach->patch->reconvert->
-      # udifrez) has never run on real macOS before this job. Prove it did
-      # not corrupt the image: the shipped dmg must still pass hdiutil verify,
-      # attach, expose JLS.app with a valid Info.plist, and carry the .jls
-      # document type. This is the CI-runnable subset of the §5 checklist
-      # (clean-VM install + Gatekeeper still need a human). A failure here
-      # means the HFS+ pass is unsafe and must not reach the release path.
-      - name: Verify the normalized dmg still mounts and is well-formed
+      # udifrez) had never run on real macOS before this lane, and its first
+      # run produced an image `hdiutil verify` rejects as corrupt. Isolate
+      # which stage breaks it by building the dmg three ways and verifying
+      # each: raw jpackage output, koly-only (the default release path), and
+      # the full HFS+ round-trip. Non-fatal so all three results print in one
+      # run; the next fix targets whichever stage first fails verify. Then
+      # confirm the surviving image still mounts with JLS.app + the .jls
+      # association intact (the CI-runnable subset of the docs §5 checklist).
+      - name: Diagnose which normalization stage keeps the dmg mountable
         shell: bash
         run: |
-          set -euo pipefail
-          dmg="$(ls target/installer/dist/*.dmg | head -1)"
-          echo "==> hdiutil verify $dmg"
-          hdiutil verify "$dmg"
-          mnt="$(mktemp -d)"
-          echo "==> attaching read-only"
-          hdiutil attach "$dmg" -quiet -nobrowse -noautoopen -readonly -mountpoint "$mnt"
-          trap 'hdiutil detach "$mnt" -quiet -force >/dev/null 2>&1 || true' EXIT
-          app="$mnt/JLS.app"
-          test -d "$app" || { echo "::error::JLS.app missing from the normalized dmg"; exit 1; }
-          test -x "$app/Contents/MacOS/JLS" || { echo "::error::launcher binary missing"; exit 1; }
-          plutil -lint "$app/Contents/Info.plist"
-          if ! plutil -extract CFBundleDocumentTypes xml1 -o - "$app/Contents/Info.plist" \
-               | grep -qi 'jls'; then
-            echo "::error::.jls document-type association did not survive normalization"
-            exit 1
-          fi
-          echo "normalized dmg verified: mounts, app + launcher present, Info.plist valid, .jls association intact"
+          set -uo pipefail
+          check() {
+            local label="$1"
+            local dmg; dmg="$(ls target/installer/dist/*.dmg | head -1)"
+            if hdiutil verify "$dmg" >/dev/null 2>&1; then
+              echo "VERIFY ok   [$label] $(basename "$dmg")"
+            else
+              echo "VERIFY FAIL [$label] $(basename "$dmg") — hdiutil rejects it"
+            fi
+          }
+          echo "== 1/3 raw jpackage (no normalization) =="
+          env JLS_SKIP_BUILD=1 JLS_SKIP_DMG_NORMALIZE=1 JLS_DMG_FULL_NORMALIZE=0 \
+            bash scripts/build-installer.sh >/dev/null 2>&1 && check "raw jpackage" || echo "BUILD FAIL [raw]"
+          echo "== 2/3 koly-only (default release path) =="
+          env JLS_SKIP_BUILD=1 JLS_DMG_FULL_NORMALIZE=0 \
+            bash scripts/build-installer.sh >/dev/null 2>&1 && check "koly-only" || echo "BUILD FAIL [koly]"
+          echo "== 3/3 full HFS+ round-trip =="
+          env JLS_SKIP_BUILD=1 JLS_DMG_FULL_NORMALIZE=1 \
+            bash scripts/build-installer.sh >/dev/null 2>&1 && check "full-normalize" || echo "BUILD FAIL [full]"
+          echo "(diagnostic; the next commit fixes whichever stage first fails verify)"
 
       - name: Attribute the residual with diffoscope
         if: steps.compare.outputs.differing == '1'

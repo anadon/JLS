@@ -886,8 +886,11 @@ public abstract sealed class Element
 	 */
 	public void changeTiming() {
 
-		// display dialog
-		new DelayChange(this instanceof Memory);
+		// display dialog; the "access time" vs "propagation delay"
+		// wording is the element's own concern, declared through the
+		// Timed capability (issue #78) rather than a base-class
+		// instanceof branch on a concrete leaf type.
+		new DelayChange(this instanceof Timed t && t.usesAccessTime());
 
 	} // end of changeTiming method
 

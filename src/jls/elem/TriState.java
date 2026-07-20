@@ -18,7 +18,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public final class TriState extends LogicElement {
+public final class TriState extends LogicElement implements Timed {
 	
 	// defaults
 	/** Default number of bits (gates). */

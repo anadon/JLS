@@ -1,19 +1,14 @@
 package jls.elem;
 
 import jls.*;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
-import javax.swing.*;
-import java.io.*;
-import java.util.*;
+import java.util.BitSet;
 
 /**
  * Not gate(s) (inverter).
- * 
+ *
  * @author David A. Poplawski
  */
-public final class NotGate extends Gate {
+public final class NotGate extends Gate implements Timed {
 
 	// identity and shared previous-settings state (#22)
 	/** Kind descriptor for NOT gates: display name "NOT", save tag "NotGate", one fixed input, default delay 5. */
@@ -22,35 +17,40 @@ public final class NotGate extends Gate {
 
 	/**
 	 * Create NOT gate.
-	 * 
+	 *
 	 * @param circuit The circuit this NOT gate is in.
 	 */
 	public NotGate(Circuit circuit) {
-		
+
 		super(circuit);
-		
-		// create image for draw
-		int s = JLSInfo.spacing;
-		int d = JLSInfo.pointDiameter;
-		Line2D top = new Line2D.Double(0,0,2*s-d,s);
-		Line2D bottom = new Line2D.Double(2*s-d,s,0,2*s);
-		Line2D side = new Line2D.Double(0,2*s,0,0);
-		gateShape = new GeneralPath(top);
-		gateShape.append(bottom,true);
-		gateShape.append(side,true);
-		gateShape.closePath();
-		Ellipse2D bubble = new Ellipse2D.Double(2*s-d,s-d/2,d,d);
-		gateShape.append(bubble,false);
 	} // end of construcor
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
+
+	/**
+	 * The NOT gate body: a triangle with an inversion bubble at its tip
+	 * (issue #77 model/render split - the symbol as headless data).
+	 */
+	@Override
+	protected GateOutline outline() {
+
+		int s = JLSInfo.spacing;
+		int d = JLSInfo.pointDiameter;
+		return GateOutline.builder()
+				.line(false, 0, 0, 2 * s - d, s)
+				.line(true, 2 * s - d, s, 0, 2 * s)
+				.line(true, 0, 2 * s, 0, 0)
+				.close()
+				.ellipse(false, 2 * s - d, s - d / 2, d, d)
+				.build();
+	} // end of outline method
 
 //-------------------------------------------------------------------------------
 // Simulation

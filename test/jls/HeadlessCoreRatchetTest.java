@@ -75,12 +75,15 @@ class HeadlessCoreRatchetTest {
 	/**
 	 * Core-candidate files that imported a forbidden package when this
 	 * ratchet landed (60 files, 2026-07). DELETE lines as files are
-	 * cleaned; NEVER add one.
+	 * cleaned; NEVER add one. The six pure gate leaves (AndGate, NandGate,
+	 * NorGate, NotGate, OrGate, XorGate) left this list once their symbol
+	 * geometry moved to the headless {@link jls.elem.GateOutline} model and
+	 * the {@code GeneralPath} translation stayed on the Gate/Swing side
+	 * (issue #77 renderer/model split).
 	 */
 	private static final Set<String> BASELINE = Set.of(
 			"src/jls/Circuit.java",
 			"src/jls/elem/Adder.java",
-			"src/jls/elem/AndGate.java",
 			"src/jls/elem/Binder.java",
 			"src/jls/elem/Clock.java",
 			"src/jls/elem/Constant.java",
@@ -104,10 +107,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/JumpStart.java",
 			"src/jls/elem/Memory.java",
 			"src/jls/elem/Mux.java",
-			"src/jls/elem/NandGate.java",
-			"src/jls/elem/NorGate.java",
-			"src/jls/elem/NotGate.java",
-			"src/jls/elem/OrGate.java",
 			"src/jls/elem/OutputPin.java",
 			"src/jls/elem/OutputSig.java",
 			"src/jls/elem/OutputVal.java",
@@ -131,7 +130,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/ValEntry.java",
 			"src/jls/elem/Wire.java",
 			"src/jls/elem/WireEnd.java",
-			"src/jls/elem/XorGate.java",
 			"src/jls/sim/InteractiveSimulator.java",
 			"src/jls/sim/Trace.java");
 

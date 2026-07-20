@@ -17,7 +17,8 @@ import java.math.*;
  * 
  * @author David A. Poplawski
  */
-public final class Register extends LogicElement {
+public final class Register extends LogicElement
+		implements Timed, Watchable {
 
 	// register types
 	/**

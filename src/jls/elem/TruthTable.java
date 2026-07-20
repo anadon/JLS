@@ -48,7 +48,8 @@ import jls.sim.Simulator;
  * 
  * @author David A. Poplawski
  */
-public final class TruthTable extends LogicElement implements Printable {
+public final class TruthTable extends LogicElement
+		implements Printable, Timed {
 
 	// default values
 	/** Default propagation delay (simulation time units). */

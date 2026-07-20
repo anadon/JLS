@@ -1,70 +1,56 @@
 package jls.elem;
 
 import jls.*;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
-import java.io.*;
 import java.util.BitSet;
-import javax.swing.*;
 
 /**
  * n-input OR gate(s).
- * 
+ *
  * @author David A. Poplawski
  */
-public final class OrGate extends Gate {
+public final class OrGate extends Gate implements Timed {
 
 	// identity and shared previous-settings state (#22)
 	/** The kind descriptor shared by all OR gates (#22). */
 	private static final Kind KIND =
 			new Kind("OR","OrGate",-1,10);
-	
+
 	/**
 	 * Create OR gate.
-	 * 
+	 *
 	 * @param circuit The circuit this OR gate is in.
 	 */
 	public OrGate(Circuit circuit) {
-		
+
 		super(circuit);
-		
-		// create image for this gate for later use
-		int s = JLSInfo.spacing;
-		Point2D.Double pright = new Point2D.Double(2*s,s);
-		Point2D.Double ptop = new Point2D.Double(0,0);
-		Point2D.Double pbottom = new Point2D.Double(0,2*s);
-		Point2D.Double c1 = new Point2D.Double();
-		Point2D.Double c2 = new Point2D.Double();
-		
-		c1.setLocation(pright.x-1,pright.y-3);
-		c2.setLocation(ptop.x+s,ptop.y);
-		CubicCurve2D top = new CubicCurve2D.Double();
-		top.setCurve(pright,c1,c2,ptop);
-		
-		c1.setLocation(ptop.x+s/4,ptop.y+s);
-		c2.setLocation(pbottom.x+s/4,pbottom.y-s);
-		CubicCurve2D side = new CubicCurve2D.Double();
-		side.setCurve(ptop,c1,c2,pbottom);
-		
-		c1.setLocation(pbottom.x+s,pbottom.y);
-		c2.setLocation(pright.x-1,pright.y+3);
-		CubicCurve2D bottom = new CubicCurve2D.Double();
-		bottom.setCurve(pbottom,c1,c2,pright);
-		gateShape = new GeneralPath(top);
-		gateShape.append(side,true);
-		gateShape.append(bottom,true);
-		gateShape.closePath();
 	} // end of constructor
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
+
+	/**
+	 * The OR gate body: a curved back and two convex sides meeting at a
+	 * point (issue #77 model/render split - the symbol as headless data).
+	 * The three cubic curves reproduce the former inline construction from
+	 * the points pright=(2s,s), ptop=(0,0), pbottom=(0,2s).
+	 */
+	@Override
+	protected GateOutline outline() {
+
+		int s = JLSInfo.spacing;
+		return GateOutline.builder()
+				.cubic(false, 2 * s, s, 2 * s - 1, s - 3, s, 0, 0, 0)
+				.cubic(true, 0, 0, s / 4, s, s / 4, s, 0, 2 * s)
+				.cubic(true, 0, 2 * s, s, 2 * s, 2 * s - 1, s + 3, 2 * s, s)
+				.close()
+				.build();
+	} // end of outline method
 
 //-------------------------------------------------------------------------------
 // Simulation

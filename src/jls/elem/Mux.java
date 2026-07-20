@@ -14,7 +14,7 @@ import javax.swing.*;
  * 
  * @author David A. Poplawski
  */
-public final class Mux extends LogicElement {
+public final class Mux extends LogicElement implements Timed {
 
 	// default values
 	/** Default number of data inputs. */

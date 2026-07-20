@@ -19,7 +19,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public final class JumpStart extends LogicElement implements TriProp {
+public final class JumpStart extends LogicElement
+		implements TriProp, Watchable {
 	
 	// default value
 	/** The default bit width for a new jump start. */

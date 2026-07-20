@@ -1,80 +1,62 @@
 package jls.elem;
 
 import jls.*;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
-import java.io.*;
 import java.util.BitSet;
-import javax.swing.*;
 
 /**
  * n-input XOR gate(s).
- * 
+ *
  * @author David A. Poplawski
  */
-public final class XorGate extends Gate {
+public final class XorGate extends Gate implements Timed {
 
 	// identity and shared previous-settings state (#22)
 	/** The kind descriptor and shared previous-settings state for XOR gates. */
 	private static final Kind KIND =
 			new Kind("XOR","XorGate",-1,10);
-	
+
 	/**
 	 * Create XOR gate.
-	 * 
+	 *
 	 * @param circuit The circuit this XOR gate is in.
 	 */
 	public XorGate(Circuit circuit) {
-		
-		super(circuit);
-		
-		// create image for this gate for later use
-		int s = JLSInfo.spacing;
-		int gap = 2;
-		Point2D.Double pright = new Point2D.Double(2*s,s);
-		Point2D.Double ptop = new Point2D.Double(gap,0);
-		Point2D.Double pbottom = new Point2D.Double(gap,2*s);
-		Point2D.Double c1 = new Point2D.Double();
-		Point2D.Double c2 = new Point2D.Double();
-		
-		c1.setLocation(pright.x-1,pright.y-3);
-		c2.setLocation(ptop.x+s,ptop.y);
-		CubicCurve2D top = new CubicCurve2D.Double();
-		top.setCurve(pright,c1,c2,ptop);
-		
-		c1.setLocation(ptop.x+s/4,ptop.y+s);
-		c2.setLocation(pbottom.x+s/4,pbottom.y-s);
-		CubicCurve2D side = new CubicCurve2D.Double();
-		side.setCurve(ptop,c1,c2,pbottom);
-		
-		c1.setLocation(pbottom.x+s,pbottom.y);
-		c2.setLocation(pright.x-1,pright.y+3);
-		CubicCurve2D bottom = new CubicCurve2D.Double();
-		bottom.setCurve(pbottom,c1,c2,pright);
-		
-		gateShape = new GeneralPath(top);
-		gateShape.append(side,true);
-		gateShape.append(bottom,true);
-		gateShape.closePath();
 
-		Point2D.Double pptop = new Point2D.Double(0,0);
-		Point2D.Double ppbottom = new Point2D.Double(0,2*s);
-		c1.setLocation(pptop.x+s/4,ptop.y+s);
-		c2.setLocation(ppbottom.x+s/4,pbottom.y-s);
-		CubicCurve2D back = new CubicCurve2D.Double();
-		back.setCurve(pptop,c1,c2,ppbottom);
-		gateShape.append(back,false);
+		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
+
+	/**
+	 * The XOR gate body: the OR outline shifted right by the gap, plus the
+	 * second (back) curve of the double-curved XOR back (issue #77
+	 * model/render split - the symbol as headless data). The curves
+	 * reproduce the former inline construction with gap=2, from the points
+	 * pright=(2s,s), ptop=(gap,0), pbottom=(gap,2s) and the back curve
+	 * from pptop=(0,0), ppbottom=(0,2s).
+	 */
+	@Override
+	protected GateOutline outline() {
+
+		int s = JLSInfo.spacing;
+		int gap = 2;
+		return GateOutline.builder()
+				.cubic(false, 2 * s, s, 2 * s - 1, s - 3, gap + s, 0, gap, 0)
+				.cubic(true, gap, 0, gap + s / 4, s, gap + s / 4, s,
+						gap, 2 * s)
+				.cubic(true, gap, 2 * s, gap + s, 2 * s, 2 * s - 1, s + 3,
+						2 * s, s)
+				.close()
+				.cubic(false, 0, 0, s / 4, s, s / 4, s, 0, 2 * s)
+				.build();
+	} // end of outline method
 
 //-------------------------------------------------------------------------------
 // Simulation

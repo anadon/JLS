@@ -19,7 +19,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public final class Adder extends LogicElement {
+public final class Adder extends LogicElement implements Timed {
 	
 	// default values
 	/** The default number of bits. */

@@ -487,8 +487,53 @@ def _describe_cab_divergence(a, b):
 	return "\n".join(lines)
 
 
+# MSI encodes table/stream names into the private Unicode range 0x3800-0x4840
+# (two base-64 symbols per code unit, then singles), so a raw name carries
+# characters no 8-bit console codec can print.  Decode to the real name.
+_MSI_B64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._"
+
+
+def _decode_streamname(name):
+	"""Decode an MSI-mangled stream/table name to its readable form.
+
+	0x4840 is the leading sentinel marking a database table stream; the
+	0x3800-0x47FF range packs two base-64 symbols per code unit and
+	0x4800-0x483F one, so e.g. the Property table's stream decodes to
+	'Property'.  Anything else (\\x05SummaryInformation, etc.) is literal.
+	"""
+	out = []
+	for ch in name:
+		c = ord(ch)
+		if c == 0x4840:  # table sentinel, carries no character
+			continue
+		if 0x3800 <= c < 0x4800:
+			c -= 0x3800
+			out.append(_MSI_B64[c & 0x3F])
+			out.append(_MSI_B64[(c >> 6) & 0x3F])
+		elif 0x4800 <= c < 0x4840:
+			out.append(_MSI_B64[(c - 0x4800) & 0x3F])
+		else:
+			out.append(ch)
+	return "".join(out)
+
+
+def _safe_name(name):
+	"""A console-safe label for a stream: decoded MSI name, ASCII-escaped, table-tagged."""
+	decoded = _decode_streamname(name)
+	tag = " [table]" if name and ord(name[0]) == 0x4840 else ""
+	shown = decoded.encode("ascii", "backslashreplace").decode("ascii")
+	return "%r%s" % (shown, tag)
+
+
 def diff_msis(path_a, path_b):
 	"""Print a per-stream divergence report for two (normalized) MSIs; returns exit code."""
+	# MSI stream names carry private-use Unicode; force a codec that can render
+	# them so the diagnostic never dies on a Windows cp1252 console.
+	for stream in (sys.stdout, sys.stderr):
+		try:
+			stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+		except (AttributeError, ValueError):
+			pass
 	with open(path_a, "rb") as f:
 		a = f.read()
 	with open(path_b, "rb") as f:
@@ -507,7 +552,7 @@ def diff_msis(path_a, path_b):
 	any_stream_diff = False
 	for name in names:
 		if name not in ia or name not in ib:
-			print("  stream %r present in only one build" % name)
+			print("  stream %s present in only one build" % _safe_name(name))
 			any_stream_diff = True
 			continue
 		sza, ha, da = ia[name]
@@ -515,8 +560,8 @@ def diff_msis(path_a, path_b):
 		if ha == hb:
 			continue
 		any_stream_diff = True
-		print("  stream %r DIFFERS (size %d vs %d, first byte diff at %d)"
-			% (name, sza, szb, _first_diff(da, db)))
+		print("  stream %s DIFFERS (size %d vs %d, first byte diff at %d)"
+			% (_safe_name(name), sza, szb, _first_diff(da, db)))
 		if da[:4] == b"MSCF" or db[:4] == b"MSCF":
 			print(_describe_cab_divergence(da, db))
 	if not any_stream_diff:

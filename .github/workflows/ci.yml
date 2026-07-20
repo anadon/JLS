@@ -565,18 +565,26 @@ jobs:
   # GUID/ProductCode generation — the payload already being reproducible, that
   # lever alone would make the whole msi byte-identical.
 
-  # macOS dmg reproducibility (#191, parent #188): hdiutil embeds a random
-  # UDIF SegmentID plus HFS+ volume dates/UUID that jpackage exposes no
-  # control over.  scripts/normalize-dmg.py pins the checksum-safe volatile
-  # set; by default the build script pins only the SegmentID (E1) — the
-  # HFS+ envelope pass is opt-in (JLS_DMG_FULL_NORMALIZE) until it is
-  # verified on real macOS hardware (docs/dmg-reproducibility.md §4/§5).
-  # So this leg is honestly a MEASUREMENT, not yet a passing gate: it
-  # double-builds, records whether the two dmgs match, and on any residual
-  # runs diffoscope and uploads the pair so "not reproducible" stays a
-  # bounded, inspectable claim (#188 §10).  continue-on-error keeps that
-  # residual from blocking; it promotes to a gate once the full pass is
-  # validated and byte-identical.  macOS lacks sha256sum (uses shasum).
+  # macOS dmg reproducibility (#191, parent #188): unlike the msi, whose
+  # non-determinism is spread through a relational database jpackage
+  # regenerates, the dmg's variance is a finite envelope set — a random UDIF
+  # SegmentID plus the HFS+ volume header's dates and UUID — that a
+  # same-length in-place patch can pin.  scripts/normalize-dmg.py owns both
+  # checksum-safe windows, and this job now runs the FULL pass
+  # (JLS_DMG_FULL_NORMALIZE=1): the Route-A round-trip in build-installer.sh
+  # converts to UDRW, clamps node dates + drops .fseventsd, pins the volume
+  # header dates/UUID, re-compresses, restores the SLA, and pins the koly
+  # SegmentID (docs/dmg-reproducibility.md §4).  hdiutil exists only on
+  # macOS, so this runner is where the round-trip is exercised and validated
+  # for the first time.  The job double-builds, verifies the normalized dmg
+  # still passes `hdiutil verify` and mounts with the app + .jls association
+  # intact (the CI-runnable subset of the §5 checklist), records whether the
+  # two dmgs match, and on any residual runs diffoscope + uploads the pair.
+  # It stays continue-on-error (an honest measurement, #188 §10): Route A is
+  # expected to leave the Finder-written .DS_Store bookmark blob (F4) as a
+  # bounded residual, so a warning — not a red gate — until either that
+  # residual is confirmed-and-documented or Route B (own the imaging) closes
+  # it.  macOS lacks sha256sum (uses shasum).
   macos-installer-reproducibility:
     name: macOS installer reproducibility (dmg)
     # runs on push/PR like the other jobs (skips only the nightly cron, which
@@ -585,6 +593,11 @@ jobs:
     if: github.event_name != 'schedule'
     runs-on: macos-latest
     continue-on-error: true
+    env:
+      # exercise the full HFS+ envelope normalization on the real runner
+      # (#191): the read-write round-trip is validated here by the mount/
+      # verify step below before any release path is asked to trust it
+      JLS_DMG_FULL_NORMALIZE: "1"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -612,9 +625,38 @@ jobs:
             echo "dmg is byte-identical across two builds"
             echo "differing=0" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::dmg differs between two builds — recording the residual (#191); this leg is a measurement until the HFS+ envelope pass is validated on macOS"
+            echo "::warning::dmg differs between two builds — recording the residual (#191); Route A is expected to leave the .DS_Store bookmark blob (F4)"
             echo "differing=1" >> "$GITHUB_OUTPUT"
           fi
+
+      # The full-normalize round-trip (convert->attach->patch->reconvert->
+      # udifrez) has never run on real macOS before this job. Prove it did
+      # not corrupt the image: the shipped dmg must still pass hdiutil verify,
+      # attach, expose JLS.app with a valid Info.plist, and carry the .jls
+      # document type. This is the CI-runnable subset of the §5 checklist
+      # (clean-VM install + Gatekeeper still need a human). A failure here
+      # means the HFS+ pass is unsafe and must not reach the release path.
+      - name: Verify the normalized dmg still mounts and is well-formed
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(ls target/installer/dist/*.dmg | head -1)"
+          echo "==> hdiutil verify $dmg"
+          hdiutil verify "$dmg"
+          mnt="$(mktemp -d)"
+          echo "==> attaching read-only"
+          hdiutil attach "$dmg" -quiet -nobrowse -noautoopen -readonly -mountpoint "$mnt"
+          trap 'hdiutil detach "$mnt" -quiet -force >/dev/null 2>&1 || true' EXIT
+          app="$mnt/JLS.app"
+          test -d "$app" || { echo "::error::JLS.app missing from the normalized dmg"; exit 1; }
+          test -x "$app/Contents/MacOS/JLS" || { echo "::error::launcher binary missing"; exit 1; }
+          plutil -lint "$app/Contents/Info.plist"
+          if ! plutil -extract CFBundleDocumentTypes xml1 -o - "$app/Contents/Info.plist" \
+               | grep -qi 'jls'; then
+            echo "::error::.jls document-type association did not survive normalization"
+            exit 1
+          fi
+          echo "normalized dmg verified: mounts, app + launcher present, Info.plist valid, .jls association intact"
 
       - name: Attribute the residual with diffoscope
         if: steps.compare.outputs.differing == '1'

@@ -28,10 +28,20 @@ verifiable off a Mac, exactly like `normalize-msi.py` for #190):
   been exercised on real macOS hardware; a maintainer validates it per
   §5 before it enters the default release path.
 
-The `macos-installer-reproducibility` leg of `ci.yml` double-builds and
-records whether the two dmgs match. It is `continue-on-error` — an
-honest measurement, not a green "reproducible" claim (#188 §10) — until
-the full pass is validated and the images are byte-identical.
+The `macos-installer-reproducibility` leg of `ci.yml` now runs the
+**full** pass (`JLS_DMG_FULL_NORMALIZE=1`) on the `macos-latest` runner
+— the first place the Route-A read-write round-trip actually executes,
+since `hdiutil` exists only on macOS. It double-builds, then **verifies
+the normalized dmg still passes `hdiutil verify`, attaches, and exposes
+`JLS.app` with a valid `Info.plist` and the `.jls` document type** (the
+CI-runnable subset of the §5 checklist below; clean-VM install and
+Gatekeeper still need a human), records whether the two dmgs match, and
+on any residual runs diffoscope + uploads the pair. It stays
+`continue-on-error` — an honest measurement, not a green "reproducible"
+claim (#188 §10): Route A is expected to leave the Finder-written
+`.DS_Store` bookmark blob (F4) as a bounded residual, so the leg
+promotes to a gate only once that residual is confirmed-and-documented
+or Route B closes it.
 
 Status at commit time:
 
@@ -258,10 +268,13 @@ Per issue #191 §10, on a clean macOS VM:
    (`koly` on by default, `hfs` behind `JLS_DMG_FULL_NORMALIZE=1`),
    wired into `build-installer.sh`'s Darwin case only, with the tool's
    `--self-test` gating it before it touches a real dmg.
-3. **Open (needs macOS):** run `scripts/measure-dmg-repro.sh` and the
-   `macos-installer-reproducibility` CI leg to record P1/P2, then flip
-   `JLS_DMG_FULL_NORMALIZE=1` on and confirm the §5 validation
-   checklist (mount/launch/associate/Gatekeeper) on a clean VM.
+3. **In progress (on `macos-latest` CI):** the
+   `macos-installer-reproducibility` leg now runs with
+   `JLS_DMG_FULL_NORMALIZE=1` and validates the CI-runnable subset of
+   the §5 checklist (`hdiutil verify`, attach, `JLS.app` + valid
+   `Info.plist` + `.jls` document type). Still needs a human on a clean
+   VM for the launch/Gatekeeper items, and `scripts/measure-dmg-repro.sh`
+   for the full byte-range attribution.
 4. Byte-identical → promote the macOS leg to a required gate; residual
    → this file and #185's `docs/reproducibility.md` state it exactly,
    with the provenance attestation as the integrity guarantee.

@@ -523,10 +523,23 @@ jobs:
           ( cd target/installer/dist && sha256sum * ) > second.sha256
           echo "first build:";  cat first.sha256
           echo "second build:"; cat second.sha256
-          diff first.sha256 second.sha256 || {
+          if ! diff first.sha256 second.sha256; then
+            # Attribute the residual before failing: point normalize-msi.py's
+            # --diff at the two normalized msis so the log names the exact
+            # divergent stream (and, for the embedded cabinet, whether the
+            # difference is CFFILE metadata or the compressed CFDATA payload).
+            # This makes "not reproducible" a bounded, inspectable claim
+            # (#188 §10) even when the diverged artifacts cannot be downloaded.
+            PYTHON="$(command -v python3 || command -v python)"
+            for f in first-dist/*; do
+              name="$(basename "$f")"
+              echo "==> per-stream divergence for $name"
+              "$PYTHON" scripts/normalize-msi.py --diff \
+                "$f" "target/installer/dist/$name" || true
+            done
             echo "::error::Windows msi is not reproducible: normalized checksums differ between two builds of the same commit"
             exit 1
-          }
+          fi
 
       - name: Upload differing msis
         if: failure()

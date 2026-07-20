@@ -174,6 +174,71 @@ final class EditorGestureSupport implements AutoCloseable {
 	}
 
 	/**
+	 * A middle-button drag (issue #74 pan gesture): press BUTTON2, drag
+	 * through an intermediate point, release. The editor's pan path reads
+	 * {@code getXOnScreen()}, which the synthetic event derives from the
+	 * (realized) canvas' on-screen location plus the component x, so the
+	 * on-screen delta equals the component delta the test passes.
+	 */
+	void middleDrag(int fromX, int fromY, int toX, int toY) throws Exception {
+		dispatch(MouseEvent.MOUSE_PRESSED, fromX, fromY, MouseEvent.BUTTON2,
+				InputEvent.BUTTON2_DOWN_MASK, false);
+		int midX = (fromX + toX) / 2;
+		int midY = (fromY + toY) / 2;
+		dispatch(MouseEvent.MOUSE_DRAGGED, midX, midY, MouseEvent.NOBUTTON,
+				InputEvent.BUTTON2_DOWN_MASK, false);
+		dispatch(MouseEvent.MOUSE_DRAGGED, toX, toY, MouseEvent.NOBUTTON,
+				InputEvent.BUTTON2_DOWN_MASK, false);
+		dispatch(MouseEvent.MOUSE_RELEASED, toX, toY, MouseEvent.BUTTON2,
+				0, false);
+	}
+
+	/**
+	 * A Ctrl/Cmd+wheel notch over a canvas point (issue #74 zoom-at-cursor,
+	 * the {@code applyZoom} path). Carries the platform menu-shortcut
+	 * modifier the editor tests for, so it drives the real zoom branch of
+	 * {@code mouseWheelMoved} rather than the plain-scroll branch.
+	 *
+	 * @param x  canvas-relative x the notch is centered on.
+	 * @param y  canvas-relative y the notch is centered on.
+	 * @param up true to zoom in (negative wheel rotation), false to zoom
+	 *           out.
+	 */
+	void ctrlWheel(int x, int y, boolean up) throws Exception {
+		int menuMask = java.awt.Toolkit.getDefaultToolkit()
+				.getMenuShortcutKeyMaskEx();
+		int rotation = up ? -1 : 1;
+		java.awt.event.MouseWheelEvent e = new java.awt.event.MouseWheelEvent(
+				canvas, java.awt.event.MouseWheelEvent.MOUSE_WHEEL, when++,
+				menuMask, x, y, 0, 0, 0, false,
+				java.awt.event.MouseWheelEvent.WHEEL_UNIT_SCROLL, 1, rotation,
+				(double) rotation);
+		SwingUtilities.invokeAndWait(() -> canvas.dispatchEvent(e));
+	}
+
+	/**
+	 * The scroll pane's current view position (top-left visible model*scale
+	 * pixel), read on the EDT. Combined with {@link #zoomScale()} this lets
+	 * a test compute the on-screen position of any model point and pin the
+	 * zoom-at-cursor screen-fixedness property (P3) at the editor level.
+	 *
+	 * @return the JViewport view position.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	java.awt.Point viewPosition() throws Exception {
+		AtomicReference<java.awt.Point> p = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			Component c = canvas.getParent();
+			if (c instanceof javax.swing.JViewport vp) {
+				p.set(vp.getViewPosition());
+			} else {
+				p.set(new java.awt.Point(0, 0));
+			}
+		});
+		return p.get();
+	}
+
+	/**
 	 * Warp the real pointer to a canvas-relative point. The one editor
 	 * path synthetic events cannot drive is paste: it reads
 	 * {@code getMousePosition()} (the genuine pointer), not an event
@@ -201,6 +266,58 @@ final class EditorGestureSupport implements AutoCloseable {
 	void clickPopupItem(String text) throws Exception {
 		JMenuItem item = waitForMenuItem(text);
 		SwingUtilities.invokeAndWait(item::doClick);
+	}
+
+	// ------------------------------------------------------------------
+	// zoom (issue #74) - drive the editor's public zoom API on the EDT
+	// ------------------------------------------------------------------
+
+	/**
+	 * Zoom the editor in one ladder stop, on the EDT.
+	 *
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void zoomIn() throws Exception {
+		SwingUtilities.invokeAndWait(editor::zoomIn);
+	}
+
+	/**
+	 * Zoom the editor out one ladder stop, on the EDT.
+	 *
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void zoomOut() throws Exception {
+		SwingUtilities.invokeAndWait(editor::zoomOut);
+	}
+
+	/**
+	 * Reset the editor to 100% zoom, on the EDT.
+	 *
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void zoomReset() throws Exception {
+		SwingUtilities.invokeAndWait(editor::zoomReset);
+	}
+
+	/**
+	 * Fit the whole circuit into the canvas, on the EDT.
+	 *
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void zoomToFit() throws Exception {
+		SwingUtilities.invokeAndWait(editor::zoomToFit);
+	}
+
+	/**
+	 * The editor's current zoom scale, read on the EDT.
+	 *
+	 * @return the zoom scale (1.0 = 100%).
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	double zoomScale() throws Exception {
+		AtomicReference<Double> s = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> s.set(editor.getZoomScale()));
+		return s.get();
 	}
 
 	// ------------------------------------------------------------------

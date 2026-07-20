@@ -82,11 +82,15 @@ class MenuBarSpecTest {
 			\tHide Simulator Window
 			\tRun (in background) [F5]
 			\tStop (background simulator) [F7]
+			View
+			\tZoom In [Ctrl+Equals]
+			\tZoom Out [Ctrl+Minus]
+			\tActual Size [Ctrl+0]
+			\tFit to Circuit [Ctrl+9]
 			Global
 			\tReset all propagation delays
 			\tRemove all probes
 			\tUnwatch all elements
-			\tExpand circuit drawing area by 10%
 			\tColor scheme
 			\t\tdefault
 			\t\tclassic
@@ -130,10 +134,10 @@ class MenuBarSpecTest {
 			SwingUtilities.invokeAndWait(() -> {
 				JMenuBar bar = jls.getJMenuBar();
 				rendered.set(render(bar));
-				// the component after Global (index 3) is the glue
-				// that right-aligns Help, not a menu
+				// the component after Global (now index 4: File, Simulator,
+				// View, Global) is the glue that right-aligns Help, not a menu
 				glueBeforeHelp.set(
-						!(bar.getComponent(3) instanceof JMenu));
+						!(bar.getComponent(4) instanceof JMenu));
 			});
 			assertEquals(EXPECTED_MENU_TREE, rendered.get(),
 					"menu bar drifted from the declared table");
@@ -326,12 +330,12 @@ class MenuBarSpecTest {
 	/**
 	 * Sanity guard for the table itself: the expectation is a
 	 * constant, so a stray edit that blanks it would make the P3 test
-	 * vacuous; pin that it still declares all four menus.
+	 * vacuous; pin that it still declares all five menus.
 	 */
 	@Test
 	void expectationTableStillDeclaresAllFourMenus() {
 		for (String menu : new String[] { "File\n", "Simulator\n",
-				"Global\n", "Help\n" }) {
+				"View\n", "Global\n", "Help\n" }) {
 			assertTrue(EXPECTED_MENU_TREE.contains(menu),
 					"expectation table lost top-level menu " + menu.trim());
 		}

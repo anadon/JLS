@@ -91,10 +91,30 @@ class KeyPadDismissalTest {
 		return visible.get();
 	}
 
+	/**
+	 * Poll the keypad's visibility until it reaches {@code want} or a
+	 * ~5s bound elapses, then return the final state. Showing and
+	 * dismissing the dialog realize asynchronously, so a single read
+	 * races the window manager on a loaded CI runner (observed on #196);
+	 * polling makes the open/dismiss assertions deterministic.
+	 *
+	 * @param want The visibility being waited for.
+	 * @return the keypad's visibility after waiting.
+	 */
+	private boolean waitPadVisible(boolean want) throws Exception {
+		for (int i = 0; i < 200; i++) {
+			if (padVisible() == want) {
+				return want;
+			}
+			Thread.sleep(25);
+		}
+		return padVisible();
+	}
+
 	@Test
 	void escapeDismissesWithoutTouchingTheValue() throws Exception {
 		openPad();
-		assertTrue(padVisible(), "keypad should open on button click");
+		assertTrue(waitPadVisible(true), "keypad should open on button click");
 		JDialog win = padWindow();
 
 		// enter a digit, then Escape
@@ -111,7 +131,7 @@ class KeyPadDismissalTest {
 				.dispatchEvent(new KeyEvent(win.getRootPane(),
 						KeyEvent.KEY_PRESSED, System.currentTimeMillis(),
 						0, KeyEvent.VK_ESCAPE, KeyEvent.CHAR_UNDEFINED)));
-		assertFalse(padVisible(), "Escape must dismiss the keypad");
+		assertFalse(waitPadVisible(false), "Escape must dismiss the keypad");
 		assertEquals("3", field.getText(),
 				"Escape must not change the entered text");
 	}
@@ -119,11 +139,11 @@ class KeyPadDismissalTest {
 	@Test
 	void focusLossDismisses() throws Exception {
 		openPad();
-		assertTrue(padVisible(), "keypad should open on button click");
+		assertTrue(waitPadVisible(true), "keypad should open on button click");
 		JDialog win = padWindow();
 		SwingUtilities.invokeAndWait(() -> win.dispatchEvent(
 				new WindowEvent(win, WindowEvent.WINDOW_LOST_FOCUS)));
-		assertFalse(padVisible(),
+		assertFalse(waitPadVisible(false),
 				"losing focus (clicking outside) must dismiss the keypad");
 	}
 

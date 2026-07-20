@@ -9,6 +9,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -1092,6 +1093,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		JMenuBar bar = new JMenuBar();
 		bar.add(fileMenu());
 		bar.add(simMenu());
+		bar.add(viewMenu());
 		bar.add(globalMenu());
 		bar.add(Box.createHorizontalGlue());
 		bar.add(helpMenu());
@@ -1508,8 +1510,94 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of simMenu method
 
 	/**
+	 * Set up the View menu (issue #74): canvas zoom in/out, actual size,
+	 * and fit-to-circuit, each acting on the currently selected editor
+	 * tab. The accelerators mirror the canvas key bindings so both the
+	 * menu and the shortcuts drive the same {@link jls.edit.SimpleEditor}
+	 * zoom methods.
+	 *
+	 * @return the menu.
+	 */
+	public JMenu viewMenu() {
+
+		int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+		JMenu menu = new JMenu("View");
+		menu.setMnemonic(KeyEvent.VK_V);
+
+		JMenuItem zoomIn = new JMenuItem("Zoom In");
+		zoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,mask));
+		menu.add(zoomIn);
+		zoomIn.addActionListener(new ActionListener() {
+			/**
+			 * Zoom the visible editor in one ladder stop.
+			 *
+			 * @param event Unused.
+			 */
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				Editor ed = (Editor)edits.getSelectedComponent();
+				if (ed != null)
+					ed.zoomIn();
+			}
+		});
+
+		JMenuItem zoomOut = new JMenuItem("Zoom Out");
+		zoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,mask));
+		menu.add(zoomOut);
+		zoomOut.addActionListener(new ActionListener() {
+			/**
+			 * Zoom the visible editor out one ladder stop.
+			 *
+			 * @param event Unused.
+			 */
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				Editor ed = (Editor)edits.getSelectedComponent();
+				if (ed != null)
+					ed.zoomOut();
+			}
+		});
+
+		JMenuItem actualSize = new JMenuItem("Actual Size");
+		actualSize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_0,mask));
+		menu.add(actualSize);
+		actualSize.addActionListener(new ActionListener() {
+			/**
+			 * Reset the visible editor to 100% zoom.
+			 *
+			 * @param event Unused.
+			 */
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				Editor ed = (Editor)edits.getSelectedComponent();
+				if (ed != null)
+					ed.zoomReset();
+			}
+		});
+
+		JMenuItem fit = new JMenuItem("Fit to Circuit");
+		fit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_9,mask));
+		menu.add(fit);
+		fit.addActionListener(new ActionListener() {
+			/**
+			 * Fit the visible editor's whole circuit into the canvas.
+			 *
+			 * @param event Unused.
+			 */
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				Editor ed = (Editor)edits.getSelectedComponent();
+				if (ed != null)
+					ed.zoomToFit();
+			}
+		});
+
+		return menu;
+	} // end of viewMenu method
+
+	/**
 	 * Set up global change menu.
-	 * 
+	 *
 	 * @return the menu.
 	 */
 	public JMenu globalMenu() {
@@ -1577,24 +1665,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 		});
 
-		JMenuItem expand = new JMenuItem("Expand circuit drawing area by 10%");
-		expand.setMnemonic(KeyEvent.VK_E);
-		menu.add(expand);
-		expand.addActionListener(new ActionListener() {
-			/**
-			 * Enlarge the visible circuit's drawing area when the Expand
-			 * menu item is chosen.
-			 *
-			 * @param event Unused.
-			 */
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				Editor ed = (Editor)edits.getSelectedComponent();
-				if (ed != null) {
-					ed.increaseSize();
-				}
-			}
-		});
+		// The "Expand circuit drawing area by 10%" item is retired (issue
+		// #74): the canvas auto-grows and zoom lives in the View menu.
 
 		JMenu scheme = new JMenu("Color scheme");
 		menu.add(scheme);
@@ -2036,20 +2108,29 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of close method
 
 	/**
-	 * Print circuit currently being edited, plus any state machines.
-	 * 
-	 * @param all True to print the entire circuit, false to print just what's visible.
+	 * Assemble the {@link Book} a "Print..." menu item would hand to a
+	 * {@link PrinterJob}, without showing the interactive print dialog
+	 * or submitting anything to a printer. Extracted from
+	 * {@link #print(boolean)} so the editor-driven print path - which
+	 * circuit the currently selected {@link Editor} tab hands over, and
+	 * whether all subcircuits are booked or just the visible one - is
+	 * exercisable headlessly (issue #56).
+	 *
+	 * @param all True to book the entire circuit, subcircuits included
+	 *        (the "Entire circuit" menu item); false to book only the
+	 *        currently visible circuit (the "Just visible window" menu
+	 *        item).
+	 * @return The assembled book, or null if no editor tab is selected.
 	 */
-	public void print(boolean all) {
+	Book assemblePrintBook(boolean all) {
 
 		// get the currently selected editor, return if none
 		Editor ed = (Editor)(edits.getSelectedComponent());
 		if (ed == null)
-			return;
+			return null;
 
-		// set up printer job
-		PrinterJob job = PrinterJob.getPrinterJob();
-		PageFormat format = job.defaultPage();
+		// page format doesn't need a printer job instance beyond this call
+		PageFormat format = PrinterJob.getPrinterJob().defaultPage();
 		format.setOrientation(PageFormat.LANDSCAPE);
 		Book book = new Book();
 
@@ -2061,7 +2142,22 @@ public class JLSStart extends JFrame implements ChangeListener {
 			book.append(ed.getCircuit(),format);
 		}
 
-		// finish up book
+		return book;
+	} // end of assemblePrintBook method
+
+	/**
+	 * Print circuit currently being edited, plus any state machines.
+	 *
+	 * @param all True to print the entire circuit, false to print just what's visible.
+	 */
+	public void print(boolean all) {
+
+		Book book = assemblePrintBook(all);
+		if (book == null)
+			return;
+
+		// set up printer job
+		PrinterJob job = PrinterJob.getPrinterJob();
 		job.setPageable(book);
 
 		// show dialog, and if ok, print

@@ -8,6 +8,16 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- FlatLaf light adopted as the default Swing look-and-feel (#153),
+  superseding the recorded cross-platform Metal default:
+  `com.formdev:flatlaf:3.7.2` (Apache-2.0, ~1 MB, zero transitive
+  dependencies) is now a runtime dependency, bundled into the shaded
+  jar so the packaged installers get it. `JLSStart.installLookAndFeel()`
+  defaults to `FlatLightLaf`; `-Djls.laf=metal` remains the documented
+  escape hatch and Metal the automatic fallback if FlatLaf can't be
+  set. `LookAndFeelPolicyTest` pins the new default headlessly, and
+  the decision is recorded in `ARCHITECTURE.md`. A dark default is
+  #76's follow-up.
 - Batch advancement of the open issue backlog (multi-agent workflow
   session, one worker + one adversarial auditor per issue; each
   increment's detail is recorded on its issue thread and in the

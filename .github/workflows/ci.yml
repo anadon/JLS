@@ -214,9 +214,13 @@ jobs:
 
       # sway (compositor), grim (screenshots), jq (tree assertions),
       # ImageMagick (pixel diff), and at least one font (Swing text
-      # rendering needs one; minimal runners may have none)
+      # rendering needs one; minimal runners may have none).
+      # gsettings-desktop-schemas provides the org.gnome.desktop.* GSettings
+      # schemas AWT/GTK looks up under Wayland; without them JBR logs
+      # "No such schema org.gnome.desktop.interface" and the first-light
+      # control frame fails to map a window (issue #101 first-light finding).
       - name: Install Wayland rig tools
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core gsettings-desktop-schemas
 
       # Guard the rig's section-9 failure classification (exit 0/1/2) on
       # every run, including when the JBR download is unavailable, by driving

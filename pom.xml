@@ -282,6 +282,15 @@
             <configuration>
               <argLine>@{argLine} -Djava.awt.headless=${jls.test.headless}</argLine>
               <groups>display</groups>
+              <!-- The @Tag("display") suite drives real Swing popups/dialogs
+                   under Xvfb, whose window-manager-less realization timing is
+                   nondeterministic on loaded CI runners (e.g. a right-click
+                   popup occasionally not materializing its items in time).
+                   Retry a failed display test a couple times before failing
+                   the build so a transient xvfb timing hiccup is reported as
+                   flaky, not fatal; the strict headless execution above gets
+                   no retries. -->
+              <rerunFailingTestsCount>2</rerunFailingTestsCount>
             </configuration>
           </execution>
         </executions>

@@ -565,26 +565,21 @@ jobs:
   # GUID/ProductCode generation — the payload already being reproducible, that
   # lever alone would make the whole msi byte-identical.
 
-  # macOS dmg reproducibility (#191, parent #188): unlike the msi, whose
-  # non-determinism is spread through a relational database jpackage
-  # regenerates, the dmg's variance is a finite envelope set — a random UDIF
-  # SegmentID plus the HFS+ volume header's dates and UUID — that a
-  # same-length in-place patch can pin.  scripts/normalize-dmg.py owns both
-  # checksum-safe windows, and this job now runs the FULL pass
-  # (JLS_DMG_FULL_NORMALIZE=1): the Route-A round-trip in build-installer.sh
-  # converts to UDRW, clamps node dates + drops .fseventsd, pins the volume
-  # header dates/UUID, re-compresses, restores the SLA, and pins the koly
-  # SegmentID (docs/dmg-reproducibility.md §4).  hdiutil exists only on
-  # macOS, so this runner is where the round-trip is exercised and validated
-  # for the first time.  The job double-builds, verifies the normalized dmg
-  # still passes `hdiutil verify` and mounts with the app + .jls association
-  # intact (the CI-runnable subset of the §5 checklist), records whether the
-  # two dmgs match, and on any residual runs diffoscope + uploads the pair.
-  # It stays continue-on-error (an honest measurement, #188 §10): Route A is
-  # expected to leave the Finder-written .DS_Store bookmark blob (F4) as a
-  # bounded residual, so a warning — not a red gate — until either that
-  # residual is confirmed-and-documented or Route B (own the imaging) closes
-  # it.  macOS lacks sha256sum (uses shasum).
+  # macOS dmg reproducibility (#191, parent #188): the dmg's variance is a
+  # finite envelope set — a random UDIF SegmentID plus the HFS+ volume
+  # header's dates and UUID.  scripts/normalize-dmg.py pins both checksum-safe
+  # windows.  MEASURED on this runner (the only place hdiutil exists): the
+  # koly SegmentID pin (the default path) produces a dmg that still passes
+  # `hdiutil verify` and mounts, but the FULL HFS+ round-trip
+  # (JLS_DMG_FULL_NORMALIZE=1: convert->UDRW->clamp+patch->reconvert->udifrez)
+  # produces an image hdiutil rejects as corrupt.  So this job ships the
+  # koly-only path (verified mountable below) and does NOT enable the full
+  # pass.  The koly pin alone does not clamp the HFS+ dates/UUID, so the two
+  # dmgs still differ — this leg stays an honest continue-on-error
+  # measurement (#188 §10), not a byte-identical gate.  Full byte-identity
+  # needs Route B (own the imaging so Finder serializes pinned values) or a
+  # fix to why the Route-A round-trip corrupts; see
+  # docs/dmg-reproducibility.md.  macOS lacks sha256sum (uses shasum).
   macos-installer-reproducibility:
     name: macOS installer reproducibility (dmg)
     # runs on push/PR like the other jobs (skips only the nightly cron, which
@@ -593,11 +588,6 @@ jobs:
     if: github.event_name != 'schedule'
     runs-on: macos-latest
     continue-on-error: true
-    env:
-      # exercise the full HFS+ envelope normalization on the real runner
-      # (#191): the read-write round-trip is validated here by the mount/
-      # verify step below before any release path is asked to trust it
-      JLS_DMG_FULL_NORMALIZE: "1"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -629,38 +619,32 @@ jobs:
             echo "differing=1" >> "$GITHUB_OUTPUT"
           fi
 
-      # The full-normalize round-trip (convert->attach->patch->reconvert->
-      # udifrez) had never run on real macOS before this lane, and its first
-      # run produced an image `hdiutil verify` rejects as corrupt. Isolate
-      # which stage breaks it by building the dmg three ways and verifying
-      # each: raw jpackage output, koly-only (the default release path), and
-      # the full HFS+ round-trip. Non-fatal so all three results print in one
-      # run; the next fix targets whichever stage first fails verify. Then
-      # confirm the surviving image still mounts with JLS.app + the .jls
-      # association intact (the CI-runnable subset of the docs §5 checklist).
-      - name: Diagnose which normalization stage keeps the dmg mountable
+      # The shipping (koly-only) dmg must still be a valid, mountable image
+      # after the SegmentID pin. The 3-way diagnostic on the previous run
+      # confirmed raw jpackage and koly-only both pass `hdiutil verify` while
+      # the full HFS+ round-trip corrupts the image, so the full pass is left
+      # disabled and this step verifies the koly-only path: hdiutil verify,
+      # attach, and JLS.app present with a valid Info.plist + the .jls
+      # document type (the CI-runnable subset of the docs §5 checklist;
+      # clean-VM launch + Gatekeeper still need a human).
+      - name: Verify the shipped dmg mounts and is well-formed
         shell: bash
         run: |
-          set -uo pipefail
-          check() {
-            local label="$1"
-            local dmg; dmg="$(ls target/installer/dist/*.dmg | head -1)"
-            if hdiutil verify "$dmg" >/dev/null 2>&1; then
-              echo "VERIFY ok   [$label] $(basename "$dmg")"
-            else
-              echo "VERIFY FAIL [$label] $(basename "$dmg") — hdiutil rejects it"
-            fi
-          }
-          echo "== 1/3 raw jpackage (no normalization) =="
-          env JLS_SKIP_BUILD=1 JLS_SKIP_DMG_NORMALIZE=1 JLS_DMG_FULL_NORMALIZE=0 \
-            bash scripts/build-installer.sh >/dev/null 2>&1 && check "raw jpackage" || echo "BUILD FAIL [raw]"
-          echo "== 2/3 koly-only (default release path) =="
-          env JLS_SKIP_BUILD=1 JLS_DMG_FULL_NORMALIZE=0 \
-            bash scripts/build-installer.sh >/dev/null 2>&1 && check "koly-only" || echo "BUILD FAIL [koly]"
-          echo "== 3/3 full HFS+ round-trip =="
-          env JLS_SKIP_BUILD=1 JLS_DMG_FULL_NORMALIZE=1 \
-            bash scripts/build-installer.sh >/dev/null 2>&1 && check "full-normalize" || echo "BUILD FAIL [full]"
-          echo "(diagnostic; the next commit fixes whichever stage first fails verify)"
+          set -euo pipefail
+          dmg="$(ls target/installer/dist/*.dmg | head -1)"
+          echo "==> hdiutil verify $dmg"
+          hdiutil verify "$dmg"
+          mnt="$(mktemp -d)"
+          hdiutil attach "$dmg" -quiet -nobrowse -noautoopen -readonly -mountpoint "$mnt"
+          trap 'hdiutil detach "$mnt" -quiet -force >/dev/null 2>&1 || true' EXIT
+          app="$mnt/JLS.app"
+          test -x "$app/Contents/MacOS/JLS" || { echo "::error::launcher binary missing"; exit 1; }
+          plutil -lint "$app/Contents/Info.plist"
+          if ! plutil -extract CFBundleDocumentTypes xml1 -o - "$app/Contents/Info.plist" \
+               | grep -qi 'jls'; then
+            echo "::error::.jls document-type association missing"; exit 1
+          fi
+          echo "shipped dmg verified: mounts, launcher present, Info.plist valid, .jls association intact"
 
       - name: Attribute the residual with diffoscope
         if: steps.compare.outputs.differing == '1'

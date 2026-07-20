@@ -28,20 +28,27 @@ verifiable off a Mac, exactly like `normalize-msi.py` for #190):
   been exercised on real macOS hardware; a maintainer validates it per
   §5 before it enters the default release path.
 
-The `macos-installer-reproducibility` leg of `ci.yml` now runs the
-**full** pass (`JLS_DMG_FULL_NORMALIZE=1`) on the `macos-latest` runner
-— the first place the Route-A read-write round-trip actually executes,
-since `hdiutil` exists only on macOS. It double-builds, then **verifies
-the normalized dmg still passes `hdiutil verify`, attaches, and exposes
-`JLS.app` with a valid `Info.plist` and the `.jls` document type** (the
-CI-runnable subset of the §5 checklist below; clean-VM install and
-Gatekeeper still need a human), records whether the two dmgs match, and
-on any residual runs diffoscope + uploads the pair. It stays
-`continue-on-error` — an honest measurement, not a green "reproducible"
-claim (#188 §10): Route A is expected to leave the Finder-written
-`.DS_Store` bookmark blob (F4) as a bounded residual, so the leg
-promotes to a gate only once that residual is confirmed-and-documented
-or Route B closes it.
+**Measured on `macos-latest` (the only place `hdiutil` exists).** A
+three-way `hdiutil verify` in `ci.yml` (CI run 29773635573) established:
+
+- raw jpackage output — **verify ok**;
+- koly-only (the default path, SegmentID pinned) — **verify ok**;
+- full Route-A HFS+ round-trip (`JLS_DMG_FULL_NORMALIZE=1`:
+  convert→UDRW→clamp+patch header→reconvert→udifrez) — **verify FAIL,
+  `hdiutil` rejects it as a corrupt image**.
+
+So the read-write round-trip, as implemented, produces an unmountable
+dmg on real hardware and **must not ship**. The lane therefore keeps the
+full pass **disabled** and ships the koly-only path, which the job now
+verifies still passes `hdiutil verify`, attaches, and exposes `JLS.app`
+with a valid `Info.plist` + the `.jls` document type (the CI-runnable
+subset of the §5 checklist; clean-VM launch and Gatekeeper still need a
+human). Because the koly pin alone does not clamp the HFS+ dates/UUID,
+the two dmgs still differ, so this leg stays `continue-on-error` — an
+honest measurement, not a byte-identical gate (#188 §10). Closing the
+residual to byte-identity now requires either finding why the Route-A
+round-trip corrupts the image, or **Route B** (own the imaging so Finder
+serializes the pinned values) — not the corrupting post-pass.
 
 Status at commit time:
 

@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.DataOutputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -141,9 +140,9 @@ class SocketSessionTest {
 					pool.submit(() -> listener.accept(BOB));
 
 			// a hostile joiner that claims a two-gigabyte first message
-			try (Socket rogue = new Socket(LOOPBACK, port)) {
-				OutputStream out = rogue.getOutputStream();
-				DataOutputStream data = new DataOutputStream(out);
+			try (Socket rogue = new Socket(LOOPBACK, port);
+					DataOutputStream data = new DataOutputStream(
+							rogue.getOutputStream())) {
 				data.writeInt(Integer.MAX_VALUE);
 				data.flush();
 

@@ -217,7 +217,9 @@ final class EditorGestureSupport implements AutoCloseable {
 
 	/** Poll the model until a condition holds, or fail after a bound. */
 	void waitFor(java.util.function.BooleanSupplier condition, String what) {
-		for (int i = 0; i < 200; i++) {
+		// ~10s budget (400 * 25ms): display polls run on shared, often
+		// heavily loaded CI runners where a 5s bound flakes under load.
+		for (int i = 0; i < 400; i++) {
 			if (condition.getAsBoolean()) {
 				return;
 			}
@@ -227,7 +229,9 @@ final class EditorGestureSupport implements AutoCloseable {
 	}
 
 	private JMenuItem waitForMenuItem(String text) {
-		for (int i = 0; i < 200; i++) {
+		// ~10s budget: opening a popup and materializing its items can
+		// exceed a 5s bound on a loaded CI runner (observed on #196).
+		for (int i = 0; i < 400; i++) {
 			AtomicReference<JMenuItem> found = new AtomicReference<>();
 			try {
 				SwingUtilities.invokeAndWait(() -> {

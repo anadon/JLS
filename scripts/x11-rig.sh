@@ -70,6 +70,7 @@
 #   XVFB_TIMEOUT      seconds to wait for the X server          [30]
 #   CONTROL_TIMEOUT   seconds to wait for the control window    [60]
 #   WINDOW_TIMEOUT    seconds to wait for the JLS window        [90]
+#   RENDER_TIMEOUT    seconds to wait for the window to paint   [30]
 #   PIXEL_DIFF_MIN    fail unless the desktop-before/after AE pixel
 #                     difference is at least this many pixels; 0
 #                     records the metric without gating         [0]
@@ -89,6 +90,8 @@ XVFB_GEOMETRY="${XVFB_GEOMETRY:-1280x800x24}"
 XVFB_TIMEOUT="${XVFB_TIMEOUT:-30}"
 CONTROL_TIMEOUT="${CONTROL_TIMEOUT:-60}"
 WINDOW_TIMEOUT="${WINDOW_TIMEOUT:-90}"
+# a mapped window paints a beat later; poll the screenshot until it renders
+RENDER_TIMEOUT="${RENDER_TIMEOUT:-30}"
 PIXEL_DIFF_MIN="${PIXEL_DIFF_MIN:-0}"
 
 # the control program lives next to this script, wherever it is run from
@@ -319,22 +322,36 @@ log "JLS window is up after ${WAITED_SECONDS}s (id $WINDOW_ID)"
 
 # record the window geometry/state as proof it is a real mapped frame
 xwininfo -id "$WINDOW_ID" > "$ARTIFACTS_DIR/jls-window-info.txt" 2>&1 || true
-# screenshot the JLS window itself (not just the root)
-import -display "$DISPLAY" -window "$WINDOW_ID" "$ARTIFACTS_DIR/jls-window.png" \
-	|| log "warning: JLS window screenshot failed"
 
 # ------------------------------------------------- non-blank proof (P1)
 # A mapped window is not enough - the screenshot must not be a blank frame.
-# A solid image has exactly 1 unique colour; a real rendered JLS window has
-# many. Gate on the JLS-window shot when present (that is the app's own
-# pixels), else the root-after shot.
+# Swing shows the frame a beat before it paints its content, so on a slow
+# runner an immediate capture can catch a still-blank window (seen in CI:
+# window mapped, screenshot 1 colour). Poll the window screenshot until it
+# has more than one unique colour - i.e. the app actually rendered - up to
+# RENDER_TIMEOUT seconds. A window that genuinely never paints times out
+# here and is still caught as a JLS-side failure by the gate below.
+render_elapsed=0
+win_colors=0
+while : ; do
+	import -display "$DISPLAY" -window "$WINDOW_ID" "$ARTIFACTS_DIR/jls-window.png" 2>/dev/null \
+		|| log "warning: JLS window screenshot failed"
+	win_colors="$(unique_colors "$ARTIFACTS_DIR/jls-window.png")"
+	case "$win_colors" in ''|*[!0-9]*) win_colors=0 ;; esac
+	{ [ "$win_colors" -gt 1 ] || [ "$render_elapsed" -ge "$RENDER_TIMEOUT" ]; } && break
+	sleep 1
+	render_elapsed=$((render_elapsed + 1))
+done
+# refresh the root shot so it reflects the now-painted window too
+import -display "$DISPLAY" -window root "$ARTIFACTS_DIR/desktop-after.png" 2>/dev/null \
+	|| log "warning: final root screenshot failed"
 root_colors="$(unique_colors "$ARTIFACTS_DIR/desktop-after.png")"
-win_colors="$(unique_colors "$ARTIFACTS_DIR/jls-window.png")"
 {
 	printf 'desktop-after unique colors: %s\n' "$root_colors"
 	printf 'jls-window unique colors:    %s\n' "$win_colors"
+	printf 'render wait: %ss\n' "$render_elapsed"
 } > "$ARTIFACTS_DIR/nonblank.txt"
-log "non-blank check: root=$root_colors colors, window=$win_colors colors"
+log "non-blank check after ${render_elapsed}s: root=$root_colors colors, window=$win_colors colors"
 
 if [ -s "$ARTIFACTS_DIR/jls-window.png" ]; then
 	gate_colors="$win_colors"

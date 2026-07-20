@@ -19,3 +19,7 @@ result-*
 
 # Agda interface files (proofs/)
 *.agdai
+
+# Python bytecode cache (e.g. from importing scripts/normalize-msi.py in tests)
+__pycache__/
+*.pyc

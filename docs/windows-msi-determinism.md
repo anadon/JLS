@@ -6,10 +6,22 @@ internally. jpackage exposes none of WiX's identity or timestamp
 controls, so two builds of one commit differ byte-wise even when every
 input is identical. This document enumerates the volatile byte set,
 describes the normalization pass that now runs in the Windows lane
-(`scripts/normalize-msi.py`), and states exactly what has and has not
-been verified — per the honesty gate of #188 §10, **no
-reproducibility claim is made here**: that claim requires a passing
-double-build gate on a real Windows runner, which has not run yet.
+(`scripts/normalize-msi.py`), and records the result of the real
+`windows-latest` double-build measurement.
+
+**Conclusion (measured, see "Measurement result" below): the Windows
+msi is not byte-reproducible with the jpackage/WiX toolchain, and this
+is an upstream limitation JLS cannot close from the build script.** The
+installed *payload* (the embedded cabinet: the jlink runtime and the
+application jar) now IS byte-reproducible; the irreducible residual is
+in the MSI **database** streams, which jpackage regenerates with
+per-build identifiers (component GUIDs, ProductCode, and row ordering)
+that it exposes no control over. Normalizing the payload and the four
+timestamp/GUID regions below is real and worthwhile; a *fully*
+byte-identical msi would require either an upstream jpackage fix or a
+full MSI-relational-database canonicalizer, which is out of proportion
+to the benefit. The lane therefore stands as an honest **measurement**,
+not a passing gate (#188 §10).
 
 ## The volatile byte set
 
@@ -71,39 +83,79 @@ files: convergence of two divergent builds, idempotence, package-code
 content-sensitivity, malformed-input refusal) runs in the Windows lane
 before the tool is allowed near the real msi.
 
-## Verified vs. not verified
+## Measurement result
 
-Verified (Linux, self-test + CLI fixtures):
+The `windows-latest` double-build measurement of #190 H1 has now run
+(CI run 29763534341, job "Windows installer reproducibility (msi)").
+Two things had to be fixed first for the measurement to be meaningful:
 
-- two synthetic msi images differing only in the four volatile regions
-  normalize to byte-identical output (equal SHA-256);
-- normalization is idempotent and refuses malformed input untouched.
+- **Parser completeness.** Real jpackage msis are MS-CFB *major
+  version 4* (4096-byte sectors) whose physical file ends mid-sector;
+  `normalize-msi.py` initially crashed on them ("sector N beyond end
+  of file"). The reader now zero-pads the parse buffer to a whole
+  sector (mirroring how Windows/olefile tolerate a short final sector)
+  so it parses the real installer. See the `--self-test` cases.
+- **Per-stream attribution.** `normalize-msi.py --diff A.msi B.msi`
+  reuses the CFB reader to name every divergent stream (decoding MSI's
+  private-range table-name mangling to readable table names), and, for
+  the cabinet, to localize the difference to CFFILE metadata vs the
+  compressed CFDATA payload. The Windows lane runs it on any mismatch,
+  so the residual is a bounded, inspectable claim printed straight into
+  the CI log even though the diverged artifacts cannot be downloaded.
 
-**Not yet verified** — these are the open items of #190, all of which
-need a Windows runner or VM:
+The measurement outcome, after normalization of both builds:
 
-1. **P1/P2 measurement**: build the real msi twice on
-   `windows-latest`, run `diffoscope` before and after normalization,
-   and confirm the residual is exactly the enumerated set (in
-   particular: that ProductCode is indeed stable, that WiX's cab uses
-   `flags == 0`, and that no additional stream varies).
-2. **Install semantics**: a normalized msi must install, associate
-   `.jls`, upgrade over a previous version, and uninstall cleanly on a
-   clean Windows VM before any release relies on it.
-3. **CI gate**: the `windows-installer-reproducibility` leg of
-   `ci.yml` now double-builds the msi on `windows-latest`, normalizes
-   each build via `normalize-msi.py`, and requires the two to be
-   byte-identical (uploading the pair for offline attribution on any
-   mismatch, since diffoscope's msi support needs msitools, absent on
-   the Windows image). It runs `continue-on-error` while its stability
-   record accrues — the same promotion rule the Windows build lane
-   uses — so a red leg surfaces a residual (honesty gate, #188 §10)
-   without yet blocking. Promote it to a required gate, and add the
-   same comparison to `release.yml`, once (1)/(2) confirm byte-identical
-   normalized output and clean install semantics. Until then releases
-   keep the per-installer provenance attestation as the integrity
-   guarantee and this document as the bounded-residual statement.
+- **The payload is reproducible.** The embedded cabinet stream
+  (`Disk1Cab`) is byte-identical between the two builds — the jlink
+  runtime, the application jar, and every CFFILE (names, order, sizes,
+  clamped times) match. The four enumerated volatile regions and the
+  compressed payload are fully handled.
+- **The MSI database is not.** Every divergent byte is in the
+  relational-database streams: `_StringData`, `_StringPool`,
+  `Component`, `File`, `Directory`, `Registry`, `RemoveFile`,
+  `FeatureComponents`, `Property`, and `MsiFileHash` all differ, each
+  at the *same size* as its counterpart — values swapping in place, not
+  content growing. That is the signature of jpackage generating
+  per-build **component GUIDs and identifiers** (and a per-build
+  **ProductCode** — hence `Property` differs, falsifying the earlier
+  "ProductCode expected stable" assumption), which cascade through
+  every table that references them and through the shared string pool.
+  `SummaryInformation` also differs, but only as a *cascade*: the
+  content-derived package code legitimately changes once anything else
+  does.
 
-If measurement shows a residual beyond the enumerated set, that
-falsifies #190 H1 and the fallback is documented bounded residual
-(H2 b), not forced rewriting.
+This **falsifies #190 H1** ("the residual is exactly the four
+regions") and lands on the documented bounded-residual fallback
+(#190 H2 b): the msi database non-determinism is upstream in
+jpackage/WiX, which exposes no control over these identifiers, so JLS
+cannot close it from `build-installer.sh`. Closing it would require
+either an upstream jpackage change (deterministic component GUIDs /
+ProductCode) or a full MSI relational-database canonicalizer inside
+`normalize-msi.py` (parse `_Tables`/`_Columns`, re-key the random GUIDs
+to content-derived values, re-sort every table's rows, and rebuild
+`_StringData`/`_StringPool` — effectively reimplementing part of
+libmsi). Neither is justified by the benefit: the payload a user
+installs is already reproducible, and provenance attestation covers
+installer integrity.
+
+## Standing posture
+
+- The `windows-installer-reproducibility` leg of `ci.yml` stays
+  `continue-on-error` and is an honest **measurement**, not a gate: it
+  double-builds, normalizes each build, and on the (expected) database
+  residual prints the `--diff` per-stream attribution. It is not
+  promoted to a required gate, because the residual is an upstream
+  limitation rather than a regression to be driven to zero.
+- Verified on Linux (self-test + CLI fixtures): two synthetic msi
+  images — 512- and 4096-byte-sector, aligned and mid-sector-truncated
+  — differing only in the volatile regions normalize to byte-identical
+  output; normalization is idempotent, length-preserving, and refuses
+  malformed input untouched.
+- Still requires a Windows VM to confirm (not a reproducibility
+  question): that a normalized msi installs, associates `.jls`,
+  upgrades over a previous version, and uninstalls cleanly.
+
+If a future jpackage/JDK exposes deterministic component-GUID and
+ProductCode generation, revisit: with the payload already reproducible,
+that upstream lever alone would make the whole msi byte-identical and
+the leg could then be promoted to a gate.

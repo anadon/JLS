@@ -25,12 +25,19 @@
 #     fresh package code (which is what Windows Installer's caching
 #     semantics require of distinct packages).
 #
-# It deliberately does NOT touch the ProductCode/UpgradeCode rows in the
-# MSI database (jpackage derives those name-based, so they are expected
-# to be stable already; the Windows double-build measurement verifies
-# that).  Anything structurally unexpected is a hard error, never a
-# silent skip: a file this script exits 0 on has had the full known
-# volatile set normalized.
+# It deliberately does NOT rewrite the MSI relational-database streams
+# (_StringData/_StringPool and the table streams).  The windows-latest
+# double-build measurement (docs/windows-msi-determinism.md) showed those
+# streams carry per-build identifiers jpackage generates with no exposed
+# control -- component GUIDs, a per-build ProductCode, and row ordering --
+# so the msi database is not byte-reproducible with this toolchain.  What
+# IS reproducible, and what this script secures, is the embedded cabinet
+# payload plus the four volatile timestamp/GUID regions above.  Canonical-
+# izing the database would mean reimplementing part of libmsi and is not
+# justified; use --diff to attribute any residual to the exact stream.
+# Anything structurally unexpected is a hard error, never a silent skip:
+# a file this script exits 0 on has had the full known volatile set
+# normalized.
 #
 # Usage:
 #   normalize-msi.py [--source-date-epoch N] FILE.msi

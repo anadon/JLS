@@ -90,21 +90,35 @@ log "artifacts: $ARTIFACTS_DIR"
 log "runtime:   $("$JAVA" -version 2>&1 | head -n 1)"
 log "jar:       $JAR"
 
-# sway refuses to run without a writable XDG_RUNTIME_DIR it owns; CI
-# runners often have none
-if [ -z "${XDG_RUNTIME_DIR:-}" ] || [ ! -w "${XDG_RUNTIME_DIR:-/nonexistent}" ]; then
-	XDG_RUNTIME_DIR="$(mktemp -d)"
-	export XDG_RUNTIME_DIR
-	log "XDG_RUNTIME_DIR not usable; using $XDG_RUNTIME_DIR"
-fi
+# The compositor and every client must share ONE runtime dir that holds
+# exactly one wayland-* socket. Reusing the inherited XDG_RUNTIME_DIR is
+# unsafe: on a shared CI runner (/run/user/UID) it can already hold a
+# stale or foreign wayland-* socket, and the rig's filename-based socket
+# adoption below would then export that dead name instead of this sway's
+# real socket - so every client gets "failed to create display" and the
+# lane mis-blames upstream JBR (issue #101). Always use a fresh, private,
+# rig-owned dir so exactly one wayland-* socket exists and adoption is
+# unambiguous. sway also refuses to run without a writable dir it owns,
+# which this satisfies on runners that have none.
+RIG_RUNTIME_DIR="$(mktemp -d "${TMPDIR:-/tmp}/wayland-rig-run.XXXXXX")"
+XDG_RUNTIME_DIR="$RIG_RUNTIME_DIR"
+export XDG_RUNTIME_DIR
 chmod 700 "$XDG_RUNTIME_DIR"
+log "private XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR"
 
 # a minimal config: the stock /etc/sway/config assumes wallpapers, idle
 # helpers, and input devices that a headless CI runner does not have
 SWAY_CONFIG="$ARTIFACTS_DIR/sway-config"
 cat > "$SWAY_CONFIG" <<'EOF'
-# minimal headless config for the JLS first-light rig (issue #101)
-# (intentionally empty: defaults are fine, and nothing external is spawned)
+# minimal headless config for the JLS first-light rig (issue #101).
+# Pin the headless output deterministically instead of trusting wlroots'
+# default output autocreation: a wlroots build that defaults to 0 headless
+# outputs would otherwise leave the compositor with no wl_output, and every
+# client (grim's screenshot, the JBR control frame) would fail. Paired with
+# WLR_HEADLESS_OUTPUTS=1 in sway's environment (which creates HEADLESS-1),
+# this names, sizes, and enables it. Nothing external is spawned.
+output HEADLESS-1 mode 1280x800 position 0 0
+output HEADLESS-1 enable
 EOF
 
 # ------------------------------------------------------------- processes
@@ -126,6 +140,10 @@ cleanup() {
 		{ [ -z "$SWAY_PID" ] || ! kill -0 "$SWAY_PID" 2>/dev/null; } && break
 		sleep 1
 	done
+	# remove the private runtime dir we created (sockets and all)
+	if [ -n "${RIG_RUNTIME_DIR:-}" ]; then
+		rm -rf "$RIG_RUNTIME_DIR" 2>/dev/null || true
+	fi
 	exit "$status"
 }
 trap cleanup EXIT INT TERM
@@ -134,6 +152,7 @@ trap cleanup EXIT INT TERM
 # software renderer - verified working in the dev container (issue #101)
 log "starting headless sway"
 env WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=pixman \
+	WLR_HEADLESS_OUTPUTS=1 \
 	sway -c "$SWAY_CONFIG" > "$ARTIFACTS_DIR/sway.log" 2>&1 &
 SWAY_PID=$!
 
@@ -166,9 +185,55 @@ done
 [ -n "$SWAYSOCK" ] || die "sway is running but no IPC socket was found in $XDG_RUNTIME_DIR"
 export SWAYSOCK
 
-# empty-desktop baseline for the P2 pixel comparison
-grim "$ARTIFACTS_DIR/desktop-before.png" \
-	|| log "warning: baseline screenshot failed (continuing)"
+# ---------------------------------------------- compositor readiness gate
+# Before launching ANY client, prove the compositor is genuinely usable:
+# (a) it must have an active output, and (b) a real client must be able to
+# connect to the adopted socket and screenshot. This gate replaces the old
+# "baseline screenshot, warn and continue", which swallowed a failed grim
+# and carried a dead compositor forward - later mis-attributing it to
+# upstream JBR/Wakefield as an exit-2 blocker (issue #101). A failure here
+# is a RIG/COMPOSITOR error (exit 1); it must never fall through to the
+# section-9 upstream classification.
+log "waiting for an active compositor output"
+outputs_ready=""
+elapsed=0
+while [ "$elapsed" -lt "$SWAY_TIMEOUT" ]; do
+	if swaymsg -t get_outputs 2>/dev/null \
+			| jq -e '[.. | objects | select(.active? == true)] | length > 0' \
+			> /dev/null 2>&1; then
+		outputs_ready=yes
+		break
+	fi
+	sleep 1
+	elapsed=$((elapsed + 1))
+done
+swaymsg -t get_outputs > "$ARTIFACTS_DIR/outputs.json" 2>/dev/null || true
+if [ -z "$outputs_ready" ]; then
+	tail -n 20 "$ARTIFACTS_DIR/sway.log" >&2 || true
+	die "compositor has no active output after ${SWAY_TIMEOUT}s (rig/compositor error, not JLS: headless output not created; see sway.log and outputs.json)"
+fi
+
+# The empty-desktop baseline for the P2 pixel comparison doubles as the
+# connect+screenshot probe: require grim to connect to the adopted socket
+# AND write a file. Its failure text is diagnostic and is classified here,
+# not blamed on JBR: "failed to create display" = a socket/connection fault
+# (the adopted WAYLAND_DISPLAY is wrong or dead); "no wl_output" = no usable
+# output. Either way it is a rig/compositor fault.
+if ! grim "$ARTIFACTS_DIR/desktop-before.png" \
+		2> "$ARTIFACTS_DIR/grim-probe-stderr.log"; then
+	grim_err="$(cat "$ARTIFACTS_DIR/grim-probe-stderr.log" 2>/dev/null || true)"
+	log "----- grim probe stderr -----"
+	printf '%s\n' "$grim_err" >&2
+	case "$grim_err" in
+		*"failed to create display"*)
+			die "grim could not connect to the compositor (WAYLAND_DISPLAY=$WAYLAND_DISPLAY, XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR): socket/connection fault - a wrong or dead wayland socket was adopted. Rig/compositor error, not JLS." ;;
+		*"no wl_output"*)
+			die "grim connected but the compositor exposes no usable output (headless output misconfigured). Rig/compositor error, not JLS." ;;
+		*)
+			die "grim failed to capture the baseline screenshot: ${grim_err:-<no stderr>}. Rig/compositor error, not JLS." ;;
+	esac
+fi
+log "readiness gate passed: active output + grim baseline screenshot OK"
 
 # wait_for_window PID NAME_REGEX TIMEOUT
 # Polls the compositor tree for a window belonging to PID (authoritative)

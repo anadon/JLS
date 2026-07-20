@@ -56,12 +56,32 @@ while True:
 PY
 EOF
 
-# --- stub swaymsg: emit a compositor tree per STUB_TREE_MODE.
-#   both         -> HelloSwingControl and JLS windows present (success)
-#   control-only -> only HelloSwingControl present
-#   empty        -> no windows (upstream blocker: control never maps)
+# --- stub swaymsg: answer the two IPC queries the rig makes.
+#   -t get_outputs -> the readiness gate needs one active output, unless
+#                     STUB_NO_OUTPUT=1 (models a compositor that came up
+#                     with no usable output -> a rig/compositor error).
+#   -t get_tree    -> a compositor tree per STUB_TREE_MODE:
+#                       both         -> HelloSwingControl and JLS present (success)
+#                       control-only -> only HelloSwingControl present
+#                       empty        -> no windows (upstream blocker: control never maps)
 cat > "$STUB_BIN/swaymsg" <<'EOF'
 #!/usr/bin/env bash
+type=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -t) type="${2:-}"; shift 2 ;;
+    *)  shift ;;
+  esac
+done
+if [ "$type" = "get_outputs" ]; then
+  if [ "${STUB_NO_OUTPUT:-0}" = 1 ]; then
+    echo '[]'
+  else
+    echo '[{"name":"HEADLESS-1","active":true,"current_mode":{"width":1280,"height":800}}]'
+  fi
+  exit 0
+fi
+# get_tree (default)
 case "${STUB_TREE_MODE:-empty}" in
   both)         echo '{"nodes":[{"name":"HelloSwingControl","pid":1},{"name":"JLS 4.3","pid":2}]}' ;;
   control-only) echo '{"nodes":[{"name":"HelloSwingControl","pid":1}]}' ;;
@@ -69,9 +89,16 @@ case "${STUB_TREE_MODE:-empty}" in
 esac
 EOF
 
-# --- stub grim: write a byte-valid 1x1 PNG so the evidence steps succeed.
+# --- stub grim: write a byte-valid 1x1 PNG so the evidence steps succeed,
+# unless STUB_GRIM_FAIL=1, which prints grim's real "failed to create
+# display" connection error and exits nonzero (the readiness-gate probe
+# failure: a rig/compositor error, NOT an upstream JBR blocker).
 cat > "$STUB_BIN/grim" <<'EOF'
 #!/usr/bin/env bash
+if [ "${STUB_GRIM_FAIL:-0}" = 1 ]; then
+  echo 'failed to create display' >&2
+  exit 1
+fi
 out="${!#}"   # grim's last argument is the output path
 printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82' > "$out"
 EOF
@@ -128,6 +155,14 @@ run_case success 0 env STUB_TREE_MODE=both
 run_case jls-fail 1 env STUB_TREE_MODE=control-only STUB_JLS_CRASH=1
 # 3) upstream blocker: the control window never maps -> exit 2
 run_case upstream 2 env STUB_TREE_MODE=empty
+# 4) rig/compositor error: the compositor came up but grim cannot connect
+#    (dead/wrong socket). The readiness gate must catch this as a rig error
+#    (exit 1) and NEVER let it fall through to the exit-2 "upstream JBR"
+#    classification - the exact CI misdiagnosis this fix removes (issue #101).
+run_case gate-grim-fail 1 env STUB_TREE_MODE=empty STUB_GRIM_FAIL=1
+# 5) rig/compositor error: the compositor exposes no active output. The gate
+#    must fail as a rig error (exit 1), not an upstream blocker.
+run_case gate-no-output 1 env STUB_TREE_MODE=empty STUB_NO_OUTPUT=1 SWAY_TIMEOUT=2
 
 # spot-check the evidence the success run is supposed to leave behind
 succ="$WORK/run-success/artifacts"

@@ -278,6 +278,79 @@ jobs:
           path: ${{ runner.temp }}/wayland-artifacts/
           if-no-files-found: ignore
 
+  # First-light X11 GUI lane: boots the REAL JLS application entry point
+  # (main class jls.JLS, via the shaded jar's Main-Class) under a headless
+  # Xvfb X server - no GPU, no physical display, no window manager - and
+  # proves the actual app window MAPS and can be screenshotted. X11 via
+  # Xvfb is the reliable, always-available GUI path, so unlike the advisory
+  # Wayland/JBR lane above this is a genuine, robust GUI-boot smoke test.
+  #
+  # DISTINCT from the existing xvfb JUnit suite: the Build job already runs
+  # the display-tagged UI *unit* tests via `xvfb-run -a mvn ... verify`,
+  # which exercises UI classes in-process. This lane instead LAUNCHES THE
+  # APP as a user would (`java -jar target/jls-*.jar`) and asserts the real
+  # window comes up. It is the X11 twin of gui-wayland: the rig maps a
+  # minimal HelloSwingControl frame first, so a failure is classified as
+  # JLS-side (exit 1) or environment/Xvfb (exit 2). Under Xvfb the platform
+  # default toolkit is correct - the rig passes NO -Dawt.toolkit.name
+  # (that is Wayland-only) and unsets WAYLAND_DISPLAY, so jls.ToolkitPolicy
+  # keeps the X11 default (no app change needed).
+  #
+  # continue-on-error while the lane's stability record accrues (same
+  # promotion rule as gui-wayland/windows: required once 20 consecutive
+  # runs show at most one failure).
+  gui-x11:
+    name: GUI first light (X11, Xvfb)
+    # runs on push/PR like the other jobs; the nightly cron runs ONLY
+    # gui-wayland (see the header), so this lane skips schedule events
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      # ---- P2 pixel gate --------------------------------------------
+      # 0 = record the AE metric without gating. TODO(maintainer): after
+      # the first green run, set this to ~10% of the observed AE value from
+      # the pixel-diff.txt artifact (calibrate from measurement, mirroring
+      # the gui-wayland P2 decision), not a blind guess.
+      PIXEL_DIFF_MIN: "0"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # Xvfb (headless X server), xdotool (find the mapped window by pid),
+      # x11-utils (xwininfo confirms Map State: IsViewable), ImageMagick
+      # (import screenshots + identify/compare for the non-blank proof),
+      # and at least one font (Swing text rendering needs one; minimal
+      # runners may have none).
+      - name: Install X11 rig tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb xdotool x11-utils imagemagick fontconfig fonts-dejavu-core
+
+      # Guard the rig's failure classification (exit 0/1/2) on every run by
+      # driving the unmodified rig against a stub toolchain - no real X
+      # server or GUI needed. A regression here is caught fast and for free.
+      - name: Self-test the rig control flow
+        run: scripts/x11-rig-selftest.sh
+
+      - name: Build jar
+        run: mvn -B -DskipTests package
+
+      - name: Run the X11 first-light rig
+        run: ARTIFACTS_DIR="$RUNNER_TEMP/x11-artifacts" scripts/x11-rig.sh
+
+      - name: Upload rig artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: x11-first-light
+          path: ${{ runner.temp }}/x11-artifacts/
+          if-no-files-found: ignore
+
   # feed GitHub's dependency graph the resolved transitive tree so
   # Dependabot alerts cover what the build actually uses (issue #65)
   dependency-submission:

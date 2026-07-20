@@ -400,7 +400,7 @@
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.550</minimum>
+                      <minimum>0.555</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -459,7 +459,7 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.905</minimum>
+                      <minimum>0.910</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>

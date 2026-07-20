@@ -1,0 +1,38 @@
+#!/bin/sh
+# jpackage resource-dir override of the default deb postinst (issue #82).
+#
+# Identical to jpackage's built-in postinst template (JDK 25) except the
+# xdg-desktop-menu step is best-effort. xdg-desktop-menu refuses to run
+# ("No writable system menu directory found") on any host whose desktop
+# menu infrastructure (/usr/share/desktop-directories) was never
+# populated by a desktop-environment package -- true of a plain server
+# install and, per local verification, of a minimal CI container. Under
+# the stock template's `set -e` that one step (registering an
+# Applications-menu shortcut and, with it, the system-wide default MIME
+# handler) aborted the whole install before the two steps that are the
+# actual point of this issue -- the .jls mime-type definition and its
+# icon -- ever ran.
+#
+# Keep set -e for genuine failures; just don't let this one step take
+# the other two down with it, and fall back to copying the .desktop
+# entry into place by hand so JLS still shows up as a handler for .jls
+# files once a desktop environment is available. It will not be
+# auto-selected as the *default* handler that way -- xdg-utils has no
+# root-level way to record a system-wide default outside
+# xdg-desktop-menu, and xdg-mime default only ever writes the invoking
+# user's own per-user mimeapps.list -- but a user can still pick "Open
+# With JLS" once, same as for any app that ships without a
+# desktop-environment-specific default. See prerm's matching guard.
+set -e
+
+DESKTOP_FILE=/opt/jls/lib/jls-JLS.desktop
+DESKTOP_TARGET=/usr/share/applications/jls-JLS.desktop
+
+if ! xdg-desktop-menu install "$DESKTOP_FILE"; then
+	echo "jls: no desktop-menu provider on this host; copying the .desktop entry directly instead of the Applications-menu shortcut (see resources/packaging/resource-dir-linux/postinst)" >&2
+	install -m 644 "$DESKTOP_FILE" "$DESKTOP_TARGET"
+fi
+xdg-mime install /opt/jls/lib/jls-JLS-MimeInfo.xml
+xdg-icon-resource install --context mimetypes --size 128 /opt/jls/lib/application-x-jls-circuit.png application-x-jls-circuit
+
+exit 0

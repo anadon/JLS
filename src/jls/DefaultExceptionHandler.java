@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Handle unexpected errors and exceptions.
  * 
@@ -16,11 +18,11 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	/** True once an exception is being handled, so a second one just exits. */
 	private boolean recovering = false;
 	/** Reference to the main class, or null when running in batch mode. */
-	private JLSStart jls = null;
+	private @Nullable JLSStart jls = null;
 	/** The circuit to dump with the stack trace, if any. */
-	private Circuit circuit = null;
+	private @Nullable Circuit circuit = null;
 	/** Memory released when handling an OutOfMemoryError so recovery can proceed. */
-	private int [] extraSpace = new int[10000];
+	private int @Nullable [] extraSpace = new int[10000];
 
 	/**
 	 * Create a handler with no JLS window or circuit attached yet;
@@ -44,8 +46,8 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	 * 
 	 * @param circ The circuit.
 	 */
-	public void setCircuit(Circuit circ) {
-		
+	public void setCircuit(@Nullable Circuit circ) {
+
 		circuit = circ;
 	} // end of setCircuit method
 

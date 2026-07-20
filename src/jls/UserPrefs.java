@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Persistent user preferences (issue #76).
  *
@@ -16,9 +18,10 @@ import java.util.prefs.Preferences;
  * for example in a sandboxed environment - so callers never see an
  * exception, they just lose persistence.
  *
- * Stored today: the color theme name, and the user's grid and
- * background color overrides.  The two color overrides are cleared
- * whenever a theme is chosen, so picking a theme takes full effect.
+ * Stored today: the color theme name, the user's grid and
+ * background color overrides, and the user's undo depth.  The two
+ * color overrides are cleared whenever a theme is chosen, so picking a
+ * theme takes full effect.
  *
  * @author David A. Poplawski
  */
@@ -31,10 +34,12 @@ public final class UserPrefs {
 	private static final String GRID_KEY = "gridColor";
 	/** The key the background color override is stored under. */
 	private static final String BACKGROUND_KEY = "backgroundColor";
+	/** The key the undo depth override is stored under. */
+	private static final String UNDO_DEPTH_KEY = "undoDepth";
 
 	// the backing node, or null when only the in-memory map is used
 	/** The backing preferences node, or null when only the in-memory map is used. */
-	private final Preferences node;
+	private final @Nullable Preferences node;
 
 	// in-memory fallback (and write-through cache) for sandboxed runs
 	/** In-memory fallback (and write-through cache) for sandboxed runs. */
@@ -46,7 +51,7 @@ public final class UserPrefs {
 	 *
 	 * @param node The backing node, or null for in-memory-only.
 	 */
-	UserPrefs(Preferences node) {
+	UserPrefs(@Nullable Preferences node) {
 
 		this.node = node;
 	} // end of constructor
@@ -78,7 +83,19 @@ public final class UserPrefs {
 		Theme.byName(get(THEME_KEY)).apply();
 		overrideColors(parseColor(get(GRID_KEY)),
 				parseColor(get(BACKGROUND_KEY)));
+		applyUndoDepth(get(UNDO_DEPTH_KEY));
 	} // end of applyStartup method
+
+	/**
+	 * Lay the user's stored undo depth (if any) over the current
+	 * default.
+	 *
+	 * @param stored The stored undo-depth string, or null for none.
+	 */
+	private static void applyUndoDepth(@Nullable String stored) {
+
+		JLSInfo.undoStackDepth = parseUndoDepth(stored);
+	} // end of applyUndoDepth method
 
 	/**
 	 * Lay the user's stored color overrides (if any) over the colors
@@ -87,7 +104,7 @@ public final class UserPrefs {
 	 * @param grid The stored grid color, or null for none.
 	 * @param background The stored background color, or null for none.
 	 */
-	private static void overrideColors(Color grid, Color background) {
+	private static void overrideColors(@Nullable Color grid, @Nullable Color background) {
 
 		if (grid != null) {
 			JLSInfo.gridColor = grid;
@@ -131,6 +148,16 @@ public final class UserPrefs {
 	} // end of rememberBackgroundColor method
 
 	/**
+	 * Persist the user's undo depth choice.
+	 *
+	 * @param depth The new undo depth.
+	 */
+	public void rememberUndoDepth(int depth) {
+
+		put(UNDO_DEPTH_KEY, Integer.toString(depth));
+	} // end of rememberUndoDepth method
+
+	/**
 	 * The stored value for a key, from the backing node when present,
 	 * otherwise from the in-memory map.
 	 *
@@ -138,7 +165,7 @@ public final class UserPrefs {
 	 *
 	 * @return the stored value, or null when none is stored.
 	 */
-	private String get(String key) {
+	private @Nullable String get(String key) {
 
 		if (node != null) {
 			try {
@@ -200,7 +227,7 @@ public final class UserPrefs {
 	 *
 	 * @return the color, or null when the value is missing or corrupt.
 	 */
-	private static Color parseColor(String value) {
+	private static @Nullable Color parseColor(@Nullable String value) {
 
 		if (value == null) {
 			return null;
@@ -212,5 +239,27 @@ public final class UserPrefs {
 			return null;
 		}
 	} // end of parseColor method
+
+	/**
+	 * Decode a value stored by {@code rememberUndoDepth}.
+	 *
+	 * @param value The stored string, or null.
+	 *
+	 * @return the undo depth, or the current
+	 *         {@link JLSInfo#undoStackDepth} when the value is missing or
+	 *         corrupt.
+	 */
+	private static int parseUndoDepth(@Nullable String value) {
+
+		if (value == null) {
+			return JLSInfo.undoStackDepth;
+		}
+		try {
+			return Integer.parseInt(value);
+		}
+		catch (NumberFormatException ex) {
+			return JLSInfo.undoStackDepth;
+		}
+	} // end of parseUndoDepth method
 
 } // end of UserPrefs class

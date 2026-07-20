@@ -17,13 +17,14 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Headless tests for the look-and-feel selection policy (issue #153).
- * JLS keeps the recorded "same everywhere" cross-platform (Metal)
- * default, but the {@code -Djls.laf} JVM property provides the
- * evaluation seam for alternatives (system look, or any LookAndFeel
- * class on the classpath, e.g. FlatLaf) with a guaranteed fallback: a
- * broken explicit selection warns and falls back to the default rather
- * than making JLS unlaunchable. Installing a look-and-feel needs no
- * display, so these run in the default headless surefire execution.
+ * JLS installs FlatLaf light by default (superseding the earlier
+ * cross-platform Metal default), while the {@code -Djls.laf} JVM
+ * property selects alternatives - {@code metal} as the escape hatch,
+ * {@code system} for the native look, or any LookAndFeel class on the
+ * classpath - with a guaranteed fallback: a broken explicit selection
+ * warns and falls back to the cross-platform default rather than making
+ * JLS unlaunchable. Installing a look-and-feel needs no display (FlatLaf
+ * included), so these run in the default headless surefire execution.
  */
 class LookAndFeelPolicyTest {
 
@@ -64,31 +65,40 @@ class LookAndFeelPolicyTest {
 	} // end of restoreState method
 
 	/**
-	 * With the property unset, the selection is the cross-platform
-	 * look-and-feel - the recorded default is unchanged.
+	 * With the property unset, the selection is FlatLaf light - the
+	 * adopted default (issue #153).
 	 */
 	@Test
-	void defaultSelectionIsTheCrossPlatformLookAndFeel() {
+	void defaultSelectionIsFlatLafLight() {
 
 		System.clearProperty("jls.laf");
-		assertEquals(UIManager.getCrossPlatformLookAndFeelClassName(),
+		assertEquals("com.formdev.flatlaf.FlatLightLaf",
 				JLSStart.lookAndFeelClassName());
-	} // end of defaultSelectionIsTheCrossPlatformLookAndFeel method
+	} // end of defaultSelectionIsFlatLafLight method
 
 	/**
-	 * "metal" and a blank value both name the cross-platform default
-	 * explicitly.
+	 * A blank value is treated the same as unset: it selects the FlatLaf
+	 * light default.
 	 */
 	@Test
-	void metalAndBlankSelectTheCrossPlatformLookAndFeel() {
+	void blankSelectsTheFlatLafDefault() {
+
+		System.setProperty("jls.laf", "  ");
+		assertEquals("com.formdev.flatlaf.FlatLightLaf",
+				JLSStart.lookAndFeelClassName());
+	} // end of blankSelectsTheFlatLafDefault method
+
+	/**
+	 * "metal" names the cross-platform look-and-feel explicitly - the
+	 * documented escape hatch back to the former default.
+	 */
+	@Test
+	void metalSelectsTheCrossPlatformLookAndFeel() {
 
 		System.setProperty("jls.laf", "metal");
 		assertEquals(UIManager.getCrossPlatformLookAndFeelClassName(),
 				JLSStart.lookAndFeelClassName());
-		System.setProperty("jls.laf", "  ");
-		assertEquals(UIManager.getCrossPlatformLookAndFeelClassName(),
-				JLSStart.lookAndFeelClassName());
-	} // end of metalAndBlankSelectTheCrossPlatformLookAndFeel method
+	} // end of metalSelectsTheCrossPlatformLookAndFeel method
 
 	/**
 	 * "system" selects the platform's native look-and-feel.
@@ -115,17 +125,18 @@ class LookAndFeelPolicyTest {
 	} // end of anyOtherValueIsUsedAsALookAndFeelClassName method
 
 	/**
-	 * The default selection installs, and installs the cross-platform
-	 * look-and-feel.
+	 * The default selection installs, and installs FlatLaf light. FlatLaf
+	 * is on the classpath and sets cleanly with no display, so this needs
+	 * no real display and runs in the headless execution.
 	 */
 	@Test
-	void installingTheDefaultInstallsTheCrossPlatformLookAndFeel() {
+	void installingTheDefaultInstallsFlatLafLight() {
 
 		System.clearProperty("jls.laf");
 		assertTrue(JLSStart.installLookAndFeel());
-		assertEquals(UIManager.getCrossPlatformLookAndFeelClassName(),
+		assertEquals("com.formdev.flatlaf.FlatLightLaf",
 				UIManager.getLookAndFeel().getClass().getName());
-	} // end of installingTheDefaultInstallsTheCrossPlatformLookAndFeel method
+	} // end of installingTheDefaultInstallsFlatLafLight method
 
 	/**
 	 * A broken explicit selection is not fatal: install still succeeds,

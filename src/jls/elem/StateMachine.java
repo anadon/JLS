@@ -64,7 +64,8 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public final class StateMachine extends LogicElement implements Printable {
+public final class StateMachine extends LogicElement
+		implements Printable, Timed {
 
 	// default values
 	/** Propagation delay a new state machine starts with. */

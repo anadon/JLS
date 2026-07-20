@@ -170,9 +170,9 @@ public final class Editor extends SimpleEditor {
 		String name = fileName.replaceAll("\\.jls$","");
 		List<Circuit> edited = new ArrayList<Circuit>();
 		for (Component edit : tabbedParent.getComponents()) {
-			if (!(edit instanceof Editor))
+			if (!(edit instanceof Editor ed))
 				continue;
-			edited.add(((Editor)edit).getCircuit());
+			edited.add(ed.getCircuit());
 		}
 		if (nameUsedByAnotherEditor(name,circuit,edited)) {
 			TellUser.error(JLSInfo.frame,
@@ -186,9 +186,8 @@ public final class Editor extends SimpleEditor {
 
 		// change name in import menu
 		for (Component edit : tabbedParent.getComponents()) {
-			if (!(edit instanceof Editor))
+			if (!(edit instanceof Editor otherEditor))
 				continue;
-			Editor otherEditor = (Editor)edit;
 
 			// don't try to change in this editor
 			if (otherEditor == this) 
@@ -257,10 +256,9 @@ public final class Editor extends SimpleEditor {
 		for (Component edit : tabbedParent.getComponents()) {
 
 			// skip non-editors in tabs
-			if (!(edit instanceof Editor))
+			if (!(edit instanceof Editor otherEditor))
 				continue;
 
-			Editor otherEditor = (Editor)edit;
 			
 			// skip this editor
 			if (otherEditor == this)
@@ -316,9 +314,8 @@ public final class Editor extends SimpleEditor {
 		// import menus of all other open circuits
 		if (!circuit.isImported()) {
 			for (Component edit : tabbedParent.getComponents()) {
-				if (!(edit instanceof Editor))
+				if (!(edit instanceof Editor otherEditor))
 					continue;
-				Editor otherEditor = (Editor)edit;
 				otherEditor.removeFromImportMenu(circuit);
 			}
 		}

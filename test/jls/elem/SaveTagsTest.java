@@ -111,7 +111,7 @@ class SaveTagsTest {
 						"CIRCUIT fixture\nELEMENT Wire\nEND\nENDCIRCUIT\n")),
 				"a non-tag element type must be rejected");
 		assertTrue(JLSInfo.lastLoadError != null
-						&& JLSInfo.lastLoadError.getCategory()
+						&& JLSInfo.lastLoadError.category()
 								== LoadError.Category.UNKNOWN_ELEMENT,
 				"category must be UNKNOWN_ELEMENT, got: "
 						+ JLSInfo.loadError);

@@ -28,7 +28,7 @@ import java.util.BitSet;
  *
  * @author David A. Poplawski
  */
-public final class ShiftRegister extends LogicElement {
+public final class ShiftRegister extends LogicElement implements Timed {
 
 	/** The shift-kind rule, shared by the dialog and the loader
 	 *  (issue #52 pattern: one string, two surfaces). */
@@ -201,7 +201,7 @@ public final class ShiftRegister extends LogicElement {
 		case UP:
 			t.rotateCCW();
 			break;
-		default: // DOWN
+		case DOWN:
 			t.rotateCCW().mirrorY();
 			break;
 		}

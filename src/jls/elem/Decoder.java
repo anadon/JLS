@@ -43,7 +43,7 @@ import jls.util.Placement;
  * 
  * @author David A. Poplawski
  */
-public final class Decoder extends LogicElement {
+public final class Decoder extends LogicElement implements Timed {
 	
 	// default values
 	/** Default number of input bits. */

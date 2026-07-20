@@ -49,7 +49,6 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		case LEFT: result += "left"; break;
 		case UP: result += "up"; break;
 		case DOWN: result += "down"; break;
-		default: result += "unknown"; break;
 		}
 		result += ",inputs={";
 		boolean firstTime = true;
@@ -201,12 +200,10 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		SortedSet<InputPin> inputList = new TreeSet<InputPin>(cmp);
 		SortedSet<OutputPin> outputList = new TreeSet<OutputPin>(cmp);
 		for (Element el : subCircuit.getElements()) {
-			if (el instanceof InputPin) {
-				InputPin pin = (InputPin)el;
+			if (el instanceof InputPin pin) {
 				inputList.add(pin);
 			}
-			else if (el instanceof OutputPin) {
-				OutputPin pin = (OutputPin)el;
+			else if (el instanceof OutputPin pin) {
 				outputList.add(pin);
 			}
 		}
@@ -236,8 +233,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		// create inputs and outputs and determine height
 		height = s;
 		for (Pin el : pins) {
-			if (el instanceof InputPin) {
-				InputPin pin = (InputPin)el;
+			if (el instanceof InputPin pin) {
 				Input in;
 				if(orientation == JLSInfo.Orientation.RIGHT)
 				{
@@ -251,8 +247,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				height += s;
 				inmap.put(in,pin);
 			}
-			else if (el instanceof OutputPin) {
-				OutputPin pin = (OutputPin)el;
+			else if (el instanceof OutputPin pin) {
 				Output out;
 				if(orientation == JLSInfo.Orientation.RIGHT)
 				{
@@ -412,8 +407,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		// make a set of all elements except attached wire ends in subcircuit
 		Set<Element> elements = new HashSet<Element>();
 		for (Element el : subCircuit.getElements()) {
-			if (el instanceof WireEnd) {
-				WireEnd end = (WireEnd)el;
+			if (el instanceof WireEnd end) {
 				if (end.isAttached())
 					continue;
 			}
@@ -432,9 +426,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		// build maps
 		for (Input input : it.inputs) {
 			for (Element el : it.subCircuit.getElements()) {
-				if (!(el instanceof InputPin))
+				if (!(el instanceof InputPin pin))
 					continue;
-				InputPin pin = (InputPin)el;
 				if (input.getName().equals(pin.getName())) {
 					it.inmap.put(input,pin);
 				}
@@ -442,9 +435,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		}
 		for (Output output : it.outputs) {
 			for (Element el : it.subCircuit.getElements()) {
-				if (!(el instanceof OutputPin))
+				if (!(el instanceof OutputPin pin))
 					continue;
-				OutputPin pin = (OutputPin)el;
 				if (output.getName().equals(pin.getName())) {
 					it.outmap.put(pin,output);
 				}
@@ -491,8 +483,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	public void setWatched(boolean which) {
 		
 		for (Element element : subCircuit.getElements()) {
-			if (element instanceof LogicElement) {
-				((LogicElement)element).setWatched(which);
+			if (element instanceof LogicElement le) {
+				le.setWatched(which);
 			}
 		}
 	} // end of setWatched method
@@ -528,16 +520,14 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		inmap.clear();
 		outmap.clear();
 		for (Element el : circ.getElements()) {
-			if (el instanceof InputPin) {
-				InputPin pin = (InputPin)el;
+			if (el instanceof InputPin pin) {
 				for (Input in : inputs) {
 					if (in.getName().equals(pin.getName())) {
 						inmap.put(in,pin);
 					}
 				}
 			}
-			else if (el instanceof OutputPin) {
-				OutputPin pin = (OutputPin)el;
+			else if (el instanceof OutputPin pin) {
 				for (Output out : outputs) {
 					if (out.getName().equals(pin.getName())) {
 						outmap.put(pin,out);
@@ -751,8 +741,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		
 		// initialize subcircuit's elements
 		for (Element element : subCircuit.getElementsInStableOrder()) {
-			if (element instanceof LogicElement) {
-				LogicElement el = (LogicElement)element;
+			if (element instanceof LogicElement el) {
 				el.initInputs();
 			}
 		}
@@ -780,8 +769,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		// circuit's time-0 events must be posted in stable-id order for
 		// the same reason as Simulator.initSimulation's top-level walk
 		for (Element el : subCircuit.getElementsInStableOrder()) {
-			if (el instanceof LogicElement) {
-				LogicElement lel = (LogicElement)el;
+			if (el instanceof LogicElement lel) {
 				lel.initSim(sim);
 			}
 		}

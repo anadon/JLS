@@ -1,0 +1,42 @@
+name: Mutation testing (PIT)
+
+# Non-blocking mutation-coverage report (issue #161): the opt-in
+# `pitest` Maven profile runs on a weekly cadence and on demand, never
+# on push/pull_request, so it can never gate a required check. The
+# mutationCoverage step is additionally marked continue-on-error for
+# resilience - a PIT hiccup should not turn this workflow red.
+on:
+  schedule:
+    - cron: "0 5 * * 0"
+  workflow_dispatch:
+
+# least-privilege token: the job only reads the repo (mirrors ci.yml, #68)
+permissions:
+  contents: read
+
+jobs:
+  mutation-report:
+    name: PIT mutation report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # the trial's scope is headless-only (docs/mutation-testing-trial-2026-07.md
+      # §2/§6); no xvfb needed here.
+      - name: Run PIT mutation coverage
+        continue-on-error: true
+        run: mvn -B -Ppitest test-compile org.pitest:pitest-maven:mutationCoverage
+
+      - name: Upload PIT report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pit-reports
+          path: target/pit-reports
+          if-no-files-found: warn

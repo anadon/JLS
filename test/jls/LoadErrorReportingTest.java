@@ -93,7 +93,7 @@ class LoadErrorReportingTest {
 				"a mid-stream IOException must be reported as an I/O error, got: "
 						+ JLSInfo.loadError);
 		assertTrue(JLSInfo.lastLoadError != null
-						&& JLSInfo.lastLoadError.getCategory()
+						&& JLSInfo.lastLoadError.category()
 								== LoadError.Category.IO_ERROR,
 				"category must be IO_ERROR");
 		assertTrue(JLSInfo.loadError.contains("checkpoint")
@@ -108,16 +108,16 @@ class LoadErrorReportingTest {
 	void truncatedFileNamesCategoryLineElementAndNextStep() {
 		// the file stops in the middle of a Clock element
 		String error = reject("CIRCUIT c\nELEMENT Clock\n int id 0\n int x 60\n");
-		assertTrue(JLSInfo.lastLoadError.getCategory()
+		assertTrue(JLSInfo.lastLoadError.category()
 						== LoadError.Category.MALFORMED,
 				"category must be MALFORMED, got: " + error);
 		assertTrue(error.contains("malformed file"),
 				"the category label must be shown, got: " + error);
-		assertTrue(error.contains("line " + JLSInfo.lastLoadError.getLine()),
+		assertTrue(error.contains("line " + JLSInfo.lastLoadError.line()),
 				"the line must be shown, got: " + error);
-		assertTrue(JLSInfo.lastLoadError.getLine() > 1,
+		assertTrue(JLSInfo.lastLoadError.line() > 1,
 				"the line must be past the header, got: "
-						+ JLSInfo.lastLoadError.getLine());
+						+ JLSInfo.lastLoadError.line());
 		assertTrue(error.contains("Clock"),
 				"the element must be named, got: " + error);
 		assertTrue(error.contains("truncated"),
@@ -129,7 +129,7 @@ class LoadErrorReportingTest {
 	@Test
 	void garbageBytesAreReportedAsNotACircuitFile() {
 		String error = reject("@#$ garbage bytes ~~~");
-		assertTrue(JLSInfo.lastLoadError.getCategory()
+		assertTrue(JLSInfo.lastLoadError.category()
 						== LoadError.Category.NOT_A_CIRCUIT,
 				"category must be NOT_A_CIRCUIT, got: " + error);
 		assertTrue(error.contains("not a circuit file"),
@@ -145,7 +145,7 @@ class LoadErrorReportingTest {
 		String error = reject("CIRCUIT c\nELEMENT Clock\n int id 0\n"
 				+ " int x 60\n int y 60\n int cycle 0\n int one 0\nEND\n"
 				+ "ENDCIRCUIT\n");
-		assertTrue(JLSInfo.lastLoadError.getCategory()
+		assertTrue(JLSInfo.lastLoadError.category()
 						== LoadError.Category.ELEMENT_ERROR,
 				"category must be ELEMENT_ERROR, got: " + error);
 		assertTrue(error.contains("invalid element"),
@@ -165,7 +165,7 @@ class LoadErrorReportingTest {
 	void unknownElementTagNamesTagCategoryAndUpgradeHint() {
 		String error = reject(
 				"CIRCUIT c\nELEMENT FluxCapacitor\nEND\nENDCIRCUIT\n");
-		assertTrue(JLSInfo.lastLoadError.getCategory()
+		assertTrue(JLSInfo.lastLoadError.category()
 						== LoadError.Category.UNKNOWN_ELEMENT,
 				"category must be UNKNOWN_ELEMENT, got: " + error);
 		assertTrue(error.contains("unknown element"),
@@ -181,7 +181,7 @@ class LoadErrorReportingTest {
 	void nonIntegerAttributeValueReportsAttributeAndLine() {
 		String error = reject("CIRCUIT c\nELEMENT Clock\n int id 0\n"
 				+ " int cycle banana\nEND\nENDCIRCUIT\n");
-		assertTrue(JLSInfo.lastLoadError.getCategory()
+		assertTrue(JLSInfo.lastLoadError.category()
 						== LoadError.Category.MALFORMED,
 				"category must be MALFORMED, got: " + error);
 		assertTrue(error.contains("'cycle'"),

@@ -1,0 +1,38 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): 4-bit y=(a&b)|~c, p=a&b (fanout)",
+  "modules": {
+    "aoi": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "a": { "direction": "input", "bits": [ 2, 3, 4, 5 ] },
+        "b": { "direction": "input", "bits": [ 6, 7, 8, 9 ] },
+        "c": { "direction": "input", "bits": [ 10, 11, 12, 13 ] },
+        "y": { "direction": "output", "bits": [ 22, 23, 24, 25 ] },
+        "p": { "direction": "output", "bits": [ 14, 15, 16, 17 ] }
+      },
+      "cells": {
+        "and_0": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": { "A_SIGNED": 0, "B_SIGNED": 0, "A_WIDTH": 4, "B_WIDTH": 4, "Y_WIDTH": 4 },
+          "port_directions": { "A": "input", "B": "input", "Y": "output" },
+          "connections": { "A": [ 2, 3, 4, 5 ], "B": [ 6, 7, 8, 9 ], "Y": [ 14, 15, 16, 17 ] }
+        },
+        "not_0": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": { "A_SIGNED": 0, "A_WIDTH": 4, "Y_WIDTH": 4 },
+          "port_directions": { "A": "input", "Y": "output" },
+          "connections": { "A": [ 10, 11, 12, 13 ], "Y": [ 18, 19, 20, 21 ] }
+        },
+        "or_0": {
+          "hide_name": 1,
+          "type": "$or",
+          "parameters": { "A_SIGNED": 0, "B_SIGNED": 0, "A_WIDTH": 4, "B_WIDTH": 4, "Y_WIDTH": 4 },
+          "port_directions": { "A": "input", "B": "input", "Y": "output" },
+          "connections": { "A": [ 14, 15, 16, 17 ], "B": [ 18, 19, 20, 21 ], "Y": [ 22, 23, 24, 25 ] }
+        }
+      }
+    }
+  }
+}

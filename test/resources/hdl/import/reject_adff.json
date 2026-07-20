@@ -1,0 +1,23 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): $adff - teachable reject (asynchronous reset)",
+  "modules": {
+    "adffmod": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "clk": { "direction": "input", "bits": [ 2 ] },
+        "rst": { "direction": "input", "bits": [ 3 ] },
+        "d": { "direction": "input", "bits": [ 4, 5, 6, 7 ] },
+        "q": { "direction": "output", "bits": [ 8, 9, 10, 11 ] }
+      },
+      "cells": {
+        "adff_0": {
+          "hide_name": 1,
+          "type": "$adff",
+          "parameters": { "WIDTH": 4, "CLK_POLARITY": 1, "ARST_POLARITY": 1, "ARST_VALUE": "0000" },
+          "port_directions": { "CLK": "input", "ARST": "input", "D": "input", "Q": "output" },
+          "connections": { "CLK": [ 2 ], "ARST": [ 3 ], "D": [ 4, 5, 6, 7 ], "Q": [ 8, 9, 10, 11 ] }
+        }
+      }
+    }
+  }
+}

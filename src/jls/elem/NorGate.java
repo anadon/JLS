@@ -1,74 +1,59 @@
 package jls.elem;
 
 import jls.*;
-import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
-import java.io.*;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * n-input NOR gate(s).
- * 
+ *
  * @author David A. Poplawski
  */
-public final class NorGate extends Gate {
+public final class NorGate extends Gate implements Timed {
 
 	// identity and shared previous-settings state (#22)
 	/** This gate type's identity and shared previous-settings state (#22). */
 	private static final Kind KIND =
 			new Kind("NOR","NorGate",-1,5);
-	
+
 	/**
 	 * Create NOR gate.
-	 * 
+	 *
 	 * @param circuit The circuit this NOR gate is in.
 	 */
 	public NorGate(Circuit circuit) {
-		
+
 		super(circuit);
-		
-		// create image for this gate for later use
-		int s = JLSInfo.spacing;
-		int d = JLSInfo.pointDiameter;
-		Point2D.Double pright = new Point2D.Double(2*s-d,s);
-		Point2D.Double ptop = new Point2D.Double(0,0);
-		Point2D.Double pbottom = new Point2D.Double(0,2*s);
-		Point2D.Double c1 = new Point2D.Double();
-		Point2D.Double c2 = new Point2D.Double();
-		
-		c1.setLocation(pright.x-1,pright.y-3);
-		c2.setLocation(ptop.x+s,ptop.y);
-		CubicCurve2D top = new CubicCurve2D.Double();
-		top.setCurve(pright,c1,c2,ptop);
-		
-		c1.setLocation(ptop.x+s/4,ptop.y+s);
-		c2.setLocation(pbottom.x+s/4,pbottom.y-s);
-		CubicCurve2D side = new CubicCurve2D.Double();
-		side.setCurve(ptop,c1,c2,pbottom);
-		
-		c1.setLocation(pbottom.x+s,pbottom.y);
-		c2.setLocation(pright.x-1,pright.y+3);
-		CubicCurve2D bottom = new CubicCurve2D.Double();
-		bottom.setCurve(pbottom,c1,c2,pright);
-		gateShape = new GeneralPath(top);
-		gateShape.append(side,true);
-		gateShape.append(bottom,true);
-		gateShape.closePath();
-		Ellipse2D bubble = new Ellipse2D.Double(2*s-d,s-d/2,d,d);
-		gateShape.append(bubble,false);
 	} // end of constructor
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
+
+	/**
+	 * The NOR gate body: the OR outline with an inversion bubble at the
+	 * front (issue #77 model/render split - the symbol as headless data).
+	 * The cubic curves reproduce the former inline construction from the
+	 * points pright=(2s-d,s), ptop=(0,0), pbottom=(0,2s).
+	 */
+	@Override
+	protected GateOutline outline() {
+
+		int s = JLSInfo.spacing;
+		int d = JLSInfo.pointDiameter;
+		return GateOutline.builder()
+				.cubic(false, 2 * s - d, s, 2 * s - d - 1, s - 3, s, 0, 0, 0)
+				.cubic(true, 0, 0, s / 4, s, s / 4, s, 0, 2 * s)
+				.cubic(true, 0, 2 * s, s, 2 * s, 2 * s - d - 1, s + 3,
+						2 * s - d, s)
+				.close()
+				.ellipse(false, 2 * s - d, s - d / 2, d, d)
+				.build();
+	} // end of outline method
 
 //-------------------------------------------------------------------------------
 // Simulation

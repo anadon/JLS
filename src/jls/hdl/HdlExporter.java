@@ -199,8 +199,8 @@ public final class HdlExporter {
 		// ---- net walk: wire nets unioned across same-named jumps ----
 		UnionFind nets = new UnionFind();
 		for (Element el : ordered) {
-			if (el instanceof WireEnd) {
-				nets.register(((WireEnd) el).getNet());
+			if (el instanceof WireEnd we) {
+				nets.register(we.getNet());
 			}
 		}
 		Map<String, List<WireNet>> jumpNets =
@@ -257,10 +257,9 @@ public final class HdlExporter {
 					pin.getBits(), "InputPin \"" + pin.getName() + "\""));
 		}
 		for (Element el : exported) {
-			if (!(el instanceof Clock)) {
+			if (!(el instanceof Clock clock)) {
 				continue;
 			}
-			Clock clock = (Clock) el;
 			String port = names.synth("clk");
 			portNames.put(clock, port);
 			Group group = groupOf(clock.getOutputList().get(0), nets, groups);
@@ -305,10 +304,9 @@ public final class HdlExporter {
 
 		// named registers label their q/notQ nets
 		for (Element el : exported) {
-			if (!(el instanceof Register)) {
+			if (!(el instanceof Register reg)) {
 				continue;
 			}
-			Register reg = (Register) el;
 			String name = reg.getName();
 			if (name == null || name.isEmpty()) {
 				continue;
@@ -341,10 +339,9 @@ public final class HdlExporter {
 		Map<Group, Integer> undrivenId = new IdentityHashMap<Group, Integer>();
 		Map<Group, String> undrivenKey = new IdentityHashMap<Group, String>();
 		for (Element el : ordered) {
-			if (!(el instanceof LogicElement) || isTopology(el)) {
+			if (!(el instanceof LogicElement logic) || isTopology(el)) {
 				continue;
 			}
-			LogicElement logic = (LogicElement) el;
 			for (Put put : logic.getAllPuts()) {
 				Group group = groupOf(put, nets, groups);
 				if (group == null || group.name != null
@@ -459,8 +456,7 @@ public final class HdlExporter {
 			return; // ports drive their nets directly
 		}
 
-		if (el instanceof OutputPin) {
-			OutputPin pin = (OutputPin) el;
+		if (el instanceof OutputPin pin) {
 			if (!ins.get(0).isAttached()) {
 				model.addWarning(describe(el)
 						+ " is not connected; its port is left undriven");
@@ -474,8 +470,7 @@ public final class HdlExporter {
 			return;
 		}
 
-		if (el instanceof Constant) {
-			Constant con = (Constant) el;
+		if (el instanceof Constant con) {
 			Group group = groupOf(outs.get(0), nets, groups);
 			int bits = group == null ? 1 : Math.max(group.bits, 1);
 			String target = target(model, el, 0, outs.get(0), bits, nets,
@@ -537,8 +532,7 @@ public final class HdlExporter {
 			return;
 		}
 
-		if (el instanceof Register) {
-			Register reg = (Register) el;
+		if (el instanceof Register reg) {
 			int bits = Math.max(reg.getBits(), 1);
 			String q = target(model, el, 0, outs.get(0), bits, nets,
 					groups, names);
@@ -576,8 +570,7 @@ public final class HdlExporter {
 			return;
 		}
 
-		if (el instanceof Binder) {
-			Binder binder = (Binder) el;
+		if (el instanceof Binder binder) {
 			List<int[]> ranges = binder.getRangeIndices();
 			int outBits = Math.max(outs.get(0).getBits(), 1);
 			String target = target(model, el, 0, outs.get(0), outBits, nets,
@@ -592,8 +585,7 @@ public final class HdlExporter {
 			return;
 		}
 
-		if (el instanceof Splitter) {
-			Splitter splitter = (Splitter) el;
+		if (el instanceof Splitter splitter) {
 			List<int[]> ranges = splitter.getRangeIndices();
 			HdlModel.Operand source = operand(ins.get(0), nets, groups);
 			for (int k = 0; k < ranges.size(); k += 1) {
@@ -867,11 +859,11 @@ public final class HdlExporter {
 	 */
 	private static String jumpAlias(Element el) {
 
-		if (el instanceof JumpStart) {
-			return ((JumpStart) el).getName();
+		if (el instanceof JumpStart js) {
+			return js.getName();
 		}
-		if (el instanceof JumpEnd) {
-			return ((JumpEnd) el).getName();
+		if (el instanceof JumpEnd je) {
+			return je.getName();
 		}
 		return null;
 	} // end of jumpAlias method

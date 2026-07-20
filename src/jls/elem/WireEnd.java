@@ -297,8 +297,7 @@ public final class WireEnd extends LogicElement {
 					put.setAttached(null);
 					put = null;
 				}
-				else if (getNet().isTriState() && put.getElement() instanceof TriProp) {
-					TriProp el = (TriProp)put.getElement();
+				else if (getNet().isTriState() && put.getElement() instanceof TriProp el) {
 					put.setAttached(null);
 					put = null;
 					el.setTriState(false);

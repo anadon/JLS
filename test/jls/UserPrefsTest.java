@@ -91,6 +91,25 @@ class UserPrefsTest {
 		assertEquals(Theme.DEFAULT.grid(), JLSInfo.gridColor);
 	}
 
+	@Test
+	void undoDepthSurvivesARestart() {
+		MemoryPreferences node = new MemoryPreferences();
+		new UserPrefs(node).rememberUndoDepth(25);
+
+		new UserPrefs(node).applyStartup();		// the "restart"
+		assertEquals(25, JLSInfo.undoStackDepth);
+	}
+
+	@Test
+	void corruptStoredUndoDepthIsIgnored() {
+		MemoryPreferences node = new MemoryPreferences();
+		int before = JLSInfo.undoStackDepth;
+		node.put("undoDepth", "not-a-number");
+
+		new UserPrefs(node).applyStartup();
+		assertEquals(before, JLSInfo.undoStackDepth);
+	}
+
 	/** A hermetic, purely in-memory java.util.prefs node. */
 	private static final class MemoryPreferences
 			extends AbstractPreferences {

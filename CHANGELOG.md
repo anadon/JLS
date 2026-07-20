@@ -8,6 +8,16 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- FlatLaf light adopted as the default Swing look-and-feel (#153),
+  superseding the recorded cross-platform Metal default:
+  `com.formdev:flatlaf:3.7.2` (Apache-2.0, ~1 MB, zero transitive
+  dependencies) is now a runtime dependency, bundled into the shaded
+  jar so the packaged installers get it. `JLSStart.installLookAndFeel()`
+  defaults to `FlatLightLaf`; `-Djls.laf=metal` remains the documented
+  escape hatch and Metal the automatic fallback if FlatLaf can't be
+  set. `LookAndFeelPolicyTest` pins the new default headlessly, and
+  the decision is recorded in `ARCHITECTURE.md`. A dark default is
+  #76's follow-up.
 - Batch advancement of the open issue backlog (multi-agent workflow
   session, one worker + one adversarial auditor per issue; each
   increment's detail is recorded on its issue thread and in the
@@ -109,6 +119,30 @@ All notable changes to JLS are documented here. The format follows
   its second seed.
 
 ### Added
+- The release workflow now installs and launches every jpackage
+  installer it builds (#82): deb via apt/dpkg, rpm via `rpm2cpio`
+  payload extraction (no RPM-based GitHub runner exists to host a
+  real rpm database), AppImage via `--appimage-extract-and-run`, msi
+  via a real per-user `msiexec` install/uninstall, dmg via
+  `hdiutil attach` plus a `Contents/MacOS` launch — each followed by
+  `-h`, which prints usage and touches no display. Since
+  windows-latest, macos-latest, ubuntu-24.04-arm and windows-11-arm
+  are real GitHub-hosted per-OS VMs, a green run of this step is the
+  "installed and checked on hardware" verification the issue has
+  been waiting on to retire its experimental/continue-on-error
+  matrix flags. Building this smoke test surfaced and fixed a real
+  bug: the deb's jpackage-generated `postinst` calls
+  `xdg-desktop-menu install` under `set -e`, and that command hard
+  errors ("No writable system menu directory found") on any host
+  whose desktop-menu infrastructure was never populated by a
+  desktop-environment package — true of a plain server install and,
+  confirmed locally, of a minimal CI container — which aborted the
+  whole package install before the `.jls` mime association (the
+  actual point of this issue) ever registered. `postinst`/`prerm` are
+  now resource-dir overrides that keep the mime-type and icon
+  registration unconditional and fall back to manually placing the
+  `.desktop` file when the menu-shortcut step is unavailable, verified
+  end-to-end both with and without that infrastructure present.
 - Documentation is now build-enforced: `mvn verify` runs a javadoc
   doclint gate over the public/protected API with warnings as
   failures, and a new package-info ratchet requires every package in

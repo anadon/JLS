@@ -1,0 +1,165 @@
+#!/bin/sh
+# jpackage resource-dir override of the default deb prerm (issue #82).
+#
+# Identical to jpackage's built-in prerm template (JDK 25) except the
+# xdg-desktop-menu uninstall is best-effort, mirroring postinst's install
+# guard: a host with no desktop-menu provider got postinst's manually
+# copied /usr/share/applications/jls-JLS.desktop fallback instead of a
+# real menu shortcut, so undoing it on removal must not be allowed to
+# abort the mime-type and icon cleanup that follow under `set -e` --
+# and the fallback copy needs its own manual removal, since
+# xdg-desktop-menu never tracked it in the first place.
+
+set -e
+
+package_type=deb
+file_belongs_to_single_package ()
+{
+  if [ ! -e "$1" ]; then
+    false
+  elif [ "$package_type" = rpm ]; then
+    test `rpm -q --whatprovides "$1" | wc -l` = 1
+  elif [ "$package_type" = deb ]; then
+    test `dpkg -S "$1" | wc -l` = 1
+  else
+    exit 1
+  fi
+}
+
+
+do_if_file_belongs_to_single_package ()
+{
+  local file="$1"
+  shift
+
+  if file_belongs_to_single_package "$file"; then
+    "$@"
+  fi
+}
+#
+# Remove $1 desktop file from the list of default handlers for $2 mime type
+# in $3 file dumping output to stdout.
+#
+desktop_filter_out_default_mime_handler ()
+{
+  local defaults_list="$3"
+
+  local desktop_file="$1"
+  local mime_type="$2"
+
+  awk -f- "$defaults_list" <<EOF
+  BEGIN {
+    mime_type="$mime_type"
+    mime_type_regexp="~" mime_type "="
+    desktop_file="$desktop_file"
+  }
+  \$0 ~ mime_type {
+    \$0 = substr(\$0, length(mime_type) + 2);
+    split(\$0, desktop_files, ";")
+    remaining_desktop_files
+    counter=0
+    for (idx in desktop_files) {
+      if (desktop_files[idx] != desktop_file) {
+        ++counter;
+      }
+    }
+    if (counter) {
+      printf mime_type "="
+      for (idx in desktop_files) {
+        if (desktop_files[idx] != desktop_file) {
+          printf desktop_files[idx]
+          if (--counter) {
+            printf ";"
+          }
+        }
+      }
+      printf "\n"
+    }
+    next
+  }
+
+  { print }
+EOF
+}
+
+
+#
+# Remove $2 desktop file from the list of default handlers for $@ mime types
+# in $1 file.
+# Result is saved in $1 file.
+#
+desktop_uninstall_default_mime_handler_0 ()
+{
+  local defaults_list=$1
+  shift
+  [ -f "$defaults_list" ] || return 0
+
+  local desktop_file="$1"
+  shift
+
+  tmpfile1=$(mktemp)
+  tmpfile2=$(mktemp)
+  cat "$defaults_list" > "$tmpfile1"
+
+  local v
+  local update=
+  for mime in "$@"; do
+    desktop_filter_out_default_mime_handler "$desktop_file" "$mime" "$tmpfile1" > "$tmpfile2"
+    v="$tmpfile2"
+    tmpfile2="$tmpfile1"
+    tmpfile1="$v"
+
+    if ! diff -q "$tmpfile1" "$tmpfile2" > /dev/null; then
+      update=yes
+      desktop_trace Remove $desktop_file default handler for $mime mime type from $defaults_list file
+    fi
+  done
+
+  if [ -n "$update" ]; then
+    cat "$tmpfile1" > "$defaults_list"
+    desktop_trace "$defaults_list" file updated
+  fi
+
+  rm -f "$tmpfile1" "$tmpfile2"
+}
+
+
+#
+# Remove $1 desktop file from the list of default handlers for $@ mime types
+# in all known system defaults lists.
+#
+desktop_uninstall_default_mime_handler ()
+{
+  for f in /usr/share/applications/defaults.list /usr/local/share/applications/defaults.list; do
+    desktop_uninstall_default_mime_handler_0 "$f" "$@"
+  done
+}
+
+
+desktop_trace ()
+{
+  echo "$@"
+}
+
+case "$1" in
+    remove|upgrade|deconfigure)
+if ! do_if_file_belongs_to_single_package /opt/jls/lib/jls-JLS.desktop xdg-desktop-menu uninstall /opt/jls/lib/jls-JLS.desktop; then
+	echo "jls: desktop-menu uninstall skipped (no menu provider present); removing postinst's fallback .desktop copy directly" >&2
+	rm -f /usr/share/applications/jls-JLS.desktop
+fi
+do_if_file_belongs_to_single_package /opt/jls/lib/jls-JLS-MimeInfo.xml xdg-mime uninstall /opt/jls/lib/jls-JLS-MimeInfo.xml
+do_if_file_belongs_to_single_package /opt/jls/lib/jls-JLS.desktop desktop_uninstall_default_mime_handler jls-JLS.desktop application/x-jls-circuit
+do_if_file_belongs_to_single_package /opt/jls/lib/application-x-jls-circuit.png xdg-icon-resource uninstall application-x-jls-circuit --size 128
+
+    ;;
+
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

@@ -1,4 +1,4 @@
-package jls.sim;
+package jls.edit;
 
 import jls.elem.*;
 import java.awt.*;

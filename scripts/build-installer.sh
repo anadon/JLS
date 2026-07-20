@@ -348,9 +348,16 @@ select_linux_runtime() {
 case "$(uname -s)" in
 	Linux)
 		select_linux_runtime
-		# --resource-dir overrides the generated .desktop entry: the JDK
-		# default Exec line has no %f field code, so double-clicked .jls
-		# files would never reach argv (see resource-dir-linux/JLS.desktop)
+		# --resource-dir overrides three of jpackage's generated deb
+		# templates (JLS.desktop, postinst, prerm): the JDK default
+		# .desktop Exec line has no %f field code, so double-clicked
+		# .jls files would never reach argv (resource-dir-linux/JLS.desktop);
+		# and the default postinst/prerm hard-fail the whole
+		# install/removal under xdg-desktop-menu on any host without
+		# desktop-menu infrastructure (a plain server, or CI), aborting
+		# before the .jls mime association -- the actual point of this
+		# flag block -- ever registers (resource-dir-linux/postinst,
+		# .../prerm)
 		linux_flags=(
 			--icon resources/packaging/jls.png
 			--file-associations resources/packaging/jls-association-linux.properties
@@ -401,9 +408,66 @@ case "$(uname -s)" in
 			--icon resources/packaging/jls.icns \
 			--file-associations resources/packaging/jls-association-macos.properties \
 			--mac-package-identifier io.github.anadon.jls
+		# Determinism (#191): hdiutil embeds a per-build random UDIF
+		# SegmentID plus HFS+ volume dates/UUID that jpackage exposes no
+		# control over, so two builds of one commit differ.  Route A of
+		# docs/dmg-reproducibility.md — normalize-dmg.py rewrites exactly
+		# the checksum-safe volatile set.  As with the msi lane its
+		# self-test runs first, so a broken tool can never touch the dmg,
+		# and any structural surprise is a hard error, not a silent skip.
+		# Escape hatch: JLS_SKIP_DMG_NORMALIZE=1.
+		DMG="$DIST/JLS-${APP_VERSION}.dmg"
+		if [ "${JLS_SKIP_DMG_NORMALIZE:-0}" != "1" ]; then
+			PYTHON="$(command -v python3 || command -v python || true)"
+			if [ -z "$PYTHON" ]; then
+				echo "error: python is required to normalize the dmg (#191);" >&2
+				echo "       set JLS_SKIP_DMG_NORMALIZE=1 to build a non-deterministic dmg" >&2
+				exit 1
+			fi
+			"$PYTHON" scripts/normalize-dmg.py --self-test
+			SDE="${SOURCE_DATE_EPOCH:-$(git log -1 --pretty=%ct 2>/dev/null || echo 0)}"
+			# Full HFS+ envelope pass (F1/F2/F3/F5): opt-in, because the
+			# read-write round-trip below is not yet verified on a real
+			# Mac (docs/dmg-reproducibility.md §4/§5) — it stays behind a
+			# flag so a maintainer validates it on macOS before it enters
+			# the default release path.  It patches the *uncompressed* UDRW
+			# image before re-compressing, the only checksum-safe window
+			# for the volume header.
+			if [ "${JLS_DMG_FULL_NORMALIZE:-0}" = "1" ]; then
+				echo "==> dmg full-normalize (HFS+ envelope, opt-in)"
+				WORK="$STAGE/dmg-work"
+				rm -rf "$WORK"
+				mkdir -p "$WORK"
+				# preserve the SLA (license) resource across the round-trip
+				hdiutil udifderez -xml "$DMG" > "$WORK/sla.plist"
+				hdiutil convert "$DMG" -quiet -format UDRW -o "$WORK/rw.dmg"
+				# clamp node dates and drop the volume's fseventsd UUID
+				# inside the mounted image, before re-imaging
+				printf 'Y\n' | hdiutil attach "$WORK/rw.dmg" -quiet -nobrowse \
+					-noautoopen -owners off -mountpoint "$WORK/mnt"
+				rm -rf "$WORK/mnt/.fseventsd" 2>/dev/null || true
+				find "$WORK/mnt" -exec touch -h -t "$CLAMP_STAMP" {} + 2>/dev/null || true
+				hdiutil detach "$WORK/mnt" -quiet || hdiutil detach "$WORK/mnt" -quiet -force
+				# pin volume-header dates + UUID on the raw read-write image
+				"$PYTHON" scripts/normalize-dmg.py hfs \
+					--source-date-epoch "$SDE" "$WORK/rw.dmg"
+				# re-compress (level pinned, not inherited) and restore the SLA
+				hdiutil convert "$WORK/rw.dmg" -quiet -format UDZO \
+					-imagekey zlib-level=9 -o "$WORK/out.dmg"
+				if [ -s "$WORK/sla.plist" ]; then
+					hdiutil udifrez "$WORK/out.dmg" -xml "$WORK/sla.plist" || true
+				fi
+				mv "$WORK/out.dmg" "$DMG"
+			fi
+			# Always pin the UDIF SegmentID on the final compressed image
+			# (E1): it lives outside every UDIF checksum, so this is safe on
+			# the shipped dmg with no round-trip and no risk to the license
+			# resource.
+			"$PYTHON" scripts/normalize-dmg.py koly "$DMG"
+		fi
 		# jpackage names the dmg JLS-<version>.dmg with no architecture;
 		# suffix it so Apple-silicon and Intel builds cannot collide
-		mv "$DIST/JLS-${APP_VERSION}.dmg" "$DIST/JLS-${APP_VERSION}-${ARCH}.dmg"
+		mv "$DMG" "$DIST/JLS-${APP_VERSION}-${ARCH}.dmg"
 		;;
 	MINGW* | MSYS* | CYGWIN*)
 		# Per-user install: no admin rights needed (student/lab machines);

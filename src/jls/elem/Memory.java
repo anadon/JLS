@@ -19,7 +19,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public final class Memory extends LogicElement {
+public final class Memory extends LogicElement
+		implements Timed, Watchable {
 	
 	// types
 	/**
@@ -739,10 +740,23 @@ public final class Memory extends LogicElement {
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		accessTime = temp;
 	} // end of setDelay method
-	
+
+	/**
+	 * Memory's timing value is an access time, not a propagation delay
+	 * (issue #78): the timing dialog labels it accordingly.
+	 *
+	 * @return {@code true} - memory is the one element that uses access
+	 *         time.
+	 */
+	@Override
+	public boolean usesAccessTime() {
+
+		return true;
+	} // end of usesAccessTime method
+
 	/**
 	 * Set the name of the memory file.
 	 * 

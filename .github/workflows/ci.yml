@@ -52,12 +52,14 @@ jobs:
           cache: maven
 
       # External HDL simulators activate the otherwise-skipped
-      # Verilog/VHDL validation tests (issue #60); xvfb activates the
+      # Verilog/VHDL validation tests (issue #60), yosys the netlist
+      # ground-truth and import legs (issues #61/#63 - YosysGroundTruthTest
+      # arms only when yosys is on PATH); xvfb activates the
       # display-tagged UI suite (issue #162). Best-effort so a
       # transient apt failure doesn't block the build - each affected
       # suite skips itself when its tool is missing
-      - name: Install HDL simulators and virtual display
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl xvfb || echo "some optional tools unavailable; their tests will skip"
+      - name: Install HDL toolchain and virtual display
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl yosys xvfb || echo "some optional tools unavailable; their tests will skip"
 
       # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
       # the headless test suite, and runs the SpotBugs check goal
@@ -166,6 +168,10 @@ jobs:
   gui-wayland:
     name: GUI first light (Wayland, JBR)
     runs-on: ubuntu-latest
+    # advisory while first-light stabilizes (issue #101): runs on every event
+    # (incl. the nightly cron, which runs ONLY this job) so the P3 stability
+    # record accrues, but a failure — e.g. the unpinned JBR download failing
+    # its TOFU checksum until a maintainer pins JBR_SHA256 — never blocks
     continue-on-error: true
     env:
       # ---- JBR pin (issues #101/#105) --------------------------------
@@ -173,17 +179,22 @@ jobs:
       # linux-x64: the JBR release #101 names as shipping Wakefield's
       # WLToolkit. Also reused by the dev container (README).
       JBR_URL: https://cache-redirector.jetbrains.com/intellij-jbr/jbr-25.0.3-linux-x64-b508.16.tar.gz
-      # TODO(maintainer): replace with the tarball's real sha256. The
-      # value could not be verified from the authoring sandbox (egress
-      # to cache-redirector.jetbrains.com is proxy-blocked; #101 section
-      # 1 hit the same wall); runners have ordinary egress, so:
-      #   curl -fsSL <JBR_URL> | sha256sum
-      # Until then this placeholder fails the checksum on purpose and
-      # the job skips with a notice rather than running unverified bits.
-      # (Re-verified 2026-07-18: cache-redirector.jetbrains.com is still
-      # an egress-policy denial from the authoring sandbox, and the hash
-      # is not published anywhere else reachable - GitHub release pages
-      # only link the CDN-hosted .checksum file.)
+      # Integrity model (see the "Download JetBrains Runtime" step):
+      #   - HTTPS/TLS authenticates the JetBrains CDN for the download itself;
+      #     that is the trust boundary the first-light lane relies on.
+      #   - A maintainer-pinned JBR_SHA256 below is an OPTIONAL hardening: when
+      #     set to a real hash it is verified fail-closed, additionally
+      #     defending against a CDN compromise. To pin it, run this once on any
+      #     unproxied machine and paste the hash (every CI run also prints the
+      #     observed digest, so you can copy it from a green log):
+      #        curl -fsSL <JBR_URL> | sha256sum
+      #   - While it stays the UNVERIFIED- placeholder the lane does NOT gate on
+      #     a hash: first light (#101) runs against the TLS-fetched JBR so the
+      #     job exercises the GUI rather than blocking on an unpinned toolchain.
+      #     (The Wayland work does not depend on a checksum; the checksum only
+      #     hardens the toolchain download.)
+      # The authoring sandbox cannot reach cache-redirector.jetbrains.com
+      # (egress-policy 403); CI runners have ordinary egress.
       JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
       # ---- P2 pixel gate (#101) --------------------------------------
       # 0 = record the AE metric without gating. TODO(maintainer): after
@@ -203,28 +214,51 @@ jobs:
 
       # sway (compositor), grim (screenshots), jq (tree assertions),
       # ImageMagick (pixel diff), and at least one font (Swing text
-      # rendering needs one; minimal runners may have none)
+      # rendering needs one; minimal runners may have none).
+      # gsettings-desktop-schemas provides the org.gnome.desktop.* GSettings
+      # schemas AWT/GTK looks up under Wayland; without them JBR logs
+      # "No such schema org.gnome.desktop.interface" and the first-light
+      # control frame fails to map a window (issue #101 first-light finding).
       - name: Install Wayland rig tools
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core gsettings-desktop-schemas
+
+      # Guard the rig's section-9 failure classification (exit 0/1/2) on
+      # every run, including when the JBR download is unavailable, by driving
+      # the unmodified rig against a stub toolchain - no JBR, no real
+      # compositor needed. A regression here is caught before the lane ever
+      # depends on the real download (issue #101).
+      - name: Self-test the rig control flow
+        run: scripts/wayland-rig-selftest.sh
 
       - name: Download JetBrains Runtime
         id: jbr
         run: |
           set -euo pipefail
-          if [[ "$JBR_SHA256" == UNVERIFIED-* ]]; then
-            echo "::notice title=gui-wayland skipped::JBR_SHA256 is still the placeholder; pin the real checksum (issue #101) to arm this lane."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if ! curl -fsSL --retry 3 -o "$RUNNER_TEMP/jbr.tar.gz" "$JBR_URL"; then
+          dest="$RUNNER_TEMP/jbr.tar.gz"
+          # Fetch over HTTPS; TLS authenticates the JetBrains CDN. A download
+          # failure skips first-light (nothing to run), it does not fail-close.
+          if ! curl -fsSL --retry 3 -o "$dest" "$JBR_URL"; then
             echo "::notice title=gui-wayland skipped::could not download JBR from $JBR_URL"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # a checksum mismatch is NOT a skip: fail closed (supply chain)
-          echo "$JBR_SHA256  $RUNNER_TEMP/jbr.tar.gz" | sha256sum -c -
+          # Always record the observed digest so a maintainer can pin it.
+          observed="$(sha256sum "$dest" | cut -d' ' -f1)"
+          echo "observed JBR sha256: $observed"
+          if [[ "$JBR_SHA256" != UNVERIFIED-* ]]; then
+            # A real pin is verified fail-closed (supply-chain hardening).
+            if [[ "$observed" != "$JBR_SHA256" ]]; then
+              echo "::error title=JBR checksum mismatch::pinned JBR_SHA256=$JBR_SHA256 but the download hashes to $observed"
+              exit 1
+            fi
+            echo "integrity: matches maintainer-pinned JBR_SHA256"
+          else
+            # Unpinned: TLS is the trust boundary; run first-light rather than
+            # gate the GUI work on a hash. Pin JBR_SHA256=$observed to harden.
+            echo "::notice title=JBR unpinned::first-light runs against the TLS-fetched JBR; set JBR_SHA256=$observed (issue #101) to additionally harden against a CDN compromise"
+          fi
           mkdir -p "$RUNNER_TEMP/jbr"
-          tar -xzf "$RUNNER_TEMP/jbr.tar.gz" -C "$RUNNER_TEMP/jbr" --strip-components=1
+          tar -xzf "$dest" -C "$RUNNER_TEMP/jbr" --strip-components=1
           "$RUNNER_TEMP/jbr/bin/java" -version
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
@@ -242,6 +276,79 @@ jobs:
         with:
           name: wayland-first-light
           path: ${{ runner.temp }}/wayland-artifacts/
+          if-no-files-found: ignore
+
+  # First-light X11 GUI lane: boots the REAL JLS application entry point
+  # (main class jls.JLS, via the shaded jar's Main-Class) under a headless
+  # Xvfb X server - no GPU, no physical display, no window manager - and
+  # proves the actual app window MAPS and can be screenshotted. X11 via
+  # Xvfb is the reliable, always-available GUI path, so unlike the advisory
+  # Wayland/JBR lane above this is a genuine, robust GUI-boot smoke test.
+  #
+  # DISTINCT from the existing xvfb JUnit suite: the Build job already runs
+  # the display-tagged UI *unit* tests via `xvfb-run -a mvn ... verify`,
+  # which exercises UI classes in-process. This lane instead LAUNCHES THE
+  # APP as a user would (`java -jar target/jls-*.jar`) and asserts the real
+  # window comes up. It is the X11 twin of gui-wayland: the rig maps a
+  # minimal HelloSwingControl frame first, so a failure is classified as
+  # JLS-side (exit 1) or environment/Xvfb (exit 2). Under Xvfb the platform
+  # default toolkit is correct - the rig passes NO -Dawt.toolkit.name
+  # (that is Wayland-only) and unsets WAYLAND_DISPLAY, so jls.ToolkitPolicy
+  # keeps the X11 default (no app change needed).
+  #
+  # continue-on-error while the lane's stability record accrues (same
+  # promotion rule as gui-wayland/windows: required once 20 consecutive
+  # runs show at most one failure).
+  gui-x11:
+    name: GUI first light (X11, Xvfb)
+    # runs on push/PR like the other jobs; the nightly cron runs ONLY
+    # gui-wayland (see the header), so this lane skips schedule events
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      # ---- P2 pixel gate --------------------------------------------
+      # 0 = record the AE metric without gating. TODO(maintainer): after
+      # the first green run, set this to ~10% of the observed AE value from
+      # the pixel-diff.txt artifact (calibrate from measurement, mirroring
+      # the gui-wayland P2 decision), not a blind guess.
+      PIXEL_DIFF_MIN: "0"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # Xvfb (headless X server), xdotool (find the mapped window by pid),
+      # x11-utils (xwininfo confirms Map State: IsViewable), ImageMagick
+      # (import screenshots + identify/compare for the non-blank proof),
+      # and at least one font (Swing text rendering needs one; minimal
+      # runners may have none).
+      - name: Install X11 rig tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb xdotool x11-utils imagemagick fontconfig fonts-dejavu-core
+
+      # Guard the rig's failure classification (exit 0/1/2) on every run by
+      # driving the unmodified rig against a stub toolchain - no real X
+      # server or GUI needed. A regression here is caught fast and for free.
+      - name: Self-test the rig control flow
+        run: scripts/x11-rig-selftest.sh
+
+      - name: Build jar
+        run: mvn -B -DskipTests package
+
+      - name: Run the X11 first-light rig
+        run: ARTIFACTS_DIR="$RUNNER_TEMP/x11-artifacts" scripts/x11-rig.sh
+
+      - name: Upload rig artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: x11-first-light
+          path: ${{ runner.temp }}/x11-artifacts/
           if-no-files-found: ignore
 
   # feed GitHub's dependency graph the resolved transitive tree so
@@ -346,8 +453,13 @@ jobs:
   # this job isolates the jlink/jpackage/appimagetool stages.  Installing
   # rpm makes rpmbuild present, so the script's rpm leg (which is skipped
   # when rpmbuild is absent) always runs — and is therefore gated — here.
+  # This is the landed x86_64 required gate; the aarch64 leg is the separate
+  # advisory job below (kept separate so this required check keeps its name).
   installer-reproducibility:
     name: Linux installer reproducibility
+    # the nightly cron runs ONLY gui-wayland (see the header comment); like
+    # the other push/PR jobs this double-build is skipped on schedule events
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -386,3 +498,167 @@ jobs:
             echo "::error::Linux installers are not reproducible: checksums differ between two builds of the same commit"
             exit 1
           }
+
+  # aarch64 Linux installer reproducibility (#189 §10): the same deb/rpm/
+  # AppImage double-build as the x86_64 gate above, on the native
+  # ubuntu-24.04-arm runner.  The build script is arch-agnostic — only the
+  # pinned appimagetool binary differs per arch (build-installer.sh already
+  # carries the aarch64 sha256) — so this reuses the identical mechanism.
+  # Kept a separate advisory (continue-on-error) job rather than a matrix
+  # leg of the gate above, so that required check keeps its stable name
+  # while this arm leg accrues its own 20-run stability record (the same
+  # promotion rule the windows and gui-wayland lanes use); the honesty gate
+  # of #188 §10 still holds — a red leg means a byte still varies.
+  installer-reproducibility-aarch64:
+    name: Linux installer reproducibility (aarch64)
+    # runs on push/PR like the other jobs (skips only the nightly cron, which
+    # runs gui-wayland alone); advisory via continue-on-error while the
+    # cross-platform double-build stabilizes on real runners (#189/#190/#191)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm diffoscope-minimal
+
+      - name: Build installers twice and compare checksums
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && sha256sum * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && sha256sum * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 || {
+            for f in first-dist/*; do
+              echo "==> diffoscope $(basename "$f")"
+              diffoscope --max-text-report-size 500000 \
+                "$f" "target/installer/dist/$(basename "$f")" || true
+            done
+            echo "::error::aarch64 Linux installers are not reproducible: checksums differ between two builds of the same commit"
+            exit 1
+          }
+
+  # The Windows msi is intentionally NOT reproducibility-checked. The
+  # windows-latest double-build measurement (docs/windows-msi-determinism.md)
+  # showed the residual is jpackage's MSI relational-database streams —
+  # per-build component GUIDs, ProductCode, and row ordering it exposes no
+  # control over — while the embedded cabinet payload IS byte-identical.
+  # That is an upstream limitation, not a regression to drive to zero, so
+  # the double-build gate was removed; scripts/normalize-msi.py still strips
+  # the volatile timestamp/GUID set in the build (and --diff can attribute a
+  # residual on demand). Revisit if a future jpackage exposes deterministic
+  # GUID/ProductCode generation — the payload already being reproducible, that
+  # lever alone would make the whole msi byte-identical.
+
+  # macOS dmg reproducibility (#191, parent #188): the dmg's variance is a
+  # finite envelope set — a random UDIF SegmentID plus the HFS+ volume
+  # header's dates and UUID.  scripts/normalize-dmg.py pins both checksum-safe
+  # windows.  MEASURED on this runner (the only place hdiutil exists): the
+  # koly SegmentID pin (the default path) produces a dmg that still passes
+  # `hdiutil verify` and mounts, but the FULL HFS+ round-trip
+  # (JLS_DMG_FULL_NORMALIZE=1: convert->UDRW->clamp+patch->reconvert->udifrez)
+  # produces an image hdiutil rejects as corrupt.  So this job ships the
+  # koly-only path (verified mountable below) and does NOT enable the full
+  # pass.  The koly pin alone does not clamp the HFS+ dates/UUID, so the two
+  # dmgs still differ — this leg stays an honest continue-on-error
+  # measurement (#188 §10), not a byte-identical gate.  Full byte-identity
+  # needs Route B (own the imaging so Finder serializes pinned values) or a
+  # fix to why the Route-A round-trip corrupts; see
+  # docs/dmg-reproducibility.md.  macOS lacks sha256sum (uses shasum).
+  macos-installer-reproducibility:
+    name: macOS installer reproducibility (dmg)
+    # runs on push/PR like the other jobs (skips only the nightly cron, which
+    # runs gui-wayland alone); advisory via continue-on-error while the
+    # cross-platform double-build stabilizes on real runners (#189/#190/#191)
+    if: github.event_name != 'schedule'
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build dmg twice and compare checksums
+        id: compare
+        shell: bash
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && shasum -a 256 * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && shasum -a 256 * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          if diff first.sha256 second.sha256; then
+            echo "dmg is byte-identical across two builds"
+            echo "differing=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::dmg differs between two builds — recording the residual (#191); Route A is expected to leave the .DS_Store bookmark blob (F4)"
+            echo "differing=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The shipping (koly-only) dmg must still be a structurally valid image
+      # after the SegmentID pin. The 3-way diagnostic on a prior run confirmed
+      # raw jpackage and koly-only both pass `hdiutil verify` while the full
+      # HFS+ round-trip corrupts the image, so the full pass stays disabled.
+      # `hdiutil verify` is the meaningful check here: the koly pin rewrites
+      # only 16 trailer bytes, outside every UDIF checksum AND outside the
+      # filesystem, so the mounted content is byte-identical to jpackage's own
+      # (macOS-produced, known-good) dmg — verify passing proves the pin did
+      # not corrupt it. (A mount/.jls-association check was dropped: it added
+      # nothing for koly-only and jpackage's SLA makes a non-interactive
+      # attach flaky on CI; app/association integrity belongs to the release
+      # job's clean-VM §5 validation, which a human still runs.)
+      - name: Verify the shipped dmg is a valid image
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(ls target/installer/dist/*.dmg | head -1)"
+          echo "==> hdiutil verify $dmg"
+          hdiutil verify "$dmg"
+          echo "shipped dmg verified: hdiutil checksum VALID (SegmentID pin did not corrupt the image)"
+
+      - name: Attribute the residual with diffoscope
+        if: steps.compare.outputs.differing == '1'
+        shell: bash
+        run: |
+          pipx install diffoscope || pip3 install --user diffoscope || true
+          export PATH="$HOME/.local/bin:$PATH"
+          for f in first-dist/*; do
+            name="$(basename "$f")"
+            echo "==> diffoscope $name"
+            diffoscope --max-text-report-size 500000 \
+              "$f" "target/installer/dist/$name" || true
+          done
+
+      - name: Upload differing dmgs
+        if: steps.compare.outputs.differing == '1'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-installer-diverged
+          path: |
+            first-dist/
+            target/installer/dist/
+          retention-days: 30

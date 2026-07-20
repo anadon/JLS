@@ -19,7 +19,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public final class JumpStart extends LogicElement implements TriProp {
+public final class JumpStart extends LogicElement
+		implements TriProp, Watchable {
 	
 	// default value
 	/** The default bit width for a new jump start. */
@@ -131,9 +132,8 @@ public final class JumpStart extends LogicElement implements TriProp {
 		
 		// highlight if corresponding end is selected
 		for (Element el : circuit.getElements()) {
-			if (!(el instanceof JumpEnd))
+			if (!(el instanceof JumpEnd jend))
 				continue;
-			JumpEnd jend = (JumpEnd)el;
 			if (name.equals(jend.getName())) {
 				if (el.highlight) {
 					g.setColor(Color.orange);
@@ -403,8 +403,7 @@ public final class JumpStart extends LogicElement implements TriProp {
 		// remove corresonding jump ends
 		Set<Element> rems = new HashSet<Element>();
 		for (Element el : circ.getElements()) {
-			if (el instanceof JumpEnd) {
-				JumpEnd end = (JumpEnd)el;
+			if (el instanceof JumpEnd end) {
 				if (name.equals(end.getName()))
 					rems.add(el);
 			}
@@ -618,9 +617,8 @@ public final class JumpStart extends LogicElement implements TriProp {
 	public void setTriState(boolean which) {
 		
 		for (Element el : circuit.getElements()) {
-			if (!(el instanceof JumpEnd))
+			if (!(el instanceof JumpEnd jend))
 				continue;
-			JumpEnd jend = (JumpEnd)el;
 			if (getName().equals(jend.getName()))
 				jend.setTriState(which);
 		}
@@ -661,9 +659,8 @@ public final class JumpStart extends LogicElement implements TriProp {
 		// create set of matching jump ends
 		jumpEnds.clear();
 		for (Element el : circuit.getElements()) {
-			if (!(el instanceof JumpEnd))
+			if (!(el instanceof JumpEnd jend))
 				continue;
-			JumpEnd jend = (JumpEnd)el;
 			if (name.equals(jend.getName())) {
 				jumpEnds.add(jend);
 			}

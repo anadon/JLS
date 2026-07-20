@@ -20,7 +20,7 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
-public final class DelayGate extends Gate {
+public final class DelayGate extends Gate implements Timed {
 	
 	// identity (#22); previous-settings unused: DELAY has its own dialog
 	/** The kind descriptor (names and pin counts) for DELAY gates. */

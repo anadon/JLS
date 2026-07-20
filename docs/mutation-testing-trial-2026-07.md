@@ -205,3 +205,8 @@ headless PIT run cannot kill mutants in — if the scope ever grows
 past the core above, the run must move under the same
 `xvfb-run … -Djls.test.headless=false` substrate CI uses, or those
 packages will drown the report in unkillable survivors.
+
+The report is now automated: `.github/workflows/mutation.yml` runs the
+`pitest` profile weekly (and on demand via `workflow_dispatch`) and
+uploads `target/pit-reports` as a build artifact, non-blocking per the
+verdict above.

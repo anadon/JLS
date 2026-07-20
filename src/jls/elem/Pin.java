@@ -18,6 +18,7 @@ import javax.swing.*;
  * @author David A. Poplawski
  */
 public abstract sealed class Pin extends LogicElement
+		implements Watchable
 		permits InputPin, OutputPin {
 	
 	// saved properties

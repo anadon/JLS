@@ -64,10 +64,10 @@ public record AttachProbe(ElementId id, String name) implements CircuitOp {
 			throws OpRejected {
 
 		Element el = Ops.resolve(circuit, id);
-		if (!(el instanceof Wire)) {
+		if (!(el instanceof Wire wire)) {
 			throw new OpRejected("element '" + id + "' is not a wire");
 		}
-		return (Wire) el;
+		return wire;
 	} // end of resolveWire method
 
 } // end of AttachProbe record

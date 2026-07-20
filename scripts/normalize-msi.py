@@ -25,16 +25,27 @@
 #     fresh package code (which is what Windows Installer's caching
 #     semantics require of distinct packages).
 #
-# It deliberately does NOT touch the ProductCode/UpgradeCode rows in the
-# MSI database (jpackage derives those name-based, so they are expected
-# to be stable already; the Windows double-build measurement verifies
-# that).  Anything structurally unexpected is a hard error, never a
-# silent skip: a file this script exits 0 on has had the full known
-# volatile set normalized.
+# It deliberately does NOT rewrite the MSI relational-database streams
+# (_StringData/_StringPool and the table streams).  The windows-latest
+# double-build measurement (docs/windows-msi-determinism.md) showed those
+# streams carry per-build identifiers jpackage generates with no exposed
+# control -- component GUIDs, a per-build ProductCode, and row ordering --
+# so the msi database is not byte-reproducible with this toolchain.  What
+# IS reproducible, and what this script secures, is the embedded cabinet
+# payload plus the four volatile timestamp/GUID regions above.  Canonical-
+# izing the database would mean reimplementing part of libmsi and is not
+# justified; use --diff to attribute any residual to the exact stream.
+# Anything structurally unexpected is a hard error, never a silent skip:
+# a file this script exits 0 on has had the full known volatile set
+# normalized.
 #
 # Usage:
 #   normalize-msi.py [--source-date-epoch N] FILE.msi
 #   normalize-msi.py --self-test
+#   normalize-msi.py --diff A.msi B.msi   # attribute a residual two-build
+#                                         # divergence to the exact stream
+#                                         # (and, in the cabinet, to CFFILE
+#                                         # metadata vs compressed CFDATA)
 #
 # Stdlib only, so it runs on a bare GitHub runner (Linux/macOS/Windows
 # git-bash) with no pip installs.  --self-test builds synthetic
@@ -110,12 +121,25 @@ class Cfb:
 		"""Parse the header, FAT, miniFAT and directory of the compound file in buf."""
 		if len(buf) < 512 or buf[:8] != CFB_MAGIC:
 			raise NormalizeError("not a compound file (bad magic)")
-		self.buf = buf
+		self.orig_len = len(buf)
 		self.sector_size = 1 << u16(buf, 30)
 		self.mini_size = 1 << u16(buf, 32)
 		self.mini_cutoff = u32(buf, 56)
-		# highest sector number that is *fully* present in the file
-		self.max_sector = len(buf) // self.sector_size - 2
+		# A conforming MS-CFB writer (jpackage/WiX for large installers) may
+		# leave the physical file ending mid-sector: the final sector begins
+		# within the file but only part of it is present on disk.  Windows and
+		# olefile tolerate this by zero-filling reads past EOF.  Mirror that by
+		# padding the in-memory *parse* buffer up to a whole-sector multiple, so
+		# a FAT chain that legitimately ends on that partial sector is readable.
+		# The padding lives only in self.buf (the parse view); normalize()
+		# rebuilds its output from the caller's original-length buffer, so the
+		# written file never grows and normalization stays idempotent.
+		pad = (-len(buf)) % self.sector_size
+		if pad:
+			buf = buf + b"\x00" * pad
+		self.buf = buf
+		# highest sector number that is *fully* present in the padded buffer
+		self.max_sector = len(self.buf) // self.sector_size - 2
 		self.fat = self._read_fat()
 		self.minifat = self._read_chain_words(u32(buf, 60))
 		self.dir_sectors = self._chain(u32(buf, 48))
@@ -366,6 +390,16 @@ def normalize(buf, epoch):
 		patches, guid_ranges, cab_members = collect_patches(cfb, epoch)
 	except (struct.error, IndexError, ValueError) as e:
 		raise NormalizeError("malformed compound file: %s" % e) from e
+	# Every rewrite must land in bytes that physically exist in the input.  The
+	# parse buffer may have been zero-padded past EOF for a partial final
+	# sector; a patch or GUID range in that padded tail would extend the output
+	# and break length-preservation/idempotence, so refuse rather than grow.
+	for foff, rep in patches:
+		if foff + len(rep) > cfb.orig_len:
+			raise NormalizeError("patch at %d extends past end of file" % foff)
+	for foff, ln in guid_ranges:
+		if foff + ln > cfb.orig_len:
+			raise NormalizeError("package-code range at %d extends past end of file" % foff)
 	out = bytearray(buf)
 	for foff, rep in patches:
 		out[foff : foff + len(rep)] = rep
@@ -385,6 +419,164 @@ def normalize(buf, epoch):
 	}
 
 
+def _stream_inventory(cfb):
+	"""Ordered list of (name, size, sha256hex, bytes) for every stream entry."""
+	out = []
+	for en in cfb.entries:
+		name, etype, start, size, _ = en
+		if etype != 2:  # streams only, skip storages
+			continue
+		data = Cfb.read(cfb.buf, cfb.stream_runs(en), size) if size else b""
+		out.append((name, size, hashlib.sha256(data).hexdigest(), data))
+	return out
+
+
+def _first_diff(a, b):
+	"""Index of the first differing byte, or -1 if equal; len(shorter) if one is a prefix."""
+	for i in range(min(len(a), len(b))):
+		if a[i] != b[i]:
+			return i
+	return -1 if len(a) == len(b) else min(len(a), len(b))
+
+
+def _cab_files(cab):
+	"""Parse a CAB's CFFILE table into (name, cbFile, uoffFolderStart, iFolder, date, time, attribs)."""
+	files = []
+	if cab[:4] != b"MSCF":
+		return files
+	off = u32(cab, 16)  # coffFiles
+	nfiles = u16(cab, 28)
+	for _ in range(nfiles):
+		if off + 16 > len(cab):
+			break
+		rec = (u32(cab, off), u32(cab, off + 4), u16(cab, off + 8),
+			u16(cab, off + 10), u16(cab, off + 12), u16(cab, off + 14))
+		nul = cab.find(b"\x00", off + 16)
+		if nul < 0:
+			break
+		name = cab[off + 16 : nul].decode("latin-1", "replace")
+		files.append((name,) + rec)
+		off = nul + 1
+	return files
+
+
+def _describe_cab_divergence(a, b):
+	"""Localize where two differing CAB streams diverge: metadata vs compressed payload."""
+	lines = []
+	for tag, cab in (("A", a), ("B", b)):
+		if cab[:4] != b"MSCF":
+			lines.append("    %s: not a cabinet (%d bytes)" % (tag, len(cab)))
+			continue
+		lines.append("    %s: MSCF len=%d cbCabinet=%d coffFiles=%d nfiles=%d firstCFDATA=%d"
+			% (tag, len(cab), u32(cab, 8), u32(cab, 16), u16(cab, 28),
+			   u32(cab, 36) if len(cab) >= 40 else -1))
+	fa, fb = _cab_files(a), _cab_files(b)
+	if [f[0] for f in fa] != [f[0] for f in fb]:
+		lines.append("    CFFILE name/order DIFFERS between builds (payload sequencing is non-deterministic)")
+	else:
+		meta = [fa[i][0] for i in range(min(len(fa), len(fb))) if fa[i] != fb[i]]
+		if meta:
+			lines.append("    CFFILE metadata differs for %d member(s): %s"
+				% (len(meta), ", ".join(meta[:8]) + (" ..." if len(meta) > 8 else "")))
+		else:
+			lines.append("    CFFILE table (names, order, sizes, times, attribs) is IDENTICAL")
+	d = _first_diff(a, b)
+	if d >= 0 and a[:4] == b"MSCF" and len(a) >= 40:
+		coff_files = u32(a, 16)
+		first_cfdata = u32(a, 36)
+		if d < coff_files:
+			region = "CFHEADER/CFFOLDER"
+		elif d < first_cfdata:
+			region = "CFFILE table"
+		else:
+			region = "CFDATA (compressed payload/checksums)"
+		lines.append("    first differing byte at CAB offset %d -> %s" % (d, region))
+	return "\n".join(lines)
+
+
+# MSI encodes table/stream names into the private Unicode range 0x3800-0x4840
+# (two base-64 symbols per code unit, then singles), so a raw name carries
+# characters no 8-bit console codec can print.  Decode to the real name.
+_MSI_B64 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._"
+
+
+def _decode_streamname(name):
+	"""Decode an MSI-mangled stream/table name to its readable form.
+
+	0x4840 is the leading sentinel marking a database table stream; the
+	0x3800-0x47FF range packs two base-64 symbols per code unit and
+	0x4800-0x483F one, so e.g. the Property table's stream decodes to
+	'Property'.  Anything else (\\x05SummaryInformation, etc.) is literal.
+	"""
+	out = []
+	for ch in name:
+		c = ord(ch)
+		if c == 0x4840:  # table sentinel, carries no character
+			continue
+		if 0x3800 <= c < 0x4800:
+			c -= 0x3800
+			out.append(_MSI_B64[c & 0x3F])
+			out.append(_MSI_B64[(c >> 6) & 0x3F])
+		elif 0x4800 <= c < 0x4840:
+			out.append(_MSI_B64[(c - 0x4800) & 0x3F])
+		else:
+			out.append(ch)
+	return "".join(out)
+
+
+def _safe_name(name):
+	"""A console-safe label for a stream: decoded MSI name, ASCII-escaped, table-tagged."""
+	decoded = _decode_streamname(name)
+	tag = " [table]" if name and ord(name[0]) == 0x4840 else ""
+	shown = decoded.encode("ascii", "backslashreplace").decode("ascii")
+	return "%r%s" % (shown, tag)
+
+
+def diff_msis(path_a, path_b):
+	"""Print a per-stream divergence report for two (normalized) MSIs; returns exit code."""
+	# MSI stream names carry private-use Unicode; force a codec that can render
+	# them so the diagnostic never dies on a Windows cp1252 console.
+	for stream in (sys.stdout, sys.stderr):
+		try:
+			stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+		except (AttributeError, ValueError):
+			pass
+	with open(path_a, "rb") as f:
+		a = f.read()
+	with open(path_b, "rb") as f:
+		b = f.read()
+	if a == b:
+		print("normalize-msi diff: %s and %s are byte-identical" % (path_a, path_b))
+		return 0
+	print("normalize-msi diff: %s vs %s (len %d vs %d)" % (path_a, path_b, len(a), len(b)))
+	try:
+		ia = {n: (sz, h, data) for n, sz, h, data in _stream_inventory(Cfb(a))}
+		ib = {n: (sz, h, data) for n, sz, h, data in _stream_inventory(Cfb(b))}
+	except NormalizeError as e:
+		print("  (could not parse as CFB: %s) first byte diff at %d" % (e, _first_diff(a, b)))
+		return 0
+	names = sorted(set(ia) | set(ib))
+	any_stream_diff = False
+	for name in names:
+		if name not in ia or name not in ib:
+			print("  stream %s present in only one build" % _safe_name(name))
+			any_stream_diff = True
+			continue
+		sza, ha, da = ia[name]
+		szb, hb, db = ib[name]
+		if ha == hb:
+			continue
+		any_stream_diff = True
+		print("  stream %s DIFFERS (size %d vs %d, first byte diff at %d)"
+			% (_safe_name(name), sza, szb, _first_diff(da, db)))
+		if da[:4] == b"MSCF" or db[:4] == b"MSCF":
+			print(_describe_cab_divergence(da, db))
+	if not any_stream_diff:
+		print("  no per-stream content difference found; divergence is in CFB envelope "
+			"(FAT/dir/free sectors) at byte %d" % _first_diff(a, b))
+	return 0
+
+
 def source_date_epoch(argv_value):
 	"""Resolve the timestamp to clamp to: --source-date-epoch flag, else env, else 0."""
 	if argv_value is not None:
@@ -395,8 +587,13 @@ def source_date_epoch(argv_value):
 # --- self test --------------------------------------------------------------
 
 
-def _synthetic_msi(guid, epoch_times, cab_times, payload_seed):
-	"""Build a minimal but structurally valid MSI-shaped compound file for the self-test."""
+def _synthetic_msi(guid, epoch_times, cab_times, payload_seed, sector_size=512, truncate_tail=False):
+	"""Build a minimal but structurally valid MSI-shaped compound file for the self-test.
+
+	sector_size selects the CFB layout: 512 -> version 3, 4096 -> version 4.
+	truncate_tail drops all but a few bytes of the final (cabinet) sector so the
+	image ends mid-sector, reproducing the real jpackage/WiX MSI shape from #190
+	(a FAT chain that legitimately ends on a partially-present final sector)."""
 
 	def dirent(name, etype, start, size, ctime=0, mtime=0, child=FREESECT):
 		n = name.encode("utf-16-le")
@@ -439,30 +636,62 @@ def _synthetic_msi(guid, epoch_times, cab_times, payload_seed):
 		cab += struct.pack("<Q", rng)
 	cab = bytes(cab[:4608])
 
-	nsec = 4 + 9  # fat, dir, minifat, ministream, 9 cab sectors
-	fat = [ENDOFCHAIN] * 4 + [5, 6, 7, 8, 9, 10, 11, 12, ENDOFCHAIN]
-	fat[0] = FATSECT
-	fat += [FREESECT] * (128 - len(fat))
-	minifat = [1, 2, ENDOFCHAIN] + [FREESECT] * 125
+	# Lay the streams out over whole sectors of the chosen size.  The sector
+	# map is fixed regardless of sector size: 0=FAT, 1=directory, 2=miniFAT,
+	# 3=mini-stream container, 4.. = the cabinet's data-sector chain.
+	ss = sector_size
+	entries_per_fat = ss // 4
+	ncab = (len(cab) + ss - 1) // ss  # cabinet data sectors
+	cab_first = 4
+	total_sectors = cab_first + ncab
+	assert total_sectors <= entries_per_fat, "self-test layout needs a single DIFAT-free FAT sector"
 
+	fat = [FREESECT] * entries_per_fat
+	fat[0] = FATSECT  # the FAT itself
+	fat[1] = ENDOFCHAIN  # directory
+	fat[2] = ENDOFCHAIN  # miniFAT
+	fat[3] = ENDOFCHAIN  # mini-stream container
+	for i in range(ncab):
+		s = cab_first + i
+		fat[s] = ENDOFCHAIN if i == ncab - 1 else s + 1
+	minifat = [1, 2, ENDOFCHAIN] + [FREESECT] * (entries_per_fat - 3)
+
+	major = 3 if ss == 512 else 4
+	sector_shift = ss.bit_length() - 1
 	hdr = bytearray(512)
 	hdr[:8] = CFB_MAGIC
-	struct.pack_into("<HHHHH", hdr, 24, 0x3E, 3, 0xFFFE, 9, 6)
+	struct.pack_into("<HHHHH", hdr, 24, 0x3E, major, 0xFFFE, sector_shift, 6)
 	struct.pack_into("<IIIIIIII", hdr, 40, 0, 1, 1, 0, 4096, 2, 1, ENDOFCHAIN)
 	struct.pack_into("<I", hdr, 72, 0)
 	struct.pack_into("<I", hdr, 76, 0)
 	for i in range(1, 109):
 		struct.pack_into("<I", hdr, 76 + 4 * i, FREESECT)
+	# the 512-byte header occupies the whole first sector of the file
+	hdr = bytes(hdr) + b"\x00" * (ss - 512)
 
-	dirsec = dirent("Root Entry", 5, 3, 192, ctime=epoch_times, mtime=epoch_times, child=2)
-	dirsec += dirent(SUMMARY_NAME, 2, 0, 172, mtime=epoch_times)
-	dirsec += dirent("Disk1Cab", 2, 4, 4608, mtime=epoch_times)
-	dirsec += b"\x00" * 128
+	def sector(data):
+		assert len(data) <= ss
+		return data + b"\x00" * (ss - len(data))
 
-	mini = summary + b"\x00" * (512 - len(summary))
-	body = struct.pack("<128I", *fat) + dirsec + struct.pack("<128I", *minifat) + mini + cab
-	assert len(body) == nsec * 512
-	return bytes(hdr) + body
+	fat_sec = sector(struct.pack("<%dI" % entries_per_fat, *fat))
+	dir_data = (
+		dirent("Root Entry", 5, 3, 192, ctime=epoch_times, mtime=epoch_times, child=2)
+		+ dirent(SUMMARY_NAME, 2, 0, 172, mtime=epoch_times)
+		+ dirent("Disk1Cab", 2, cab_first, 4608, mtime=epoch_times)
+	)
+	dir_sec = sector(dir_data)
+	minifat_sec = sector(struct.pack("<%dI" % entries_per_fat, *minifat))
+	mini_sec = sector(summary)  # mini-stream container: summary in mini sectors 0..2
+	cab_region = cab + b"\x00" * (ncab * ss - len(cab))
+
+	image = hdr + fat_sec + dir_sec + minifat_sec + mini_sec + cab_region
+	assert len(image) == (1 + total_sectors) * ss
+	if truncate_tail:
+		# End the physical file a few bytes into the final cab sector, so the
+		# last referenced sector begins within the file but is not fully
+		# present -- the exact #190 shape.  Only zero payload padding is lost.
+		image = image[: len(image) - ss + 16]
+	return image
 
 
 def self_test():
@@ -485,6 +714,41 @@ def self_test():
 	ncc, scc = normalize(c, epoch)
 	assert scc["package_code"] != sa["package_code"], "package code must track content"
 	assert GUID_RE.match(sa["package_code"].encode("ascii"))
+	# #190 regression: large real installers are version-4 (4096-byte-sector)
+	# compound files whose physical length is not a whole number of sectors, so
+	# the final cabinet sector begins within the file but is only partly present
+	# (olefile/Windows zero-fill the tail; the parser must too).  Cover both
+	# sector sizes, aligned and truncated, proving parse + convergence +
+	# idempotence + length-preservation on every combination.  Before the fix
+	# the truncated cases raised "sector N beyond end of file".
+	for ss in (512, 4096):
+		for trunc in (False, True):
+			va = _synthetic_msi(g1, 1700000001, 1710000002, payload_seed=42, sector_size=ss, truncate_tail=trunc)
+			vb = _synthetic_msi(g2, 1650000003, 1660000004, payload_seed=42, sector_size=ss, truncate_tail=trunc)
+			if trunc:
+				assert len(va) % ss != 0, "truncated shape must end mid-sector"
+			nva, sva = normalize(va, epoch)
+			nvb, svb = normalize(vb, epoch)
+			assert nva == nvb, "sector=%d trunc=%s builds must converge" % (ss, trunc)
+			assert sva["cab_members"] == 2 and sva["changed"]
+			assert len(nva) == len(va), "normalization must preserve file length"
+			nvc, svc = normalize(nva, epoch)
+			assert nvc == nva and not svc["changed"], "sector=%d trunc=%s must be idempotent" % (ss, trunc)
+	# --diff diagnostic: two builds differing only in payload localize to the
+	# cabinet's compressed CFDATA, with the CFFILE table reported identical;
+	# equal inputs report no per-stream difference.
+	da = _synthetic_msi(g1, 1700000001, 1710000002, payload_seed=7, sector_size=4096)
+	db = _synthetic_msi(g2, 1700000001, 1710000002, payload_seed=8, sector_size=4096)
+	nda, _ = normalize(da, epoch)
+	ndb, _ = normalize(db, epoch)
+	assert nda != ndb, "distinct payloads must not converge"
+	inv = {n: (sz, h, data) for n, sz, h, data in _stream_inventory(Cfb(nda))}
+	assert SUMMARY_NAME in inv, "self-test image must carry a SummaryInformation stream"
+	cab_a = next(d for n, (sz, h, d) in inv.items() if d[:4] == b"MSCF")
+	cab_b = next(d for n, sz, h, d in _stream_inventory(Cfb(ndb)) if d[:4] == b"MSCF")
+	report = _describe_cab_divergence(cab_a, cab_b)
+	assert "CFDATA" in report and "IDENTICAL" in report, report
+	assert _first_diff(b"abc", b"abc") == -1 and _first_diff(b"abc", b"abd") == 2
 	# refusal: non-CFB and truncated inputs raise, never return garbage
 	for bad in (b"not an msi at all" + b"\x00" * 600, a[:700]):
 		try:
@@ -503,11 +767,17 @@ def main(argv):
 	if args and args[0] == "--self-test":
 		self_test()
 		return 0
+	if args and args[0] == "--diff":
+		if len(args) != 3:
+			print("usage: normalize-msi.py --diff A.msi B.msi", file=sys.stderr)
+			return 2
+		return diff_msis(args[1], args[2])
 	if len(args) >= 2 and args[0] == "--source-date-epoch":
 		epoch_arg = args[1]
 		args = args[2:]
 	if len(args) != 1:
-		print("usage: normalize-msi.py [--source-date-epoch N] FILE.msi | --self-test", file=sys.stderr)
+		print("usage: normalize-msi.py [--source-date-epoch N] FILE.msi | --self-test"
+			" | --diff A.msi B.msi", file=sys.stderr)
 		return 2
 	path = args[0]
 	try:

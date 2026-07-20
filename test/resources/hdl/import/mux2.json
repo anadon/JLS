@@ -1,0 +1,23 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): 4-bit 2:1 mux y = s ? b : a",
+  "modules": {
+    "mux2": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "a": { "direction": "input", "bits": [ 2, 3, 4, 5 ] },
+        "b": { "direction": "input", "bits": [ 6, 7, 8, 9 ] },
+        "s": { "direction": "input", "bits": [ 10 ] },
+        "y": { "direction": "output", "bits": [ 11, 12, 13, 14 ] }
+      },
+      "cells": {
+        "mux_0": {
+          "hide_name": 1,
+          "type": "$mux",
+          "parameters": { "WIDTH": 4 },
+          "port_directions": { "A": "input", "B": "input", "S": "input", "Y": "output" },
+          "connections": { "A": [ 2, 3, 4, 5 ], "B": [ 6, 7, 8, 9 ], "S": [ 10 ], "Y": [ 11, 12, 13, 14 ] }
+        }
+      }
+    }
+  }
+}

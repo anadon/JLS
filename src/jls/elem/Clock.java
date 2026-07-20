@@ -136,7 +136,7 @@ public final class Clock extends LogicElement {
 		case UP:
 			t.rotateCCW();
 			break;
-		default: // DOWN
+		case DOWN:
 			t.rotateCW();
 			break;
 		}

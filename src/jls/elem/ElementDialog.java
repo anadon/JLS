@@ -301,8 +301,8 @@ public abstract class ElementDialog extends JDialog {
 		if (field != null) {
 			field.getAccessibleContext()
 					.setAccessibleDescription(violation.getMessage());
-			if (field instanceof JTextField) {
-				((JTextField) field).selectAll();
+			if (field instanceof JTextField tf) {
+				tf.selectAll();
 			}
 			field.requestFocusInWindow();
 		}

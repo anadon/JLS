@@ -34,10 +34,11 @@ class DialogCoverageRatchetTest {
 	 */
 	private static final Set<String> SWEPT = Set.of(
 			"Adder", "AndGate", "Binder", "Clock", "Constant", "Decoder",
-			"DelayGate", "Display", "Extend", "InputPin", "JumpEnd",
-			"JumpStart", "Memory", "Mux", "OutputPin", "Register",
-			"ShiftRegister", "SigGen", "Splitter", "StateMachine",
-			"SubCircuit", "Text", "TriState", "TruthTable");
+			"DelayGate", "Display", "Element", "Extend", "InputPin",
+			"JumpEnd", "JumpStart", "Memory", "Mux", "OutputPin",
+			"Register", "ShiftRegister", "SigGen", "Splitter",
+			"StateMachine", "SubCircuit", "Text", "TriState",
+			"TruthTable");
 
 	/**
 	 * Dialog-owning classes covered through a subclass the sweep
@@ -51,10 +52,6 @@ class DialogCoverageRatchetTest {
 					+ " and Splitter",
 			"Pin", "abstract; its dialog is swept via InputPin and"
 					+ " OutputPin",
-			"Element", "DelayChange is an edit-time dialog on a placed"
-					+ " element, not a creation dialog; needs the"
-					+ " element-edit path - a known sweep gap, tracked"
-					+ " in #162",
 			"State", "constructed only inside StateMachine's"
 					+ " StateEditor, which the StateMachine sweep entry"
 					+ " opens");

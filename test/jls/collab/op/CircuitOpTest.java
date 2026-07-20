@@ -209,6 +209,52 @@ class CircuitOpTest {
 				"op and inline removal must produce identical bytes");
 	}
 
+	/**
+	 * A reconfigure installs exactly the block it carries: the element
+	 * the op addresses serializes, after the op, to the reconfigured
+	 * bytes and nothing else (P1 for the commit-time attribute/ordered-
+	 * row op kind).
+	 */
+	@Test
+	void configReplaceInstallsExactlyTheReconfiguredBlock()
+			throws Exception {
+		Circuit circuit = loadAdder();
+		Element adder = find(circuit, Element::canRotate);
+		ElementId id = adder.getStableId();
+		String reconfigured = ElementBlocks.saveBlock(adder)
+				.replace("int bits 4", "int bits 8");
+		assertNotEquals(ElementBlocks.saveBlock(adder), reconfigured,
+				"the fixture must actually change under reconfigure");
+		new SetElementConfig(id, reconfigured).apply(circuit, graphics());
+		assertEquals(reconfigured,
+				ElementBlocks.saveBlock(byId(circuit, id)),
+				"the op must install exactly the reconfigured block");
+	}
+
+	/**
+	 * Renaming an element through a reconfigure frees the old name and
+	 * registers the new one - the invariant a byte comparison of the
+	 * circuit save cannot see, since the name registry is not itself in
+	 * the save format.
+	 */
+	@Test
+	void configReplaceRenameUpdatesTheNameRegistry() throws Exception {
+		Circuit circuit = loadText("CIRCUIT named\nELEMENT InputPin\n"
+				+ " int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\nENDCIRCUIT\n");
+		Element pin = find(circuit, el -> true);
+		String renamed = ElementBlocks.saveBlock(pin)
+				.replace("String name \"A\"", "String name \"B\"");
+		new SetElementConfig(pin.getStableId(), renamed)
+				.apply(circuit, graphics());
+		assertTrue(!circuit.hasName("A"),
+				"the reconfigured-away name must be freed");
+		assertTrue(circuit.hasName("B"),
+				"the reconfigured-in name must be registered");
+	}
+
 	// ------------------------------------------------------------------
 	// P2: apply then invert restores the canonical bytes
 	// ------------------------------------------------------------------
@@ -289,6 +335,16 @@ class CircuitOpTest {
 	}
 
 	@Test
+	void configReplaceInverseRestoresBytes() throws Exception {
+		Circuit circuit = loadAdder();
+		Element adder = find(circuit, Element::canRotate);
+		String reconfigured = ElementBlocks.saveBlock(adder)
+				.replace("int bits 4", "int bits 8");
+		assertInverseRestores(circuit,
+				new SetElementConfig(adder.getStableId(), reconfigured));
+	}
+
+	@Test
 	void jumpEndAloneIsRemovableAndRestorable() throws Exception {
 		Circuit circuit = loadJumpPair();
 		Element end = find(circuit, el -> el instanceof JumpEnd);
@@ -323,6 +379,11 @@ class CircuitOpTest {
 				new RemoveElements(List.of(adder.getStableId())));
 		assertInverseRestores(adders,
 				new AddElements(List.of(donorAdderBlock())));
+		Element restoredAdder = find(adders, Element::canRotate);
+		assertInverseRestores(adders, new SetElementConfig(
+				restoredAdder.getStableId(),
+				ElementBlocks.saveBlock(restoredAdder)
+						.replace("int bits 4", "int bits 8")));
 	}
 
 	// ------------------------------------------------------------------
@@ -344,7 +405,11 @@ class CircuitOpTest {
 				new AddElements(List.of(donorAdderBlock(),
 						"ELEMENT Text\n String text \"multi\nline "
 								+ "\\\"quoted\\\"\"\nEND\n")),
-				new RemoveElements(List.of(id, other)));
+				new RemoveElements(List.of(id, other)),
+				new SetElementConfig(id, "ELEMENT Adder\n int id 0\n"
+						+ " int x 60\n int y 60\n String sid \"legacy:7\"\n"
+						+ " int bits 4\n String orient \"LEFT\"\n"
+						+ " int delay 10\nEND\n"));
 		for (CircuitOp op : ops) {
 			String text = serialize(op);
 			CircuitOp parsed = CircuitOpReader.read(new Scanner(text));
@@ -401,6 +466,18 @@ class CircuitOpTest {
 				// oversized element block
 				"OP AddElements\n String block \""
 						+ "x".repeat(100_001) + "\"\nEND\n",
+				// reconfigure with no block
+				"OP SetElementConfig\n String id \"legacy:1\"\nEND\n",
+				// reconfigure with two blocks
+				"OP SetElementConfig\n String id \"legacy:1\"\n"
+						+ " String block \"a\"\n String block \"b\"\nEND\n",
+				// reconfigure with two ids
+				"OP SetElementConfig\n String id \"legacy:1\"\n"
+						+ " String id \"legacy:2\"\n String block \"a\"\n"
+						+ "END\n",
+				// reconfigure with a stray name field
+				"OP SetElementConfig\n String id \"legacy:1\"\n"
+						+ " String block \"a\"\n String name \"x\"\nEND\n",
 		};
 		for (String text : hostile) {
 			assertThrows(OpRejected.class,
@@ -613,6 +690,102 @@ class CircuitOpTest {
 						.apply(circuit, graphics()));
 		assertEquals(before, save(circuit),
 				"a rejected removal must not change the circuit");
+	}
+
+	@Test
+	void configReplaceRejectionsLeaveTheCircuitUnchanged()
+			throws Exception {
+		// unknown id: resolution fails before the block is examined
+		Circuit adders = loadAdder();
+		String addersBefore = save(adders);
+		Element adder = find(adders, Element::canRotate);
+		ElementId adderId = adder.getStableId();
+		String adderBlock = ElementBlocks.saveBlock(adder);
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(ElementId.parse("nosuch:1"),
+						adderBlock).apply(adders, graphics()));
+		assertEquals(addersBefore, save(adders));
+
+		// the block declares a stable id other than the one addressed
+		String otherSid = adderBlock.replaceAll("String sid \"[^\"]*\"",
+				"String sid \"other:9\"");
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(adderId, otherSid)
+						.apply(adders, graphics()));
+		assertEquals(addersBefore, save(adders));
+
+		// a wired element may not be reconfigured (fresh puts would
+		// orphan its wire)
+		Circuit fork = load();
+		String forkBefore = save(fork);
+		Element wired = findWiredElement(fork);
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(wired.getStableId(),
+						ElementBlocks.saveBlock(wired))
+								.apply(fork, graphics()));
+		assertEquals(forkBefore, save(fork));
+
+		// a jump's name links across elements: out of scope
+		Circuit jumps = loadJumpPair();
+		String jumpsBefore = save(jumps);
+		Element start = find(jumps, el -> el instanceof JumpStart);
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(start.getStableId(),
+						ElementBlocks.saveBlock(start))
+								.apply(jumps, graphics()));
+		assertEquals(jumpsBefore, save(jumps));
+	}
+
+	@Test
+	void configReplaceRejectsTypeChange() throws Exception {
+		Circuit circuit = loadText("CIRCUIT named\nELEMENT InputPin\n"
+				+ " int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\nENDCIRCUIT\n");
+		String before = save(circuit);
+		Element pin = find(circuit, el -> true);
+		// a well-formed Adder block carrying the pin's stable id: the
+		// stable id matches, but the type does not
+		String adderAtPinId = "ELEMENT Adder\n int id 0\n int x 240\n"
+				+ " int y 240\n String sid \"pin:1\"\n int bits 4\n"
+				+ " String orient \"LEFT\"\n int delay 10\nEND\n";
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(pin.getStableId(), adderAtPinId)
+						.apply(circuit, graphics()));
+		assertEquals(before, save(circuit),
+				"a rejected reconfigure must not change the circuit");
+	}
+
+	@Test
+	void configReplaceRejectsNameCollision() throws Exception {
+		Circuit circuit = loadText("CIRCUIT named\nELEMENT InputPin\n"
+				+ " int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n"
+				+ "ELEMENT InputPin\n int id 1\n int x 120\n int y 240\n"
+				+ " String sid \"pin:2\"\n String name \"B\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\nENDCIRCUIT\n");
+		String before = save(circuit);
+		Element a = find(circuit,
+				el -> "A".equals(el.getName()));
+		String renamed = ElementBlocks.saveBlock(a)
+				.replace("String name \"A\"", "String name \"B\"");
+		assertThrows(OpRejected.class,
+				() -> new SetElementConfig(a.getStableId(), renamed)
+						.apply(circuit, graphics()));
+		assertEquals(before, save(circuit),
+				"a rejected reconfigure must not change the circuit");
+	}
+
+	/**
+	 * The element in the circuit whose stable id matches, in canonical
+	 * order (there is exactly one).
+	 */
+	private static Element byId(Circuit circuit, ElementId id) {
+		return find(circuit, el -> el.getStableId().equals(id));
 	}
 
 	/**

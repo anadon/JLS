@@ -3,6 +3,7 @@ package jls;
 import jls.elem.*;
 import java.awt.Point;
 import java.math.BigInteger;
+import org.jspecify.annotations.Nullable;
 import java.util.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -74,9 +75,8 @@ public final class Util {
 		
 		// now copy all remaining wire ends
 		for (Element el : from) {
-			if (!(el instanceof WireEnd))
+			if (!(el instanceof WireEnd end))
 				continue;
-			WireEnd end = (WireEnd)el;
 			int x = end.getX();
 			int y = end.getY();
 			if (firstTime) {
@@ -94,9 +94,8 @@ public final class Util {
 		
 		// copy wires
 		for (Element el : from) {
-			if (!(el instanceof Wire))
+			if (!(el instanceof Wire wire))
 				continue;
-			Wire wire = (Wire)el;
 			WireEnd end1 = wire.getEnd();
 			WireEnd end2 = wire.getOtherEnd(end1);
 			
@@ -119,8 +118,7 @@ public final class Util {
 		Set<Element>temp = new HashSet<Element>();
 		temp.addAll(to.getElements());
 		for (Element el : temp) {
-			if (el instanceof WireEnd) {
-				WireEnd end = (WireEnd)el;
+			if (el instanceof WireEnd end) {
 				if (end.degree() == 0) {
 					to.remove(end);
 				}
@@ -142,8 +140,7 @@ public final class Util {
 		
 		LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
 		for (Element el : circ.getElements()) {
-			if (el instanceof WireEnd) {
-				WireEnd end = (WireEnd)el;
+			if (el instanceof WireEnd end) {
 				ends.add(end);
 			}
 		}
@@ -193,8 +190,7 @@ public final class Util {
 			for (WireEnd end : net.getAllEnds()) {
 				if (!end.isAttached())
 					continue;
-				if (end.getPut() instanceof Output) {
-					Output out = (Output)end.getPut();
+				if (end.getPut() instanceof Output out) {
 					if (out.isTriState()) {
 						net.setTriState(true);
 					}
@@ -242,7 +238,7 @@ public final class Util {
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#fileNameValidationStripsDirectoriesOnBothSeparators()
 	 */
-	public static String isValidFileName(String str) {
+	public static @Nullable String isValidFileName(String str) {
 
 		// accept both separators regardless of platform: splitting only
 		// on the platform one rejected C:/work/foo.jls on Windows (#51)

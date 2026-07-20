@@ -1,6 +1,8 @@
 package jls;
 
 import jls.elem.LogicElement;
+
+import org.jspecify.annotations.Nullable;
 import jls.sim.TraceSample;
 
 import java.awt.Color;
@@ -47,7 +49,7 @@ public final class BatchTracePrinter {
 	 * @param printer The name of the printer to print to.
 	 */
 	public static void printTrace(
-			Map<LogicElement,List<TraceSample>> eventTrace, String printer) {
+			Map<LogicElement,List<TraceSample>> eventTrace, @Nullable String printer) {
 
 		// set up printer job
 		PrinterJob job = PrinterJob.getPrinterJob();
@@ -176,7 +178,13 @@ public final class BatchTracePrinter {
 
 					// draw signal history
 					LogicElement el = map.get(sig);
+					if (el == null) {
+						continue;
+					}
 					List<TraceSample> events = eventTrace.get(el);
+					if (events == null) {
+						continue;
+					}
 
 					if (el.getBits() == 1) {
 
@@ -246,7 +254,7 @@ public final class BatchTracePrinter {
 						if (events.getFirst().value().equals(off))
 							prevValue = null;
 						int prevXpos = 0;
-						for (TraceSample event : eventTrace.get(map.get(sig))) {
+						for (TraceSample event : events) {
 							int xpos = (int)(event.time()*timeScaleFactor + 0.5);
 
 							// draw horizontal line

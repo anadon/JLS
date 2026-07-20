@@ -1,0 +1,12 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): y = a[1:0] - a bit-level slice with no whole-vector driver",
+  "modules": {
+    "slicemod": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "a": { "direction": "input", "bits": [ 2, 3, 4, 5 ] },
+        "y": { "direction": "output", "bits": [ 2, 3 ] }
+      }
+    }
+  }
+}

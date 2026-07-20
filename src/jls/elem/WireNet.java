@@ -132,9 +132,8 @@ public class WireNet {
 				// set bits and, if an output set hasinput and possibly tristate
 				Put put = e.getPut();
 				net.bits = put.getBits();
-				if (put instanceof Output) {
+				if (put instanceof Output out) {
 					net.hasinput = true;
-					Output out = (Output)put;
 					if (out.isTriState()) {
 						net.setTriState(true);
 					}
@@ -148,8 +147,7 @@ public class WireNet {
 				if (!e.isAttached())
 					continue;
 				Element el = e.getPut().getElement();
-				if (el instanceof TriProp) {
-					TriProp pin = (TriProp)el;
+				if (el instanceof TriProp pin) {
 					pin.setTriState(false);
 				}
 			}
@@ -272,9 +270,8 @@ public class WireNet {
 			if (end.getPut() != null) {
 				bits = Math.max(end.getPut().getBits(),bits);
 			}
-			if (end.getPut() instanceof Output) {
+			if (end.getPut() instanceof Output out) {
 				hasinput = true;
-				Output out = (Output)end.getPut();
 				if (out.isTriState()) {
 					triState = true;
 				}
@@ -285,8 +282,7 @@ public class WireNet {
 				if (!end.isAttached())
 					continue;
 				Element el = end.getPut().getElement();
-				if (el instanceof TriProp) {
-					TriProp pin = (TriProp)el;
+				if (el instanceof TriProp pin) {
 					pin.setTriState(false);
 				}
 			}
@@ -370,10 +366,9 @@ public class WireNet {
 			
 			// if attached to a tri-state propagating element...
 			Element el = end.getPut().getElement();
-			if (el instanceof TriProp) {
+			if (el instanceof TriProp tel) {
 				
 				// propagate tri-state
-				TriProp tel = (TriProp)el;
 				tel.setTriState(which);
 			}
 		}
@@ -450,9 +445,8 @@ public class WireNet {
 				if (!end.isAttached())
 					continue;
 				Put p = end.getPut();
-				if (!(p instanceof Output))
+				if (!(p instanceof Output out))
 					continue;
-				Output out = (Output)p;
 				if (out.getValue() != null) {
 					if (actual == null) {
 						actual = out.getValue();

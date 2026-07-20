@@ -14,6 +14,8 @@ import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.jspecify.annotations.Nullable;
+
 import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.SeekableFileInputStream;
 import org.tukaani.xz.SeekableXZInputStream;
@@ -95,7 +97,7 @@ public final class FileAbstractor {
 	 * @jls.testedby jls.edit.CheckpointWriterTest#awaitWritten()
 	 * @jls.testedby jls.edit.CheckpointWriterTest#checkpointIsWrittenAndLoadable()
 	 */
-	public static Scanner openCircuit(String filePath) {
+	public static @Nullable Scanner openCircuit(String filePath) {
 
 		String name = filePath.replaceAll("\\.jls~$", "");
 		name = name.replaceAll("\\.jls$", "");

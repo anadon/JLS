@@ -19,6 +19,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -48,8 +50,10 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
@@ -364,8 +368,8 @@ public abstract class SimpleEditor extends JPanel {
 		for (Element elm : circuit.elementsNear(span)) {
 			if (sel == elm)
 				continue;
-			if (elm instanceof WireEnd) {
-				if (wire.touches((WireEnd)elm)) {
+			if (elm instanceof WireEnd wend) {
+				if (wire.touches(wend)) {
 					return true;
 				}
 				continue;
@@ -426,7 +430,10 @@ public abstract class SimpleEditor extends JPanel {
 		north.add(top,BorderLayout.CENTER);
 		all.add(north,BorderLayout.NORTH);
 		ew = new EditWindow();
-		ew.setPreferredSize(new Dimension(JLSInfo.circuitsize,JLSInfo.circuitsize));
+		// preferred size follows the model canvas size scaled by the current
+		// zoom (issue #74); the EditWindow computes it from its own model
+		// bounds and Viewport
+		ew.applyPreferredSize();
 		pane = new JScrollPane(ew);
 		pane.getHorizontalScrollBar().setUnitIncrement(10);
 		pane.getVerticalScrollBar().setUnitIncrement(10);
@@ -438,21 +445,10 @@ public abstract class SimpleEditor extends JPanel {
 		// save reference to myself
 		me = this;
 
-		// set up increase circuit size button in lower right corner of scroll pane
-		JButton corner = new JButton();
-		corner.setToolTipText("expand circuit drawing area by 10%");
-		pane.setCorner(JScrollPane.LOWER_RIGHT_CORNER, corner);
-		corner.addActionListener(new ActionListener() {
-			/**
-			 * Expand the circuit drawing area when the corner button is pressed.
-			 *
-			 * @param event The triggering action event.
-			 */
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				me.increaseSize();
-			}
-		});
+		// The old "increase drawing area by 10%" corner button and its Global
+		// menu twin are retired (issue #74): the canvas now auto-grows as
+		// elements approach its edge, and zoom (View menu, Ctrl +/-/0, and
+		// Ctrl/Cmd+wheel) replaces the single fixed magnification.
 
 	} // end of constructor
 
@@ -572,8 +568,7 @@ public abstract class SimpleEditor extends JPanel {
 	 */
 	public void setCircuitSize(Dimension size) {
 
-		ew.setPreferredSize(size);
-		ew.revalidate();
+		ew.setModelSize(size);
 	} // end of setCircuitSize method
 
 	/**
@@ -596,14 +591,53 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of focusOnCanvas method
 
 	/**
-	 * Increase circuit drawing area size by 10%.
+	 * Zoom in one keyboard ladder stop, centered on the visible canvas
+	 * (issue #74). Bound to the View menu's Zoom In item and Ctrl/Cmd+=.
 	 */
-	public void increaseSize() {
+	public void zoomIn() {
 
-		Dimension size = ew.getSize();
-		Dimension newSize = new Dimension((int)(size.width*1.1),(int)(size.height*1.1));
-		setCircuitSize(newSize);
-	} // end of increaseSize method
+		ew.zoomInCentered();
+	} // end of zoomIn method
+
+	/**
+	 * Zoom out one keyboard ladder stop, centered on the visible canvas
+	 * (issue #74). Bound to the View menu's Zoom Out item and Ctrl/Cmd+-.
+	 */
+	public void zoomOut() {
+
+		ew.zoomOutCentered();
+	} // end of zoomOut method
+
+	/**
+	 * Reset the zoom to exactly 100%, keeping the visible-canvas center
+	 * fixed (issue #74). Bound to the View menu's Actual Size item and
+	 * Ctrl/Cmd+0.
+	 */
+	public void zoomReset() {
+
+		ew.zoomResetCentered();
+	} // end of zoomReset method
+
+	/**
+	 * Fit the whole circuit into the visible canvas and center it (issue
+	 * #74) - the adjudicated "reset the view" affordance. Bound to the
+	 * View menu's Fit item and Ctrl/Cmd+9.
+	 */
+	public void zoomToFit() {
+
+		ew.zoomFit();
+	} // end of zoomToFit method
+
+	/**
+	 * The current zoom scale of the editing canvas (1.0 = 100%), for
+	 * tests and status display (issue #74).
+	 *
+	 * @return the zoom scale.
+	 */
+	public double getZoomScale() {
+
+		return ew.getViewportScale();
+	} // end of getZoomScale method
 
 	/**
 	 * Finish up import of a circuit.
@@ -813,7 +847,39 @@ public abstract class SimpleEditor extends JPanel {
 		/**
 		 * The window the circuit is displayed and edited in.
 		 */
-		private class EditWindow extends JPanel implements ActionListener,MouseListener,MouseMotionListener {
+		private class EditWindow extends JPanel implements ActionListener,MouseListener,MouseMotionListener,MouseWheelListener {
+
+			/**
+			 * The view transform (issue #74): owns the zoom scale between
+			 * model coordinates (grid-snapped integers, saved to files, used
+			 * by hit-testing) and this component's coordinates. Panning is
+			 * handled by the enclosing {@link JScrollPane} (plain wheel and
+			 * space/middle drag move the scroll position), so this viewport's
+			 * translation stays zero and its scale is the single view factor:
+			 * component = model * scale, and model = component / scale, which
+			 * is the one inversion every mouse-event entry point performs.
+			 */
+			private final Viewport viewport = new Viewport();
+
+			/**
+			 * The logical size of the drawing area in model units. The
+			 * component's preferred size is this scaled by the current zoom.
+			 * It auto-grows (never shrinks) as elements approach an edge,
+			 * replacing the retired manual 10% grow button (issue #74).
+			 */
+			private Dimension modelSize =
+					new Dimension(JLSInfo.circuitsize,JLSInfo.circuitsize);
+
+			/** True while a pan gesture (space-drag or middle-drag) is active. */
+			private boolean panning = false;
+			/** True while the space bar is held, arming space-drag panning. */
+			private boolean spaceDown = false;
+			/** Absolute screen x where the current pan started. */
+			private int panAnchorX;
+			/** Absolute screen y where the current pan started. */
+			private int panAnchorY;
+			/** Scroll view position when the current pan started. */
+			private Point panStartView;
 
 			// popup menus
 			/** Right-click menu over an existing element or wire. */
@@ -871,10 +937,19 @@ public abstract class SimpleEditor extends JPanel {
 			private State currentState = State.idle;
 			/** True until the first paint, which pushes the undo base copy. */
 			private boolean firstDraw = true;
-			/** Latest actual cursor x coordinate. */
+			/** Latest cursor x coordinate, in model units (issue #74). */
 			private int x;
-			/** Latest actual cursor y coordinate. */
+			/** Latest cursor y coordinate, in model units (issue #74). */
 			private int y;
+			/**
+			 * Latest cursor position in this component's own coordinates
+			 * (issue #74). Popup menus and value dialogs are positioned in
+			 * component space, so they use these rather than the model-space
+			 * {@link #x}/{@link #y} the hit-testing uses.
+			 */
+			private int sx;
+			/** Latest cursor y coordinate, in component units (issue #74). */
+			private int sy;
 			/** Selection rectangle, or null when none is being dragged. */
 			private Rectangle selRect = null;
 			/** Currently selected elements. */
@@ -921,6 +996,8 @@ public abstract class SimpleEditor extends JPanel {
 				// add listeners for mouse activities
 				addMouseListener(this);
 				addMouseMotionListener(this);
+				// wheel = scroll, Ctrl/Cmd+wheel = zoom-at-cursor (issue #74)
+				addMouseWheelListener(this);
 
 				// set up popup menus
 				probe.setToolTipText("watch activity on this wire during simulation");
@@ -1033,9 +1110,12 @@ public abstract class SimpleEditor extends JPanel {
 							Point p = getMousePosition();
 							if (p == null)
 								return; // not in drawing window
+							// invert the component position into model space (#74)
+							p = viewport.toModel(p);
 							setState(State.startwire);
 							x = p.x;
 							y = p.y;
+							autoGrow(x,y);
 							WireStart start =
 									startWireGesture(circuit,selected,x,y);
 							wireEnd = start.end();
@@ -1488,7 +1568,315 @@ public abstract class SimpleEditor extends JPanel {
 				getInputMap().put(MenuAcceleratorPolicy.flipStroke(),"do flip");
 				getActionMap().put("do flip", flipKey);
 
+				// set up zoom key bindings (issue #74): Ctrl/Cmd += in,
+				// Ctrl/Cmd +- out, Ctrl/Cmd +0 actual size, Ctrl/Cmd +9 fit.
+				// All zoom about the center of the visible canvas and share
+				// the code path with the View menu items.
+				int zoomMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+				Action zoomInKey = new AbstractAction() {
+					/**
+					 * Handle the zoom-in shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						zoomInCentered();
+					}
+				};
+				// accept both the main-row '=' and the numpad '+' for zoom in
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS,zoomMask),"zoom in");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS,zoomMask),"zoom in");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ADD,zoomMask),"zoom in");
+				getActionMap().put("zoom in", zoomInKey);
+				Action zoomOutKey = new AbstractAction() {
+					/**
+					 * Handle the zoom-out shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						zoomOutCentered();
+					}
+				};
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS,zoomMask),"zoom out");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT,zoomMask),"zoom out");
+				getActionMap().put("zoom out", zoomOutKey);
+				Action zoomResetKey = new AbstractAction() {
+					/**
+					 * Handle the actual-size shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						zoomResetCentered();
+					}
+				};
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_0,zoomMask),"zoom reset");
+				getActionMap().put("zoom reset", zoomResetKey);
+				Action zoomFitKey = new AbstractAction() {
+					/**
+					 * Handle the fit-to-circuit shortcut.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						zoomFit();
+					}
+				};
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_9,zoomMask),"zoom fit");
+				getActionMap().put("zoom fit", zoomFitKey);
+
+				// space bar arms space-drag panning while held (issue #74)
+				Action spacePressed = new AbstractAction() {
+					/**
+					 * Arm space-drag panning on space press.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						spaceDown = true;
+					}
+				};
+				Action spaceReleased = new AbstractAction() {
+					/**
+					 * Disarm space-drag panning on space release.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						spaceDown = false;
+					}
+				};
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0,false),"pan on");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0,true),"pan off");
+				getActionMap().put("pan on", spacePressed);
+				getActionMap().put("pan off", spaceReleased);
+
 			} // end of constructor
+
+			/**
+			 * The current zoom scale (1.0 = 100%).
+			 *
+			 * @return the scale.
+			 */
+			double getViewportScale() {
+
+				return viewport.getScale();
+			} // end of getViewportScale method
+
+			/**
+			 * Recompute the component's preferred size from the model canvas
+			 * size and the current zoom, then revalidate so the scroll pane
+			 * updates its scrollbars (issue #74).
+			 */
+			void applyPreferredSize() {
+
+				int w = (int)Math.ceil(modelSize.width * viewport.getScale());
+				int h = (int)Math.ceil(modelSize.height * viewport.getScale());
+				setPreferredSize(new Dimension(w,h));
+				revalidate();
+			} // end of applyPreferredSize method
+
+			/**
+			 * Set the logical drawing-area size (issue #74). The area never
+			 * shrinks below the default circuit size; the preferred size is
+			 * updated for the current zoom.
+			 *
+			 * @param size The requested model-space size.
+			 */
+			void setModelSize(Dimension size) {
+
+				modelSize = new Dimension(
+						Math.max(size.width,JLSInfo.circuitsize),
+						Math.max(size.height,JLSInfo.circuitsize));
+				applyPreferredSize();
+			} // end of setModelSize method
+
+			/**
+			 * Grow the model drawing area, if needed, so it contains the
+			 * given model point plus a generous margin and the whole current
+			 * circuit (issue #74). Auto-grow replaces the retired manual 10%
+			 * grow button; the area never shrinks, so saved coordinates stay
+			 * absolute.
+			 *
+			 * @param mx The model x that should be inside the area.
+			 * @param my The model y that should be inside the area.
+			 */
+			private void autoGrow(int mx, int my) {
+
+				int margin = 10*JLSInfo.spacing;
+				int needW = Math.max(mx + margin, modelSize.width);
+				int needH = Math.max(my + margin, modelSize.height);
+				Rectangle b = circuit.getBounds();
+				if (b != null) {
+					needW = Math.max(needW, b.x + b.width + margin);
+					needH = Math.max(needH, b.y + b.height + margin);
+				}
+				if (needW > modelSize.width || needH > modelSize.height) {
+					modelSize = new Dimension(needW,needH);
+					applyPreferredSize();
+				}
+			} // end of autoGrow method
+
+			/**
+			 * Repaint a dirty region expressed in model coordinates by
+			 * mapping it through the view transform to this component's
+			 * pixels (issue #74); a null region repaints everything. The
+			 * dirty-region logic of issues #35/#43 computes in model space,
+			 * so this single mapping keeps those optimizations correct at
+			 * any zoom.
+			 *
+			 * @param modelRect The changed region in model units, or null.
+			 */
+			private void repaintModel(Rectangle modelRect) {
+
+				if (modelRect == null) {
+					repaint();
+					return;
+				}
+				repaint(viewport.toScreen(modelRect));
+			} // end of repaintModel method
+
+			/**
+			 * The center of the currently visible canvas, in this
+			 * component's coordinates - the anchor keyboard zoom holds fixed
+			 * (issue #74).
+			 *
+			 * @return the visible-canvas center point.
+			 */
+			private Point visibleCenter() {
+
+				JViewport vp = pane.getViewport();
+				Point pos = vp.getViewPosition();
+				Dimension ext = vp.getExtentSize();
+				return new Point(pos.x + ext.width/2, pos.y + ext.height/2);
+			} // end of visibleCenter method
+
+			/**
+			 * Apply a new zoom scale (clamped), keeping the model point under
+			 * the given component-space anchor fixed on screen (issue #74).
+			 * The scale lives in the Viewport; the fixed-point math is done
+			 * against the scroll position, since panning is the scroll
+			 * pane's job.
+			 *
+			 * @param newScale The requested scale; clamped to the permitted
+			 *                 range.
+			 * @param anchorX  The component-space x to hold fixed.
+			 * @param anchorY  The component-space y to hold fixed.
+			 */
+			private void applyZoom(double newScale, int anchorX, int anchorY) {
+
+				double oldScale = viewport.getScale();
+				double clamped = Viewport.clampScale(newScale);
+				if (clamped == oldScale)
+					return;
+
+				// the model point currently under the anchor
+				double modelX = anchorX / oldScale;
+				double modelY = anchorY / oldScale;
+
+				// visible offset of the anchor within the scroll viewport,
+				// which must be preserved so the point stays under the cursor
+				JViewport vp = pane.getViewport();
+				Point viewPos = vp.getViewPosition();
+				int visOffX = anchorX - viewPos.x;
+				int visOffY = anchorY - viewPos.y;
+
+				// set the new scale (translation stays zero) and resize
+				viewport.zoomTo(clamped,0,0);
+				applyPreferredSize();
+				pane.validate();
+
+				// the anchor model point's new component coordinate, placed
+				// back at the same visible offset
+				int newX = (int)Math.round(modelX*clamped) - visOffX;
+				int newY = (int)Math.round(modelY*clamped) - visOffY;
+				Dimension ext = vp.getExtentSize();
+				Dimension viewSz = vp.getViewSize();
+				int maxX = Math.max(0, viewSz.width - ext.width);
+				int maxY = Math.max(0, viewSz.height - ext.height);
+				vp.setViewPosition(new Point(
+						Math.min(Math.max(0,newX),maxX),
+						Math.min(Math.max(0,newY),maxY)));
+				repaint();
+			} // end of applyZoom method
+
+			/**
+			 * Zoom in one keyboard ladder stop, centered on the visible
+			 * canvas (issue #74).
+			 */
+			void zoomInCentered() {
+
+				Point c = visibleCenter();
+				applyZoom(Viewport.ladderUp(viewport.getScale()),c.x,c.y);
+			} // end of zoomInCentered method
+
+			/**
+			 * Zoom out one keyboard ladder stop, centered on the visible
+			 * canvas (issue #74).
+			 */
+			void zoomOutCentered() {
+
+				Point c = visibleCenter();
+				applyZoom(Viewport.ladderDown(viewport.getScale()),c.x,c.y);
+			} // end of zoomOutCentered method
+
+			/**
+			 * Reset the zoom to exactly 100%, keeping the visible-canvas
+			 * center fixed (issue #74).
+			 */
+			void zoomResetCentered() {
+
+				Point c = visibleCenter();
+				applyZoom(1.0,c.x,c.y);
+			} // end of zoomResetCentered method
+
+			/**
+			 * Fit the whole circuit into the visible canvas and center it
+			 * (issue #74) - the adjudicated "reset the view" affordance. An
+			 * empty circuit resets to 100%.
+			 */
+			void zoomFit() {
+
+				Rectangle b = circuit.getBounds();
+				JViewport vp = pane.getViewport();
+				Dimension ext = vp.getExtentSize();
+				if (b == null || b.width <= 0 || b.height <= 0
+						|| ext.width <= 0 || ext.height <= 0) {
+					zoomResetCentered();
+					return;
+				}
+
+				// generous margin so the circuit is not flush to the edges
+				int margin = 2*JLSInfo.spacing;
+				double s = Viewport.clampScale(Math.min(
+						ext.width / (double)(b.width + 2*margin),
+						ext.height / (double)(b.height + 2*margin)));
+				viewport.zoomTo(s,0,0);
+
+				// make sure the model area still contains the whole circuit
+				setModelSize(new Dimension(b.x + b.width + margin,
+						b.y + b.height + margin));
+				applyPreferredSize();
+				pane.validate();
+
+				// center the circuit's model center in the viewport
+				int cx = (int)Math.round((b.x + b.width/2.0)*s) - ext.width/2;
+				int cy = (int)Math.round((b.y + b.height/2.0)*s) - ext.height/2;
+				Dimension viewSz = vp.getViewSize();
+				int maxX = Math.max(0, viewSz.width - ext.width);
+				int maxY = Math.max(0, viewSz.height - ext.height);
+				vp.setViewPosition(new Point(
+						Math.min(Math.max(0,cx),maxX),
+						Math.min(Math.max(0,cy),maxY)));
+				repaint();
+			} // end of zoomFit method
 
 			/**
 			 * Rotate the single selected element, if there is exactly one
@@ -2119,14 +2507,31 @@ public abstract class SimpleEditor extends JPanel {
 				super.paintComponent(g);
 				Graphics2D gg = (Graphics2D)g;
 
-				// draw background
+				// apply the view transform (issue #74): from here on the
+				// Graphics is in model coordinates, so the grid, the circuit,
+				// and the selection rectangles all draw with model-space
+				// numbers and are scaled once here. Panning is the scroll
+				// pane's job, so the transform is scale-only (translate 0).
+				gg.transform(viewport.createTransform());
+
+				// draw background grid, but only across the visible (clipped)
+				// model region so a large zoomed-out canvas does not draw
+				// thousands of off-screen lines
 				gg.setColor(JLSInfo.gridColor);
-				Dimension size = getSize();
-				for (int r=0; r<size.height; r+=JLSInfo.spacing) {
-					gg.drawLine(0,r,size.width,r);
+				Rectangle clip = gg.getClipBounds();
+				int mx0 = clip == null ? 0 : Math.max(0,clip.x);
+				int my0 = clip == null ? 0 : Math.max(0,clip.y);
+				int mx1 = clip == null ? modelSize.width
+						: Math.min(modelSize.width,clip.x + clip.width);
+				int my1 = clip == null ? modelSize.height
+						: Math.min(modelSize.height,clip.y + clip.height);
+				int firstR = (my0/JLSInfo.spacing)*JLSInfo.spacing;
+				for (int r=firstR; r<=my1; r+=JLSInfo.spacing) {
+					gg.drawLine(mx0,r,mx1,r);
 				}
-				for (int c=0; c<size.width; c+=JLSInfo.spacing) {
-					gg.drawLine(c,0,c,size.height);
+				int firstC = (mx0/JLSInfo.spacing)*JLSInfo.spacing;
+				for (int c=firstC; c<=mx1; c+=JLSInfo.spacing) {
+					gg.drawLine(c,my0,c,my1);
 				}
 
 				// draw selection rectangle if elements selected
@@ -2456,6 +2861,16 @@ public abstract class SimpleEditor extends JPanel {
 				// focus-follows-mouse grab in mouseEntered
 				requestFocusInWindow();
 
+				// space-drag or middle-drag starts a pan (issue #74); pan is
+				// a view-only gesture, allowed even while editing is disabled
+				if (spaceDown || event.getButton() == MouseEvent.BUTTON2) {
+					panning = true;
+					panAnchorX = event.getXOnScreen();
+					panAnchorY = event.getYOnScreen();
+					panStartView = pane.getViewport().getViewPosition();
+					return;
+				}
+
 				// do nothing if editor is disabled
 				if (!enabled)
 					return;
@@ -2463,9 +2878,15 @@ public abstract class SimpleEditor extends JPanel {
 				info.setForeground(Color.BLACK);
 				info.setText("");
 
-				// get event information
-				x = event.getX();
-				y = event.getY();
+				// get event information; the mouse point is inverted through
+				// the view transform once here so all downstream hit-testing
+				// and placement stays in model coordinates (issue #74)
+				sx = event.getX();
+				sy = event.getY();
+				Point m = viewport.toModel(event.getPoint());
+				x = m.x;
+				y = m.y;
+				autoGrow(x,y);
 				boolean leftButton = event.getButton() == MouseEvent.BUTTON1;
 				boolean rightButton = (event.getButton() == MouseEvent.BUTTON3) || (event.isPopupTrigger());
 
@@ -2486,8 +2907,7 @@ public abstract class SimpleEditor extends JPanel {
 									return;
 
 								// drag wire means drag both ends
-								if (el instanceof Wire) {
-									Wire dragWire = (Wire)el;
+								if (el instanceof Wire dragWire) {
 									WireEnd end1 = dragWire.getEnd();
 									if (end1.isAttached())
 										continue;
@@ -2505,7 +2925,7 @@ public abstract class SimpleEditor extends JPanel {
 								}
 
 								// can't select an attached wire end
-								if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+								if (el instanceof WireEnd wend && wend.isAttached())
 									continue;
 
 								// select it and begin moving
@@ -2534,7 +2954,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (el.contains(x,y)) {
 
 								// can't display menu on attached wire end
-								if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+								if (el instanceof WireEnd wend && wend.isAttached())
 									continue;
 
 								makeOptionMenu(el);
@@ -2548,12 +2968,12 @@ public abstract class SimpleEditor extends JPanel {
 									setState(State.option);
 									selected.add(el);
 									el.setHighlight(true);
-									optionMenu.show(this,x,y);
+									optionMenu.show(this,sx,sy);
 								}
 								return;
 							}
 						}
-						newMenu.show(this,x,y);
+						newMenu.show(this,sx,sy);
 					}
 					return;
 				}
@@ -2611,7 +3031,7 @@ public abstract class SimpleEditor extends JPanel {
 								setState(State.option);
 								selRect = null;
 								repaint();
-								optionMenu.show(this,x,y);
+								optionMenu.show(this,sx,sy);
 							}
 						}
 						return;
@@ -2819,8 +3239,7 @@ public abstract class SimpleEditor extends JPanel {
 						optionMenu.add(matchJump);
 					}
 				}
-				if (el instanceof Wire) {
-					Wire wire = (Wire)el;
+				if (el instanceof Wire wire) {
 					if (wire.hasProbe()) {
 						probe.setText("Remove Probe");
 					}
@@ -2839,6 +3258,13 @@ public abstract class SimpleEditor extends JPanel {
 			@Override
 			public void mouseReleased(MouseEvent event) {
 
+				// finish a pan gesture (issue #74) before the enabled gate,
+				// so panning works during simulation too
+				if (panning) {
+					panning = false;
+					return;
+				}
+
 				// do nothing if editor is disabled
 				if (!enabled)
 					return;
@@ -2853,7 +3279,7 @@ public abstract class SimpleEditor extends JPanel {
 						if (el.contains(x,y)) {
 
 							// can't display menu on attached wire end
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached())
+							if (el instanceof WireEnd wend && wend.isAttached())
 								continue;
 
 							makeOptionMenu(el);
@@ -2867,12 +3293,12 @@ public abstract class SimpleEditor extends JPanel {
 								setState(State.option);
 								selected.add(el);
 								el.setHighlight(true);
-								optionMenu.show(this,x,y);
+								optionMenu.show(this,sx,sy);
 							}
 							return;
 						}
 					}
-					newMenu.show(this,x,y);
+					newMenu.show(this,sx,sy);
 					return;
 				}
 
@@ -2904,8 +3330,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// fix up wire end attached to imaginary puts
 						for (Element el : selected) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached() && end.getPut().getElement() == null) {
 									end.setPut(null);
 								}
@@ -2978,6 +3403,22 @@ public abstract class SimpleEditor extends JPanel {
 			@Override
 			public void mouseDragged(MouseEvent event) {
 
+				// a pan drag moves the scroll position (issue #74); it is a
+				// view-only gesture, so it runs before the enabled gate
+				if (panning) {
+					int dx = event.getXOnScreen() - panAnchorX;
+					int dy = event.getYOnScreen() - panAnchorY;
+					JViewport vp = pane.getViewport();
+					Dimension ext = vp.getExtentSize();
+					Dimension viewSz = vp.getViewSize();
+					int maxX = Math.max(0, viewSz.width - ext.width);
+					int maxY = Math.max(0, viewSz.height - ext.height);
+					int nvx = Math.min(Math.max(0,panStartView.x - dx),maxX);
+					int nvy = Math.min(Math.max(0,panStartView.y - dy),maxY);
+					vp.setViewPosition(new Point(nvx,nvy));
+					return;
+				}
+
 				// do nothing if editor is disabled
 				if (!enabled)
 					return;
@@ -2985,9 +3426,13 @@ public abstract class SimpleEditor extends JPanel {
 				info.setForeground(Color.BLACK);
 				info.setText("");
 
-				// get cursor position
-				int nx = event.getX();
-				int ny = event.getY();
+				// get cursor position in model coordinates (issue #74)
+				sx = event.getX();
+				sy = event.getY();
+				Point mp = viewport.toModel(event.getPoint());
+				int nx = mp.x;
+				int ny = mp.y;
+				autoGrow(nx,ny);
 
 				// if moving elements...
 				if (currentState == State.moving) {
@@ -3044,7 +3489,7 @@ public abstract class SimpleEditor extends JPanel {
 					Set<Element> attachedInside = new HashSet<Element>();
 					for (Element el : circuit.elementsNear(selRect)) {
 						if (el.isInside(selRect)) {
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+							if (el instanceof WireEnd wend && wend.isAttached()) {
 								attachedInside.add(el);
 								continue;
 							}
@@ -3075,7 +3520,7 @@ public abstract class SimpleEditor extends JPanel {
 						selected.add(el);
 					}
 					dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
-					repaint(dirty);
+					repaintModel(dirty);
 					return;
 				}
 
@@ -3116,8 +3561,8 @@ public abstract class SimpleEditor extends JPanel {
 				Rectangle acc = null;
 				for (Element el : selected) {
 					acc = union(acc, el.getRect());
-					if (el instanceof WireEnd) {
-						for (Wire w : ((WireEnd)el).getWires()) {
+					if (el instanceof WireEnd wend) {
+						for (Wire w : wend.getWires()) {
 							acc = union(acc, w.getRect());
 						}
 					}
@@ -3175,7 +3620,7 @@ public abstract class SimpleEditor extends JPanel {
 					return;
 				}
 				dirty.grow(8*JLSInfo.spacing, 8*JLSInfo.spacing);
-				repaint(dirty);
+				repaintModel(dirty);
 			} // end of repaintDirty method
 
 			/**
@@ -3193,9 +3638,13 @@ public abstract class SimpleEditor extends JPanel {
 				info.setForeground(Color.BLACK);
 				info.setText("");
 
-				// get mouse coordinates
-				int nx = event.getX();
-				int ny = event.getY();
+				// get mouse coordinates in model space (issue #74)
+				sx = event.getX();
+				sy = event.getY();
+				Point mp = viewport.toModel(event.getPoint());
+				int nx = mp.x;
+				int ny = mp.y;
+				autoGrow(nx,ny);
 
 				info.setText(" ");
 				if (currentState == State.idle) {
@@ -3210,7 +3659,7 @@ public abstract class SimpleEditor extends JPanel {
 					Set<Element> attachedUnder = new HashSet<Element>();
 					for (Element el : circuit.elementsAt(nx,ny)) {
 						if (el.contains(nx,ny)) {
-							if (el instanceof WireEnd && ((WireEnd)el).isAttached()) {
+							if (el instanceof WireEnd wend && wend.isAttached()) {
 								attachedUnder.add(el);
 								continue;
 							}
@@ -3242,7 +3691,7 @@ public abstract class SimpleEditor extends JPanel {
 					}
 					if (dirty != null) {
 						dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
-						repaint(dirty);
+						repaintModel(dirty);
 					}
 					return;
 				}
@@ -3253,8 +3702,11 @@ public abstract class SimpleEditor extends JPanel {
 					Point p = getMousePosition();
 					if (p == null)
 						return;
+					// invert the raw component position into model space (#74)
+					p = viewport.toModel(p);
 					x = p.x;
 					y = p.y;
+					autoGrow(x,y);
 					item.setXY(p.x,p.y);
 					item.savePosition();
 
@@ -3338,6 +3790,39 @@ public abstract class SimpleEditor extends JPanel {
 					repaint();
 				}
 			} // end of mouseExited method
+
+			/**
+			 * React to the mouse wheel (issue #74): a plain wheel scrolls the
+			 * canvas (vertically, or horizontally with Shift), while
+			 * Ctrl/Cmd+wheel zooms continuously about the cursor - the model
+			 * point under the cursor stays fixed. Zooming consumes the event;
+			 * scrolling is handled here rather than bubbled so the canvas'
+			 * own wheel listener never swallows it.
+			 *
+			 * @param event The wheel event.
+			 */
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent event) {
+
+				int menuMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+				boolean zoomMod = (event.getModifiersEx() & menuMask) != 0;
+				if (zoomMod) {
+					double factor = event.getPreciseWheelRotation() < 0
+							? Viewport.WHEEL_STEP
+							: 1.0 / Viewport.WHEEL_STEP;
+					applyZoom(viewport.getScale()*factor,
+							event.getX(),event.getY());
+					event.consume();
+					return;
+				}
+
+				// plain wheel: scroll the appropriate bar
+				JScrollBar bar = event.isShiftDown()
+						? pane.getHorizontalScrollBar()
+						: pane.getVerticalScrollBar();
+				bar.setValue(bar.getValue()
+						+ event.getUnitsToScroll()*bar.getUnitIncrement());
+			} // end of mouseWheelMoved method
 
 			/**
 			 * Update current state and show corresponding message.
@@ -3535,8 +4020,7 @@ public abstract class SimpleEditor extends JPanel {
 				// make sure not multiple ends connecting to this wire
 				int count = 0;
 				for (Element el : selected) {
-					if (el instanceof WireEnd) {
-						WireEnd end = (WireEnd)el;
+					if (el instanceof WireEnd end) {
 						if (wire.contains(end.getX(),end.getY())) {
 							count += 1;
 						}
@@ -3662,8 +4146,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// can't attach if put is an output and wire end has an input
 				// unless both are tristate
-				if (put instanceof Output && end.getNet().hasInput()) {
-					Output out = (Output)put;
+				if (put instanceof Output out && end.getNet().hasInput()) {
 					if (!(out.isTriState() && end.isTriState())) {
 						overlapMessage = "Wire already has an input";
 						return false;
@@ -3691,8 +4174,7 @@ public abstract class SimpleEditor extends JPanel {
 						continue;
 					for (Element el : circuit.elementsAt(otherEnd.getX(),otherEnd.getY())) {
 						Put p = el.getPut(otherEnd.getX(),otherEnd.getY());
-						if (p != null && p instanceof Output) {
-							Output out = (Output)p;
+						if (p != null && p instanceof Output out) {
 							if (out.isTriState()) {
 								triCount += 1;
 							}
@@ -3731,16 +4213,14 @@ public abstract class SimpleEditor extends JPanel {
 				if (net.getBits() == 0) {
 					net.setBits(put.getBits());
 				}
-				if (put instanceof Output) {
+				if (put instanceof Output out) {
 					net.setInput();
-					Output out = (Output)put;
 					if (out.isTriState()) {
 						net.setTriState(true);
 					}
 				}
 				else if (put instanceof Input && net.isTriState()) {
-					if (put.getElement() instanceof TriProp) {
-						TriProp pin = (TriProp)put.getElement();
+					if (put.getElement() instanceof TriProp pin) {
 						pin.setTriState(true);
 					}
 				}
@@ -3776,9 +4256,7 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// can't connect output to output unless both are tristate
-				if (p1 instanceof Output && p2 instanceof Output) {
-					Output out1 = (Output)p1;
-					Output out2 = (Output)p2;
+				if (p1 instanceof Output out1 && p2 instanceof Output out2) {
 					if (!(out1.isTriState() && out2.isTriState())) {
 						overlapMessage = "Can't connect output to output";
 						return false;
@@ -3845,20 +4323,18 @@ public abstract class SimpleEditor extends JPanel {
 				p2.getElement().fixPosition();
 
 				// make net tristate if either put is a tristate output
-				if (p1 instanceof Output && ((Output)p1).isTriState()) {
+				if (p1 instanceof Output o1 && o1.isTriState()) {
 					net.setTriState(true);
 				}
-				else if (p2 instanceof Output && ((Output)p2).isTriState()) {
+				else if (p2 instanceof Output o2 && o2.isTriState()) {
 					net.setTriState(true);
 				}
 
 				// make output pin tristate if appropriate
-				if (net.isTriState() && p1.getElement() instanceof TriProp) {
-					TriProp pin = (TriProp)p1.getElement();
+				if (net.isTriState() && p1.getElement() instanceof TriProp pin) {
 					pin.setTriState(true);
 				}
-				else if (net.isTriState() && p2.getElement() instanceof TriProp) {
-					TriProp pin = (TriProp)p2.getElement();
+				else if (net.isTriState() && p2.getElement() instanceof TriProp pin) {
 					pin.setTriState(true);
 				}
 			}
@@ -3888,8 +4364,7 @@ public abstract class SimpleEditor extends JPanel {
 							// (wireCollidesAlongSpan; the element predicate
 							// is the same one the reverse drag direction
 							// uses); these checks depend only on sel
-							if (sel instanceof WireEnd) {
-								WireEnd end = (WireEnd)sel;
+							if (sel instanceof WireEnd end) {
 								for (Wire wire : end.getWires()) {
 									if (wireCollidesAlongSpan(circuit,selected,sel,wire)) {
 										overlapMessage = "overlap";
@@ -3927,14 +4402,12 @@ public abstract class SimpleEditor extends JPanel {
 									boolean ok = false;
 
 									// if selected is a wire end ...
-									if (sel instanceof WireEnd) {
+									if (sel instanceof WireEnd end) {
 
-										WireEnd end = (WireEnd)sel;
 
-										if (el instanceof WireEnd) {
+										if (el instanceof WireEnd otherEnd) {
 
 											// wire end to wire end
-											WireEnd otherEnd = (WireEnd)el;
 											if (!canConnect(end,otherEnd)) {
 												untouchAll();
 												return true;
@@ -3943,10 +4416,9 @@ public abstract class SimpleEditor extends JPanel {
 											touch(otherEnd);
 											ok = true;
 										}
-										else if (el instanceof Wire) {
+										else if (el instanceof Wire wire) {
 
 											// wire end to wire
-											Wire wire = (Wire)el;
 											if (!canConnect(end,wire)) {
 												untouchAll();
 												return true;
@@ -4003,9 +4475,8 @@ public abstract class SimpleEditor extends JPanel {
 										for (Put put : sel.getAllPuts()) {
 
 											// if not a wire end, ignore
-											if (!(el instanceof WireEnd))
+											if (!(el instanceof WireEnd end))
 												continue;
-											WireEnd end = (WireEnd)el;
 
 											// if don't line up, ignore
 											if (put.getX() != end.getX() || put.getY() != end.getY()) {
@@ -4123,14 +4594,12 @@ public abstract class SimpleEditor extends JPanel {
 									boolean ok = false;
 
 									// if a wire end ...
-									if (sel instanceof WireEnd) {
+									if (sel instanceof WireEnd end) {
 
-										WireEnd end = (WireEnd)sel;
 
-										if (el instanceof WireEnd) {
+										if (el instanceof WireEnd otherEnd) {
 
 											// wire end to wire end
-											WireEnd otherEnd = (WireEnd)el;
 											WireEnd endLeft = connect(end,otherEnd);
 											connected = true;
 											if (currentState == State.startwire) {
@@ -4139,10 +4608,9 @@ public abstract class SimpleEditor extends JPanel {
 											}
 											ok = true;
 										}
-										else if (el instanceof Wire) {
+										else if (el instanceof Wire wire) {
 
 											// wire end to wire
-											Wire wire = (Wire)el;
 											WireEnd it = connect(end,wire);
 											connected = true;
 											if (currentState == State.startwire) {
@@ -4182,9 +4650,8 @@ public abstract class SimpleEditor extends JPanel {
 										for (Put put : sel.getAllPuts()) {
 
 											// if not a wire end, ignore
-											if (!(el instanceof WireEnd))
+											if (!(el instanceof WireEnd end))
 												continue;
-											WireEnd end = (WireEnd)el;
 
 											// if don't line up, ignore
 											if (put.getX() != end.getX() || put.getY() != end.getY()) {
@@ -4328,8 +4795,7 @@ public abstract class SimpleEditor extends JPanel {
 								continue;
 
 							// or attached wire ends
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -4427,8 +4893,11 @@ public abstract class SimpleEditor extends JPanel {
 						Point pos = getMousePosition();
 						if (pos == null)
 							return false;
+						// invert the component position into model space (#74)
+						pos = viewport.toModel(pos);
 						x = pos.x;
 						y = pos.y;
+						autoGrow(x,y);
 
 						// first copy all but wires and wire ends
 						for (Element el : from.getElements()) {
@@ -4442,17 +4911,15 @@ public abstract class SimpleEditor extends JPanel {
 							cel.setHighlight(true);
 
 							// if a jump start, add name to start list
-							if (cel instanceof JumpStart) {
-								JumpStart j = (JumpStart)cel;
+							if (cel instanceof JumpStart j) {
 								circuit.addJumpStart(j.getName(),j);
 							}
 						}
 
 						// now copy all wire ends, checking for those attached to puts
 						for (Element el : from.getElements()) {
-							if (!(el instanceof WireEnd))
+							if (!(el instanceof WireEnd oldEnd))
 								continue;
-							WireEnd oldEnd = (WireEnd)el;
 							WireEnd newEnd = (WireEnd)(el.copy());
 							newEnd.fixPosition();
 							newEnd.move(x,y);
@@ -4470,9 +4937,8 @@ public abstract class SimpleEditor extends JPanel {
 
 						// add wires
 						for (Element el : from.getElements()) {
-							if (!(el instanceof Wire))
+							if (!(el instanceof Wire wire))
 								continue;
-							Wire wire = (Wire)el;
 							WireEnd end1 = wire.getEnd();
 							WireEnd end2 = wire.getOtherEnd(end1);
 
@@ -4519,8 +4985,7 @@ public abstract class SimpleEditor extends JPanel {
 						clearSelected();
 						selRect = null;
 						for (Element el : circuit.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -4549,10 +5014,9 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// if it is a subcircuit...
-						if (el instanceof SubCircuit) {
+						if (el instanceof SubCircuit sub) {
 
 							// get circuit and set up editor for it
-							SubCircuit sub = (SubCircuit)el;
 							Circuit subcirc = sub.getSubCircuit();
 							String tabName = sub.getName() + " in " + circuit.getName();
 							for (int e=0; e<tabbedParent.getTabCount(); e+=1) {
@@ -4573,9 +5037,8 @@ public abstract class SimpleEditor extends JPanel {
 
 							// set up import menu
 							for (Component edit : tabbedParent.getComponents()) {
-								if (!(edit instanceof Editor))
+								if (!(edit instanceof Editor otherEditor))
 									continue;
-								Editor otherEditor = (Editor)edit;
 								if (!otherEditor.getCircuit().isImported())
 									ed.addToImportMenu(otherEditor.getCircuit());
 							}
@@ -4781,16 +5244,25 @@ public abstract class SimpleEditor extends JPanel {
 						}
 						selected.clear();
 
-						// decide where the element will drop: the last tracked
-						// mouse position, or the center of the visible canvas
-						// when invoked from the tool bar (event-local; #103)
+						// decide where the element will drop, in model coords
+						// (issue #74): the last tracked mouse position (already
+						// model space), or the center of the visible canvas when
+						// invoked from the tool bar (event-local; #103). The
+						// tool-bar drop point is computed in component space and
+						// inverted through the view transform once.
 						int dx = x;
 						int dy = y;
 						if (fromToolBar) {
-							Point view = pane.getViewport().getViewPosition();
-							dx = view.x + tabbedParent.getSize().width/2;
-							dy = view.y + tabbedParent.getSize().height/4;
+							JViewport vp = pane.getViewport();
+							Point view = vp.getViewPosition();
+							Dimension ext = vp.getExtentSize();
+							Point drop = viewport.toModel(new Point(
+									view.x + ext.width/2,
+									view.y + ext.height/4));
+							dx = drop.x;
+							dy = drop.y;
 						}
+						autoGrow(dx,dy);
 
 						// if not cancelled...
 						if (item.setup(this.getGraphics(),this,dx,dy)) {
@@ -4808,6 +5280,8 @@ public abstract class SimpleEditor extends JPanel {
 								setState(State.chosen);
 							}
 							else {
+								// invert the component position to model (#74)
+								pos = viewport.toModel(pos);
 								x = pos.x;
 								y = pos.y;
 								item.savePosition();
@@ -4835,8 +5309,7 @@ public abstract class SimpleEditor extends JPanel {
 						Circuit source = circMap.get(name);
 						Set<Element> elements = new HashSet<Element>();
 						for (Element el : source.getElements()) {
-							if (el instanceof WireEnd) {
-								WireEnd end = (WireEnd)el;
+							if (el instanceof WireEnd end) {
 								if (end.isAttached())
 									continue;
 							}
@@ -5068,9 +5541,9 @@ public abstract class SimpleEditor extends JPanel {
 						// the discarded circuit (issue #39, finding M8)
 						if (tabbedParent != null) {
 							for (Component tab : tabbedParent.getComponents()) {
-								if (tab instanceof SimpleEditor
+								if (tab instanceof SimpleEditor se
 										&& tab != SimpleEditor.this) {
-									((SimpleEditor)tab)
+									se
 											.refreshInImportMenu(circuit);
 								}
 							}
@@ -5091,9 +5564,8 @@ public abstract class SimpleEditor extends JPanel {
 
 							// propagate tri-state to outputs
 							for (Element el : circuit.getElements()) {
-								if (!(el instanceof OutputPin))
+								if (!(el instanceof OutputPin pin))
 									continue;
-								OutputPin pin = (OutputPin)el;
 								SubCircuit subc = pin.getCircuit().getSubElement();
 								Output put = (Output)subc.getPut(pin.getName());
 								Input input = pin.getInput("input");
@@ -5117,12 +5589,10 @@ public abstract class SimpleEditor extends JPanel {
 					private void updateJumpStarts(Circuit circ) {
 
 						for (Element el : circ.getElements()) {
-							if (el instanceof JumpStart) {
-								JumpStart j = (JumpStart)el;
+							if (el instanceof JumpStart j) {
 								circ.addJumpStart(j.getName(),j);
 							}
-							else if (el instanceof SubCircuit) {
-								SubCircuit sc = (SubCircuit)el;
+							else if (el instanceof SubCircuit sc) {
 								updateJumpStarts(sc.getSubCircuit());
 							}
 						}
@@ -5143,8 +5613,7 @@ public abstract class SimpleEditor extends JPanel {
 							}
 							// not an else: subcircuits are named, so the
 							// recursion never ran as an else-if (#51)
-							if (el instanceof SubCircuit) {
-								SubCircuit sc = (SubCircuit)el;
+							if (el instanceof SubCircuit sc) {
 								updateNamesUsed(sc.getSubCircuit());
 							}
 						}

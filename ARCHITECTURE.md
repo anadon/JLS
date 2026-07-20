@@ -266,6 +266,23 @@ tree can be published to the web without rewriting. Repo documents
 and are the normative home for contracts; in-jar help is the
 student-facing manual.
 
+### Look-and-feel: FlatLaf light is the default (recorded 2026-07, #153)
+
+`JLSStart.installLookAndFeel()` now installs `com.formdev.flatlaf.FlatLightLaf`
+by default, superseding the earlier "force cross-platform Metal, same
+everywhere" default. The evaluation is
+[`docs/flatlaf-evaluation-2026-07.md`](docs/flatlaf-evaluation-2026-07.md):
+FlatLaf is Apache-2.0, a single ~1 MB jar with zero transitive
+dependencies, bundled into the shaded jar so the packaged installers
+carry it, and it drives the exact widget set (`JButton`, `JMenuBar`,
+`JTabbedPane`, `JTextField`, `JEditorPane`) JLS's dialogs and help
+viewer use. `-Djls.laf=metal` remains the documented escape hatch back
+to the cross-platform look, `system` and `<class>` are unchanged, and a
+broken explicit selection still warns and falls back rather than
+exiting (`LookAndFeelPolicyTest`). A dark default is out of scope here:
+~126 hardcoded chrome/canvas color call sites (audited in the same
+document) still fight every look-and-feel and are #76's follow-up.
+
 ### Plugin mechanism: removed (5.0.0, #80)
 
 The inherited XML plugin loader was removed in 5.0.0: it activated

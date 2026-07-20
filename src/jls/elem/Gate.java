@@ -296,10 +296,21 @@ public abstract sealed class Gate extends LogicElement
 	 */
 	@Override
 	public void draw(Graphics g) {
-		
+
 		// draw context
 		super.draw(g);
-		
+
+		// build the outline path on first draw for gates that describe
+		// their symbol headlessly (issue #77 model/render split); gates
+		// that still build gateShape inline (DelayGate, Extend) set it in
+		// their constructor and skip this
+		if (gateShape == null) {
+			GateOutline model = outline();
+			if (model != null) {
+				gateShape = gatePathFrom(model);
+			}
+		}
+
 		// draw the gate
 		int s = JLSInfo.spacing;
 		int dist = (Math.max(numInputs,4)-3)/2*s;
@@ -372,7 +383,66 @@ public abstract sealed class Gate extends LogicElement
 		}
 		
 	} // end of draw method
-	
+
+	/**
+	 * The headless outline geometry of this gate's body symbol (issue #77
+	 * model/render split). A gate leaf that describes its symbol as data
+	 * returns a {@link GateOutline} here and leaves {@link #gateShape}
+	 * null; {@link #draw(Graphics)} builds the {@link GeneralPath} on first
+	 * paint via {@link #gatePathFrom(GateOutline)}. Gates that still build
+	 * {@code gateShape} inline in their constructor (DelayGate, Extend)
+	 * inherit this default and return null.
+	 *
+	 * @return the outline model, or null if this gate builds
+	 *         {@code gateShape} directly.
+	 */
+	protected GateOutline outline() {
+
+		return null;
+	} // end of outline method
+
+	/**
+	 * Translate a headless {@link GateOutline} into the exact
+	 * {@link GeneralPath} the gate leaves used to build inline: each
+	 * primitive is reconstructed as the same {@code java.awt.geom} shape
+	 * and appended (or used to open the path) with the same connect flag,
+	 * so the rendered symbol is byte-for-byte unchanged. This is the one
+	 * place the AWT conversion lives, keeping the leaves import-clean.
+	 *
+	 * @param model The outline to translate.
+	 *
+	 * @return the general path for the gate body.
+	 */
+	private GeneralPath gatePathFrom(GateOutline model) {
+
+		GeneralPath path = null;
+		for (GateOutline.Segment seg : model.segments()) {
+			double[] c = seg.coords();
+			Shape shape = switch (seg.kind()) {
+				case LINE ->
+						new Line2D.Double(c[0], c[1], c[2], c[3]);
+				case ARC ->
+						new Arc2D.Double(c[0], c[1], c[2], c[3], c[4], c[5],
+								Arc2D.OPEN);
+				case CUBIC ->
+						new CubicCurve2D.Double(c[0], c[1], c[2], c[3],
+								c[4], c[5], c[6], c[7]);
+				case ELLIPSE ->
+						new Ellipse2D.Double(c[0], c[1], c[2], c[3]);
+			};
+			if (path == null) {
+				path = new GeneralPath(shape);
+			}
+			else {
+				path.append(shape, seg.connect());
+			}
+			if (seg.closeAfter()) {
+				path.closePath();
+			}
+		}
+		return path;
+	} // end of gatePathFrom method
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by every gate kind.
 	/** The persistence attributes shared by every gate kind. */

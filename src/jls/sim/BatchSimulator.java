@@ -200,8 +200,7 @@ public class BatchSimulator extends Simulator {
 	private void findWatched(Circuit circ) {
 
 		for (Element el : circ.getElements()) {
-			if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit)el;
+			if (el instanceof SubCircuit sub) {
 				findWatched(sub.getSubCircuit());
 			}
 			else if (el.isWatched()) {

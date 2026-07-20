@@ -55,7 +55,7 @@ class OrientationGeometryTest {
 	 */
 	private static String errorCategory() {
 		return JLSInfo.lastLoadError == null ? JLSInfo.loadError
-				: JLSInfo.lastLoadError.getCategory().label();
+				: JLSInfo.lastLoadError.category().label();
 	}
 
 	/** Load one element headlessly and describe its geometry. */

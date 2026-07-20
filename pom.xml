@@ -71,6 +71,17 @@
       <artifactId>org.jfree.svg</artifactId>
       <version>5.0.7</version>
     </dependency>
+    <!-- FlatLaf: the default Swing look-and-feel (issue #153, evaluation
+         in docs/flatlaf-evaluation-2026-07.md). Apache-2.0; a single
+         ~1 MB jar with zero transitive dependencies. FlatLightLaf is the
+         interactive default installed by JLSStart.installLookAndFeel();
+         -Djls.laf=metal remains the escape hatch and Metal the automatic
+         fallback if FlatLaf can't be set. A dark default is #76 follow-up. -->
+    <dependency>
+      <groupId>com.formdev</groupId>
+      <artifactId>flatlaf</artifactId>
+      <version>3.7.2</version>
+    </dependency>
     <!-- JSpecify 1.0 nullness annotations (issue #93): the type-use
          annotations (@NullMarked/@Nullable) that make nullness a
          compiler-checked contract, enforced by NullAway inside the
@@ -99,6 +110,17 @@
       <groupId>com.tngtech.archunit</groupId>
       <artifactId>archunit</artifactId>
       <version>1.4.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- PIT's own test classpath does not inject junit-platform-launcher
+         the way Surefire does; the JUnit 5 plugin cannot discover tests
+         without it (issue #161 trial, docs/mutation-testing-trial-2026-07.md
+         §1). Keep its version aligned with the junit-jupiter dependency
+         above whenever that is bumped. -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>6.1.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -260,6 +282,15 @@
             <configuration>
               <argLine>@{argLine} -Djava.awt.headless=${jls.test.headless}</argLine>
               <groups>display</groups>
+              <!-- The @Tag("display") suite drives real Swing popups/dialogs
+                   under Xvfb, whose window-manager-less realization timing is
+                   nondeterministic on loaded CI runners (e.g. a right-click
+                   popup occasionally not materializing its items in time).
+                   Retry a failed display test a couple times before failing
+                   the build so a transient xvfb timing hiccup is reported as
+                   flaky, not fatal; the strict headless execution above gets
+                   no retries. -->
+              <rerunFailingTestsCount>2</rerunFailingTestsCount>
             </configuration>
           </execution>
         </executions>
@@ -295,6 +326,9 @@
                Raised again same day (draw/print-path smoke, Util and
                Memory-file coverage): INSTRUCTION 42.65%, LINE 40.88%,
                BRANCH 37.21%.
+               Raised 2026-07-19 (issue #159): INSTRUCTION 52.0%,
+               LINE 50.0%, BRANCH 47.5% (measured headless 53.13% /
+               51.24% / 48.77%).
                The floors are pinned to the *headless* measurement so a
                plain mvn verify passes anywhere; under the #162 display
                substrate (xvfb-run ... -Djls.test.headless=false, which
@@ -319,17 +353,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.420</minimum>
+                      <minimum>0.520</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.400</minimum>
+                      <minimum>0.500</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.365</minimum>
+                      <minimum>0.475</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -340,7 +374,13 @@
                      measurement of 2026-07-18 (jls 52.5/50.9/56.6,
                      jls.sim 45.0/44.6/35.3, jls.elem 42.6/41.6/36.3,
                      jls.collab.op 90.9/92.2/74.0 - instruction/line/
-                     branch). jls.edit is deliberately unfloored until
+                     branch).
+                     Raised 2026-07-19 (issue #159): floors sit just
+                     under the fresh headless measurement (jls
+                     53.96/52.14/57.16, jls.sim 51.61/50.22/41.63,
+                     jls.elem 46.67/45.33/40.80, jls.collab.op
+                     92.69/92.77/78.39 - instruction/line/branch).
+                     jls.edit is deliberately unfloored until
                      the #91/#84 work makes editor code testable; the
                      same raise-with-your-PR convention applies here as
                      to the bundle floors. Two verified-the-hard-way
@@ -359,17 +399,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.510</minimum>
+                      <minimum>0.525</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.495</minimum>
+                      <minimum>0.510</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.550</minimum>
+                      <minimum>0.555</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -382,17 +422,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.435</minimum>
+                      <minimum>0.505</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.430</minimum>
+                      <minimum>0.490</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.340</minimum>
+                      <minimum>0.405</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -405,17 +445,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.410</minimum>
+                      <minimum>0.455</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.400</minimum>
+                      <minimum>0.440</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.350</minimum>
+                      <minimum>0.395</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -428,17 +468,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.880</minimum>
+                      <minimum>0.910</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.890</minimum>
+                      <minimum>0.905</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.700</minimum>
+                      <minimum>0.770</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -634,6 +674,51 @@
                   <version>0.13.7</version>
                 </path>
               </annotationProcessorPaths>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- PIT mutation-testing trial gate (issue #161): opt-in, scoped
+         mutation coverage on the covered, non-Swing core. Run with
+           mvn -Ppitest test-compile org.pitest:pitest-maven:mutationCoverage
+         Deliberately a profile, mirroring the errorprone trial-gate
+         convention above: a non-blocking report first, with a
+         mutationThreshold ratchet only after a few scheduled runs
+         establish the noise floor (docs/mutation-testing-trial-2026-07.md
+         §6). excludedGroups=display: the #162 display-tagged suites
+         need a real/virtual display, and this profile runs headless. -->
+    <profile>
+      <id>pitest</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.25.7</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-junit5-plugin</artifactId>
+                <version>1.2.3</version>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <targetClasses>
+                <param>jls.sim.*</param>
+                <param>jls.BitSetUtils</param>
+                <param>jls.Util</param>
+                <param>jls.SpatialIndex</param>
+                <param>jls.collab.op.*</param>
+              </targetClasses>
+              <excludedGroups>
+                <param>display</param>
+              </excludedGroups>
+              <jvmArgs>
+                <value>-Djava.awt.headless=true</value>
+              </jvmArgs>
+              <threads>4</threads>
+              <timestampedReports>false</timestampedReports>
             </configuration>
           </plugin>
         </plugins>

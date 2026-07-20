@@ -45,6 +45,8 @@ import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The main (container) class for each circuit.
  * 
@@ -54,16 +56,16 @@ public class Circuit implements Printable {
 
 	// properties
 	/** The circuit name (becomes the file name after appending .jls). */
-	private String name = null; // will be the file name after appending .jls
+	private String name; // will be the file name after appending .jls
 	/** The directory the circuit's file is in. */
 	private String dir = ""; // the directory the file is in
 	/** All elements (logic elements, wires and wire ends) in this circuit. */
 	private Set<Element> elements = new HashSet<Element>();
 	/** The subcircuit element referring to this circuit, or null if none. */
-	private SubCircuit subElement = null; // the element referring to this
+	private @Nullable SubCircuit subElement = null; // the element referring to this
 											// circuit
 	/** This circuit's editor, or null if it has none. */
-	private Editor editor = null; // this circuit's editor (null if none)
+	private @Nullable Editor editor = null; // this circuit's editor (null if none)
 	/** All element names in use, so element names can be kept unique. */
 	private Set<String> namesUsed = new HashSet<String>(); // so element names
 															// can be unique
@@ -522,8 +524,8 @@ public class Circuit implements Printable {
 		if (elements.contains(el)) {
 			index.update(el);
 		}
-		if (el instanceof WireEnd) {
-			for (Wire wire : ((WireEnd) el).getWires()) {
+		if (el instanceof WireEnd we) {
+			for (Wire wire : we.getWires()) {
 				if (elements.contains(wire)) {
 					index.update(wire);
 				}
@@ -991,7 +993,7 @@ public class Circuit implements Printable {
 	private boolean loadElementItems(Element el, Scanner input) {
 		while (input.hasNext()) {
 			if (input.hasNext("CIRCUIT")) {
-				if (!(el instanceof SubCircuit)) {
+				if (!(el instanceof SubCircuit sub)) {
 					return failLoad(LoadError.Category.MALFORMED, el,
 							"a nested CIRCUIT appears here, but only a "
 									+ "SubCircuit element may contain one",
@@ -1003,7 +1005,6 @@ public class Circuit implements Printable {
 					// specific failure - keep it (#58)
 					return false;
 				}
-				SubCircuit sub = (SubCircuit) el;
 				subCirc.setImported(sub);
 				sub.setSubCircuit(subCirc);
 				sub.setName(subCirc.getName());
@@ -1126,13 +1127,12 @@ public class Circuit implements Printable {
 				if (value == null) {
 					return badValueInElement(el, type, "a quoted string");
 				}
-				if (!(el instanceof WireEnd)) {
+				if (!(el instanceof WireEnd end)) {
 					return failLoad(LoadError.Category.MALFORMED, el,
 							"a probe entry appears here, but probes can "
 									+ "only be attached to wire ends",
 							NOT_JLS_HINT);
 				}
-				WireEnd end = (WireEnd) el;
 				end.setProbe(id, value);
 				lineNumber += 1;
 			} else {
@@ -1195,7 +1195,7 @@ public class Circuit implements Printable {
 	 *
 	 * @return the decoded string, or null if no quoted value is present.
 	 */
-	private static String unquoteAndUnescape(String raw) {
+	private static @Nullable String unquoteAndUnescape(String raw) {
 
 		int start = raw.indexOf('"');
 		int end = raw.lastIndexOf('"');
@@ -1284,7 +1284,7 @@ public class Circuit implements Printable {
 	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
 	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
-	public boolean finishLoad(Graphics g) throws Exception {
+	public boolean finishLoad(@Nullable Graphics g) throws Exception {
 
 		// if any exceptions, assume load problem
 		try {
@@ -1331,9 +1331,8 @@ public class Circuit implements Printable {
 			// finish up wire ends
 			LinkedList<WireEnd> ends = new LinkedList<WireEnd>();
 			for (Element el : loadedElements) {
-				if (!(el instanceof WireEnd))
+				if (!(el instanceof WireEnd end))
 					continue;
-				WireEnd end = (WireEnd) el;
 				end.init(this);
 				elements.add(end);
 				ends.add(end);
@@ -1463,7 +1462,7 @@ public class Circuit implements Printable {
 		// write header; a file-level save states the format version once
 		// at the top (issue #79) - nested subcircuit blocks, which are
 		// always saved through their imported circuit, never repeat it
-		if (isImported()) {
+		if (subElement != null) {
 			out.println("CIRCUIT " + subElement.getName());
 		} else {
 			out.println("FORMAT " + formatVersionNeeded());
@@ -1590,7 +1589,7 @@ public class Circuit implements Printable {
 	 *
 	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
 	 */
-	public void draw(Graphics g, Set<Element> second, SimpleEditor ed)
+	public void draw(Graphics g, Set<Element> second, @Nullable SimpleEditor ed)
 			throws Exception {
 
 		// finish up loading process if necessary
@@ -1711,8 +1710,9 @@ public class Circuit implements Printable {
 		// construct name
 		Circuit c = this;
 		String nm = name;
-		while (c.isImported()) {
-			c = c.getSubElement().getCircuit();
+		SubCircuit se;
+		while ((se = c.getSubElement()) != null) {
+			c = se.getCircuit();
 			nm += " in " + c.getName();
 		}
 
@@ -1781,8 +1781,7 @@ public class Circuit implements Printable {
 
 		// add state machines
 		for (Element el : ordered) {
-			if (el instanceof StateMachine) {
-				StateMachine sm = (StateMachine) el;
+			if (el instanceof StateMachine sm) {
 				book.append(sm, format);
 				Printable p = sm.makeOutSum();
 				if (p != null)
@@ -1792,16 +1791,15 @@ public class Circuit implements Printable {
 
 		// add truth tables
 		for (Element el : ordered) {
-			if (el instanceof TruthTable) {
-				TruthTable tt = (TruthTable) el;
+			if (el instanceof TruthTable tt) {
 				book.append(tt, format);
 			}
 		}
 
 		// add subcircuits
 		for (Element el : ordered) {
-			if (el instanceof SubCircuit) {
-				((SubCircuit) el).getSubCircuit().addToBook(book, format);
+			if (el instanceof SubCircuit sub) {
+				sub.getSubCircuit().addToBook(book, format);
 			}
 		}
 	} // end of addToBook method
@@ -1928,7 +1926,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return the element with the given id, or null if not in the map.
 	 */
-	public Element getElementByID(int id) {
+	public @Nullable Element getElementByID(int id) {
 
 		return elementMap.get(id);
 	} // end of getElementByID method
@@ -2005,7 +2003,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return the element.
 	 */
-	public SubCircuit getSubElement() {
+	public @Nullable SubCircuit getSubElement() {
 
 		return subElement;
 	} // end of getSubElement method
@@ -2016,11 +2014,9 @@ public class Circuit implements Printable {
 	public void removeAllProbes() {
 
 		for (Element el : elements) {
-			if (el instanceof Wire) {
-				Wire wire = (Wire) el;
+			if (el instanceof Wire wire) {
 				wire.removeProbe();
-			} else if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit) el;
+			} else if (el instanceof SubCircuit sub) {
 				sub.getSubCircuit().removeAllProbes();
 			}
 		}
@@ -2032,8 +2028,7 @@ public class Circuit implements Printable {
 	public void clearAllWatches() {
 
 		for (Element el : elements) {
-			if (el instanceof SubCircuit) {
-				SubCircuit sub = (SubCircuit) el;
+			if (el instanceof SubCircuit sub) {
 				sub.getSubCircuit().clearAllWatches();
 			} else {
 				if (!el.isUneditable())
@@ -2048,11 +2043,10 @@ public class Circuit implements Printable {
 	public void resetAllDelays() {
 
 		for (Element el : elements) {
-			if (!(el instanceof LogicElement))
+			if (!(el instanceof LogicElement logic))
 				continue;
 			if (el.isUneditable())
 				continue;
-			LogicElement logic = (LogicElement) el;
 			logic.resetPropDelay();
 		}
 	} // end of resetAllDelays method
@@ -2086,7 +2080,7 @@ public class Circuit implements Printable {
 	 * @return the jumpstart, or null if it no jumpstart with the given name
 	 *         exists.
 	 */
-	public JumpStart getJumpStart(String name) {
+	public @Nullable JumpStart getJumpStart(String name) {
 
 		return starts.get(name);
 	} // end of getJumpStart method
@@ -2130,7 +2124,7 @@ public class Circuit implements Printable {
 	 * 
 	 * @return The current editor, or null if not being edited.
 	 */
-	public Editor getEditor() {
+	public @Nullable Editor getEditor() {
 
 		return editor;
 	} // end of getEditor method

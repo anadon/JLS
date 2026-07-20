@@ -55,6 +55,52 @@ between students and instructors and are treated as untrusted input —
 parser crashes, resource exhaustion, or code execution reachable from a
 hostile circuit file are all in scope.
 
+## Release artifact signing & verification (issue #136)
+
+JLS's release integrity model is **keyless**: no project-held, long-lived
+GPG signing key exists, and none is planned. This is a deliberate custody
+decision, not an oversight — resolves #136.
+
+1. **Integrity comes from checksums and attestation, not a maintainer
+   key.** Every release publishes a `SHA256SUMS` (jar, BOM, `.buildinfo`)
+   and per-OS `SHA256SUMS-installers-<os>-<arch>` files, and every
+   artifact carries a keyless build-provenance attestation signed by the
+   release workflow's OIDC identity (Sigstore, no long-lived secret to
+   hold or leak). Windows installers additionally get Authenticode
+   signing through SignPath.io's open-source program (#134) — SignPath
+   holds that key, not this project. Verify with:
+
+   ```sh
+   sha256sum -c SHA256SUMS                                   # checksum
+   gh attestation verify jls-<version>.jar --repo anadon/JLS  # provenance
+   ```
+
+   Substitute the installer filename and its matching
+   `SHA256SUMS-installers-*` line to verify a deb/rpm/msi/dmg/AppImage the
+   same way (see `docs/reproducibility.md` for the jar/BOM's additional
+   bit-for-bit rebuild recipe, and README.md for the per-platform
+   download list).
+
+2. **rpm and AppImage deliberately carry no project-held detached GPG
+   signature.** `rpm -K`-native and AppImage-native verification would
+   need this repository to generate, store, rotate, and eventually
+   revoke a signing key on a single-maintainer project — key-custody
+   risk (loss, compromise, succession) that the attestation above
+   already covers without any secret to protect. Given that the jar,
+   BOM, and every installer are already checksum- and
+   attestation-verifiable, a project-held GPG key would add custody risk
+   without adding a verification guarantee users don't already have.
+   Both formats remain verifiable via checksums plus attestation, per
+   recipe above.
+
+3. **Detached GPG signatures are added only on concrete downstream
+   need.** If a downstream distribution repository (a Linux distro's
+   package archive, a corporate mirror, etc.) requires a GPG-signed rpm
+   or AppImage as a condition of inclusion, that concrete requirement —
+   not a general "signing is best practice" preference — is what would
+   justify generating and custodying a key, at that time, scoped to that
+   need.
+
 ## Collaboration transport (issue #168, Stage 1a)
 
 JLS is growing a peer-to-peer collaborative-editing mode (issue #163;
@@ -93,13 +139,21 @@ are enforced by tests, not convention:
   Frames carry opaque bytes only — what they mean (the closed,
   data-only op vocabulary, its allowlists and caps) is specified in
   the research doc §6.1 and owned by the operation-layer work.
-- **No listener, provably.** No socket construction exists anywhere in
-  JLS today; `SocketConfinementRatchetTest` pins that socket code may
-  only ever appear under `jls.collab.net`, and that nothing under
-  `jls.collab` ever touches Java object serialization. Batch mode and
-  default GUI start cannot open a listener because no listener code
-  exists; when it lands, it must bind only on an explicit
-  "Start session" action (research doc §6.4).
+- **Listener hygiene.** The socket transport (`SessionListener`,
+  `SocketSession`) is the only code in JLS that constructs a socket,
+  and it lives under `jls.collab.net` and nowhere else —
+  `SocketConfinementRatchetTest` and `ArchitectureRulesTest` pin that,
+  along with the rule that nothing under `jls.collab` ever touches Java
+  object serialization. Binding is separate from accepting: a listener
+  is created only by an explicit "Start session" (Share) gesture, so
+  batch mode and the default GUI start construct no listener and open
+  no port. The listener defaults to loopback and accepts one peer at a
+  time; the handshake runs under a read timeout so a stalled peer
+  cannot pin the accepting thread, and each handshake message is
+  length-capped before its buffer is allocated, in the same
+  hostile-input style as frames (research doc §6.4). The join/verify
+  and key-change dialogs that drive these gestures are the following
+  #168 slice under `jls.collab.ui`.
 ## Collaboration payloads (planned; issues #163/#170)
 
 The collaborative-editing program extends the untrusted-input surface

@@ -38,7 +38,17 @@ class IverilogCompileTest {
 		List<Path> goldens = new ArrayList<>();
 		try (DirectoryStream<Path> dir = Files.newDirectoryStream(
 				Path.of("test", "resources", "hdl"), "*.v")) {
-			dir.forEach(goldens::add);
+			for (Path v : dir) {
+				// jls_map.v is the Yosys techmap library (issue #61): it
+				// references $-prefixed Yosys internal cells and is consumed
+				// by the import pipeline via `techmap -map`, not a standalone
+				// Verilog-2005 export golden, so it does not elaborate under
+				// iverilog. It is exercised by ImportPipelineTest instead.
+				if (v.getFileName().toString().equals("jls_map.v")) {
+					continue;
+				}
+				goldens.add(v);
+			}
 		}
 		Collections.sort(goldens);
 		assertEquals(false, goldens.isEmpty(), "no goldens found");

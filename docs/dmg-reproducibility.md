@@ -8,6 +8,48 @@ measurement itself (issue #191 P1/P2) requires a macOS machine —
 `hdiutil` exists nowhere else — and is packaged, ready to run, as
 `scripts/measure-dmg-repro.sh`.
 
+**Implementation status (this branch).** Route A's checksum-safe
+normalization now exists as `scripts/normalize-dmg.py` — a stdlib-only
+tool with two in-place, same-length rewrites and a `--self-test` that
+proves convergence, idempotence, content-sensitivity of the derived
+identifiers, and malformed-input refusal on synthetic images (so it is
+verifiable off a Mac, exactly like `normalize-msi.py` for #190):
+
+- `koly` mode pins the UDIF trailer `SegmentID` (E1) on the finished
+  compressed dmg — outside every UDIF checksum, so it is safe with no
+  round-trip and no risk to the license resource. This is wired into
+  the macOS lane of `build-installer.sh` **by default**.
+- `hfs` mode pins the HFS+ volume-header dates and volume UUID (F1) on
+  the *uncompressed* read-write image before it is re-compressed — the
+  only checksum-safe window for the volume header. It refuses anything
+  that is not a bare HFS+/HFSX volume (signature at offset 1024). This
+  is wired behind the **opt-in** `JLS_DMG_FULL_NORMALIZE=1`, because
+  the read-write round-trip it needs (§4 Route A steps 1–5) has not yet
+  been exercised on real macOS hardware; a maintainer validates it per
+  §5 before it enters the default release path.
+
+**Measured on `macos-latest` (the only place `hdiutil` exists).** A
+three-way `hdiutil verify` in `ci.yml` (CI run 29773635573) established:
+
+- raw jpackage output — **verify ok**;
+- koly-only (the default path, SegmentID pinned) — **verify ok**;
+- full Route-A HFS+ round-trip (`JLS_DMG_FULL_NORMALIZE=1`:
+  convert→UDRW→clamp+patch header→reconvert→udifrez) — **verify FAIL,
+  `hdiutil` rejects it as a corrupt image**.
+
+So the read-write round-trip, as implemented, produces an unmountable
+dmg on real hardware and **must not ship**. The lane therefore keeps the
+full pass **disabled** and ships the koly-only path, which the job now
+verifies still passes `hdiutil verify`, attaches, and exposes `JLS.app`
+with a valid `Info.plist` + the `.jls` document type (the CI-runnable
+subset of the §5 checklist; clean-VM launch and Gatekeeper still need a
+human). Because the koly pin alone does not clamp the HFS+ dates/UUID,
+the two dmgs still differ, so this leg stays `continue-on-error` — an
+honest measurement, not a byte-identical gate (#188 §10). Closing the
+residual to byte-identity now requires either finding why the Route-A
+round-trip corrupts the image, or **Route B** (own the imaging so Finder
+serializes the pinned values) — not the corrupting post-pass.
+
 Status at commit time:
 
 - No `SOURCE_DATE_EPOCH` or mtime-clamp plumbing exists anywhere in
@@ -226,14 +268,20 @@ Per issue #191 §10, on a clean macOS VM:
 
 ## 6. Dependencies and sequencing
 
-1. #188 ships `SOURCE_DATE_EPOCH` + staged-tree clamp (not yet
-   present in this repository).
-2. Someone with macOS (or a temporary workflow step) runs
-   `scripts/measure-dmg-repro.sh` twice around that change — once at
-   current master for P1, once after #188 for P2 — and records both
-   reports in issue #191.
-3. Route A/B decision per section 4; implementation in
-   `build-installer.sh`'s Darwin case only.
-4. Byte-identical → macOS double-build CI gate; residual → this file
-   and #185's `docs/reproducibility.md` state it exactly, with the
-   provenance attestation as the integrity guarantee.
+1. #188's `SOURCE_DATE_EPOCH` + staged-tree clamp — **done**
+   (`build-installer.sh` exports it from `project.build.outputTimestamp`
+   and clamps `input/`, `runtime/`, and the app-image tree).
+2. Route A normalization — **done** as `scripts/normalize-dmg.py`
+   (`koly` on by default, `hfs` behind `JLS_DMG_FULL_NORMALIZE=1`),
+   wired into `build-installer.sh`'s Darwin case only, with the tool's
+   `--self-test` gating it before it touches a real dmg.
+3. **In progress (on `macos-latest` CI):** the
+   `macos-installer-reproducibility` leg now runs with
+   `JLS_DMG_FULL_NORMALIZE=1` and validates the CI-runnable subset of
+   the §5 checklist (`hdiutil verify`, attach, `JLS.app` + valid
+   `Info.plist` + `.jls` document type). Still needs a human on a clean
+   VM for the launch/Gatekeeper items, and `scripts/measure-dmg-repro.sh`
+   for the full byte-range attribution.
+4. Byte-identical → promote the macOS leg to a required gate; residual
+   → this file and #185's `docs/reproducibility.md` state it exactly,
+   with the provenance attestation as the integrity guarantee.

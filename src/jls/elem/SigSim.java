@@ -84,10 +84,10 @@ public abstract sealed class SigSim extends LogicElement
 			String signal = input.next();
 			InputPin pin = null;
 			for (Element el : circuit.getElements()) {
-				if (!(el instanceof InputPin)) 
+				if (!(el instanceof InputPin ip)) 
 					continue;
 				if (signal.equals(el.getName())) {
-					pin = (InputPin)el;
+					pin = ip;
 				}
 			}
 			if (pin == null) {

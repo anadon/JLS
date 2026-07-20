@@ -3,6 +3,8 @@ package jls;
 import jls.sim.*;
 import java.awt.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Constants for JLS.
  * 
@@ -88,13 +90,21 @@ public final class JLSInfo {
 	/** Number of circuit changes between checkpoint file writes. */
 	public static final int checkPointFreq = 10;			// how many changes between checkpoint file writes
 	/** Maximum number of undos remembered. */
-	public static final int undoStackDepth = 10;			// maximum number of undos
+	public static int undoStackDepth = 10;			// maximum number of undos
 	/** Default simulation time limit. */
 	public static final long defaultTimeLimit = 100000000;		// default simulation time
-	/** The main window frame, used as the parent of dialog boxes. */
-	public static Frame frame = null;					// for dialog boxes
-	/** The simulator, referenced by undo/redo. */
-	public static Simulator sim = null;					// for undo/redo
+	/**
+	 * The main window frame, used as the parent of dialog boxes.
+	 * Null until the main window is created; set once at startup and
+	 * never cleared thereafter.
+	 */
+	public static @Nullable Frame frame = null;					// for dialog boxes
+	/**
+	 * The simulator, referenced by undo/redo. Null until a simulation
+	 * is started; may be reassigned across simulation runs and reverts
+	 * to null when no simulation is active.
+	 */
+	public static @Nullable Simulator sim = null;					// for undo/redo
 	/** True when JLS is running in batch mode. */
 	public static boolean batch = false;				// batch mode
 	/** True when a signal trace should be printed. */
@@ -189,8 +199,12 @@ public final class JLSInfo {
 		Theme.DEFAULT.background();						// editor window background
 	/** Error message from the most recent circuit load failure, or "" if none. */
 	public static String loadError = "";				// error message when loading a circuit
-	/** Structured detail behind loadError, or null if none (issue #58). */
-	public static LoadError lastLoadError = null;		// structured detail behind loadError (#58)
+	/**
+	 * Structured detail behind loadError, or null if none (issue #58).
+	 * Null until a circuit load fails; cleared back to null when a load
+	 * succeeds or when the failure is otherwise reset.
+	 */
+	public static @Nullable LoadError lastLoadError = null;		// structured detail behind loadError (#58)
 
 	/**
 	 * Publish a load failure (or clear it with null). The legacy
@@ -200,7 +214,7 @@ public final class JLSInfo {
 	 *
 	 * @param error The load error, or null to clear the state.
 	 */
-	public static void setLoadError(LoadError error) {
+	public static void setLoadError(@Nullable LoadError error) {
 
 		lastLoadError = error;
 		loadError = error == null ? "" : error.render();

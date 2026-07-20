@@ -26,6 +26,7 @@ class NullMarkedRatchetTest {
 	 * compiler-enforced. Add, never remove.
 	 */
 	private static final List<String> MARKED = List.of(
+			"src/jls",
 			"src/jls/sim",
 			"src/jls/util");
 

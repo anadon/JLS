@@ -110,12 +110,25 @@ class Cfb:
 		"""Parse the header, FAT, miniFAT and directory of the compound file in buf."""
 		if len(buf) < 512 or buf[:8] != CFB_MAGIC:
 			raise NormalizeError("not a compound file (bad magic)")
-		self.buf = buf
+		self.orig_len = len(buf)
 		self.sector_size = 1 << u16(buf, 30)
 		self.mini_size = 1 << u16(buf, 32)
 		self.mini_cutoff = u32(buf, 56)
-		# highest sector number that is *fully* present in the file
-		self.max_sector = len(buf) // self.sector_size - 2
+		# A conforming MS-CFB writer (jpackage/WiX for large installers) may
+		# leave the physical file ending mid-sector: the final sector begins
+		# within the file but only part of it is present on disk.  Windows and
+		# olefile tolerate this by zero-filling reads past EOF.  Mirror that by
+		# padding the in-memory *parse* buffer up to a whole-sector multiple, so
+		# a FAT chain that legitimately ends on that partial sector is readable.
+		# The padding lives only in self.buf (the parse view); normalize()
+		# rebuilds its output from the caller's original-length buffer, so the
+		# written file never grows and normalization stays idempotent.
+		pad = (-len(buf)) % self.sector_size
+		if pad:
+			buf = buf + b"\x00" * pad
+		self.buf = buf
+		# highest sector number that is *fully* present in the padded buffer
+		self.max_sector = len(self.buf) // self.sector_size - 2
 		self.fat = self._read_fat()
 		self.minifat = self._read_chain_words(u32(buf, 60))
 		self.dir_sectors = self._chain(u32(buf, 48))
@@ -366,6 +379,16 @@ def normalize(buf, epoch):
 		patches, guid_ranges, cab_members = collect_patches(cfb, epoch)
 	except (struct.error, IndexError, ValueError) as e:
 		raise NormalizeError("malformed compound file: %s" % e) from e
+	# Every rewrite must land in bytes that physically exist in the input.  The
+	# parse buffer may have been zero-padded past EOF for a partial final
+	# sector; a patch or GUID range in that padded tail would extend the output
+	# and break length-preservation/idempotence, so refuse rather than grow.
+	for foff, rep in patches:
+		if foff + len(rep) > cfb.orig_len:
+			raise NormalizeError("patch at %d extends past end of file" % foff)
+	for foff, ln in guid_ranges:
+		if foff + ln > cfb.orig_len:
+			raise NormalizeError("package-code range at %d extends past end of file" % foff)
 	out = bytearray(buf)
 	for foff, rep in patches:
 		out[foff : foff + len(rep)] = rep
@@ -395,8 +418,13 @@ def source_date_epoch(argv_value):
 # --- self test --------------------------------------------------------------
 
 
-def _synthetic_msi(guid, epoch_times, cab_times, payload_seed):
-	"""Build a minimal but structurally valid MSI-shaped compound file for the self-test."""
+def _synthetic_msi(guid, epoch_times, cab_times, payload_seed, sector_size=512, truncate_tail=False):
+	"""Build a minimal but structurally valid MSI-shaped compound file for the self-test.
+
+	sector_size selects the CFB layout: 512 -> version 3, 4096 -> version 4.
+	truncate_tail drops all but a few bytes of the final (cabinet) sector so the
+	image ends mid-sector, reproducing the real jpackage/WiX MSI shape from #190
+	(a FAT chain that legitimately ends on a partially-present final sector)."""
 
 	def dirent(name, etype, start, size, ctime=0, mtime=0, child=FREESECT):
 		n = name.encode("utf-16-le")
@@ -439,30 +467,62 @@ def _synthetic_msi(guid, epoch_times, cab_times, payload_seed):
 		cab += struct.pack("<Q", rng)
 	cab = bytes(cab[:4608])
 
-	nsec = 4 + 9  # fat, dir, minifat, ministream, 9 cab sectors
-	fat = [ENDOFCHAIN] * 4 + [5, 6, 7, 8, 9, 10, 11, 12, ENDOFCHAIN]
-	fat[0] = FATSECT
-	fat += [FREESECT] * (128 - len(fat))
-	minifat = [1, 2, ENDOFCHAIN] + [FREESECT] * 125
+	# Lay the streams out over whole sectors of the chosen size.  The sector
+	# map is fixed regardless of sector size: 0=FAT, 1=directory, 2=miniFAT,
+	# 3=mini-stream container, 4.. = the cabinet's data-sector chain.
+	ss = sector_size
+	entries_per_fat = ss // 4
+	ncab = (len(cab) + ss - 1) // ss  # cabinet data sectors
+	cab_first = 4
+	total_sectors = cab_first + ncab
+	assert total_sectors <= entries_per_fat, "self-test layout needs a single DIFAT-free FAT sector"
 
+	fat = [FREESECT] * entries_per_fat
+	fat[0] = FATSECT  # the FAT itself
+	fat[1] = ENDOFCHAIN  # directory
+	fat[2] = ENDOFCHAIN  # miniFAT
+	fat[3] = ENDOFCHAIN  # mini-stream container
+	for i in range(ncab):
+		s = cab_first + i
+		fat[s] = ENDOFCHAIN if i == ncab - 1 else s + 1
+	minifat = [1, 2, ENDOFCHAIN] + [FREESECT] * (entries_per_fat - 3)
+
+	major = 3 if ss == 512 else 4
+	sector_shift = ss.bit_length() - 1
 	hdr = bytearray(512)
 	hdr[:8] = CFB_MAGIC
-	struct.pack_into("<HHHHH", hdr, 24, 0x3E, 3, 0xFFFE, 9, 6)
+	struct.pack_into("<HHHHH", hdr, 24, 0x3E, major, 0xFFFE, sector_shift, 6)
 	struct.pack_into("<IIIIIIII", hdr, 40, 0, 1, 1, 0, 4096, 2, 1, ENDOFCHAIN)
 	struct.pack_into("<I", hdr, 72, 0)
 	struct.pack_into("<I", hdr, 76, 0)
 	for i in range(1, 109):
 		struct.pack_into("<I", hdr, 76 + 4 * i, FREESECT)
+	# the 512-byte header occupies the whole first sector of the file
+	hdr = bytes(hdr) + b"\x00" * (ss - 512)
 
-	dirsec = dirent("Root Entry", 5, 3, 192, ctime=epoch_times, mtime=epoch_times, child=2)
-	dirsec += dirent(SUMMARY_NAME, 2, 0, 172, mtime=epoch_times)
-	dirsec += dirent("Disk1Cab", 2, 4, 4608, mtime=epoch_times)
-	dirsec += b"\x00" * 128
+	def sector(data):
+		assert len(data) <= ss
+		return data + b"\x00" * (ss - len(data))
 
-	mini = summary + b"\x00" * (512 - len(summary))
-	body = struct.pack("<128I", *fat) + dirsec + struct.pack("<128I", *minifat) + mini + cab
-	assert len(body) == nsec * 512
-	return bytes(hdr) + body
+	fat_sec = sector(struct.pack("<%dI" % entries_per_fat, *fat))
+	dir_data = (
+		dirent("Root Entry", 5, 3, 192, ctime=epoch_times, mtime=epoch_times, child=2)
+		+ dirent(SUMMARY_NAME, 2, 0, 172, mtime=epoch_times)
+		+ dirent("Disk1Cab", 2, cab_first, 4608, mtime=epoch_times)
+	)
+	dir_sec = sector(dir_data)
+	minifat_sec = sector(struct.pack("<%dI" % entries_per_fat, *minifat))
+	mini_sec = sector(summary)  # mini-stream container: summary in mini sectors 0..2
+	cab_region = cab + b"\x00" * (ncab * ss - len(cab))
+
+	image = hdr + fat_sec + dir_sec + minifat_sec + mini_sec + cab_region
+	assert len(image) == (1 + total_sectors) * ss
+	if truncate_tail:
+		# End the physical file a few bytes into the final cab sector, so the
+		# last referenced sector begins within the file but is not fully
+		# present -- the exact #190 shape.  Only zero payload padding is lost.
+		image = image[: len(image) - ss + 16]
+	return image
 
 
 def self_test():
@@ -485,6 +545,26 @@ def self_test():
 	ncc, scc = normalize(c, epoch)
 	assert scc["package_code"] != sa["package_code"], "package code must track content"
 	assert GUID_RE.match(sa["package_code"].encode("ascii"))
+	# #190 regression: large real installers are version-4 (4096-byte-sector)
+	# compound files whose physical length is not a whole number of sectors, so
+	# the final cabinet sector begins within the file but is only partly present
+	# (olefile/Windows zero-fill the tail; the parser must too).  Cover both
+	# sector sizes, aligned and truncated, proving parse + convergence +
+	# idempotence + length-preservation on every combination.  Before the fix
+	# the truncated cases raised "sector N beyond end of file".
+	for ss in (512, 4096):
+		for trunc in (False, True):
+			va = _synthetic_msi(g1, 1700000001, 1710000002, payload_seed=42, sector_size=ss, truncate_tail=trunc)
+			vb = _synthetic_msi(g2, 1650000003, 1660000004, payload_seed=42, sector_size=ss, truncate_tail=trunc)
+			if trunc:
+				assert len(va) % ss != 0, "truncated shape must end mid-sector"
+			nva, sva = normalize(va, epoch)
+			nvb, svb = normalize(vb, epoch)
+			assert nva == nvb, "sector=%d trunc=%s builds must converge" % (ss, trunc)
+			assert sva["cab_members"] == 2 and sva["changed"]
+			assert len(nva) == len(va), "normalization must preserve file length"
+			nvc, svc = normalize(nva, epoch)
+			assert nvc == nva and not svc["changed"], "sector=%d trunc=%s must be idempotent" % (ss, trunc)
 	# refusal: non-CFB and truncated inputs raise, never return garbage
 	for bad in (b"not an msi at all" + b"\x00" * 600, a[:700]):
 		try:

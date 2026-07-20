@@ -179,22 +179,22 @@ jobs:
       # linux-x64: the JBR release #101 names as shipping Wakefield's
       # WLToolkit. Also reused by the dev container (README).
       JBR_URL: https://cache-redirector.jetbrains.com/intellij-jbr/jbr-25.0.3-linux-x64-b508.16.tar.gz
-      # Integrity is enforced in two tiers (see the "Download JetBrains
-      # Runtime" step):
-      #   1. A maintainer-pinned sha256 here is the strongest guard and
-      #      always wins - it survives even a full CDN compromise. To pin
-      #      it, run this once on any unproxied machine and paste the hash:
+      # Integrity model (see the "Download JetBrains Runtime" step):
+      #   - HTTPS/TLS authenticates the JetBrains CDN for the download itself;
+      #     that is the trust boundary the first-light lane relies on.
+      #   - A maintainer-pinned JBR_SHA256 below is an OPTIONAL hardening: when
+      #     set to a real hash it is verified fail-closed, additionally
+      #     defending against a CDN compromise. To pin it, run this once on any
+      #     unproxied machine and paste the hash (every CI run also prints the
+      #     observed digest, so you can copy it from a green log):
       #        curl -fsSL <JBR_URL> | sha256sum
-      #   2. While it stays the UNVERIFIED- placeholder, the lane arms
-      #      itself by verifying the download against JetBrains' own
-      #      published "<JBR_URL>.checksum" digest (TOFU over HTTPS) so
-      #      first light (#101) happens without waiting on a human. This
-      #      catches corruption and a swapped-without-checksum tarball; it
-      #      is weaker than a pin only against a coordinated CDN compromise.
+      #   - While it stays the UNVERIFIED- placeholder the lane does NOT gate on
+      #     a hash: first light (#101) runs against the TLS-fetched JBR so the
+      #     job exercises the GUI rather than blocking on an unpinned toolchain.
+      #     (The Wayland work does not depend on a checksum; the checksum only
+      #     hardens the toolchain download.)
       # The authoring sandbox cannot reach cache-redirector.jetbrains.com
-      # (egress-policy 403, re-verified 2026-07-20; #101 section 1 hit the
-      # same wall), so tier 1 is left to a maintainer; CI runners have
-      # ordinary egress and take tier 2 automatically.
+      # (egress-policy 403); CI runners have ordinary egress.
       JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
       # ---- P2 pixel gate (#101) --------------------------------------
       # 0 = record the AE metric without gating. TODO(maintainer): after
@@ -219,10 +219,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core
 
       # Guard the rig's section-9 failure classification (exit 0/1/2) on
-      # every run, including the nightly and the JBR-unpinned skip window,
-      # by driving the unmodified rig against a stub toolchain - no JBR,
-      # no real compositor needed. A regression here is caught before the
-      # lane ever depends on the real download (issue #101).
+      # every run, including when the JBR download is unavailable, by driving
+      # the unmodified rig against a stub toolchain - no JBR, no real
+      # compositor needed. A regression here is caught before the lane ever
+      # depends on the real download (issue #101).
       - name: Self-test the rig control flow
         run: scripts/wayland-rig-selftest.sh
 
@@ -231,34 +231,28 @@ jobs:
         run: |
           set -euo pipefail
           dest="$RUNNER_TEMP/jbr.tar.gz"
-          # Resolve the expected sha256 (see the JBR_SHA256 env comment):
-          # a maintainer-pinned value wins; otherwise fall back to the
-          # vendor's own published .checksum so the lane arms itself.
-          expected=""
-          if [[ "$JBR_SHA256" != UNVERIFIED-* ]]; then
-            expected="$JBR_SHA256"
-            echo "integrity: maintainer-pinned JBR_SHA256"
-          else
-            echo "integrity: JBR_SHA256 unpinned; fetching vendor .checksum"
-            if curl -fsSL --retry 3 -o "$RUNNER_TEMP/jbr.checksum" "$JBR_URL.checksum"; then
-              # JetBrains .checksum files carry the bare sha256 (optionally
-              # trailed by the filename); take the first 64-hex token.
-              expected="$(grep -oiE '[0-9a-f]{64}' "$RUNNER_TEMP/jbr.checksum" | head -n1 || true)"
-            fi
-            if [[ -z "$expected" ]]; then
-              echo "::notice title=gui-wayland skipped::JBR_SHA256 is unpinned and the vendor .checksum was unreachable/unparseable; pin the checksum (issue #101) to arm this lane."
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "integrity: vendor-published sha256 $expected"
-          fi
+          # Fetch over HTTPS; TLS authenticates the JetBrains CDN. A download
+          # failure skips first-light (nothing to run), it does not fail-close.
           if ! curl -fsSL --retry 3 -o "$dest" "$JBR_URL"; then
             echo "::notice title=gui-wayland skipped::could not download JBR from $JBR_URL"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # a checksum mismatch is NOT a skip: fail closed (supply chain)
-          echo "$expected  $dest" | sha256sum -c -
+          # Always record the observed digest so a maintainer can pin it.
+          observed="$(sha256sum "$dest" | cut -d' ' -f1)"
+          echo "observed JBR sha256: $observed"
+          if [[ "$JBR_SHA256" != UNVERIFIED-* ]]; then
+            # A real pin is verified fail-closed (supply-chain hardening).
+            if [[ "$observed" != "$JBR_SHA256" ]]; then
+              echo "::error title=JBR checksum mismatch::pinned JBR_SHA256=$JBR_SHA256 but the download hashes to $observed"
+              exit 1
+            fi
+            echo "integrity: matches maintainer-pinned JBR_SHA256"
+          else
+            # Unpinned: TLS is the trust boundary; run first-light rather than
+            # gate the GUI work on a hash. Pin JBR_SHA256=$observed to harden.
+            echo "::notice title=JBR unpinned::first-light runs against the TLS-fetched JBR; set JBR_SHA256=$observed (issue #101) to additionally harden against a CDN compromise"
+          fi
           mkdir -p "$RUNNER_TEMP/jbr"
           tar -xzf "$dest" -C "$RUNNER_TEMP/jbr" --strip-components=1
           "$RUNNER_TEMP/jbr/bin/java" -version

@@ -52,12 +52,14 @@ jobs:
           cache: maven
 
       # External HDL simulators activate the otherwise-skipped
-      # Verilog/VHDL validation tests (issue #60); xvfb activates the
+      # Verilog/VHDL validation tests (issue #60), yosys the netlist
+      # ground-truth and import legs (issues #61/#63 - YosysGroundTruthTest
+      # arms only when yosys is on PATH); xvfb activates the
       # display-tagged UI suite (issue #162). Best-effort so a
       # transient apt failure doesn't block the build - each affected
       # suite skips itself when its tool is missing
-      - name: Install HDL simulators and virtual display
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl xvfb || echo "some optional tools unavailable; their tests will skip"
+      - name: Install HDL toolchain and virtual display
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends iverilog ghdl yosys xvfb || echo "some optional tools unavailable; their tests will skip"
 
       # Compiles with -Xlint:deprecation,removal,unchecked -Werror, runs
       # the headless test suite, and runs the SpotBugs check goal
@@ -173,17 +175,22 @@ jobs:
       # linux-x64: the JBR release #101 names as shipping Wakefield's
       # WLToolkit. Also reused by the dev container (README).
       JBR_URL: https://cache-redirector.jetbrains.com/intellij-jbr/jbr-25.0.3-linux-x64-b508.16.tar.gz
-      # TODO(maintainer): replace with the tarball's real sha256. The
-      # value could not be verified from the authoring sandbox (egress
-      # to cache-redirector.jetbrains.com is proxy-blocked; #101 section
-      # 1 hit the same wall); runners have ordinary egress, so:
-      #   curl -fsSL <JBR_URL> | sha256sum
-      # Until then this placeholder fails the checksum on purpose and
-      # the job skips with a notice rather than running unverified bits.
-      # (Re-verified 2026-07-18: cache-redirector.jetbrains.com is still
-      # an egress-policy denial from the authoring sandbox, and the hash
-      # is not published anywhere else reachable - GitHub release pages
-      # only link the CDN-hosted .checksum file.)
+      # Integrity is enforced in two tiers (see the "Download JetBrains
+      # Runtime" step):
+      #   1. A maintainer-pinned sha256 here is the strongest guard and
+      #      always wins - it survives even a full CDN compromise. To pin
+      #      it, run this once on any unproxied machine and paste the hash:
+      #        curl -fsSL <JBR_URL> | sha256sum
+      #   2. While it stays the UNVERIFIED- placeholder, the lane arms
+      #      itself by verifying the download against JetBrains' own
+      #      published "<JBR_URL>.checksum" digest (TOFU over HTTPS) so
+      #      first light (#101) happens without waiting on a human. This
+      #      catches corruption and a swapped-without-checksum tarball; it
+      #      is weaker than a pin only against a coordinated CDN compromise.
+      # The authoring sandbox cannot reach cache-redirector.jetbrains.com
+      # (egress-policy 403, re-verified 2026-07-20; #101 section 1 hit the
+      # same wall), so tier 1 is left to a maintainer; CI runners have
+      # ordinary egress and take tier 2 automatically.
       JBR_SHA256: "UNVERIFIED-PLACEHOLDER-fill-in-real-sha256-see-issue-101"
       # ---- P2 pixel gate (#101) --------------------------------------
       # 0 = record the AE metric without gating. TODO(maintainer): after
@@ -207,24 +214,49 @@ jobs:
       - name: Install Wayland rig tools
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends sway grim jq imagemagick fontconfig fonts-dejavu-core
 
+      # Guard the rig's section-9 failure classification (exit 0/1/2) on
+      # every run, including the nightly and the JBR-unpinned skip window,
+      # by driving the unmodified rig against a stub toolchain - no JBR,
+      # no real compositor needed. A regression here is caught before the
+      # lane ever depends on the real download (issue #101).
+      - name: Self-test the rig control flow
+        run: scripts/wayland-rig-selftest.sh
+
       - name: Download JetBrains Runtime
         id: jbr
         run: |
           set -euo pipefail
-          if [[ "$JBR_SHA256" == UNVERIFIED-* ]]; then
-            echo "::notice title=gui-wayland skipped::JBR_SHA256 is still the placeholder; pin the real checksum (issue #101) to arm this lane."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          dest="$RUNNER_TEMP/jbr.tar.gz"
+          # Resolve the expected sha256 (see the JBR_SHA256 env comment):
+          # a maintainer-pinned value wins; otherwise fall back to the
+          # vendor's own published .checksum so the lane arms itself.
+          expected=""
+          if [[ "$JBR_SHA256" != UNVERIFIED-* ]]; then
+            expected="$JBR_SHA256"
+            echo "integrity: maintainer-pinned JBR_SHA256"
+          else
+            echo "integrity: JBR_SHA256 unpinned; fetching vendor .checksum"
+            if curl -fsSL --retry 3 -o "$RUNNER_TEMP/jbr.checksum" "$JBR_URL.checksum"; then
+              # JetBrains .checksum files carry the bare sha256 (optionally
+              # trailed by the filename); take the first 64-hex token.
+              expected="$(grep -oiE '[0-9a-f]{64}' "$RUNNER_TEMP/jbr.checksum" | head -n1 || true)"
+            fi
+            if [[ -z "$expected" ]]; then
+              echo "::notice title=gui-wayland skipped::JBR_SHA256 is unpinned and the vendor .checksum was unreachable/unparseable; pin the checksum (issue #101) to arm this lane."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "integrity: vendor-published sha256 $expected"
           fi
-          if ! curl -fsSL --retry 3 -o "$RUNNER_TEMP/jbr.tar.gz" "$JBR_URL"; then
+          if ! curl -fsSL --retry 3 -o "$dest" "$JBR_URL"; then
             echo "::notice title=gui-wayland skipped::could not download JBR from $JBR_URL"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           # a checksum mismatch is NOT a skip: fail closed (supply chain)
-          echo "$JBR_SHA256  $RUNNER_TEMP/jbr.tar.gz" | sha256sum -c -
+          echo "$expected  $dest" | sha256sum -c -
           mkdir -p "$RUNNER_TEMP/jbr"
-          tar -xzf "$RUNNER_TEMP/jbr.tar.gz" -C "$RUNNER_TEMP/jbr" --strip-components=1
+          tar -xzf "$dest" -C "$RUNNER_TEMP/jbr" --strip-components=1
           "$RUNNER_TEMP/jbr/bin/java" -version
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
@@ -346,10 +378,15 @@ jobs:
   # this job isolates the jlink/jpackage/appimagetool stages.  Installing
   # rpm makes rpmbuild present, so the script's rpm leg (which is skipped
   # when rpmbuild is absent) always runs — and is therefore gated — here.
+  # This is the landed x86_64 required gate; the aarch64 leg is the separate
+  # advisory job below (kept separate so this required check keeps its name).
   installer-reproducibility:
     name: Linux installer reproducibility
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    # the nightly cron runs ONLY gui-wayland (see the header comment); like
+    # the other push/PR jobs this double-build is skipped on schedule events
+    if: github.event_name != 'schedule'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -387,3 +424,180 @@ jobs:
             echo "::error::Linux installers are not reproducible: checksums differ between two builds of the same commit"
             exit 1
           }
+
+  # aarch64 Linux installer reproducibility (#189 §10): the same deb/rpm/
+  # AppImage double-build as the x86_64 gate above, on the native
+  # ubuntu-24.04-arm runner.  The build script is arch-agnostic — only the
+  # pinned appimagetool binary differs per arch (build-installer.sh already
+  # carries the aarch64 sha256) — so this reuses the identical mechanism.
+  # Kept a separate advisory (continue-on-error) job rather than a matrix
+  # leg of the gate above, so that required check keeps its stable name
+  # while this arm leg accrues its own 20-run stability record (the same
+  # promotion rule the windows and gui-wayland lanes use); the honesty gate
+  # of #188 §10 still holds — a red leg means a byte still varies.
+  installer-reproducibility-aarch64:
+    name: Linux installer reproducibility (aarch64)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm diffoscope-minimal
+
+      - name: Build installers twice and compare checksums
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && sha256sum * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && sha256sum * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 || {
+            for f in first-dist/*; do
+              echo "==> diffoscope $(basename "$f")"
+              diffoscope --max-text-report-size 500000 \
+                "$f" "target/installer/dist/$(basename "$f")" || true
+            done
+            echo "::error::aarch64 Linux installers are not reproducible: checksums differ between two builds of the same commit"
+            exit 1
+          }
+
+  # Windows msi reproducibility gate (#190, parent #188): WiX embeds a
+  # per-build random package-code GUID plus build timestamps that jpackage
+  # exposes no control over, so scripts/normalize-msi.py rewrites exactly
+  # that volatile set in place (its self-test runs first inside the build
+  # script, and gates the tool).  This job builds the msi twice from one
+  # commit — sharing the jar via JLS_SKIP_BUILD, as the Linux gate does —
+  # and requires the two normalized msis to be byte-identical.  WiX is
+  # preinstalled on windows-latest; git-bash supplies sha256sum.
+  # diffoscope's msi support needs msitools, which is not on the Windows
+  # image, so a mismatch uploads the pair for offline attribution instead.
+  # Advisory (continue-on-error) while its stability record accrues, the
+  # same promotion rule the windows build lane uses; the honesty gate of
+  # #188 §10 still holds — a red leg means a byte still varies.
+  windows-installer-reproducibility:
+    name: Windows installer reproducibility (msi)
+    if: github.event_name != 'schedule'
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build msi twice and compare checksums
+        shell: bash
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && sha256sum * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && sha256sum * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          diff first.sha256 second.sha256 || {
+            echo "::error::Windows msi is not reproducible: normalized checksums differ between two builds of the same commit"
+            exit 1
+          }
+
+      - name: Upload differing msis
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-installer-diverged
+          path: |
+            first-dist/
+            target/installer/dist/
+          retention-days: 30
+
+  # macOS dmg reproducibility (#191, parent #188): hdiutil embeds a random
+  # UDIF SegmentID plus HFS+ volume dates/UUID that jpackage exposes no
+  # control over.  scripts/normalize-dmg.py pins the checksum-safe volatile
+  # set; by default the build script pins only the SegmentID (E1) — the
+  # HFS+ envelope pass is opt-in (JLS_DMG_FULL_NORMALIZE) until it is
+  # verified on real macOS hardware (docs/dmg-reproducibility.md §4/§5).
+  # So this leg is honestly a MEASUREMENT, not yet a passing gate: it
+  # double-builds, records whether the two dmgs match, and on any residual
+  # runs diffoscope and uploads the pair so "not reproducible" stays a
+  # bounded, inspectable claim (#188 §10).  continue-on-error keeps that
+  # residual from blocking; it promotes to a gate once the full pass is
+  # validated and byte-identical.  macOS lacks sha256sum (uses shasum).
+  macos-installer-reproducibility:
+    name: macOS installer reproducibility (dmg)
+    if: github.event_name != 'schedule'
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build dmg twice and compare checksums
+        id: compare
+        shell: bash
+        run: |
+          mvn -B -q -DskipTests package
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          mkdir first-dist
+          cp target/installer/dist/* first-dist/
+          ( cd first-dist && shasum -a 256 * ) > first.sha256
+          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
+          ( cd target/installer/dist && shasum -a 256 * ) > second.sha256
+          echo "first build:";  cat first.sha256
+          echo "second build:"; cat second.sha256
+          if diff first.sha256 second.sha256; then
+            echo "dmg is byte-identical across two builds"
+            echo "differing=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::dmg differs between two builds — recording the residual (#191); this leg is a measurement until the HFS+ envelope pass is validated on macOS"
+            echo "differing=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Attribute the residual with diffoscope
+        if: steps.compare.outputs.differing == '1'
+        shell: bash
+        run: |
+          pipx install diffoscope || pip3 install --user diffoscope || true
+          export PATH="$HOME/.local/bin:$PATH"
+          for f in first-dist/*; do
+            name="$(basename "$f")"
+            echo "==> diffoscope $name"
+            diffoscope --max-text-report-size 500000 \
+              "$f" "target/installer/dist/$name" || true
+          done
+
+      - name: Upload differing dmgs
+        if: steps.compare.outputs.differing == '1'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-installer-diverged
+          path: |
+            first-dist/
+            target/installer/dist/
+          retention-days: 30

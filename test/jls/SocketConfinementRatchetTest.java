@@ -20,10 +20,11 @@ import org.junit.jupiter.api.Test;
  * channel construction may only ever appear under {@code
  * jls.collab.net}, so the network-facing surface cannot quietly
  * spread through the codebase - the property SECURITY.md's collab
- * threat model rests on. Today the allowed set is empty too: the
- * Stage 1a crypto core is transport-agnostic and no listener code
- * exists anywhere; when the socket slice lands, its files join the
- * allowlist here, one by one, each with a reason.
+ * threat model rests on. The Stage 1a crypto core is
+ * transport-agnostic; the socket slice ({@code SessionListener},
+ * {@code SocketSession}) now lives under that one allowed directory
+ * and nowhere else, so the network surface stays confined to the
+ * package the architecture reserves for it.
  *
  * A second ratchet pins research doc section 6.1's hardest rule:
  * never Java object serialization anywhere under {@code jls.collab}
@@ -47,12 +48,11 @@ class SocketConfinementRatchetTest {
 			"AsynchronousServerSocketChannel.open");
 
 	/**
-	 * The only directory whose files may ever construct sockets.
-	 * Nothing in it does yet - the Stage 1a core is
-	 * transport-agnostic - so today this ratchet also proves the
-	 * repository-wide absence that batch mode and default GUI start
-	 * rely on: no code path can open a listener, because no listener
-	 * code exists.
+	 * The only directory whose files may ever construct sockets. The
+	 * socket transport lives here and only here; everywhere else this
+	 * ratchet proves the repository-wide absence that batch mode and
+	 * default GUI start rely on - no code path outside this package can
+	 * open a listener, because no socket code exists outside it.
 	 */
 	private static final String ALLOWED_PREFIX = "src/jls/collab/net/";
 

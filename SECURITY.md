@@ -139,13 +139,21 @@ are enforced by tests, not convention:
   Frames carry opaque bytes only — what they mean (the closed,
   data-only op vocabulary, its allowlists and caps) is specified in
   the research doc §6.1 and owned by the operation-layer work.
-- **No listener, provably.** No socket construction exists anywhere in
-  JLS today; `SocketConfinementRatchetTest` pins that socket code may
-  only ever appear under `jls.collab.net`, and that nothing under
-  `jls.collab` ever touches Java object serialization. Batch mode and
-  default GUI start cannot open a listener because no listener code
-  exists; when it lands, it must bind only on an explicit
-  "Start session" action (research doc §6.4).
+- **Listener hygiene.** The socket transport (`SessionListener`,
+  `SocketSession`) is the only code in JLS that constructs a socket,
+  and it lives under `jls.collab.net` and nowhere else —
+  `SocketConfinementRatchetTest` and `ArchitectureRulesTest` pin that,
+  along with the rule that nothing under `jls.collab` ever touches Java
+  object serialization. Binding is separate from accepting: a listener
+  is created only by an explicit "Start session" (Share) gesture, so
+  batch mode and the default GUI start construct no listener and open
+  no port. The listener defaults to loopback and accepts one peer at a
+  time; the handshake runs under a read timeout so a stalled peer
+  cannot pin the accepting thread, and each handshake message is
+  length-capped before its buffer is allocated, in the same
+  hostile-input style as frames (research doc §6.4). The join/verify
+  and key-change dialogs that drive these gestures are the following
+  #168 slice under `jls.collab.ui`.
 ## Collaboration payloads (planned; issues #163/#170)
 
 The collaborative-editing program extends the untrusted-input surface

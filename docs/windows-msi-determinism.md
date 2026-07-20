@@ -90,12 +90,19 @@ need a Windows runner or VM:
 2. **Install semantics**: a normalized msi must install, associate
    `.jls`, upgrade over a previous version, and uninstall cleanly on a
    clean Windows VM before any release relies on it.
-3. **CI gate**: once (1) reaches byte-identical, add a double-build
-   comparison to the Windows leg of `release.yml` (or a workflow_call
-   lane) so the property is enforced, not assumed. Until that gate is
-   green, releases keep the per-installer provenance attestation as
-   the integrity guarantee and this document as the bounded-residual
-   statement.
+3. **CI gate**: the `windows-installer-reproducibility` leg of
+   `ci.yml` now double-builds the msi on `windows-latest`, normalizes
+   each build via `normalize-msi.py`, and requires the two to be
+   byte-identical (uploading the pair for offline attribution on any
+   mismatch, since diffoscope's msi support needs msitools, absent on
+   the Windows image). It runs `continue-on-error` while its stability
+   record accrues — the same promotion rule the Windows build lane
+   uses — so a red leg surfaces a residual (honesty gate, #188 §10)
+   without yet blocking. Promote it to a required gate, and add the
+   same comparison to `release.yml`, once (1)/(2) confirm byte-identical
+   normalized output and clean install semantics. Until then releases
+   keep the per-installer provenance attestation as the integrity
+   guarantee and this document as the bounded-residual statement.
 
 If measurement shows a residual beyond the enumerated set, that
 falsifies #190 H1 and the fallback is documented bounded residual

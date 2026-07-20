@@ -154,6 +154,11 @@ public final class CircuitOpReader {
 					&& name == null && dx == null && dy == null
 					&& cw == null);
 			return new RemoveElements(ids);
+		case "SetElementConfig":
+			requireFields(kind, ids.size() == 1 && blocks.size() == 1
+					&& name == null && dx == null && dy == null
+					&& cw == null);
+			return new SetElementConfig(ids.get(0), blocks.get(0));
 		default:
 			throw new OpRejected("unknown op kind '" + clip(kind) + "'");
 		}

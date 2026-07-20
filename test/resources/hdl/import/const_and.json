@@ -1,0 +1,21 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): y = a & 1'b1 (constant driver)",
+  "modules": {
+    "constdrive": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "a": { "direction": "input", "bits": [ 2 ] },
+        "y": { "direction": "output", "bits": [ 3 ] }
+      },
+      "cells": {
+        "and_0": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": { "A_SIGNED": 0, "B_SIGNED": 0, "A_WIDTH": 1, "B_WIDTH": 1, "Y_WIDTH": 1 },
+          "port_directions": { "A": "input", "B": "input", "Y": "output" },
+          "connections": { "A": [ 2 ], "B": [ "1" ], "Y": [ 3 ] }
+        }
+      }
+    }
+  }
+}

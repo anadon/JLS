@@ -258,6 +258,15 @@ push/PR and on a nightly cron that runs only this lane. The development
 container below accepts a `JBR_URL` build argument to bake that runtime
 in.
 
+The rig's failure-classification logic (the exit 0/1/2 verdict above)
+is guarded independently of the JBR download by
+[`scripts/wayland-rig-selftest.sh`](scripts/wayland-rig-selftest.sh),
+which drives the unmodified rig against a stub toolchain (no JBR, no real
+compositor, no network) and asserts each scenario is classified with the
+documented exit code. The `gui-wayland` lane runs it on every event, so a
+regression in the classification is caught even while the lane is skipped
+pending the JBR checksum pin.
+
 ### Development container
 
 [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with

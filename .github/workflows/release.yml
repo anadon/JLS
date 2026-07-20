@@ -250,23 +250,39 @@ jobs:
   # builds and CI cannot drift.
   #
   # Verification status:
-  #   - ubuntu-latest (x86_64 deb + rpm + AppImage): recipe verified
-  #     end-to-end on Linux (deb installed, launcher ran, .jls
-  #     association files present).  Per the #82 adjudication
-  #     (2026-07-17) the Linux legs bundle JetBrains Runtime (Wayland
-  #     WLToolkit) once the JBR sha256 pin in scripts/build-installer.sh
-  #     is armed (issue #101's placeholder convention); until then they
-  #     fall back to the build JDK's jlink image with a loud warning in
-  #     the build log.
+  #   - Every leg now runs an "Install and smoke-test the installer" step
+  #     (below) that actually installs the built artifact on the runner
+  #     that built it and launches it with -h (prints usage, touches no
+  #     AWT/display) before anything is signed, checksummed, or uploaded:
+  #     deb via apt/dpkg plus the .jls mime association and desktop %f
+  #     field code, rpm via rpm2cpio payload extraction (no RPM-based
+  #     GitHub runner exists to host a real rpm database), AppImage via
+  #     --appimage-extract-and-run, msi via a real per-user msiexec
+  #     install/uninstall, dmg via hdiutil attach + Contents/MacOS launch.
+  #     windows-latest, macos-latest, ubuntu-24.04-arm and windows-11-arm
+  #     are GitHub-hosted real per-OS VMs/hardware, so a green run of this
+  #     step on the matrix below *is* the "installed and checked on
+  #     hardware" verification #82 has been waiting on — this only needs
+  #     a dry-run (workflow_dispatch) or tag push to go green once to
+  #     retire the manual matrix.  ubuntu-latest (x86_64) was additionally
+  #     verified by hand end-to-end before this step existed.
+  #   - Per the #82 adjudication (2026-07-17) the Linux legs bundle
+  #     JetBrains Runtime (Wayland WLToolkit) once the JBR sha256 pin in
+  #     scripts/build-installer.sh is armed (issue #101's placeholder
+  #     convention: cache-redirector.jetbrains.com is not reachable from
+  #     this authoring environment, 403 from the egress proxy); until
+  #     then they fall back to the build JDK's jlink image with a loud
+  #     warning in the build log, so this step still smoke-tests a real,
+  #     working (if X11/XWayland-only) installer.
   #   - windows-latest (msi) and macos-latest (dmg, Apple silicon — the
   #     macos-latest runners are arm64): built successfully in dry-runs;
-  #     still continue-on-error until a real msi/dmg has been installed
-  #     and checked on hardware — flip experimental to false then.  The
-  #     icons are real per-platform files (jls.ico / jls.icns are
-  #     PNG-bearing containers from scripts/GenerateIcons.java).
+  #     still continue-on-error until the smoke-test step above has gone
+  #     green on a real run — flip experimental to false then.  The icons
+  #     are real per-platform files (jls.ico / jls.icns are PNG-bearing
+  #     containers from scripts/GenerateIcons.java).
   #   - ubuntu-24.04-arm (aarch64 deb + rpm + AppImage) and
   #     windows-11-arm (aarch64 msi): same recipe on ARM runners;
-  #     experimental until installed and checked on hardware.
+  #     experimental until the smoke test has gone green there too.
   #   - riscv64: no GitHub runners exist and jpackage cannot
   #     cross-compile its launcher, so RISC-V is served by the container
   #     image (built via QEMU below) and the architecture-independent jar.
@@ -422,6 +438,91 @@ jobs:
         env:
           JLS_SKIP_BUILD: "1"
         run: bash scripts/build-installer.sh
+
+      # The "installed and checked on hardware" leg of #82: every one of
+      # these runners (windows-latest, macos-latest, ubuntu-24.04-arm,
+      # windows-11-arm) is a real per-OS GitHub-hosted VM, so actually
+      # installing the artifact this job just built and launching it is
+      # exactly the manual verification the issue has been waiting on,
+      # done automatically on every dry-run and release. -h prints usage
+      # and returns before anything touches AWT/a display, so this needs
+      # no Xvfb on any platform. A broken bundled runtime, a missing
+      # native launcher, or a silently-failing postinst/mime association
+      # fails the job here instead of surfacing only when a user
+      # double-clicks a downloaded release asset.
+      - name: Install and smoke-test the installer (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -ex
+          DEB="$(ls target/installer/dist/jls_*.deb)"
+          # apt-get only treats this as a local file, rather than a
+          # package name to resolve, when the path is absolute or
+          # ./-prefixed
+          sudo apt-get install -y -qq "./${DEB}"
+          /opt/jls/bin/JLS -h
+          grep -q '^Exec=.*%f' /opt/jls/lib/jls-JLS.desktop
+          if [ "$(xdg-mime query default application/x-jls-circuit)" = "jls-JLS.desktop" ]; then
+            echo "default .jls handler registered"
+          else
+            echo "::warning::no desktop-menu provider on this runner; JLS was not recorded as the default .jls handler (see resources/packaging/resource-dir-linux/postinst) -- the mime type, icon, and launcher are still verified above"
+          fi
+          sudo apt-get remove -y -qq jls
+
+          RPM="$(ls target/installer/dist/jls-*.rpm 2>/dev/null || true)"
+          if [ -n "${RPM}" ]; then
+            # no RPM-based GitHub runner exists to host a real rpm
+            # database, so the payload is smoke-tested by extraction
+            # rather than a genuine `rpm -i`
+            command -v rpm2cpio >/dev/null 2>&1 || sudo apt-get install -y -qq rpm2cpio cpio
+            EXTRACT="$(mktemp -d)"
+            rpm2cpio "${RPM}" | (cd "${EXTRACT}" && cpio -idm --quiet)
+            chmod +x "${EXTRACT}/opt/jls/bin/JLS"
+            "${EXTRACT}/opt/jls/bin/JLS" -h
+          fi
+
+          for appimage in target/installer/dist/JLS-*.AppImage; do
+            [ -e "${appimage}" ] || continue
+            chmod +x "${appimage}"
+            "${appimage}" --appimage-extract-and-run -h
+          done
+
+      - name: Install and smoke-test the installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $msi = (Get-ChildItem target/installer/dist/JLS-*.msi | Select-Object -First 1).FullName
+          Write-Host "installing $msi"
+          $log = Join-Path $env:RUNNER_TEMP 'jls-msi-install.log'
+          $install = Start-Process msiexec.exe -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$log`"") -Wait -PassThru
+          if ($install.ExitCode -ne 0) {
+            Get-Content $log -Tail 80
+            throw "msiexec /i exited $($install.ExitCode)"
+          }
+          # per-user install (--win-per-user-install): search rather than
+          # assume a path, since jpackage/WiX choose the install root
+          $exe = Get-ChildItem -Path $env:LOCALAPPDATA, $env:ProgramFiles, ${env:ProgramFiles(x86)} `
+            -Filter JLS.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) { throw "JLS.exe not found under LOCALAPPDATA or Program Files after install" }
+          Write-Host "launcher: $($exe.FullName)"
+          & $exe.FullName -h
+          if ($LASTEXITCODE -ne 0) { throw "JLS.exe -h exited $LASTEXITCODE" }
+          $uninstall = Start-Process msiexec.exe -ArgumentList @('/x', "`"$msi`"", '/qn', '/norestart') -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) { throw "msiexec /x exited $($uninstall.ExitCode)" }
+
+      - name: Install and smoke-test the installer (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -ex
+          DMG="$(ls target/installer/dist/JLS-*.dmg)"
+          MOUNT="$(mktemp -d)"
+          hdiutil attach "${DMG}" -mountpoint "${MOUNT}" -nobrowse -quiet
+          APP="$(ls -d "${MOUNT}"/*.app | head -1)"
+          cp -R "${APP}" /Applications/
+          hdiutil detach "${MOUNT}" -quiet
+          /Applications/JLS.app/Contents/MacOS/JLS -h
+          rm -rf /Applications/JLS.app
 
       # Predictions P1 and P3 from #136, enforced on every signed build:
       # the rpm must verify against the public half of the signing key

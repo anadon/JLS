@@ -33,7 +33,8 @@ import jls.Circuit;
  */
 public sealed interface CircuitOp
 		permits ToggleWatched, AttachProbe, RemoveProbe, RotateElement,
-				FlipElement, MoveElements, AddElements, RemoveElements {
+				FlipElement, MoveElements, AddElements, RemoveElements,
+				SetElementConfig {
 
 	/**
 	 * Validate this op against the circuit and perform it. Validation

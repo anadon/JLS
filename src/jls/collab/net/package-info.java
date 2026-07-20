@@ -24,16 +24,28 @@
  * <li>{@link jls.collab.net.KnownPeers} - persisted trust: verified
  * keys skip re-verification; a changed key for a known name is a loud
  * warning (section 5.2 step 4).</li>
+ * <li>{@link jls.collab.net.SessionListener} - the one place in JLS
+ * that binds a server socket, and only after an explicit Share
+ * gesture; binding is separate from accepting so the join string shows
+ * before any peer connects.</li>
+ * <li>{@link jls.collab.net.SocketSession} - a live TCP session: it
+ * drives the handshake over a socket's byte streams, then carries
+ * {@link jls.collab.net.SecureLink} frames in both directions with one
+ * blocking I/O call per receive (the caller owns the session thread).
+ * </li>
  * </ul>
  *
- * Everything here is transport-agnostic and headless: no sockets are
- * constructed in this package yet (the listener, its lifecycle rules,
- * and the join/verify dialogs are the following #168 slice; the
+ * The crypto core is transport-agnostic; the socket layer is the thin
+ * shell that moves its bytes. Socket construction lives only here (the
  * socket-confinement ratchet {@code jls.SocketConfinementRatchetTest}
- * already pins where socket code may ever live), no Swing is imported
- * (enforced by {@code jls.ArchitectureRulesTest}), and no Java object
- * serialization exists in the protocol (enforced by the same ratchet
- * test). Frame parsing follows the #38 hostile-input discipline:
- * caps, typed rejections, never repair.
+ * and {@code jls.ArchitectureRulesTest} pin that), so a default GUI
+ * start and batch mode - which construct no listener - open no port.
+ * The join/verify and key-change dialogs are the following #168 slice,
+ * under {@code jls.collab.ui}. No Swing is imported here (enforced by
+ * {@code jls.ArchitectureRulesTest}) and no Java object serialization
+ * exists in the protocol (enforced by the same ratchet test). Frame
+ * and handshake parsing both follow the #38 hostile-input discipline:
+ * length caps checked before allocation, typed rejections, never
+ * repair.
  */
 package jls.collab.net;

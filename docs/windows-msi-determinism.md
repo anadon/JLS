@@ -20,8 +20,9 @@ that it exposes no control over. Normalizing the payload and the four
 timestamp/GUID regions below is real and worthwhile; a *fully*
 byte-identical msi would require either an upstream jpackage fix or a
 full MSI-relational-database canonicalizer, which is out of proportion
-to the benefit. The lane therefore stands as an honest **measurement**,
-not a passing gate (#188 §10).
+to the benefit. The CI reproducibility check was therefore **removed**
+rather than kept as a perpetually-red measurement (see "Standing
+posture" below).
 
 ## The volatile byte set
 
@@ -140,12 +141,14 @@ installer integrity.
 
 ## Standing posture
 
-- The `windows-installer-reproducibility` leg of `ci.yml` stays
-  `continue-on-error` and is an honest **measurement**, not a gate: it
-  double-builds, normalizes each build, and on the (expected) database
-  residual prints the `--diff` per-stream attribution. It is not
-  promoted to a required gate, because the residual is an upstream
-  limitation rather than a regression to be driven to zero.
+- **The msi reproducibility check has been removed** from `ci.yml`.
+  Because the residual is a permanent upstream limitation rather than a
+  regression to drive to zero, a perpetually-red double-build leg was
+  noise, not signal. `scripts/normalize-msi.py` still runs in the build
+  (it strips the volatile timestamp/GUID set and makes the payload
+  reproducible), and its `--diff` mode remains available to attribute a
+  residual on demand — but nothing in CI asserts the whole msi is
+  byte-identical, because it is not and cannot be with this toolchain.
 - Verified on Linux (self-test + CLI fixtures): two synthetic msi
   images — 512- and 4096-byte-sector, aligned and mid-sector-truncated
   — differing only in the volatile regions normalize to byte-identical

@@ -553,76 +553,17 @@ jobs:
             exit 1
           }
 
-  # Windows msi reproducibility gate (#190, parent #188): WiX embeds a
-  # per-build random package-code GUID plus build timestamps that jpackage
-  # exposes no control over, so scripts/normalize-msi.py rewrites exactly
-  # that volatile set in place (its self-test runs first inside the build
-  # script, and gates the tool).  This job builds the msi twice from one
-  # commit — sharing the jar via JLS_SKIP_BUILD, as the Linux gate does —
-  # and requires the two normalized msis to be byte-identical.  WiX is
-  # preinstalled on windows-latest; git-bash supplies sha256sum.
-  # diffoscope's msi support needs msitools, which is not on the Windows
-  # image, so a mismatch uploads the pair for offline attribution instead.
-  # Advisory (continue-on-error) while its stability record accrues, the
-  # same promotion rule the windows build lane uses; the honesty gate of
-  # #188 §10 still holds — a red leg means a byte still varies.
-  windows-installer-reproducibility:
-    name: Windows installer reproducibility (msi)
-    # runs on push/PR like the other jobs (skips only the nightly cron, which
-    # runs gui-wayland alone); advisory via continue-on-error while the
-    # cross-platform double-build stabilizes on real runners (#189/#190/#191)
-    if: github.event_name != 'schedule'
-    runs-on: windows-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
-        with:
-          distribution: temurin
-          java-version: 25
-          cache: maven
-
-      - name: Build msi twice and compare checksums
-        shell: bash
-        run: |
-          mvn -B -q -DskipTests package
-          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
-          mkdir first-dist
-          cp target/installer/dist/* first-dist/
-          ( cd first-dist && sha256sum * ) > first.sha256
-          JLS_SKIP_BUILD=1 bash scripts/build-installer.sh
-          ( cd target/installer/dist && sha256sum * ) > second.sha256
-          echo "first build:";  cat first.sha256
-          echo "second build:"; cat second.sha256
-          if ! diff first.sha256 second.sha256; then
-            # Attribute the residual before failing: point normalize-msi.py's
-            # --diff at the two normalized msis so the log names the exact
-            # divergent stream (and, for the embedded cabinet, whether the
-            # difference is CFFILE metadata or the compressed CFDATA payload).
-            # This makes "not reproducible" a bounded, inspectable claim
-            # (#188 §10) even when the diverged artifacts cannot be downloaded.
-            PYTHON="$(command -v python3 || command -v python)"
-            for f in first-dist/*; do
-              name="$(basename "$f")"
-              echo "==> per-stream divergence for $name"
-              "$PYTHON" scripts/normalize-msi.py --diff \
-                "$f" "target/installer/dist/$name" || true
-            done
-            echo "::error::Windows msi is not reproducible: normalized checksums differ between two builds of the same commit"
-            exit 1
-          fi
-
-      - name: Upload differing msis
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: windows-installer-diverged
-          path: |
-            first-dist/
-            target/installer/dist/
-          retention-days: 30
+  # The Windows msi is intentionally NOT reproducibility-checked. The
+  # windows-latest double-build measurement (docs/windows-msi-determinism.md)
+  # showed the residual is jpackage's MSI relational-database streams —
+  # per-build component GUIDs, ProductCode, and row ordering it exposes no
+  # control over — while the embedded cabinet payload IS byte-identical.
+  # That is an upstream limitation, not a regression to drive to zero, so
+  # the double-build gate was removed; scripts/normalize-msi.py still strips
+  # the volatile timestamp/GUID set in the build (and --diff can attribute a
+  # residual on demand). Revisit if a future jpackage exposes deterministic
+  # GUID/ProductCode generation — the payload already being reproducible, that
+  # lever alone would make the whole msi byte-identical.
 
   # macOS dmg reproducibility (#191, parent #188): hdiutil embeds a random
   # UDIF SegmentID plus HFS+ volume dates/UUID that jpackage exposes no

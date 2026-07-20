@@ -635,7 +635,10 @@ jobs:
           echo "==> hdiutil verify $dmg"
           hdiutil verify "$dmg"
           mnt="$(mktemp -d)"
-          hdiutil attach "$dmg" -quiet -nobrowse -noautoopen -readonly -mountpoint "$mnt"
+          # jpackage attaches a license (SLA) via --license-file, so a
+          # non-interactive attach blocks on the agreement prompt; pipe 'Y'
+          # to accept it (as build-installer.sh's own attach does).
+          printf 'Y\n' | hdiutil attach "$dmg" -quiet -nobrowse -noautoopen -readonly -mountpoint "$mnt"
           trap 'hdiutil detach "$mnt" -quiet -force >/dev/null 2>&1 || true' EXIT
           app="$mnt/JLS.app"
           test -x "$app/Contents/MacOS/JLS" || { echo "::error::launcher binary missing"; exit 1; }

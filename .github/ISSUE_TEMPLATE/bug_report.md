@@ -8,6 +8,12 @@ labels: bug
 
 <!-- What did you do, what did you expect, what happened instead? -->
 
+## Who this affects
+
+<!-- Who hits this and what does it cost them? e.g. students lose an edit,
+     an instructor's batch grade is wrong, a third-party .jls file
+     mis-loads silently. Skip if it is obvious from "What happened". -->
+
 ## Environment
 
 - JLS version (Help → About):

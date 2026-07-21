@@ -4,7 +4,7 @@ about: A rigorously framed unit of work — defect, improvement, or investigatio
 ---
 
 <!--
-  Template: scientific-task v1 (2026-07)
+  Template: scientific-task v2 (2026-07)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
@@ -42,6 +42,30 @@ about: A rigorously framed unit of work — defect, improvement, or investigatio
 
 <!-- 2-4 sentences: what is wrong or missing, why it matters, and the
      one-line shape of the proposed remedy. -->
+
+## Intended Audience & Impact
+
+<!-- Who is this work for, and how is it meaningful to them? Name the
+     concrete audience(s) JLS actually serves and, per audience, the
+     change they experience — what they can do afterward that they can't
+     today, or what stops going wrong for them. Impact claims are
+     observations too (rule 1): where the harm or gap is measurable
+     (a wrong simulation, a crash, a lost edit, a silent mis-load),
+     point at it.
+
+     The recurring audiences — pick and name the ones this task serves,
+     do not list them all:
+       - Students drawing and simulating circuits in the editor.
+       - Instructors authoring, grading, or auto-checking work in batch
+         (`-b`) mode.
+       - Circuit-file authors and third-party tools that read or write
+         `.jls` files against docs/file-format.md.
+       - Contributors, maintainers, and LLM agents working the codebase.
+       - Packagers and distributors shipping the installers and container.
+     If a task genuinely serves an internal audience only (a refactor, a
+     CI gate), say so and name the downstream audience it protects; "N/A"
+     with no audience means the work has no beneficiary and does not
+     belong on the backlog (rule 2). -->
 
 ## 1. Background & Prior Work
 

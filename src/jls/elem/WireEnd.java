@@ -99,6 +99,19 @@ public final class WireEnd extends LogicElement {
 			if (loadPut != null) {
 				Element elem = circ.getElementByID(loadAttach);
 				Put p = elem.getPut(loadPut);
+				// A connection point (put) takes a single wire net; fan-out is
+				// several wires leaving one end, not several ends on one put.
+				// A file that attaches two different ends to the same put used
+				// to load silently with only the last attachment honored and
+				// the rest left dead (read as undriven) - a silent mis-load.
+				// Reject it instead of simulating a subtly wrong circuit (#58).
+				if (p.isAttached() && p.getAttached() != this) {
+					throw new IllegalStateException("put \"" + loadPut
+							+ "\" of element id " + loadAttach + " has more than"
+							+ " one wire end attached to it; a connection point"
+							+ " takes a single wire net (fan-out is multiple"
+							+ " wires from one end, not multiple ends on one put)");
+				}
 				p.setAttached(this);
 				setPut(p);
 			}

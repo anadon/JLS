@@ -40,9 +40,12 @@ import jls.elem.Put;
  * H2 acceptance test (issue #75): build the tutorial's first two-gate
  * circuit -- an OR gate and a NOT gate wired output-to-input, the A + ~B
  * skeleton of tutorial 1 -- with no pointing device. Every construction
- * step after the palette choice is driven by synthetic key events
- * dispatched to the canvas: arrow keys move the following element, the
- * grid caret, and the selection; Enter places elements, activates the
+ * step after the palette choice is driven through the REAL focus subsystem:
+ * each key is dispatched to the live {@link java.awt.KeyboardFocusManager}
+ * focus owner ({@link EditorGestureSupport#pressKeyThroughFocusOwner}), not
+ * to a hardcoded canvas reference, so the keystroke reaches whatever
+ * component a real user's key would. Arrow keys move the following element,
+ * the grid caret, and the selection; Enter places elements, activates the
  * caret, and commits; the port-to-port connection is made the way the
  * tutorial itself makes it, by moving the NOT gate's output onto an OR
  * input so placement wires them. No {@link java.awt.Robot} and no mouse
@@ -53,8 +56,13 @@ import jls.elem.Put;
  * {@code doClick}, a keyboard-equivalent activation, not a pointer
  * gesture. The gate's creation dialog is real and modal, so a background
  * thread accepts it with its defaults (mirroring {@link PaletteDropTest}).
- * Everything that positions, places, nudges, and connects the gates is
- * keyboard-only.</p>
+ * Because the keys route through the live focus owner, the test re-checks
+ * after <em>each</em> palette choice that the #75 {@code setup()} handoff
+ * put focus on the canvas ({@link EditorGestureSupport#canvasIsFocusOwner});
+ * a focus-stranding regression on the first OR-gate choice or the second
+ * NOT-gate choice therefore turns this red where a canvas-force-feeding
+ * driver would stay green. Everything that positions, places, nudges, and
+ * connects the gates is keyboard-only.</p>
  *
  * <p>The connection uses the editor's coincidence wiring (moving a port
  * onto another creates the wire) rather than free-hand wire drawing with
@@ -140,7 +148,16 @@ class EditorKeyboardConstructionTest {
 			// the setup() requestFocusInWindow this times out).
 			ui.waitFor(ui::canvasIsFocusOwner,
 					"choosing from the palette moved focus to the canvas");
-			ui.pressKey(KeyEvent.VK_ENTER);
+			// The line above is the handoff PROOF (it times out if setup()
+			// failed to move focus - see Mutation A). Then pin the canvas as
+			// the KFM focus owner deterministically before faithful driving:
+			// under the WM-less #162 Xvfb the live focus owner can read null
+			// for a beat after a modal dialog closes even though the canvas is
+			// the frame's focus owner, which a driver reading the live owner
+			// at press time would trip over. focusCanvas() polls the KFM until
+			// the canvas genuinely owns focus, so every key below lands there.
+			ui.focusCanvas();
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER);
 			OrGate or = assertElementPresent(circuit, OrGate.class);
 
 			// 2. arrow-key nudge of a selected element: move the caret onto
@@ -149,12 +166,12 @@ class EditorKeyboardConstructionTest {
 			Rectangle orRect = or.getRect();
 			driveCaretToward(ui, orRect.x + orRect.width / 2,
 					orRect.y + orRect.height / 2);
-			ui.pressKey(KeyEvent.VK_ENTER);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER);
 			int beforeX = or.getX();
-			ui.pressKey(KeyEvent.VK_RIGHT);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_RIGHT);
 			assertEquals(beforeX + step, or.getX(),
 					"arrow key nudged the selected OR gate one grid step");
-			ui.pressKey(KeyEvent.VK_ENTER); // finish the selection, back to idle
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER); // finish, back to idle
 
 			// the OR input we will wire to, read after the nudge
 			Input orIn = firstOf(or, Input.class);
@@ -164,10 +181,10 @@ class EditorKeyboardConstructionTest {
 			// 3. the W key starts a wire at the caret, and Esc abandons it -
 			// pin that the wire tool is reachable from the keyboard
 			driveCaretToward(ui, ix - 6 * step, iy);
-			ui.pressKey(KeyEvent.VK_W);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_W);
 			ui.waitFor(() -> present(circuit, wireEndClass()),
 					"W started a wire");
-			ui.pressKey(KeyEvent.VK_ESCAPE);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ESCAPE);
 			ui.waitFor(() -> !present(circuit, wireEndClass()),
 					"Esc abandoned the wire");
 
@@ -178,6 +195,18 @@ class EditorKeyboardConstructionTest {
 			assertNotNull(notButton, "toolbar has a \"NOT gate\" button");
 			SwingUtilities.invokeAndWait(notButton::doClick);
 			ui.waitFor(() -> present(circuit, NotGate.class), "NOT gate created");
+			// #75 H2, second palette handoff: choosing the SECOND tool
+			// (after a modal creation dialog) must AGAIN hand focus to the
+			// canvas, or the keyboard user's placement keys would strand on
+			// the tool-bar button. The faithful driver below routes through
+			// the live focus owner, so this re-check is load-bearing: if the
+			// second handoff regressed, the caret keys would reach the button
+			// (or throw for no focus owner), not the canvas.
+			ui.waitFor(ui::canvasIsFocusOwner,
+					"choosing the NOT gate handed focus back to the canvas");
+			// handoff proven; pin the KFM owner deterministically (see the
+			// OR-gate note above) before the faithful placement keys below
+			ui.focusCanvas();
 			NotGate not = assertElementPresent(circuit, NotGate.class);
 			Output notOut = firstOf(not, Output.class);
 
@@ -189,7 +218,7 @@ class EditorKeyboardConstructionTest {
 			assertEquals(new Point(ix, iy),
 					new Point(notOut.getX(), notOut.getY()),
 					"keyboard moved the NOT output onto the OR input");
-			ui.pressKey(KeyEvent.VK_ENTER);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER);
 
 			// the keyboard-built circuit is the tutorial's connected pair
 			assertElementPresent(circuit, OrGate.class);
@@ -214,21 +243,26 @@ class EditorKeyboardConstructionTest {
 		int step = JLSInfo.spacing;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 
+			// stage the canvas as the genuine focus owner, then drive every
+			// key through the live focus owner (no palette choice precedes
+			// this test, so there is no setup() handoff to rely on)
+			ui.focusCanvas();
+
 			// caret to a clear grid point, well away from any element
 			driveCaretToward(ui, 20 * step, 10 * step);
 			int startX = ui.keyboardCaret().x;
 			int startY = ui.keyboardCaret().y;
 
 			// W starts the wire, Enter anchors it and begins a drawn segment
-			ui.pressKey(KeyEvent.VK_W);
-			ui.pressKey(KeyEvent.VK_ENTER);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_W);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER);
 			ui.waitFor(() -> present(circuit, wireClass()),
 					"the keyboard started drawing a wire");
 
 			// run the free end out four grid steps to the right; the caret
 			// (the wire's moving end) tracks it there
 			for (int i = 0; i < 4; i++) {
-				ui.pressKey(KeyEvent.VK_RIGHT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_RIGHT);
 			}
 			assertEquals(new Point(startX + 4 * step, startY),
 					ui.keyboardCaret(),
@@ -242,7 +276,7 @@ class EditorKeyboardConstructionTest {
 							+ "each side)");
 
 			// Esc abandons the in-progress end
-			ui.pressKey(KeyEvent.VK_ESCAPE);
+			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ESCAPE);
 		}
 	} // end of keyboardDrawsAWireInOpenSpace method
 
@@ -265,13 +299,13 @@ class EditorKeyboardConstructionTest {
 				return;
 			}
 			if (p.x < tx) {
-				ui.pressKey(KeyEvent.VK_RIGHT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_RIGHT);
 			} else if (p.x > tx) {
-				ui.pressKey(KeyEvent.VK_LEFT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_LEFT);
 			} else if (p.y < ty) {
-				ui.pressKey(KeyEvent.VK_DOWN);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_DOWN);
 			} else {
-				ui.pressKey(KeyEvent.VK_UP);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_UP);
 			}
 		}
 		fail("keyboard could not reach (" + tx + "," + ty + "); last at "
@@ -295,15 +329,15 @@ class EditorKeyboardConstructionTest {
 				return;
 			}
 			if (c == null) {
-				ui.pressKey(KeyEvent.VK_LEFT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_LEFT);
 			} else if (c.x < tx) {
-				ui.pressKey(KeyEvent.VK_RIGHT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_RIGHT);
 			} else if (c.x > tx) {
-				ui.pressKey(KeyEvent.VK_LEFT);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_LEFT);
 			} else if (c.y < ty) {
-				ui.pressKey(KeyEvent.VK_DOWN);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_DOWN);
 			} else {
-				ui.pressKey(KeyEvent.VK_UP);
+				ui.pressKeyThroughFocusOwner(KeyEvent.VK_UP);
 			}
 		}
 		fail("caret could not reach (" + tx + "," + ty + "); last at "

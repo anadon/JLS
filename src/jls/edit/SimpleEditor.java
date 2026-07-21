@@ -2549,6 +2549,14 @@ public abstract class SimpleEditor extends JPanel {
 				button.setToolTipText(tip);
 				button.setBackground(Color.WHITE);
 				item.setToolTipText(tip);
+				// #75 accessibility: the palette buttons are icon-only, so the
+				// shared Action's NAME is the empty string and the button would
+				// otherwise expose a blank accessible name - a screen reader
+				// focusing it would announce nothing. The tooltip carries the
+				// human-readable element name, so make it the accessible name on
+				// both the tool-bar button and its mirror "elements" menu item.
+				button.getAccessibleContext().setAccessibleName(tip);
+				item.getAccessibleContext().setAccessibleName(tip);
 				elements.add(item);
 				return button;
 			} // end of makeElement method

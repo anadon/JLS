@@ -21,9 +21,8 @@ import jlsrun                          # noqa: E402
 IMM = 3
 ADDI = (IMM << 20) | 0x8093            # addi x1, x1, 3  ==  0x00308093
 
-CPU_JLS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
-    "/tmp/claude-0/-home-user-JLS/"
-    "5629c65d-470b-5c3b-a567-4f9019babece/scratchpad", "cpu.jls")
+# default to the committed GUI-built circuit sitting beside this script
+CPU_JLS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "cpu.jls")
 
 # (duration -> expected cycle count) for the cycle=2000 clock
 DURATIONS = [3000, 9000, 15000, 21000, 41000]

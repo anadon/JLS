@@ -37,8 +37,7 @@ import jls.elem.Put;
  */
 public final class RiscvCpu {
 
-	static final String SCR = "/tmp/claude-0/-home-user-JLS/"
-			+ "5629c65d-470b-5c3b-a567-4f9019babece/scratchpad/";
+	static final String SCR = GuiDriver.outDir();
 	static final int IMM = 3; // addi x1, x1, 3
 	static GuiDriver g;
 

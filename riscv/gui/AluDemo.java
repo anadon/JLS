@@ -7,8 +7,7 @@ import jls.elem.Put;
  *  ports, Cin left unconnected -- verifies unconnected-input default and
  *  gives a concrete simulated RISC-V-style computation (5 + 3 = 8). */
 public final class AluDemo {
-	static String scr = "/tmp/claude-0/-home-user-JLS/"
-			+ "5629c65d-470b-5c3b-a567-4f9019babece/scratchpad/";
+	static String scr = GuiDriver.outDir();
 	static GuiDriver g;
 	public static void main(String[] a) throws Exception {
 		try { run(); } catch (Throwable t) { t.printStackTrace(); }

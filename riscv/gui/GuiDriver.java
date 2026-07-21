@@ -60,6 +60,20 @@ public final class GuiDriver {
 		screen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
 	}
 
+	/** Directory for generated artifacts (.jls, screenshots): the
+	 *  {@code JLS_GUI_OUT} environment variable if set, else the system temp
+	 *  directory. Always ends with the platform separator. */
+	public static String outDir() {
+		String d = System.getenv("JLS_GUI_OUT");
+		if (d == null || d.isBlank()) {
+			d = System.getProperty("java.io.tmpdir");
+		}
+		if (!d.endsWith(File.separator)) {
+			d += File.separator;
+		}
+		return d;
+	}
+
 	// ---------------------------------------------------------------
 	// boot
 	// ---------------------------------------------------------------

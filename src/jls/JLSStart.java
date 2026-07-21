@@ -33,11 +33,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.InputMismatchException;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
 import javax.print.PrintService;
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JColorChooser;
@@ -55,6 +57,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import jls.edit.EditOp;
 import jls.edit.Editor;
 import jls.elem.Element;
 import jls.hdl.HdlEmitter;
@@ -119,6 +122,16 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private JSplitPane both;
 	/** The tabbed pane holding one editor per open circuit. */
 	private JTabbedPane edits;
+	/**
+	 * The menu-bar Edit and Element menu items, keyed by operation
+	 * (issue #75). On every tab change {@link #retargetEditMenus()}
+	 * points each item at the currently selected editor's shared
+	 * {@link Action} for that operation, so the menu bar, the popup
+	 * menus, and the canvas key bindings all dispatch through one object
+	 * instead of three copies.
+	 */
+	private final EnumMap<EditOp,JMenuItem> editMenuItems =
+			new EnumMap<EditOp,JMenuItem>(EditOp.class);
 	/** Pseudo-circuit holding the elements most recently cut or copied. */
 	private Circuit clipboard = new Circuit("clipboard");		// for cut and paste
 	/** Persistent user preferences, opened at startup. */
@@ -1116,6 +1129,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 		// set up menu bar
 		JMenuBar bar = new JMenuBar();
 		bar.add(fileMenu());
+		// Edit and Element reuse the selected editor's shared Actions (#75)
+		bar.add(editMenu());
+		bar.add(elementMenu());
 		bar.add(simMenu());
 		bar.add(viewMenu());
 		bar.add(globalMenu());
@@ -1171,6 +1187,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	@Override
 	public void stateChanged(ChangeEvent event) {
+
+		// point the Edit and Element menu items at the newly selected
+		// editor's shared Actions (or disable them when no tab is left) (#75)
+		retargetEditMenus();
 
 		Editor ed = (Editor)edits.getSelectedComponent();
 		if (ed == null) {
@@ -1441,6 +1461,106 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		return menu;
 	} // end of fileMenu method
+
+	/**
+	 * Set up the Edit menu (issue #75): undo, redo, cut, copy, paste,
+	 * delete, and select-all. Each item reuses the currently selected
+	 * editor's shared {@link Action} for that operation - the same
+	 * object the popup menus and canvas key bindings dispatch through -
+	 * retargeted on every tab change by {@link #retargetEditMenus()}.
+	 * The items are always enabled and no-op when no editor is
+	 * selected, matching the rest of the menu bar.
+	 *
+	 * @return the menu.
+	 */
+	public JMenu editMenu() {
+
+		JMenu menu = new JMenu("Edit");
+		menu.setMnemonic(MenuAcceleratorPolicy.editMenuMnemonic());
+		menu.add(makeEditItem(EditOp.UNDO));
+		menu.add(makeEditItem(EditOp.REDO));
+		menu.addSeparator();
+		menu.add(makeEditItem(EditOp.CUT));
+		menu.add(makeEditItem(EditOp.COPY));
+		menu.add(makeEditItem(EditOp.PASTE));
+		menu.add(makeEditItem(EditOp.DELETE));
+		menu.addSeparator();
+		menu.add(makeEditItem(EditOp.SELECT_ALL));
+		return menu;
+	} // end of editMenu method
+
+	/**
+	 * Set up the Element menu (issue #75): rotate clockwise / counter-
+	 * clockwise, flip, watch, probe, modify, and change timing. Like
+	 * the Edit menu, each item reuses the selected editor's shared
+	 * {@link Action}, retargeted on tab change.
+	 *
+	 * @return the menu.
+	 */
+	public JMenu elementMenu() {
+
+		JMenu menu = new JMenu("Element");
+		menu.setMnemonic(MenuAcceleratorPolicy.elementMenuMnemonic());
+		menu.add(makeEditItem(EditOp.ROTATE_CW));
+		menu.add(makeEditItem(EditOp.ROTATE_CCW));
+		menu.add(makeEditItem(EditOp.FLIP));
+		menu.addSeparator();
+		menu.add(makeEditItem(EditOp.WATCH));
+		menu.add(makeEditItem(EditOp.PROBE));
+		menu.add(makeEditItem(EditOp.MODIFY));
+		menu.add(makeEditItem(EditOp.TIMING));
+		return menu;
+	} // end of elementMenu method
+
+	/**
+	 * Create one menu-bar editing item, showing the operation's label
+	 * and accelerator (issue #75). It starts with no action - a no-op
+	 * until an editor is selected - and is registered in
+	 * {@link #editMenuItems} so {@link #retargetEditMenus()} can point
+	 * it at the selected editor's shared {@link Action}. Because a menu
+	 * item's accelerator lives in the window's WHEN_IN_FOCUSED_WINDOW
+	 * map, this also gives every Ctrl/Cmd-modified operation window-wide
+	 * scope, so the shortcut fires with the pointer anywhere in the
+	 * frame; a modal {@link jls.TellUser} dialog is a separate focused
+	 * window and so never receives these.
+	 *
+	 * @param op the editing operation the item performs.
+	 * @return the menu item.
+	 */
+	private JMenuItem makeEditItem(EditOp op) {
+
+		JMenuItem item = new JMenuItem(op.label());
+		item.setAccelerator(op.accelerator(System.getProperty("os.name")));
+		editMenuItems.put(op, item);
+		return item;
+	} // end of makeEditItem method
+
+	/**
+	 * Point every Edit and Element menu item at the currently selected
+	 * editor's shared {@link Action} for its operation (issue #75), so
+	 * the menu bar drives the same object as that editor's popups and
+	 * key bindings. When no editor is selected the items fall back to
+	 * their label and accelerator with no action - always enabled, but
+	 * a no-op.
+	 */
+	private void retargetEditMenus() {
+
+		Editor ed = (Editor)edits.getSelectedComponent();
+		String osName = System.getProperty("os.name");
+		for (EditOp op : editMenuItems.keySet()) {
+			JMenuItem item = editMenuItems.get(op);
+			if (item == null)
+				continue;
+			if (ed == null) {
+				item.setAction(null);
+				item.setText(op.label());
+				item.setAccelerator(op.accelerator(osName));
+			}
+			else {
+				item.setAction(ed.editAction(op));
+			}
+		}
+	} // end of retargetEditMenus method
 
 	/**
 	 * Set up simulator menu.

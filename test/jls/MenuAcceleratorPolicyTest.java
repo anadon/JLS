@@ -179,18 +179,39 @@ class MenuAcceleratorPolicyTest {
 		}
 	}
 
+	/** Wire-start is plain W: issue #75 moved it off the Ctrl/Cmd+W chord
+	 *  it used to share with toggle-watch (the same stroke was shown on
+	 *  two popup items), so it is a plain key like rotate/flip and can
+	 *  never collide with the now-sole Ctrl/Cmd+W watch binding. */
+	@Test
+	void wireStartIsPlainW() {
+		assertEquals(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0),
+				MenuAcceleratorPolicy.wireStartStroke());
+		for (String os : new String[] { "Mac OS X", "Linux",
+				"Windows 11" }) {
+			assertFalse(MenuAcceleratorPolicy.wireStartStroke().equals(
+					KeyStroke.getKeyStroke(KeyEvent.VK_W,
+							MenuAcceleratorPolicy.menuMask(os))),
+					"wire-start must never collide with Ctrl/Cmd+W watch on "
+							+ os);
+		}
+	}
+
 	// ---- menu mnemonics ----
 
 	/** Every top-level menu gets its own mnemonic; Alt+letter must be
-	 *  unambiguous across the menu bar. */
+	 *  unambiguous across the menu bar. Issue #75 added the Edit and
+	 *  Element menus, so all six must stay distinct. */
 	@Test
 	void menuMnemonicsAreDistinct() {
 		Set<Integer> mnemonics = new HashSet<>(List.of(
 				MenuAcceleratorPolicy.fileMenuMnemonic(),
+				MenuAcceleratorPolicy.editMenuMnemonic(),
+				MenuAcceleratorPolicy.elementMenuMnemonic(),
 				MenuAcceleratorPolicy.simulatorMenuMnemonic(),
 				MenuAcceleratorPolicy.globalMenuMnemonic(),
 				MenuAcceleratorPolicy.helpMenuMnemonic()));
-		assertEquals(4, mnemonics.size(),
+		assertEquals(6, mnemonics.size(),
 				"top-level menu mnemonics must be distinct");
 	}
 

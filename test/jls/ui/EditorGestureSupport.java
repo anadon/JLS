@@ -110,6 +110,18 @@ final class EditorGestureSupport implements AutoCloseable {
 	}
 
 	/**
+	 * Whether the edit canvas currently owns the keyboard focus. Used to
+	 * pin the #75 H2 fix: choosing an element from the tool bar must hand
+	 * focus to the canvas so the arrow/Enter placement keys reach it
+	 * without the user first tabbing off the palette.
+	 *
+	 * @return true when the canvas is the focus owner.
+	 */
+	boolean canvasIsFocusOwner() {
+		return canvas.isFocusOwner();
+	}
+
+	/**
 	 * The editor's current circuit. Undo/redo rebuild the circuit
 	 * through the load path and swap in a fresh instance
 	 * ({@code finishDo}: {@code circuit = newCopy}), so the reference
@@ -266,6 +278,106 @@ final class EditorGestureSupport implements AutoCloseable {
 	void clickPopupItem(String text) throws Exception {
 		JMenuItem item = waitForMenuItem(text);
 		SwingUtilities.invokeAndWait(item::doClick);
+	}
+
+	/**
+	 * The currently visible popup-menu item with the given text (issue
+	 * #75). Used to prove the popup item and the canvas key binding
+	 * dispatch through the same shared {@link javax.swing.Action}.
+	 *
+	 * @param text the item's label.
+	 * @return the menu item.
+	 */
+	JMenuItem popupItem(String text) {
+		return waitForMenuItem(text);
+	}
+
+	/**
+	 * The action registered in the canvas' ActionMap under the given key
+	 * (issue #75), read on the EDT. The shared editing Actions are stored
+	 * here by the canvas key bindings, so this lets a test assert the
+	 * binding points at {@code editor.editAction(op)} rather than a
+	 * separate copy.
+	 *
+	 * @param key the ActionMap key (e.g. "do cut").
+	 * @return the bound action, or null if none.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	javax.swing.Action canvasAction(String key) throws Exception {
+		AtomicReference<javax.swing.Action> a = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			if (canvas instanceof javax.swing.JComponent jc) {
+				a.set(jc.getActionMap().get(key));
+			}
+		});
+		return a.get();
+	}
+
+	/**
+	 * The action a keystroke resolves to through the canvas' WHEN_FOCUSED
+	 * maps (issue #75): {@code actionMap.get(inputMap.get(stroke))}, read
+	 * on the EDT. Returns null if either map lacks the entry, so a test
+	 * can pin a binding end to end - removing the InputMap stroke or the
+	 * ActionMap entry makes this null, failing an identity assertion.
+	 *
+	 * @param stroke the keystroke to resolve.
+	 * @return the bound action, or null if the stroke is unbound.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	javax.swing.Action canvasActionForStroke(javax.swing.KeyStroke stroke)
+			throws Exception {
+		AtomicReference<javax.swing.Action> a = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			if (canvas instanceof javax.swing.JComponent jc) {
+				Object name = jc.getInputMap().get(stroke);
+				if (name != null) {
+					a.set(jc.getActionMap().get(name));
+				}
+			}
+		});
+		return a.get();
+	}
+
+	/**
+	 * Dispatch a KEY_PRESSED to the canvas on the EDT (issue #75),
+	 * exercising the same WHEN_FOCUSED InputMap the user's keystroke
+	 * would. Mirrors the synthetic-mouse idiom: no {@link java.awt.Robot},
+	 * so it stays deterministic under Xvfb.
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @param modifiers the extended modifier mask (0 for none).
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void pressKey(int keyCode, int modifiers) throws Exception {
+		java.awt.event.KeyEvent e = new java.awt.event.KeyEvent(canvas,
+				java.awt.event.KeyEvent.KEY_PRESSED, when++, modifiers,
+				keyCode, java.awt.event.KeyEvent.CHAR_UNDEFINED);
+		SwingUtilities.invokeAndWait(() -> canvas.dispatchEvent(e));
+	}
+
+	/**
+	 * Dispatch an unmodified KEY_PRESSED to the canvas on the EDT.
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void pressKey(int keyCode) throws Exception {
+		pressKey(keyCode, 0);
+	}
+
+	/**
+	 * The editor's keyboard construction caret (issue #75), read on the
+	 * EDT, or null if the keyboard has not been used to point yet. Lets a
+	 * keyboard-only construction test see where the next placement or wire
+	 * endpoint will land between key presses.
+	 *
+	 * @return a copy of the caret point, or null.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	java.awt.Point keyboardCaret() throws Exception {
+		AtomicReference<java.awt.Point> p = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> p.set(editor.keyboardCaret()));
+		return p.get();
 	}
 
 	// ------------------------------------------------------------------

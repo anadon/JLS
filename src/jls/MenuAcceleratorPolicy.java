@@ -249,6 +249,26 @@ public final class MenuAcceleratorPolicy {
 	} // end of flipStroke method
 
 	/**
+	 * The wire-start canvas binding: plain W, no modifier, on every
+	 * platform. Historically wire-start shared the menu-mask + W chord
+	 * with toggle-watch, a two-functions-on-one-stroke overload
+	 * (issue #75): the same Ctrl/Cmd+W was shown as the accelerator on
+	 * both the Wire and the Watch popup items. Moving wire-start to plain
+	 * W frees Ctrl/Cmd+W to mean toggle-watch alone. W is the natural
+	 * mnemonic for "Wire" and, like rotate/flip, a bare letter cannot
+	 * collide with any menu-mask chord and the canvas has no text field
+	 * to steal typing from.
+	 *
+	 * @return the wire-start keystroke.
+	 *
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#wireStartIsPlainW()
+	 */
+	public static KeyStroke wireStartStroke() {
+
+		return KeyStroke.getKeyStroke(KeyEvent.VK_W, 0);
+	} // end of wireStartStroke method
+
+	/**
 	 * The view-current-value canvas binding: plain V, no modifier, on
 	 * every platform. Historically this was menu-mask + S, which would
 	 * shadow the menu bar's Save accelerator whenever the canvas had
@@ -278,6 +298,34 @@ public final class MenuAcceleratorPolicy {
 
 		return KeyEvent.VK_F;
 	} // end of fileMenuMnemonic method
+
+	/**
+	 * The Edit menu mnemonic (issue #75): the menu-bar Edit menu holding
+	 * the undo/redo/cut/copy/paste/delete/select-all operations.
+	 *
+	 * @return the Edit menu mnemonic key code.
+	 *
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 */
+	public static int editMenuMnemonic() {
+
+		return KeyEvent.VK_E;
+	} // end of editMenuMnemonic method
+
+	/**
+	 * The Element menu mnemonic (issue #75): the menu-bar Element menu
+	 * holding the rotate/flip/watch/probe/modify/timing operations. E is
+	 * taken by the Edit menu, so Element uses L (its second consonant),
+	 * keeping every top-level mnemonic distinct.
+	 *
+	 * @return the Element menu mnemonic key code.
+	 *
+	 * @jls.testedby jls.MenuAcceleratorPolicyTest#menuMnemonicsAreDistinct()
+	 */
+	public static int elementMenuMnemonic() {
+
+		return KeyEvent.VK_L;
+	} // end of elementMenuMnemonic method
 
 	/**
 	 * The Simulator menu mnemonic.

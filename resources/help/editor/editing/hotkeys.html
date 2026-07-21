@@ -46,7 +46,7 @@ The keys and their functions are:
     </tr>
 <tr>
     <td> Start Wire </td>
-    <td> ctrl-w </td>
+    <td> w </td>
     </tr>
 <tr>
     <td> End Wire </td>
@@ -88,22 +88,39 @@ The keys and their functions are:
     <td> Lock Element </td>
     <td> ctrl-l </td>
     </tr>
+<tr>
+    <td> Move Caret / Following Element / Wire End / Selection </td>
+    <td> arrow keys </td>
+    </tr>
+<tr>
+    <td> Place, Wire, or Select (keyboard commit) </td>
+    <td> enter </td>
+    </tr>
 </table>
 
 <p>
 Many keys only work when the cursor is in a certain place (e.g., on an element,
 on a wire, in "empty" space) - otherwise they have no effect.
-The ctrl-w key is context sensitive:
-if the cursor is on an element that can be modified the function is
-"Modify"; if it is in "empty" space the function is "Start Wire".
+Start Wire and Watch/Unwatch used to share ctrl-w, which put two
+functions on one stroke.  They are now separate: plain <b>w</b> starts a
+wire, and <b>ctrl-w</b> (cmd-w on macOS) toggles watch on a single
+selected element.
 
 <p>
 The editing area holds keyboard focus like any other component: click
 in it (or just select its tab) and the hot keys above work until you
 click somewhere else.  Focus no longer follows the mouse pointer.
-File operations (New, Open, Save, Save As, Exit) have their own menu
-accelerators, shown in the File menu, and those work no matter which
-part of the window has focus.
+The editing operations also appear in the menu bar's <b>Edit</b> and
+<b>Element</b> menus, each showing its accelerator; those Ctrl/Cmd
+accelerators work no matter which part of the window has focus.
+File operations (New, Open, Save, Save As, Exit) likewise have their own
+menu accelerators, shown in the File menu.
+
+<p>
+The arrow keys and Enter make it possible to build a circuit with no
+pointing device at all.  See
+<a href="keyboard.html">Keyboard-only Construction</a> for the full
+workflow.
 
 </body>
 

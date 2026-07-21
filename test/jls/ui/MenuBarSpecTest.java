@@ -77,6 +77,25 @@ class MenuBarSpecTest {
 			\tExport Image
 			\tClose
 			\tExit [Ctrl+Q]
+			Edit
+			\tUndo [Ctrl+Z]
+			\tRedo [Ctrl+Y]
+			\t--
+			\tCut [Ctrl+X]
+			\tCopy [Ctrl+C]
+			\tPaste [Ctrl+V]
+			\tDelete [Delete]
+			\t--
+			\tSelect All [Ctrl+A]
+			Element
+			\tRotate Clockwise [R]
+			\tRotate Counter-Clockwise [Shift+R]
+			\tFlip [F]
+			\t--
+			\tWatch [Ctrl+W]
+			\tProbe [Ctrl+P]
+			\tModify [Ctrl+M]
+			\tChange Timing [Ctrl+T]
 			Simulator
 			\tShow Simulator Window
 			\tHide Simulator Window
@@ -134,10 +153,12 @@ class MenuBarSpecTest {
 			SwingUtilities.invokeAndWait(() -> {
 				JMenuBar bar = jls.getJMenuBar();
 				rendered.set(render(bar));
-				// the component after Global (now index 4: File, Simulator,
-				// View, Global) is the glue that right-aligns Help, not a menu
+				// the component after Global (now index 6: File, Edit,
+				// Element, Simulator, View, Global) is the glue that
+				// right-aligns Help, not a menu (issue #75 inserted Edit and
+				// Element after File)
 				glueBeforeHelp.set(
-						!(bar.getComponent(4) instanceof JMenu));
+						!(bar.getComponent(6) instanceof JMenu));
 			});
 			assertEquals(EXPECTED_MENU_TREE, rendered.get(),
 					"menu bar drifted from the declared table");
@@ -330,12 +351,13 @@ class MenuBarSpecTest {
 	/**
 	 * Sanity guard for the table itself: the expectation is a
 	 * constant, so a stray edit that blanks it would make the P3 test
-	 * vacuous; pin that it still declares all five menus.
+	 * vacuous; pin that it still declares all seven menus (issue #75
+	 * added Edit and Element).
 	 */
 	@Test
-	void expectationTableStillDeclaresAllFourMenus() {
-		for (String menu : new String[] { "File\n", "Simulator\n",
-				"View\n", "Global\n", "Help\n" }) {
+	void expectationTableStillDeclaresAllSevenMenus() {
+		for (String menu : new String[] { "File\n", "Edit\n", "Element\n",
+				"Simulator\n", "View\n", "Global\n", "Help\n" }) {
 			assertTrue(EXPECTED_MENU_TREE.contains(menu),
 					"expectation table lost top-level menu " + menu.trim());
 		}

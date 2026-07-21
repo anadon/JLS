@@ -100,13 +100,16 @@ class DeleteKeyPolicyTest {
 
 	/**
 	 * SimpleEditor must consume the policy rather than hard-coding
-	 * VK_DELETE: the delete menu item's accelerator and the canvas
+	 * VK_DELETE: the delete operation's accelerator and the canvas
 	 * input-map bindings both go through DeleteKeyPolicy, and no
 	 * literal VK_DELETE keystroke construction remains. This is the
 	 * regression pin for the wiring the headless JVM cannot exercise
 	 * (constructing the editor throws HeadlessException); it fails on
 	 * pre-#127 SimpleEditor, which bound
 	 * {@code KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0)} directly.
+	 * Issue #75 folded the delete menu item, popup item, and key binding
+	 * into one shared {@link javax.swing.Action}, so the menu accelerator
+	 * now comes from the policy when that Action is built.
 	 */
 	@Test
 	void simpleEditorDelegatesDeleteBindingsToThePolicy()
@@ -118,9 +121,8 @@ class DeleteKeyPolicyTest {
 						+ source);
 		String text = Files.readString(source, StandardCharsets.UTF_8);
 
-		assertTrue(text.contains(
-				"delete.setAccelerator(DeleteKeyPolicy.menuAccelerator("),
-				"the delete menu accelerator must come from the policy");
+		assertTrue(text.contains("DeleteKeyPolicy.menuAccelerator("),
+				"the delete accelerator must come from the policy");
 		assertTrue(text.contains("DeleteKeyPolicy.canvasBindings()"),
 				"the canvas delete bindings must come from the policy");
 		assertFalse(text.contains("VK_DELETE"),

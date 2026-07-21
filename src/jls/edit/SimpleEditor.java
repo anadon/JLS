@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,6 +69,7 @@ import jls.Util;
 import jls.collab.op.AttachProbe;
 import jls.collab.op.CircuitOp;
 import jls.collab.op.FlipElement;
+import jls.collab.op.MoveElements;
 import jls.collab.op.OpRejected;
 import jls.collab.op.OpSink;
 import jls.collab.op.RemoveProbe;
@@ -79,6 +83,7 @@ import jls.elem.Constant;
 import jls.elem.Decoder;
 import jls.elem.DelayGate;
 import jls.elem.Element;
+import jls.elem.ElementId;
 import jls.elem.Extend;
 import jls.elem.Group;
 import jls.elem.Input;
@@ -591,6 +596,40 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of focusOnCanvas method
 
 	/**
+	 * The single shared {@link Action} this editor uses for the given
+	 * editing operation (issue #75). The popup menus, the canvas key
+	 * bindings, and the main window's Edit and Element menus all dispatch
+	 * through this one object, so the three surfaces are not separate
+	 * copies of the operation. The action is always enabled and guards
+	 * its own preconditions (selection size, editability), so invoking it
+	 * with nothing selected is a harmless no-op. The main menu bar
+	 * retargets its items to the currently selected editor's actions on
+	 * every tab change.
+	 *
+	 * @param op the editing operation.
+	 * @return the shared action for that operation.
+	 */
+	public Action editAction(EditOp op) {
+
+		return ew.editAction(op);
+	} // end of editAction method
+
+	/**
+	 * The current keyboard construction caret position (issue #75), in
+	 * model coordinates, or null if the keyboard has not yet been used to
+	 * point. The caret is the keyboard counterpart of the mouse pointer: a
+	 * grid-snapped marker arrow keys move and W starts a wire at. Exposed
+	 * so a keyboard-driven construction test can read where the next
+	 * placement or wire endpoint will land between key presses.
+	 *
+	 * @return a copy of the caret point, or null when the caret is unset.
+	 */
+	public Point keyboardCaret() {
+
+		return ew.keyboardCaret();
+	} // end of keyboardCaret method
+
+	/**
 	 * Zoom in one keyboard ladder stop, centered on the visible canvas
 	 * (issue #74). Bound to the View menu's Zoom In item and Ctrl/Cmd+=.
 	 */
@@ -757,46 +796,6 @@ public abstract class SimpleEditor extends JPanel {
 	};
 
 	/**
-	 * What the ctrl-W shortcut does, as a pure function of editor state
-	 * and selection size, so the dispatch is unit-testable headless
-	 * (issue #126; the injected-facts pattern of ToolkitPolicy).
-	 */
-	enum CtrlW {
-		/** Start drawing a wire. */
-		START_WIRE,
-		/** Toggle watched status of the selected element. */
-		TOGGLE_WATCH,
-		/** Do nothing. */
-		NONE
-	};
-
-	/**
-	 * Decide the ctrl-W gesture. From idle the shortcut always starts a
-	 * wire — before #126 it also required an empty selection, so the
-	 * hover selection that idle mouse motion maintains made the shortcut
-	 * toggle watch, or do nothing, until the cursor left every element.
-	 * Watch toggling remains reachable from every non-idle state with a
-	 * single selected element (e.g. after a select-rectangle).
-	 *
-	 * @param state The current editor state.
-	 * @param selectionSize The number of currently selected elements.
-	 * @return the gesture to perform.
-	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireDespiteMultiSelection()
-	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireDespiteSingleSelection()
-	 * @jls.testedby jls.edit.CtrlWGestureTest#idleStartsWireWithEmptySelection()
-	 * @jls.testedby jls.edit.CtrlWGestureTest#otherStatesDoNothing()
-	 * @jls.testedby jls.edit.CtrlWGestureTest#watchToggleStillReachableFromSelectedState()
-	 */
-	static CtrlW ctrlWGesture(State state, int selectionSize) {
-
-		if (state == State.idle)
-			return CtrlW.START_WIRE;
-		if (selectionSize == 1)
-			return CtrlW.TOGGLE_WATCH;
-		return CtrlW.NONE;
-	} // end of ctrlWGesture method
-
-	/**
 	 * Result of starting the wire-drawing gesture: the initial wire end,
 	 * and whether a selection had to be cleared to start it. The flag is
 	 * captured before the clear — keyed off the selection afterwards it
@@ -927,6 +926,16 @@ public abstract class SimpleEditor extends JPanel {
 			/** Menu item to create the wire end matching a jump start. */
 			private JMenuItem matchJump = new JMenuItem("Create Matching End");
 
+			/**
+			 * The one shared {@link Action} per editing operation
+			 * (issue #75). Built once in the constructor and reused by the
+			 * popup menu items, the canvas key bindings, and the main
+			 * window's Edit and Element menus, so those surfaces dispatch
+			 * through a single object instead of three separate copies.
+			 */
+			private final EnumMap<EditOp,Action> editActions =
+					new EnumMap<EditOp,Action>(EditOp.class);
+
 			/** The element toolbar shown above the edit window. */
 			private JPanel toolbar;
 			/** The element menu backing the toolbar. */
@@ -977,6 +986,17 @@ public abstract class SimpleEditor extends JPanel {
 			/** Puts marked touching by overlap/connect. */
 			private Set<Put>touchedPuts =
 					new HashSet<Put>();
+			/**
+			 * The keyboard construction caret (issue #75), in model
+			 * coordinates and always grid-snapped, or null when the
+			 * keyboard has not been used to point yet. Arrow keys move it
+			 * while idle; W starts a wire at it; it is the keyboard
+			 * counterpart of the mouse pointer, so a user with no pointing
+			 * device can position a drop point or a wire endpoint. It
+			 * tracks the following element or wire end while placing or
+			 * drawing so it always shows where the next commit lands.
+			 */
+			private Point caret = null;
 
 			/**
 			 * Create a new edit window.
@@ -999,170 +1019,70 @@ public abstract class SimpleEditor extends JPanel {
 				// wheel = scroll, Ctrl/Cmd+wheel = zoom-at-cursor (issue #74)
 				addMouseWheelListener(this);
 
-				// set up popup menus
-				probe.setToolTipText("watch activity on this wire during simulation");
-				probe.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				watch.setToolTipText("watch activity on this element during simulation");
-				watch.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				modify.setToolTipText("view/modify element details");
-				modify.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				timing.setToolTipText("change propagation delay or access time");
-				timing.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				view.setToolTipText("view current simulated value");
-				// plain V, not menu-mask+S: the old stroke shadowed the
-				// menu bar's Save accelerator whenever the canvas had
-				// focus (#75)
-				view.setAccelerator(MenuAcceleratorPolicy.viewValueStroke());
-				cut.setToolTipText("cut all selected elements to clipboard");
-				cut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				copy.setToolTipText("copy all selected elements to clipboard");
-				copy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-				delete.setToolTipText("delete all selected elements");
-				delete.setAccelerator(DeleteKeyPolicy.menuAccelerator(System.getProperty("os.name")));
-				lock.setToolTipText("make selected elements uneditable (cannot be undone)");
-				lock.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// build the one shared Action per editing operation (#75)
+				// before wiring any surface to them
+				initEditActions();
+
+				// set up popup menus: every item dispatches through the
+				// shared Action, which carries its label, accelerator,
+				// tooltip, and the single implementation - so the popups,
+				// the canvas key bindings, and the menu bar Edit/Element
+				// menus are no longer three separate copies of each op
+				probe.setAction(editAction(EditOp.PROBE));
+				watch.setAction(editAction(EditOp.WATCH));
+				modify.setAction(editAction(EditOp.MODIFY));
+				timing.setAction(editAction(EditOp.TIMING));
+				view.setAction(editAction(EditOp.VIEW_VALUE));
+				cut.setAction(editAction(EditOp.CUT));
+				copy.setAction(editAction(EditOp.COPY));
+				delete.setAction(editAction(EditOp.DELETE));
+				lock.setAction(editAction(EditOp.LOCK));
 
 				// rotate/flip show the plain-key canvas bindings (#75)
-				Crotate.setToolTipText("rotate the selected element clockwise");
-				Crotate.setAccelerator(MenuAcceleratorPolicy.rotateCwStroke());
-				CCrotate.setToolTipText("rotate the selected element counter-clockwise");
-				CCrotate.setAccelerator(MenuAcceleratorPolicy.rotateCcwStroke());
-				flip.setToolTipText("flip the selected element");
-				flip.setAccelerator(MenuAcceleratorPolicy.flipStroke());
+				Crotate.setAction(editAction(EditOp.ROTATE_CW));
+				CCrotate.setAction(editAction(EditOp.ROTATE_CCW));
+				flip.setAction(editAction(EditOp.FLIP));
 
-				// TODO: Make an action for this.
-				//matchJump.setToolTipText("create the wire end to match this wire start");
-				//matchJump.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// matchJump is contextual (JumpStart only) and popup-only,
+				// so it stays on the ActionListener rather than becoming a
+				// shared Action
+				matchJump.addActionListener(this);
 
-				connect.setToolTipText("create a new wire");
-				connect.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				// the connect item now shows plain W: wire-start moved off
+				// the Ctrl/Cmd+W it used to share with Watch, resolving the
+				// overload that put the same stroke on two popup items (#75)
+				connect.setAction(editAction(EditOp.WIRE_START));
 				newMenu.add(connect);
 
-				paste.setToolTipText("paste contents of clipboard");
-				paste.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				paste.setAction(editAction(EditOp.PASTE));
 				newMenu.add(paste);
 
-				selAll.setToolTipText("select all elements");
-				selAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				selAll.setAction(editAction(EditOp.SELECT_ALL));
 				newMenu.add(selAll);
 
-				close.setToolTipText("close this circuit");
-				close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				close.setAction(editAction(EditOp.CLOSE));
 				newMenu.add(close);
 
-				undo.setToolTipText("undo last modification");
-				undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+				undo.setAction(editAction(EditOp.UNDO));
 				newMenu.add(undo);
 
-				redo.setToolTipText("redo last undo");
-				// Shift+Cmd+Z on macOS (platform convention), Ctrl+Y
-				// elsewhere; the policy keeps Cmd+Y bound as an alias (#75)
-				redo.setAccelerator(MenuAcceleratorPolicy.redoDisplayed(System.getProperty("os.name")));
+				redo.setAction(editAction(EditOp.REDO));
 				newMenu.add(redo);
 
 				makeElements();
 				newMenu.add(elements);
 
-				// add listeners for menu items
-				probe.addActionListener(this);
-				watch.addActionListener(this);
-				modify.addActionListener(this);
-				timing.addActionListener(this);
-				view.addActionListener(this);
-				cut.addActionListener(this);
-				copy.addActionListener(this);
-				delete.addActionListener(this);
-				lock.addActionListener(this);
-				undo.addActionListener(this);
-				redo.addActionListener(this);
-				paste.addActionListener(this);
-				selAll.addActionListener(this);
-				close.addActionListener(this);
-				connect.addActionListener(this);
-				Crotate.addActionListener(this);
-				CCrotate.addActionListener(this);
-				flip.addActionListener(this);
-				matchJump.addActionListener(this);
-
-				// set up ctrl-w (new wire / watch) key binding
-				Action ctrlw = new AbstractAction() {
-					/**
-					 * Handle ctrl-W: start a wire from idle, otherwise toggle the watch
-					 * on a single selected element.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// decide what the shortcut does here (#126)
-						CtrlW gesture = ctrlWGesture(currentState,selected.size());
-
-						// if current state is idle, start a wire, superseding
-						// any hover selection (#126)
-						if (gesture == CtrlW.START_WIRE) {
-
-							// start a wire
-							Point p = getMousePosition();
-							if (p == null)
-								return; // not in drawing window
-							// invert the component position into model space (#74)
-							p = viewport.toModel(p);
-							setState(State.startwire);
-							x = p.x;
-							y = p.y;
-							autoGrow(x,y);
-							WireStart start =
-									startWireGesture(circuit,selected,x,y);
-							wireEnd = start.end();
-							wire = null;
-							net = wireEnd.getNet();
-
-							// a cleared selection was under the cursor, so
-							// report the (likely) overlap the same way wire
-							// dragging does
-							if (start.hadSelection()) {
-								if (overlap()) {
-									info.setText(overlapMessage);
-									info.setForeground(Color.red);
-								}
-								else {
-									info.setText("");
-									info.setForeground(Color.black);
-								}
-							}
-							repaint();
-						}
-						else if (gesture == CtrlW.TOGGLE_WATCH) {
-
-							// watch/unwatch
-							Element el = (Element)selected.toArray()[0];
-
-							// do nothing if locked
-							if (el.isUneditable())
-								return;
-
-							// do nothing if not watchable
-							if (!el.canWatch())
-								return;
-
-							// remove if watched, add if not (#167: through
-							// the op entry point)
-							submitOp(new ToggleWatched(el.getStableId()));
-
-							// clean up
-							clearSelected();
-							setState(State.idle);
-							repaint();
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_W,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"ctrlw");
-				getActionMap().put("ctrlw", ctrlw);
+				// canvas key bindings: menu-mask+W now toggles Watch only
+				// and wire-start is the dedicated plain-W binding, so the
+				// two functions no longer share one stroke (#75). Both
+				// point at the same shared Actions the popups and menu bar
+				// use.
+				int menuMask =
+						Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_W,menuMask),"watch");
+				getActionMap().put("watch", editAction(EditOp.WATCH));
+				getInputMap().put(MenuAcceleratorPolicy.wireStartStroke(),"wire start");
+				getActionMap().put("wire start", editAction(EditOp.WIRE_START));
 
 				// set up end wire key binding
 				Action endWire = new AbstractAction() {
@@ -1209,364 +1129,74 @@ public abstract class SimpleEditor extends JPanel {
 				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),"Escape");
 				getActionMap().put("Escape", endWire);
 
-				// set up view key binding
-				Action see = new AbstractAction() {
-					/**
-					 * Handle the view shortcut: show the single selected element's
-					 * current value.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// do nothing if not just one element selected
-						if (selected.size() != 1)
-							return;
-
-						// get the single item in the selected set
-						Element el = (Element)(selected.toArray()[0]);
-
-						// ask element to display its current value
-						el.showCurrentValue(new Point(x,y));
-
-						// clean up
-						clearSelected();
-						setState(State.idle);
-						repaint();
-
-					}
-				};
+				// the remaining edit-op key bindings all dispatch through the
+				// shared Actions (#75): the InputMap names them and the
+				// ActionMap points each at editAction(op), the same object the
+				// popup items and the menu-bar Edit/Element menus use
 				getInputMap().put(MenuAcceleratorPolicy.viewValueStroke(),"view");
-				getActionMap().put("view", see);
-
-				// set up modify key binding
-				Action modify = new AbstractAction() {
-					/**
-					 * Handle the modify shortcut: modify the single selected element.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// do nothing if not just one element selected
-						if (selected.size() != 1)
-							return;
-
-						doModify();
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_M,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"modify");
-				getActionMap().put("modify", modify);
-
-				// set up probe key binding
-				Action probe = new AbstractAction() {
-					/**
-					 * Handle the probe shortcut: toggle a probe on the single selected
-					 * wire.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// do nothing if not just one element selected
-						if (selected.size() != 1)
-							return;
-
-						// do nothing if the selected element is not a wire
-						Element el = (Element)selected.toArray()[0];
-						if (!(el instanceof Wire))
-							return;
-
-						doProbe();
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_P,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"probe");
-				getActionMap().put("probe", probe);
-
-				// set up timing key binding
-				Action timing = new AbstractAction() {
-					/**
-					 * Handle the timing shortcut: change timing on the single selected
-					 * element that has it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						// do nothing if not just one element selected
-						if (selected.size() != 1)
-							return;
-
-						// do nothing if the selected element does not having timing
-						Element el = (Element)selected.toArray()[0];
-						if (!el.hasTiming())
-							return;
-
-						doTiming();
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_T,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"timing");
-				getActionMap().put("timing",timing);
-
-				// set up selectAll key binding
-				Action selectAll = new AbstractAction() {
-					/**
-					 * Handle the select-all shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-
-						// do nothing if editor is disabled
-						if (!enabled)
-							return;
-
-						doSelectAll();
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"select all");
-				getActionMap().put("select all", selectAll);
-
-				// set up close window key binding
-				Action closeWin = new AbstractAction() {
-					/**
-					 * Handle the close-window shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						close();
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_E,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"close window");
-				getActionMap().put("close window", closeWin);
-
-				// set up delete key binding
-				Action deleteKey = new AbstractAction() {
-					/**
-					 * Handle the delete shortcut: remove the selected elements.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							remove();
-							removeCoLinear();
-							clearSelected();
-							setState(State.idle);
-							repaint();
-						}
-					}
-				};
+				getActionMap().put("view", editAction(EditOp.VIEW_VALUE));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_M,menuMask),"modify");
+				getActionMap().put("modify", editAction(EditOp.MODIFY));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_P,menuMask),"probe");
+				getActionMap().put("probe", editAction(EditOp.PROBE));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_T,menuMask),"timing");
+				getActionMap().put("timing", editAction(EditOp.TIMING));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_A,menuMask),"select all");
+				getActionMap().put("select all", editAction(EditOp.SELECT_ALL));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_E,menuMask),"close window");
+				getActionMap().put("close window", editAction(EditOp.CLOSE));
 				for (KeyStroke stroke : DeleteKeyPolicy.canvasBindings())
 					getInputMap().put(stroke,"do delete");
-				getActionMap().put("do delete", deleteKey);
-
-				// set up cut key binding
-				Action cutKey = new AbstractAction() {
-					/**
-					 * Handle the cut shortcut: copy then remove the selected elements.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							copy();
-							remove();
-							removeCoLinear();
-							clearSelected();
-							setState(State.idle);
-							repaint();
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_X,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do cut");
-				getActionMap().put("do cut", cutKey);
-
-				// set up copy key binding
-				Action copyKey = new AbstractAction() {
-					/**
-					 * Handle the copy shortcut: copy the selected elements to the
-					 * clipboard.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							copy();
-							clearSelected();
-							setState(State.idle);
-							repaint();
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do copy");
-				getActionMap().put("do copy", copyKey);
-
-				// set up paste key binding
-				Action pasteKey = new AbstractAction() {
-					/**
-					 * Handle the paste shortcut: paste the clipboard contents.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							if (clipboard.getElements().size() == 0)
-								return;
-							if (paste(clipboard)) {
-								setState(State.placing);
-							}
-							repaint();
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_V,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do paste");
-				getActionMap().put("do paste", pasteKey);
-
-				// set up undo key binding
-				Action undoKey = new AbstractAction() {
-					/**
-					 * Handle the undo shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							undo();
-							repaint();
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do undo");
-				getActionMap().put("do undo", undoKey);
-
-				// set up redo key binding
-				Action redoKey = new AbstractAction() {
-					/**
-					 * Handle the redo shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-							redo();
-							repaint();
-						}
-					}
-				};
-				// every redo stroke the policy defines: the platform
-				// accelerator plus, on macOS, the historical Cmd+Y alias (#75)
+				getActionMap().put("do delete", editAction(EditOp.DELETE));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_X,menuMask),"do cut");
+				getActionMap().put("do cut", editAction(EditOp.CUT));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C,menuMask),"do copy");
+				getActionMap().put("do copy", editAction(EditOp.COPY));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_V,menuMask),"do paste");
+				getActionMap().put("do paste", editAction(EditOp.PASTE));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuMask),"do undo");
+				getActionMap().put("do undo", editAction(EditOp.UNDO));
+				// every redo stroke the policy defines: the platform accelerator
+				// plus, on macOS, the historical Cmd+Y alias (#75)
 				for (KeyStroke stroke : MenuAcceleratorPolicy.redoBindings(System.getProperty("os.name")))
 					getInputMap().put(stroke,"do redo");
-				getActionMap().put("do redo", redoKey);
-
-				// set up lock key binding
-				Action lockKey = new AbstractAction() {
-					/**
-					 * Handle the lock shortcut: make the selected elements uneditable.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						if (enabled) {
-
-							// warn user first
-							boolean opt = TellUser.confirm(null,
-									"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-									"WARNING");
-
-							// if user still ok with it ...
-							if (opt) {
-
-								// make selected elements uneditable
-								for (Element el : selected) {
-									el.makeUneditable();
-								}
-							}
-
-							// finish up
-							clearSelected();
-							setState(State.idle);
-							repaint();
-							return;
-						}
-					}
-				};
-				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_L,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"do lock");
-				getActionMap().put("do lock", lockKey);
-
-				// set up rotate/flip key bindings (#75): plain R, Shift+R,
-				// and F act on a single selected element, sharing the same
-				// code path as the popup menu items
-				Action rotateCwKey = new AbstractAction() {
-					/**
-					 * Handle the rotate-clockwise shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						rotateSelected(true);
-					}
-				};
+				getActionMap().put("do redo", editAction(EditOp.REDO));
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_L,menuMask),"do lock");
+				getActionMap().put("do lock", editAction(EditOp.LOCK));
 				getInputMap().put(MenuAcceleratorPolicy.rotateCwStroke(),"rotate cw");
-				getActionMap().put("rotate cw", rotateCwKey);
-				Action rotateCcwKey = new AbstractAction() {
-					/**
-					 * Handle the rotate-counter-clockwise shortcut.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						rotateSelected(false);
-					}
-				};
+				getActionMap().put("rotate cw", editAction(EditOp.ROTATE_CW));
 				getInputMap().put(MenuAcceleratorPolicy.rotateCcwStroke(),"rotate ccw");
-				getActionMap().put("rotate ccw", rotateCcwKey);
-				Action flipKey = new AbstractAction() {
+				getActionMap().put("rotate ccw", editAction(EditOp.ROTATE_CCW));
+				getInputMap().put(MenuAcceleratorPolicy.flipStroke(),"do flip");
+				getActionMap().put("do flip", editAction(EditOp.FLIP));
+
+				// keyboard-only construction bindings (issue #75, H2):
+				// arrow keys move the grid caret, the following element, the
+				// wire end, or the selection depending on state; Enter
+				// commits (places, wires, or selects). All WHEN_FOCUSED like
+				// the other canvas bindings, so a keyboard user builds a
+				// circuit with no pointing device
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,0),"kbd up");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,0),"kbd down");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,0),"kbd left");
+				getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,0),"kbd right");
+				getActionMap().put("kbd up", nudgeAction(KeyboardConstructionPolicy.Nudge.UP));
+				getActionMap().put("kbd down", nudgeAction(KeyboardConstructionPolicy.Nudge.DOWN));
+				getActionMap().put("kbd left", nudgeAction(KeyboardConstructionPolicy.Nudge.LEFT));
+				getActionMap().put("kbd right", nudgeAction(KeyboardConstructionPolicy.Nudge.RIGHT));
+				getInputMap().put(KeyboardConstructionPolicy.commitStroke(),"kbd commit");
+				Action kbdCommit = new AbstractAction() {
 					/**
-					 * Handle the flip shortcut.
+					 * Handle the keyboard commit (Enter) key.
 					 *
 					 * @param event The triggering action event.
 					 */
 					@Override
 					public void actionPerformed(ActionEvent event) {
-						flipSelected();
+						keyboardCommit();
 					}
 				};
-				getInputMap().put(MenuAcceleratorPolicy.flipStroke(),"do flip");
-				getActionMap().put("do flip", flipKey);
+				getActionMap().put("kbd commit", kbdCommit);
 
 				// set up zoom key bindings (issue #74): Ctrl/Cmd += in,
 				// Ctrl/Cmd +- out, Ctrl/Cmd +0 actual size, Ctrl/Cmd +9 fit.
@@ -1659,6 +1289,443 @@ public abstract class SimpleEditor extends JPanel {
 				getActionMap().put("pan off", spaceReleased);
 
 			} // end of constructor
+
+			/**
+			 * The shared {@link Action} for one editing operation (#75).
+			 * The popup items, the key bindings, and the menu-bar Edit and
+			 * Element menus all dispatch through the object this returns.
+			 *
+			 * @param op the editing operation.
+			 * @return the one shared action for that operation.
+			 */
+			Action editAction(EditOp op) {
+
+				return editActions.get(op);
+			} // end of editAction method
+
+			/**
+			 * The current keyboard construction caret position (issue #75),
+			 * copied so callers cannot mutate it, or null when unset.
+			 *
+			 * @return a copy of the caret point, or null.
+			 */
+			Point keyboardCaret() {
+
+				return caret == null ? null : new Point(caret);
+			} // end of keyboardCaret method
+
+			/**
+			 * Store a shared editing Action under its operation, tagging it
+			 * with the label, accelerator, and tooltip its menu items and
+			 * bindings display (#75). The action is always enabled and
+			 * guards its own preconditions, so any surface may invoke it
+			 * safely.
+			 *
+			 * @param op the operation the action performs.
+			 * @param accel the accelerator keystroke, or null for none.
+			 * @param tip the tooltip/short description.
+			 * @param action the action implementation.
+			 */
+			private void register(EditOp op, KeyStroke accel, String tip,
+				Action action) {
+
+				action.putValue(Action.NAME, op.label());
+				if (accel != null)
+					action.putValue(Action.ACCELERATOR_KEY, accel);
+				action.putValue(Action.SHORT_DESCRIPTION, tip);
+				editActions.put(op, action);
+			} // end of register method
+
+			/**
+			 * Build the one shared Action per editing operation (#75). Each
+			 * body is the single implementation for its operation - lifted
+			 * from what used to be a popup switch arm and a duplicate
+			 * key-binding action - and carries every guard (editor enabled,
+			 * selection size, element type) so it is a harmless no-op when
+			 * invoked from the menu bar with nothing appropriate selected.
+			 */
+			private void initEditActions() {
+
+				int menuMask =
+						Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+				String osName = System.getProperty("os.name");
+
+				register(EditOp.PROBE, KeyStroke.getKeyStroke(KeyEvent.VK_P,menuMask),
+					"watch activity on this wire during simulation",
+					new AbstractAction() {
+						/**
+						 * Perform the PROBE operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (selected.size() != 1)
+								return;
+							Element el = (Element)selected.toArray()[0];
+							if (!(el instanceof Wire))
+								return;
+							doProbe();
+						}
+					});
+
+				register(EditOp.WATCH, KeyStroke.getKeyStroke(KeyEvent.VK_W,menuMask),
+					"watch activity on this element during simulation",
+					new AbstractAction() {
+						/**
+						 * Perform the WATCH operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (selected.size() != 1)
+								return;
+							Element el = (Element)selected.toArray()[0];
+							if (el.isUneditable())
+								return;
+							if (!el.canWatch())
+								return;
+							submitOp(new ToggleWatched(el.getStableId()));
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.MODIFY, KeyStroke.getKeyStroke(KeyEvent.VK_M,menuMask),
+					"view/modify element details",
+					new AbstractAction() {
+						/**
+						 * Perform the MODIFY operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (selected.size() != 1)
+								return;
+							doModify();
+						}
+					});
+
+				register(EditOp.TIMING, KeyStroke.getKeyStroke(KeyEvent.VK_T,menuMask),
+					"change propagation delay or access time",
+					new AbstractAction() {
+						/**
+						 * Perform the TIMING operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (selected.size() != 1)
+								return;
+							Element el = (Element)selected.toArray()[0];
+							if (!el.hasTiming())
+								return;
+							doTiming();
+						}
+					});
+
+				register(EditOp.VIEW_VALUE, MenuAcceleratorPolicy.viewValueStroke(),
+					"view current simulated value",
+					new AbstractAction() {
+						/**
+						 * Perform the VIEW_VALUE operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (selected.size() != 1)
+								return;
+							Element el = (Element)selected.toArray()[0];
+							el.showCurrentValue(new Point(x,y));
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.CUT, KeyStroke.getKeyStroke(KeyEvent.VK_X,menuMask),
+					"cut all selected elements to clipboard",
+					new AbstractAction() {
+						/**
+						 * Perform the CUT operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							copy();
+							remove();
+							removeCoLinear();
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.COPY, KeyStroke.getKeyStroke(KeyEvent.VK_C,menuMask),
+					"copy all selected elements to clipboard",
+					new AbstractAction() {
+						/**
+						 * Perform the COPY operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							copy();
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.PASTE, KeyStroke.getKeyStroke(KeyEvent.VK_V,menuMask),
+					"paste contents of clipboard",
+					new AbstractAction() {
+						/**
+						 * Perform the PASTE operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							if (clipboard.getElements().size() == 0)
+								return;
+							if (paste(clipboard))
+								setState(State.placing);
+							repaint();
+						}
+					});
+
+				register(EditOp.DELETE, DeleteKeyPolicy.menuAccelerator(osName),
+					"delete all selected elements",
+					new AbstractAction() {
+						/**
+						 * Perform the DELETE operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							remove();
+							removeCoLinear();
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.LOCK, KeyStroke.getKeyStroke(KeyEvent.VK_L,menuMask),
+					"make selected elements uneditable (cannot be undone)",
+					new AbstractAction() {
+						/**
+						 * Perform the LOCK operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							boolean opt = TellUser.confirm(null,
+									"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
+									"WARNING");
+							if (opt) {
+								for (Element el : selected) {
+									el.makeUneditable();
+								}
+							}
+							clearSelected();
+							setState(State.idle);
+							repaint();
+						}
+					});
+
+				register(EditOp.SELECT_ALL, KeyStroke.getKeyStroke(KeyEvent.VK_A,menuMask),
+					"select all elements",
+					new AbstractAction() {
+						/**
+						 * Perform the SELECT_ALL operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							doSelectAll();
+						}
+					});
+
+				register(EditOp.UNDO, KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuMask),
+					"undo last modification",
+					new AbstractAction() {
+						/**
+						 * Perform the UNDO operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							undo();
+							repaint();
+						}
+					});
+
+				register(EditOp.REDO, MenuAcceleratorPolicy.redoDisplayed(osName),
+					"redo last undo",
+					new AbstractAction() {
+						/**
+						 * Perform the REDO operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							redo();
+							repaint();
+						}
+					});
+
+				register(EditOp.ROTATE_CW, MenuAcceleratorPolicy.rotateCwStroke(),
+					"rotate the selected element clockwise",
+					new AbstractAction() {
+						/**
+						 * Perform the ROTATE_CW operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							rotateSelected(true);
+						}
+					});
+
+				register(EditOp.ROTATE_CCW, MenuAcceleratorPolicy.rotateCcwStroke(),
+					"rotate the selected element counter-clockwise",
+					new AbstractAction() {
+						/**
+						 * Perform the ROTATE_CCW operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							rotateSelected(false);
+						}
+					});
+
+				register(EditOp.FLIP, MenuAcceleratorPolicy.flipStroke(),
+					"flip the selected element",
+					new AbstractAction() {
+						/**
+						 * Perform the FLIP operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							flipSelected();
+						}
+					});
+
+				register(EditOp.WIRE_START, MenuAcceleratorPolicy.wireStartStroke(),
+					"create a new wire",
+					new AbstractAction() {
+						/**
+						 * Perform the WIRE_START operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							if (!enabled)
+								return;
+							// start the wire at the pointer if it is over the canvas,
+							// otherwise at the last tracked model position (e.g. the
+							// spot a right-click "Wire(s)" was invoked from)
+							// keyboard-first: start at the construction caret
+							// when the keyboard has positioned it (issue #75).
+							// Otherwise start at the pointer if it is over the
+							// canvas, else at the last tracked model position
+							if (caret != null) {
+								x = caret.x;
+								y = caret.y;
+							}
+							else {
+								Point p = getMousePosition();
+								if (p != null) {
+									p = viewport.toModel(p);
+									x = p.x;
+									y = p.y;
+								}
+							}
+							autoGrow(x,y);
+							setState(State.startwire);
+							WireStart start = startWireGesture(circuit,selected,x,y);
+							wireEnd = start.end();
+							wire = null;
+							net = wireEnd.getNet();
+							// keep the caret on the wire end so arrows extend it
+							caret = new Point(x,y);
+							// a cleared selection was under the cursor, so report the
+							// (likely) overlap the same way wire dragging does
+							if (start.hadSelection()) {
+								if (overlap()) {
+									info.setText(overlapMessage);
+									info.setForeground(Color.red);
+								}
+								else {
+									info.setText("");
+									info.setForeground(Color.black);
+								}
+							}
+							repaint();
+						}
+					});
+
+				register(EditOp.CLOSE, KeyStroke.getKeyStroke(KeyEvent.VK_E,menuMask),
+					"close this circuit",
+					new AbstractAction() {
+						/**
+						 * Perform the CLOSE operation.
+						 *
+						 * @param event The triggering action event.
+						 */
+						@Override
+						public void actionPerformed(ActionEvent event) {
+							close();
+						}
+					});
+
+			} // end of initEditActions method
 
 			/**
 			 * The current zoom scale (1.0 = 100%).
@@ -2555,6 +2622,20 @@ public abstract class SimpleEditor extends JPanel {
 						gg.draw(selRect);
 				}
 
+				// draw the keyboard construction caret (issue #75): a small
+				// crosshair marking where the next keyboard placement or
+				// wire endpoint lands. Shown only when no mouse gesture owns
+				// the screen (idle or a held selection), since while placing
+				// or drawing the element or wire end is itself the cursor
+				if (caret != null
+						&& (currentState == State.idle
+							|| currentState == State.selected)) {
+					gg.setColor(JLSInfo.selectionColor);
+					int r = JLSInfo.spacing/2;
+					gg.drawLine(caret.x-r,caret.y,caret.x+r,caret.y);
+					gg.drawLine(caret.x,caret.y-r,caret.x,caret.y+r);
+				}
+
 				// save circuit for undo on first draw (finishLoad must
 				// have been done by now); the paint-pass Graphics is NOT
 				// cached - Swing may dispose it after this call, so later
@@ -2567,8 +2648,12 @@ public abstract class SimpleEditor extends JPanel {
 			} // end of paintComponent method
 
 			/**
-			 * React to menu item selections.
-			 * 
+			 * React to the one popup item still wired through the
+			 * ActionListener: matchJump. Every other editing operation now
+			 * dispatches through its shared {@link Action} (#75), so only the
+			 * contextual "Create Matching End" item (JumpStart only) is
+			 * handled here.
+			 *
 			 * @param event The event object for actions.
 			 */
 			@Override
@@ -2576,231 +2661,6 @@ public abstract class SimpleEditor extends JPanel {
 
 				info.setForeground(Color.BLACK);
 				info.setText("");
-
-				// if probe option selected: attach or remove a probe.
-				// This branch used to swallow every handler below it - a
-				// merge-conflict brace error left them nested inside and
-				// unreachable, and dropped the doProbe() call (issue #37)
-				if (event.getSource() == probe) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					doProbe();
-					return;
-				}
-
-				// if watch option selected, ...
-				if (event.getSource() == watch) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// get the single item in the selected set
-					Element el = (Element)(selected.toArray()[0]);
-
-					// if its locked, don't change it
-					if (el.isUneditable())
-						return;
-
-					// do nothing if not watchable (the menu item only
-					// shows for watchable elements; this mirrors the
-					// ctrl-W path's guard)
-					if (!el.canWatch())
-						return;
-
-					// remove if watched, add if not (#167: through the
-					// op entry point)
-					submitOp(new ToggleWatched(el.getStableId()));
-
-					// clean up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if view option selected, ...
-				if (event.getSource() == modify) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-					doModify();
-				}
-
-				// if change timing, then it must have timing info
-				if (event.getSource() == timing) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					doTiming();
-				}
-
-				// if view, then it must be a watchable element
-				if (event.getSource() == view) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// get the single item in the selected set
-					Element el = (Element)(selected.toArray()[0]);
-
-					// ask element to display its current value
-					el.showCurrentValue(new Point(x,y));
-
-					// clean up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if cut option selected, copy selected elements to clipboard,
-				// then delete those elements
-				if (event.getSource() == cut) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// copy, then remove
-					copy();
-					remove();
-
-					// clean up
-					removeCoLinear();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if copy option, copy selected elements to clipboard
-				if (event.getSource() == copy) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					copy();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if delete option, delete selected elements
-				if (event.getSource() == delete) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// remove
-					remove();
-					removeCoLinear();
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// if lock, set all selected elements to uneditable
-				if (event.getSource() == lock) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// warn user first
-					boolean opt = TellUser.confirm(null,
-							"Making elements uneditable cannot be undone.  Are you sure you want to do this?",
-							"WARNING");
-
-					// if user still ok with it ...
-					if (opt) {
-
-						// make selected elements uneditable
-						for (Element el : selected) {
-							el.makeUneditable();
-						}
-					}
-
-					// finish up
-					clearSelected();
-					setState(State.idle);
-					repaint();
-					return;
-				}
-
-				// paste contents of clipboard
-				if (event.getSource() == paste) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					// paste
-					if (clipboard.getElements().size() == 0)
-						return;
-					if (paste(clipboard)) {
-						setState(State.placing);
-					}
-					repaint();
-					return;
-				}
-
-				// if select all option, select everything
-				if (event.getSource() == selAll) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					doSelectAll();
-				}
-
-				// if close, close this circuit (or subcircuit)
-				if (event.getSource() == close) {
-					close();
-				}
-
-				// if undo, restore prevous copy of circuit
-				if (event.getSource() == undo) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					undo();
-					repaint();
-				}
-
-				// if redo, restore future copy of circuit
-				if (event.getSource() == redo) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					redo();
-				}
-
-				if(event.getSource() == Crotate)
-				{
-					rotateSelected(true);
-				}
-
-				if(event.getSource() == CCrotate)
-				{
-					rotateSelected(false);
-				}
 
 				if(event.getSource() == matchJump) {
 					if(!enabled)
@@ -2819,30 +2679,6 @@ public abstract class SimpleEditor extends JPanel {
 
 					setState(State.chosen);
 					markChanged();
-					repaint();
-				}
-
-				if(event.getSource() == flip)
-				{
-					flipSelected();
-				}
-				// if connection, start drawing wires
-				else if (event.getSource() == connect) {
-
-					// do nothing if editor is disabled
-					if (!enabled)
-						return;
-
-					setState(State.startwire);
-					wireEnd = new WireEnd(circuit);
-					wireEnd.setXY(x,y);
-					wireEnd.init(circuit);
-					circuit.addElement(wireEnd);
-					selected.add(wireEnd);
-					wire = null;
-					net = new WireNet();
-					net.add(wireEnd);
-					wireEnd.setNet(net);
 					repaint();
 				}
 
@@ -3066,24 +2902,9 @@ public abstract class SimpleEditor extends JPanel {
 						return;
 					}
 
-					// don't do anything if there is overlap
-					if (overlap()) {
-						return;
-					}
-
-					// fix all positions
-					for (Element el : selected) {
-						el.fixPosition();
-					}
-
-					// connect everything connectable
-					connect();
-					markChanged();
-
-					// clear up
-					setState(State.idle);
-					clearSelected();
-					repaint();
+					// commit the placement (shared with the keyboard Enter
+					// path, issue #75)
+					commitPlacing();
 					return;
 				}
 
@@ -3117,77 +2938,407 @@ public abstract class SimpleEditor extends JPanel {
 						return;
 					}
 
-					// left button -> put in place and start next wire end
+					// left button -> commit this wire vertex (shared with the
+					// keyboard Enter path, issue #75)
 					else {
-
-						// make sure no overlaps
-						if (overlap()) {
-							return;
-						}
-
-						// set end of wire
-						wireEnd.fixPosition();
-
-						// connect if possible
-						connect();
-
-						// finish up if wire becomes attached to another wire or put
-						if (currentState == State.drawire && wireEnd.isAttached()) {
-
-							// if attached to imaginary put, unattach it
-							if (wireEnd.getPut().getElement() == null)
-								wireEnd.setPut(null);
-							wireEnd = null;
-							wire = null;
-							prev = null;
-							clearSelected();
-							setState(State.idle);
-							markChanged();
-							repaint();
-							return;
-						}
-
-						// if attached to imaginary put, unattach it
-						if (currentState == State.startwire && wireEnd.isAttached()) {
-							if (wireEnd.getPut().getElement() == null)
-								wireEnd.setPut(null);
-						}
-
-						// save current wire end
-						prev = wireEnd;
-						WireEnd save = wireEnd;
-
-						// create new wire end
-						wireEnd = new WireEnd(circuit);
-						wireEnd.setXY(x,y);
-						wireEnd.init(circuit);
-						circuit.addElement(wireEnd);
-
-						// create new wire
-						wire = new Wire(save,wireEnd);
-						save.addWire(wire);
-						wireEnd.addWire(wire);
-						circuit.addElement(wire);
-
-						// add wire end and wire to net
-						net.add(wireEnd);
-						wireEnd.setNet(net);
-						net.add(wire);
-						wire.setNet(net);
-
-						// set up new selected set
-						clearSelected();
-						selected.add(wireEnd);
-						selected.add(wire);
-
-						// finish up
-						setState(State.drawire);
-						repaint();
+						commitWireVertex();
 						return;
 					}
 
 				}
 			} // end of mousePressed method
+
+			/**
+			 * Commit the element(s) being placed at their current position
+			 * (issue #75). Extracted from the left-button branch of
+			 * {@link #mousePressed} so the mouse click and the keyboard
+			 * Enter key share one implementation. Does nothing and returns
+			 * false when the placement overlaps something, matching the
+			 * mouse behavior that ignores a drop onto an overlap.
+			 *
+			 * @return true if the placement was committed, false if an
+			 *         overlap blocked it.
+			 */
+			private boolean commitPlacing() {
+
+				// don't do anything if there is overlap
+				if (overlap()) {
+					return false;
+				}
+
+				// fix all positions
+				for (Element el : selected) {
+					el.fixPosition();
+				}
+
+				// connect everything connectable
+				connect();
+				markChanged();
+
+				// clear up
+				setState(State.idle);
+				clearSelected();
+				repaint();
+				return true;
+			} // end of commitPlacing method
+
+			/**
+			 * Commit the current wire vertex and continue or finish the
+			 * wire (issue #75). Extracted verbatim from the left-button
+			 * branch of {@link #mousePressed} so the mouse click and the
+			 * keyboard Enter key share one implementation: it fixes the
+			 * current wire end, connects it to any coincident port or wire,
+			 * finishes the wire if that end became attached, and otherwise
+			 * spawns the next segment. An overlap blocks the commit exactly
+			 * as it does for the mouse.
+			 */
+			private void commitWireVertex() {
+
+				// make sure no overlaps
+				if (overlap()) {
+					return;
+				}
+
+				// set end of wire
+				wireEnd.fixPosition();
+
+				// connect if possible
+				connect();
+
+				// finish up if wire becomes attached to another wire or put
+				if (currentState == State.drawire && wireEnd.isAttached()) {
+
+					// if attached to imaginary put, unattach it
+					if (wireEnd.getPut().getElement() == null)
+						wireEnd.setPut(null);
+					wireEnd = null;
+					wire = null;
+					prev = null;
+					clearSelected();
+					setState(State.idle);
+					markChanged();
+					repaint();
+					return;
+				}
+
+				// if attached to imaginary put, unattach it
+				if (currentState == State.startwire && wireEnd.isAttached()) {
+					if (wireEnd.getPut().getElement() == null)
+						wireEnd.setPut(null);
+				}
+
+				// save current wire end
+				prev = wireEnd;
+				WireEnd save = wireEnd;
+
+				// create new wire end
+				wireEnd = new WireEnd(circuit);
+				wireEnd.setXY(x,y);
+				wireEnd.init(circuit);
+				circuit.addElement(wireEnd);
+
+				// create new wire
+				wire = new Wire(save,wireEnd);
+				save.addWire(wire);
+				wireEnd.addWire(wire);
+				circuit.addElement(wire);
+
+				// add wire end and wire to net
+				net.add(wireEnd);
+				wireEnd.setNet(net);
+				net.add(wire);
+				wire.setNet(net);
+
+				// set up new selected set
+				clearSelected();
+				selected.add(wireEnd);
+				selected.add(wire);
+
+				// keep the caret on the moving end so arrows extend it
+				caret = new Point(x,y);
+
+				// finish up
+				setState(State.drawire);
+				repaint();
+			} // end of commitWireVertex method
+
+			/**
+			 * The default keyboard caret position (issue #75): the center
+			 * of the visible canvas, in model coordinates, snapped to the
+			 * grid. Used the first time an arrow key is pressed while idle,
+			 * so the caret appears where the user is looking rather than at
+			 * the origin.
+			 *
+			 * @return the snapped model-space center of the viewport.
+			 */
+			private Point defaultCaret() {
+
+				JViewport vp = pane.getViewport();
+				Point view = vp.getViewPosition();
+				Dimension ext = vp.getExtentSize();
+				Point c = viewport.toModel(new Point(
+						view.x + ext.width/2, view.y + ext.height/2));
+				int step = JLSInfo.spacing;
+				return new Point(
+						KeyboardConstructionPolicy.snap(c.x,step),
+						KeyboardConstructionPolicy.snap(c.y,step));
+			} // end of defaultCaret method
+
+			/**
+			 * An action that nudges in one grid direction (issue #75). All
+			 * four arrow keys map to one of these; the action just forwards
+			 * to {@link #keyboardNudge} so the per-state dispatch lives in
+			 * one place.
+			 *
+			 * @param n the direction this arrow key moves.
+			 * @return the action bound to that arrow key.
+			 */
+			private AbstractAction nudgeAction(final KeyboardConstructionPolicy.Nudge n) {
+
+				return new AbstractAction() {
+					/**
+					 * Nudge one grid step in this action's direction.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						keyboardNudge(n);
+					}
+				};
+			} // end of nudgeAction method
+
+			/**
+			 * Handle an arrow-key nudge, dispatched by the current editor
+			 * state (issue #75): move the following element while placing,
+			 * extend the wire end while drawing, nudge the selection through
+			 * an undoable move op while a selection is held, and otherwise
+			 * move the free grid caret. States with an in-flight mouse
+			 * gesture (moving, selecting, option) ignore the keys.
+			 *
+			 * @param n the direction to nudge one grid step.
+			 */
+			private void keyboardNudge(KeyboardConstructionPolicy.Nudge n) {
+
+				if (!enabled)
+					return;
+				int step = JLSInfo.spacing;
+				int dx = n.dx(step);
+				int dy = n.dy(step);
+				switch (currentState) {
+					case chosen: {
+
+						// begin following from the element's own position so
+						// the caret and the element stay aligned
+						Element item = (Element)(selected.toArray()[0]);
+						x = item.getX();
+						y = item.getY();
+						setState(State.placing);
+						nudgeFollowing(dx,dy);
+						break;
+					}
+					case placing:
+					case startwire:
+					case drawire:
+						nudgeFollowing(dx,dy);
+						break;
+					case selected:
+						nudgeSelection(dx,dy);
+						break;
+					case idle:
+						moveCaret(dx,dy);
+						break;
+					default:
+						break;
+				}
+			} // end of keyboardNudge method
+
+			/**
+			 * The element the keyboard caret should track while following
+			 * (issue #75): the wire end while drawing a wire, otherwise the
+			 * first non-wire element of the selection. Its position is
+			 * grid-aligned, so anchoring the caret to it keeps the caret on
+			 * the grid.
+			 *
+			 * @return the representative element, or null if none.
+			 */
+			private Element followRepresentative() {
+
+				if (wireEnd != null && selected.contains(wireEnd)) {
+					return wireEnd;
+				}
+				for (Element el : selected) {
+					if (!(el instanceof Wire)) {
+						return el;
+					}
+				}
+				return null;
+			} // end of followRepresentative method
+
+			/**
+			 * Move the element(s) or wire end currently following the
+			 * keyboard by one grid step (issue #75), mirroring the placing
+			 * branch of {@link #mouseMoved}: shift the selection, re-index,
+			 * track the reference point and caret, and give the same overlap
+			 * feedback and dirty-region repaint.
+			 *
+			 * @param dx the x grid delta.
+			 * @param dy the y grid delta.
+			 */
+			private void nudgeFollowing(int dx, int dy) {
+
+				Rectangle dirty = union(selectionBounds(), touchedBounds());
+				for (Element el : selected) {
+					el.move(dx,dy);
+				}
+				circuit.reindexAfterMove(selected);
+
+				// anchor the logical cursor and the caret to a representative
+				// element's own grid-aligned position rather than accumulating
+				// deltas onto the (possibly off-grid) mouse coordinate, so the
+				// keyboard caret always lands on the grid and coincides with
+				// ports for wiring (issue #75)
+				Element rep = followRepresentative();
+				if (rep != null) {
+					x = rep.getX();
+					y = rep.getY();
+				}
+				else {
+					x += dx;
+					y += dy;
+				}
+				autoGrow(x,y);
+				caret = new Point(x,y);
+
+				// overlap feedback, as the mouse placing path shows
+				if (overlap()) {
+					info.setText(overlapMessage);
+					info.setForeground(Color.red);
+				}
+				else {
+					info.setText("");
+					info.setForeground(Color.black);
+				}
+				dirty = union(dirty, selectionBounds());
+				dirty = union(dirty, touchedBounds());
+				repaintDirty(dirty);
+			} // end of nudgeFollowing method
+
+			/**
+			 * Nudge the current selection by one grid step through the
+			 * undoable move op (issue #75), the keyboard counterpart of
+			 * dragging a selection. The op path (not a raw move) keeps the
+			 * nudge collaboration- and undo-correct. A move that would push
+			 * an element off the canvas is rejected by the op and leaves the
+			 * selection where it was.
+			 *
+			 * @param dx the x grid delta.
+			 * @param dy the y grid delta.
+			 */
+			private void nudgeSelection(int dx, int dy) {
+
+				if (selected.isEmpty())
+					return;
+				List<ElementId> ids = new ArrayList<ElementId>();
+				for (Element el : selected) {
+					ids.add(el.getStableId());
+				}
+				if (!submitOp(new MoveElements(ids,dx,dy)))
+					return;
+				if (selRect != null)
+					selRect.translate(dx,dy);
+				Element any = (Element)(selected.toArray()[0]);
+				caret = new Point(any.getX(),any.getY());
+				repaint();
+			} // end of nudgeSelection method
+
+			/**
+			 * Move the free grid caret by one grid step while idle
+			 * (issue #75), creating it at the viewport center the first
+			 * time. The caret never leaves the canvas (clamped at zero) and
+			 * seeds the drop point for the next placement and the endpoint
+			 * for keyboard wiring.
+			 *
+			 * @param dx the x grid delta.
+			 * @param dy the y grid delta.
+			 */
+			private void moveCaret(int dx, int dy) {
+
+				if (caret == null)
+					caret = defaultCaret();
+				int nx = Math.max(0, caret.x + dx);
+				int ny = Math.max(0, caret.y + dy);
+				caret = new Point(nx,ny);
+				x = nx;
+				y = ny;
+				autoGrow(nx,ny);
+				repaint();
+			} // end of moveCaret method
+
+			/**
+			 * Handle the keyboard commit (Enter) key, dispatched by the
+			 * current editor state (issue #75): place a following element,
+			 * commit a wire vertex, select the element under the caret, or
+			 * drop a held selection back to idle.
+			 */
+			private void keyboardCommit() {
+
+				if (!enabled)
+					return;
+				switch (currentState) {
+					case chosen:
+					case placing:
+						commitPlacing();
+						break;
+					case startwire:
+					case drawire:
+						commitWireVertex();
+						break;
+					case idle:
+						selectElementAtCaret();
+						break;
+					case selected:
+
+						// finish a keyboard nudge: drop back to idle
+						for (Element el : selected) {
+							el.setHighlight(false);
+						}
+						clearSelected();
+						selRect = null;
+						setState(State.idle);
+						repaint();
+						break;
+					default:
+						break;
+				}
+			} // end of keyboardCommit method
+
+			/**
+			 * Select the element under the keyboard caret, if any, and enter
+			 * the selected state so arrow keys nudge it (issue #75). The
+			 * keyboard counterpart of clicking an element. Attached wire ends
+			 * are skipped, exactly as the mouse selection path skips them.
+			 */
+			private void selectElementAtCaret() {
+
+				if (caret == null)
+					return;
+				for (Element el : circuit.elementsAt(caret.x,caret.y)) {
+					if (el.contains(caret.x,caret.y)) {
+						if (el instanceof WireEnd wend && wend.isAttached())
+							continue;
+						clearSelected();
+						selected.add(el);
+						el.setHighlight(true);
+						el.savePosition();
+						selRect = new Rectangle(el.getRect());
+						setState(State.selected);
+						repaint();
+						return;
+					}
+				}
+			} // end of selectElementAtCaret method
+
 
 			/**
 			 * Set up the options popup menu.
@@ -5295,6 +5446,15 @@ public abstract class SimpleEditor extends JPanel {
 								setState(State.placing);
 								repaint();
 							}
+
+							// keyboard operability (#75 H2): choosing an element
+							// from the tool bar/palette leaves focus on that
+							// button, so the canvas arrow/Enter placement keys
+							// (WHEN_FOCUSED on this EditWindow) would not reach it.
+							// Hand focus to the canvas now the element is chosen,
+							// so a keyboard-only user can nudge and Enter-place it
+							// without first tabbing off the palette.
+							requestFocusInWindow();
 						}
 					} // end of setup method
 

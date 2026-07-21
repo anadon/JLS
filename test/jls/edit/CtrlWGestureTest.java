@@ -13,21 +13,21 @@ import org.junit.jupiter.api.Test;
 
 import jls.Circuit;
 import jls.JLSInfo;
-import jls.edit.SimpleEditor.CtrlW;
-import jls.edit.SimpleEditor.State;
 import jls.edit.SimpleEditor.WireStart;
 import jls.elem.Constant;
 import jls.elem.Element;
 import jls.elem.WireEnd;
 
 /**
- * Regression tests for issue #126: an idle-state ctrl-W starts a wire
- * regardless of the current (hover) selection, clearing that selection
- * as part of the gesture.
+ * Regression tests for the wire-start gesture (issue #126, revised by
+ * issue #75). Starting a wire clears any current (hover) selection as
+ * part of the gesture. Issue #75 moved wire-start off the Ctrl/Cmd+W it
+ * used to share with toggle-watch onto the dedicated plain-W binding, so
+ * these tests now pin only the Swing-free model half that both the
+ * wire-start key and the keyboard construction path drive.
  *
- * <p>The gesture is pinned at two seams SimpleEditor exposes for exactly
- * this purpose: the pure dispatch function
- * {@link SimpleEditor#ctrlWGesture} and the Swing-free model half
+ * <p>The gesture is pinned at the seam SimpleEditor exposes for exactly
+ * this purpose: the Swing-free model half
  * {@link SimpleEditor#startWireGesture}. This is the compensating
  * control for the key-press-to-pixels path (the ToolkitPolicyTest
  * pattern): the editor itself cannot be constructed under the suite's
@@ -64,49 +64,6 @@ class CtrlWGestureTest {
 		constant.setHighlight(true);
 		selected.add(constant);
 		return constant;
-	}
-
-	// ------------------------------------------------------------------
-	// dispatch: the #126 gate itself
-	// ------------------------------------------------------------------
-
-	/** P1's dispatch half: with an element hover-selected, idle ctrl-W
-	 * must start a wire. Pre-#126 the empty-selection gate sent this to
-	 * the watch toggle instead. */
-	@Test
-	void idleStartsWireDespiteSingleSelection() {
-		assertEquals(CtrlW.START_WIRE, SimpleEditor.ctrlWGesture(State.idle, 1));
-	}
-
-	/** Pre-#126, an idle multi-selection (overlapping hover) fell through
-	 * to nothing at all. */
-	@Test
-	void idleStartsWireDespiteMultiSelection() {
-		assertEquals(CtrlW.START_WIRE, SimpleEditor.ctrlWGesture(State.idle, 3));
-	}
-
-	/** The original gesture — idle, nothing selected — is unchanged. */
-	@Test
-	void idleStartsWireWithEmptySelection() {
-		assertEquals(CtrlW.START_WIRE, SimpleEditor.ctrlWGesture(State.idle, 0));
-	}
-
-	/** P2's sibling-gesture pin: the watch toggle is still reachable with
-	 * one element selected outside idle (e.g. after a select-rectangle,
-	 * State.selected). */
-	@Test
-	void watchToggleStillReachableFromSelectedState() {
-		assertEquals(CtrlW.TOGGLE_WATCH,
-				SimpleEditor.ctrlWGesture(State.selected, 1));
-	}
-
-	/** Everything else stays a no-op, exactly as before. */
-	@Test
-	void otherStatesDoNothing() {
-		assertEquals(CtrlW.NONE, SimpleEditor.ctrlWGesture(State.selected, 0));
-		assertEquals(CtrlW.NONE, SimpleEditor.ctrlWGesture(State.selected, 2));
-		assertEquals(CtrlW.NONE, SimpleEditor.ctrlWGesture(State.drawire, 0));
-		assertEquals(CtrlW.NONE, SimpleEditor.ctrlWGesture(State.moving, 4));
 	}
 
 	// ------------------------------------------------------------------

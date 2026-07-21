@@ -170,9 +170,21 @@ public abstract sealed class Put
 	 * @param end The wire end it is to attach to, or null if detaching.
 	 */
 	public void setAttached(WireEnd end) {
-		
+
 		wireEnd = end;
 	} // end of setAttached method
+
+	/**
+	 * Get the wire end this put is attached to, if any.
+	 *
+	 * @return the attached wire end, or null if this put is unattached.
+	 *
+	 * @jls.testedby jls.CircuitLoadErrorTest#duplicateWireEndAttachmentIsRejected()
+	 */
+	public WireEnd getAttached() {
+
+		return wireEnd;
+	} // end of getAttached method
 	
 	/**
 	 * Record that this put is touching or not touching a WireEnd.

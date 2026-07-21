@@ -2,6 +2,7 @@ package jls.ui;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.KeyboardFocusManager;
 import java.awt.Window;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
@@ -107,6 +108,18 @@ final class EditorGestureSupport implements AutoCloseable {
 				g.dispose();
 			}
 		});
+	}
+
+	/**
+	 * Whether the edit canvas currently owns the keyboard focus. Used to
+	 * pin the #75 H2 fix: choosing an element from the tool bar must hand
+	 * focus to the canvas so the arrow/Enter placement keys reach it
+	 * without the user first tabbing off the palette.
+	 *
+	 * @return true when the canvas is the focus owner.
+	 */
+	boolean canvasIsFocusOwner() {
+		return canvas.isFocusOwner();
 	}
 
 	/**
@@ -266,6 +279,246 @@ final class EditorGestureSupport implements AutoCloseable {
 	void clickPopupItem(String text) throws Exception {
 		JMenuItem item = waitForMenuItem(text);
 		SwingUtilities.invokeAndWait(item::doClick);
+	}
+
+	/**
+	 * The currently visible popup-menu item with the given text (issue
+	 * #75). Used to prove the popup item and the canvas key binding
+	 * dispatch through the same shared {@link javax.swing.Action}.
+	 *
+	 * @param text the item's label.
+	 * @return the menu item.
+	 */
+	JMenuItem popupItem(String text) {
+		return waitForMenuItem(text);
+	}
+
+	/**
+	 * Whether a showing popup menu currently offers an item with the given
+	 * text - a single, non-blocking probe (unlike {@link #popupItem}, which
+	 * polls to a long bound and fails on timeout). Lets a test retry the
+	 * right-press that raises the popup when the first press did not
+	 * materialize it (a popup-show timing flake under the WM-less #162 Xvfb).
+	 *
+	 * @param text the item's label.
+	 * @return true if the item is showing in a visible popup right now.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	boolean isPopupItemShowing(String text) throws Exception {
+		AtomicReference<JMenuItem> found = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			for (Window w : Window.getWindows()) {
+				JMenuItem item = findMenuItem(w, text);
+				if (item != null) {
+					found.set(item);
+					return;
+				}
+			}
+			found.set(findMenuItem(frame, text));
+		});
+		return found.get() != null;
+	}
+
+	/**
+	 * The action registered in the canvas' ActionMap under the given key
+	 * (issue #75), read on the EDT. The shared editing Actions are stored
+	 * here by the canvas key bindings, so this lets a test assert the
+	 * binding points at {@code editor.editAction(op)} rather than a
+	 * separate copy.
+	 *
+	 * @param key the ActionMap key (e.g. "do cut").
+	 * @return the bound action, or null if none.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	javax.swing.Action canvasAction(String key) throws Exception {
+		AtomicReference<javax.swing.Action> a = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			if (canvas instanceof javax.swing.JComponent jc) {
+				a.set(jc.getActionMap().get(key));
+			}
+		});
+		return a.get();
+	}
+
+	/**
+	 * The action a keystroke resolves to through the canvas' WHEN_FOCUSED
+	 * maps (issue #75): {@code actionMap.get(inputMap.get(stroke))}, read
+	 * on the EDT. Returns null if either map lacks the entry, so a test
+	 * can pin a binding end to end - removing the InputMap stroke or the
+	 * ActionMap entry makes this null, failing an identity assertion.
+	 *
+	 * @param stroke the keystroke to resolve.
+	 * @return the bound action, or null if the stroke is unbound.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	javax.swing.Action canvasActionForStroke(javax.swing.KeyStroke stroke)
+			throws Exception {
+		AtomicReference<javax.swing.Action> a = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> {
+			if (canvas instanceof javax.swing.JComponent jc) {
+				Object name = jc.getInputMap().get(stroke);
+				if (name != null) {
+					a.set(jc.getActionMap().get(name));
+				}
+			}
+		});
+		return a.get();
+	}
+
+	/**
+	 * Dispatch a KEY_PRESSED to the canvas on the EDT (issue #75),
+	 * exercising the same WHEN_FOCUSED InputMap the user's keystroke
+	 * would. Mirrors the synthetic-mouse idiom: no {@link java.awt.Robot},
+	 * so it stays deterministic under Xvfb.
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @param modifiers the extended modifier mask (0 for none).
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void pressKey(int keyCode, int modifiers) throws Exception {
+		java.awt.event.KeyEvent e = new java.awt.event.KeyEvent(canvas,
+				java.awt.event.KeyEvent.KEY_PRESSED, when++, modifiers,
+				keyCode, java.awt.event.KeyEvent.CHAR_UNDEFINED);
+		SwingUtilities.invokeAndWait(() -> canvas.dispatchEvent(e));
+	}
+
+	/**
+	 * Dispatch an unmodified KEY_PRESSED to the canvas on the EDT.
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void pressKey(int keyCode) throws Exception {
+		pressKey(keyCode, 0);
+	}
+
+	// ------------------------------------------------------------------
+	// focus-faithful key driver (issue #75 verification hardening)
+	// ------------------------------------------------------------------
+
+	/**
+	 * The component that currently owns the keyboard focus, read on the EDT
+	 * from the real {@link KeyboardFocusManager} - the same authority the
+	 * AWT event pipeline consults when routing a user's keystroke. Unlike
+	 * the hardcoded {@code canvas} the synthetic {@link #pressKey}
+	 * dispatches to, this reflects where a real key would actually land, so
+	 * a test built on it goes red if a focus regression strands focus off
+	 * the canvas (the exact class of the #75 H2 tool-bar focus bug).
+	 *
+	 * @return the live focus owner, or null if no component in this JVM owns
+	 *         the focus.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	Component focusOwner() throws Exception {
+		AtomicReference<Component> owner = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> owner.set(KeyboardFocusManager
+				.getCurrentKeyboardFocusManager().getFocusOwner()));
+		return owner.get();
+	}
+
+	/**
+	 * Dispatch a KEY_PRESSED to the LIVE keyboard-focus owner on the EDT
+	 * (issue #75 verification hardening), instead of to the hardcoded canvas
+	 * as {@link #pressKey} does. This is the focus-faithful key path: it
+	 * reads {@code KeyboardFocusManager.getFocusOwner()} at dispatch time,
+	 * so the keystroke reaches whatever component a real user's key would -
+	 * the canvas' WHEN_FOCUSED bindings fire only when the canvas genuinely
+	 * holds the focus. A regression that leaves focus stranded on the
+	 * tool-bar button (the exact #75 H2 bug) therefore turns a test driven
+	 * through here red, where {@link #pressKey} stays green by force-feeding
+	 * the canvas regardless of focus.
+	 *
+	 * <p>Focus-owner dispatch, not {@link java.awt.Robot#keyPress}: under
+	 * the #162 window-manager-less Xvfb a single {@code Robot} key press
+	 * auto-repeats into many KEY_PRESSED events (empirically ~30 for one
+	 * press/release), which makes exact "moved one grid step" assertions
+	 * flaky; dispatching to the focus owner delivers exactly one event while
+	 * still honoring the real focus subsystem - it routes to the button and
+	 * not the canvas when focus is on the button, and vice versa (both
+	 * verified empirically). The faithfulness we need is "which component
+	 * receives the key", and that is the focus owner, read live here.</p>
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @param modifiers the extended modifier mask (0 for none).
+	 * @throws Exception if there is no focus owner, or the EDT dispatch
+	 *         fails.
+	 */
+	void pressKeyThroughFocusOwner(int keyCode, int modifiers)
+			throws Exception {
+		Component owner = focusOwner();
+		if (owner == null) {
+			throw new AssertionError("no focus owner to route the key to; a "
+					+ "real keystroke would have nowhere to go either");
+		}
+		java.awt.event.KeyEvent e = new java.awt.event.KeyEvent(owner,
+				java.awt.event.KeyEvent.KEY_PRESSED, when++, modifiers,
+				keyCode, java.awt.event.KeyEvent.CHAR_UNDEFINED);
+		SwingUtilities.invokeAndWait(() -> owner.dispatchEvent(e));
+	}
+
+	/**
+	 * Dispatch an unmodified KEY_PRESSED to the live keyboard-focus owner on
+	 * the EDT (issue #75 verification hardening).
+	 *
+	 * @param keyCode the {@link java.awt.event.KeyEvent} VK_ code.
+	 * @throws Exception if there is no focus owner, or the EDT dispatch
+	 *         fails.
+	 */
+	void pressKeyThroughFocusOwner(int keyCode) throws Exception {
+		pressKeyThroughFocusOwner(keyCode, 0);
+	}
+
+	/**
+	 * Move the keyboard focus to the given component and wait for the real
+	 * {@link KeyboardFocusManager} to confirm the handoff (issue #75
+	 * verification hardening). Used to set up a non-canvas focus owner so a
+	 * test can prove {@link #pressKeyThroughFocusOwner} honors it - a
+	 * deliberate stand-in for a focus-stranding regression.
+	 *
+	 * @param target the component to focus.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void giveFocusTo(Component target) throws Exception {
+		SwingUtilities.invokeAndWait(target::requestFocusInWindow);
+		waitFor(() -> {
+			try {
+				return focusOwner() == target;
+			} catch (Exception e) {
+				throw new AssertionError(e);
+			}
+		}, "focus to move to " + target.getClass().getSimpleName());
+	}
+
+	/**
+	 * Move the keyboard focus to the edit canvas and wait for the real
+	 * {@link KeyboardFocusManager} to confirm the handoff (issue #75
+	 * verification hardening). Used to stage the canvas as the genuine focus
+	 * owner before a keyboard-editing test routes keys through
+	 * {@link #pressKeyThroughFocusOwner}: once the canvas truly owns focus,
+	 * routing a key through the live focus owner delivers it to the canvas
+	 * exactly as a real user's keystroke would, so the InputMap/ActionMap
+	 * wiring is exercised through the real event path rather than force-fed to
+	 * a hardcoded reference.
+	 *
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	void focusCanvas() throws Exception {
+		giveFocusTo(canvas);
+	}
+
+	/**
+	 * The editor's keyboard construction caret (issue #75), read on the
+	 * EDT, or null if the keyboard has not been used to point yet. Lets a
+	 * keyboard-only construction test see where the next placement or wire
+	 * endpoint will land between key presses.
+	 *
+	 * @return a copy of the caret point, or null.
+	 * @throws Exception if the EDT dispatch fails.
+	 */
+	java.awt.Point keyboardCaret() throws Exception {
+		AtomicReference<java.awt.Point> p = new AtomicReference<>();
+		SwingUtilities.invokeAndWait(() -> p.set(editor.keyboardCaret()));
+		return p.get();
 	}
 
 	// ------------------------------------------------------------------

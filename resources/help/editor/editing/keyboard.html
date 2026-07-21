@@ -1,0 +1,85 @@
+<html>
+<head>
+<title>Keyboard-only Construction</title>
+</head>
+
+<body>
+<h1>Keyboard-only Construction</h1>
+
+<p>
+You can lay out and wire a circuit entirely from the keyboard, with no
+pointing device.  The editing area behaves like any other component: give
+it keyboard focus by selecting its tab (or clicking in it once), and the
+keys below then drive the whole construction.
+
+<h2>The caret</h2>
+<p>
+The <b>arrow keys</b> move a small crosshair called the <i>caret</i>
+around the drawing grid.  The caret is the keyboard's equivalent of the
+mouse pointer: it marks where the next element will drop and where a wire
+will start or end.  It always sits on a grid line, so wires you start or
+finish at the caret line up exactly with the ports on gates and pins.
+
+<h2>Placing an element</h2>
+<ol>
+<li>Choose an element from the <b>Element</b> menu on the tool bar (it is
+    fully keyboard navigable) and answer its creation dialog as usual.</li>
+<li>The new element appears attached to the keyboard.  Use the
+    <b>arrow keys</b> to move it one grid step at a time to where you want
+    it.</li>
+<li>Press <b>Enter</b> to drop it.  If a message warns of an overlap, move
+    it clear first; Enter has no effect while it overlaps something.</li>
+</ol>
+
+<h2>Moving something already placed</h2>
+<p>
+With nothing being placed, move the caret over an element and press
+<b>Enter</b> to select it.  The <b>arrow keys</b> then nudge the selected
+element one grid step at a time (this is undoable, like a mouse drag).
+Press <b>Enter</b> again to finish and deselect.
+
+<h2>Wiring port to port</h2>
+<p>
+To connect two elements with a wire:
+<ol>
+<li>Move the caret onto the source port (for example a gate's output).</li>
+<li>Press <b>w</b> to start a wire there.</li>
+<li>Press <b>Enter</b> to anchor the wire to that port.</li>
+<li>Use the <b>arrow keys</b> to run the wire's free end across to the
+    destination port (a gate input or a pin).</li>
+<li>Press <b>Enter</b> on the destination port to complete the
+    connection.  Press <b>Esc</b> at any time to abandon the wire.</li>
+</ol>
+<p>
+Because the caret and every port share the grid, ending a wire on a port
+connects them exactly, the same way touching two ports with the mouse
+does.
+
+<h2>Rotating, flipping, and the rest</h2>
+<p>
+The plain keys <b>r</b> (rotate clockwise), <b>shift-r</b> (rotate
+counter-clockwise), and <b>f</b> (flip) act on the selected element, and
+every other operation on the
+<a href="hotkeys.html">Keyboard Accelerators</a> page works from the
+keyboard too.  When the circuit is built, press <b>F5</b> to simulate it.
+
+<h2>A worked example: A + ~B</h2>
+<p>
+This is the first circuit in the tutorial, built with no mouse:
+<ol>
+<li>Choose an OR gate, move it to the center with the arrow keys, and
+    press <b>Enter</b>.</li>
+<li>Choose a NOT gate, move it with the arrow keys so its output is a
+    little to the left of one of the OR gate's inputs, and press
+    <b>Enter</b>.</li>
+<li>Move the caret onto the NOT gate's output, press <b>w</b>, press
+    <b>Enter</b>, move the caret across to the OR gate's input, and press
+    <b>Enter</b> to wire them.</li>
+</ol>
+<p>
+The two gates are now the A + ~B skeleton, ready for input and output
+pins and simulation.
+
+</body>
+
+</html>

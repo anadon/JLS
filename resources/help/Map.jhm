@@ -7,6 +7,7 @@
 	<mapID target="sigformat" url="elements/other/sigformat.html" />
 	<mapID target="edit.over" url="editor/editor.html" />
 	<mapID target="hotkeys" url="editor/editing/hotkeys.html" />
+	<mapID target="keyboard" url="editor/editing/keyboard.html" />
 	<mapID target="picking" url="editor/editing/picking.html" />
 	<mapID target="wiring" url="editor/editing/wiring.html" />
 	<mapID target="selecting" url="editor/editing/selecting.html" />

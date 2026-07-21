@@ -43,6 +43,7 @@
 	<tocitem text="Paste" target="paste"/>
 	<tocitem text="Undo/Redo" target="undoredo"/>
 	<tocitem text="Keyboard Accelerators" target="hotkeys"/>
+	<tocitem text="Keyboard-only Construction" target="keyboard"/>
     </tocitem>
     <tocitem text="Circuits" target="circuit.over">
    	<tocitem text="Wiring" target="wires">

@@ -1,0 +1,1 @@
+clk 0 until 1000 1 until 2000 0 until 3000 1 until 4000 0 until 5000 1 until 6000 0 until 7000 1 until 8000 0 until 9000 1 until 10000 0 until 11000 1 until 12000 0 until 13000 1 until 14000 0 until 15000 1 until 16000 0 until 17000 1 until 18000 0 end

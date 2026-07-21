@@ -1,0 +1,530 @@
+FORMAT 1
+CIRCUIT riscvcpu
+ELEMENT Clock
+ int id 0
+ int x 120
+ int y 120
+ int width 24
+ int height 24
+ String sid "56fa413010b6414487a414b19cb94375:0"
+ int cycle 2000
+ int one 1000
+ String orient "RIGHT"
+END
+ELEMENT Register
+ int id 1
+ int x 360
+ int y 300
+ int width 48
+ int height 60
+ String sid "56fa413010b6414487a414b19cb94375:1"
+ String name "PC"
+ int bits 8
+ Int init 0
+ String orient "RIGHT"
+ int delay 50
+ String type "pff"
+ int watch 1
+END
+ELEMENT Adder
+ int id 2
+ int x 360
+ int y 600
+ int width 48
+ int height 48
+ String sid "56fa413010b6414487a414b19cb94375:2"
+ int bits 8
+ int delay 240
+ String orient "RIGHT"
+END
+ELEMENT Constant
+ int id 3
+ int x 120
+ int y 720
+ int width 24
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:3"
+ Int value 1
+ int base 10
+ String orient "RIGHT"
+END
+ELEMENT Register
+ int id 4
+ int x 1080
+ int y 300
+ int width 72
+ int height 60
+ String sid "56fa413010b6414487a414b19cb94375:4"
+ String name "ACC"
+ int bits 32
+ Int init 0
+ String orient "RIGHT"
+ int delay 50
+ String type "pff"
+ int watch 1
+END
+ELEMENT Adder
+ int id 5
+ int x 1080
+ int y 600
+ int width 48
+ int height 48
+ String sid "56fa413010b6414487a414b19cb94375:5"
+ int bits 32
+ int delay 960
+ String orient "RIGHT"
+END
+ELEMENT Constant
+ int id 6
+ int x 840
+ int y 720
+ int width 24
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:6"
+ Int value 3
+ int base 10
+ String orient "RIGHT"
+END
+ELEMENT JumpStart
+ int id 7
+ int x 144
+ int y 132
+ int width 36
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:7"
+ String name "clk"
+ int bits 1
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 8
+ int x 144
+ int y 132
+ String sid "56fa413010b6414487a414b19cb94375:8"
+ String put "input"
+ ref attach 7
+ ref wire 9
+END
+ELEMENT WireEnd
+ int id 9
+ int x 144
+ int y 132
+ String sid "56fa413010b6414487a414b19cb94375:9"
+ String put "output"
+ ref attach 0
+ ref wire 8
+END
+ELEMENT JumpEnd
+ int id 10
+ int x 324
+ int y 348
+ int width 36
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:11"
+ String name "clk"
+ int bits 1
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 11
+ int x 360
+ int y 348
+ String sid "56fa413010b6414487a414b19cb94375:12"
+ String put "output"
+ ref attach 10
+ ref wire 12
+END
+ELEMENT WireEnd
+ int id 12
+ int x 360
+ int y 348
+ String sid "56fa413010b6414487a414b19cb94375:13"
+ String put "C"
+ ref attach 1
+ ref wire 11
+END
+ELEMENT JumpEnd
+ int id 13
+ int x 1044
+ int y 348
+ int width 36
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:15"
+ String name "clk"
+ int bits 1
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 14
+ int x 1080
+ int y 348
+ String sid "56fa413010b6414487a414b19cb94375:16"
+ String put "output"
+ ref attach 13
+ ref wire 15
+END
+ELEMENT WireEnd
+ int id 15
+ int x 1080
+ int y 348
+ String sid "56fa413010b6414487a414b19cb94375:17"
+ String put "C"
+ ref attach 4
+ ref wire 14
+END
+ELEMENT JumpStart
+ int id 16
+ int x 408
+ int y 312
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:19"
+ String name "pcq"
+ int bits 8
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 17
+ int x 408
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:20"
+ String put "input"
+ ref attach 16
+ ref wire 18
+END
+ELEMENT WireEnd
+ int id 18
+ int x 408
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:21"
+ String put "Q"
+ ref attach 1
+ ref wire 17
+END
+ELEMENT JumpEnd
+ int id 19
+ int x 312
+ int y 612
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:23"
+ String name "pcq"
+ int bits 8
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 20
+ int x 360
+ int y 612
+ String sid "56fa413010b6414487a414b19cb94375:24"
+ String put "output"
+ ref attach 19
+ ref wire 21
+END
+ELEMENT WireEnd
+ int id 21
+ int x 360
+ int y 612
+ String sid "56fa413010b6414487a414b19cb94375:25"
+ String put "A"
+ ref attach 2
+ ref wire 20
+END
+ELEMENT JumpStart
+ int id 22
+ int x 144
+ int y 720
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:27"
+ String name "one"
+ int bits 8
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 23
+ int x 144
+ int y 720
+ String sid "56fa413010b6414487a414b19cb94375:28"
+ String put "input"
+ ref attach 22
+ ref wire 24
+END
+ELEMENT WireEnd
+ int id 24
+ int x 144
+ int y 720
+ String sid "56fa413010b6414487a414b19cb94375:29"
+ String put "output"
+ ref attach 3
+ ref wire 23
+END
+ELEMENT JumpEnd
+ int id 25
+ int x 312
+ int y 636
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:31"
+ String name "one"
+ int bits 8
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 26
+ int x 360
+ int y 636
+ String sid "56fa413010b6414487a414b19cb94375:32"
+ String put "output"
+ ref attach 25
+ ref wire 27
+END
+ELEMENT WireEnd
+ int id 27
+ int x 360
+ int y 636
+ String sid "56fa413010b6414487a414b19cb94375:33"
+ String put "B"
+ ref attach 2
+ ref wire 26
+END
+ELEMENT JumpStart
+ int id 28
+ int x 408
+ int y 624
+ int width 72
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:35"
+ String name "pcnext"
+ int bits 8
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 29
+ int x 408
+ int y 624
+ String sid "56fa413010b6414487a414b19cb94375:36"
+ String put "input"
+ ref attach 28
+ ref wire 30
+END
+ELEMENT WireEnd
+ int id 30
+ int x 408
+ int y 624
+ String sid "56fa413010b6414487a414b19cb94375:37"
+ String put "S"
+ ref attach 2
+ ref wire 29
+END
+ELEMENT JumpEnd
+ int id 31
+ int x 288
+ int y 312
+ int width 72
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:39"
+ String name "pcnext"
+ int bits 8
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 32
+ int x 360
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:40"
+ String put "output"
+ ref attach 31
+ ref wire 33
+END
+ELEMENT WireEnd
+ int id 33
+ int x 360
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:41"
+ String put "D"
+ ref attach 1
+ ref wire 32
+END
+ELEMENT JumpStart
+ int id 34
+ int x 1152
+ int y 312
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:43"
+ String name "accq"
+ int bits 32
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 35
+ int x 1152
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:44"
+ String put "input"
+ ref attach 34
+ ref wire 36
+END
+ELEMENT WireEnd
+ int id 36
+ int x 1152
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:45"
+ String put "Q"
+ ref attach 4
+ ref wire 35
+END
+ELEMENT JumpEnd
+ int id 37
+ int x 1032
+ int y 612
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:47"
+ String name "accq"
+ int bits 32
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 38
+ int x 1080
+ int y 612
+ String sid "56fa413010b6414487a414b19cb94375:48"
+ String put "output"
+ ref attach 37
+ ref wire 39
+END
+ELEMENT WireEnd
+ int id 39
+ int x 1080
+ int y 612
+ String sid "56fa413010b6414487a414b19cb94375:49"
+ String put "A"
+ ref attach 5
+ ref wire 38
+END
+ELEMENT JumpStart
+ int id 40
+ int x 864
+ int y 720
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:51"
+ String name "imm"
+ int bits 32
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 41
+ int x 864
+ int y 720
+ String sid "56fa413010b6414487a414b19cb94375:52"
+ String put "input"
+ ref attach 40
+ ref wire 42
+END
+ELEMENT WireEnd
+ int id 42
+ int x 864
+ int y 720
+ String sid "56fa413010b6414487a414b19cb94375:53"
+ String put "output"
+ ref attach 6
+ ref wire 41
+END
+ELEMENT JumpEnd
+ int id 43
+ int x 1032
+ int y 636
+ int width 48
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:55"
+ String name "imm"
+ int bits 32
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 44
+ int x 1080
+ int y 636
+ String sid "56fa413010b6414487a414b19cb94375:56"
+ String put "output"
+ ref attach 43
+ ref wire 45
+END
+ELEMENT WireEnd
+ int id 45
+ int x 1080
+ int y 636
+ String sid "56fa413010b6414487a414b19cb94375:57"
+ String put "B"
+ ref attach 5
+ ref wire 44
+END
+ELEMENT JumpStart
+ int id 46
+ int x 1128
+ int y 624
+ int width 72
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:59"
+ String name "accnext"
+ int bits 32
+ int watch 0
+ String orientation "LEFT"
+END
+ELEMENT WireEnd
+ int id 47
+ int x 1128
+ int y 624
+ String sid "56fa413010b6414487a414b19cb94375:60"
+ String put "input"
+ ref attach 46
+ ref wire 48
+END
+ELEMENT WireEnd
+ int id 48
+ int x 1128
+ int y 624
+ String sid "56fa413010b6414487a414b19cb94375:61"
+ String put "S"
+ ref attach 5
+ ref wire 47
+END
+ELEMENT JumpEnd
+ int id 49
+ int x 1008
+ int y 312
+ int width 72
+ int height 0
+ String sid "56fa413010b6414487a414b19cb94375:63"
+ String name "accnext"
+ int bits 32
+ String orientation "RIGHT"
+END
+ELEMENT WireEnd
+ int id 50
+ int x 1080
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:64"
+ String put "output"
+ ref attach 49
+ ref wire 51
+END
+ELEMENT WireEnd
+ int id 51
+ int x 1080
+ int y 312
+ String sid "56fa413010b6414487a414b19cb94375:65"
+ String put "D"
+ ref attach 4
+ ref wire 50
+END
+ENDCIRCUIT

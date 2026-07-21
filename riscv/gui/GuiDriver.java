@@ -255,6 +255,10 @@ public final class GuiDriver {
 	 *  physical key fires -- without depending on Robot key routing, which
 	 *  is unreliable under a headless WM. */
 	public void keyToCanvas(int keyCode) throws Exception {
+		keyToCanvasMod(keyCode, 0);
+	}
+
+	public void keyToCanvasMod(int keyCode, int mods) throws Exception {
 		Component owner = java.awt.KeyboardFocusManager
 				.getCurrentKeyboardFocusManager().getFocusOwner();
 		if (owner == null) {
@@ -263,12 +267,91 @@ public final class GuiDriver {
 		final Component o = owner;
 		final long w = System.currentTimeMillis();
 		SwingUtilities.invokeAndWait(() -> {
-			o.dispatchEvent(new KeyEvent(o, KeyEvent.KEY_PRESSED, w, 0,
+			o.dispatchEvent(new KeyEvent(o, KeyEvent.KEY_PRESSED, w, mods,
 					keyCode, KeyEvent.CHAR_UNDEFINED));
-			o.dispatchEvent(new KeyEvent(o, KeyEvent.KEY_RELEASED, w + 1, 0,
+			o.dispatchEvent(new KeyEvent(o, KeyEvent.KEY_RELEASED, w + 1, mods,
 					keyCode, KeyEvent.CHAR_UNDEFINED));
 		});
 		robot.delay(40);
+	}
+
+	/** Bring the editor to a clean idle state before a palette action:
+	 *  dismiss any stray dialog with Cancel, re-assert the frame, and press
+	 *  Escape on the canvas. The editor's setup() only opens a creation
+	 *  dialog when idle, so accumulated state from a prior gesture would
+	 *  otherwise silently swallow the next palette click. */
+	public void ensureIdle() throws Exception {
+		for (int i = 0; i < 3 && dialogUp(); i++) {
+			AbstractButton cancel = null;
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog && w.isShowing()) {
+					for (Component c : descend(w)) {
+						if (c instanceof AbstractButton b && b.isShowing()
+								&& ("Cancel".equals(b.getText())
+										|| "OK".equals(b.getText()))) {
+							cancel = b;
+						}
+					}
+				}
+			}
+			if (cancel != null) {
+				click(cancel);
+			}
+			robot.delay(150);
+		}
+		Frame fr = jls.JLSInfo.frame;
+		if (fr != null) {
+			final Frame ff = fr;
+			SwingUtilities.invokeAndWait(() -> {
+				ff.setAlwaysOnTop(true);
+				ff.toFront();
+			});
+		}
+		focusCanvas();
+		keyToCanvas(KeyEvent.VK_ESCAPE);
+		robot.delay(80);
+	}
+
+	/** The newly-added element that is not a wire artifact (coincidence
+	 *  placement also spawns WireEnds/Wires). */
+	private jls.elem.Element newRealElement(
+			java.util.Set<jls.elem.Element> before) {
+		for (jls.elem.Element e : currentCircuit().getElements()) {
+			if (!before.contains(e) && !(e instanceof jls.elem.WireEnd)
+					&& !(e instanceof jls.elem.Wire)) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	/** Select a single element with a rubber-band drag around it (a plain
+	 *  click would enter move mode and clear the selection on release).
+	 *  Encloses only this element, so call it while the element is isolated
+	 *  from neighbours. */
+	public void select(jls.elem.Element el) throws Exception {
+		focusCanvas();
+		java.awt.Rectangle r = el.getRect();
+		Point p0 = modelToScreen(r.x - 8, r.y - 8);
+		Point p1 = modelToScreen(r.x + r.width + 8, r.y + r.height + 8);
+		drag(p0.x, p0.y, p1.x, p1.y);
+		robot.delay(100);
+	}
+
+	/** Toggle "watch" on an element (batch mode reports watched registers /
+	 *  output pins): select it, then fire the editor's Ctrl+W watch action. */
+	public void watch(jls.elem.Element el) throws Exception {
+		select(el);
+		keyToCanvasMod(KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_DOWN_MASK);
+		robot.delay(120);
+		// a watch dialog may pop (choose watched puts); accept it
+		if (dialogUp()) {
+			AbstractButton ok = dialogButton("OK");
+			if (ok != null) {
+				click(ok);
+			}
+			waitNoDialog(3000);
+		}
 	}
 
 	public void shiftTap(int keyCode) {
@@ -305,6 +388,10 @@ public final class GuiDriver {
 			tap(KeyEvent.VK_COMMA);
 		} else if (ch == ':') {
 			shiftTap(KeyEvent.VK_SEMICOLON);
+		} else if (ch == '/') {
+			tap(KeyEvent.VK_SLASH);
+		} else if (ch == '\n') {
+			tap(KeyEvent.VK_ENTER);
 		} else {
 			throw new RuntimeException("no key mapping for char: " + ch);
 		}
@@ -482,6 +569,19 @@ public final class GuiDriver {
 		return null;
 	}
 
+	public AbstractButton waitDialogButton(String text, long ms)
+			throws Exception {
+		long deadline = System.currentTimeMillis() + ms;
+		AbstractButton b = null;
+		while (b == null && System.currentTimeMillis() < deadline) {
+			b = dialogButton(text);
+			if (b == null) {
+				robot.delay(60);
+			}
+		}
+		return b;
+	}
+
 	public boolean dialogUp() {
 		for (Window w : Window.getWindows()) {
 			if (w instanceof java.awt.Dialog && w.isShowing()) {
@@ -577,13 +677,38 @@ public final class GuiDriver {
 	 */
 	public jls.elem.Element placeExact(String tip, String[] fields,
 			String[] radios, int tx, int ty) throws Exception {
+		ensureIdle();
 		java.util.Set<jls.elem.Element> before =
 				new java.util.HashSet<>(currentCircuit().getElements());
-		Component pal = waitFind(paletteTip(tip), "palette " + tip, 5000);
-		click(pal);
-		long d = System.currentTimeMillis() + 5000;
-		while (!dialogUp() && System.currentTimeMillis() < d) {
-			robot.delay(50);
+		// open the creation dialog, retrying the palette click if it does
+		// not appear (a click can be lost under the headless WM)
+		boolean opened = false;
+		for (int attempt = 0; attempt < 3 && !opened; attempt++) {
+			Component pal = waitFind(paletteTip(tip), "palette " + tip, 5000);
+			click(pal);
+			long d = System.currentTimeMillis() + 3000;
+			while (!dialogUp() && System.currentTimeMillis() < d) {
+				robot.delay(50);
+			}
+			opened = dialogUp();
+			if (!opened) {
+				ensureIdle();
+			}
+		}
+		if (!opened) {
+			try {
+				Component pal = find(paletteTip(tip));
+				System.err.println("palette '" + tip + "' loc="
+						+ (pal != null && pal.isShowing()
+								? pal.getLocationOnScreen() : "??")
+						+ " frame bounds=" + (jls.JLSInfo.frame != null
+								? jls.JLSInfo.frame.getBounds() : "null"));
+				shot(System.getProperty("java.io.tmpdir") + "/"
+					+ "jls-open-fail.png");
+			} catch (Exception ignore) {
+			}
+			throw new RuntimeException("creation dialog for " + tip
+					+ " never opened");
 		}
 		robot.delay(150);
 		if (fields != null) {
@@ -605,17 +730,20 @@ public final class GuiDriver {
 				}
 			}
 		}
-		click(dialogButton("OK"));
+		AbstractButton okb = waitDialogButton("OK", 4000);
+		if (okb == null) {
+			try {
+				shot(System.getProperty("java.io.tmpdir") + "/"
+					+ "jls-ok-fail.png");
+			} catch (Exception ignore) {
+			}
+			throw new RuntimeException("OK button not found for " + tip);
+		}
+		click(okb);
 		waitNoDialog(4000);
 		robot.delay(200);
 
-		jls.elem.Element el = null;
-		for (jls.elem.Element e : currentCircuit().getElements()) {
-			if (!before.contains(e)) {
-				el = e;
-				break;
-			}
-		}
+		jls.elem.Element el = newRealElement(before);
 		if (el == null) {
 			throw new RuntimeException("no element appeared for " + tip);
 		}
@@ -640,12 +768,285 @@ public final class GuiDriver {
 		return el;
 	}
 
+	/** Place a Memory element (RAM/ROM), optionally typing its initial
+	 *  contents into the dialog's "Built In" editor (the genuine GUI way a
+	 *  user enters a program into ROM). `contents` is "addr value" hex, one
+	 *  pair per line. Fields order in the Create Memory dialog is
+	 *  [name, bits, capacity]. */
+	public jls.elem.Element placeMemory(String name, int bits, int cap,
+			boolean rom, String contents, int tx, int ty) throws Exception {
+		ensureIdle();
+		java.util.Set<jls.elem.Element> before =
+				new java.util.HashSet<>(currentCircuit().getElements());
+		click(waitFind(paletteTip("memory, various types"), "mem palette", 5000));
+		long dd = System.currentTimeMillis() + 5000;
+		while (!dialogUp() && System.currentTimeMillis() < dd) {
+			robot.delay(50);
+		}
+		robot.delay(200);
+		if (rom) {
+			AbstractButton r = dialogButton("ROM");
+			if (r != null) {
+				click(r);
+			}
+		}
+		List<JTextComponent> fs = dialogFields();
+		String[] vals = {name, String.valueOf(bits), String.valueOf(cap)};
+		for (int i = 0; i < vals.length && i < fs.size(); i++) {
+			click(fs.get(i));
+			clearField();
+			type(vals[i]);
+		}
+		if (contents != null) {
+			// "Built In" opens a JTextArea editor for the initial contents
+			click(dialogButton("Built In"));
+			robot.delay(400);
+			javax.swing.JTextArea area = null;
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog && w.isShowing()
+						&& !"Create Memory".equals(((java.awt.Dialog) w).getTitle())) {
+					for (Component c : descend(w)) {
+						if (c instanceof javax.swing.JTextArea ta
+								&& ta.isShowing()) {
+							area = ta;
+						}
+					}
+				}
+			}
+			if (area != null) {
+				click(area);
+				clearField();
+				type(contents);
+				robot.delay(100);
+				// the Built In editor's OK button is lowercase "ok"
+				AbstractButton ok = null;
+				for (Window w : Window.getWindows()) {
+					if (w instanceof java.awt.Dialog dlg && w.isShowing()
+							&& !"Create Memory".equals(dlg.getTitle())) {
+						for (Component c : descend(w)) {
+							if (c instanceof AbstractButton b && b.isShowing()
+									&& ("ok".equalsIgnoreCase(b.getText()))) {
+								ok = b;
+							}
+						}
+					}
+				}
+				if (ok != null) {
+					click(ok);
+				}
+				robot.delay(300);
+			} else {
+				System.err.println("placeMemory: Built In text area not found");
+			}
+		}
+		if (VERBOSE) {
+			try {
+				shot(System.getProperty("java.io.tmpdir") + "/"
+					+ "jls-mem-dlg.png");
+			} catch (Exception ignore) {
+			}
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog dlg && w.isShowing()) {
+					System.err.println("[mem] dialog up: '" + dlg.getTitle()
+							+ "'");
+				}
+			}
+		}
+		click(dialogButton("OK"));
+		waitNoDialog(4000);
+		robot.delay(200);
+		jls.elem.Element el = newRealElement(before);
+		if (el == null) {
+			if (VERBOSE) {
+				for (Window w : Window.getWindows()) {
+					if (w instanceof java.awt.Dialog dlg && w.isShowing()) {
+						System.err.println("[mem] STILL up: '" + dlg.getTitle()
+								+ "'");
+						for (Component c : descend(w)) {
+							if (c instanceof javax.swing.JLabel l
+									&& l.getText() != null
+									&& !l.getText().isBlank()) {
+								System.err.println("   label: " + l.getText());
+							}
+						}
+					}
+				}
+			}
+			throw new RuntimeException("no Memory element appeared");
+		}
+		focusCanvas();
+		int gx = 400;
+		while (el.getX() != tx && gx-- > 0) {
+			keyToCanvas(el.getX() < tx ? KeyEvent.VK_RIGHT : KeyEvent.VK_LEFT);
+		}
+		int gy = 400;
+		while (el.getY() != ty && gy-- > 0) {
+			keyToCanvas(el.getY() < ty ? KeyEvent.VK_DOWN : KeyEvent.VK_UP);
+		}
+		keyToCanvas(KeyEvent.VK_ENTER);
+		robot.delay(150);
+		return el;
+	}
+
+	/** Place a Constant with a chosen orientation so its OUTPUT port lands
+	 *  exactly on (portX,portY) -- coincidence-connecting it to a sink. The
+	 *  orientation ("Up"/"Down"/"Left"/"Right") is chosen so the constant's
+	 *  body extends AWAY from the sink element, which is how mid-body input
+	 *  ports (shifter amount, adder Cin, memory CS/OE) get driven without the
+	 *  jump/body overlapping the element. */
+	public jls.elem.Element placeConstDriving(String value, String radix,
+			String orient, int portX, int portY) throws Exception {
+		ensureIdle();
+		java.util.Set<jls.elem.Element> before =
+				new java.util.HashSet<>(currentCircuit().getElements());
+		boolean opened = false;
+		for (int attempt = 0; attempt < 3 && !opened; attempt++) {
+			click(waitFind(paletteTip("constant value"), "const palette", 5000));
+			long dl = System.currentTimeMillis() + 3000;
+			while (!dialogUp() && System.currentTimeMillis() < dl) {
+				robot.delay(50);
+			}
+			opened = dialogUp();
+			if (!opened) {
+				ensureIdle();
+			}
+		}
+		robot.delay(150);
+		List<JTextComponent> fs = dialogFields();
+		if (!fs.isEmpty()) {
+			click(fs.get(0));
+			clearField();
+			type(value);
+		}
+		AbstractButton rb = dialogButton(radix);
+		if (rb != null) {
+			click(rb);
+		}
+		AbstractButton ob = dialogButton(orient);
+		if (ob != null) {
+			click(ob);
+		}
+		click(waitDialogButton("OK", 4000));
+		waitNoDialog(4000);
+		robot.delay(200);
+		jls.elem.Element el = newRealElement(before);
+		if (el == null) {
+			throw new RuntimeException("no constant appeared");
+		}
+		jls.elem.Put op = null;
+		for (jls.elem.Put p : el.getAllPuts()) {
+			if (p instanceof jls.elem.Output) {
+				op = p;
+			}
+		}
+		int offX = op == null ? 0 : op.getX() - el.getX();
+		int offY = op == null ? 0 : op.getY() - el.getY();
+		int ex = portX - offX;
+		int ey = portY - offY;
+		focusCanvas();
+		int gx = 500;
+		while (el.getX() != ex && gx-- > 0) {
+			keyToCanvas(el.getX() < ex ? KeyEvent.VK_RIGHT : KeyEvent.VK_LEFT);
+		}
+		int gy = 500;
+		while (el.getY() != ey && gy-- > 0) {
+			keyToCanvas(el.getY() < ey ? KeyEvent.VK_DOWN : KeyEvent.VK_UP);
+		}
+		keyToCanvas(KeyEvent.VK_ENTER);
+		robot.delay(150);
+		return el;
+	}
+
+	/** Place a ROM whose initial contents come from a program file loaded
+	 *  through the dialog's "from File" button (assemble -> file -> load,
+	 *  the genuine way software reaches a CPU). fileName must be a bare
+	 *  valid name (letters/digits/_); the file is read from the working
+	 *  directory at simulation time. */
+	public jls.elem.Element placeRomFile(String name, int bits, int cap,
+			String fileName, int tx, int ty) throws Exception {
+		ensureIdle();
+		java.util.Set<jls.elem.Element> before =
+				new java.util.HashSet<>(currentCircuit().getElements());
+		click(waitFind(paletteTip("memory, various types"), "mem palette", 5000));
+		long dd = System.currentTimeMillis() + 5000;
+		while (!dialogUp() && System.currentTimeMillis() < dd) {
+			robot.delay(50);
+		}
+		robot.delay(200);
+		AbstractButton rom = dialogButton("ROM");
+		if (rom != null) {
+			click(rom);
+		}
+		List<JTextComponent> fs = dialogFields();
+		String[] vals = {name, String.valueOf(bits), String.valueOf(cap)};
+		for (int i = 0; i < vals.length && i < fs.size(); i++) {
+			click(fs.get(i));
+			clearField();
+			type(vals[i]);
+		}
+		// "from File" -> input prompt for the (bare) file name
+		click(dialogButton("from File"));
+		robot.delay(400);
+		JTextComponent pathField = null;
+		for (Window w : Window.getWindows()) {
+			if (w instanceof java.awt.Dialog dlg && w.isShowing()
+					&& !"Create Memory".equals(dlg.getTitle())) {
+				for (Component c : descend(w)) {
+					if (c instanceof JTextComponent t && t.isEditable()
+							&& t.isShowing()) {
+						pathField = t;
+					}
+				}
+			}
+		}
+		if (pathField != null) {
+			click(pathField);
+			clearField();
+			type(fileName);
+			robot.delay(100);
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog dlg && w.isShowing()
+						&& !"Create Memory".equals(dlg.getTitle())) {
+					for (Component c : descend(w)) {
+						if (c instanceof AbstractButton b && b.isShowing()
+								&& "OK".equals(b.getText())) {
+							click(b);
+						}
+					}
+				}
+			}
+			robot.delay(300);
+		} else {
+			System.err.println("placeRomFile: path field not found");
+		}
+		click(dialogButton("OK"));
+		waitNoDialog(4000);
+		robot.delay(200);
+		jls.elem.Element el = newRealElement(before);
+		if (el == null) {
+			throw new RuntimeException("no ROM element appeared");
+		}
+		focusCanvas();
+		int gx = 400;
+		while (el.getX() != tx && gx-- > 0) {
+			keyToCanvas(el.getX() < tx ? KeyEvent.VK_RIGHT : KeyEvent.VK_LEFT);
+		}
+		int gy = 400;
+		while (el.getY() != ty && gy-- > 0) {
+			keyToCanvas(el.getY() < ty ? KeyEvent.VK_DOWN : KeyEvent.VK_UP);
+		}
+		keyToCanvas(KeyEvent.VK_ENTER);
+		robot.delay(150);
+		return el;
+	}
+
 	/** Place a JumpEnd ("connect to a named wire") that joins the named net,
 	 *  positioned so its element origin lands at (tx,ty). Drives the
 	 *  name-selector list in the creation dialog, then keyboard-nudges to the
 	 *  target and commits. */
 	public jls.elem.Element placeJumpEnd(String name, int tx, int ty)
 			throws Exception {
+		ensureIdle();
 		java.util.Set<jls.elem.Element> before =
 				new java.util.HashSet<>(currentCircuit().getElements());
 		Component pal = waitFind(paletteTip("connect to a named wire"),
@@ -656,15 +1057,21 @@ public final class GuiDriver {
 			robot.delay(50);
 		}
 		robot.delay(200);
-		// select the wire name in the dialog's JList
+		// select the wire name in the dialog's JList (poll: it may settle)
 		javax.swing.JList<?> list = null;
-		for (Window w : Window.getWindows()) {
-			if (w instanceof java.awt.Dialog && w.isShowing()) {
-				for (Component c : descend(w)) {
-					if (c instanceof javax.swing.JList<?> jl) {
-						list = jl;
+		long jld = System.currentTimeMillis() + 3000;
+		while (list == null && System.currentTimeMillis() < jld) {
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog && w.isShowing()) {
+					for (Component c : descend(w)) {
+						if (c instanceof javax.swing.JList<?> jl && jl.isShowing()) {
+							list = jl;
+						}
 					}
 				}
+			}
+			if (list == null) {
+				robot.delay(80);
 			}
 		}
 		if (list != null) {
@@ -682,29 +1089,62 @@ public final class GuiDriver {
 			Point lo = list.getLocationOnScreen();
 			clickAt(lo.x + cell.width / 2, lo.y + cell.y + cell.height / 2);
 			robot.delay(120);
+		} else {
+			System.err.println("placeJumpEnd(" + name + "): no JList found; "
+					+ "dialogs up:");
+			for (Window w : Window.getWindows()) {
+				if (w instanceof java.awt.Dialog dlg && w.isShowing()) {
+					System.err.println("  '" + dlg.getTitle() + "'");
+				}
+			}
+			try {
+				shot(System.getProperty("java.io.tmpdir") + "/"
+					+ "jls-je-fail.png");
+			} catch (Exception ignore) {
+			}
 		}
-		click(dialogButton("OK"));
+		// wait for the OK button (the dialog may still be settling)
+		AbstractButton ok = null;
+		long okd = System.currentTimeMillis() + 4000;
+		while (ok == null && System.currentTimeMillis() < okd) {
+			ok = dialogButton("OK");
+			if (ok == null) {
+				robot.delay(60);
+			}
+		}
+		if (ok != null) {
+			click(ok);
+		} else if (dialogUp()) {
+			// last resort: commit the dialog with Enter
+			keyToCanvas(KeyEvent.VK_ENTER);
+		}
 		waitNoDialog(4000);
 		robot.delay(200);
 
-		jls.elem.Element el = null;
-		for (jls.elem.Element e : currentCircuit().getElements()) {
-			if (!before.contains(e)) {
-				el = e;
-				break;
-			}
-		}
+		jls.elem.Element el = newRealElement(before);
 		if (el == null) {
 			throw new RuntimeException("no JumpEnd appeared");
 		}
+		// (tx,ty) is the target for the JumpEnd's OUTPUT port; its offset from
+		// the element origin depends on the label width, so read it live.
+		jls.elem.Put op = null;
+		for (jls.elem.Put p : el.getAllPuts()) {
+			if (p instanceof jls.elem.Output) {
+				op = p;
+			}
+		}
+		int offX = op == null ? 36 : op.getX() - el.getX();
+		int offY = op == null ? 0 : op.getY() - el.getY();
+		int ex = tx - offX;
+		int ey = ty - offY;
 		focusCanvas();
 		int gx = 400;
-		while (el.getX() != tx && gx-- > 0) {
-			keyToCanvas(el.getX() < tx ? KeyEvent.VK_RIGHT : KeyEvent.VK_LEFT);
+		while (el.getX() != ex && gx-- > 0) {
+			keyToCanvas(el.getX() < ex ? KeyEvent.VK_RIGHT : KeyEvent.VK_LEFT);
 		}
 		int gy = 400;
-		while (el.getY() != ty && gy-- > 0) {
-			keyToCanvas(el.getY() < ty ? KeyEvent.VK_DOWN : KeyEvent.VK_UP);
+		while (el.getY() != ey && gy-- > 0) {
+			keyToCanvas(el.getY() < ey ? KeyEvent.VK_DOWN : KeyEvent.VK_UP);
 		}
 		keyToCanvas(KeyEvent.VK_ENTER);
 		robot.delay(150);

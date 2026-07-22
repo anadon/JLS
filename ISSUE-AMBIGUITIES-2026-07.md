@@ -1,9 +1,8 @@
 # Open-Issue Ambiguities & Decisions — July 2026
 
-Scope: every one of the **29 open issues** (#33, #56, #59, #61–#63, #73–#79, #81, #82, #84, #86,
-#91, #93–#96, #100, #101, #111, #128, #134–#136), read together with their comments, the working
-tree at `2c0ee59`, and the prior audit docs (`ISSUE-REVIEW-2026-07.md`, `AUDIT-2026-07.md`,
-`ERGONOMICS-AUDIT-2026-07.md`, `MAINTENANCE_AUDIT.md`).
+Scope: every one of the **20 open issues** (#33, #59, #61–#63, #73, #75–#78, #82, #84, #86,
+#91, #93–#96, #101, #134), read together with their comments, the working
+tree at `2c0ee59`, and the prior audit passes.
 
 Purpose: surface **every genuine decision or ambiguity** a maintainer must resolve before work can
 proceed, **fill in the ones answerable from the code/docs/best-practice**, and flag the rest with
@@ -23,11 +22,6 @@ Legend for each decision point:
 Three maintainer directives were applied and the external unknowns were actually checked, collapsing
 most of the open surface:
 
-- **"I don't want to pay Apple."** → **macOS code-signing is dropped.** #135 and #128 are **won't-fix
-  / close**; the macOS dmg keeps shipping unsigned with #82's right-click-Open story. This also makes
-  #128's Apple-silicon hardware task and the `--mac-sign`-vs-inside-out method question moot. The only
-  residue is one README line clarifying macOS stays unsigned by choice. (Windows #134 and Linux #136
-  signing are unaffected — both are free.)
 - **"check-at-pickup = just do it."** → the two external unknowns were verified live (2026-07-17):
   - **#93 is NOT blocked.** Error Prone 2.50.0 runs on JDK 21+ (supports 25); NullAway 0.13.7 needs
     only EP 2.36.0+/JDK 17+, handles JDK 27-EA, and its JSpecify mode *recommends* Java 25. **Wire
@@ -46,9 +40,8 @@ most of the open surface:
   the mainstream practice.
 
 **What genuinely still needs you** shrank to the §9 short-list: enroll the project in SignPath (free,
-Windows #134); decide whether to hold a GPG signing key at all (Linux #136 — best-practice default
-given); and the pure project-management triage on #33/#56 (close/reparent/re-scope + source or defer
-the legacy test corpus). Everything else is settled below.
+Windows #134); and the pure project-management triage on #33 (close/reparent/re-scope). Everything
+else is settled below.
 
 ---
 
@@ -60,7 +53,7 @@ the legacy test corpus). Everything else is settled below.
    reporter + `NotificationRatchetTest` (#81), the headless-core ratchet (#77), the KeyPad half of
    #86, HDL Stage-1 export (#59), the Wayland code idioms (#100 sub-issues #102–#105), the #56 edge
    goldens / JaCoCo ratchet / CLI smoke tests, and the Layer-1 UI harness (#91). **Before deciding
-   anything, re-scope or close the stale issues** — details under #33, #56, #79, #81, #86, #100.
+   anything, re-scope or close the stale issues** — details under #33, #86.
 
 2. **A few decisions, made once, resolve many issues.** See §1 (cross-cutting) — settling the
    modernization sequencing, the save-format tag-freeze rule, the Memory-timing/xz-coercion pair,
@@ -189,11 +182,9 @@ Settled (do not re-litigate): #92 closed (Java 25 LTS baseline, enforcer `[25,)`
 
 ---
 
-## 3. Architecture & save format — #77, #78, #79, #81
+## 3. Architecture & save format — #77, #78
 
-Landed (not re-surfaced): #77 ratchet; #78 v5.0.0 source break authorized + unify `JLSInfo.Orientation`;
-#79 FORMAT header/version-negotiation/spec/test; #81 `TellUser` + ratchet (only `TellUser.java` itself
-still touches `JOptionPane`).
+Landed (not re-surfaced): #77 ratchet; #78 v5.0.0 source break authorized + unify `JLSInfo.Orientation`.
 
 ### #77 — Extract headless `jls.core`
 - **`InteractiveSimulator`: shed Swing in place, or move GUI-side?** RESOLVED (best practice —
@@ -230,30 +221,9 @@ still touches `JOptionPane`).
   saved values are already uppercase (spec §7) so the switch is **byte-identical on save**; delete the
   lowercase `Gate.Orientation` in-memory duplicate.
 
-### #79 — Save-format stewardship
-- Does decoupling tags from class names break compat / need a version bump? FILLED — **No** (X2): the
-  canonical write-tag stays frozen; the alias table replaces `Class.forName`; no old reader sees a new
-  tag ⇒ no bump. (The `edu.mtu.cs.jls`→`jls` rename already survived this way.)
-- Protecting the format across #94/#95/#77 renames: FILLED (X2 coordination rule) — **land #78 registry
-  + #79 alias table before any rename touches a persisted element.**
-- Legacy-4.1 reader characterization (P3) a ship gate? FILLED — **no**; the header already shipped ahead
-  of it, and P3 is blocked only on sourcing an authentic 4.1 jar. **Move P3 to #56's corpus work.**
-- `TestGen`/non-conformant tags: FILLED — register as **loadable-but-not-writable** (a `synthetic`
-  flag on `ElementType`) so the registry-integrity test doesn't demand icon/palette/help entries.
-
-### #81 — Notification consolidation (substantially done)
-- Reporter API/headless selection: FILLED (implemented — `TellUser` verbs; `interactive() = !batch &&
-  !headless`; stderr + safe defaults).
-- **Adopt #58's structured `Message`, or is plain `String` final?** RESOLVED (the two-channel split is
-  clean): **leave as-is** — `LoadError` (structured, core, load path) + `TellUser` (string, GUI,
-  elsewhere); close the #58-integration checkbox as satisfied by `LoadError`.
-- Residual: batch "safe defaults" (`confirm`→no, `prompt`→null) can silently proceed where a hard error
-  might be more correct. FILLED recommendation — audit the `confirmOrCancel`/`prompt` sites reachable in
-  batch as a small follow-up; don't block closing #81.
-
 ---
 
-## 4. Editor UX — #86, #84, #74, #73, #75, #76
+## 4. Editor UX — #86, #84, #73, #75, #76
 
 State: `SimpleEditor.java` is now **4,477 lines** (issues cite 4,119); 9-state enum at `:495`; undo
 depth hardcoded `10`; `circuitsize=1000`; zero `java.util.prefs`; KeyPad half of #86 landed. All
@@ -289,21 +259,6 @@ depth hardcoded `10`; `circuitsize=1000`; zero `java.util.prefs`; KeyPad half of
   `JLSInfo.undoStackDepth = 10` until #76 lands.
 - Sequencing: FILLED — after #43/#74/#75 (same `SimpleEditor:1295-3200` region); consume #75 Actions;
   host #86.
-
-### #74 — Zoom & canvas growth (owner APPROVED gestures: wheel=scroll, Ctrl+wheel=zoom-at-cursor, mid/space-drag=pan, range [0.25,4.0], retire grow button, `Viewport` owned here)
-- **Zoom step granularity/increment?** RESOLVED (standard diagram/CAD behavior): **continuous
-  ~1.15–1.2× per wheel notch; keyboard zoom snaps to a fixed ladder** (25/50/75/100/150/200/300/400%)
-  so Ctrl+0 → exactly 100% and #91's screenshot grid lands on predictable percentages.
-- **Exact zoom keybindings?** RESOLVED (platform convention): **Ctrl/Cmd+= zoom in, Ctrl/Cmd+− out,
-  Ctrl/Cmd+0 reset to 100%, a "Fit" menu item (optionally Ctrl/Cmd+9)**, in a View menu co-owned with
-  #75.
-- **Does the canvas become unbounded? auto-shrink?** RESOLVED (matches Logisim-evolution/Digital):
-  **unbounded auto-grow with a generous margin, no auto-shrink, saved coords stay absolute**
-  (byte-identical files); fit-to-circuit is the "reset the view" affordance instead of shrinking the
-  model (shrinking would yank the scroll position and strand off-screen elements).
-- Pan gesture: FILLED — **both** space-drag and middle-drag (owner).
-- Fractional-zoom hit-testing: FILLED — **hit-test in model space only** (invert the transform at each
-  mouse entry); scale fonts/strokes with the `AffineTransform`; legibility pass at 25%/400%.
 
 ### #73 — First-run onboarding (owner: samples from MTU site; Edit menu→#75; tutorial already resizable)
 - **Which specific sample circuits?** RESOLVED (covers the pedagogy spread; author fresh so licensing
@@ -358,43 +313,10 @@ depth hardcoded `10`; `circuitsize=1000`; zero `java.util.prefs`; KeyPad half of
 
 ---
 
-## 5. Code-signing & distribution — #136, #134  (#135, #128 dropped — no Apple)
+## 5. Code-signing & distribution — #134
 
-Cross-cutting (X4): single-maintainer custody. With macOS signing dropped, the only remaining sequencing
-hazard is that **#134 and #136 both edit the `installers` job in `release.yml`** (second-to-land rebases)
-and both touch #82's README "unsigned" text — keep the two README hunks consistent.
-
-### #135 + #128 — macOS signing → RESOLVED: WON'T-FIX (close both)
-Per maintainer directive ("I don't want to pay Apple"), **macOS code-signing/notarization is dropped.**
-Apple Developer Program enrollment ($99/yr) is the only path and there is no free tier or third-party
-signer, so both issues close as won't-fix. Consequences:
-- The macOS dmg keeps shipping **unsigned**; keep #82's right-click→Open (Gatekeeper) instructions in
-  the README and add one line making clear it is unsigned **by choice**, not an oversight.
-- Every previously-open sub-decision here is moot: the credential type, `--mac-sign`-vs-inside-out
-  method, the #128-vs-#135 split, the on-Apple-silicon `experimental` flip, publisher-string, keychain
-  handling, and the `jls.entitlements` file.
-- #82's macOS "verify a real install on hardware" debt is closed the same way — there is nothing to
-  verify for an intentionally-unsigned build beyond the right-click-Open path.
-- If Apple is ever reconsidered, reopen with the App Store Connect **API key** credential path and
-  jpackage-native `--mac-sign` (inside-out `codesign` as the documented fallback) — recorded here so the
-  analysis isn't lost.
-
-### #136 — GPG signatures for rpm & AppImage  (free; unaffected by the Apple decision)
-- **Key-custody model.** RESOLVED (best practice for a signed release; you can still decline — see
-  below): **offline certify-only primary + a passphrase-protected CI *signing subkey*** in
-  `RELEASE_GPG_KEY`/`RELEASE_GPG_PASSPHRASE`, publishing `resources/packaging/RELEASE-KEY.asc` in-repo.
-  Rejected alternatives: manual maintainer-side signing is self-defeating (`rpmsign`/appimagetool mutate
-  the file *after* CI attests/checksums it → `gh attestation verify` fails); Sigstore-only leaves the
-  native `rpm -K` gap this issue exists to close. **The one thing still yours to decide:** whether you
-  want to hold a long-lived signing key at all — if key custody isn't worth it for a solo project, close
-  #136 as won't-fix (Sigstore attestations stay) with that rationale. Default: do it.
-- Key algorithm: FILLED — **RSA-4096** (rpm client-side EdDSA verify only since 4.16/2020; ed25519
-  can't be imported on EL8/SLES15/AL2). Choose ed25519 only if EL8-era clients are out of scope.
-- Dry-run signing gate: RESOLVED (best practice — rehearse the whole path without publishing):
-  **secret-presence gate** (import→sign→verify on dispatch, publish nothing).
-- Subkey expiry: RESOLVED — **no expiry** for a solo project (avoids forced secret rotation).
-- deb per-file signing: FILLED — **out of scope permanently** (Debian signs repo metadata, not `.deb`s;
-  `dpkg-sig` is dead). A signed apt/dnf repo is separate future work.
+Cross-cutting (X4): single-maintainer custody. **#134 edits the `installers` job in `release.yml`** and
+touches #82's README "unsigned" text — keep that README hunk consistent.
 
 ### #134 — Windows Authenticode  (free; unaffected by the Apple decision)
 - **SignPath.io OSS tier vs Azure Trusted Signing?** RESOLVED (SignPath OSS is the standard, free path
@@ -413,7 +335,7 @@ signer, so both issues close as won't-fix. Consequences:
 
 ---
 
-## 6. GUI / Wayland / UI testing — #101, #100, #91, #111
+## 6. GUI / Wayland / UI testing — #101, #91
 
 ### #101 — Wayland CI rig (rig + `gui-wayland` lane exist; `JBR_SHA256` fill + first run already tracked)
 - **No minimal-Swing control program though §9's falsification requires one.** RESOLVED (make the rig
@@ -427,17 +349,6 @@ signer, so both issues close as won't-fix. Consequences:
   push cadence.
 - weston fallback (named in §9, not wired): RESOLVED — add **reactively**, only if sway is shown to be
   the blocker (don't pre-build a second compositor path).
-
-### #100 — Wayland-native tracking (code sub-issues #102–#105 CLOSED; only #101 open)
-- **Physical-desktop spot-check (§10).** RESOLVED (process — CI can't cover real GPU compositors):
-  the **maintainer runs a short scripted checklist (launch, place each element type, open each dialog,
-  use KeyPad) on one real Wayland desktop (Mutter/KWin) per release**, recorded on the issue.
-- **P3 matrix (Win/mac/X11 unchanged).** RESOLVED: **sequence the P3 sign-off after #111** (so the
-  Windows leg rests on a green suite) + a manual GUI smoke; file macOS/X11 GUI-CI as separate scope.
-- **#82 handoff: the bundled Linux runtime must ship WLToolkit (only JBR has it).** RESOLVED
-  (best practice — JBR is a JetBrains OpenJDK fork under GPLv2+Classpath-Exception, which permits
-  redistribution): **bundle JBR in the Linux installer**; revisit only if/when mainline OpenJDK ships
-  Wayland support. Surface this on #82 as the settled runtime choice.
 
 ### #91 — Automated UI test harness (Layer 1 already built & green)
 - **Layer-2 framework: AssertJ-Swing vs `java.awt.Robot`?** RESOLVED (best practice — AssertJ-Swing is
@@ -456,24 +367,6 @@ signer, so both issues close as won't-fix. Consequences:
   to promote a test into the required set. No bounded-retry masking.
 - P6 pilot (which UX issue converts a manual criterion first): RESOLVED — **#75** (menu accelerators;
   no rendering layer needed, cheapest against the existing Layer-1 infra).
-
-### #111 — Windows test-suite failures (all three reproduced)
-- **CRLF round-trip.** RESOLVED (best practice — a reproducible file format must be byte-identical
-  cross-platform; fix the producer, not the test): **make the writer always emit `\n`** + add
-  **`.gitattributes` pinning `*.jls`/resources to LF**. (`Circuit.save` uses `PrintWriter.println` →
-  CRLF on Windows; test-only normalization would hide the real byte-divergence and break the format's
-  reproducibility guarantee.)
-- **Leaked file handle blocking `@TempDir`.** RESOLVED (best practice — a resource leak is a production
-  bug, fix it at the source): **fix the load path** — `FileAbstractor.readText`/`readXZ` read the
-  bounded payload into memory and close the handle before returning the `Scanner` (mirror the zip path;
-  the 64 MiB cap already bounds it), which fixes real Windows users too, not just the test.
-- **Geometry baseline drift.** RESOLVED (standard determinism fix): **pin a bundled font via
-  `Font.createFont`** so metrics are identical everywhere (CI already installs `fonts-dejavu-core`);
-  the `TriState "invalid element"` lines are expected rejects (red herring). Split any still-metric-
-  sensitive entry into a tolerance set only if pinning doesn't fully stabilize it.
-- **Scope/sequencing.** RESOLVED (standard: fix → advisory → required): **land the three fixes, add a
-  `windows-latest` advisory matrix leg, promote to required once green** — this also unblocks #100's P3
-  "Windows unchanged" record.
 
 ---
 
@@ -543,28 +436,10 @@ Stage-1 export shipped. Settle the **Memory-timing / x/z-coercion pair once** (X
 
 ---
 
-## 8. Test gaps & release tracking — #56, #33
+## 8. Test gaps & release tracking — #33
 
-Context: v5.0.0–v5.0.4 shipped; #33 is 24/26 sub-issues closed (only #56, #59 open); most of #56 has
-landed. Test count is now **65 files / ~399 `@Test`** (not the body's "70 tests/12 classes").
-
-### #56 — Test-suite gaps
-- **Authentic JLS 4.1 corpus — source, owner, and (missing) fallback.** NEEDS-MAINTAINER. Source is
-  adjudicated (MTU/Poplawski + GVSU/Kurmas) but **not in the repo**; the only committed fixture
-  (`fork-4.6-shiftregister.jls`) is this fork's own writer output, which §10 forbids as a legacy proxy.
-  Recommend **(a) download the MTU 4.1 `JLS.jar`, author circuits across all container formats (incl. an
-  `orient 0` Display), commit under `test/fixtures/legacy-4.1/` with provenance + license**, and
-  **write GVSU/Kurmas in as the explicit fallback** the issue currently lacks; don't let the synthetic
-  interim silently become permanent.
-- **Is the corpus still a blocker?** RESOLVED — **no**: all its stated consumers (#57/#38/#79/
-  #60/#61) shipped without it via synthetic fixtures. Recommend **downgrading it to a non-blocking
-  hardening task**.
-- **Editor-smoke coverage is gated on #91's nonexistent Layer 2.** NEEDS-MAINTAINER. Recommend
-  **closing #56 down to the corpus and moving editor-smoke coverage into #91's Layer-2 acceptance
-  criteria** (popup smoke must dispatch the `Action` directly, not a key event — per #37).
-- `HelpTopicsTest` source-scan: FILLED — **drop** (obsolete; it already walks the help tree).
-- Meta: #56's body is stale/mostly satisfied — NEEDS-MAINTAINER: **rewrite to its two live residuals or
-  close + reparent**; fix the "70/12" figure and check off the landed items.
+Context: v5.0.0–v5.0.4 shipped; #33 is 25/26 sub-issues closed (only #59 open). Test count is now
+**65 files / ~399 `@Test`** (not the body's "70 tests/12 classes").
 
 ### #33 — Post-audit / v5.0.0 tracker
 - **The release already shipped while the stated policy was "cut the RC only once the tracker is empty,"
@@ -587,25 +462,17 @@ landed. Test count is now **65 files / ~399 `@Test`** (not the body's "70 tests/
 ## 9. What actually still needs you (after 2026-07-17)
 
 The design-taste, external-state, and Apple decisions are all **RESOLVED** above. What's left is a
-short list — two account/custody items and the project-management triage on the two stale trackers.
+short list — one account/custody item and the project-management triage on the stale tracker.
 Everything else in this document is settled and just needs your ✔ when the work is picked up.
 
 **Account / custody (free, but a human step):**
 1. **#134 — enroll the project in SignPath's OSS program** (the signer, publisher, and auto-approval
    policy are all decided; this is the account action) and set the release policy to auto-approve.
-2. **#136 — one yes/no: do you want to hold a GPG signing key at all?** Default is yes (offline primary
-   + CI subkey, RSA-4096); if key custody isn't worth it for a solo project, close #136 as won't-fix
-   and keep Sigstore attestations. Everything else about #136 is decided.
 
-**Project-management triage on the stale trackers (your call on your own project):**
-3. **#33 — reconcile the "cut the RC once the tracker is empty" policy with the already-shipped
-   v5.0.0**, then close #33 and reparent #56/#59 as non-blocking post-1.0 work. Also: create the
+**Project-management triage on the stale tracker (your call on your own project):**
+2. **#33 — reconcile the "cut the RC once the tracker is empty" policy with the already-shipped
+   v5.0.0**, then close #33 and reparent #59 as non-blocking post-1.0 work. Also: create the
    severity/phase label taxonomy + milestone, and mark #80's deprecation window closed (removal shipped).
-4. **#56 — source or formally defer the authentic 4.1 test corpus.** This needs *you* because it means
-   downloading the MTU 4.1 `JLS.jar`, authoring/licensing third-party circuits, and committing them
-   under `test/fixtures/legacy-4.1/` (the proxy blocks `pages.mtu.edu` from here). Either do that with
-   GVSU/Kurmas as the written fallback, or downgrade it to a non-blocking hardening task (it no longer
-   gates anything — all its consumers shipped on synthetic fixtures). Move editor-smoke coverage to #91.
 
 That's the whole remaining decision surface. Optional confirmations you can also veto if you disagree:
 the two best-practice calls that revise an earlier adjudication — **FlatLaf-primary over

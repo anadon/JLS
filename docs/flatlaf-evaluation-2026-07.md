@@ -123,32 +123,40 @@ The `-Djls.laf` seam exists precisely so this QA needs no rebuild:
 
 ## Recommendation
 
-**Adopt FlatLaf (light theme) as the default look-and-feel**, gated only
-on the cross-OS screenshot matrix above. Adoption commit checklist:
+The recommendation was **adopt FlatLaf (light theme) as the default
+look-and-feel**, gated at the time on the cross-OS screenshot matrix
+above. That adoption has since shipped (#153 closed); the commit did:
 
-1. Add `com.formdev:flatlaf:3.7.2` (or current) to `pom.xml` runtime
-   scope; SBOM/Dependabot pick it up automatically.
-2. Change the default arm of `JLSStart.installLookAndFeel()` from the
-   cross-platform class to `FlatLightLaf`, keeping `-Djls.laf=metal` as
-   the documented escape hatch and Metal as the automatic fallback.
-3. Re-record the look-and-feel decision in `ARCHITECTURE.md`
+1. Added `com.formdev:flatlaf:3.7.2` to `pom.xml` runtime scope;
+   SBOM/Dependabot pick it up automatically.
+2. Changed the default arm of `JLSStart.installLookAndFeel()` from the
+   cross-platform class to `FlatLightLaf`
+   (`JLSStart.DEFAULT_LOOK_AND_FEEL`), keeping `-Djls.laf=metal` as the
+   documented escape hatch and Metal as the automatic fallback.
+3. Re-recorded the look-and-feel decision in `ARCHITECTURE.md`
    (deliberately superseding "force Metal, same everywhere"), citing
    this document.
-4. File the follow-ups out of scope here: `flatlaf-extras`/`FlatSVGIcon`
+4. Left the follow-ups out of scope here: `flatlaf-extras`/`FlatSVGIcon`
    toolbar-icon redraw (the other half of #76), chrome-color cleanup
    (audit §(b)), and a dark-theme toggle once canvas colors are themed
    (audit §(a), U8 preferences work).
 
-`flatlaf-extras` is **not** needed for the core adoption (it adds the
+`flatlaf-extras` was **not** needed for the core adoption (it adds the
 SVG icon support, another ~100 KiB); keeping it a separate follow-up
-keeps the adoption diff one dependency and a few lines.
+kept the adoption diff to one dependency and a few lines.
 
 ## What shipped with this issue
 
-The evaluation seam, in the spirit of #153's "spike + fallback flag"
-task but dependency-free: `JLSStart.lookAndFeelClassName()` /
-`installLookAndFeel()` honor `-Djls.laf=metal|system|<class>` (default
-`metal`, i.e. today's behavior is unchanged), a broken explicit
-selection warns once and falls back instead of exiting, the generated
-usage text documents the property alongside `-Djls.toolkit`, and
-`test/jls/LookAndFeelPolicyTest.java` pins all of it headlessly.
+The full adoption shipped, not just the evaluation seam. FlatLaf is now
+a runtime dependency (`com.formdev:flatlaf:3.7.2` in `pom.xml`) and the
+default look-and-feel is FlatLaf light: `JLSStart.lookAndFeelClassName()`
+/ `installLookAndFeel()` honor `-Djls.laf=metal|system|<class>` with the
+default arm resolving to `JLSStart.DEFAULT_LOOK_AND_FEEL`
+(`com.formdev.flatlaf.FlatLightLaf`), so `-Djls.laf=metal` is the escape
+hatch back to the old cross-platform behavior rather than the default.
+A broken explicit selection warns once and falls back to Metal instead
+of exiting, the generated usage text documents the property alongside
+`-Djls.toolkit` (`default FlatLaf light`), and
+`test/jls/LookAndFeelPolicyTest.java` pins all of it headlessly. The
+cross-OS caveats in "What could not be verified here" above remain the
+standing QA record for this change.

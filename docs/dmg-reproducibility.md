@@ -275,13 +275,19 @@ Per issue #191 §10, on a clean macOS VM:
    (`koly` on by default, `hfs` behind `JLS_DMG_FULL_NORMALIZE=1`),
    wired into `build-installer.sh`'s Darwin case only, with the tool's
    `--self-test` gating it before it touches a real dmg.
-3. **In progress (on `macos-latest` CI):** the
-   `macos-installer-reproducibility` leg now runs with
-   `JLS_DMG_FULL_NORMALIZE=1` and validates the CI-runnable subset of
-   the §5 checklist (`hdiutil verify`, attach, `JLS.app` + valid
-   `Info.plist` + `.jls` document type). Still needs a human on a clean
-   VM for the launch/Gatekeeper items, and `scripts/measure-dmg-repro.sh`
-   for the full byte-range attribution.
+3. **Shipped (on `macos-latest` CI):** the
+   `macos-installer-reproducibility` leg runs the **koly-only** path —
+   it does **not** set `JLS_DMG_FULL_NORMALIZE=1`. The full HFS+
+   normalization stays disabled because its read-write round-trip
+   corrupts the dmg on real macOS hardware (the three-way `hdiutil
+   verify` above; commit d79166c). The leg builds the dmg twice as an
+   honest `continue-on-error` measurement and verifies the shipped
+   koly-only image still passes `hdiutil verify` (the SegmentID pin
+   rewrites only the 16 trailer bytes, outside every UDIF checksum and
+   the filesystem, so the mounted content is byte-identical to
+   jpackage's own known-good dmg). The launch/Gatekeeper items still
+   need a human on a clean VM (§5), and `scripts/measure-dmg-repro.sh`
+   supplies the full byte-range attribution.
 4. Byte-identical → promote the macOS leg to a required gate; residual
    → this file and #185's `docs/reproducibility.md` state it exactly,
    with the provenance attestation as the integrity guarantee.

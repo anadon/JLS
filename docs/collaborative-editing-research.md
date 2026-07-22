@@ -20,21 +20,29 @@ sub-issues #165 (stable ids), #166 (deterministic serialization),
 #167 (operation layer), #168 (transport/SAS), #169 (session
 lifecycle), #170 (security hardening), #171 (CRDT replication).*
 
+*Status (2026-07): this is a design under execution, not greenfield.
+Stage 0's determinism foundations have shipped — #165 (stable element
+ids) and #166 (deterministic serialization) are closed — and the
+`src/jls/collab/{crdt,net,op,session}` package skeleton now exists.*
+
 ## Executive summary
 
-1. **Serialization is NOT deterministic today — confirmed, with the
-   evidence in §2.** Elements live in a `HashSet` with identity
-   hashing, so save order varies across JVM instances; element ids are
-   assigned *by save order* and wires cross-reference those ids, so two
-   saves of the same logical circuit can differ in content, not just
-   line order. The test suite already works around this
-   (`FileFormatSupport.canonicalize` sorts blocks and strips id lines,
-   and documents itself as unsound for circuits with wires). Canonical,
-   byte-deterministic serialization is achievable and cheap once
-   elements have stable ids; it should be **Stage 0 work**, because a
-   deterministic canonical form is the convergence oracle every P2P
-   architecture needs, and it doubles as a user-visible "in sync"
-   indicator.
+1. **Serialization was NOT deterministic — confirmed against the code
+   (§2), and since fixed (Stage 0 shipped: #165, #166 closed).**
+   Elements lived in a `HashSet` with identity hashing, so save order
+   varied across JVM instances; element ids were assigned *by save
+   order* and wires cross-reference those ids, so two saves of the same
+   logical circuit could differ in content, not just line order. The
+   test suite worked around this at the time
+   (`FileFormatSupport.canonicalize` sorted blocks and stripped id
+   lines, and documented itself as unsound for circuits with wires).
+   Canonical, byte-deterministic serialization was the identified
+   **Stage 0 work** — the convergence oracle every P2P architecture
+   needs, doubling as a user-visible "in sync" indicator — and it has
+   landed: stable element ids (#165) plus a canonical save order sorted
+   by stable id (#166) now live in `Circuit.save`, and
+   `DeterministicSaveTest` pins save-twice and save→load→save
+   byte-equality without canonicalization, which is retired.
 2. **The Google Docs model does not transfer literally — but its
    lesson does.** Google Docs is centralized operational
    transformation (Jupiter lineage): an authoritative server orders
@@ -110,35 +118,43 @@ lifecycle), #170 (security hardening), #171 (CRDT replication).*
 - **Security is in scope from the start**; the headline risk is any
   path from network input to actions outside the circuit model.
 
-## 2. Determinism audit (the confirmed answer)
+## 2. Determinism audit (the confirmed answer, now resolved)
 
-**Question:** is a circuit's serialized form a pure function of its
-logical content? **Answer: no — not today.** Four findings, each with
-anchors:
+**Question:** was a circuit's serialized form a pure function of its
+logical content? **Answer: no — not before Stage 0.** Four findings,
+each with anchors; all four are since resolved by #165/#166 (see "What
+to build" and the status note below):
 
 1. **Element storage is unordered with identity hashing.**
    `private Set<Element> elements = new HashSet<Element>()`
-   (`src/jls/Circuit.java:55`), and `Element` overrides neither
+   (`src/jls/Circuit.java:63`), and `Element` overrides neither
    `hashCode` nor `equals` (verified by inspection of
-   `src/jls/elem/Element.java`) — so iteration order depends on
-   identity hash codes, which vary per object, per run, per JVM.
-2. **Save order and element ids inherit that nondeterminism.**
-   `Circuit.save` iterates the set to assign ids sequentially
-   (`src/jls/Circuit.java:1098-1102`) and again to emit `ELEMENT`
-   blocks (`:1105-1107`). Same circuit, two load instances → different
-   block order *and* different id assignments.
+   `src/jls/elem/Element.java`) — so in-memory iteration order depends
+   on identity hash codes, which vary per object, per run, per JVM. The
+   field is still a `HashSet`; determinism is now imposed at save time
+   (finding 2) rather than by the container.
+2. **Save order and element ids inherited that nondeterminism (fixed).**
+   `Circuit.save` used to iterate the set directly to assign ids
+   sequentially and to emit `ELEMENT` blocks, so the same circuit at two
+   load instances produced different block order *and* different id
+   assignments. It now sorts elements by stable id (wires last) before
+   numbering and emitting them (`Circuit.save`, `src/jls/Circuit.java`
+   ~`:1478-1494`, #166), so both are a pure function of content.
 3. **Ids leak into content, not just order.** `WireEnd.save` writes
    `ref` lines using the save-time ids of referenced elements
-   (`src/jls/elem/WireEnd.java:535,540`). So for any circuit with
-   wires, the differences are not removable by sorting lines: the
-   *bytes differ semantically*.
-4. **The test suite already knows.** `FileFormatSupport.canonicalize`
-   (`test/jls/FileFormatSupport.java:82`) exists precisely because
-   "Elements live in a HashSet, so block order and the ids assigned at
-   save time are not stable across load instances" (its own comment),
-   and it documents itself as "Only sound for circuits without id
-   cross-references (ref lines)". Round-trip tests compare saves only
-   after canonicalization.
+   (`src/jls/elem/WireEnd.java` ~`:616,621`). So for any circuit with
+   wires the differences were not removable by sorting lines — which is
+   why the canonical-save fix (#166) had to make the save-time ids
+   themselves deterministic (stable-id sort), not merely reorder blocks.
+4. **The test suite already knew.** `FileFormatSupport.canonicalize`
+   existed precisely because "Elements live in a HashSet, so block order
+   and the ids assigned at save time are not stable across load
+   instances" (its own comment), and it documented itself as "Only sound
+   for circuits without id cross-references (ref lines)"; round-trip
+   tests compared saves only after canonicalization. With #166 shipped
+   that helper is retired — `DeterministicSaveTest`
+   (`test/jls/DeterministicSaveTest.java`) now compares raw save bytes,
+   wires included.
 
 Two mitigating facts, also confirmed:
 
@@ -148,7 +164,7 @@ Two mitigating facts, also confirmed:
   (`SimpleEditor.pushCopy`, `src/jls/edit/SimpleEditor.java:4238-4241`).
 - **The repo already values load-side determinism**: the load path
   deliberately preserves file order via a `LinkedHashSet`
-  (`loadedElements`, `src/jls/Circuit.java:74-76`) so that wire-net
+  (`loadedElements`, `src/jls/Circuit.java:93`) so that wire-net
   construction and multi-driver resolution are deterministic
   (issue #98, S1). This audit extends that same principle to the
   save side.
@@ -181,7 +197,10 @@ safety net.
 Deliverable to pin it: a `DeterministicSaveTest` asserting (a)
 save-twice byte equality, (b) save→load→save byte equality, both
 *without* canonicalization, on fixtures including wires; retire
-`FileFormatSupport.canonicalize` when it passes.
+`FileFormatSupport.canonicalize` when it passes. **This shipped**
+(`test/jls/DeterministicSaveTest.java`, #166): the test pins both
+byte-equality assertions and `FileFormatSupport.canonicalize` has been
+removed.
 
 ## 3. The "Google Docs model" and linked-list CRDTs
 

@@ -270,7 +270,7 @@ pending the JBR checksum pin.
 ### Development container
 
 [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile) builds an image with
-Maven, Temurin JDK 25, and all of the optional tools above — and no X11
+Maven, Temurin JDK 26, and all of the optional tools above — and no X11
 components. VS Code and GitHub Codespaces pick it up automatically via
 [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json); to use
 it directly:

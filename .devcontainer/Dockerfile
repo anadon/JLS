@@ -16,7 +16,8 @@
 # VS Code / GitHub Codespaces pick it up automatically via
 # .devcontainer/devcontainer.json.
 
-# Maven + Temurin JDK 25 (the required CI baseline, current LTS — #92).
+# Maven + Temurin JDK 26 (satisfies the JDK 25+ floor; the CI baseline is
+# JDK 25, the current LTS — #92).
 FROM maven:3-eclipse-temurin-26@sha256:d5617b9a6307e1b51dc7c55edf09bacb66f1c91fb861949c34a3a0d4e16bd241
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \

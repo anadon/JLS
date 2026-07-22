@@ -86,8 +86,9 @@ FlatLaf #153, JFreeSVG #154, ArchUnit #155, picocli #156, Error Prone
   with Metal fallback shipped in `JLSStart` so the remaining
   screenshot-matrix QA (Linux/Windows/macOS at fractional scales — the
   one part a headless container cannot do) needs no rebuild. The
-  default switch itself, the `pom.xml` dependency, and the
-  ARCHITECTURE.md re-record happen together at the adoption commit.
+  adoption has since shipped (#153): the default flipped to
+  `FlatLightLaf`, the `pom.xml` dependency landed, and ARCHITECTURE.md
+  records the decision.
 
 ### 2. JFreeSVG — vector image export *(ADOPTED, #154)*
 

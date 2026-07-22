@@ -239,7 +239,7 @@ its rationale and the trigger that reopens it.
 
 All user-facing strings are inline English; there is no
 `ResourceBundle`/`Locale` usage anywhere, and that is now a
-**decision, not an accident** (ergonomics audit U11). Rationale: JLS
+**decision, not an accident**. Rationale: JLS
 is a single-maintainer pedagogy tool serving an English-language
 course ecosystem; externalizing every string across ~30 element
 dialogs, the editor, and the help tree is a large, ongoing tax with
@@ -255,7 +255,7 @@ User help ships inside the jar as HTML 3.2 rendered by the #11 Swing
 viewer (`jls.Help`), because the single self-contained jar is the
 deployment model students and labs rely on — help must work offline
 and version-locked to the binary. Hosted, versioned web documentation
-is the planned future direction (audit M5/I1: searchability, linkable
+is the planned future direction (searchability, linkable
 pages, one source of truth); when it happens, the in-app viewer
 shrinks to context-sensitive basics pointing at the site.
 **Portability discipline until then:** help content stays plain

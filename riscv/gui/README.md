@@ -91,6 +91,11 @@ adder carry-in defaults to 0 when left open.
 
 ## Run
 
+The `run.sh` wrapper in this directory is a convenience for the `java` step:
+it runs one `GuiDriver`-family main class under a headless display (default
+`:99`) and captures its artifacts and output — the jar and `riscv/gui/out`
+classes must already be built. The full manual sequence is:
+
 ```sh
 mvn -q package -DskipTests                                  # build the JLS jar
 Xvfb :99 -screen 0 1920x1200x24 & DISPLAY=:99 openbox &     # headless X + WM

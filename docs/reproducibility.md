@@ -172,13 +172,22 @@ otherwise:
 
 - **`msi`** (owned by issue #190): `scripts/normalize-msi.py` rewrites
   the known volatile bytes (the WiX package-code GUID, SummaryInformation
-  FILETIMEs, CFB directory timestamps, cabinet member times) in place,
-  but no double-build gate has run on a real Windows runner yet — see
+  FILETIMEs, CFB directory timestamps, cabinet member times) in place. A
+  double-build gate did run on a real Windows runner, but was then
+  intentionally **removed**: jpackage/WiX regenerates non-payload MSI
+  database identifiers (component GUIDs, ProductCode) with no override,
+  so the msi cannot be byte-identical with the current toolchain even
+  though the embedded cabinet payload is reproducible — see
   `docs/windows-msi-determinism.md`.
 - **`dmg`** (owned by issue #191): the variance inventory and a
-  measurement harness exist (`docs/dmg-reproducibility.md`), but no
-  normalization has been implemented and no measurement has been
-  recorded.
+  measurement harness exist (`docs/dmg-reproducibility.md`), and
+  `scripts/normalize-dmg.py` now pins the koly UDIF `SegmentID` by
+  default (a checksum-safe post-pass wired into `build-installer.sh`).
+  A CI measurement was recorded on `macos-latest`: the shipped
+  koly-only dmg passes `hdiutil verify`, though it is not yet
+  byte-identical (the full HFS+ normalization stays disabled because
+  its round-trip corrupts the image on macOS) — see
+  `docs/dmg-reproducibility.md`.
 - **Linux aarch64** (owned by issue #189): the same `SOURCE_DATE_EPOCH`
   derivation and `clamp_mtimes()` apply on this architecture, but only
   the report-only probe (`.github/workflows/repro-installers.yml`)

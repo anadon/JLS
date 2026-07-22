@@ -79,15 +79,15 @@ the migration commit.
 | Rotate CCW, context menu | `RotateElement(ccw)` | **migrated** |
 | Flip, context menu | `FlipElement` | **migrated** |
 | Probe attach/remove, context menu | `AttachProbe` / `RemoveProbe` (name prompt stays in the gesture; ops are pure data) | **migrated** |
-| Move-selection commit (mouse release) | `MoveElements` | op implemented + tested; gesture still inline (live drag must become preview-then-commit) |
+| Move-selection commit (mouse release) | `MoveElements` | op implemented + tested, and wired into the keyboard nudge (issue #75, `submitOp(new MoveElements(...))` at `SimpleEditor.java:3254`); the mouse-release drag commit is still inline (live drag must become preview-then-commit) |
 | Placement drop (fixPosition + connect) | `AddElements` (+ implicit wiring) | op implemented + tested for the unwired case; gesture still inline (the drop's `connect()` needs the wiring vocabulary, and placement must become preview-then-commit) |
 | Matching JumpEnd creation, context menu | `AddElements` | op implemented + tested (jump-source validation included); gesture still inline (the created end stays mouse-attached in `chosen` state, so the commit point is the later drop) |
 | Delete selection | `RemoveElements` | op implemented + tested with a **true inverse** (the removed elements' blocks) for unwired selections; wired selections stay inline until the wiring vocabulary lands (#167 §9's fallback narrowed to just that case). Gesture still inline |
 | Paste | `AddElements` | op machinery in place (multi-block add with paste's name/jump validation); gesture still inline (pasted wires need the wiring vocabulary) |
 | Wire-attach finish (mouse) | `AddWire` | deferred — wiring gestures become commit-time ops |
 | Wire-draw cancel (right button / end-wire key, two sites) | none — gesture-local cleanup of the in-progress wire; these `markChanged` calls compensate for live mutation and disappear when wiring is commit-time | deferred |
-| Quick attribute edit commit (`quickReset`) | `SetAttributes` (element-state replace) | deferred — dialog commits mutate in place today |
-| Element dialog commits (all element edit dialogs) | `SetAttributes` | deferred — same |
+| Quick attribute edit commit (`quickReset`) | `SetElementConfig` (element-state replace) | op implemented (a record in the sealed `CircuitOp permits` list, `CircuitOp.java:37`, with its reader case at `CircuitOpReader.java:157`); gesture still inline — dialog commits mutate in place today |
+| Element dialog commits (all element edit dialogs) | `SetElementConfig` | op implemented; gesture still inline — same |
 | Ordered-row edits (state machine, truth table, sig-gen programs) | `EditOrderedRows` | deferred — Stage 2 sequence semantics (#163) |
 | Subcircuit import | `ImportSubcircuit` | deferred |
 
@@ -113,6 +113,7 @@ rule 2; only the future `jls.collab.ui` may touch Swing).
    anchored by the #91 gesture harness (`EditorGestureTest`) - the
    step that migrates the gestures whose ops already exist
    (`MoveElements`, `AddElements`, `RemoveElements`).
-3. `SetAttributes` from the dialog-commit paths.
+3. Wiring the dialog-commit gestures onto `SetElementConfig`, whose op
+   already exists; the commit paths mutate in place until then.
 4. Op-inverse (precise) undo activation is explicitly *not* this
    stage: snapshot undo stays user-facing until Stage 2 (#163).

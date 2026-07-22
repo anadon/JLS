@@ -76,16 +76,34 @@ Enforcement is structural, not procedural, and the build gates it:
 
 Per-payload caps ship with the parser: `CircuitOpReader` bounds ids
 per op (10,000), string length (10,000), and lines per block. The
-save-format loader's #38 caps bound snapshots. Streaming caps —
-frame size, per-peer rate, op backlog, element-count ceilings — are
-new surface that lands with the Stage 1a frame layer, wired into
-frame handling with typed rejection; thresholds will be documented
-here and tested at boundary values when that layer exists.
+save-format loader's #38 caps bound snapshots. The Stage 1a frame
+layer (`jls.collab.net`, #168) now exists and adds the first
+streaming cap: `SecureLink` caps every application-payload frame at
+`MAX_PAYLOAD_BYTES` (1 MiB, `1 << 20`), and the length prefix is
+checked against the cap *before* any body byte is read or any buffer
+allocated — an over-cap length is a typed `FrameRejected`, never a
+repair (the #38 resource-exhaustion discipline). The handshake phase
+has its own tighter length cap, `SocketSession.HANDSHAKE_FRAME_CAP`
+(8,192 bytes), rejected the same way before allocation. The
+remaining streaming caps — per-peer rate, op backlog, element-count
+ceilings — are Stage 1b surface layered on top of the frame; they
+are documented and tested at boundary values as they land.
 
-## Peer misbehavior (planned, with Stage 1a)
+## Peer misbehavior
 
-A rejection is attributable: rejections are counted per peer, a
-threshold disconnects, and the session log records the event.
-Vandalism *within* the vocabulary (valid ops that wreck the circuit)
-is a recovery problem, not a prevention problem — revert and eject
-belong to Stage 1b/2 (see SECURITY.md).
+The Stage 1a frame layer's response to a malformed frame is
+fail-closed, not best-effort: an over-cap length, a truncated read,
+or a failed authentication tag (which also covers replayed and
+reordered frames, because the nonce is a strict per-direction
+counter) throws `FrameRejected` and *poisons the link for good* —
+once `SecureLink` has seen a bad frame it rejects every later seal or
+open, and the transport (`SocketSession`) closes the connection. An
+authenticated channel cannot re-synchronize trust after a bad tag, so
+there is no recovery within the session.
+
+The richer per-peer attribution policy — counting rejections across
+sessions, a threshold that refuses reconnection, and a session log of
+the event — is Stage 1b surface layered above the frame. Vandalism
+*within* the vocabulary (valid ops that wreck the circuit) is a
+recovery problem, not a prevention problem — revert and eject belong
+to Stage 1b/2 (see SECURITY.md).

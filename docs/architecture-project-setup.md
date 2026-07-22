@@ -134,18 +134,24 @@ already done are untouched.
     -f c="$(gh api repos/anadon/JLS/issues/NNN --jq .node_id)"
   ```
 
-- **Blocking dependencies** (a stronger "blocked by" than a mention) can be
-  set with the issue-dependencies REST API if you want the machine-readable
-  edges of the spine — e.g. #212 blocked by #220 and #222; #220, #221, #222
-  blocked by #77:
+- **Blocking dependencies** (the machine-readable "blocked by" edges that
+  let GitHub/Projects compute implementation order) are populated by
+  [`scripts/setup-issue-dependencies.sh`](../scripts/setup-issue-dependencies.sh).
+  It encodes the authoritative edge set recorded in the comment on tracking
+  issue #224 ("Authoritative dependency graph & implementation order") — the
+  reconciled open→open dependencies, with closed prerequisites dropped and
+  tracking issues (aggregators) omitted. Run it the same way:
 
   ```sh
-  gh api -X POST repos/anadon/JLS/issues/212/dependencies/blocked_by \
-    -F issue_id="$(gh api repos/anadon/JLS/issues/220 --jq .id)"
+  DRY_RUN=1 scripts/setup-issue-dependencies.sh   # preview the edges
+  scripts/setup-issue-dependencies.sh             # apply (idempotent; 422 = already present)
   ```
 
-  (This endpoint is newer; skip it if your `gh`/API version rejects it —
-  the milestone + tracker structure already conveys the ordering.)
+  To change the graph, edit the `EDGES` array in that script *and* the #224
+  comment together so the source of truth and the native edges stay in sync.
+  The issue-dependencies REST API is newer; if your `gh`/GitHub version
+  rejects it, the script reports per-edge failures and the ordering still
+  lives in the #224 comment and the M0–M4 milestones.
 
 ## After running
 

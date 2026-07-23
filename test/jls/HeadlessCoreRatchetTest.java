@@ -116,7 +116,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/Pin.java",
 			"src/jls/elem/Put.java",
 			"src/jls/elem/Register.java",
-			"src/jls/elem/SMUtil.java",
 			"src/jls/elem/SigEntry.java",
 			"src/jls/elem/SigGen.java",
 			"src/jls/elem/Splitter.java",

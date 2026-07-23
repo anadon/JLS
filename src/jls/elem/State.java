@@ -13,6 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
@@ -227,7 +230,7 @@ public class State {
 
 				// draw arrow
 				double angle = SMUtil.getAngle(w,h);
-				SMUtil.drawArrow(endx,endy,angle,g);
+				drawArrow(endx,endy,angle,g);
 
 				// draw condition info
 				int midx = (x+dxf+endx)/2;
@@ -278,7 +281,7 @@ public class State {
 
 				// draw arrow
 				double angle = SMUtil.getAngle(w,h);
-				SMUtil.drawArrow(endx,endy,angle,g);
+				drawArrow(endx,endy,angle,g);
 
 				// draw highlight point if there is one
 				if (tr.highlight != null) {
@@ -356,6 +359,38 @@ public class State {
 			g.drawString(cond,x+1,y-descent-1);
 		}
 	} // end of drawCond method
+
+	/**
+	 * Draw a transition arrowhead at a point and angle. Moved here from
+	 * the former {@code SMUtil.drawArrow} (issue #77) so the shared
+	 * state-machine helper {@code SMUtil} stays headless; the rendering
+	 * lives with {@code State}, which draws transitions, and
+	 * {@code StateMachine} calls it for the last segment.
+	 *
+	 * @param x The x-coordinate of the end point of the arrow.
+	 * @param y The y-coordinate of the end point of the arrow.
+	 * @param angle The angle the arrow points.
+	 * @param g The Graphics object to use.
+	 */
+	static void drawArrow(int x, int y, double angle, Graphics g) {
+
+		int p = Geometry.ARROW_SIZE;
+		Line2D top = new Line2D.Double(-p,-p,0,0);
+		Line2D bottom = new Line2D.Double(0,0,-p,p);
+		Line2D back = new Line2D.Double(-p,p,-p,-p);
+		GeneralPath arrow = new GeneralPath(top);
+		arrow.append(bottom,true);
+		arrow.append(back,true);
+		arrow.closePath();
+		AffineTransform trans = new AffineTransform();
+		trans.translate(x,y);
+		trans.rotate(Math.toRadians(-angle));
+		arrow.transform(trans);
+		Graphics2D gg = (Graphics2D)g;
+		g.setColor(Color.black);
+		gg.fill(arrow);
+
+	} // end of drawArrow method
 
 	/**
 	 * Get the bounds of this state.

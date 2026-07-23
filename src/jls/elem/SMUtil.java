@@ -1,16 +1,10 @@
 package jls.elem;
 
-
-import java.awt.*;
-import java.awt.geom.*;
-import jls.core.Geometry;
-import jls.*;
-
-
 /**
- * Static drawing helpers shared by state-machine elements, providing
- * geometry utilities such as computing an angle from a rectangle's
- * dimensions and rendering directional arrowheads.
+ * Pure state-machine geometry: the angle from a rectangle's dimensions,
+ * used to orient transition arrows. Headless by construction (issue
+ * #77) - the arrowhead *rendering* that used to live here moved to the
+ * GUI-drawing side (State.drawArrow), so this class carries no AWT.
  */
 public class SMUtil {
 
@@ -59,33 +53,5 @@ public class SMUtil {
 			angle = 360-angle;
 		return angle;
 	} // end of getAngle method
-
-	/**
-	 * Draw an arrow at a given point and angle.
-	 * 
-	 * @param x The x-coordinate of the end point of the arrow.
-	 * @param y The y-coordinate of the end point of the arrow.
-	 * @param angle The angle the arrow points.
-	 * @param g The Graphics object to use.
-	 */
-	public static void drawArrow(int x, int y, double angle, Graphics g) {
-
-		int p = Geometry.ARROW_SIZE;
-		Line2D top = new Line2D.Double(-p,-p,0,0);
-		Line2D bottom = new Line2D.Double(0,0,-p,p);
-		Line2D back = new Line2D.Double(-p,p,-p,-p);
-		GeneralPath arrow = new GeneralPath(top);
-		arrow.append(bottom,true);
-		arrow.append(back,true);
-		arrow.closePath();
-		AffineTransform trans = new AffineTransform();
-		trans.translate(x,y);
-		trans.rotate(Math.toRadians(-angle));
-		arrow.transform(trans);
-		Graphics2D gg = (Graphics2D)g;
-		g.setColor(Color.black);
-		gg.fill(arrow);
-
-	} // end of drawArrow method
 
 } // end of SMUtil class

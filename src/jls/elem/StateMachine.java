@@ -1211,7 +1211,7 @@ public final class StateMachine extends LogicElement
 				last = p;
 			}
 			if (prev != null) {
-				SMUtil.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
+				State.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
 			}
 		} // end of drawTrans method
 		

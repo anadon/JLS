@@ -59,6 +59,7 @@ import javax.swing.event.ChangeListener;
 
 import jls.edit.EditOp;
 import jls.edit.Editor;
+import jls.edit.Editors;
 import jls.elem.Element;
 import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
@@ -2202,7 +2203,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// create editor
 		Editor ed = new Editor(edits,circ,name,clipboard);
-		circ.setEditor(ed);
+		Editors.register(circ, ed);
 
 		// update all import menus
 		for (Component edit : edits.getComponents()) {

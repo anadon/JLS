@@ -5193,7 +5193,7 @@ public abstract class SimpleEditor extends JPanel {
 							Editor ed = new Editor(tabbedParent,subcirc,sub.getName(),clipboard);
 							Dimension all = subcirc.getBounds().getSize();
 							ed.setCircuitSize(all);
-							subcirc.setEditor(ed);
+							Editors.register(subcirc, ed);
 
 							// set up import menu
 							for (Component edit : tabbedParent.getComponents()) {
@@ -5689,7 +5689,8 @@ public abstract class SimpleEditor extends JPanel {
 						if (newCopy == null) {
 							return false;
 						}
-						Editor ed = circuit.getEditor();
+						Editor ed = Editors.of(circuit);
+						Editors.unregister(circuit);
 						newCopy.setDirectory(circuit.getDirectory());
 
 						// link into subcircuit if it is imported
@@ -5702,7 +5703,9 @@ public abstract class SimpleEditor extends JPanel {
 
 						// make it be the current circuit
 						circuit = newCopy;
-						circuit.setEditor(ed);
+						if (ed != null) {
+							Editors.register(circuit, ed);
+						}
 						circuit.markChanged();
 
 						// point sibling editors' import maps at the new

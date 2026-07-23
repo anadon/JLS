@@ -631,7 +631,7 @@ public final class InteractiveSimulator extends Simulator {
 			public void run() {
 
 				// disable circuit editor (if one)
-				Editor ed = circ.getEditor();
+				Editor ed = Editors.of(circ);
 				if (ed != null)
 					ed.enableEditor(false); // turn off listeners
 
@@ -733,7 +733,7 @@ public final class InteractiveSimulator extends Simulator {
 	@Override
 	protected boolean beforeEvent() {
 
-		Editor ed = circuit().getEditor();
+		Editor ed = Editors.of(circuit());
 
 		// check for being paused
 		if (paused) {

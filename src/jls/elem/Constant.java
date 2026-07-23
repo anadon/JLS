@@ -920,7 +920,7 @@ public final class Constant extends LogicElement implements ActionListener {
 			value = value.subtract(BigInteger.ONE);
 			value = value.max(BigInteger.ZERO);
 		}
-		Editor ed = getCircuit().getEditor();
+		Editor ed = Editors.of(getCircuit());
 		if (ed != null) {
 			sed.quickReset();
 			ed.repaint();

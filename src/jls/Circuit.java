@@ -30,7 +30,6 @@ import java.util.TreeMap;
 import javax.imageio.ImageIO;
 
 import jls.core.Geometry;
-import jls.edit.Editor;
 import jls.edit.SimpleEditor;
 import jls.elem.Element;
 import jls.elem.ElementRegistry;
@@ -65,8 +64,9 @@ public class Circuit implements Printable {
 	/** The subcircuit element referring to this circuit, or null if none. */
 	private @Nullable SubCircuit subElement = null; // the element referring to this
 											// circuit
-	/** This circuit's editor, or null if it has none. */
-	private @Nullable Editor editor = null; // this circuit's editor (null if none)
+	// The circuit's editor back-reference moved out of the model to
+	// jls.edit.Editors (issue #77): the editor side owns the
+	// circuit->editor mapping, inverting the former model->GUI edge.
 	/** All element names in use, so element names can be kept unique. */
 	private Set<String> namesUsed = new HashSet<String>(); // so element names
 															// can be unique
@@ -2108,27 +2108,6 @@ public class Circuit implements Printable {
 
 		starts.remove(name);
 	} // end of removeJumpStart
-
-	/**
-	 * Set the editor of this circuit.
-	 * 
-	 * @param ed
-	 *            The current editor, or null to indicate not being edited.
-	 */
-	public void setEditor(Editor ed) {
-
-		editor = ed;
-	} // end of setEditor method
-
-	/**
-	 * Get the editor of this circuit.
-	 * 
-	 * @return The current editor, or null if not being edited.
-	 */
-	public @Nullable Editor getEditor() {
-
-		return editor;
-	} // end of getEditor method
 
 	/**
 	 * Get the current line number of the loaded circuit file. Used when an

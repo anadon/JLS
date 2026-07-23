@@ -25,6 +25,18 @@ public class BatchSimulator extends Simulator {
 		new HashMap<LogicElement,List<TraceSample>>();
 
 	/**
+	 * Per probed net (keyed by probe name), its recorded samples in time
+	 * order (issue #200). Probes name a wire net rather than an element,
+	 * so they trace through a parallel map fed by
+	 * {@link #probeSample} and merged into the VCD by {@link #toVcd}.
+	 */
+	private final Map<String,List<TraceSample>> probeTrace =
+		new HashMap<String,List<TraceSample>>();
+	/** Per probed net, its bit width (issue #200). */
+	private final Map<String,Integer> probeBits =
+		new HashMap<String,Integer>();
+
+	/**
 	 * VCD export (issue #72): the file to write, or null for no export.
 	 * A non-null value enables trace accumulation in afterEvent even
 	 * when the -r printer flag (JLSInfo.printTrace) is off.
@@ -105,7 +117,15 @@ public class BatchSimulator extends Simulator {
 		// find watched elements and set up trace map
 		findWatched(circuit());
 
-		// run the shared event loop (tracing happens in afterEvent)
+		// register probed nets so they trace into the VCD alongside
+		// watched elements (issue #200); only when a trace consumer is
+		// active, matching afterEvent's gate
+		if (JLSInfo.printTrace || vcdFileName != null) {
+			findProbes(circuit());
+		}
+
+		// run the shared event loop (tracing happens in afterEvent and,
+		// for probed nets, in probeSample via WireNet.propagate)
 		runEventLoop();
 
 	} // end of runSim
@@ -218,6 +238,80 @@ public class BatchSimulator extends Simulator {
 	} // end of findWatched method
 
 	/**
+	 * Find all probed nets and seed each with a time-0 sample, so every
+	 * probe has a VCD $dumpvars baseline and appears even if its value
+	 * never changes (issue #200). Recurses into subcircuits. Wires are
+	 * elements of the circuit (Circuit.getElements includes them), and a
+	 * probe is attached to a wire; several wire segments of one net may
+	 * carry the same probe name, so the first registration wins.
+	 *
+	 * @param circ The circuit (or subcircuit) to look in.
+	 */
+	private void findProbes(Circuit circ) {
+
+		for (Element el : circ.getElements()) {
+			if (el instanceof SubCircuit sub) {
+				findProbes(sub.getSubCircuit());
+			}
+			else if (el instanceof Wire wire && wire.hasProbe()) {
+				String name = wire.getProbe();
+				if (probeTrace.containsKey(name)) {
+					continue;
+				}
+				int bits = wire.getBits();
+				BitSet value = wire.getValue();
+				BitSet sample;
+				if (value == null) {
+					sample = new BitSet(bits + 1);
+					sample.set(bits);
+				}
+				else {
+					sample = (BitSet) value.clone();
+				}
+				List<TraceSample> events = new LinkedList<TraceSample>();
+				events.add(new TraceSample(0, sample));
+				probeTrace.put(name, events);
+				probeBits.put(name, bits);
+			}
+		}
+	} // end of findProbes method
+
+	/**
+	 * Record a probed net's value change (issue #200), mirroring
+	 * {@link #afterEvent}'s dedup: extend the probe's sample list only
+	 * when the value differs from the previous one, and normalize HiZ to
+	 * the marker BitSet so a net that stays undriven is not re-recorded
+	 * on every propagate. A probe not registered by {@link #findProbes}
+	 * (tracing off) is ignored.
+	 *
+	 * @param name  The probe name.
+	 * @param bits  The net's bit width.
+	 * @param time  The simulation time of the change.
+	 * @param value The net's new value, or null for HiZ.
+	 *
+	 * @jls.testedby jls.VcdProbeExportTest#probedNetAppearsInVcd()
+	 */
+	@Override
+	public void probeSample(String name, int bits, long time,
+			@Nullable BitSet value) {
+
+		if (!JLSInfo.printTrace && vcdFileName == null) {
+			return;
+		}
+		List<TraceSample> events = probeTrace.get(name);
+		if (events == null) {
+			return;
+		}
+		BitSet off = new BitSet(bits + 1);
+		off.set(bits);
+		BitSet current = (value == null) ? off : (BitSet) value.clone();
+		TraceSample prev = events.getLast();
+		if (!prev.value().equals(current)) {
+			events.add(new TraceSample(time, current));
+		}
+	} // end of probeSample method
+
+	/**
 	 * The recorded traces of every watched element, for consumers such
 	 * as the GUI-side trace printer ({@link jls.BatchTracePrinter}).
 	 * Each element's samples are ordered oldest first, starting with a
@@ -291,13 +385,31 @@ public class BatchSimulator extends Simulator {
 
 		StringBuilder out = new StringBuilder();
 
-		// signals in full-name order: deterministic header, identifier
-		// assignment, and per-timestamp change order
-		TreeMap<String,LogicElement> signals =
-			new TreeMap<String,LogicElement>();
-		for (LogicElement el : eventTrace.keySet()) {
-			signals.put(el.getFullName(), el);
+		// unify watched elements and probed nets (issue #200) into one
+		// signal set, keyed by full name for a deterministic header,
+		// identifier assignment, and per-timestamp change order. Each
+		// signal carries its bit width and its folded time -> value
+		// history; the change times accumulate into a shared set.
+		record Sig(int bits, TreeMap<Long,BitSet> byTime) { }
+		TreeMap<String,Sig> signals = new TreeMap<String,Sig>();
+		TreeSet<Long> times = new TreeSet<Long>();
+		for (Map.Entry<LogicElement,List<TraceSample>> e
+				: eventTrace.entrySet()) {
+			signals.put(e.getKey().getFullName(),
+					new Sig(e.getKey().getBits(), fold(e.getValue(), times)));
 		}
+		for (Map.Entry<String,List<TraceSample>> e : probeTrace.entrySet()) {
+			// a probe name that collides with an element's full name is
+			// disambiguated so neither signal is silently dropped
+			String key = e.getKey();
+			while (signals.containsKey(key)) {
+				key = key + "_probe";
+			}
+			signals.put(key, new Sig(
+					Objects.requireNonNull(probeBits.get(e.getKey())),
+					fold(e.getValue(), times)));
+		}
+
 		Map<String,String> codes = new HashMap<String,String>();
 		int next = 0;
 		for (String name : signals.keySet()) {
@@ -311,8 +423,8 @@ public class BatchSimulator extends Simulator {
 		out.append("$timescale 1 ns $end\n");
 		out.append("$scope module ").append(circuit().getName())
 			.append(" $end\n");
-		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-			int bits = e.getValue().getBits();
+		for (Map.Entry<String,Sig> e : signals.entrySet()) {
+			int bits = e.getValue().bits();
 			out.append("$var wire ").append(bits).append(' ')
 				.append(codes.get(e.getKey())).append(' ')
 				.append(e.getKey());
@@ -324,32 +436,14 @@ public class BatchSimulator extends Simulator {
 		out.append("$upscope $end\n");
 		out.append("$enddefinitions $end\n");
 
-		// fold each signal's event list into time -> value (the last
-		// event recorded at a given time wins) and collect the set of
-		// change times
-		Map<String,TreeMap<Long,BitSet>> folded =
-			new HashMap<String,TreeMap<Long,BitSet>>();
-		TreeSet<Long> times = new TreeSet<Long>();
-		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-			TreeMap<Long,BitSet> byTime = new TreeMap<Long,BitSet>();
-			// the signal map was built from eventTrace's keys, so the
-			// trace list is always present
-			for (TraceSample ev
-					: Objects.requireNonNull(eventTrace.get(e.getValue()))) {
-				byTime.put(ev.time(), ev.value());
-				times.add(ev.time());
-			}
-			folded.put(e.getKey(), byTime);
-		}
-
-		// initial values (findWatched guarantees a time-0 entry for
-		// every watched element)
+		// initial values (findWatched/findProbes guarantee a time-0 entry
+		// for every watched element and probed net)
 		out.append("#0\n");
 		out.append("$dumpvars\n");
-		for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
+		for (Map.Entry<String,Sig> e : signals.entrySet()) {
 			BitSet value = Objects.requireNonNull(
-					Objects.requireNonNull(folded.get(e.getKey())).get(0L));
-			out.append(vcdValue(e.getValue(), value,
+					e.getValue().byTime().get(0L));
+			out.append(vcdValue(e.getValue().bits(), value,
 					Objects.requireNonNull(codes.get(e.getKey()))))
 				.append('\n');
 		}
@@ -363,11 +457,10 @@ public class BatchSimulator extends Simulator {
 				continue;
 			}
 			out.append('#').append(t).append('\n');
-			for (Map.Entry<String,LogicElement> e : signals.entrySet()) {
-				BitSet value =
-						Objects.requireNonNull(folded.get(e.getKey())).get(t);
+			for (Map.Entry<String,Sig> e : signals.entrySet()) {
+				BitSet value = e.getValue().byTime().get(t);
 				if (value != null) {
-					out.append(vcdValue(e.getValue(), value,
+					out.append(vcdValue(e.getValue().bits(), value,
 							Objects.requireNonNull(codes.get(e.getKey()))))
 						.append('\n');
 				}
@@ -381,6 +474,28 @@ public class BatchSimulator extends Simulator {
 		}
 		return out.toString();
 	} // end of toVcd method
+
+	/**
+	 * Fold a signal's ordered samples into a time -> value map (the last
+	 * sample recorded at a given time wins) and add its change times to
+	 * the shared set, so watched elements and probed nets share one
+	 * timeline (issue #200).
+	 *
+	 * @param samples The signal's samples, oldest first.
+	 * @param times   The shared change-time set to extend.
+	 *
+	 * @return the time -> value map for this signal.
+	 */
+	private static TreeMap<Long,BitSet> fold(List<TraceSample> samples,
+			TreeSet<Long> times) {
+
+		TreeMap<Long,BitSet> byTime = new TreeMap<Long,BitSet>();
+		for (TraceSample ev : samples) {
+			byTime.put(ev.time(), ev.value());
+			times.add(ev.time());
+		}
+		return byTime;
+	} // end of fold method
 
 	/**
 	 * The VCD identifier code for the n'th signal: the printable ASCII
@@ -412,17 +527,17 @@ public class BatchSimulator extends Simulator {
 	 * zeros omitted, or {@code bz <code>} when the whole signal is
 	 * HiZ.
 	 *
-	 * @param el The signal's element (for its bit width).
+	 * @param bits The signal's bit width (a watched element's or a
+	 *        probed net's, issue #200).
 	 * @param value The recorded value, with HiZ encoded as the trace's
-	 *        marker BitSet (only bit el.getBits() set).
+	 *        marker BitSet (only bit {@code bits} set).
 	 * @param code The signal's identifier code.
 	 *
 	 * @return the value-change line, without the newline.
 	 */
-	private static String vcdValue(LogicElement el, BitSet value,
+	private static String vcdValue(int bits, BitSet value,
 			String code) {
 
-		int bits = el.getBits();
 		BitSet off = new BitSet(bits + 1);
 		off.set(bits);
 		boolean hiZ = value.equals(off);

@@ -218,14 +218,27 @@ and the golden tests compare byte-for-byte.
 ### 4.1 Signal set
 
 The VCD contains one signal per **watched element**, at any depth of
-the subcircuit hierarchy (`BatchSimulator.findWatched`). Note this is
-*broader* than the stdout whitelist of 3.2: any watched element that
-the simulator traces appears (e.g. a watched `InputPin`). Probed wires
-are **not** included — probes are an interactive-simulator feature and
-batch mode accumulates no data for them. Trace accumulation
-(`BatchSimulator.afterEvent`) is enabled whenever `-vcd` or `-r` is
-given; the two consumers share one trace and neither requires the
-other's flag.
+the subcircuit hierarchy (`BatchSimulator.findWatched`), **plus one
+signal per probed wire net** (`BatchSimulator.findProbes`, issue #200).
+Note the watched-element set is *broader* than the stdout whitelist of
+3.2: any watched element that the simulator traces appears (e.g. a
+watched `InputPin`).
+
+A **probe** is the interactive named-net feature (a name attached to a
+wire, saved as a `probe` item on a `WireEnd`, section 7 of
+`docs/file-format.md`); its VCD signal is a `wire` named by the probe
+and carries the net's value history. This lets a circuit name an
+internal net and observe it headlessly without splicing in an
+`OutputPin` tap. A probe still never prints to **stdout** — the 3.2
+whitelist is unchanged; probes are a VCD-only signal. If a probe name
+happens to equal a watched element's full name, the probe signal is
+suffixed (`_probe`) so neither is dropped.
+
+Trace accumulation (`BatchSimulator.afterEvent` for elements,
+`BatchSimulator.probeSample` for probed nets) is enabled whenever
+`-vcd` or `-r` is given; the consumers share one trace and neither
+requires the other's flag. A circuit with no probes produces
+byte-identical output to before this addition.
 
 ### 4.2 Header
 

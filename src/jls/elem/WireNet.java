@@ -496,7 +496,17 @@ public class WireNet {
 			this.value = null;
 		else
 			this.value = (BitSet)value.clone();
-		
+
+		// feed probed nets to the batch VCD trace (issue #200): a probe
+		// names this net, so its value history is the net's. This is a
+		// no-op in the interactive engine (Simulator.probeSample is
+		// empty) and cheap otherwise - one field check per wire.
+		for (Wire wire : wires) {
+			if (wire.hasProbe()) {
+				sim.probeSample(wire.getProbe(), bits, now, this.value);
+			}
+		}
+
 	} // end of propagate method
 
 } // end of WireNet class

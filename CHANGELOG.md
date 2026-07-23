@@ -8,6 +8,13 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- Batch `-vcd` export now includes **probed wire nets** as VCD signals
+  (#200), so a named internal net can be observed headlessly without
+  splicing in an `OutputPin` tap. Each probe becomes a `wire` signal
+  named by the probe, fed by `WireNet.propagate` →
+  `Simulator.probeSample`; the stdout whitelist (batch-interface §3.2)
+  is unchanged and a probe-free circuit produces byte-identical VCD.
+  Additive, minor-version per `docs/batch-interface.md` §6.
 - FlatLaf light adopted as the default Swing look-and-feel (#153),
   superseding the recorded cross-platform Metal default:
   `com.formdev:flatlaf:3.7.2` (Apache-2.0, ~1 MB, zero transitive

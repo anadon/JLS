@@ -18,6 +18,7 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import jls.edit.CircuitRenderer;
 import jls.elem.Element;
 
 /**
@@ -96,7 +97,7 @@ class ElementDrawSmokeTest {
 	void everyElementDrawsOnTheRasterExportPath() throws Exception {
 		Circuit circuit = load();
 		File png = tmp.resolve("draw.png").toFile();
-		circuit.exportImage(png.getAbsolutePath());
+		CircuitRenderer.of(circuit).exportImage(png.getAbsolutePath());
 		BufferedImage image = ImageIO.read(png);
 		assertNotNull(image, "export did not produce a decodable PNG");
 		assertTrue(image.getWidth() > 100 && image.getHeight() > 50,
@@ -108,7 +109,7 @@ class ElementDrawSmokeTest {
 	void everyElementDrawsOnTheSvgExportPath() throws Exception {
 		Circuit circuit = load();
 		File svg = tmp.resolve("draw.svg").toFile();
-		circuit.exportImage(svg.getAbsolutePath());
+		CircuitRenderer.of(circuit).exportImage(svg.getAbsolutePath());
 		String text = Files.readString(svg.toPath(), StandardCharsets.UTF_8);
 		assertTrue(text.contains("<svg") && text.contains("</svg>"),
 				"export did not produce a well-formed SVG document");

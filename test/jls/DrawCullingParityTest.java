@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.edit.CircuitRenderer;
 import jls.core.Geometry;
 import jls.elem.Element;
 
@@ -126,7 +127,7 @@ class DrawCullingParityTest {
 		Graphics2D g = full.createGraphics();
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, width, height);
-		circuit.draw(g, new HashSet<Element>(), null);
+		CircuitRenderer.of(circuit).draw(g, new HashSet<Element>(), null);
 		g.dispose();
 
 		BufferedImage tiled = new BufferedImage(width, height,
@@ -138,7 +139,7 @@ class DrawCullingParityTest {
 		for (int tx = 0; tx < width; tx += tile) {
 			for (int ty = 0; ty < height; ty += tile) {
 				g.setClip(tx, ty, tile, tile);
-				circuit.draw(g, new HashSet<Element>(), null);
+				CircuitRenderer.of(circuit).draw(g, new HashSet<Element>(), null);
 			}
 		}
 		g.dispose();

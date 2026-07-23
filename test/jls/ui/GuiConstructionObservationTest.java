@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import jls.edit.CircuitRenderer;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -150,7 +151,7 @@ class GuiConstructionObservationTest {
 			File png = new File(dir, "gui-built-circuit.png");
 			SwingUtilities.invokeAndWait(() -> {
 				try {
-					circuit.exportImage(png.getPath());
+					CircuitRenderer.of(circuit).exportImage(png.getPath());
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

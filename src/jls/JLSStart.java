@@ -60,6 +60,7 @@ import javax.swing.event.ChangeListener;
 import jls.edit.EditOp;
 import jls.edit.Editor;
 import jls.edit.Editors;
+import jls.edit.CircuitRenderer;
 import jls.elem.Element;
 import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
@@ -344,7 +345,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			// (issue #71)
 			String outFile = (imageFile != null) ? imageFile : name + ".png";
 			try {
-				circ.exportImage(outFile);
+				CircuitRenderer.of(circ).exportImage(outFile);
 			} catch (Exception e) {
 				System.err.println("jls: error: can't export image to "
 						+ outFile + ": " + e);
@@ -2285,10 +2286,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// find all unique sub-circuits (and their state machines)
 		if (all) {
-			ed.getCircuit().addToBook(book,format);
+			CircuitRenderer.of(ed.getCircuit()).addToBook(book,format);
 		}
 		else {
-			book.append(ed.getCircuit(),format);
+			book.append(CircuitRenderer.of(ed.getCircuit()),format);
 		}
 
 		return book;
@@ -2829,10 +2830,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// print either the top level or the entire circuit
 		if (justTop) {
-			book.append(circ,format);
+			book.append(CircuitRenderer.of(circ),format);
 		}
 		else {
-			circ.addToBook(book,format);
+			CircuitRenderer.of(circ).addToBook(book,format);
 		}
 
 		// finish up book
@@ -2901,7 +2902,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 
 		// export the image
 		Circuit circ = ed.getCircuit();
-		circ.exportImage(fileName);
+		CircuitRenderer.of(circ).exportImage(fileName);
 	} // end of exportImage method
 
 	/**

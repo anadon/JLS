@@ -1,5 +1,6 @@
 package jls;
 
+import jls.edit.CircuitRenderer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,14 +53,14 @@ class ProofBridgeTest {
 	}
 
 	private static int drawMargin() throws Exception {
-		Field margin = Circuit.class.getDeclaredField("DRAW_MARGIN");
+		Field margin = CircuitRenderer.class.getDeclaredField("DRAW_MARGIN");
 		margin.setAccessible(true);
 		return margin.getInt(null);
 	}
 
 	private static boolean mayBeVisible(Element el, Rectangle clip)
 			throws Exception {
-		Method m = Circuit.class.getDeclaredMethod("mayBeVisible",
+		Method m = CircuitRenderer.class.getDeclaredMethod("mayBeVisible",
 				Element.class, Rectangle.class);
 		m.setAccessible(true);
 		return (Boolean) m.invoke(null, el, clip);

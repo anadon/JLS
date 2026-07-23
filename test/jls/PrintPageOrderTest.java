@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.edit.CircuitRenderer;
 import jls.elem.Element;
 import jls.elem.StateMachine;
 import jls.elem.TruthTable;
@@ -51,14 +52,14 @@ class PrintPageOrderTest {
 	void bookedPagesFollowStableIdOrder() throws Exception {
 		Circuit circuit = load();
 		Book book = new Book();
-		circuit.addToBook(book, new PageFormat());
+		CircuitRenderer.of(circuit).addToBook(book, new PageFormat());
 
 		List<Printable> pages = new ArrayList<Printable>();
 		for (int i = 0; i < book.getNumberOfPages(); i++) {
 			pages.add(book.getPrintable(i));
 		}
-		assertSame(circuit, pages.get(0),
-				"the circuit's own page must come first");
+		assertTrue(pages.get(0) instanceof CircuitRenderer,
+				"the circuit's own page (its renderer) must come first");
 
 		// the state-machine pages, in booked order, must be the state
 		// machines in canonical stable-id order; likewise truth tables

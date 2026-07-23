@@ -2618,7 +2618,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// draw all elements, selected ones last
 				try {
-					circuit.draw(g,selected,me);
+					CircuitRenderer.of(circuit).draw(g,selected,me);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

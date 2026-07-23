@@ -11,6 +11,7 @@ import java.awt.print.Printable;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
+import jls.edit.CircuitRenderer;
 
 /**
  * Headless smoke coverage of the printing pipeline (issue #91 layer 1):
@@ -47,7 +48,7 @@ class PrintPathSmokeTest {
 		Circuit circuit = load();
 		Book book = new Book();
 		PageFormat format = new PageFormat();
-		circuit.addToBook(book, format);
+		CircuitRenderer.of(circuit).addToBook(book, format);
 
 		// circuit + state machine + its output summary + truth table
 		// + the nested subcircuit's page
@@ -78,7 +79,7 @@ class PrintPathSmokeTest {
 		Graphics2D g = image.createGraphics();
 		try {
 			assertEquals(Printable.PAGE_EXISTS,
-					circuit.print(g, new PageFormat(), 0));
+					CircuitRenderer.of(circuit).print(g, new PageFormat(), 0));
 		} finally {
 			g.dispose();
 		}

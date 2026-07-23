@@ -100,7 +100,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/Entry.java",
 			"src/jls/elem/Extend.java",
 			"src/jls/elem/Gate.java",
-			"src/jls/elem/GridTransform.java",
 			"src/jls/elem/Group.java",
 			"src/jls/elem/HLine.java",
 			"src/jls/elem/InputPin.java",

@@ -1,6 +1,8 @@
 package jls.elem;
 
 import jls.core.Geometry;
+import jls.core.GridPoint;
+import jls.core.GridSize;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -98,15 +100,15 @@ public final class TriState extends LogicElement implements Timed {
 		// the current orientation pair (#24)
 		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
-		Dimension d = t.size();
-		width = d.width;
-		height = d.height;
-		Point in = t.map(0, s);
-		Point ctl = t.map(2*s, 3*s);
-		Point outAt = t.map(4*s, s);
-		inputs.add(new Input("input",this,in.x,in.y,bits));
-		inputs.add(new Input("control",this,ctl.x,ctl.y,1));
-		Output out = new Output("output",this,outAt.x,outAt.y,bits);
+		GridSize d = t.size();
+		width = d.width();
+		height = d.height();
+		GridPoint in = t.map(0, s);
+		GridPoint ctl = t.map(2*s, 3*s);
+		GridPoint outAt = t.map(4*s, s);
+		inputs.add(new Input("input",this,in.x(),in.y(),bits));
+		inputs.add(new Input("control",this,ctl.x(),ctl.y(),1));
+		Output out = new Output("output",this,outAt.x(),outAt.y(),bits);
 		outputs.add(out);
 		out.setTriState(true);
 	} // end of init method
@@ -182,19 +184,39 @@ public final class TriState extends LogicElement implements Timed {
 		int s = Geometry.SPACING;
 		g.setColor(Color.black);
 		GridTransform.Chain t = placement();
-		t.drawLine(g,x,y,0,s,s,s);				// input wire
-		t.drawLine(g,x,y,s,0,s,2*s);			// back
-		t.drawLine(g,x,y,s,0,3*s,s);			// top
-		t.drawLine(g,x,y,s,2*s,3*s,s);			// bottom
-		t.drawLine(g,x,y,3*s,s,4*s,s);			// output wire
-		t.drawLine(g,x,y,2*s,3*s/2,2*s,3*s);	// control wire
+		drawMapped(g,t,x,y,0,s,s,s);			// input wire
+		drawMapped(g,t,x,y,s,0,s,2*s);			// back
+		drawMapped(g,t,x,y,s,0,3*s,s);			// top
+		drawMapped(g,t,x,y,s,2*s,3*s,s);		// bottom
+		drawMapped(g,t,x,y,3*s,s,4*s,s);		// output wire
+		drawMapped(g,t,x,y,2*s,3*s/2,2*s,3*s);	// control wire
 		// draw inputs and outputs
 		inputs.get(0).draw(g);
 		inputs.get(1).draw(g);
 		outputs.get(0).draw(g);
 		
 	} // end of draw method
-	
+
+	/**
+	 * Draw a chain-mapped line offset by the element origin (issue #77):
+	 * the pure grid mapping lives in {@link GridTransform.Chain#mapLine},
+	 * the drawing stays here with the graphics context.
+	 *
+	 * @param g the graphics to draw on.
+	 * @param t the transform chain.
+	 * @param ox the element origin x.
+	 * @param oy the element origin y.
+	 * @param x1 first endpoint canonical x.
+	 * @param y1 first endpoint canonical y.
+	 * @param x2 second endpoint canonical x.
+	 * @param y2 second endpoint canonical y.
+	 */
+	private static void drawMapped(Graphics g, GridTransform.Chain t,
+			int ox, int oy, int x1, int y1, int x2, int y2) {
+		int[] l = t.mapLine(x1, y1, x2, y2);
+		g.drawLine(ox + l[0], oy + l[1], ox + l[2], oy + l[3]);
+	} // end of drawMapped method
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** This element's own saved attributes (bits, delay, orientations). */

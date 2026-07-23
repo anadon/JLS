@@ -1,6 +1,8 @@
 package jls.elem;
 
 import jls.core.Geometry;
+import jls.core.GridPoint;
+import jls.core.GridSize;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -96,9 +98,9 @@ public final class Mux extends LogicElement implements Timed {
 		// so its put is placed directly from its own orientation
 		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
-		Dimension d = t.size();
-		width = d.width;
-		height = d.height;
+		GridSize d = t.size();
+		width = d.width();
+		height = d.height();
 
 		// determine number of select bits
 		int sbits = 32 - Integer.numberOfLeadingZeros(numInputs-1);
@@ -123,13 +125,33 @@ public final class Mux extends LogicElement implements Timed {
 
 		// create inputs and output
 		for (int i=0; i<numInputs; i+=1) {
-			Point p = t.map(0,(i+1)*s);
-			inputs.add(new Input("input"+i,this,p.x,p.y,bits));
+			GridPoint p = t.map(0,(i+1)*s);
+			inputs.add(new Input("input"+i,this,p.x(),p.y(),bits));
 		}
-		Point p = t.map(2*s,(numInputs+1)/2*s);
-		outputs.add(new Output("output",this,p.x,p.y,bits));
+		GridPoint p = t.map(2*s,(numInputs+1)/2*s);
+		outputs.add(new Output("output",this,p.x(),p.y(),bits));
 
 	} // end of init method
+
+	/**
+	 * Draw a chain-mapped line offset by the element origin (issue #77):
+	 * the pure grid mapping lives in {@link GridTransform.Chain#mapLine},
+	 * the drawing stays here with the graphics context.
+	 *
+	 * @param g the graphics to draw on.
+	 * @param t the transform chain.
+	 * @param ox the element origin x.
+	 * @param oy the element origin y.
+	 * @param x1 first endpoint canonical x.
+	 * @param y1 first endpoint canonical y.
+	 * @param x2 second endpoint canonical x.
+	 * @param y2 second endpoint canonical y.
+	 */
+	private static void drawMapped(Graphics g, GridTransform.Chain t,
+			int ox, int oy, int x1, int y1, int x2, int y2) {
+		int[] l = t.mapLine(x1, y1, x2, y2);
+		g.drawLine(ox + l[0], oy + l[1], ox + l[2], oy + l[3]);
+	} // end of drawMapped method
 
 	/**
 	 * The transform from canonical geometry (output RIGHT) to the current
@@ -179,10 +201,10 @@ public final class Mux extends LogicElement implements Timed {
 		GridTransform.Chain t = placement();
 		int slant = s/2;
 		int ch = (numInputs+1)*s;					// canonical height
-		t.drawLine(g,x,y,0,0,0,ch);					// input (wide) side
-		t.drawLine(g,x,y,2*s,slant,2*s,ch-slant);	// output (narrow) side
-		t.drawLine(g,x,y,0,0,2*s,slant);			// top slant
-		t.drawLine(g,x,y,0,ch,2*s,ch-slant);		// bottom slant
+		drawMapped(g,t,x,y,0,0,0,ch);				// input (wide) side
+		drawMapped(g,t,x,y,2*s,slant,2*s,ch-slant);	// output (narrow) side
+		drawMapped(g,t,x,y,0,0,2*s,slant);			// top slant
+		drawMapped(g,t,x,y,0,ch,2*s,ch-slant);		// bottom slant
 		// draw inputs and labels
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();

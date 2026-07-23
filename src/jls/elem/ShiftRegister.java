@@ -151,9 +151,9 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		// element inherited in the fork
 		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
-		java.awt.Dimension d = t.size();
-		width = d.width;
-		height = d.height;
+		jls.core.GridSize d = t.size();
+		width = d.width();
+		height = d.height();
 
 		// determine number of amount bits
 		int sbits = 32 - Integer.numberOfLeadingZeros(bits-1);
@@ -177,10 +177,10 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		}
 
 		// create data input and output
-		java.awt.Point in = t.map(0,s);
-		inputs.add(new Input("input",this,in.x,in.y,bits));
-		java.awt.Point out = t.map(2*s,s);
-		outputs.add(new Output("output",this,out.x,out.y,bits));
+		jls.core.GridPoint in = t.map(0,s);
+		inputs.add(new Input("input",this,in.x(),in.y(),bits));
+		jls.core.GridPoint out = t.map(2*s,s);
+		outputs.add(new Output("output",this,out.x(),out.y(),bits));
 
 	} // end of init method
 

@@ -1,7 +1,7 @@
 package jls.elem;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import jls.core.GridPoint;
+import jls.core.GridSize;
 
 /**
  * Exact integer geometry transforms on the snap grid (issue #24).
@@ -36,9 +36,9 @@ public final class GridTransform {
 	 *
 	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
-	public static Point rotateCW(int px, int py, int height) {
+	public static GridPoint rotateCW(int px, int py, int height) {
 
-		return new Point(height - py, px);
+		return new GridPoint(height - py, px);
 	} // end of rotateCW method
 
 	/**
@@ -53,9 +53,9 @@ public final class GridTransform {
 	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
-	public static Point rotateCCW(int px, int py, int width) {
+	public static GridPoint rotateCCW(int px, int py, int width) {
 
-		return new Point(py, width - px);
+		return new GridPoint(py, width - px);
 	} // end of rotateCCW method
 
 	/**
@@ -69,9 +69,9 @@ public final class GridTransform {
 	 *
 	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
-	public static Point rotate180(int px, int py, int width, int height) {
+	public static GridPoint rotate180(int px, int py, int width, int height) {
 
-		return new Point(width - px, height - py);
+		return new GridPoint(width - px, height - py);
 	} // end of rotate180 method
 
 	/**
@@ -85,9 +85,9 @@ public final class GridTransform {
 	 * @jls.testedby jls.elem.GridTransformTest#adderLeftIsMirrorOfRight()
 	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
-	public static Point mirrorX(int px, int py, int width) {
+	public static GridPoint mirrorX(int px, int py, int width) {
 
-		return new Point(width - px, py);
+		return new GridPoint(width - px, py);
 	} // end of mirrorX method
 
 	/**
@@ -100,9 +100,9 @@ public final class GridTransform {
 	 *
 	 * @jls.testedby jls.elem.GridTransformTest#andGateOrientationsAreTransformsOfEachOther()
 	 */
-	public static Point mirrorY(int px, int py, int height) {
+	public static GridPoint mirrorY(int px, int py, int height) {
 
-		return new Point(px, height - py);
+		return new GridPoint(px, height - py);
 	} // end of mirrorY method
 
 	/**
@@ -114,9 +114,9 @@ public final class GridTransform {
 	 *
 	 * @jls.testedby jls.elem.GridTransformTest#quarterTurnsCompose()
 	 */
-	public static Dimension rotatedSize(int width, int height) {
+	public static GridSize rotatedSize(int width, int height) {
 
-		return new Dimension(height, width);
+		return new GridSize(height, width);
 	} // end of rotatedSize method
 
 	/**
@@ -228,29 +228,29 @@ public final class GridTransform {
 		 * @param py the point's y offset in the canonical box.
 		 * @return the point's offset in the transformed box.
 		 */
-		public Point map(int px, int py) {
+		public GridPoint map(int px, int py) {
 
 			int w = canonicalWidth;
 			int h = canonicalHeight;
-			Point p = new Point(px, py);
+			GridPoint p = new GridPoint(px, py);
 			for (int op : ops) {
 				switch (op) {
 				case CW:
-					p = GridTransform.rotateCW(p.x, p.y, h);
+					p = GridTransform.rotateCW(p.x(), p.y(), h);
 					int t = w; w = h; h = t;
 					break;
 				case CCW:
-					p = GridTransform.rotateCCW(p.x, p.y, w);
+					p = GridTransform.rotateCCW(p.x(), p.y(), w);
 					t = w; w = h; h = t;
 					break;
 				case R180:
-					p = GridTransform.rotate180(p.x, p.y, w, h);
+					p = GridTransform.rotate180(p.x(), p.y(), w, h);
 					break;
 				case MX:
-					p = GridTransform.mirrorX(p.x, p.y, w);
+					p = GridTransform.mirrorX(p.x(), p.y(), w);
 					break;
 				default:
-					p = GridTransform.mirrorY(p.x, p.y, h);
+					p = GridTransform.mirrorY(p.x(), p.y(), h);
 					break;
 				}
 			}
@@ -263,7 +263,7 @@ public final class GridTransform {
 		 * @return the canonical dimensions, with width and height swapped
 		 *         once per quarter-turn rotation in the chain.
 		 */
-		public Dimension size() {
+		public GridSize size() {
 
 			int w = canonicalWidth;
 			int h = canonicalHeight;
@@ -272,29 +272,29 @@ public final class GridTransform {
 					int t = w; w = h; h = t;
 				}
 			}
-			return new Dimension(w, h);
+			return new GridSize(w, h);
 		} // end of size method
 
 		/**
-		 * Draw a line whose endpoints are canonical coordinates, mapped
-		 * through the chain and offset by the element position.
+		 * Map a line's two endpoints from canonical coordinates through
+		 * the chain, returning their transformed offsets as
+		 * {@code {x1, y1, x2, y2}}. The drawing itself stays with the
+		 * caller (which has the {@code Graphics} and the element origin),
+		 * so this class stays headless (issue #77): it replaces the former
+		 * {@code drawLine(Graphics, ...)} with pure geometry.
 		 *
-		 * @param g the graphics object to draw on.
-		 * @param originX the x coordinate of the element's origin.
-		 * @param originY the y coordinate of the element's origin.
 		 * @param x1 the first endpoint's canonical x offset.
 		 * @param y1 the first endpoint's canonical y offset.
 		 * @param x2 the second endpoint's canonical x offset.
 		 * @param y2 the second endpoint's canonical y offset.
+		 * @return the four transformed offsets {@code {x1, y1, x2, y2}}.
 		 */
-		public void drawLine(java.awt.Graphics g, int originX, int originY,
-				int x1, int y1, int x2, int y2) {
+		public int[] mapLine(int x1, int y1, int x2, int y2) {
 
-			Point p1 = map(x1, y1);
-			Point p2 = map(x2, y2);
-			g.drawLine(originX + p1.x, originY + p1.y,
-					originX + p2.x, originY + p2.y);
-		} // end of drawLine method
+			GridPoint p1 = map(x1, y1);
+			GridPoint p2 = map(x2, y2);
+			return new int[] { p1.x(), p1.y(), p2.x(), p2.y() };
+		} // end of mapLine method
 
 	} // end of Chain class
 

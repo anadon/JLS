@@ -1,6 +1,7 @@
 package jls.elem;
 
 import jls.core.Geometry;
+import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -142,8 +143,8 @@ public final class Clock extends LogicElement {
 			t.rotateCW();
 			break;
 		}
-		Point p = t.map(2*s, s);
-		outputs.add(new Output("output",this,p.x,p.y,1));
+		GridPoint p = t.map(2*s, s);
+		outputs.add(new Output("output",this,p.x(),p.y(),1));
 
 	} // end of init method
 	

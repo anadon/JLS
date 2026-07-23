@@ -1,6 +1,7 @@
 package jls.elem;
 
 import jls.core.Geometry;
+import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -98,16 +99,16 @@ public final class Adder extends LogicElement implements Timed {
 		height = 4*s;
 		width = 4*s;
 		GridTransform.Chain t = placement();
-		Point a = t.map(0,s);
-		Point b = t.map(0,3*s);
-		Point cin = t.map(2*s,0);
-		Point sum = t.map(4*s,2*s);
-		Point cout = t.map(2*s,4*s);
-		inputs.add(new Input("A",this,a.x,a.y,bits));
-		inputs.add(new Input("B",this,b.x,b.y,bits));
-		inputs.add(new Input("Cin",this,cin.x,cin.y,1));
-		outputs.add(new Output("S",this,sum.x,sum.y,bits));
-		outputs.add(new Output("Cout",this,cout.x,cout.y,1));
+		GridPoint a = t.map(0,s);
+		GridPoint b = t.map(0,3*s);
+		GridPoint cin = t.map(2*s,0);
+		GridPoint sum = t.map(4*s,2*s);
+		GridPoint cout = t.map(2*s,4*s);
+		inputs.add(new Input("A",this,a.x(),a.y(),bits));
+		inputs.add(new Input("B",this,b.x(),b.y(),bits));
+		inputs.add(new Input("Cin",this,cin.x(),cin.y(),1));
+		outputs.add(new Output("S",this,sum.x(),sum.y(),bits));
+		outputs.add(new Output("Cout",this,cout.x(),cout.y(),1));
 	} // end of init method
 
 	/**

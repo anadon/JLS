@@ -309,10 +309,68 @@ public abstract sealed class Group extends LogicElement
 			}
 			ranges.set(v1, e);
 		} else {
-			// Legacy save file: sorted, contiguous ranges
-			ranges.add(new Entry(v1, v2));
+			// Legacy save file: sorted, contiguous ranges. A legitimate
+			// GUI-authored legacy group assigns each bundle bit to
+			// exactly one put, so its contiguous ranges are disjoint and
+			// ascending (issue #198, O5: the dialog's `picked` flag
+			// forbids reusing a bit). A descending or overlapping range
+			// is instead the signature of a file that meant the
+			// (put index, bundle bit) "noncontig" reading but omitted
+			// the required `noncontig "true"` flag - which would
+			// otherwise silently mis-load as a different element (issue
+			// #198, O2). Reject it with a message that names the fix
+			// rather than mis-loading.
+			if (v1 > v2) {
+				throw new IllegalArgumentException(noncontigHint(v1, v2));
+			}
+			Entry candidate = new Entry(v1, v2);
+			for (Entry existing : ranges) {
+				if (existing != null && rangesOverlap(existing, candidate)) {
+					throw new IllegalArgumentException(
+							noncontigHint(v1, v2));
+				}
+			}
+			ranges.add(candidate);
 		}
 	} // end of setPair method
+
+	/**
+	 * Whether two contiguous legacy ranges share any bit index. Both
+	 * entries are ascending, non-empty contiguous ranges here (built by
+	 * {@link Entry#Entry(int,int)} in the legacy load path), so an
+	 * endpoint comparison suffices.
+	 *
+	 * @param a One range.
+	 * @param b The other range.
+	 * @return True if the ranges intersect.
+	 */
+	private static boolean rangesOverlap(Entry a, Entry b) {
+		if (a.getSize() == 0 || b.getSize() == 0) {
+			return false;
+		}
+		return a.getMin() <= b.getMax() && b.getMin() <= a.getMax();
+	} // end of rangesOverlap method
+
+	/**
+	 * The load-error message for a legacy (flag-absent) {@code pair} set
+	 * that overlaps or descends - the signature of a misread
+	 * {@code noncontig} file (issue #198). Names the missing flag so a
+	 * third-party writer can fix its output.
+	 *
+	 * @param v1 The offending pair's first value.
+	 * @param v2 The offending pair's second value.
+	 * @return The message, consumed as a {@code LoadError} detail.
+	 */
+	private String noncontigHint(int v1, int v2) {
+		return "this " + getClass().getSimpleName().toLowerCase()
+				+ "'s bit routing has an invalid or overlapping range at "
+				+ "pair (" + v1 + " " + v2 + "): a legacy contiguous group "
+				+ "never reuses a bit or lists a descending range. A file "
+				+ "written to the (index, bundle bit) pair semantics must "
+				+ "declare `String noncontig \"true\"` on this element - "
+				+ "the flag JLS writes for every group - or be re-saved "
+				+ "from JLS";
+	} // end of noncontigHint method
 	
 	/**
 	 * The bit routing of this binder/splitter, one entry per bundled

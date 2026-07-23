@@ -294,7 +294,7 @@ Version-1 and version-2 writers emit exactly these 32 tags:
 |---|---|---|
 | `Adder` | ripple adder | |
 | `AndGate` | AND gate | |
-| `Binder` | wire bundler | `pair` items: (input index, bundle bit); `orient` values `UP`/`DOWN` require version 2 (§4) |
+| `Binder` | wire bundler | `pair` items: (input index, bundle bit); **requires `String noncontig "true"`** (see note below); `orient` values `UP`/`DOWN` require version 2 (§4) |
 | `Clock` | clock generator | |
 | `Constant` | constant driver | value is an `Int` item |
 | `Decoder` | decoder | |
@@ -315,7 +315,7 @@ Version-1 and version-2 writers emit exactly these 32 tags:
 | `Register` | latch / D flip-flop | |
 | `ShiftRegister` | combinational barrel shifter | despite the name, stateless; tag and attributes match the bsiever-fork 4.6 element (issue #122) |
 | `SigGen` | signal generator | |
-| `Splitter` | wire unbundler | `pair` items: (output index, bundle bit); `orient` values `UP`/`DOWN` require version 2 (§4) |
+| `Splitter` | wire unbundler | `pair` items: (output index, bundle bit); **requires `String noncontig "true"`** (see note below); `orient` values `UP`/`DOWN` require version 2 (§4) |
 | `StateMachine` | finite state machine | state list encoded as ordered `String state`/`output`/`trans`/`next` items with interleaved `int`/`long` values; the item *sequence* is significant for this type only |
 | `Stop` | simulation stop control | |
 | `SubCircuit` | nested circuit instance | body contains one nested `CIRCUIT` block (no `FORMAT` line) |
@@ -336,6 +336,22 @@ Additional notes:
 - **Gate `pair`/sequence-free types**: for every type except
   `StateMachine`, items are order-independent; `pair` items are
   applied in file order.
+- **`Binder`/`Splitter` `noncontig` flag** (issue #198): the
+  `pair` semantics tabulated above — `(index, bundle bit)`, where
+  several pairs sharing an `index` accumulate their bits into that
+  one put — are the *non-contiguous* reading, selected only when the
+  element carries `String noncontig "true"`. A conformant writer
+  MUST emit this flag on every `Binder`/`Splitter`; JLS itself
+  always does. Its absence selects a legacy reading in which each
+  `pair a b` is instead one contiguous bit range `[a..b]` on a
+  distinct put — a different port count and bit routing. A reader
+  MUST NOT silently apply the legacy reading to a set whose ranges
+  overlap or descend (bits reused across puts, or `a > b`): that is
+  the signature of a `noncontig` file missing the flag, and the
+  reference reader rejects it with a diagnostic naming the flag
+  rather than mis-loading a different element. A genuine legacy
+  group (pre-flag JLS saves) has disjoint ascending ranges and
+  still loads.
 - **`TestGen`** is a loadable-but-not-writable tag: the reference
   reader accepts it (it exists for the batch test facility) but a
   conformant writer never emits it. Readers MAY reject it.

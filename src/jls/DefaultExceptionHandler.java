@@ -4,6 +4,9 @@ import java.nio.charset.StandardCharsets;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 import org.jspecify.annotations.Nullable;
 
@@ -23,6 +26,35 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	private @Nullable Circuit circuit = null;
 	/** Memory released when handling an OutOfMemoryError so recovery can proceed. */
 	private int @Nullable [] extraSpace = new int[10000];
+
+	// -- termination seams (issue #208) ---------------------------------
+	// The interactive branches show a modal dialog and only then exit. On
+	// an unattended display (the Xvfb UI-CI lane), no human dismisses the
+	// dialog, so the modal blocks the handler thread forever and the exit
+	// never runs - the process hangs until a wall-clock timeout instead of
+	// failing fast (issue #208). GraphicsEnvironment.isHeadless() is false
+	// under Xvfb, so it cannot tell a CI lane from a real user; rather than
+	// classify the session, we guarantee a bounded exit unconditionally: a
+	// daemon watchdog force-terminates after a short interval, so a
+	// dismissed dialog exits immediately and an unattended one exits when
+	// the watchdog fires. These fields are package-private seams the tests
+	// drive (a blocking dialog + recording exiters) without a real display.
+
+	/** Ensures exactly one termination path runs, whichever fires first. */
+	private final AtomicBoolean terminated = new AtomicBoolean(false);
+	/** Orderly, immediate exit (dialog dismissed / batch path). */
+	IntConsumer exiter = System::exit;
+	/** Hard exit the watchdog uses, in case shutdown hooks also hang. */
+	IntConsumer hardExiter = code -> Runtime.getRuntime().halt(code);
+	/** Runs the modal dialog; may block indefinitely when unattended. */
+	Consumer<Runnable> dialogRunner = Runnable::run;
+	/** How long the watchdog waits before forcing termination. */
+	long watchdogMillis = Long.getLong("jls.exitWatchdogMillis", 5000L);
+	/**
+	 * Forces the interactive branch even without a real {@link JLSStart}
+	 * (test seam); null means the live {@code jls != null} decision.
+	 */
+	@Nullable Boolean interactiveOverride = null;
 
 	/**
 	 * Create a handler with no JLS window or circuit attached yet;
@@ -60,65 +92,115 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	 */
 	@Override
 	public void uncaughtException(Thread t, Throwable th) {
-		
+
 		// if already trying to recover, forget it
 		if (recovering) {
-			System.exit(1);
+			terminate(1, false);
+			return;
 		}
 		recovering = true;
-		
+
+		boolean interactive = interactiveOverride != null
+				? interactiveOverride.booleanValue()
+				: (jls != null);
+
 		// if out of memory
 		if (th instanceof OutOfMemoryError) {
-			
+
 			// free up some memory and garbage collect
 			extraSpace = null;
 			System.gc();
-			
+
 			// if batch, print message and quit
-			if (jls == null) {
+			if (!interactive) {
 				System.out.println("Not enough memory to simulate circuit");
 				System.out.println("Run JLS again and give JVM more memory");
+				terminate(1, false);
 			}
-			
-			// otherwise display message and quit
+
+			// otherwise display message and quit -- but arm the watchdog
+			// first so an unattended display cannot hang here (issue #208);
+			// the branch has already freed extraSpace for this path
 			else {
-				
-				TellUser.error(null,
-						"Not enough memory", "Error");
-				TellUser.warn(null,
-						"Run JLS again and give JVM more memory", "Warning");
+				armWatchdog();
+				dialogRunner.accept(() -> {
+					TellUser.error(null, "Not enough memory", "Error");
+					TellUser.warn(null,
+							"Run JLS again and give JVM more memory",
+							"Warning");
+				});
+				terminate(1, false);
 			}
-			System.exit(1);
 		}
-		
+
 		// all other errors/exceptions...
 		else {
-			
+
 			// if batch, print message and quit
-			if (jls == null) {
+			if (!interactive) {
 				saveTrace(th);
 				System.out.println("UNEXPECTED INTERNAL ERROR!");
 				System.out.println("JLS will create a file called JLSerror in the current folder/directory.");
 				System.out.println("Please attach it to a bug report at https://github.com/anadon/JLS/issues so it can be fixed.");
-				System.exit(1);
+				terminate(1, false);
 			}
-			
-			// otherwise show message and quit
+
+			// otherwise show message and quit. The trace is written before
+			// the dialog, and the watchdog is armed before it, so the
+			// JLSerror file lands and the process exits within a bounded
+			// time whether or not a human ever dismisses the dialog (#208)
 			else {
 				saveTrace(th);
-				String msg = "<html>" + 
-					"UNEXPECTED INTERNAL ERROR! Try to save circuit(s)." + 
-					"<p>" + 
+				armWatchdog();
+				String msg = "<html>" +
+					"UNEXPECTED INTERNAL ERROR! Try to save circuit(s)." +
+					"<p>" +
 					"JLS will create a file called JLSerror in the current folder/directory." +
 					"<br>Please attach it to a bug report at https://github.com/anadon/JLS/issues so it can be fixed." +
 					"<br><br>Try restarting JLS using checkpoints of open circuits" +
 					"<br>(i.e., <i>file</i>.jls~, where <i>file</i> is the name of the open circuit)" +
 					"</html>";
-				TellUser.error(null, msg, "Error");
-				System.exit(1);
+				dialogRunner.accept(() -> TellUser.error(null, msg, "Error"));
+				terminate(1, false);
 			}
 		}
 	} // end of uncaughtException method
+
+	/**
+	 * Terminate the process exactly once, whichever path fires first
+	 * (issue #208). The immediate branches call this after their dialog;
+	 * the watchdog calls it with {@code hard} true to bypass shutdown
+	 * hooks that might themselves hang.
+	 *
+	 * @param code The exit status.
+	 * @param hard True to use the hard-halt exiter (the watchdog path).
+	 */
+	private void terminate(int code, boolean hard) {
+		if (terminated.compareAndSet(false, true)) {
+			(hard ? hardExiter : exiter).accept(code);
+		}
+	} // end of terminate method
+
+	/**
+	 * Arm a daemon watchdog that force-terminates after
+	 * {@link #watchdogMillis}, so a modal error dialog on an unattended
+	 * display (the Xvfb UI-CI lane) cannot block the handler thread past
+	 * a bounded time (issue #208). If the dialog is dismissed first, the
+	 * immediate {@link #terminate} wins and this fires harmlessly into the
+	 * already-set {@code terminated} guard.
+	 */
+	private void armWatchdog() {
+		Thread watchdog = new Thread(() -> {
+			try {
+				Thread.sleep(watchdogMillis);
+			} catch (InterruptedException ignored) {
+				return;
+			}
+			terminate(1, true);
+		}, "jls-exit-watchdog");
+		watchdog.setDaemon(true);
+		watchdog.start();
+	} // end of armWatchdog method
 	
 	/**
 	 * Save stack trace in a file.

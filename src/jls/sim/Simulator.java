@@ -270,6 +270,23 @@ public abstract class Simulator {
 	} // end of afterEvent method
 
 	/**
+	 * Hook called from {@link jls.elem.WireNet#propagate} for every
+	 * probed wire on a net whose value just changed (issue #200). The
+	 * base engine ignores probes - they are an interactive convenience;
+	 * the batch simulator overrides this to fold each probed net into the
+	 * VCD trace alongside watched elements, so a named net can be observed
+	 * headlessly without splicing in an OutputPin tap.
+	 *
+	 * @param name  The probe name - the net's user-given signal name.
+	 * @param bits  The net's bit width.
+	 * @param time  The simulation time of the change.
+	 * @param value The net's new value, or null for HiZ (undriven).
+	 */
+	public void probeSample(String name, int bits, long time,
+			@Nullable BitSet value) {
+	} // end of probeSample method
+
+	/**
 	 * Stop the simulation.
 	 */
 	public abstract void stop();

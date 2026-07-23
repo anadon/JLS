@@ -6,8 +6,24 @@ software), or some other point on the Pareto curve? This document answers that
 with a structured comparison rather than a preference. It complements the
 recorded no-rewrite decision (#96) and the forward architecture
 ([`grand-architecture.md`](grand-architecture.md)) by showing the **work** behind
-the verdict: a 14-candidate comparison matrix over ten migration-impact
+the verdict: a full-rewrite comparison matrix over eight migration-impact
 dimensions, plus the measured performance evidence that motivated the question.*
+
+## Scope & revisions
+
+- **Framing: full rewrite vs. stay.** Each non-Java candidate is evaluated as a
+  *strict full rewrite*; the Java 25 row is the baseline (do not rewrite —
+  modernize in place per #96). A partial "extract only the sim kernel via FFI"
+  path is **out of scope** for this study.
+- **2026-07-23 revision.** Two dimensions from the initial ten were dropped at the
+  maintainer's direction and one was re-scored:
+  - **contributor-pool** — removed; not a concern for this project.
+  - **kernel-only-path** — removed; only a full rewrite is in consideration.
+  - **deployment** — re-scored *without* riscv64 as a required target
+    architecture (see the deployment re-score table below).
+  The determination is unchanged by these edits (it never rested on those axes),
+  but the margins narrowed and several native candidates rose; both are recorded
+  below honestly.
 
 ## Why this exists
 
@@ -19,127 +35,142 @@ This document is the firmer answer. Its two load-bearing results:
 1. **The "large circuits are slow" bottleneck is algorithmic, not linguistic** —
    and every realistic performance win is capturable in pure Java. Measured
    below, and filed as #231 and #232.
-2. **Across 14 candidate languages scored on ten dimensions, staying on Java 25
+2. **Across 14 candidate languages scored on eight dimensions, staying on Java 25
    and modernizing in place (#96) is the global optimum** — a Pareto frontier
    point that strictly dominates 8 of the 13 alternatives outright, including
-   the runner-up.
+   the runner-up, and leads the field by 7 points on a 40-point scale.
 
 ## Method
 
 Candidates were enumerated (the four named languages plus Kotlin, Scala 3,
 C#/.NET, OCaml, Zig, Go, Swift, Nim, Lean4, and a "Java 25, modernize in place"
 baseline so the no-migration option competes on equal footing). Each was scored
-1–5 on ten dimensions anchored to JLS's actual constraints — **not** the language
-in the abstract — then every analysis was passed through an adversarial
-verification step charged with catching both over-optimism (hand-waving the GUI
+1–5 on dimensions anchored to JLS's actual constraints — **not** the language in
+the abstract — then every analysis was passed through an adversarial verification
+step charged with catching both over-optimism (hand-waving the GUI
 reimplementation cost) and over-pessimism, with score corrections folded back in.
-A final synthesis produced the matrix and determination. This is an
-AI-assisted study; the numbers are judgments, but the performance findings
-(§"The performance finding") are measured and reproducible, and the structural
-facts (LOC, Swing coupling, contracts) are drawn from the tree at commit
-`02dbd3c`.
+A final synthesis produced the matrix and determination. This is an AI-assisted
+study; the numbers are judgments, but the performance findings (§"The performance
+finding") are measured and reproducible, and the structural facts (LOC, Swing
+coupling, contracts) are drawn from the tree at commit `02dbd3c`.
 
-The ten dimensions: **sim-core-fit**, **gui-maturity** (for a dense hit-tested
-schematic canvas — where ~47% of the code lives), **typing-gain over modern
-Java-25** (sealed + records + JSpecify/NullAway, i.e. the #93–96 program),
-**memory-safety**, **deployment** (single self-contained offline artifact incl.
-riscv64), **contributor-pool** (first-year students in a Java course; a single
-maintainer), **verification-affordance**, **ecosystem-longevity**,
-**kernel-only-path** (extract *only* the sim kernel via FFI, keep the Java GUI),
-and **contract-and-effort** (parity effort + risk of regressing the byte-exact
+The eight scored dimensions (after the 2026-07-23 revision): **sim-core-fit**,
+**gui-maturity** (for a dense hit-tested schematic canvas — where ~47% of the
+code lives), **typing-gain over modern Java-25** (sealed + records +
+JSpecify/NullAway, i.e. the #93–96 program), **memory-safety**, **deployment**
+(single self-contained offline artifact across amd64/arm64 + Windows/macOS/Linux;
+riscv64 *not* required), **verification-affordance**, **ecosystem-longevity**, and
+**contract-and-effort** (parity effort + risk of regressing the byte-exact
 `.jls`/batch/VCD contracts).
 
 ## The comparison matrix
 
-Scores are 1–5 (5 best **for JLS's objective**), verifier-adjusted. Total is out
-of 50.
+Scores are 1–5 (5 best **for JLS's objective**), verifier-adjusted, with
+deployment re-scored per the revision. Total is out of 40.
 
-| Language | sim-core | gui | typing-gain | mem-safe | deploy | contrib | verif | eco | kernel | contract | **Total** | Full rewrite | Kernel-only (FFI) |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|---|---|
-| **Java 25** (Swing+FlatLaf) | 5 | 4 | 2 | 5 | 5 | 5 | 4 | 5 | 5 | 4 | **44** | viable (= modernize-in-place #96) | n/a — no foreign language; #77 is in-JVM |
-| **Kotlin** (reuse Swing) | 3 | 4 | 2 | 5 | 4 | 2 | 3 | 3 | 3 | 3 | **32** | uneconomic | weak (shared heap, no real FFI) |
-| **C#/.NET** (Avalonia) | 4 | 3 | 2 | 4 | 2 | 2 | 3 | 3 | 2 | 2 | **27** | uneconomic | weak (cross-runtime CLR↔JVM) |
-| **Scala 3** (reuse Swing) | 3 | 3 | 3 | 4 | 4 | 1 | 3 | 2 | 2 | 1 | **26** | uneconomic | weak (same-JVM, no seam) |
-| **OCaml** (lablgtk3) | 4 | 2 | 3 | 4 | 2 | 1 | 4 | 2 | 3 | 1 | **26** | not-viable | weak (dual-GC; 63-bit int wrinkle) |
-| **Nim** (gintro/GTK4) | 4 | 2 | 2 | 3 | 3 | 2 | 2 | 2 | 4 | 2 | **26** | uneconomic | defensible (clean C-ABI, thin RT) |
-| **Haskell** (monomer) | 3 | 2 | 3 | 5 | 2 | 1 | 4 | 2 | 2 | 1 | **25** | not-viable | weak (embed GHC RTS = 2nd GC) |
-| **C++** (Qt QGraphicsView) | 5 | 4 | 1 | 1 | 2 | 1 | 3 | 3 | 3 | 1 | **24** | uneconomic | weak (clean seam, chatty upcalls) |
-| **Rust** (egui/Slint) | 4 | 1 | 2 | 3 | 3 | 1 | 4 | 2 | 3 | 1 | **24** | uneconomic | defensible (cdylib via Panama) |
-| **Zig** (Dear ImGui) | 5 | 1 | 2 | 2 | 3 | 1 | 2 | 1 | 5 | 1 | **23** | not-viable | weak (cleanest FFI, no live problem) |
-| **Go** (Gio) | 3 | 2 | 1 | 4 | 3 | 2 | 2 | 3 | 2 | 1 | **23** | uneconomic | weak (2 GCs/schedulers, cgo) |
-| **Lean4** (none) | 2 | 1 | 5 | 2 | 2 | 1 | 5 | 2 | 2 | 1 | **23** | not-viable | weak (verified-kernel idea, impractical) |
-| **Agda** (none) | 1 | 1 | 3 | 5 | 1 | 1 | 5 | 2 | 2 | 1 | **22** | not-viable | *compelling — but only as surgical proof, not executable extraction* |
-| **Swift** (SwiftGtk/Adwaita) | 3 | 1 | 2 | 3 | 1 | 1 | 2 | 2 | 2 | 1 | **18** | not-viable | weak (ship ARC RT; weak riscv64) |
+| Language | sim-core | gui | typing-gain | mem-safe | deploy | verif | eco | contract | **Total** | Full rewrite |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|---|
+| **Java 25** (Swing+FlatLaf) | 5 | 4 | 2 | 5 | 5 | 4 | 5 | 4 | **34** | baseline — modernize in place (#96) |
+| **Kotlin** (reuse Swing) | 3 | 4 | 2 | 5 | 4 | 3 | 3 | 3 | **27** | uneconomic |
+| **C#/.NET** (Avalonia) | 4 | 3 | 2 | 4 | 4 | 3 | 3 | 2 | **25** | uneconomic |
+| **Scala 3** (reuse Swing) | 3 | 3 | 3 | 4 | 4 | 3 | 2 | 1 | **23** | uneconomic |
+| **Haskell** (monomer) | 3 | 2 | 3 | 5 | 3 | 4 | 2 | 1 | **23** | not-viable |
+| **OCaml** (lablgtk3) | 4 | 2 | 3 | 4 | 2 | 4 | 2 | 1 | **22** | not-viable |
+| **C++** (Qt QGraphicsView) | 5 | 4 | 1 | 1 | 3 | 3 | 3 | 1 | **21** | uneconomic |
+| **Rust** (egui/Slint) | 4 | 1 | 2 | 3 | 4 | 4 | 2 | 1 | **21** | uneconomic |
+| **Lean4** (none) | 2 | 1 | 5 | 2 | 3 | 5 | 2 | 1 | **21** | not-viable |
+| **Nim** (gintro/GTK4) | 4 | 2 | 2 | 3 | 3 | 2 | 2 | 2 | **20** | uneconomic |
+| **Go** (Gio) | 3 | 2 | 1 | 4 | 3 | 2 | 3 | 1 | **19** | uneconomic |
+| **Agda** (none) | 1 | 1 | 3 | 5 | 1 | 5 | 2 | 1 | **19** | not-viable |
+| **Zig** (Dear ImGui) | 5 | 1 | 2 | 2 | 3 | 2 | 1 | 1 | **17** | not-viable |
+| **Swift** (SwiftGtk/Adwaita) | 3 | 1 | 2 | 3 | 2 | 2 | 2 | 1 | **16** | not-viable |
+
+### Deployment re-score (riscv64 no longer required)
+
+| Language | was | now | reason for the change (riscv64 removed) |
+|---|:--:|:--:|---|
+| C#/.NET | 2 | **4** | riscv64/NativeAOT gap was *the* driver of the 2; NativeAOT single-file self-contained is clean on amd64/arm64 + Windows/macOS. |
+| Rust | 3 | **4** | removes the software-render-only riscv64-GUI caveat; clean, reproducible static binaries elsewhere. |
+| C++ | 2 | **3** | drops the riscv64 Qt-toolchain burden; still loses the single-jar model to N per-arch builds + a full supply-chain rebuild. |
+| Haskell | 2 | **3** | removes the shaky unregisterised-riscv64-GHC hard failure; native binaries are workable on amd64/arm64. |
+| Lean4 | 2 | **3** | removes the unproven riscv64 leg; Lean emits C then a self-contained native binary. |
+| Swift | 1 | **2** | removes the riscv64 hard blocker; Linux/Windows Foundation+runtime bundling stays weak. |
+| Java 25 | 5 | 5 | unchanged — riscv64 was a bonus, never the reason for the 5. |
+| Kotlin, Scala 3 | 4 | 4 | unchanged — single-jar preserved regardless; cost was stdlib size. |
+| OCaml | 2 | 2 | unchanged — riscv64 backend already worked; penalty is the heavy system-GTK runtime dependency. |
+| Nim, Zig, Go | 3 | 3 | unchanged — riscv64 was fine (Nim/Zig) or only helped the headless core (Go's Gio GUI is cgo, per-platform). |
+| Agda | 1 | 1 | unchanged — a build-time proof artifact, not a deployable application. |
 
 ## Ranking, by fitness for JLS's objective
 
-1. **Java 25 (44)** — the incumbent *is* the target, so "full rewrite" collapses
-   into modernize-in-place. Captures every language-independent win with zero
-   FFI, keeps the 47%-GUI surface, the single-jar supply chain, and the
-   Java-course audience, and adds #93–96 as compiler-enforced properties. The
-   recorded #96 decision, and the correct one.
-2. **Kotlin (32)** — the only non-Java candidate that keeps Swing verbatim in one
+1. **Java 25 (34)** — the incumbent *is* the target, so "full rewrite" collapses
+   into modernize-in-place. Captures every language-independent performance win
+   with zero rewrite, keeps the 47%-GUI surface, the single-jar supply chain, and
+   the 36k-LOC executable-spec test suite, and adds #93–96 as compiler-enforced
+   properties. The recorded #96 decision, and the correct one.
+2. **Kotlin (27)** — the only non-Java candidate that keeps Swing verbatim in one
    JVM jar and lets the tests stay Java; but it buys essentially nothing over
-   Java-25 (same JIT ceiling, marginal typing gain) while adding a second
-   compiler to a solo Java build.
-3. **C#/.NET (27)** — strong sim-core fit and Java-familiar, but NativeAOT has no
-   riscv64 target, breaking the multi-arch container mandate by itself, and it
-   exits the JVM ecosystem for a ~1.5–3× constant.
-4. **Scala 3 (26)** — smoothest JVM rewrite mechanically (records/sealed native,
-   tests stay executable), but sbt/Scala are inaccessible to the audience and it
-   delivers no performance-ceiling gain.
-5. **Nim (26)** — best solo-maintainer native-kernel story (light ORC runtime,
-   clean C-ABI, single static binary), but no mature GUI for the dense canvas and
-   a small high-churn ecosystem make a full rewrite indefensible.
-6. **Rust (24)** — highest-scoring native candidate on the axes that matter for a
-   *kernel* (memory-safety, verification, a clean Panama seam), but pre-1.0 GUI
-   (egui/Slint), the borrow-checker-versus-cyclic-graph friction, and pool
-   collapse make the full rewrite uneconomic; the residual is a 2–3× constant.
-7. **OCaml (26)** — idiomatic discrete-event style and good verification
+   Java-25 (same JIT ceiling, marginal typing gain) while adding a second compiler
+   to a solo Java build.
+3. **C#/.NET (25)** — the biggest beneficiary of the revision (deployment 2→4 once
+   riscv64 is dropped) and now the strongest non-JVM option. Genuinely strong
+   sim-core fit and Java-familiar; but a full rewrite still re-engineers the entire
+   JVM-shaped supply chain and rebuilds the working Swing GUI for a ~1.5–3×
+   constant it doesn't need.
+4. **Scala 3 (23)** — smoothest JVM rewrite mechanically (records/sealed native,
+   tests stay executable), but delivers no performance-ceiling gain and adds a
+   version-locked runtime to the shaded jar/SBOM.
+5. **Haskell (23)** — elegant value/event semantics, memory-safe, strong
+   verification; but monomer is immature and embedding the GHC RTS is a hostile
+   boundary. Purity is an aesthetic, not a product, win here.
+6. **OCaml (22)** — idiomatic discrete-event style and good verification
    affordance, but lablgtk3 is generations behind Swing and the 63-bit tagged int
    reintroduces boxing in exactly the hot path #94 is meant to de-allocate.
-8. **C++ (24)** — the best raw substrate (Qt `QGraphicsView` is a superb
-   dense-canvas engine), but surrenders Java's memory safety to UB and evicts the
-   entire contributor pool.
-9. **Go (23)** — single-binary and memory-safe, but regresses the type system
-   *below* Java-25 (no sealed sums, no records, nil hazards) and Gio is a fraction
-   of Swing's maturity; the worst FFI shape for a chatty discrete-event loop.
-10. **Haskell (25 pts, lower fitness)** — elegant value/event semantics and
-    strong verification, but monomer is immature, riscv64 GHC is shaky, and
-    embedding the GHC RTS in the JVM is a hostile kernel boundary; purity is an
-    aesthetic, not a product, win here.
-11. **Lean4 (23)** — unmatched typing/verification, but literally no desktop GUI
-    target for 47% of the code; interesting only as a verified sim kernel, and
-    even that is undercut by the per-event `react()` callback entanglement.
-12. **Zig (23)** — the cleanest C-ABI kernel seam of the set, but 0.x churn, no
-    retained-mode GUI, and no live problem left once the Java fixes land.
-13. **Agda (22)** — not an application language (no GUI, no production runtime).
-    It earns its place *only* by extending the existing
-    `SpatialIndexCorrectness` surgical-proof pattern to simulation invariants —
-    verification, not migration.
-14. **Swift (18)** — no toolkit both mature and cross-platform, deployment fails
-    on riscv64/single-artifact, and Apple-governed churn on Linux/Windows is the
-    worst 10–20-year bet.
+7. **C++ (21)** — the best raw substrate (Qt `QGraphicsView` is a superb
+   dense-canvas engine), but surrenders Java's memory safety to UB and rebuilds the
+   whole product for a performance win that is algorithmic and Java-capturable.
+8. **Rust (21)** — highest-scoring native candidate on the axes that matter for a
+   simulation core (memory-safety, verification), but pre-1.0 GUI (egui/Slint) and
+   borrow-checker-versus-cyclic-graph friction make the full rewrite uneconomic;
+   the residual is a 2–3× constant.
+9. **Lean4 (21)** — unmatched typing/verification, but literally no desktop GUI
+   target for 47% of the code and a proof-assistant runtime; interesting only as a
+   verified sim kernel, which this full-rewrite framing excludes.
+10. **Nim (20)** — small native binaries and clean C interop, but no mature GUI for
+    the dense canvas and a small high-churn ecosystem make a full rewrite
+    indefensible.
+11. **Go (19)** — single-binary and memory-safe, but regresses the type system
+    *below* Java-25 (no sealed sums, no records, nil hazards) and Gio is a fraction
+    of Swing's maturity.
+12. **Agda (19)** — not an application language (no GUI, no production runtime). It
+    earns its place *only* by extending the existing `SpatialIndexCorrectness`
+    surgical-proof pattern to simulation invariants — verification, not migration.
+13. **Zig (17)** — an excellent systems substrate, but 0.x churn and no
+    retained-mode GUI for a GUI-first product, and the performance problem it would
+    address is gone once the Java fixes land.
+14. **Swift (16)** — no toolkit both mature and cross-platform, weak Linux/Windows
+    deployment, and Apple-governed churn is the worst 10–20-year bet.
 
 ## Pareto analysis
 
 **Frontier points** (non-dominated):
 
-- **Java 25** — the global optimum: top or joint-top on 8 of 10 axes and the
-  highest total (44). Dominates 8 of the 13 alternatives outright.
-- **Scala 3, OCaml, Haskell, Agda, Lean4** sit on the frontier only via a single
-  specialist axis each — typing-gain (Scala 3), typing+verification (OCaml,
-  Lean4), memory-safety+verification (Haskell, Agda) — none of which is
-  product-decisive for JLS, and all of which Java either matches or renders moot
-  through the surgical Agda/ProofBridge prong it already runs.
+- **Java 25 (34)** — the global optimum: top or joint-top on 6 of 8 axes and the
+  highest total. Its only sub-maximal axes are typing-gain (2) and gui (4).
+- **Scala 3, OCaml, Haskell, Agda, Lean4** sit on the frontier *only* via
+  typing-gain > 2 (Java's single weak axis) — i.e. typing/verification specialism.
+  None is product-decisive for JLS, and all lose decisively on total; Java
+  neutralizes their edge through the surgical Agda/ProofBridge prong it already
+  runs.
 
-**Strictly dominated by Java 25** (Java scores ≥ on every axis): Kotlin, C#/.NET,
-Scala's non-typing axes, C++, Rust, Nim, Go, Zig, Swift. The recurring reason is
-that the axes where these languages *could* win — raw throughput, memory
-footprint — are either non-binding (see below) or matched by Java's in-JVM kernel
-path, while the axes they lose — GUI maturity for this canvas, deployment,
-contributor pool, contract-preservation effort — are exactly where JLS's value
-concentrates.
+**Strictly dominated by Java 25** (Java scores ≥ on all eight axes): **Kotlin,
+C#/.NET, C++, Rust, Nim, Go, Zig, Swift** — 8 of the 13 alternatives, unchanged
+from the ten-dimension version. The recurring reason survives the re-weighting:
+the axes where these languages *could* win — raw throughput, memory footprint —
+are non-binding (see below), while the axes they lose — GUI maturity for this
+canvas, contract-preservation effort, ecosystem longevity — are where JLS's value
+concentrates. Dropping contributor-pool and riscv64 narrowed the totals but moved
+no candidate off Java's domination set.
 
 ## The performance finding
 
@@ -185,20 +216,26 @@ to leave Java; it is a reason to fix the hash first.**
 ## Determination
 
 **No full rewrite** in any candidate — every one is uneconomic-to-not-viable, and
-the top-scoring alternative (Kotlin, 32) is strictly dominated by staying put
-(44).
+the top-scoring alternative (Kotlin, 27) is strictly dominated by staying put
+(34).
 
-**No sim-kernel-only FFI extraction now** — it solves a performance problem that
-will not exist once the Java algorithmic fixes land, and the event loop's
-per-event upcalls into 70 Java element `react()` methods make any near-term
-kernel seam catastrophically chatty. The extractable core is exactly the part the
-free hash fix already makes fast.
+With contributor-pool and riscv64 removed from the weighting, the decision no
+longer rests on any soft axis. It rests on three hard facts the re-weighting does
+not touch:
+
+1. **The GUI is 47% of the code and it works.** A full rewrite in any candidate
+   must re-derive a dense hit-tested schematic canvas (the ~5.8k-line
+   `SimpleEditor`), ~30 element dialogs, undo, and a trace window in a GUI toolkit
+   that is, in every non-JVM case, less mature than 25 years of Swing. This cost
+   is paid in full by every rewrite and zero by staying.
+2. **The 36k-LOC test suite is the executable spec, and the `.jls`/batch/VCD
+   contracts are byte-exact.** A rewrite must reproduce them across a language
+   boundary; modernize-in-place refactors under them, test-guarded.
+3. **The performance motivation is algorithmic** (see above) and capturable in
+   Java. No language change is credited for it without double-counting.
 
 **Continue modernize-in-place per #96** — the target *is* the incumbent, so
-"rewrite in the best language" and "modernize Java" are the same program, and it
-uniquely preserves the single-jar product, the JVM supply chain, the 47%-GUI
-Swing surface, the 36k-LOC executable-spec test suite, and the Java-course
-contributor pool at zero migration cost.
+"rewrite in the best language" and "modernize Java" are the same program.
 
 **Sequence:**
 
@@ -222,31 +259,25 @@ contributor pool at zero migration cost.
 
 This determination flips only if:
 
-- All three Java algorithmic fixes have shipped **and** a profiled, warmed-JVM
-  benchmark on a real target design (e.g. the RV32I datapath) still misses a hard
-  latency SLO by the ~2–3× a native constant would close — then, and only then,
-  reopen sim-kernel-only FFI extraction (Zig/Rust/Nim via Panama), never a full
-  rewrite.
-- The event loop is refactored so the hot path no longer upcalls per-event into
-  the 70 element `react()` methods — removing the "chatty boundary" objection that
-  currently sinks every kernel-only option.
-- Swing/Java2D is announced for removal from the JDK, or FlatLaf is abandoned with
-  no maintained equivalent — forcing a GUI-toolkit reckoning, but toward JavaFX or
-  another in-ecosystem canvas, still not a language migration.
-- The audience/maintainer constraint changes: contributors fluent in a native or
-  typed-functional stack arrive, or the first-year-Java-course mandate is dropped
-  — reweighting contributor-pool, the single axis doing the most work to sink the
-  native candidates.
-- The hard deployment constraints relax — riscv64 dropped, or the
-  single-self-contained-reproducible-artifact mandate abandoned — lifting the
-  deployment penalty on C#/.NET, Rust, and Nim.
-- Verification requirements escalate to machine-checked in-language sim semantics
-  as a build gate — favoring the surgical Agda/Lean4 proof prong, still not a
-  rewrite of shippable code.
-- A future measurement overturns the load-bearing performance model — i.e. the
-  bottleneck is shown to be a tight numeric inner loop with no allocation or
-  graph-walking, where the JVM genuinely trails native ~10× — resurrecting the
-  native-kernel case on evidence rather than benchmark folklore.
+- **The GUI cost collapses.** Swing/Java2D is announced for removal from the JDK,
+  or FlatLaf is abandoned with no maintained equivalent — forcing a GUI-toolkit
+  reckoning. Even then the move is toward JavaFX or another in-ecosystem canvas
+  first, not a language migration.
+- **The performance model is overturned by measurement.** After the three Java
+  fixes ship, a profiled warmed-JVM benchmark on a real target design (e.g. the
+  RV32I datapath) shows the residual bottleneck is a tight numeric inner loop with
+  no allocation or graph-walking — the one shape where the JVM genuinely trails
+  native by ~10×. That would resurrect the native case on evidence rather than
+  benchmark folklore. (Under the strict full-rewrite framing this study adopts,
+  the response would still be scoped native work, evaluated afresh, not a
+  whole-product rewrite.)
+- **Verification requirements escalate** to machine-checked in-language simulation
+  semantics as a build gate — favoring the surgical Agda/Lean4 proof prong, still
+  not a rewrite of shippable code.
+
+*(The earlier triggers about the contributor pool and riscv64 deployment are
+retired: those constraints have been lifted and folded into the scoring above, so
+they can no longer flip the result.)*
 
 ## Related
 

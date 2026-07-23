@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
@@ -154,7 +155,7 @@ class KeyboardEditingFaithfulTest {
 	@Test
 	void arrowNudgeThroughFocusOwnerIsUndoableWithCtrlZ() throws Exception {
 		Circuit circuit = oneGate();
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		String os = System.getProperty("os.name");
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
@@ -183,7 +184,7 @@ class KeyboardEditingFaithfulTest {
 	@Test
 	void redoThroughFocusOwnerReappliesTheNudge() throws Exception {
 		Circuit circuit = oneGate();
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		String os = System.getProperty("os.name");
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
@@ -315,7 +316,7 @@ class KeyboardEditingFaithfulTest {
 	@Test
 	void wireStartAndEscapeThroughFocusOwner() throws Exception {
 		Circuit circuit = new Circuit("kbd-wire");
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			ui.focusCanvas();
 			assertTrue(ui.canvasIsFocusOwner(), "canvas owns focus");

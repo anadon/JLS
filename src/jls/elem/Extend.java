@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 import java.awt.*;
@@ -43,7 +44,7 @@ public final class Extend extends Gate implements TriProp {
 		super(circuit);
 		
 		// create image for draw
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int s2 = s/2;
 		int s4 = s/4;
 		Line2D left = new Line2D.Double(0,s,s2,s);
@@ -119,7 +120,7 @@ public final class Extend extends Gate implements TriProp {
 		
 		super.init(g);
 		inputs.clear();
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		switch (orientation) {
 		case LEFT:
 			inputs.add(new Input("input0",this,4*s,s,1));

@@ -28,6 +28,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
@@ -117,7 +118,7 @@ public final class Decoder extends LogicElement implements Timed {
 	@Override
 	public void init(Graphics g) {
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int outs = 1 << bits;
 	
 		if(orientation == Orientation.LEFT)
@@ -226,7 +227,7 @@ public final class Decoder extends LogicElement implements Timed {
 					y+(int)(height/2-t.getHeight())/2+fm.getAscent());
 			t = fm.getStringBounds(dec,g);
 			g.drawString(dec,x+(int)(width-t.getWidth())/2,
-					y+JLSInfo.spacing+(int)(height/2-t.getHeight())/2+fm.getAscent());
+					y+Geometry.SPACING+(int)(height/2-t.getHeight())/2+fm.getAscent());
 		}
 		else if(orientation == Orientation.UP)
 		{

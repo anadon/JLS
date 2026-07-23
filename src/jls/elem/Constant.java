@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.edit.*;
@@ -103,7 +104,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	@Override
 	public void init(Graphics g) {
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		// set up size if there is a graphics object
 		if (g != null) {
 			
@@ -170,7 +171,7 @@ public final class Constant extends LogicElement implements ActionListener {
 		int dy = (int)((r.height-th)/2+fm.getAscent());
 		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
-			g.drawString(str,x+dx,y-JLSInfo.spacing/2+dy);
+			g.drawString(str,x+dx,y-Geometry.SPACING/2+dy);
 		}
 		else
 		{
@@ -323,7 +324,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	public Rectangle getRect() {
 		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
-			return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
+			return new Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else
 			return new Rectangle(x,y,width,height);
@@ -679,7 +680,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	 */
 	public boolean valueFits(String value) {
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		FontMetrics fm = saveg.getFontMetrics();
 		int w = fm.stringWidth(value)+s;
 		int rw = Math.max((w+s/2)/s*s,2*s);

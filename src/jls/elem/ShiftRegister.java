@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -148,7 +149,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		// that transform, so its put is placed directly from its own
 		// orientation - the same scheme as Mux, whose geometry this
 		// element inherited in the fork
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
 		java.awt.Dimension d = t.size();
 		width = d.width;
@@ -191,7 +192,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 */
 	private GridTransform.Chain placement() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(2*s,2*s);
 		switch (outputOrientation) {
 		case RIGHT:
@@ -229,7 +230,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		java.awt.FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int hi = ascent + fm.getDescent();
-		int d2 = JLSInfo.pointDiameter/2;
+		int d2 = Geometry.POINT_DIAMETER/2;
 		Input data = inputs.get(1);
 		g.setColor(java.awt.Color.BLACK);
 		if(outputOrientation == Orientation.RIGHT)

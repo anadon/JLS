@@ -23,7 +23,7 @@ import java.util.Map;
  * <p>All coordinates are pixels in JLS's coordinate system (y grows
  * downward). Port offsets are relative to the element's top-left
  * corner and, like all JLS element geometry, are multiples of the
- * 12-px grid unit ({@link jls.JLSInfo#spacing}).</p>
+ * 12-px grid unit ({@link jls.core.Geometry#SPACING}).</p>
  */
 public final class LayoutGraph {
 

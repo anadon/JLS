@@ -29,6 +29,7 @@ import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
+import jls.core.Geometry;
 import jls.edit.Editor;
 import jls.edit.SimpleEditor;
 import jls.elem.Element;
@@ -574,7 +575,7 @@ public class Circuit implements Printable {
 	 */
 	public Set<Element> elementsAt(int x, int y) {
 
-		int pad = JLSInfo.spacing;
+		int pad = Geometry.SPACING;
 		return elementsNear(new Rectangle(x - pad, y - pad, 2 * pad, 2 * pad));
 	} // end of elementsAt method
 
@@ -1606,8 +1607,8 @@ public class Circuit implements Printable {
 
 			// set circuit size to the largest of the default area or the needed
 			// area
-			Rectangle rect = new Rectangle(0, 0, JLSInfo.circuitsize,
-					JLSInfo.circuitsize);
+			Rectangle rect = new Rectangle(0, 0, Geometry.CIRCUITSIZE,
+					Geometry.CIRCUITSIZE);
 			rect.add(getBounds());
 			if (ed != null) {
 				ed.setCircuitSize(rect.getSize());
@@ -1669,7 +1670,7 @@ public class Circuit implements Printable {
 	 * similar decorations). Draw culling pads by this margin on both the
 	 * index query and the exact visibility check.
 	 */
-	private static final int DRAW_MARGIN = 8 * JLSInfo.spacing;
+	private static final int DRAW_MARGIN = 8 * Geometry.SPACING;
 
 	/**
 	 * Whether an element could draw inside the clip. The margin generously
@@ -1740,13 +1741,13 @@ public class Circuit implements Printable {
 		if (rect.width > width) {
 			scale = width / rect.width;
 		}
-		if (rect.height + JLSInfo.pointDiameter > height) {
+		if (rect.height + Geometry.POINT_DIAMETER > height) {
 			scale = Math.min(scale, height
-					/ (rect.height + JLSInfo.pointDiameter));
+					/ (rect.height + Geometry.POINT_DIAMETER));
 		}
 		gg.scale(scale, scale);
-		gg.translate(-rect.x + JLSInfo.pointDiameter / 2, -rect.y
-				+ JLSInfo.pointDiameter / 2);
+		gg.translate(-rect.x + Geometry.POINT_DIAMETER / 2, -rect.y
+				+ Geometry.POINT_DIAMETER / 2);
 
 		// print
 		try {

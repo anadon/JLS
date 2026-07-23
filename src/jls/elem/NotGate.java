@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import java.util.BitSet;
 
@@ -41,8 +42,8 @@ public final class NotGate extends Gate implements Timed {
 	@Override
 	protected GateOutline outline() {
 
-		int s = JLSInfo.spacing;
-		int d = JLSInfo.pointDiameter;
+		int s = Geometry.SPACING;
+		int d = Geometry.POINT_DIAMETER;
 		return GateOutline.builder()
 				.line(false, 0, 0, 2 * s - d, s)
 				.line(true, 2 * s - d, s, 0, 2 * s)

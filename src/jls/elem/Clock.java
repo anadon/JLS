@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -124,7 +125,7 @@ public final class Clock extends LogicElement {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		width = 2*s;
 		height = 2*s;
 		GridTransform.Chain t = GridTransform.chain(2*s, 2*s);
@@ -158,7 +159,7 @@ public final class Clock extends LogicElement {
 		super.draw(g);
 		
 		// draw rounded rectangle
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int s2 = s/2;
 		int s4 = s/4;
 		int d = s*2;

@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -31,7 +32,7 @@ class DrawCullingParityTest {
 	private static final long SEED = 20260717L;
 
 	/** Mirrors Circuit's draw margin (labels drawn outside bounds). */
-	private static final int MARGIN = 8 * JLSInfo.spacing;
+	private static final int MARGIN = 8 * Geometry.SPACING;
 
 	/** Mirrors Circuit.mayBeVisible: the exact culling predicate. */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
@@ -83,8 +84,8 @@ class DrawCullingParityTest {
 			Set<Element> moved = new HashSet<Element>();
 			for (Element el : circuit.getElements()) {
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 					moved.add(el);
 				}
 			}

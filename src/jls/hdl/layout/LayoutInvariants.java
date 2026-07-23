@@ -3,12 +3,13 @@ package jls.hdl.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import jls.core.Geometry;
 import jls.JLSInfo;
 
 /**
  * The hard drawing invariants every layout must satisfy before the
  * importer realizes it as elements and WireEnds (issue #62 §2): every
- * coordinate on the 12-px grid ({@link jls.JLSInfo#spacing}), every
+ * coordinate on the 12-px grid ({@link jls.core.Geometry#SPACING}), every
  * route anchored at the exact port attachment points, every segment
  * horizontal or vertical with nonzero length, and no two element
  * bodies overlapping. A layout that satisfies these re-saves and
@@ -65,7 +66,7 @@ public final class LayoutInvariants {
 			}
 			if (!onGrid(position.x) || !onGrid(position.y)) {
 				violations.add("node " + node.id + " is off the "
-						+ JLSInfo.spacing + "-px grid at " + position);
+						+ Geometry.SPACING + "-px grid at " + position);
 			}
 		}
 		for (int first = 0; first < nodes.size(); first += 1) {
@@ -160,7 +161,7 @@ public final class LayoutInvariants {
 	 * @return true if the coordinate lies on the snap grid
 	 */
 	private static boolean onGrid(int coordinate) {
-		return coordinate % JLSInfo.spacing == 0;
+		return coordinate % Geometry.SPACING == 0;
 	}
 
 } // end of LayoutInvariants class

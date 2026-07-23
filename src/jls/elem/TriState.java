@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -95,7 +96,7 @@ public final class TriState extends LogicElement implements Timed {
 
 		// canonical geometry (gate RIGHT, control DOWN), transformed to
 		// the current orientation pair (#24)
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
 		Dimension d = t.size();
 		width = d.width;
@@ -131,7 +132,7 @@ public final class TriState extends LogicElement implements Timed {
 					"invalid TriState orientation combination: gate "
 					+ gateOrientation + ", control " + controlOrientation);
 		}
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(4*s, 3*s);
 		switch (gateOrientation) {
 		case RIGHT:
@@ -178,7 +179,7 @@ public final class TriState extends LogicElement implements Timed {
 		
 		// draw gate: canonical segments (gate RIGHT, control DOWN)
 		// mapped through the orientation transform (#24)
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		g.setColor(Color.black);
 		GridTransform.Chain t = placement();
 		t.drawLine(g,x,y,0,s,s,s);				// input wire

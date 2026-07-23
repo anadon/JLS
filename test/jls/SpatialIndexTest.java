@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -166,8 +167,8 @@ class SpatialIndexTest {
 			Set<Element> moved = new HashSet<Element>();
 			for (Element el : circuit.getElements()) {
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 					moved.add(el);
 				}
 			}

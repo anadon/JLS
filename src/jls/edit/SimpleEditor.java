@@ -60,6 +60,7 @@ import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
@@ -369,7 +370,7 @@ public abstract class SimpleEditor extends JPanel {
 			Set<Element> selected, Element sel, Wire wire) {
 
 		Rectangle span = wire.getIndexBounds();
-		span.grow(JLSInfo.pointDiameter,JLSInfo.pointDiameter);
+		span.grow(Geometry.POINT_DIAMETER,Geometry.POINT_DIAMETER);
 		for (Element elm : circuit.elementsNear(span)) {
 			if (sel == elm)
 				continue;
@@ -867,7 +868,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * replacing the retired manual 10% grow button (issue #74).
 			 */
 			private Dimension modelSize =
-					new Dimension(JLSInfo.circuitsize,JLSInfo.circuitsize);
+					new Dimension(Geometry.CIRCUITSIZE,Geometry.CIRCUITSIZE);
 
 			/** True while a pan gesture (space-drag or middle-drag) is active. */
 			private boolean panning = false;
@@ -1760,8 +1761,8 @@ public abstract class SimpleEditor extends JPanel {
 			void setModelSize(Dimension size) {
 
 				modelSize = new Dimension(
-						Math.max(size.width,JLSInfo.circuitsize),
-						Math.max(size.height,JLSInfo.circuitsize));
+						Math.max(size.width,Geometry.CIRCUITSIZE),
+						Math.max(size.height,Geometry.CIRCUITSIZE));
 				applyPreferredSize();
 			} // end of setModelSize method
 
@@ -1777,7 +1778,7 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			private void autoGrow(int mx, int my) {
 
-				int margin = 10*JLSInfo.spacing;
+				int margin = 10*Geometry.SPACING;
 				int needW = Math.max(mx + margin, modelSize.width);
 				int needH = Math.max(my + margin, modelSize.height);
 				Rectangle b = circuit.getBounds();
@@ -1921,7 +1922,7 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// generous margin so the circuit is not flush to the edges
-				int margin = 2*JLSInfo.spacing;
+				int margin = 2*Geometry.SPACING;
 				double s = Viewport.clampScale(Math.min(
 						ext.width / (double)(b.width + 2*margin),
 						ext.height / (double)(b.height + 2*margin)));
@@ -2600,12 +2601,12 @@ public abstract class SimpleEditor extends JPanel {
 						: Math.min(modelSize.width,clip.x + clip.width);
 				int my1 = clip == null ? modelSize.height
 						: Math.min(modelSize.height,clip.y + clip.height);
-				int firstR = (my0/JLSInfo.spacing)*JLSInfo.spacing;
-				for (int r=firstR; r<=my1; r+=JLSInfo.spacing) {
+				int firstR = (my0/Geometry.SPACING)*Geometry.SPACING;
+				for (int r=firstR; r<=my1; r+=Geometry.SPACING) {
 					gg.drawLine(mx0,r,mx1,r);
 				}
-				int firstC = (mx0/JLSInfo.spacing)*JLSInfo.spacing;
-				for (int c=firstC; c<=mx1; c+=JLSInfo.spacing) {
+				int firstC = (mx0/Geometry.SPACING)*Geometry.SPACING;
+				for (int c=firstC; c<=mx1; c+=Geometry.SPACING) {
 					gg.drawLine(c,my0,c,my1);
 				}
 
@@ -2639,7 +2640,7 @@ public abstract class SimpleEditor extends JPanel {
 						&& (currentState == State.idle
 							|| currentState == State.selected)) {
 					gg.setColor(JLSInfo.selectionColor);
-					int r = JLSInfo.spacing/2;
+					int r = Geometry.SPACING/2;
 					gg.drawLine(caret.x-r,caret.y,caret.x+r,caret.y);
 					gg.drawLine(caret.x,caret.y-r,caret.x,caret.y+r);
 				}
@@ -3086,7 +3087,7 @@ public abstract class SimpleEditor extends JPanel {
 				Dimension ext = vp.getExtentSize();
 				Point c = viewport.toModel(new Point(
 						view.x + ext.width/2, view.y + ext.height/2));
-				int step = JLSInfo.spacing;
+				int step = Geometry.SPACING;
 				return new Point(
 						KeyboardConstructionPolicy.snap(c.x,step),
 						KeyboardConstructionPolicy.snap(c.y,step));
@@ -3130,7 +3131,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				if (!enabled)
 					return;
-				int step = JLSInfo.spacing;
+				int step = Geometry.SPACING;
 				int dx = n.dx(step);
 				int dy = n.dy(step);
 				switch (currentState) {
@@ -3678,7 +3679,7 @@ public abstract class SimpleEditor extends JPanel {
 						el.setHighlight(true);
 						selected.add(el);
 					}
-					dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
+					dirty.grow(Geometry.SPACING, Geometry.SPACING);
 					repaintModel(dirty);
 					return;
 				}
@@ -3754,7 +3755,7 @@ public abstract class SimpleEditor extends JPanel {
 				for (Element el : touchedElements) {
 					acc = union(acc, el.getRect());
 				}
-				int d = JLSInfo.pointDiameter;
+				int d = Geometry.POINT_DIAMETER;
 				for (Put put : touchedPuts) {
 					acc = union(acc, new Rectangle(put.getX()-d, put.getY()-d,
 							2*d, 2*d));
@@ -3778,7 +3779,7 @@ public abstract class SimpleEditor extends JPanel {
 					repaint();
 					return;
 				}
-				dirty.grow(8*JLSInfo.spacing, 8*JLSInfo.spacing);
+				dirty.grow(8*Geometry.SPACING, 8*Geometry.SPACING);
 				repaintModel(dirty);
 			} // end of repaintDirty method
 
@@ -3849,7 +3850,7 @@ public abstract class SimpleEditor extends JPanel {
 						el.showInfo(info);
 					}
 					if (dirty != null) {
-						dirty.grow(JLSInfo.spacing, JLSInfo.spacing);
+						dirty.grow(Geometry.SPACING, Geometry.SPACING);
 						repaintModel(dirty);
 					}
 					return;
@@ -4547,7 +4548,7 @@ public abstract class SimpleEditor extends JPanel {
 							// (grown so edge-touching put alignments are
 							// included)
 							Rectangle near = sel.getIndexBounds();
-							near.grow(JLSInfo.spacing,JLSInfo.spacing);
+							near.grow(Geometry.SPACING,Geometry.SPACING);
 							for (Element el : circuit.elementsNear(near)) {
 
 								// ignore elements in the selected set
@@ -4739,7 +4740,7 @@ public abstract class SimpleEditor extends JPanel {
 							// (grown so edge-touching put alignments are
 							// included), as in overlap() (#3, #17)
 							Rectangle near = sel.getIndexBounds();
-							near.grow(JLSInfo.spacing,JLSInfo.spacing);
+							near.grow(Geometry.SPACING,Geometry.SPACING);
 							for (Element el : circuit.elementsNear(near)) {
 
 								// ignore elements in the selected set

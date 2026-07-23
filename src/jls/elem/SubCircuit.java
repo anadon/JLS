@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -165,7 +166,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	public void init(Graphics g) {
 		
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
 				FontMetrics fm = g.getFontMetrics();
@@ -287,7 +288,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		super.draw(g);
 		
 		// draw box
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		g.setColor(Color.BLACK);
 		g.drawRect(x,y,width,height);
 		int yy = y+height-2*s;
@@ -310,12 +311,12 @@ public final class SubCircuit extends LogicElement implements TriProp {
 
 			if(orientation == Orientation.RIGHT)
 			{
-				dx = JLSInfo.pointDiameter/2+1;
+				dx = Geometry.POINT_DIAMETER/2+1;
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
 			else
 			{
-				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
+				dx = (int)(width - rect.getWidth() - (Geometry.POINT_DIAMETER/2+1));
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
 			g.drawString(inputName,x+dx,input.getY()+dy);
@@ -327,12 +328,12 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			g.setColor(Color.BLACK);
 			if(orientation == Orientation.LEFT)
 			{
-				dx = JLSInfo.pointDiameter/2+1;
+				dx = Geometry.POINT_DIAMETER/2+1;
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
 			else
 			{
-				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
+				dx = (int)(width - rect.getWidth() - (Geometry.POINT_DIAMETER/2+1));
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
 			}
 			g.drawString(outputName,x+dx,output.getY()+dy);

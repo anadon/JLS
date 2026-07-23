@@ -10,6 +10,7 @@ import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -80,8 +81,8 @@ class ProofBridgeTest {
 				assertTrue(b.width >= 0 && b.height >= 0,
 						"index bounds must be non-empty (A1): " + b + " for " + el);
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 				}
 			}
 		}

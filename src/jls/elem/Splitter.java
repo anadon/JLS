@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.elem.Group.Entry;
@@ -71,7 +72,7 @@ public final class Splitter extends Group implements TriProp {
 		// set up height and width
 		super.init(g);
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		
 		if(orientation == Orientation.RIGHT)
 		{
@@ -147,8 +148,8 @@ public final class Splitter extends Group implements TriProp {
 		super.draw(g);
 		
 		// set up
-		int d2 = JLSInfo.pointDiameter/2;
-		int s = JLSInfo.spacing;
+		int d2 = Geometry.POINT_DIAMETER/2;
+		int s = Geometry.SPACING;
 		
 		if(orientation == Orientation.RIGHT)
 		{
@@ -195,7 +196,7 @@ public final class Splitter extends Group implements TriProp {
 				ypos = output.getY();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(x+JLSInfo.pointDiameter/2);
+				int edge = (int)(x+Geometry.POINT_DIAMETER/2);
 				g.drawString(output.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
 				g.drawLine(x+width-s/2,ypos,(int)(edge+t.getWidth()+d2),ypos);
 			}
@@ -209,7 +210,7 @@ public final class Splitter extends Group implements TriProp {
 				int xpos = output.getX();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(y+height-JLSInfo.pointDiameter/2);
+				int edge = (int)(y+height-Geometry.POINT_DIAMETER/2);
 				if(inum%2 == 0)
 				{
 					g.drawString(output.getName(),xpos-(int)t.getWidth()/2, (int)(edge-t.getHeight()/2+6));
@@ -238,7 +239,7 @@ public final class Splitter extends Group implements TriProp {
 				int xpos = output.getX();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(y+JLSInfo.pointDiameter/2);
+				int edge = (int)(y+Geometry.POINT_DIAMETER/2);
 				if(inum%2 == 0)
 				{
 					g.drawString(output.getName(),xpos-(int)t.getWidth()/2, (int)(edge+t.getHeight()/2+6));

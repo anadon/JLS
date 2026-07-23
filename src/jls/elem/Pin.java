@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.util.Placement;
@@ -128,7 +129,7 @@ public abstract sealed class Pin extends LogicElement
 		if (g != null) {
 			
 			if (width == 0 && height == 0) {
-				int s = JLSInfo.spacing;
+				int s = Geometry.SPACING;
 				FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(" " + name + " ");
 				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
@@ -278,7 +279,7 @@ public abstract sealed class Pin extends LogicElement
 	public void draw(Graphics g) {
 
 		// set up shape
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		Polygon p = new Polygon();
 		if (orientation == Orientation.RIGHT) {
 			p.addPoint(x, y);

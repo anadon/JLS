@@ -14,6 +14,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
@@ -45,7 +46,7 @@ import jls.JLSInfo;
  */
 class GroupOrientationTest {
 
-	private static final int S = JLSInfo.spacing;
+	private static final int S = Geometry.SPACING;
 
 	/** One bundler/unbundler of 2 single bits at the given orientation. */
 	private static String groupText(String type, String orient) {

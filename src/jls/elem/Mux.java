@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -93,7 +94,7 @@ public final class Mux extends LogicElement implements Timed {
 		// output orientation (#24); the selector side is independent of
 		// that transform (input order never mirrors with the selector),
 		// so its put is placed directly from its own orientation
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
 		Dimension d = t.size();
 		width = d.width;
@@ -138,7 +139,7 @@ public final class Mux extends LogicElement implements Timed {
 	 */
 	private GridTransform.Chain placement() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(2*s,(numInputs+1)*s);
 		switch (outputOrientation) {
 		case RIGHT:
@@ -173,7 +174,7 @@ public final class Mux extends LogicElement implements Timed {
 		// (#24). The slant is half a grid unit, so the narrow side still
 		// spans every put on it and the selector's put circle (radius
 		// pointDiameter/2) still touches the slanted edge at its put.
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		g.setColor(Color.black);
 		GridTransform.Chain t = placement();
 		int slant = s/2;
@@ -186,7 +187,7 @@ public final class Mux extends LogicElement implements Timed {
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int hi = ascent + fm.getDescent();
-		int d2 = JLSInfo.pointDiameter/2;
+		int d2 = Geometry.POINT_DIAMETER/2;
 		int inum = -1; // first input is selector, so start one too small
 		if(outputOrientation == Orientation.LEFT || outputOrientation == Orientation.RIGHT)
 		{

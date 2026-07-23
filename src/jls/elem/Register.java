@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -125,7 +126,7 @@ public final class Register extends LogicElement
 		if (g != null) {
 			
 			if (width == 0 && height == 0) {
-				int s = JLSInfo.spacing;
+				int s = Geometry.SPACING;
 				FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(" " + name + " ");
 				width = Math.max((w+s/2)/s*s,2*s)+2*s;
@@ -146,7 +147,7 @@ public final class Register extends LogicElement
 		}
 		
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if(orientation == Orientation.RIGHT)
 		{
 			// create inputs
@@ -198,7 +199,7 @@ public final class Register extends LogicElement
 	public void draw(Graphics g) {
 		
 		// draw watched background
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (watched) {
 			
 			g.setColor(JLSInfo.watchColor);
@@ -254,7 +255,7 @@ public final class Register extends LogicElement
 			Input two = inputs.get(1);
 			lx = two.getX();
 			ly = two.getY();
-			int d = JLSInfo.pointDiameter;
+			int d = Geometry.POINT_DIAMETER;
 			g.setColor(Color.black);
 			switch (type) {
 			case Latch:
@@ -321,7 +322,7 @@ public final class Register extends LogicElement
 			Input two = inputs.get(1);
 			lx = two.getX();
 			ly = two.getY();
-			int d = JLSInfo.pointDiameter;
+			int d = Geometry.POINT_DIAMETER;
 			g.setColor(Color.black);
 			switch (type) {
 			case Latch:
@@ -388,7 +389,7 @@ public final class Register extends LogicElement
 			Input two = inputs.get(1);
 			lx = two.getX();
 			ly = two.getY();
-			int d = JLSInfo.pointDiameter;
+			int d = Geometry.POINT_DIAMETER;
 			g.setColor(Color.black);
 			switch (type) {
 			case Latch:
@@ -456,7 +457,7 @@ public final class Register extends LogicElement
 			Input two = inputs.get(1);
 			lx = two.getX();
 			ly = two.getY();
-			int d = JLSInfo.pointDiameter;
+			int d = Geometry.POINT_DIAMETER;
 			g.setColor(Color.black);
 			switch (type) {
 			case Latch:
@@ -1272,7 +1273,7 @@ public final class Register extends LogicElement
 	 */
 	public boolean valueFits(String value) {
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		FontMetrics fm = saveg.getFontMetrics();
 		int w = fm.stringWidth(value)+s;
 		int rw = Math.max((w+s/2)/s*s,2*s);

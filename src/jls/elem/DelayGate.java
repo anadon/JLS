@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.core.Orientation;
 import jls.sim.*;
@@ -50,7 +51,7 @@ public final class DelayGate extends Gate implements Timed {
 		super(circuit);
 		
 		// create image for draw
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		Line2D top = new Line2D.Double(0,0,2*s,s);
 		Line2D bottom = new Line2D.Double(2*s,s,0,2*s);
 		Line2D side = new Line2D.Double(0,2*s,0,0);

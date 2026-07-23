@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import java.math.*;
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -97,7 +98,7 @@ public final class SigGen extends SigSim {
 		if (width != 0 || height != 0)
 			return;
 		
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		FontMetrics fm = g.getFontMetrics();
 		int w = fm.stringWidth(title);
 		width = (w+s-1)/s*s;

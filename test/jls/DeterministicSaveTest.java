@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -145,7 +146,7 @@ class DeterministicSaveTest {
 			if (el instanceof jls.elem.Wire) {
 				continue; // wires don't move (they follow their ends)
 			}
-			el.move(JLSInfo.spacing, 0);
+			el.move(Geometry.SPACING, 0);
 			break;
 		}
 		assertNotEquals(before, first.stateHash(),

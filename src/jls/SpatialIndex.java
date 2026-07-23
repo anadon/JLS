@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -43,7 +44,7 @@ public final class SpatialIndex {
 	 * that typical elements cover only a few cells, small enough that a
 	 * cell holds few elements.
 	 */
-	private static final int CELL = 4 * JLSInfo.spacing;
+	private static final int CELL = 4 * Geometry.SPACING;
 
 	/** Grid cells, keyed by packed cell coordinates, holding the elements that overlap them. */
 	private final Map<Long, List<Element>> cells = new HashMap<Long, List<Element>>();

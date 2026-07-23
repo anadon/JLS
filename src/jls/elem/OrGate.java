@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import java.util.BitSet;
 
@@ -43,7 +44,7 @@ public final class OrGate extends Gate implements Timed {
 	@Override
 	protected GateOutline outline() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		return GateOutline.builder()
 				.cubic(false, 2 * s, s, 2 * s - 1, s - 3, s, 0, 0, 0)
 				.cubic(true, 0, 0, s / 4, s, s / 4, s, 0, 2 * s)

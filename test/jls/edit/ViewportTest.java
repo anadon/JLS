@@ -1,4 +1,5 @@
 package jls.edit;
+import jls.core.Geometry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -454,7 +455,7 @@ class ViewportTest {
 	@Test
 	void gridSnapInModelSpaceIsZoomInvariant() {
 
-		final int spacing = 12; // JLSInfo.spacing
+		final int spacing = 12; // Geometry.SPACING
 		Random rnd = new Random(SEED + 7);
 		for (int i = 0; i < 1000; i++) {
 			Viewport vp = randomViewport(rnd);

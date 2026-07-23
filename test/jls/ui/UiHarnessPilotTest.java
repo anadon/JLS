@@ -20,6 +20,7 @@ import java.util.Scanner;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.AndGate;
@@ -132,7 +133,7 @@ class UiHarnessPilotTest {
 		// dimensions: the model bounding box (getRect); a RIGHT-facing
 		// constant pads its declared 24x24 body by half a grid spacing
 		// above and below for the value label
-		assertDimensions(constant, 24, 24 + JLSInfo.spacing);
+		assertDimensions(constant, 24, 24 + Geometry.SPACING);
 
 		// relative position: whole-box comparisons and grid distance
 		assertLeftOf(constant, pin);

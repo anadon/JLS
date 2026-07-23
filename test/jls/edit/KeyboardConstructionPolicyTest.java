@@ -11,6 +11,7 @@ import javax.swing.KeyStroke;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.JLSInfo;
 import jls.edit.KeyboardConstructionPolicy.Nudge;
 
@@ -74,7 +75,7 @@ class KeyboardConstructionPolicyTest {
 	@Test
 	void oppositeDirectionsCancel() {
 
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 
 		assertEquals(0, Nudge.UP.dy(step) + Nudge.DOWN.dy(step));
 		assertEquals(0, Nudge.LEFT.dx(step) + Nudge.RIGHT.dx(step));
@@ -96,7 +97,7 @@ class KeyboardConstructionPolicyTest {
 	@Test
 	void snapRoundsDownToGrid() {
 
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 
 		assertEquals(0, KeyboardConstructionPolicy.snap(0, step));
 		assertEquals(0, KeyboardConstructionPolicy.snap(step - 1, step));

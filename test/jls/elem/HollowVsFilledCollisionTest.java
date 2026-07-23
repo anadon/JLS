@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -42,7 +43,7 @@ import jls.JLSInfo;
  */
 class HollowVsFilledCollisionTest {
 
-	private static final int S = JLSInfo.spacing; // 12
+	private static final int S = Geometry.SPACING; // 12
 
 	/** A rectangular probe element standing in for a dragged selection. */
 	private static SubCircuit probe(int x, int y, int w, int h) {

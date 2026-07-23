@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -93,7 +94,7 @@ public final class Adder extends LogicElement implements Timed {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		height = 4*s;
 		width = 4*s;
 		GridTransform.Chain t = placement();
@@ -117,7 +118,7 @@ public final class Adder extends LogicElement implements Timed {
 	 */
 	private GridTransform.Chain placement() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(4*s, 4*s);
 		switch (orientation) {
 		case RIGHT:
@@ -151,7 +152,7 @@ public final class Adder extends LogicElement implements Timed {
 		g.drawRect(x,y,width,height);
 		
 		// draw plus sign
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if(orientation == Orientation.UP || orientation == Orientation.DOWN)
 		{
 			g.drawLine(x+2*s,y+s,x+2*s,y+2*s);
@@ -164,7 +165,7 @@ public final class Adder extends LogicElement implements Timed {
 		}
 		
 		// draw input and output labels
-		int d = JLSInfo.pointDiameter;
+		int d = Geometry.POINT_DIAMETER;
 		FontMetrics fm = g.getFontMetrics();
 		if(orientation == Orientation.RIGHT)
 		{

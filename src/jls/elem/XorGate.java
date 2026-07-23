@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import java.util.BitSet;
 
@@ -45,7 +46,7 @@ public final class XorGate extends Gate implements Timed {
 	@Override
 	protected GateOutline outline() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int gap = 2;
 		return GateOutline.builder()
 				.cubic(false, 2 * s, s, 2 * s - 1, s - 3, gap + s, 0, gap, 0)

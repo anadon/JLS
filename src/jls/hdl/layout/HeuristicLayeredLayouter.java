@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jls.core.Geometry;
 import jls.JLSInfo;
 
 /**
@@ -31,7 +32,7 @@ import jls.JLSInfo;
  * swept down then up a fixed number of times. Deterministic - a
  * requirement of the {@link SchematicLayouter} contract.</li>
  * <li><b>Coordinates.</b> Each layer is a disjoint vertical band on
- * the 12-px grid ({@link JLSInfo#spacing}); a uniform row pitch keeps
+ * the 12-px grid ({@link jls.core.Geometry#SPACING}); a uniform row pitch keeps
  * element bodies from overlapping without any collision search.</li>
  * <li><b>Routing.</b> Every net gets its own vertical lane in the gap
  * before its target layer, so different nets never share a channel
@@ -51,7 +52,7 @@ import jls.JLSInfo;
 public final class HeuristicLayeredLayouter implements SchematicLayouter {
 
 	/** The snap grid; every emitted coordinate is a multiple of it. */
-	private static final int GRID = JLSInfo.spacing;
+	private static final int GRID = Geometry.SPACING;
 	/** Minimum horizontal gap between adjacent layer bands, in px. */
 	private static final int MIN_GAP = GRID * 6;
 	/** Vertical clearance added below the tallest element, in px. */

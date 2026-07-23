@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -134,7 +135,7 @@ class EditorKeyboardConstructionTest {
 	@Test
 	void keyboardBuildsTheTwoGateCircuit() throws Exception {
 		Circuit circuit = new Circuit("keyboard");
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 
 			// 1. choose the OR gate from the palette and place it with Enter
@@ -240,7 +241,7 @@ class EditorKeyboardConstructionTest {
 	@Test
 	void keyboardDrawsAWireInOpenSpace() throws Exception {
 		Circuit circuit = new Circuit("wire");
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 
 			// stage the canvas as the genuine focus owner, then drive every

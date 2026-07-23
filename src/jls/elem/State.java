@@ -37,6 +37,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Geometry;
 import jls.BitSetUtils;
 import jls.JLSInfo;
 import jls.KeyPad;
@@ -179,7 +180,7 @@ public class State {
 		this.name = name;
 		if (g != null) {
 			FontMetrics fm = g.getFontMetrics();
-			diameter = Math.max(fm.stringWidth("  " + name + "  "),JLSInfo.stateDiameter);
+			diameter = Math.max(fm.stringWidth("  " + name + "  "),Geometry.STATE_DIAMETER);
 		}
 	} // end of constructor
 
@@ -281,7 +282,7 @@ public class State {
 
 				// draw highlight point if there is one
 				if (tr.highlight != null) {
-					int pd = JLSInfo.pointDiameter;
+					int pd = Geometry.POINT_DIAMETER;
 					g.setColor(JLSInfo.highlightColor);
 					g.fillOval(tr.highlight.x-pd/2,tr.highlight.y-pd/2,pd,pd);
 				}
@@ -866,7 +867,7 @@ public class State {
 	 */
 	public boolean overlaps(State other) {
 
-		int d = JLSInfo.stateDiameter;
+		int d = Geometry.STATE_DIAMETER;
 		int ox = other.x;
 		int oy = other.y;
 		if ((x-ox)*(x-ox)+(y-oy)*(y-oy) <= d*d) {
@@ -1244,7 +1245,7 @@ public class State {
 	 */
 	public Point highlightTransPoints(int x, int y) {
 
-		int ds = JLSInfo.pointDiameter*JLSInfo.pointDiameter;
+		int ds = Geometry.POINT_DIAMETER*Geometry.POINT_DIAMETER;
 		for (Transition tr : trans) {
 			tr.highlight = null;
 			for (Point p : tr.points) {
@@ -1270,7 +1271,7 @@ public class State {
 	public boolean highlightTrans(int xp, int yp) {
 
 		// for all transitions...
-		int d = JLSInfo.pointDiameter;
+		int d = Geometry.POINT_DIAMETER;
 		for (Transition tran : trans) {
 
 			// un-highlight it

@@ -3,6 +3,7 @@ package jls.elem;
 
 import java.awt.*;
 import java.awt.geom.*;
+import jls.core.Geometry;
 import jls.*;
 
 
@@ -69,7 +70,7 @@ public class SMUtil {
 	 */
 	public static void drawArrow(int x, int y, double angle, Graphics g) {
 
-		int p = JLSInfo.arrowSize;
+		int p = Geometry.ARROW_SIZE;
 		Line2D top = new Line2D.Double(-p,-p,0,0);
 		Line2D bottom = new Line2D.Double(0,0,-p,p);
 		Line2D back = new Line2D.Double(-p,p,-p,-p);

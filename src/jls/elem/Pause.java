@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -61,7 +62,7 @@ public final class Pause extends LogicElement {
 	public void init(Graphics g) {
 
 		// set up size
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		width = s * 2;
 		height = width;
 
@@ -80,7 +81,7 @@ public final class Pause extends LogicElement {
 	@Override
 	public void draw(Graphics g) {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 
 		// draw context
 		super.draw(g);

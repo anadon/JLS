@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jls.core.Geometry;
 import jls.JLSInfo;
 import jls.hdl.layout.HeuristicLayeredLayouter;
 import jls.hdl.layout.LayoutException;
@@ -47,7 +48,7 @@ import jls.hdl.yosys.YosysNetlist;
 public final class NetlistImporter {
 
 	/** The snap grid; all emitted geometry is a multiple of it. */
-	private static final int GRID = JLSInfo.spacing;
+	private static final int GRID = Geometry.SPACING;
 
 	/** No instances; the class is one static entry point. */
 	private NetlistImporter() {

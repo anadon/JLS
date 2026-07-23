@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import java.awt.*;
 import java.util.*;
@@ -254,7 +255,7 @@ public abstract sealed class Put
 		else {
 			inside = Color.WHITE;
 		}
-		int d = JLSInfo.pointDiameter;
+		int d = Geometry.POINT_DIAMETER;
 		int r = d/2;
 		int x = element.getX()+xr;
 		int y = element.getY()+yr;

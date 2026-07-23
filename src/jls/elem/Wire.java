@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import java.awt.*;
 import java.awt.geom.*;
@@ -268,7 +269,7 @@ public final class Wire extends Element {
 		int y2 = end2.getY();
 		Rectangle bounds = new Rectangle(Math.min(x1, x2), Math.min(y1, y2),
 				Math.abs(x2 - x1), Math.abs(y2 - y1));
-		bounds.grow(JLSInfo.spacing, JLSInfo.spacing);
+		bounds.grow(Geometry.SPACING, Geometry.SPACING);
 		return bounds;
 	} // end of getIndexBounds method
 
@@ -302,8 +303,8 @@ public final class Wire extends Element {
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		int d = JLSInfo.pointDiameter;
-		if (Line2D.ptSegDist(x1,y1,x2,y2,x,y) < JLSInfo.spacing/2 &&
+		int d = Geometry.POINT_DIAMETER;
+		if (Line2D.ptSegDist(x1,y1,x2,y2,x,y) < Geometry.SPACING/2 &&
 				Point2D.distance(x1,y1,x,y) > d && Point2D.distance(x2,y2,x,y) > d) {
 			return true;
 		}
@@ -361,7 +362,7 @@ public final class Wire extends Element {
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		int d = JLSInfo.pointDiameter;
+		int d = Geometry.POINT_DIAMETER;
 		if (Line2D.ptSegDist(x1,y1,x2,y2,x,y) < d/2) {
 			if (Point.distance(x,y,x1,y1) < d/2) {
 				return false;

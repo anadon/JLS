@@ -113,7 +113,7 @@ class PaletteDropTest {
 
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
 
-			// on-grid: snapped to the JLSInfo.spacing grid, like any
+			// on-grid: snapped to the Geometry.SPACING grid, like any
 			// placed element
 			GeometryAssert.assertOnGrid(gate);
 

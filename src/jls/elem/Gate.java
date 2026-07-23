@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.core.Orientation;
 import jls.sim.*;
@@ -219,12 +220,12 @@ public abstract sealed class Gate extends LogicElement
 		
 		// set up size
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			width = JLSInfo.spacing*4;
-			height = JLSInfo.spacing*(Math.max(numInputs,3)-1);
+			width = Geometry.SPACING*4;
+			height = Geometry.SPACING*(Math.max(numInputs,3)-1);
 		}
 		else { // up or down
-			width = JLSInfo.spacing*(Math.max(numInputs,3)-1);
-			height = JLSInfo.spacing*4;
+			width = Geometry.SPACING*(Math.max(numInputs,3)-1);
+			height = Geometry.SPACING*4;
 		}
 		
 		Output out;
@@ -232,58 +233,58 @@ public abstract sealed class Gate extends LogicElement
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			
 			int inx = 0;
-			int outx = JLSInfo.spacing*4;
+			int outx = Geometry.SPACING*4;
 			if (orientation == Orientation.LEFT) {
-				inx = JLSInfo.spacing*4;
+				inx = Geometry.SPACING*4;
 				outx = 0;
 			}
 			
 			// set up output
-			int dist = (Math.max(numInputs,4)-3)/2*JLSInfo.spacing;
-			out = new Output("output",this,outx,dist+JLSInfo.spacing,bits);
+			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
+			out = new Output("output",this,outx,dist+Geometry.SPACING,bits);
 			outputs.add(out);
 			
 			// set up inputs
 			if (numInputs == 1) { // not or delay gate
-				inputs.add(new Input("input0",this,inx,JLSInfo.spacing,bits));
+				inputs.add(new Input("input0",this,inx,Geometry.SPACING,bits));
 			}
 			else {
 				int yc = 0;
 				for (int i=0; i<numInputs; i+=1) {
 					inputs.add(new Input("input"+i,this,inx,yc,bits));
 					if (numInputs == 2)
-						yc += 2*JLSInfo.spacing;
+						yc += 2*Geometry.SPACING;
 					else
-						yc += JLSInfo.spacing;
+						yc += Geometry.SPACING;
 				}
 			}
 			
 		}
 		else { // up or down
 			int iny = 0;
-			int outy = JLSInfo.spacing*4;
+			int outy = Geometry.SPACING*4;
 			if (orientation == Orientation.UP) {
-				iny = JLSInfo.spacing*4;
+				iny = Geometry.SPACING*4;
 				outy = 0;
 			}
 			
 			// set up output
-			int dist = (Math.max(numInputs,4)-3)/2*JLSInfo.spacing;
-			out = new Output("output",this,dist+JLSInfo.spacing,outy,bits);
+			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
+			out = new Output("output",this,dist+Geometry.SPACING,outy,bits);
 			outputs.add(out);
 			
 			// set up inputs
 			if (numInputs == 1) { // not or delay gate
-				inputs.add(new Input("input0",this,JLSInfo.spacing,iny,bits));
+				inputs.add(new Input("input0",this,Geometry.SPACING,iny,bits));
 			}
 			else {
 				int xc = 0;
 				for (int i=0; i<numInputs; i+=1) {
 					inputs.add(new Input("input"+i,this,xc,iny,bits));
 					if (numInputs == 2)
-						xc += 2*JLSInfo.spacing;
+						xc += 2*Geometry.SPACING;
 					else
-						xc += JLSInfo.spacing;
+						xc += Geometry.SPACING;
 				}
 			}
 		}
@@ -312,7 +313,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 
 		// draw the gate
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int dist = (Math.max(numInputs,4)-3)/2*s;
 		int ox = 0;
 		int oy = 0;
@@ -613,10 +614,10 @@ public abstract sealed class Gate extends LogicElement
 	public Rectangle getRect() {
 		
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
+			return new Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else {
-			return new Rectangle(x-JLSInfo.spacing/2,y,width+JLSInfo.spacing,height);
+			return new Rectangle(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
 		}
 	} // end of getRect method
 	

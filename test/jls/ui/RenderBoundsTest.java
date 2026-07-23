@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
@@ -35,7 +36,7 @@ import jls.elem.WireEnd;
 class RenderBoundsTest {
 
 	/** Mirrors Circuit.DRAW_MARGIN: the exact culling margin. */
-	private static final int DRAW_MARGIN = 8 * JLSInfo.spacing;
+	private static final int DRAW_MARGIN = 8 * Geometry.SPACING;
 
 	/** Slack past the allowed envelope so strays are detectable. */
 	private static final int SLACK = 40;

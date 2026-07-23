@@ -50,16 +50,10 @@ public final class JLSInfo {
 	// miscellaneous parameters
 	/** Initial width and height of the main window, in pixels. */
 	public static final int windowsize = 600;
-	/** Width and height of the (square) circuit drawing area, in pixels. */
-	public static final int circuitsize = 1000;			// square circuit (can be increased)
-	/** Grid spacing used for snap-to positioning, in pixels. */
-	public static final int spacing = 12;					// for snap-to
-	/** Diameter of input and output connection points, in pixels. */
-	public static final int pointDiameter = 6;			// for inputs and outputs
-	/** Diameter of state machine states, in pixels. */
-	public static final int stateDiameter = 40;			// state machine states
-	/** Size of state machine transition arrowheads, in pixels. */
-	public static final int arrowSize = 6;				// state machine arrows
+	// Model-geometry constants moved to jls.core.Geometry (issue #77):
+	// circuitsize -> Geometry.CIRCUITSIZE, spacing -> Geometry.SPACING,
+	// pointDiameter -> Geometry.POINT_DIAMETER, stateDiameter ->
+	// Geometry.STATE_DIAMETER, arrowSize -> Geometry.ARROW_SIZE.
 	// semantic colors; set from the active Theme (issue #76), so they
 	// are mutable statics like gridColor below. Theme.apply() is the
 	// only intended writer.

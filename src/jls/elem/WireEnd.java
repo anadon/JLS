@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 import java.awt.*;
@@ -88,8 +89,8 @@ public final class WireEnd extends LogicElement {
 	 */
 	public void init(Circuit circ) {
 		
-		width = JLSInfo.pointDiameter;
-		height = JLSInfo.pointDiameter;
+		width = Geometry.POINT_DIAMETER;
+		height = Geometry.POINT_DIAMETER;
 		
 		fixPosition();
 		
@@ -248,7 +249,7 @@ public final class WireEnd extends LogicElement {
 			inside = Color.black;
 		}
 		g.setColor(Color.BLACK);
-		int pd = JLSInfo.pointDiameter;
+		int pd = Geometry.POINT_DIAMETER;
 		int pr = pd/2;
 		g.fillOval(x-pr,y-pr,pd,pd);
 		g.setColor(inside);
@@ -560,7 +561,7 @@ public final class WireEnd extends LogicElement {
 	@Override
 	public Rectangle getRect() {
 		
-		int d = JLSInfo.pointDiameter;
+		int d = Geometry.POINT_DIAMETER;
 		int r = d/2;
 		return new Rectangle(x-r,y-r,d,d);
 	} // end of getRect method
@@ -586,7 +587,7 @@ public final class WireEnd extends LogicElement {
 	} // end of getCopy method
 	
 	/**
-	 * Wire ends are always JLSInfo.pointDiameter squares, set by init()
+	 * Wire ends are always Geometry.POINT_DIAMETER squares, set by init()
 	 * on every load, so their size is not saved (#21). They dominate
 	 * saved files: every wire segment endpoint is one of these blocks.
 	 */

@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -138,7 +139,7 @@ public final class JumpEnd extends LogicElement {
 			if (width == 0 && height == 0) {
 
 				// set up size
-				int s = JLSInfo.spacing;
+				int s = Geometry.SPACING;
 				FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(" " + name + " ")+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
@@ -185,7 +186,7 @@ public final class JumpEnd extends LogicElement {
 		}
 		
 		// draw box
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int top = y-s/2;
 		int bottom = y+s/2;
 		
@@ -217,9 +218,9 @@ public final class JumpEnd extends LogicElement {
 		int w = fm.stringWidth(name);
 		int tx = 0;
 		if(orientation == Orientation.RIGHT)
-			tx = x+s/2+(width-s-w)/2+JLSInfo.pointDiameter/2;
+			tx = x+s/2+(width-s-w)/2+Geometry.POINT_DIAMETER/2;
 		else if(orientation == Orientation.LEFT)
-			tx = x+s/2+(width-2*s-w)/2+JLSInfo.pointDiameter/2;
+			tx = x+s/2+(width-2*s-w)/2+Geometry.POINT_DIAMETER/2;
 		g.drawString(name,tx,y-h/2+ascent);
 		
 		// draw output
@@ -235,7 +236,7 @@ public final class JumpEnd extends LogicElement {
 	@Override
 	public Rectangle getRect() {
 		
-		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
+		return new Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 	} // end of getRect method
 	
 	// Declarative persistence (#23): one declaration drives save, load

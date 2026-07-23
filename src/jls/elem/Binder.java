@@ -11,6 +11,7 @@ import java.util.BitSet;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
@@ -77,7 +78,7 @@ public final class Binder extends Group implements TriProp {
 		super.init(g);
 		
 		// set up inputs
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if(orientation == Orientation.RIGHT)
 		{
 			int ypos = s;
@@ -148,8 +149,8 @@ public final class Binder extends Group implements TriProp {
 		super.draw(g);
 		
 		// set up
-		int d2 = JLSInfo.pointDiameter/2;
-		int s = JLSInfo.spacing;
+		int d2 = Geometry.POINT_DIAMETER/2;
+		int s = Geometry.SPACING;
 		
 		// draw inputs
 		FontMetrics fm = g.getFontMetrics();
@@ -161,7 +162,7 @@ public final class Binder extends Group implements TriProp {
 				int ypos = input.getY();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(x+JLSInfo.pointDiameter/2);
+				int edge = (int)(x+Geometry.POINT_DIAMETER/2);
 				g.drawString(input.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
 				g.drawLine(x+width-s/2,ypos,(int)(edge+t.getWidth()+d2),ypos);
 			}
@@ -184,7 +185,7 @@ public final class Binder extends Group implements TriProp {
 				int ypos = input.getY();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(x+width-JLSInfo.pointDiameter/2-t.getWidth());
+				int edge = (int)(x+width-Geometry.POINT_DIAMETER/2-t.getWidth());
 				g.drawString(input.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
 				g.drawLine(x+s/2,ypos,(int)(edge-d2),ypos);
 			}
@@ -208,7 +209,7 @@ public final class Binder extends Group implements TriProp {
 				int xpos = input.getX();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(y+JLSInfo.pointDiameter/2);
+				int edge = (int)(y+Geometry.POINT_DIAMETER/2);
 				if(inum%2 == 0)
 				{
 					g.drawString(input.getName(),xpos-(int)t.getWidth()/2, (int)(edge+t.getHeight()/2+6));
@@ -236,7 +237,7 @@ public final class Binder extends Group implements TriProp {
 				int xpos = input.getX();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
-				int edge = (int)(y+height-JLSInfo.pointDiameter/2);
+				int edge = (int)(y+height-Geometry.POINT_DIAMETER/2);
 				if(inum%2 == 0)
 				{
 					g.drawString(input.getName(),xpos-(int)t.getWidth()/2, (int)(edge-t.getHeight()/2+6));

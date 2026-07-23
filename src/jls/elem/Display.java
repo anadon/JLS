@@ -29,6 +29,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
@@ -113,7 +114,7 @@ public final class Display extends LogicElement {
 	public void init(Graphics g) {
 		
 		// set up size
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			
 			// use existing size if it has one
@@ -172,7 +173,7 @@ public final class Display extends LogicElement {
 		super.draw(g);
 		
 		// draw shape
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		g.setColor(Color.black);
 		g.drawRect(x,y,width,height);
 		g.drawRoundRect(x,y,width,height,s,s);

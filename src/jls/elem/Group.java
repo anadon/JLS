@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 
@@ -92,7 +93,7 @@ public abstract sealed class Group extends LogicElement
 		
 		// set up
 		FontMetrics fm = g.getFontMetrics();
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int puts = ranges.size();
 
 		// the size decomposes into an across axis (from the narrow puts

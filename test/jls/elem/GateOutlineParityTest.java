@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -33,10 +34,10 @@ import jls.JLSInfo;
 class GateOutlineParityTest {
 
 	/** The grid spacing the gate symbols are measured in. */
-	private static final int S = JLSInfo.spacing;
+	private static final int S = Geometry.SPACING;
 
 	/** The inversion-bubble diameter the gate symbols use. */
-	private static final int D = JLSInfo.pointDiameter;
+	private static final int D = Geometry.POINT_DIAMETER;
 
 	/**
 	 * Translate a headless outline into a {@link GeneralPath} the same way

@@ -33,6 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.Help;
 import jls.JLSInfo;
@@ -170,7 +171,7 @@ public final class TruthTable extends LogicElement
 	public void init(Graphics g) {
 
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
 				FontMetrics fm = g.getFontMetrics();
@@ -240,8 +241,8 @@ public final class TruthTable extends LogicElement
 	public void draw(Graphics g) {
 
 		// set up
-		int s = JLSInfo.spacing;
-		int d2 = JLSInfo.pointDiameter/2;
+		int s = Geometry.SPACING;
+		int d2 = Geometry.POINT_DIAMETER/2;
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int descent = fm.getDescent();

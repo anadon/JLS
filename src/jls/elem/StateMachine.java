@@ -50,6 +50,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Geometry;
 import jls.BitSetUtils;
 import jls.Circuit;
 import jls.Help;
@@ -202,7 +203,7 @@ public final class StateMachine extends LogicElement
 	public void init(Graphics g) {
 
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
 				FontMetrics fm = g.getFontMetrics();
@@ -312,8 +313,8 @@ public final class StateMachine extends LogicElement
 	public void draw(Graphics g) {
 		
 		// set up
-		int s = JLSInfo.spacing;
-		int d2 = JLSInfo.pointDiameter/2;
+		int s = Geometry.SPACING;
+		int d2 = Geometry.POINT_DIAMETER/2;
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
 		int descent = fm.getDescent();
@@ -1689,7 +1690,7 @@ public final class StateMachine extends LogicElement
 			// display it at the current mouse position (if possible)
 			Point p = editArea.getMousePosition();
 			if (p == null) {
-				int d = JLSInfo.stateDiameter;
+				int d = Geometry.STATE_DIAMETER;
 				state.moveTo(-d,-d);	// anywhere off screen
 			}
 			else {

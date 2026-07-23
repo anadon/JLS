@@ -2,6 +2,7 @@ package jls.elem;
 
 import java.nio.charset.StandardCharsets;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -174,7 +175,7 @@ public final class Memory extends LogicElement
 		}
 		
 		// set up size if there is a graphics object
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			
 			// set up size if it doesn't already have one
@@ -223,8 +224,8 @@ public final class Memory extends LogicElement
 	public void draw(Graphics g) {
 		
 		// draw watched background
-		int s = JLSInfo.spacing;
-		int d2 = JLSInfo.pointDiameter/2;
+		int s = Geometry.SPACING;
+		int d2 = Geometry.POINT_DIAMETER/2;
 		if (watched) {
 			g.setColor(JLSInfo.watchColor);
 			g.fillRect(x,y,width,height);

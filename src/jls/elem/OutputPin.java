@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
@@ -81,9 +82,9 @@ public final class OutputPin extends Pin implements TriProp {
 
 		super.init(g);
 		if (orientation == Orientation.RIGHT) {
-			inputs.add(new Input("input", this, 0, JLSInfo.spacing, bits));
+			inputs.add(new Input("input", this, 0, Geometry.SPACING, bits));
 		} else if (orientation == Orientation.LEFT) {
-			inputs.add(new Input("input", this, width, JLSInfo.spacing, bits));
+			inputs.add(new Input("input", this, width, Geometry.SPACING, bits));
 		} else if (orientation == Orientation.DOWN) {
 			inputs.add(new Input("input", this, width / 2, 0, bits));
 		} else if (orientation == Orientation.UP) {

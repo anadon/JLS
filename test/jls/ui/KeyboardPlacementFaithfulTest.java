@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -101,7 +102,7 @@ class KeyboardPlacementFaithfulTest {
 	@Test
 	void enterThroughFocusOwnerCommitsThePlacedGate() throws Exception {
 		Circuit circuit = new Circuit("kbd-place");
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			JButton orButton = findToolbarButton(ui.editor, "OR gate");
 			assertNotNull(orButton, "toolbar has an \"OR gate\" button");

@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -32,9 +33,9 @@ public final class TriState extends LogicElement implements Timed {
 	/** The propagation delay of this element. */
 	private int propDelay = defaultPropDelay;
 	/** The direction the output points. */
-	private JLSInfo.Orientation gateOrientation = JLSInfo.Orientation.RIGHT;
+	private Orientation gateOrientation = Orientation.RIGHT;
 	/** The side the control input is on. */
-	private JLSInfo.Orientation controlOrientation = JLSInfo.Orientation.DOWN;
+	private Orientation controlOrientation = Orientation.DOWN;
 	// running properties
 	/** True if the user cancelled the creation dialog. */
 	private boolean cancelled;
@@ -120,11 +121,11 @@ public final class TriState extends LogicElement implements Timed {
 		// the control must be perpendicular to the gate; loads with an
 		// invalid pair have always failed, so keep rejecting them
 		boolean gateHorizontal =
-				gateOrientation == JLSInfo.Orientation.LEFT
-				|| gateOrientation == JLSInfo.Orientation.RIGHT;
+				gateOrientation == Orientation.LEFT
+				|| gateOrientation == Orientation.RIGHT;
 		boolean controlHorizontal =
-				controlOrientation == JLSInfo.Orientation.LEFT
-				|| controlOrientation == JLSInfo.Orientation.RIGHT;
+				controlOrientation == Orientation.LEFT
+				|| controlOrientation == Orientation.RIGHT;
 		if (gateHorizontal == controlHorizontal) {
 			throw new IllegalStateException(
 					"invalid TriState orientation combination: gate "
@@ -134,12 +135,12 @@ public final class TriState extends LogicElement implements Timed {
 		GridTransform.Chain t = GridTransform.chain(4*s, 3*s);
 		switch (gateOrientation) {
 		case RIGHT:
-			if (controlOrientation == JLSInfo.Orientation.UP) {
+			if (controlOrientation == Orientation.UP) {
 				t.mirrorY();
 			}
 			break;
 		case LEFT:
-			if (controlOrientation == JLSInfo.Orientation.UP) {
+			if (controlOrientation == Orientation.UP) {
 				t.rotate180();
 			}
 			else {
@@ -148,12 +149,12 @@ public final class TriState extends LogicElement implements Timed {
 			break;
 		case UP:
 			t.rotateCCW();
-			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+			if (controlOrientation == Orientation.LEFT) {
 				t.mirrorX();
 			}
 			break;
 		default: // DOWN
-			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+			if (controlOrientation == Orientation.LEFT) {
 				t.rotateCW();
 			}
 			else {
@@ -242,7 +243,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @return the gate orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((TriState)el).gateOrientation;
 			}
 			/**
@@ -252,7 +253,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @param o The new gate orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((TriState)el).gateOrientation = o;
 			}
 		},
@@ -264,7 +265,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @return the control orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((TriState)el).controlOrientation;
 			}
 			/**
@@ -274,7 +275,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @param o The new control orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((TriState)el).controlOrientation = o;
 			}
 		}
@@ -454,14 +455,14 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			controlOrientation = controlOrientation.ccw();
 			gateOrientation = gateOrientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			controlOrientation = controlOrientation.cw();
 			gateOrientation = gateOrientation.cw();
@@ -626,50 +627,50 @@ public final class TriState extends LogicElement implements Timed {
 			}
 			if(this.oLeft.isSelected())
 				{
-					gateOrientation = JLSInfo.Orientation.LEFT;
+					gateOrientation = Orientation.LEFT;
 					if(this.sUp.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.UP;
+						controlOrientation = Orientation.UP;
 					}
 					else if(this.sDown.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.DOWN;
+						controlOrientation = Orientation.DOWN;
 					}
 				}
 				else if(this.oRight.isSelected())
 				{
-					gateOrientation = JLSInfo.Orientation.RIGHT;
+					gateOrientation = Orientation.RIGHT;
 					if(this.sUp.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.UP;
+						controlOrientation = Orientation.UP;
 					}
 					else if(this.sDown.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.DOWN;
+						controlOrientation = Orientation.DOWN;
 					}
 				}
 				else if(this.oDown.isSelected())
 				{
-					gateOrientation = JLSInfo.Orientation.DOWN;
+					gateOrientation = Orientation.DOWN;
 					if(this.sLeft.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.LEFT;
+						controlOrientation = Orientation.LEFT;
 					}
 					else if(this.sRight.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.RIGHT;
+						controlOrientation = Orientation.RIGHT;
 					}
 				}
 				else if(this.oUp.isSelected())
 				{
-					gateOrientation = JLSInfo.Orientation.UP;
+					gateOrientation = Orientation.UP;
 					if(this.sLeft.isSelected())
 					{
-						controlOrientation = JLSInfo.Orientation.LEFT;
+						controlOrientation = Orientation.LEFT;
 					}
 				else if(this.sRight.isSelected())
 				{
-					controlOrientation = JLSInfo.Orientation.RIGHT;
+					controlOrientation = Orientation.RIGHT;
 				}
 			}
 			dispose();

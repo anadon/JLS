@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -33,7 +34,7 @@ public final class Adder extends LogicElement implements Timed {
 	/** The propagation delay, in simulated time units. */
 	private int propDelay = defaultPropDelay;
 	/** Which way the adder faces. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 
 	// running properties
 	/** Whether the user cancelled the creation dialog. */
@@ -151,12 +152,12 @@ public final class Adder extends LogicElement implements Timed {
 		
 		// draw plus sign
 		int s = JLSInfo.spacing;
-		if(orientation == JLSInfo.Orientation.UP || orientation == JLSInfo.Orientation.DOWN)
+		if(orientation == Orientation.UP || orientation == Orientation.DOWN)
 		{
 			g.drawLine(x+2*s,y+s,x+2*s,y+2*s);
 			g.drawLine(x+3*s/2,y+3*s/2,x+5*s/2,y+3*s/2);
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
 			g.drawLine(x+2*s,y+3*s/2,x+2*s,y+5*s/2);
 			g.drawLine(x+3*s/2,y+2*s,x+5*s/2,y+2*s);
@@ -165,7 +166,7 @@ public final class Adder extends LogicElement implements Timed {
 		// draw input and output labels
 		int d = JLSInfo.pointDiameter;
 		FontMetrics fm = g.getFontMetrics();
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			int ascent = fm.getAscent();
 			Rectangle2D t = fm.getStringBounds("A",g);
@@ -189,7 +190,7 @@ public final class Adder extends LogicElement implements Timed {
 			g.drawString("Cout", x+(int)(width-t.getWidth())/2, y+height-descent);
 			g.setFont(f);
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			int ascent = fm.getAscent();
 			Rectangle2D t = fm.getStringBounds("A",g);
@@ -213,7 +214,7 @@ public final class Adder extends LogicElement implements Timed {
 			g.drawString("Cout", x+(int)(width-t.getWidth())/2, y+height-descent);
 			g.setFont(f);
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int ascent = fm.getAscent();
 			int descent = fm.getDescent();
@@ -237,7 +238,7 @@ public final class Adder extends LogicElement implements Timed {
 			g.drawString("Cout", x+(int)(width-t.getWidth()-5), y+height/2+ascent);
 			g.setFont(f);	
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int ascent = fm.getAscent();
 			Rectangle2D t = fm.getStringBounds("A",g);
@@ -318,7 +319,7 @@ public final class Adder extends LogicElement implements Timed {
 			 * @return the current orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Adder)el).orientation;
 			}
 			/**
@@ -328,7 +329,7 @@ public final class Adder extends LogicElement implements Timed {
 			 * @param o The new orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Adder)el).orientation = o;
 			}
 		}
@@ -448,13 +449,13 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -582,19 +583,19 @@ public final class Adder extends LogicElement implements Timed {
 			}
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

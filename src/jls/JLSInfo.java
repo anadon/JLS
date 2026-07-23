@@ -115,82 +115,8 @@ public final class JLSInfo {
 	public static boolean hdlexport = false;			// export HDL from command line (#60)
 	/** True when re-saving a circuit as plain text from the command line (issue #129). */
 	public static boolean textsave = false;				// re-save as plain text from command line (#129)
-	/**
-	 * The four cardinal directions an element can face in the editor,
-	 * used to drive drawing and to rotate or flip elements.
-	 */
-	public enum Orientation {
-		/** Facing up. */
-		UP,
-		/** Facing down. */
-		DOWN,
-		/** Facing left. */
-		LEFT,
-		/** Facing right. */
-		RIGHT;
-
-		/**
-		 * The orientation after a quarter-turn counterclockwise (what
-		 * rotating an element "left" does to each of its orientations).
-		 *
-		 * @return the orientation one quarter-turn counterclockwise from this one.
-		 */
-		public Orientation ccw() {
-			switch (this) {
-			case LEFT: return DOWN;
-			case DOWN: return RIGHT;
-			case RIGHT: return UP;
-			default: return LEFT;
-			}
-		} // end of ccw method
-
-		/**
-		 * The orientation after a quarter-turn clockwise (rotating an
-		 * element "right").
-		 *
-		 * @return the orientation one quarter-turn clockwise from this one.
-		 */
-		public Orientation cw() {
-			switch (this) {
-			case LEFT: return UP;
-			case UP: return RIGHT;
-			case RIGHT: return DOWN;
-			default: return LEFT;
-			}
-		} // end of cw method
-
-		/**
-		 * The opposite orientation (what flipping an element does).
-		 *
-		 * @return the opposite orientation.
-		 */
-		public Orientation flipped() {
-			switch (this) {
-			case LEFT: return RIGHT;
-			case RIGHT: return LEFT;
-			case UP: return DOWN;
-			default: return UP;
-			}
-		} // end of flipped method
-
-		/**
-		 * The orientation named by a saved-file string, or the given
-		 * current value if the string names none (the handwritten
-		 * loaders always ignored unknown strings).
-		 *
-		 * @param value The orientation name read from a saved file.
-		 * @param current The orientation to fall back on if value names none.
-		 * @return the orientation named by value, or current if there is no match.
-		 */
-		public static Orientation parse(String value, Orientation current) {
-			for (Orientation o : values()) {
-				if (o.toString().equals(value)) {
-					return o;
-				}
-			}
-			return current;
-		} // end of parse method
-	}
+	// Orientation moved to jls.core.Orientation (issue #77): it is pure
+	// model geometry and belongs in the headless core, not the app hub.
 	/** Color of the editor window grid. */
 	public static Color gridColor =
 		Theme.DEFAULT.grid();							// editor window grid

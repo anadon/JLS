@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -29,7 +30,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	/** Map from the subcircuit's output pins to this element's corresponding outputs. */
 	private Map<OutputPin,Output> outmap = new HashMap<OutputPin,Output>();
 	/** The direction this element faces (side its inputs are on). */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 	
 	// editing properties
 	/** True if the user cancelled the most recent dialog. */
@@ -235,7 +236,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		for (Pin el : pins) {
 			if (el instanceof InputPin pin) {
 				Input in;
-				if(orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.RIGHT)
 				{
 					in = new Input(pin.getName(),this,0,height,pin.getBits());
 				}
@@ -249,7 +250,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			}
 			else if (el instanceof OutputPin pin) {
 				Output out;
-				if(orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.RIGHT)
 				{
 					out = new Output(pin.getName(),this,width,height,pin.getBits());
 				}
@@ -307,7 +308,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			rect = fm.getStringBounds(inputName,g);
 			g.setColor(Color.BLACK);
 
-			if(orientation == JLSInfo.Orientation.RIGHT)
+			if(orientation == Orientation.RIGHT)
 			{
 				dx = JLSInfo.pointDiameter/2+1;
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
@@ -324,7 +325,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			String outputName = output.getName();
 			rect = fm.getStringBounds(outputName,g);
 			g.setColor(Color.BLACK);
-			if(orientation == JLSInfo.Orientation.LEFT)
+			if(orientation == Orientation.LEFT)
 			{
 				dx = JLSInfo.pointDiameter/2+1;
 				dy = ascent - (int)Math.round(rect.getHeight()/2);
@@ -379,11 +380,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		if (name.equals("orient")) {
 			if(value.equals("LEFT"))
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(value.equals("RIGHT"))
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			
 		} else {
@@ -611,13 +612,13 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 */
 	@Override
 	public void flip(Graphics g) {
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = Orientation.RIGHT;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = Orientation.LEFT;
 		}
 		inputs.clear();
 		outputs.clear();
@@ -702,11 +703,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				}
 				if(left.isSelected())
 				{
-					orientation = JLSInfo.Orientation.LEFT;
+					orientation = Orientation.LEFT;
 				}
 				else if(right.isSelected())
 				{
-					orientation = JLSInfo.Orientation.RIGHT;
+					orientation = Orientation.RIGHT;
 				}
 				name = tname;
 				subCircuit.setName(name);

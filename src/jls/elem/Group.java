@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 
 import java.awt.*;
@@ -53,7 +54,7 @@ public abstract sealed class Group extends LogicElement
 	/** True if the bundled wire is tri-state. */
 	protected boolean triState = false;
 	/** Which way the element faces (the direction of the bundled side). */
-	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	protected Orientation orientation = Orientation.RIGHT;
 
 	// running properties
 	/** True if the user cancelled the creation dialog. */
@@ -106,8 +107,8 @@ public abstract sealed class Group extends LogicElement
 		across = (across+2*s)/s*s;
 		int along = (puts+1)*s;
 
-		if (orientation == JLSInfo.Orientation.LEFT
-				|| orientation == JLSInfo.Orientation.RIGHT) {
+		if (orientation == Orientation.LEFT
+				|| orientation == Orientation.RIGHT) {
 			width = across;
 			height = along;
 		}
@@ -182,7 +183,7 @@ public abstract sealed class Group extends LogicElement
 		if (name.equals("orient")) {
 			// unknown strings leave the orientation unchanged, matching
 			// the historical loaders (issue #124: all four orientations)
-			orientation = JLSInfo.Orientation.parse(value, orientation);
+			orientation = Orientation.parse(value, orientation);
 		} else if(name.equals("noncontig")) {
 			if(value.equals("true")) noncontig = true;
 			else noncontig = false;
@@ -214,13 +215,13 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -436,8 +437,8 @@ public abstract sealed class Group extends LogicElement
 	@Override
 	public int saveFormatVersion() {
 
-		if (orientation == JLSInfo.Orientation.UP
-				|| orientation == JLSInfo.Orientation.DOWN) {
+		if (orientation == Orientation.UP
+				|| orientation == Orientation.DOWN) {
 			return 2;
 		}
 		return 1;
@@ -614,19 +615,19 @@ public abstract sealed class Group extends LogicElement
 			}
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

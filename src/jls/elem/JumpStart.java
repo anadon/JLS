@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -41,7 +42,7 @@ public final class JumpStart extends LogicElement
 	private JumpStart me;
 
 	/** Which direction the element faces. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.LEFT;
+	private Orientation orientation = Orientation.LEFT;
 	
 	/**
 	 * Create a new adder element.
@@ -107,10 +108,10 @@ public final class JumpStart extends LogicElement
 		}
 		
 		// create input
-		if(orientation == JLSInfo.Orientation.LEFT) {
+		if(orientation == Orientation.LEFT) {
 			inputs.add(new Input("input",this,0,0,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
+		else if(orientation == Orientation.RIGHT) {
 			inputs.add(new Input("input",this,width,0,bits));
 		}
 		
@@ -155,7 +156,7 @@ public final class JumpStart extends LogicElement
 		}
 		
 		// draw box
-		if(orientation == JLSInfo.Orientation.LEFT) {
+		if(orientation == Orientation.LEFT) {
 			g.setColor(Color.BLACK);
 			g.drawLine(x,top,x,bottom);
 			g.drawLine(x,top,x+width-s,top);
@@ -165,7 +166,7 @@ public final class JumpStart extends LogicElement
 			g.drawLine(x+width,y,x+width-s/4,y-s/4);
 			g.drawLine(x+width,y,x+width-s/4,y+s/4);
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT){
+		else if(orientation == Orientation.RIGHT){
 			g.setColor(Color.BLACK);
 			g.drawLine(x+width,top,x+width,bottom);
 			g.drawLine(x+s,top,x+width,top);
@@ -182,7 +183,7 @@ public final class JumpStart extends LogicElement
 		int h = fm.getDescent() + ascent;
 		int w = fm.stringWidth(name);
 		int tx = 0;
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 			tx = x+(width-s-w)/2+JLSInfo.pointDiameter/2;
 		else 
 			tx = x+(width+0-w)/2+JLSInfo.pointDiameter/2;
@@ -290,7 +291,7 @@ public final class JumpStart extends LogicElement
 			 * @return the jump start's orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((JumpStart)el).orientation;
 			}
 			/**
@@ -300,7 +301,7 @@ public final class JumpStart extends LogicElement
 			 * @param o The orientation read from the file.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((JumpStart)el).orientation = o;
 			}
 		}
@@ -361,7 +362,7 @@ public final class JumpStart extends LogicElement
 	 * 
 	 * @return orientation
 	 */
-	public JLSInfo.Orientation getOrientation() {
+	public Orientation getOrientation() {
 		return orientation;
 	}
 	
@@ -433,21 +434,21 @@ public final class JumpStart extends LogicElement
 	@Override
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = Orientation.RIGHT;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = Orientation.LEFT;
 		}
 
 		inputs.clear();
 		
-		if(orientation == JLSInfo.Orientation.LEFT) {
+		if(orientation == Orientation.LEFT) {
 			inputs.add(new Input("input",this,0,0,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
+		else if(orientation == Orientation.RIGHT) {
 			inputs.add(new Input("input",this,width,0,bits));
 		}
 	}
@@ -584,10 +585,10 @@ public final class JumpStart extends LogicElement
 				return;
 			}
 			if (right.isSelected()) {
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else {
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			circuit.addJumpStart(tname,me);
 			name = tname;

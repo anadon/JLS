@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -70,7 +71,7 @@ public final class Clock extends LogicElement {
 	/** The number of time units per cycle the output is 1. */
 	private int oneTime = defaultOneTime;
 	/** Which way the output pin faces. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 	/** Whether the user cancelled the creation or change dialog. */
 	private boolean cancelled;
 	
@@ -286,7 +287,7 @@ public final class Clock extends LogicElement {
 			 * @return the orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Clock)el).orientation;
 			}
 			/**
@@ -296,7 +297,7 @@ public final class Clock extends LogicElement {
 			 * @param o The new orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Clock)el).orientation = o;
 			}
 		}
@@ -366,13 +367,13 @@ public final class Clock extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -578,19 +579,19 @@ public final class Clock extends LogicElement {
 			oneTime = newOneTime;
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

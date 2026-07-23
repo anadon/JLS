@@ -14,6 +14,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -184,7 +185,7 @@ class GroupOrientationTest {
 		try {
 			List<String> seen = new ArrayList<>();
 			for (int i = 0; i < 4; i++) {
-				group.rotate(JLSInfo.Orientation.RIGHT, g);
+				group.rotate(Orientation.RIGHT, g);
 				seen.add(orientOf(group));
 			}
 			assertEquals(List.of("DOWN", "LEFT", "UP", "RIGHT"), seen,
@@ -192,7 +193,7 @@ class GroupOrientationTest {
 			assertEquals(savedBefore, save(circuit),
 					"four quarter-turns must restore the identical save");
 
-			group.rotate(JLSInfo.Orientation.LEFT, g);
+			group.rotate(Orientation.LEFT, g);
 			assertEquals("UP", orientOf(group),
 					"counterclockwise from RIGHT is UP");
 		} finally {

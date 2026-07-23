@@ -1,4 +1,5 @@
 package jls.elem;
+import jls.core.Orientation;
 
 import java.io.PrintWriter;
 import java.math.BigInteger;
@@ -344,7 +345,7 @@ public abstract class Attribute {
 	} // end of StringAttribute class
 
 	/**
-	 * A String-typed attribute holding a JLSInfo.Orientation. Saves the
+	 * A String-typed attribute holding an Orientation. Saves the
 	 * enum name; loading an unknown string leaves the orientation
 	 * unchanged, as every handwritten loader did.
 	 */
@@ -366,7 +367,7 @@ public abstract class Attribute {
 		 * @param el The element to read from.
 		 * @return the current orientation.
 		 */
-		protected abstract jls.JLSInfo.Orientation getOrientation(Element el);
+		protected abstract Orientation getOrientation(Element el);
 
 		/**
 		 * Write the orientation onto the element.
@@ -375,7 +376,7 @@ public abstract class Attribute {
 		 * @param value The orientation to store.
 		 */
 		protected abstract void setOrientation(Element el,
-				jls.JLSInfo.Orientation value);
+				Orientation value);
 
 		/**
 		 * The orientation's enum name, for the String save line.
@@ -392,7 +393,7 @@ public abstract class Attribute {
 		@Override
 		protected void set(Element el, String value) {
 
-			setOrientation(el, jls.JLSInfo.Orientation.parse(value,
+			setOrientation(el, Orientation.parse(value,
 					getOrientation(el)));
 		} // end of set method
 

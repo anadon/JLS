@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.util.Placement;
 
@@ -29,7 +30,7 @@ public abstract sealed class Pin extends LogicElement
 	/** Whether this pin is watched (shown in the signal trace). */
 	protected boolean watched = false;
 	/** The direction this pin faces. */
-	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	protected Orientation orientation = Orientation.RIGHT;
 
 	// editting properties
 	/** Whether the setup dialog was cancelled. */
@@ -130,7 +131,7 @@ public abstract sealed class Pin extends LogicElement
 				int s = JLSInfo.spacing;
 				FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(" " + name + " ");
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					width = Math.max((w+s/2)/s*s,2*s)+s;	// ceiling in spacings
 					height = 2*s;
@@ -191,12 +192,12 @@ public abstract sealed class Pin extends LogicElement
 		new Attribute.OrientationAttribute("orient") {
 			/** Read the pin's orientation for saving. */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Pin)el).orientation;
 			}
 			/** Load the pin's orientation. */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Pin)el).orientation = o;
 			}
 		}
@@ -279,25 +280,25 @@ public abstract sealed class Pin extends LogicElement
 		// set up shape
 		int s = JLSInfo.spacing;
 		Polygon p = new Polygon();
-		if (orientation == JLSInfo.Orientation.RIGHT) {
+		if (orientation == Orientation.RIGHT) {
 			p.addPoint(x, y);
 			p.addPoint(x + width - s, y);
 			p.addPoint(x + width, y + height / 2);
 			p.addPoint(x + width - s, y + height);
 			p.addPoint(x, y + height);
-		} else if (orientation == JLSInfo.Orientation.LEFT) {
+		} else if (orientation == Orientation.LEFT) {
 			p.addPoint(x + s, y);
 			p.addPoint(x, y + height / 2);
 			p.addPoint(x + s, y + height);
 			p.addPoint(x + width, y + height);
 			p.addPoint(x + width, y);
-		} else if (orientation == JLSInfo.Orientation.UP) {
+		} else if (orientation == Orientation.UP) {
 			p.addPoint(x + width / 2, y);
 			p.addPoint(x + width, y + s);
 			p.addPoint(x + width, y + height);
 			p.addPoint(x, y + height);
 			p.addPoint(x, y + s);
-		} else if (orientation == JLSInfo.Orientation.DOWN) {
+		} else if (orientation == Orientation.DOWN) {
 			p.addPoint(x, y);
 			p.addPoint(x + width, y);
 			p.addPoint(x + width, y + height - s);
@@ -326,14 +327,14 @@ public abstract sealed class Pin extends LogicElement
 		int by = y;
 		int bwidth = width;
 		int bheight = height;
-		if (orientation == JLSInfo.Orientation.LEFT) {
+		if (orientation == Orientation.LEFT) {
 			bx = x + s;
 			bwidth = width - s;
 		}
-		else if (orientation == JLSInfo.Orientation.RIGHT) {
+		else if (orientation == Orientation.RIGHT) {
 			bwidth = width - s;
 		}
-		else if (orientation == JLSInfo.Orientation.UP) {
+		else if (orientation == Orientation.UP) {
 			by = y + s;
 			bheight = height - s;
 		}
@@ -428,12 +429,12 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g) {
+	public void rotate(Orientation direction, Graphics g) {
 
-		if (direction == JLSInfo.Orientation.LEFT) {
+		if (direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
 		}
-		else if (direction == JLSInfo.Orientation.RIGHT) {
+		else if (direction == Orientation.RIGHT) {
 			orientation = orientation.cw();
 		}
 		inputs.clear();
@@ -611,19 +612,19 @@ public abstract sealed class Pin extends LogicElement
 			name = tname;
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

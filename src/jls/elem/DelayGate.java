@@ -1,7 +1,7 @@
 package jls.elem;
 
 import jls.*;
-import jls.JLSInfo.Orientation;
+import jls.core.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
 

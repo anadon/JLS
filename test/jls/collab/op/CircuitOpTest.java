@@ -20,6 +20,7 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -191,7 +192,7 @@ class CircuitOpTest {
 		new RotateElement(adder.getStableId(), true)
 				.apply(viaOp, graphics());
 		find(inline, Element::canRotate)
-				.rotate(JLSInfo.Orientation.RIGHT, graphics());
+				.rotate(Orientation.RIGHT, graphics());
 		assertEquals(save(inline), save(viaOp),
 				"op and inline rotation must produce identical bytes");
 	}

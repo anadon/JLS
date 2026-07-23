@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -85,9 +86,9 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	/** The propagation delay of this instance. */
 	private int propDelay = defaultPropDelay;
 	/** Which side of the element the output is on. */
-	private JLSInfo.Orientation outputOrientation = JLSInfo.Orientation.RIGHT;
+	private Orientation outputOrientation = Orientation.RIGHT;
 	/** Which side of the element the amount input is on. */
-	private JLSInfo.Orientation amountOrientation = JLSInfo.Orientation.DOWN;
+	private Orientation amountOrientation = Orientation.DOWN;
 
 	// running properties
 	/** True if the user cancelled the creation dialog. */
@@ -157,19 +158,19 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		int sbits = 32 - Integer.numberOfLeadingZeros(bits-1);
 
 		// create amount input
-		if(amountOrientation == JLSInfo.Orientation.DOWN)
+		if(amountOrientation == Orientation.DOWN)
 		{
 			inputs.add(new Input("amount",this,s,height,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.UP)
+		else if(amountOrientation == Orientation.UP)
 		{
 			inputs.add(new Input("amount",this,s,0,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.LEFT)
+		else if(amountOrientation == Orientation.LEFT)
 		{
 			inputs.add(new Input("amount",this,0,s,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.RIGHT)
+		else if(amountOrientation == Orientation.RIGHT)
 		{
 			inputs.add(new Input("amount",this,width,s,sbits));
 		}
@@ -231,11 +232,11 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		int d2 = JLSInfo.pointDiameter/2;
 		Input data = inputs.get(1);
 		g.setColor(java.awt.Color.BLACK);
-		if(outputOrientation == JLSInfo.Orientation.RIGHT)
+		if(outputOrientation == Orientation.RIGHT)
 		{
 			g.drawString("in",x+d2,data.getY()-hi/2+ascent);
 		}
-		else if(outputOrientation == JLSInfo.Orientation.LEFT)
+		else if(outputOrientation == Orientation.LEFT)
 		{
 			g.drawString("in",x+width-5*d2,data.getY()-hi/2+ascent);
 		}
@@ -347,7 +348,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @return the output orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).outputOrientation;
 			}
 			/**
@@ -357,7 +358,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @param o The new output orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((ShiftRegister)el).outputOrientation = o;
 			}
 		},
@@ -370,7 +371,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @return the amount-input orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).amountOrientation;
 			}
 			/**
@@ -380,7 +381,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @param o The new amount-input orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((ShiftRegister)el).amountOrientation = o;
 			}
 		}
@@ -536,13 +537,13 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size.
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, java.awt.Graphics g) {
+	public void rotate(Orientation direction, java.awt.Graphics g) {
 
-		if (direction == JLSInfo.Orientation.LEFT) {
+		if (direction == Orientation.LEFT) {
 			amountOrientation = amountOrientation.ccw();
 			outputOrientation = outputOrientation.ccw();
 		}
-		else if (direction == JLSInfo.Orientation.RIGHT) {
+		else if (direction == Orientation.RIGHT) {
 			amountOrientation = amountOrientation.cw();
 			outputOrientation = outputOrientation.cw();
 		}
@@ -797,39 +798,39 @@ public final class ShiftRegister extends LogicElement implements Timed {
 				type = ShiftRegister.Type.LogicalLeft;
 			}
 			if (oLeft.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.LEFT;
+				outputOrientation = Orientation.LEFT;
 				if (sUp.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.UP;
+					amountOrientation = Orientation.UP;
 				}
 				else if (sDown.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.DOWN;
+					amountOrientation = Orientation.DOWN;
 				}
 			}
 			else if (oRight.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.RIGHT;
+				outputOrientation = Orientation.RIGHT;
 				if (sUp.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.UP;
+					amountOrientation = Orientation.UP;
 				}
 				else if (sDown.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.DOWN;
+					amountOrientation = Orientation.DOWN;
 				}
 			}
 			else if (oDown.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.DOWN;
+				outputOrientation = Orientation.DOWN;
 				if (sLeft.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.LEFT;
+					amountOrientation = Orientation.LEFT;
 				}
 				else if (sRight.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.RIGHT;
+					amountOrientation = Orientation.RIGHT;
 				}
 			}
 			else if (oUp.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.UP;
+				outputOrientation = Orientation.UP;
 				if (sLeft.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.LEFT;
+					amountOrientation = Orientation.LEFT;
 				}
 				else if (sRight.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.RIGHT;
+					amountOrientation = Orientation.RIGHT;
 				}
 			}
 			bitsPad.close();

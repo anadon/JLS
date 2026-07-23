@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.edit.*;
 
@@ -924,7 +925,7 @@ public abstract sealed class Element
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
 		throw new UnsupportedOperationException("Rotate");
 	}

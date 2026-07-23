@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.edit.*;
 import jls.sim.*;
@@ -34,7 +35,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	/** The radix the value is displayed in (2, 10 or 16). */
 	private int base = defaultBase;
 	/** Which way this constant faces. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 	
 	// running properties
 	/** Value of the previously created constant. */
@@ -42,7 +43,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	/** Display radix of the previously created constant. */
 	private static int previousBase = defaultBase;
 	/** Orientation of the previously created constant. */
-	private static JLSInfo.Orientation previousOrientation = JLSInfo.Orientation.RIGHT;
+	private static Orientation previousOrientation = Orientation.RIGHT;
 	/** True if the creation or change dialog was cancelled. */
 	private boolean cancelled;
 	/** True if a changed value no longer fits, so the element must resize. */
@@ -111,7 +112,7 @@ public final class Constant extends LogicElement implements ActionListener {
 				FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(Util.convert(value,base,true))+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					height = 0;	// not really, but bounding rectangle will be large enough
 				}
@@ -123,19 +124,19 @@ public final class Constant extends LogicElement implements ActionListener {
 			
 		}
 		// create output
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
 			outputs.add(new Output("output",this,0,0,0));
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
 			outputs.add(new Output("output",this,width,0,0));
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			outputs.add(new Output("output",this,width/2,0,0));
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			outputs.add(new Output("output",this,width/2,height,0));
 		}
@@ -167,7 +168,7 @@ public final class Constant extends LogicElement implements ActionListener {
 		double th = t.getHeight();
 		int dx = (int)((r.width-tw)/2);
 		int dy = (int)((r.height-th)/2+fm.getAscent());
-		if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
 			g.drawString(str,x+dx,y-JLSInfo.spacing/2+dy);
 		}
@@ -244,7 +245,7 @@ public final class Constant extends LogicElement implements ActionListener {
 			protected void set(Element el, String v) {
 				// unknown strings leave the orientation unchanged,
 				// as the handwritten loader always did
-				for (JLSInfo.Orientation o : JLSInfo.Orientation.values()) {
+				for (Orientation o : Orientation.values()) {
 					if (o.toString().equals(v)) {
 						((Constant)el).orientation = o;
 					}
@@ -320,7 +321,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	 */
 	@Override
 	public Rectangle getRect() {
-		if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
 			return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
 		}
@@ -355,14 +356,14 @@ public final class Constant extends LogicElement implements ActionListener {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 			
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -521,19 +522,19 @@ public final class Constant extends LogicElement implements ActionListener {
 				//bits = Integer.parseInt(bitsField.getText());
 				if(left.isSelected())
 				{
-					orientation = JLSInfo.Orientation.LEFT;
+					orientation = Orientation.LEFT;
 				}
 				else if(right.isSelected())
 				{
-					orientation = JLSInfo.Orientation.RIGHT;
+					orientation = Orientation.RIGHT;
 				}
 				else if(up.isSelected())
 				{
-					orientation = JLSInfo.Orientation.UP;
+					orientation = Orientation.UP;
 				}
 				else if(down.isSelected())
 				{
-					orientation = JLSInfo.Orientation.DOWN;
+					orientation = Orientation.DOWN;
 				}
 
 			}
@@ -568,11 +569,11 @@ public final class Constant extends LogicElement implements ActionListener {
 				valuePad.setBase(base);
 				valuePad.reset();
 				System.out.println(orientation);
-				if (orientation == JLSInfo.Orientation.LEFT)
+				if (orientation == Orientation.LEFT)
 					left.setSelected(true);
-				else if (orientation == JLSInfo.Orientation.RIGHT)
+				else if (orientation == Orientation.RIGHT)
 					right.setSelected(true);
-				else if (orientation == JLSInfo.Orientation.UP)
+				else if (orientation == Orientation.UP)
 					up.setSelected(true);
 				else
 					down.setSelected(true);

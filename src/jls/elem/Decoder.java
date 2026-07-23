@@ -28,6 +28,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
 import jls.Help;
@@ -58,7 +59,7 @@ public final class Decoder extends LogicElement implements Timed {
 	private int propDelay = defaultPropDelay;
 	//Orientation is based off of where the inputs are
 	/** Which side the input is on. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.LEFT;
+	private Orientation orientation = Orientation.LEFT;
 	
 	// running properties
 	/** True if the user cancelled the creation dialog. */
@@ -119,19 +120,19 @@ public final class Decoder extends LogicElement implements Timed {
 		int s = JLSInfo.spacing;
 		int outs = 1 << bits;
 	
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
 			inout = bits + "-" + outs;
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			inout = bits + "\n | \n" + outs;
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			inout = outs + "\n | \n" + bits;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
 			inout = outs + "-" + bits;
 		}
@@ -143,7 +144,7 @@ public final class Decoder extends LogicElement implements Timed {
 			// if element already has a size, use it
 			if (width == 0 && height == 0) {
 				
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					width = 5*s;
 					height = 2*s;
@@ -155,10 +156,10 @@ public final class Decoder extends LogicElement implements Timed {
 				}
 				FontMetrics fm = g.getFontMetrics();
 				int bw = fm.stringWidth(inout);
-				if (bw > width && orientation == JLSInfo.Orientation.LEFT) {
+				if (bw > width && orientation == Orientation.LEFT) {
 					inout = "1-n";
 				}
-				else if(bw > width && orientation == JLSInfo.Orientation.RIGHT)
+				else if(bw > width && orientation == Orientation.RIGHT)
 				{
 					inout = "n-1";
 				}
@@ -171,28 +172,28 @@ public final class Decoder extends LogicElement implements Timed {
 		}
 		
 		
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{	
 			// create input
 			inputs.add(new Input("input",this,0,s,bits));
 			// create output
 			outputs.add(new Output("output",this,width,s,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
 			// create input
 			inputs.add(new Input("input",this,width,s,bits));
 			// create output
 			outputs.add(new Output("output",this,0,s,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			// create input
 			inputs.add(new Input("input",this,s,height,bits));
 			// create output
 			outputs.add(new Output("output",this,s,0,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			// create input
 			inputs.add(new Input("input",this,s,0,bits));
@@ -218,7 +219,7 @@ public final class Decoder extends LogicElement implements Timed {
 		
 		// draw values inside box
 		FontMetrics fm = g.getFontMetrics();
-		if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
 			Rectangle2D t = fm.getStringBounds(inout,g);
 			g.drawString(inout,x+(int)(width-t.getWidth())/2,
@@ -227,14 +228,14 @@ public final class Decoder extends LogicElement implements Timed {
 			g.drawString(dec,x+(int)(width-t.getWidth())/2,
 					y+JLSInfo.spacing+(int)(height/2-t.getHeight())/2+fm.getAscent());
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			Rectangle2D t = fm.getStringBounds("1", g);
 			g.drawString("1", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+5);
 			g.drawString("|", x+(width-(int)t.getWidth())/2, y+fm.getHeight() + 20);
 			g.drawString("n", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+ 35);
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			Rectangle2D t = fm.getStringBounds("1", g);
 			g.drawString("n", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+5);
@@ -297,7 +298,7 @@ public final class Decoder extends LogicElement implements Timed {
 			 * @return the current orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Decoder)el).orientation;
 			}
 			/**
@@ -307,7 +308,7 @@ public final class Decoder extends LogicElement implements Timed {
 			 * @param o The new orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Decoder)el).orientation = o;
 			}
 		}
@@ -424,14 +425,14 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 			
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -556,19 +557,19 @@ public final class Decoder extends LogicElement implements Timed {
 			}
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			dispose();
 		} // end of validateAndAccept method

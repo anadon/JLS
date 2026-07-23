@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -63,7 +64,7 @@ public final class Register extends LogicElement
 	/** True if this register's value is watched during simulation. */
 	private boolean watched = false;
 	/** The direction this register faces (position of D/C inputs vs Q outputs). */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 
 	// running properties
 	/** True if the user cancelled the create/modify dialog. */
@@ -132,7 +133,7 @@ public final class Register extends LogicElement
 				{
 					width += s;
 				}
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					height = 5*s;
 				}
@@ -146,7 +147,7 @@ public final class Register extends LogicElement
 		
 		
 		int s = JLSInfo.spacing;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			// create inputs
 			inputs.add(new Input("D",this,0,s,bits));
@@ -156,7 +157,7 @@ public final class Register extends LogicElement
 			outputs.add(new Output("Q",this,width,s,bits));
 			outputs.add(new Output("notQ",this,width,4*s,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			// create inputs
 			inputs.add(new Input("D",this,width,s,bits));
@@ -166,7 +167,7 @@ public final class Register extends LogicElement
 			outputs.add(new Output("Q",this,0,s,bits));
 			outputs.add(new Output("notQ",this,0,4*s,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			// create inputs
 			inputs.add(new Input("D",this,s,height,bits));
@@ -176,7 +177,7 @@ public final class Register extends LogicElement
 			outputs.add(new Output("Q",this,s,0,bits));
 			outputs.add(new Output("notQ",this,width-s,0,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			// create inputs
 			inputs.add(new Input("D",this,s,0,bits));
@@ -201,19 +202,19 @@ public final class Register extends LogicElement
 		if (watched) {
 			
 			g.setColor(JLSInfo.watchColor);
-			if(orientation == JLSInfo.Orientation.RIGHT)
+			if(orientation == Orientation.RIGHT)
 			{
 				g.fillRect(x+s,y,width-s,height);
 			}
-			else if(orientation == JLSInfo.Orientation.LEFT)
+			else if(orientation == Orientation.LEFT)
 			{
 				g.fillRect(x,y,width-s,height);
 			}
-			else if(orientation == JLSInfo.Orientation.UP)
+			else if(orientation == Orientation.UP)
 			{
 				g.fillRect(x,y,width,height-s);
 			}
-			else if(orientation == JLSInfo.Orientation.DOWN)
+			else if(orientation == Orientation.DOWN)
 			{
 				g.fillRect(x,y+s,width,height-s);
 			}
@@ -225,7 +226,7 @@ public final class Register extends LogicElement
 		// draw box
 		g.setColor(Color.BLACK);
 		
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 		
 			g.drawRect(x+s,y,width-s,5*s);
@@ -293,7 +294,7 @@ public final class Register extends LogicElement
 			g.drawLine(lx-fm.stringWidth("Q")-1,ly-h/2,lx-2,ly-h/2);
 			four.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			g.drawRect(x,y,width-s,5*s);
 			
@@ -360,7 +361,7 @@ public final class Register extends LogicElement
 			g.drawLine(lx+fm.stringWidth("Q")+2,ly-h/2,lx+2,ly-h/2);
 			four.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			g.drawRect(x,y,width,height-s);
 			
@@ -428,7 +429,7 @@ public final class Register extends LogicElement
 			four.draw(g);
 
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			g.drawRect(x,y+s,width,height-s);
 			
@@ -566,14 +567,14 @@ public final class Register extends LogicElement
 			 * Read the register's orientation for saving.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Register)el).orientation;
 			}
 			/**
 			 * Load the register's orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Register)el).orientation = o;
 			}
 		},
@@ -841,12 +842,12 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g) {
+	public void rotate(Orientation direction, Graphics g) {
 		
-		if(direction == JLSInfo.Orientation.LEFT) {
+		if(direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT) {
+		else if(direction == Orientation.RIGHT) {
 			orientation = orientation.cw();
 		}
 		inputs.clear();
@@ -1109,19 +1110,19 @@ public final class Register extends LogicElement
 			BigInteger tinitialValue = BigInteger.ZERO;
 			if(left.isSelected())
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(right.isSelected())
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else if(up.isSelected())
 			{
-				orientation = JLSInfo.Orientation.UP;
+				orientation = Orientation.UP;
 			}
 			else if(down.isSelected())
 			{
-				orientation = JLSInfo.Orientation.DOWN;
+				orientation = Orientation.DOWN;
 			}
 			try {
 				if (creating) {

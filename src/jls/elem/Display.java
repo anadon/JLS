@@ -29,6 +29,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
 import jls.Help;
@@ -350,7 +351,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
 		// No-op
 	}

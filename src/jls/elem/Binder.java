@@ -11,6 +11,7 @@ import java.util.BitSet;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.sim.Simulator;
@@ -77,7 +78,7 @@ public final class Binder extends Group implements TriProp {
 		
 		// set up inputs
 		int s = JLSInfo.spacing;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			int ypos = s;
 			for(Entry e : ranges) {
@@ -91,7 +92,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			int ypos = s;
 			for(Entry e : ranges) {
@@ -105,7 +106,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int xpos = s;
 			for(Entry e : ranges) {
@@ -119,7 +120,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int xpos = s;
 			for(Entry e : ranges) {
@@ -153,7 +154,7 @@ public final class Binder extends Group implements TriProp {
 		// draw inputs
 		FontMetrics fm = g.getFontMetrics();
 		
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			for (Input input : inputs) {
 				input.draw(g);
@@ -176,7 +177,7 @@ public final class Binder extends Group implements TriProp {
 			g.drawLine(x+width,ypos,x+width-s/2,ypos);
 			output.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			for (Input input : inputs) {
 				input.draw(g);
@@ -199,7 +200,7 @@ public final class Binder extends Group implements TriProp {
 			g.drawLine(x,ypos,x+s/2,ypos);
 			output.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int inum = 0;
 			for (Input input : inputs) {
@@ -227,7 +228,7 @@ public final class Binder extends Group implements TriProp {
 			g.drawLine(xpos,y+height-s,xpos,y+height);
 			output.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int inum = 0;
 			for (Input input : inputs) {
@@ -338,7 +339,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
 		super.rotate(direction, g);
 		init(g);

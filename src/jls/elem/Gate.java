@@ -1,7 +1,7 @@
 package jls.elem;
 
 import jls.*;
-import jls.JLSInfo.Orientation;
+import jls.core.Orientation;
 import jls.sim.*;
 import jls.util.Placement;
 
@@ -27,7 +27,7 @@ public abstract sealed class Gate extends LogicElement
 		OrGate, XorGate {
 	
 	// named constants
-	// gates share the one JLSInfo.Orientation enum (issue #78 H3); only
+	// gates share the one Orientation enum (issue #78 H3); only
 	// their persistence differs - lowercase names, kept byte-identical
 	// by the "orientation" attribute below
 	/** Default number of inputs. */
@@ -693,11 +693,11 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
 		// one shared enum (issue #78 H3), so the quarter-turn is its
 		// ccw()/cw() instead of a hand-rolled transition table
-		if (direction == JLSInfo.Orientation.LEFT) {
+		if (direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
 		}
 		else {

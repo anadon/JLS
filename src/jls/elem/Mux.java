@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -32,9 +33,9 @@ public final class Mux extends LogicElement implements Timed {
 	/** The propagation delay of this element. */
 	private int propDelay = defaultPropDelay;
 	/** The direction the output points. */
-	private JLSInfo.Orientation outputOrientation = JLSInfo.Orientation.RIGHT;
+	private Orientation outputOrientation = Orientation.RIGHT;
 	/** The side the selector input is on. */
-	private JLSInfo.Orientation selectorOrientation = JLSInfo.Orientation.DOWN;
+	private Orientation selectorOrientation = Orientation.DOWN;
 
 	// running properties
 	/** True if the user cancelled the creation dialog. */
@@ -102,19 +103,19 @@ public final class Mux extends LogicElement implements Timed {
 		int sbits = 32 - Integer.numberOfLeadingZeros(numInputs-1);
 
 		// create select input
-		if(selectorOrientation == JLSInfo.Orientation.DOWN)
+		if(selectorOrientation == Orientation.DOWN)
 		{
 			inputs.add(new Input("select",this,s,height,sbits));
 		}
-		else if(selectorOrientation == JLSInfo.Orientation.UP)
+		else if(selectorOrientation == Orientation.UP)
 		{
 			inputs.add(new Input("select",this,s,0,sbits));
 		}
-		else if(selectorOrientation == JLSInfo.Orientation.LEFT)
+		else if(selectorOrientation == Orientation.LEFT)
 		{
 			inputs.add(new Input("select",this,0,s,sbits));
 		}
-		else if(selectorOrientation == JLSInfo.Orientation.RIGHT)
+		else if(selectorOrientation == Orientation.RIGHT)
 		{
 			inputs.add(new Input("select",this,width,s,sbits));
 		}
@@ -187,21 +188,21 @@ public final class Mux extends LogicElement implements Timed {
 		int hi = ascent + fm.getDescent();
 		int d2 = JLSInfo.pointDiameter/2;
 		int inum = -1; // first input is selector, so start one too small
-		if(outputOrientation == JLSInfo.Orientation.LEFT || outputOrientation == JLSInfo.Orientation.RIGHT)
+		if(outputOrientation == Orientation.LEFT || outputOrientation == Orientation.RIGHT)
 		{
 			for (Input input : inputs) {
 				input.draw(g);
 				if (inum >= 0) {
 					g.setColor(Color.BLACK);
-					if(outputOrientation == JLSInfo.Orientation.RIGHT)
+					if(outputOrientation == Orientation.RIGHT)
 					{
 						g.drawString(inum+"",x+d2,input.getY()-hi/2+ascent);			
 					}
-					else if(outputOrientation == JLSInfo.Orientation.LEFT)
+					else if(outputOrientation == Orientation.LEFT)
 					{
 						g.drawString(inum+"",x+width-5*d2,input.getY()-hi/2+ascent);
 					}
-					else if(outputOrientation == JLSInfo.Orientation.UP || outputOrientation == JLSInfo.Orientation.DOWN)
+					else if(outputOrientation == Orientation.UP || outputOrientation == Orientation.DOWN)
 					{
 						g.drawString(inum+"",input.getX()-4,y+5*d2);
 					}
@@ -209,7 +210,7 @@ public final class Mux extends LogicElement implements Timed {
 				inum += 1;
 			}
 		}
-		if(outputOrientation == JLSInfo.Orientation.UP || outputOrientation == JLSInfo.Orientation.DOWN)
+		if(outputOrientation == Orientation.UP || outputOrientation == Orientation.DOWN)
 		{
 			if(inputs.size() == 3)
 			{
@@ -227,15 +228,15 @@ public final class Mux extends LogicElement implements Timed {
 					input.draw(g);
 					if (inum >= 0 && inum%2 == 0) {
 						g.setColor(Color.BLACK);
-						if(outputOrientation == JLSInfo.Orientation.RIGHT)
+						if(outputOrientation == Orientation.RIGHT)
 						{
 						g.drawString(inum+"",x+d2,input.getY()-hi/2+ascent);			
 						}
-						else if(outputOrientation == JLSInfo.Orientation.LEFT)
+						else if(outputOrientation == Orientation.LEFT)
 						{
 							g.drawString(inum+"",x+width-5*d2,input.getY()-hi/2+ascent);
 						}
-						else if(outputOrientation == JLSInfo.Orientation.UP || outputOrientation == JLSInfo.Orientation.DOWN)
+						else if(outputOrientation == Orientation.UP || outputOrientation == Orientation.DOWN)
 						{
 							g.drawString(inum+"",input.getX()-4,y+5*d2);
 						}
@@ -317,7 +318,7 @@ public final class Mux extends LogicElement implements Timed {
 			 * @return the output orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Mux)el).outputOrientation;
 			}
 			/**
@@ -327,7 +328,7 @@ public final class Mux extends LogicElement implements Timed {
 			 * @param o The new output orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Mux)el).outputOrientation = o;
 			}
 		},
@@ -339,7 +340,7 @@ public final class Mux extends LogicElement implements Timed {
 			 * @return the selector orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Mux)el).selectorOrientation;
 			}
 			/**
@@ -349,7 +350,7 @@ public final class Mux extends LogicElement implements Timed {
 			 * @param o The new selector orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Mux)el).selectorOrientation = o;
 			}
 		}
@@ -501,14 +502,14 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			selectorOrientation = selectorOrientation.ccw();
 			outputOrientation = outputOrientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			selectorOrientation = selectorOrientation.cw();
 			outputOrientation = outputOrientation.cw();
@@ -724,50 +725,50 @@ public final class Mux extends LogicElement implements Timed {
 			}
 			if(this.oLeft.isSelected())
 			{
-				outputOrientation = JLSInfo.Orientation.LEFT;
+				outputOrientation = Orientation.LEFT;
 				if(this.sUp.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.UP;
+					selectorOrientation = Orientation.UP;
 				}
 				else if(this.sDown.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.DOWN;
+					selectorOrientation = Orientation.DOWN;
 				}
 			}
 			else if(this.oRight.isSelected())
 			{
-				outputOrientation = JLSInfo.Orientation.RIGHT;
+				outputOrientation = Orientation.RIGHT;
 				if(this.sUp.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.UP;
+					selectorOrientation = Orientation.UP;
 				}
 				else if(this.sDown.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.DOWN;
+					selectorOrientation = Orientation.DOWN;
 				}
 			}
 			else if(this.oDown.isSelected())
 			{
-				outputOrientation = JLSInfo.Orientation.DOWN;
+				outputOrientation = Orientation.DOWN;
 				if(this.sLeft.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.LEFT;
+					selectorOrientation = Orientation.LEFT;
 				}
 				else if(this.sRight.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.RIGHT;
+					selectorOrientation = Orientation.RIGHT;
 				}
 			}
 			else if(this.oUp.isSelected())
 			{
-				outputOrientation = JLSInfo.Orientation.UP;
+				outputOrientation = Orientation.UP;
 				if(this.sLeft.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.LEFT;
+					selectorOrientation = Orientation.LEFT;
 				}
 				else if(this.sRight.isSelected())
 				{
-					selectorOrientation = JLSInfo.Orientation.RIGHT;
+					selectorOrientation = Orientation.RIGHT;
 				}
 			}
 			inputsPad.close();

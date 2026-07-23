@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import java.awt.*;
@@ -25,7 +26,7 @@ public final class OutputPin extends Pin implements TriProp {
 	public OutputPin(Circuit circ) {
 
 		super(circ);
-		orientation = JLSInfo.Orientation.RIGHT;
+		orientation = Orientation.RIGHT;
 	} // end of constructor
 	
 	/**
@@ -79,13 +80,13 @@ public final class OutputPin extends Pin implements TriProp {
 	public void init(Graphics g) {
 
 		super.init(g);
-		if (orientation == JLSInfo.Orientation.RIGHT) {
+		if (orientation == Orientation.RIGHT) {
 			inputs.add(new Input("input", this, 0, JLSInfo.spacing, bits));
-		} else if (orientation == JLSInfo.Orientation.LEFT) {
+		} else if (orientation == Orientation.LEFT) {
 			inputs.add(new Input("input", this, width, JLSInfo.spacing, bits));
-		} else if (orientation == JLSInfo.Orientation.DOWN) {
+		} else if (orientation == Orientation.DOWN) {
 			inputs.add(new Input("input", this, width / 2, 0, bits));
-		} else if (orientation == JLSInfo.Orientation.UP) {
+		} else if (orientation == Orientation.UP) {
 			inputs.add(new Input("input", this, width / 2, height, bits));
 		}
 	} // end of init method

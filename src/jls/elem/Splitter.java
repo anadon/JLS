@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.elem.Group.Entry;
 import jls.sim.*;
@@ -72,7 +73,7 @@ public final class Splitter extends Group implements TriProp {
 		
 		int s = JLSInfo.spacing;
 		
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			// set up input
 			inputs.add(new Input("input",this,0,((ranges.size()-1)/2+1)*s,bits));
@@ -88,7 +89,7 @@ public final class Splitter extends Group implements TriProp {
 				ypos += s;
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			// set up input
 			inputs.add(new Input("input",this,width,((ranges.size()-1)/2+1)*s,bits));
@@ -104,7 +105,7 @@ public final class Splitter extends Group implements TriProp {
 				ypos += s;
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int xpos = s;
 			for (Entry e : ranges) {
@@ -118,7 +119,7 @@ public final class Splitter extends Group implements TriProp {
 			// set up input
 			inputs.add(new Input("input",this,((ranges.size()-1)/2+1)*s,height,bits));
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int xpos = s;
 			for (Entry e : ranges) {
@@ -149,7 +150,7 @@ public final class Splitter extends Group implements TriProp {
 		int d2 = JLSInfo.pointDiameter/2;
 		int s = JLSInfo.spacing;
 		
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 		{
 			// draw input and line from it
 			Input input = inputs.get(0);
@@ -174,7 +175,7 @@ public final class Splitter extends Group implements TriProp {
 				g.drawLine(x+s/2,ypos,edge-d2,ypos);
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			// draw input and line from it
 			Input input = inputs.get(0);
@@ -199,7 +200,7 @@ public final class Splitter extends Group implements TriProp {
 				g.drawLine(x+width-s/2,ypos,(int)(edge+t.getWidth()+d2),ypos);
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int inum = 0;
 			FontMetrics fm = g.getFontMetrics();
@@ -228,7 +229,7 @@ public final class Splitter extends Group implements TriProp {
 			g.drawLine(xpos,y+s,xpos,y);
 			input.draw(g);
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int inum = 0;
 			FontMetrics fm = g.getFontMetrics();
@@ -314,7 +315,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, Graphics g)
 	{
 		super.rotate(direction, g);
 		init(g);

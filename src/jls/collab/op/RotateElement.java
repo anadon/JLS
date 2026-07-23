@@ -3,6 +3,7 @@ package jls.collab.op;
 import java.awt.Graphics;
 import java.io.PrintWriter;
 
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -25,8 +26,8 @@ public record RotateElement(ElementId id, boolean clockwise)
 		if (!el.canRotate()) {
 			throw new OpRejected("element '" + id + "' cannot rotate");
 		}
-		el.rotate(clockwise ? JLSInfo.Orientation.RIGHT
-				: JLSInfo.Orientation.LEFT, g);
+		el.rotate(clockwise ? Orientation.RIGHT
+				: Orientation.LEFT, g);
 	} // end of apply method
 
 	@Override

@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 import jls.util.Placement;
@@ -45,7 +46,7 @@ public final class JumpEnd extends LogicElement {
 	private boolean loadTriState = false;
 
 	/** Which way the element points. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 	
 	/**
 	 * Create a new wire jump end.
@@ -93,10 +94,10 @@ public final class JumpEnd extends LogicElement {
 		}
 		else {
 			bits = circuit.getJumpStart(name).getBits();
-			if(circuit.getJumpStart(name).getOrientation() == JLSInfo.Orientation.LEFT)
-				orientation = JLSInfo.Orientation.RIGHT;
+			if(circuit.getJumpStart(name).getOrientation() == Orientation.LEFT)
+				orientation = Orientation.RIGHT;
 			else
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			cancelled = false;
 		}
 		// don't do anything if user cancelled
@@ -148,7 +149,7 @@ public final class JumpEnd extends LogicElement {
 		
 		// create output
 		Output out;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 			out = new Output("output",this,width,0,bits);
 		else
 			out = new Output("output",this,0,0,bits);
@@ -188,7 +189,7 @@ public final class JumpEnd extends LogicElement {
 		int top = y-s/2;
 		int bottom = y+s/2;
 		
-		if(orientation == JLSInfo.Orientation.LEFT) {
+		if(orientation == Orientation.LEFT) {
 			g.setColor(Color.BLACK);
 			g.drawLine(x+width-s/2,top,x+width-s/2,bottom);
 			g.drawLine(x+s/2,top,x+width-s/2,top);
@@ -198,7 +199,7 @@ public final class JumpEnd extends LogicElement {
 			g.drawLine(x+width-s/2,y,x+width-s/4,y-s/4);
 			g.drawLine(x+width-s/2,y,x+width-s/4,y+s/4);
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
+		else if(orientation == Orientation.RIGHT) {
 			g.setColor(Color.BLACK);
 			g.drawLine(x+s/2,top,x+s/2,bottom);
 			g.drawLine(x+s/2,top,x+width-s/2,top);
@@ -215,9 +216,9 @@ public final class JumpEnd extends LogicElement {
 		int h = fm.getDescent() + ascent;
 		int w = fm.stringWidth(name);
 		int tx = 0;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 			tx = x+s/2+(width-s-w)/2+JLSInfo.pointDiameter/2;
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 			tx = x+s/2+(width-2*s-w)/2+JLSInfo.pointDiameter/2;
 		g.drawString(name,tx,y-h/2+ascent);
 		
@@ -307,7 +308,7 @@ public final class JumpEnd extends LogicElement {
 			 * @return the element's orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((JumpEnd)el).orientation;
 			}
 			/**
@@ -317,7 +318,7 @@ public final class JumpEnd extends LogicElement {
 			 * @param o The orientation read from the file.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((JumpEnd)el).orientation = o;
 			}
 		}
@@ -433,20 +434,20 @@ public final class JumpEnd extends LogicElement {
 	@Override
 	public void flip(Graphics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = Orientation.RIGHT;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = Orientation.LEFT;
 		}
 
 		outputs.clear();
 		
 		// create output
 		Output out;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 			out = new Output("output",this,width,0,bits);
 		else
 			out = new Output("output",this,0,0,bits);
@@ -535,10 +536,10 @@ public final class JumpEnd extends LogicElement {
 			name = (String)starts.getSelectedValue();
 			bits = circuit.getJumpStart(name).getBits();
 			if (right.isSelected()) {
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			else {
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			dispose();
 		} // end of validateAndAccept method

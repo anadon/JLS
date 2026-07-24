@@ -36,7 +36,7 @@ public final class ConstantRenderer implements ElementRenderer {
 
 		// draw box
 		Graphics2D gg = (Graphics2D) g;
-		Rectangle r = c.getRect();
+		Rectangle r = AwtGeom.awt(c.getRect());
 		gg.setColor(Color.BLACK);
 		Rectangle drawn = new Rectangle(r.x, r.y, r.width, r.height);
 		gg.draw(drawn);

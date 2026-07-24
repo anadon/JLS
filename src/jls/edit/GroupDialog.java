@@ -59,7 +59,7 @@ public final class GroupDialog implements ElementDialog {
 		}
 
 		// complete initialization and place the element
-		group.init(g);
+		group.init(SwingTextMetrics.forGraphics(g));
 		Point p = Placement.dropPoint(editWindow, x, y,
 				group.getWidth(), group.getHeight());
 		group.setXY(p.x, p.y);

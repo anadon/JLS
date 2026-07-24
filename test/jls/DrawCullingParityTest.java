@@ -38,7 +38,7 @@ class DrawCullingParityTest {
 	/** Mirrors Circuit.mayBeVisible: the exact culling predicate. */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 
-		Rectangle b = el.getIndexBounds();
+		Rectangle b = jls.edit.AwtGeom.awt(el.getIndexBounds());
 		b.grow(MARGIN, MARGIN);
 		return b.intersects(clip);
 	}
@@ -71,7 +71,7 @@ class DrawCullingParityTest {
 				Rectangle query = new Rectangle(clip);
 				query.grow(MARGIN, MARGIN);
 				Set<Element> actual = new HashSet<Element>();
-				for (Element el : circuit.elementsNear(query)) {
+				for (Element el : circuit.elementsNear(jls.edit.AwtGeom.bounds(query))) {
 					if (mayBeVisible(el, clip)) {
 						actual.add(el);
 					}

@@ -32,7 +32,7 @@ public final class Pause extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// set up size
 		int s = Geometry.SPACING;

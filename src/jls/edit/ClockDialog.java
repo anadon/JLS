@@ -59,7 +59,7 @@ public final class ClockDialog implements ElementDialog {
 			}
 
 			// complete initialization and place the element
-			clock.init(g);
+			clock.init(SwingTextMetrics.forGraphics(g));
 			Point p = Placement.dropPoint(editWindow, x, y,
 					clock.getWidth(), clock.getHeight());
 			clock.setXY(p.x, p.y);

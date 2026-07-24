@@ -24,7 +24,7 @@ public final class PauseDialog implements ElementDialog {
 		Pause pause = (Pause) el;
 
 		// complete initialization
-		pause.init(g);
+		pause.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

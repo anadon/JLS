@@ -79,11 +79,11 @@ class PopupOperationBehaviorTest {
 	}
 
 	private static int centerX(Element el) {
-		return el.getX() + el.getRect().width / 2;
+		return el.getX() + el.getRect().width() / 2;
 	}
 
 	private static int centerY(Element el) {
-		return el.getY() + el.getRect().height / 2;
+		return el.getY() + el.getRect().height() / 2;
 	}
 
 	/**

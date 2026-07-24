@@ -64,7 +64,6 @@ public final class TruthTableEditor extends ElementFormDialog
 		// set up display
 		disp = new DisplayBool(ttelem);
 		ttelem.setDisplayRefresher(disp::refresh);
-		ttelem.setEditParent(this);
 
 		// set not cancelled
 		ttelem.setCancelled(false);

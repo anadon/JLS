@@ -122,7 +122,7 @@ class RenderBoundsTest {
 	 * @return the allowed painting envelope.
 	 */
 	private static Rectangle grown(Element el) {
-		Rectangle allowed = el.getIndexBounds();
+		Rectangle allowed = jls.edit.AwtGeom.awt(el.getIndexBounds());
 		allowed.grow(DRAW_MARGIN, DRAW_MARGIN);
 		return allowed;
 	} // end of grown method

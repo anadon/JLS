@@ -1,7 +1,6 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,8 +56,8 @@ public record MoveElements(List<ElementId> ids, int dx, int dy)
 			if (el instanceof Wire) {
 				continue;
 			}
-			Rectangle r = el.getRect();
-			if (r.x + dx < 0 || r.y + dy < 0) {
+			jls.core.Bounds r = el.getRect();
+			if (r.x() + dx < 0 || r.y() + dy < 0) {
 				throw new OpRejected("moving element '" + el.getStableId()
 						+ "' by (" + dx + "," + dy
 						+ ") would leave the canvas");

@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
+import jls.core.GridPoint;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
@@ -53,7 +53,7 @@ public final class StateRenderer {
 			// set line color
 			Color color = Color.black;
 			if (tr.highlighted) {
-				color = JLSInfo.highlightColor;
+				color = JLSInfo.Palette.highlightColor;
 			}
 
 			// if no midpoints, draw straight from this state to the other
@@ -87,8 +87,8 @@ public final class StateRenderer {
 			else {
 
 				// draw first segment
-				int nx = tr.points.get(0).x;
-				int ny = tr.points.get(0).y;
+				int nx = tr.points.get(0).x();
+				int ny = tr.points.get(0).y();
 				int w = nx - x;
 				int h = y - ny;
 				double dist = Math.sqrt(w*w+h*h);
@@ -106,8 +106,8 @@ public final class StateRenderer {
 				int px = nx;
 				int py = ny;
 				for (int i=1; i<tr.points.size(); i+=1) {
-					nx = tr.points.get(i).x;
-					ny = tr.points.get(i).y;
+					nx = tr.points.get(i).x();
+					ny = tr.points.get(i).y();
 					g.drawLine(px,py,nx,ny);
 					px = nx;
 					py = ny;
@@ -131,21 +131,21 @@ public final class StateRenderer {
 				// draw highlight point if there is one
 				if (tr.highlight != null) {
 					int pd = Geometry.POINT_DIAMETER;
-					g.setColor(JLSInfo.highlightColor);
-					g.fillOval(tr.highlight.x-pd/2,tr.highlight.y-pd/2,pd,pd);
+					g.setColor(JLSInfo.Palette.highlightColor);
+					g.fillOval(tr.highlight.x()-pd/2,tr.highlight.y()-pd/2,pd,pd);
 				}
 			}
 		}
 
 		// show initial if necessary
 		if (state.isInitial()) {
-			g.setColor(JLSInfo.initialStateColor);
+			g.setColor(JLSInfo.Palette.initialStateColor);
 			g.fillOval(x-r,y-r,d+1,d+1);
 		}
 
 		// highlight if necessary
 		if (state.isHighlighted()) {
-			g.setColor(JLSInfo.highlightColor);
+			g.setColor(JLSInfo.Palette.highlightColor);
 			g.fillOval(x-r,y-r,d+1,d+1);
 		}
 
@@ -248,8 +248,8 @@ public final class StateRenderer {
 		for (Transition tr : state.getTransitions()) {
 
 			// add points to bounds
-			for (Point p : tr.points) {
-				bounds.add(p);
+			for (GridPoint p : tr.points) {
+				bounds.add(p.x(), p.y());
 			}
 
 			// add condition to bounds
@@ -276,8 +276,8 @@ public final class StateRenderer {
 			else {
 
 				// draw first segment
-				int nx = tr.points.get(0).x;
-				int ny = tr.points.get(0).y;
+				int nx = tr.points.get(0).x();
+				int ny = tr.points.get(0).y();
 				int w = nx - x;
 				int h = y - ny;
 				double dist = Math.sqrt(w*w+h*h);

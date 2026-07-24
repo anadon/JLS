@@ -71,7 +71,7 @@ public final class TextDialog implements ElementDialog {
 				return false;
 
 			// complete initialization
-			t.init(g);
+			t.init(SwingTextMetrics.forGraphics(g));
 
 			// set position
 			Point p = Placement.dropPoint(editWindow, x, y,
@@ -96,7 +96,7 @@ public final class TextDialog implements ElementDialog {
 		t.setText(ed.getText());
 		t.setWidth(0);
 		t.setHeight(0);
-		t.init(g);
+		t.init(SwingTextMetrics.forGraphics(g));
 		return true;
 	} // end of setup method
 
@@ -214,7 +214,7 @@ public final class TextDialog implements ElementDialog {
 				if (elem.isBold()) bi |= Font.BOLD;
 				if (elem.isItalic()) bi |= Font.ITALIC;
 				textArea.setFont(new Font(elem.getFontName(),bi,elem.getFontSize()));
-				textArea.setForeground(elem.getColor());
+				textArea.setForeground(new Color(elem.getColorRGB()));
 			}
 			JScrollPane pane = new JScrollPane(textArea);
 			pane.setPreferredSize(new Dimension(SIZE,SIZE));
@@ -248,7 +248,7 @@ public final class TextDialog implements ElementDialog {
 				elem.setFontSize(fs);
 				elem.setBold(isB);
 				elem.setItalic(isI);
-				elem.setColor(col);
+				elem.setColorRGB(col.getRGB());
 			}
 			dispose();
 		} // end of validateAndAccept method
@@ -318,7 +318,7 @@ public final class TextDialog implements ElementDialog {
 				return;
 			}
 			else if (event.getSource() == colorButton) {
-				final JColorChooser ch = new JColorChooser(elem.getColor());
+				final JColorChooser ch = new JColorChooser(new Color(elem.getColorRGB()));
 				ch.setPreviewPanel(new JPanel());
 				ActionListener ok = new ActionListener(){
 				/**

@@ -77,7 +77,7 @@ public final class JumpStart extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		if (g != null) {
 
@@ -85,7 +85,7 @@ public final class JumpStart extends LogicElement
 
 				// set up size
 				int s = Geometry.SPACING;
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(" " + name + " ")+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
 				height = 0;	// not really, but bounding rectangle will be large enough
@@ -112,9 +112,9 @@ public final class JumpStart extends LogicElement
 	 * @return the rectangle bounding this element.
 	 */
 	@Override
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
-		return new java.awt.Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
+		return new jls.core.Bounds(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 	} // end of getRect method
 	
 	// Declarative persistence (#23): one declaration drives save, load
@@ -344,7 +344,7 @@ public final class JumpStart extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		if(orientation == Orientation.LEFT)
 		{

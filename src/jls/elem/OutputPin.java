@@ -54,7 +54,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		super.init(g);
 		if (orientation == Orientation.RIGHT) {
@@ -207,7 +207,7 @@ public final class OutputPin extends Pin implements TriProp {
 	@Override
 	public void showCurrentValue(int whereX, int whereY) {
 
-		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(
+		TellUser.info(null, BitSetUtils.toDisplay(
 				currentValue, bits), "Information");
 	} // end of showCurrentValue method
 

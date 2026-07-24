@@ -53,19 +53,19 @@ public final class WireRenderer implements ElementRenderer {
 
 		BitSet value = w.hasNet() ? w.getValue() : null;
 		if (w.isTouching()) {
-			g.setColor(JLSInfo.touchColor);
+			g.setColor(JLSInfo.Palette.touchColor);
 		}
 		else if (w.isHighlighted()) {
-			g.setColor(JLSInfo.highlightColor);
+			g.setColor(JLSInfo.Palette.highlightColor);
 		}
 		else if (value == null) { // off
-			g.setColor(JLSInfo.wireOffColor);
+			g.setColor(JLSInfo.Palette.wireOffColor);
 		}
 		else if (!(value.isEmpty())) {
-			g.setColor(JLSInfo.nonZeroColor);
+			g.setColor(JLSInfo.Palette.nonZeroColor);
 		}
 		else {
-			g.setColor(JLSInfo.wireZeroColor);
+			g.setColor(JLSInfo.Palette.wireZeroColor);
 		}
 		int x1 = w.getEnd().getX();
 		int y1 = w.getEnd().getY();

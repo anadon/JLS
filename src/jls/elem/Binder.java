@@ -32,7 +32,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 		
 		// set up height and width
 		super.init(g);
@@ -178,7 +178,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		super.rotate(direction, g);
 		init(g);
@@ -189,7 +189,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		super.flip(g);
 		init(g);

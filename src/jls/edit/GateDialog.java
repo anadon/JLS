@@ -65,7 +65,7 @@ public final class GateDialog implements ElementDialog {
 		gate.setDelay(gate.getDefaultDelay());
 
 		// set up inputs and outputs
-		gate.init(g);
+		gate.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

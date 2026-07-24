@@ -143,6 +143,8 @@ final class BuiltinElementRenderers {
 		// ShiftRegister
 		ElementRenderers.register(jls.elem.ShiftRegister.class,
 				new ShiftRegisterRenderer());
+		ElementDialogs.register(jls.elem.ShiftRegister.class,
+				new ShiftRegisterDialog());
 		// Pin family
 		ElementRenderers.register(jls.elem.InputPin.class, new PinRenderer());
 		ElementDialogs.register(jls.elem.InputPin.class, new PinDialog());

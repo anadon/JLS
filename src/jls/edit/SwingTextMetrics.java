@@ -14,9 +14,10 @@ import jls.core.TextMetrics;
  * — element geometry, and therefore saved-file bytes, are unchanged.
  * {@code TextMetricsParityTest} pins that forwarding.
  */
-public final class SwingTextMetrics implements TextMetrics {
+public final class SwingTextMetrics implements TextMetrics, TextMetrics.Provider {
 
 	private final FontMetrics fm;
+	private final @org.jspecify.annotations.Nullable Graphics g;
 
 	/**
 	 * Wrap a font's metrics.
@@ -25,18 +26,59 @@ public final class SwingTextMetrics implements TextMetrics {
 	 */
 	public SwingTextMetrics(FontMetrics fm) {
 		this.fm = fm;
+		this.g = null;
+	} // end of constructor
+
+	private SwingTextMetrics(Graphics g) {
+		this.g = g;
+		this.fm = g.getFontMetrics();
 	} // end of constructor
 
 	/**
 	 * Metrics for the ambient font of a graphics context — the common
-	 * case, replacing an element's {@code g.getFontMetrics()}.
+	 * case, replacing an element's {@code g.getFontMetrics()}. The result
+	 * also serves as a {@link TextMetrics.Provider} for the {@code Text}
+	 * element's own named fonts, so a single object can size every element
+	 * during a load or draw.
 	 *
 	 * @param g The graphics whose current font to measure in.
 	 * @return metrics for that graphics' font.
 	 */
 	public static SwingTextMetrics of(Graphics g) {
-		return new SwingTextMetrics(g.getFontMetrics());
+		return new SwingTextMetrics(g);
 	} // end of of method
+
+	/**
+	 * Null-safe metrics for a graphics context: the metrics for {@code g},
+	 * or null when {@code g} is null. Element sizing treats a null
+	 * {@link TextMetrics} the same way it treated a null {@code Graphics}
+	 * (skip sizing), so this is the seam the relocated dialogs and the
+	 * loader use in place of a bare {@code element.init(g)}.
+	 *
+	 * @param g The graphics to measure in, or null.
+	 * @return metrics for that graphics, or null if it was null.
+	 */
+	public static @org.jspecify.annotations.Nullable TextMetrics forGraphics(
+			@org.jspecify.annotations.Nullable Graphics g) {
+		return g == null ? null : new SwingTextMetrics(g);
+	} // end of forGraphics method
+
+	@Override
+	public TextMetrics forFont(String name, boolean bold, boolean italic,
+			int size) {
+		int style = (bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0);
+		return new SwingTextMetrics(g.getFontMetrics(new Font(name, style, size)));
+	} // end of forFont method
+
+	@Override
+	public String defaultFontName() {
+		return g.getFont().getFamily();
+	} // end of defaultFontName method
+
+	@Override
+	public int defaultFontSize() {
+		return g.getFont().getSize();
+	} // end of defaultFontSize method
 
 	@Override
 	public int stringWidth(String s) {

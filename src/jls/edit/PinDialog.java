@@ -49,7 +49,7 @@ public final class PinDialog implements ElementDialog {
 		}
 
 		// finish up
-		pin.init(g);
+		pin.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

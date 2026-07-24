@@ -156,7 +156,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 		
 		// set up size
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
@@ -472,13 +472,13 @@ public abstract sealed class Gate extends LogicElement
 	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	@Override
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			return new java.awt.Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
+			return new jls.core.Bounds(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else {
-			return new java.awt.Rectangle(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
+			return new jls.core.Bounds(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
 		}
 	} // end of getRect method
 	
@@ -555,7 +555,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		// one shared enum (issue #78 H3), so the quarter-turn is its
 		// ccw()/cw() instead of a hand-rolled transition table
@@ -631,7 +631,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();

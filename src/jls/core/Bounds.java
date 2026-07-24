@@ -2,7 +2,7 @@ package jls.core;
 
 /**
  * An axis-aligned integer rectangle (issue #77): the headless value type
- * that replaces {@link java.awt.Rectangle} in element and circuit
+ * that replaces {@code Rectangle} in element and circuit
  * geometry (bounding boxes, hit testing, cull rectangles), so that
  * geometry can be computed without an AWT dependency.
  *
@@ -11,7 +11,7 @@ package jls.core;
  * is derived from {@code Rectangle}'s exact behavior, including its
  * treatment of zero- and negative-size ("non-existent") rectangles and
  * its edge-touch conventions. Every method here reproduces the algorithm
- * of the corresponding {@code java.awt.Rectangle} method verbatim, and
+ * of the corresponding {@code Rectangle} method verbatim, and
  * {@code BoundsGeometryParityTest} pins that equivalence across empty,
  * degenerate, edge-touching, and negative cases. The mutating
  * {@code Rectangle} operations ({@code add}) are rendered as pure methods
@@ -27,7 +27,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * Whether this rectangle is empty — has no interior. Matches
-	 * {@link java.awt.Rectangle#isEmpty()}.
+	 * {@code Rectangle.isEmpty()}.
 	 *
 	 * @return true if the width or height is not positive.
 	 */
@@ -37,7 +37,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * Whether this rectangle contains the given point. Matches
-	 * {@link java.awt.Rectangle#contains(int,int)}.
+	 * {@code Rectangle.contains(int,int)}.
 	 *
 	 * @param px the point's x.
 	 * @param py the point's y.
@@ -61,7 +61,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * Whether this rectangle wholly contains the other. Matches
-	 * {@link java.awt.Rectangle#contains(java.awt.Rectangle)}.
+	 * {@code Rectangle.contains(Rectangle)}.
 	 *
 	 * @param b the other rectangle.
 	 * @return true if the other rectangle lies inside this one.
@@ -108,7 +108,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * Whether this rectangle intersects the other. Matches
-	 * {@link java.awt.Rectangle#intersects(java.awt.Rectangle)}.
+	 * {@code Rectangle.intersects(Rectangle)}.
 	 *
 	 * @param b the other rectangle.
 	 * @return true if the two rectangles overlap.
@@ -137,7 +137,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * The smallest rectangle containing both this and the other. Matches
-	 * the result of {@link java.awt.Rectangle#union(java.awt.Rectangle)}
+	 * the result of {@code Rectangle.union(Rectangle)}
 	 * (and {@code Rectangle.add(Rectangle)}), returning a new value
 	 * rather than mutating.
 	 *
@@ -188,7 +188,7 @@ public record Bounds(int x, int y, int width, int height) {
 
 	/**
 	 * The smallest rectangle containing this and the given point. Matches
-	 * the result of {@link java.awt.Rectangle#add(int,int)}, returning a
+	 * the result of {@code Rectangle.add(int,int)}, returning a
 	 * new value rather than mutating.
 	 *
 	 * @param px the point's x.

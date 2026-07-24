@@ -122,9 +122,11 @@ public class State {
 		/** the name of the state this transition goes to. */
 		public String nextStateName = null; // temporarily used during load
 		/** the intermediate points the transition line is drawn through. */
-		public Vector<java.awt.Point>points = new Vector<java.awt.Point>();
+		public Vector<jls.core.GridPoint>points = new Vector<jls.core.GridPoint>();
 		/** the corner point currently highlighted, or null if none. */
-		public java.awt.Point highlight = null;
+		public jls.core.@org.jspecify.annotations.Nullable GridPoint highlight = null;
+		/** index into {@link #points} of the highlighted corner, or -1. */
+		public int highlightIndex = -1;
 		/** true if this transition is drawn highlighted. */
 		public boolean highlighted;
 
@@ -133,6 +135,24 @@ public class State {
 		 */
 		private Transition() {
 		}
+
+		/**
+		 * Move the currently-highlighted corner point to a new location
+		 * (issue #77: replaces the GUI mutating a shared {@code Point}
+		 * in place; {@link jls.core.GridPoint} is immutable, so the point is
+		 * replaced by value and the highlight marker re-pointed).
+		 *
+		 * @param x The new x-coordinate.
+		 * @param y The new y-coordinate.
+		 */
+		public void moveHighlight(int x, int y) {
+
+			if (highlightIndex >= 0 && highlightIndex < points.size()) {
+				jls.core.GridPoint np = new jls.core.GridPoint(x, y);
+				points.set(highlightIndex, np);
+				highlight = np;
+			}
+		} // end of moveHighlight method
 	} // end of Transition class
 
 	/**
@@ -143,12 +163,12 @@ public class State {
 	 * @param name The name of the state.
 	 * @param g The Graphics object to use.
 	 */
-	public State(StateMachine machine, String name, java.awt.Graphics g) {
+	public State(StateMachine machine, String name, jls.core.TextMetrics g) {
 
 		this.machine = machine;
 		this.name = name;
 		if (g != null) {
-			java.awt.FontMetrics fm = g.getFontMetrics();
+			jls.core.TextMetrics fm = g;
 			diameter = Math.max(fm.stringWidth("  " + name + "  "),Geometry.STATE_DIAMETER);
 		}
 	} // end of constructor
@@ -191,8 +211,8 @@ public class State {
 			newTrans.value = tran.value;
 			newTrans.bits = tran.bits;
 			newTrans.nextStateName = tran.nextState.getName();
-			for (java.awt.Point p : tran.points) {
-				newTrans.points.add(new java.awt.Point(p.x,p.y));
+			for (jls.core.GridPoint p : tran.points) {
+				newTrans.points.add(new jls.core.GridPoint(p.x(),p.y()));
 			}
 			newState.trans.add(newTrans);
 		}
@@ -305,8 +325,8 @@ public class State {
 				output.println("   int bits " + tr.bits);
 			}
 			output.println("   String next \"" + tr.nextState.getName() + "\"");
-			for (java.awt.Point p : tr.points) {
-				output.println("    pair " + p.x + " " + p.y);
+			for (jls.core.GridPoint p : tr.points) {
+				output.println("    pair " + p.x() + " " + p.y());
 			}
 		}
 	} // end of save method
@@ -460,7 +480,7 @@ public class State {
 	 */
 	public void setTransPair(int v1, int v2) {
 
-		buildTrans.points.add(new java.awt.Point(v1,v2));
+		buildTrans.points.add(new jls.core.GridPoint(v1,v2));
 
 	} // end of setPair method
 
@@ -564,7 +584,7 @@ public class State {
 	 * 
 	 * @return true if it is inside, false if not.
 	 */
-	public boolean isInside(java.awt.Rectangle rect) {
+	public boolean isInside(jls.core.Bounds rect) {
 
 		return rect.contains(getRect());
 	} // end of isInside method
@@ -594,8 +614,9 @@ public class State {
 		y += dy;
 		for (Transition tr : trans) {
 			if (selected.contains(tr.nextState)) {
-				for (java.awt.Point p : tr.points) {
-					p.translate(dx,dy);
+				for (int i = 0; i < tr.points.size(); i += 1) {
+					jls.core.GridPoint p = tr.points.get(i);
+					tr.points.set(i, new jls.core.GridPoint(p.x()+dx, p.y()+dy));
 				}
 			}
 		}
@@ -636,11 +657,11 @@ public class State {
 	 * 
 	 * @return the bounding rectangle.
 	 */
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
 		int d = diameter;
 		int r = d/2;
-		return new java.awt.Rectangle(x-r,y-r,d,d);
+		return new jls.core.Bounds(x-r,y-r,d,d);
 	} // end of getRect method
 
 	/**
@@ -671,9 +692,9 @@ public class State {
 	 *
 	 * @return true if the name fits and was changed, false if not.
 	 */
-	public boolean changeName(String name, java.awt.Graphics g) {
+	public boolean changeName(String name, jls.core.TextMetrics g) {
 
-		java.awt.FontMetrics fm = g.getFontMetrics();
+		jls.core.TextMetrics fm = g;
 		int w = fm.stringWidth("  " + name + "  ");
 		if (w > diameter) {
 			return false;
@@ -709,7 +730,7 @@ public class State {
 	 *
 	 * @return the candidate transition, or null if it should not be made.
 	 */
-	public Transition buildTransition(State to, Vector<java.awt.Point> points) {
+	public Transition buildTransition(State to, Vector<jls.core.GridPoint> points) {
 
 		// if transition is to the same state, then make sure
 		// there are at least three points in the transition else
@@ -741,7 +762,7 @@ public class State {
 		return newTrans;
 	} // end of buildTransition method
 
-	public void addTransition(Transition newTrans, java.awt.Component mainDialog) {
+	public void addTransition(Transition newTrans) {
 
 		{
 
@@ -775,32 +796,32 @@ public class State {
 
 			// now test new transition for problems
 			if (hasUnconditional) {
-				TellUser.error(mainDialog,
+				TellUser.error(null,
 						"State already has an unconditional transition",
 						"Error");
 				return;
 			}
 			if (newTrans.unconditional && !trans.isEmpty()) {
-				TellUser.error(mainDialog,
+				TellUser.error(null,
 						"Can't add an unconditional transition",
 						"Error");
 				return;
 			}
 			if (newTrans.other) {
 				if (trans.isEmpty()) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"State can't have just an else transition",
 							"Error");
 					return;
 				}
 				if (hasOther) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"State already has an else transition",
 							"Error");
 					return;
 				}
 				if (tested.cardinality() == 1<<bits) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"Existing transitions cover all possible cases",
 							"Error");
 					return;
@@ -809,13 +830,13 @@ public class State {
 				return;
 			}
 			if (!signal.isEmpty() && !signal.equals(newTrans.signal)) {
-				TellUser.error(mainDialog,
+				TellUser.error(null,
 						"Can't test different signals in same state",
 						"Error");
 				return;
 			}
 			if (bits > 0 && bits != newTrans.bits) {
-				TellUser.error(mainDialog,
+				TellUser.error(null,
 						"Bits differ",
 						"Error");
 				return;
@@ -834,12 +855,12 @@ public class State {
 			}
 			else {
 				if (!ch.isInput) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"This signal is already an output", "Error");
 					return;
 				}
 				if (ch.bits != newTrans.bits) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"Bits not consistent with previous use of this signal",
 							"Error");
 					return;
@@ -848,14 +869,14 @@ public class State {
 			}
 			if (newTrans.equal) {
 				if (tested.get(newTrans.value)) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"This value already tested in an existing transition",
 							"Error");
 					return;
 				}
 				tested.set(newTrans.value);
 				if (hasOther && tested.cardinality() == 1<<bits) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"New transition would make else transition impossible",
 							"Error");
 					return;
@@ -865,7 +886,7 @@ public class State {
 			}
 			if (!newTrans.equal) {
 				if (hasOther) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"New transition would make else transition impossible",
 							"Error");
 					return;
@@ -874,7 +895,7 @@ public class State {
 				temp.set(newTrans.value);
 				temp.flip(0,1<<bits);
 				if (temp.intersects(tested)) {
-					TellUser.error(mainDialog,
+					TellUser.error(null,
 							"These values already tested in existing transition(s)",
 							"Error");
 					return;
@@ -901,9 +922,9 @@ public class State {
 	 * 
 	 * @return The x,y coordinates of the center.
 	 */
-	public java.awt.Point getLocation() {
+	public jls.core.GridPoint getLocation() {
 
-		return new java.awt.Point(x,y);
+		return new jls.core.GridPoint(x,y);
 	} // end of getLocation method
 
 	/**
@@ -938,17 +959,22 @@ public class State {
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
 	 * 
-	 * @return the point if there is one, else null.
+	 * @return the transition whose corner is highlighted, else null. Its
+	 *         highlighted corner can then be dragged via {@link
+	 *         Transition#moveHighlight(int,int)} (issue #77).
 	 */
-	public java.awt.Point highlightTransPoints(int x, int y) {
+	public @org.jspecify.annotations.Nullable Transition highlightTransPoints(int x, int y) {
 
 		int ds = Geometry.POINT_DIAMETER*Geometry.POINT_DIAMETER;
 		for (Transition tr : trans) {
 			tr.highlight = null;
-			for (java.awt.Point p : tr.points) {
-				if ((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y) < ds) {
+			tr.highlightIndex = -1;
+			for (int i = 0; i < tr.points.size(); i += 1) {
+				jls.core.GridPoint p = tr.points.get(i);
+				if ((p.x()-x)*(p.x()-x)+(p.y()-y)*(p.y()-y) < ds) {
 					tr.highlight = p;
-					return p;
+					tr.highlightIndex = i;
+					return tr;
 				}
 			}
 		}
@@ -977,7 +1003,7 @@ public class State {
 			// if a single segment line...
 			if (tran.points.isEmpty()) {
 				double maind =
-					java.awt.geom.Line2D.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
+					jls.core.SegmentGeometry.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
 				if (maind < d && !contains(xp,yp) && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -987,8 +1013,8 @@ public class State {
 			else {
 
 				// check out first segment
-				java.awt.Point p = tran.points.get(0);
-				double maind = java.awt.geom.Line2D.ptSegDist(x,y,p.x,p.y,xp,yp);
+				jls.core.GridPoint p = tran.points.get(0);
+				double maind = jls.core.SegmentGeometry.ptSegDist(x,y,p.x(),p.y(),xp,yp);
 				if (maind < d && !contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -997,9 +1023,9 @@ public class State {
 
 				// check out middle segments
 				for (int i=1; i<tran.points.size(); i+=1) {
-					java.awt.Point p1 = tran.points.get(i-1);
-					java.awt.Point p2 = tran.points.get(i);
-					maind = java.awt.geom.Line2D.ptSegDist(p1.x,p1.y,p2.x,p2.y,xp,yp);
+					jls.core.GridPoint p1 = tran.points.get(i-1);
+					jls.core.GridPoint p2 = tran.points.get(i);
+					maind = jls.core.SegmentGeometry.ptSegDist(p1.x(),p1.y(),p2.x(),p2.y(),xp,yp);
 					if (maind < d) {
 						tran.highlighted = true;
 						lastHighlighted = tran;
@@ -1009,7 +1035,7 @@ public class State {
 
 				// check out last segment
 				p = tran.points.get(tran.points.size()-1);
-				maind = java.awt.geom.Line2D.ptSegDist(p.x,p.y,tran.nextState.x,tran.nextState.y,xp,yp);
+				maind = jls.core.SegmentGeometry.ptSegDist(p.x(),p.y(),tran.nextState.x,tran.nextState.y,xp,yp);
 				if (maind < d && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -1075,7 +1101,7 @@ public class State {
 	 * 
 	 * @return the maximum width.
 	 */
-	public int getWidthInfo(java.awt.FontMetrics fm) {
+	public int getWidthInfo(jls.core.TextMetrics fm) {
 
 		int width = 0;
 		for (Out out : outs) {
@@ -1256,15 +1282,14 @@ public class State {
 	 *
 	 * @return the added output, or null if the input was rejected.
 	 */
-	public Out addOutput(String signal, long value, int bits,
-			java.awt.Component dialog) {
+	public Out addOutput(String signal, long value, int bits) {
 
 		if (signal.isEmpty()) {
-			TellUser.error(dialog, "Missing signal name", "Error");
+			TellUser.error(null, "Missing signal name", "Error");
 			return null;
 		}
 		if (Math.log(value+1)/Math.log(2) > bits) {
-			TellUser.error(dialog,
+			TellUser.error(null,
 					"Value too large for number of bits", "Error");
 			return null;
 		}
@@ -1273,7 +1298,7 @@ public class State {
 		// in this state
 		for (Out out : outs) {
 			if (out.signal.equals(signal)) {
-				TellUser.error(dialog,
+				TellUser.error(null,
 						"Already an output with this name", "Error");
 				return null;
 			}
@@ -1290,12 +1315,12 @@ public class State {
 		}
 		else {
 			if (ch.isInput) {
-				TellUser.error(dialog,
+				TellUser.error(null,
 						"This signal is already an input", "Error");
 				return null;
 			}
 			if (ch.bits != bits) {
-				TellUser.error(dialog,
+				TellUser.error(null,
 						"Bits not consistent with previous use of this signal",
 						"Error");
 				return null;

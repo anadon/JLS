@@ -79,11 +79,11 @@ class EditActionMatrixTest {
 	}
 
 	private static int centerX(Element el) {
-		return el.getX() + el.getRect().width / 2;
+		return el.getX() + el.getRect().width() / 2;
 	}
 
 	private static int centerY(Element el) {
-		return el.getY() + el.getRect().height / 2;
+		return el.getY() + el.getRect().height() / 2;
 	}
 
 	/**
@@ -148,8 +148,8 @@ class EditActionMatrixTest {
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
 			// rubber-band select the gate, then press Delete on the canvas
 			int x0 = gate.getX() - 40, y0 = gate.getY() - 40;
-			int x1 = gate.getX() + gate.getRect().width + 40;
-			int y1 = gate.getY() + gate.getRect().height + 40;
+			int x1 = gate.getX() + gate.getRect().width() + 40;
+			int y1 = gate.getY() + gate.getRect().height() + 40;
 			ui.leftDrag(x0, y0, x1, y1);
 			ui.waitFor(gate::isHighlighted, "gate selected");
 

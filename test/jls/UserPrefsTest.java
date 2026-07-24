@@ -34,7 +34,7 @@ class UserPrefsTest {
 
 		new UserPrefs(node).applyStartup();		// the "restart"
 		assertSame(Theme.CLASSIC, Theme.active());
-		assertEquals(Color.green, JLSInfo.touchColor,
+		assertEquals(Color.green, JLSInfo.Palette.touchColor,
 				"classic touch color must be live after restart");
 	}
 
@@ -47,8 +47,8 @@ class UserPrefsTest {
 
 		new UserPrefs(node).applyStartup();
 		assertSame(Theme.DEFAULT, Theme.active());
-		assertEquals(new Color(1, 2, 3), JLSInfo.gridColor);
-		assertEquals(new Color(4, 5, 6), JLSInfo.backgroundColor);
+		assertEquals(new Color(1, 2, 3), JLSInfo.Palette.gridColor);
+		assertEquals(new Color(4, 5, 6), JLSInfo.Palette.backgroundColor);
 	}
 
 	@Test
@@ -59,7 +59,7 @@ class UserPrefsTest {
 		store.rememberTheme("classic");
 
 		new UserPrefs(node).applyStartup();
-		assertEquals(Theme.CLASSIC.grid(), JLSInfo.gridColor,
+		assertEquals(Theme.CLASSIC.grid(), JLSInfo.Palette.gridColor,
 				"a theme choice must reset the grid to the theme's own");
 	}
 
@@ -67,7 +67,7 @@ class UserPrefsTest {
 	void missingStoreFallsBackToDefaultsWithoutFailing() {
 		new UserPrefs(new MemoryPreferences()).applyStartup();
 		assertSame(Theme.DEFAULT, Theme.active());
-		assertEquals(Theme.DEFAULT.grid(), JLSInfo.gridColor);
+		assertEquals(Theme.DEFAULT.grid(), JLSInfo.Palette.gridColor);
 	}
 
 	@Test
@@ -77,7 +77,7 @@ class UserPrefsTest {
 		store.rememberGridColor(new Color(7, 8, 9));
 		store.applyStartup();
 		assertSame(Theme.CLASSIC, Theme.active());
-		assertEquals(new Color(7, 8, 9), JLSInfo.gridColor);
+		assertEquals(new Color(7, 8, 9), JLSInfo.Palette.gridColor);
 	}
 
 	@Test
@@ -88,7 +88,7 @@ class UserPrefsTest {
 
 		new UserPrefs(node).applyStartup();
 		assertSame(Theme.DEFAULT, Theme.active());
-		assertEquals(Theme.DEFAULT.grid(), JLSInfo.gridColor);
+		assertEquals(Theme.DEFAULT.grid(), JLSInfo.Palette.gridColor);
 	}
 
 	@Test

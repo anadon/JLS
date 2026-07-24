@@ -1,6 +1,7 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
+import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 
 import jls.Circuit;
@@ -21,7 +22,7 @@ public record FlipElement(ElementId id) implements CircuitOp {
 		if (!el.canFlip()) {
 			throw new OpRejected("element '" + id + "' cannot flip");
 		}
-		el.flip(g);
+		el.flip(SwingTextMetrics.forGraphics(g));
 	} // end of apply method
 
 	@Override

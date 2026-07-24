@@ -38,7 +38,7 @@ public final class RegisterRenderer implements ElementRenderer {
 		int s = Geometry.SPACING;
 		if (reg.isWatched()) {
 
-			g.setColor(JLSInfo.watchColor);
+			g.setColor(JLSInfo.Palette.watchColor);
 			if(orientation == Orientation.RIGHT)
 			{
 				g.fillRect(x+s,y,width-s,height);

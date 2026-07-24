@@ -60,7 +60,7 @@ public final class TruthTableDialog implements ElementDialog {
 				return false;
 
 			// complete initialization
-			tt.init(g);
+			tt.init(SwingTextMetrics.forGraphics(g));
 
 			// save position
 			Point p = Placement.dropPoint(editWindow,x,y,
@@ -79,7 +79,7 @@ public final class TruthTableDialog implements ElementDialog {
 			return false;
 		}
 
-		return tt.finishChange(g);
+		return tt.finishChange(SwingTextMetrics.forGraphics(g));
 	} // end of setup method
 
 } // end of TruthTableDialog class

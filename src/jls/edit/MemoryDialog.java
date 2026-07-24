@@ -70,7 +70,7 @@ public final class MemoryDialog implements ElementDialog {
 			}
 
 			// complete initialization and place the element
-			mem.init(g);
+			mem.init(SwingTextMetrics.forGraphics(g));
 			Point p = Placement.dropPoint(editWindow, x, y,
 					mem.getWidth(), mem.getHeight());
 			mem.setXY(p.x, p.y);
@@ -82,7 +82,7 @@ public final class MemoryDialog implements ElementDialog {
 
 		// if name too big, resize and detach
 		if (form.changed) {
-			mem.reinit(g);
+			mem.reinit(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 		return false;

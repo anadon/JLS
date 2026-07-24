@@ -46,7 +46,7 @@ public final class JumpStartDialog implements ElementDialog {
 		}
 
 		// complete initialization
-		start.init(g);
+		start.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

@@ -24,7 +24,7 @@ public final class StopDialog implements ElementDialog {
 		Stop stop = (Stop) el;
 
 		// complete initialization
-		stop.init(g);
+		stop.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

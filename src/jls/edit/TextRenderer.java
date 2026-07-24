@@ -46,7 +46,7 @@ public final class TextRenderer implements ElementRenderer {
 
 		ElementRenderSupport.drawHighlight(g, t);
 		int y = t.getY() + ascent;
-		myg.setColor(t.getColor());
+		myg.setColor(new java.awt.Color(t.getColorRGB()));
 		for (String str : t.getLines()) {
 			myg.drawString(str, t.getX(), y);
 			y += height;

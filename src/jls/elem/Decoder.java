@@ -108,7 +108,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		int s = Geometry.SPACING;
 		int outs = 1 << bits;
@@ -147,7 +147,7 @@ public final class Decoder extends LogicElement implements Timed {
 					width = 2 * s;
 					height = 5 * s;
 				}
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int bw = fm.stringWidth(inout);
 				if (bw > width && orientation == Orientation.LEFT) {
 					inout = "1-n";
@@ -371,7 +371,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -394,7 +394,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();

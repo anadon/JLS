@@ -67,7 +67,7 @@ class OrientationGeometryTest {
 			}
 			BufferedImage img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = img.createGraphics();
-			boolean finished = circuit.finishLoad(g);
+			boolean finished = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 			g.dispose();
 			if (!finished) {
 				return label + " finishLoadError=" + errorCategory();
@@ -85,9 +85,9 @@ class OrientationGeometryTest {
 			return label + " missing";
 		}
 		StringBuilder line = new StringBuilder(label);
-		java.awt.Rectangle r = el.getRect();
-		line.append(" rect=").append(r.x - el.getX()).append(',')
-			.append(r.y - el.getY()).append(',').append(r.width).append(',').append(r.height);
+		jls.core.Bounds r = el.getRect();
+		line.append(" rect=").append(r.x() - el.getX()).append(',')
+			.append(r.y() - el.getY()).append(',').append(r.width()).append(',').append(r.height());
 		List<String> puts = new ArrayList<>();
 		for (Put p : el.getAllPuts()) {
 			puts.add(p.getName() + "@" + (p.getX() - el.getX()) + "," + (p.getY() - el.getY()));

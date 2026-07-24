@@ -64,7 +64,7 @@ public final class RegisterDialog implements ElementDialog {
 			}
 
 			// complete initialization
-			reg.init(g);
+			reg.init(SwingTextMetrics.forGraphics(g));
 
 			// save position
 			Point p = Placement.dropPoint(editWindow, x, y,
@@ -78,7 +78,7 @@ public final class RegisterDialog implements ElementDialog {
 
 		// if element got bigger, detach and make user re-position
 		if (form.nameChanged) {
-			reg.resizeForNewName(g);
+			reg.resizeForNewName(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 		return false;

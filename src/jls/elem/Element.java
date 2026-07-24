@@ -60,24 +60,6 @@ public abstract sealed class Element
 	} // end of constructor
 
 	/**
-	 * Set up this element (overridden by most elements).
-	 *
-	 * @param g The Graphics object to use to initialize sizes.
-	 * @param editWindow The editor window this element will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 *
-	 * @return false if cancelled, true otherwise (this default implementation always returns false).
-	 *
-	 * @jls.testedby jls.ui.DialogConstructionSmokeTest#constructAndCancel()
-	 */
-	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
-			int x, int y) {
-
-		return false;
-	} // end of init method
-
-	/**
 	 * Set coordinates of this element.
 	 * 
 	 * @param x The x-coordinate of the upper left corner of this element.
@@ -424,7 +406,7 @@ public abstract sealed class Element
 	 *
 	 * @throws Exception always, unless overridden by a subclass.
 	 */
-	public void init(java.awt.Graphics g) throws Exception{
+	public void init(jls.core.TextMetrics g) throws Exception{
 		throw new Exception("ERROR: using undefined function from " + this.getName());
 	}
 
@@ -512,7 +494,7 @@ public abstract sealed class Element
 	 */
 	public boolean contains(int x, int y) {
 
-		java.awt.Rectangle thisRect = getRect();
+		jls.core.Bounds thisRect = getRect();
 		return thisRect.contains(x,y);
 	} // end of contains method
 
@@ -549,8 +531,8 @@ public abstract sealed class Element
 		}
 
 		// simply see if the elements' bounding rectangles intersect
-		java.awt.Rectangle thisRect = getRect();
-		java.awt.Rectangle otherRect = other.getRect();
+		jls.core.Bounds thisRect = getRect();
+		jls.core.Bounds otherRect = other.getRect();
 		return thisRect.intersects(otherRect);
 	} // end of intersects method
 
@@ -563,9 +545,9 @@ public abstract sealed class Element
 	 *
 	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
 	 */
-	public boolean isInside(java.awt.Rectangle rect) {
+	public boolean isInside(jls.core.Bounds rect) {
 
-		java.awt.Rectangle me = getRect();
+		jls.core.Bounds me = getRect();
 		return rect.contains(me);
 	} // end of isInside method
 
@@ -768,9 +750,9 @@ public abstract sealed class Element
 	 * @jls.testedby jls.ui.GeometryAssert#assertLeftOf()
 	 * @jls.testedby jls.ui.GeometryAssert#assertWithinGridUnits()
 	 */
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
-		return new java.awt.Rectangle(x,y,width,height);
+		return new jls.core.Bounds(x,y,width,height);
 	} // end of getRect method
 
 	/**
@@ -787,7 +769,7 @@ public abstract sealed class Element
 	 * @jls.testedby jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
 	 * @jls.testedby jls.SpatialIndexTest#bruteForceNear()
 	 */
-	public java.awt.Rectangle getIndexBounds() {
+	public jls.core.Bounds getIndexBounds() {
 
 		return getRect();
 	} // end of getIndexBounds method
@@ -828,23 +810,6 @@ public abstract sealed class Element
 	} // end of canChange method
 
 	/**
-	 * Change element characteristics.
-	 * Overridden in elements that can change.
-	 * 
-	 * @param g A Graphics object to use for sizing.
-	 * @param editWindow The editor window.
-	 * @param x The current x-coordinate of the cursor.
-	 * @param y The current y-coordinate of the cursor.
-	 * 
-	 * @return true if the element did change, false if not.
-	 */
-	public boolean change(java.awt.Graphics g, javax.swing.JPanel editWindow,
-			int x, int y) {
-
-		return false;
-	} // end of change method
-
-	/**
 	 * Check whether element has a quick change (shortcut) option.
 	 * Overridden by elements than can.
 	 * 
@@ -854,22 +819,6 @@ public abstract sealed class Element
 
 		return false;
 	} // end of quicChange method
-
-	/**
-	 * Set up menu item for quick changes.
-	 * Overridden by elements that can do it.
-	 * Should never be called.
-	 * 
-	 * @param sed The simple editor the menu item will be used in.
-	 *
-	 * @return a menu item (can be a menu with submenu items)
-	 *
-	 * @throws UnsupportedOperationException if called and not overridden.
-	 */
-	public javax.swing.JMenuItem setupQuickMenu(jls.edit.SimpleEditor sed) {
-
-		throw new UnsupportedOperationException("setupQuickMenu");
-	} // end of setupQuickMenu method
 
 	/**
 	 * Check whether the element has timing info, i.e., propagation delay or access time.
@@ -882,19 +831,6 @@ public abstract sealed class Element
 
 		return false;
 	} // end of hasTiming method
-
-	/**
-	 * Show timing change dialog.
-	 */
-	public void changeTiming() {
-
-		// the timing dialog is GUI-side (issue #77); the model routes to
-		// it by fully-qualified reference so it keeps no Swing import. The
-		// "access time" vs "propagation delay" wording is the element's
-		// own concern, declared through the Timed capability (issue #78).
-		jls.edit.DelayChangeDialog.open(this);
-
-	} // end of changeTiming method
 
 	/**
 	 * The save-format version this element's current state requires
@@ -926,7 +862,7 @@ public abstract sealed class Element
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		throw new UnsupportedOperationException("Rotate");
 	}
@@ -945,7 +881,7 @@ public abstract sealed class Element
 	 * This method will flip an element, it must be overridden by classes that support it
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		throw new UnsupportedOperationException("Flip");
 	}

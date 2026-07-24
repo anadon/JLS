@@ -127,14 +127,14 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// set up size if needed
 		if (g != null) {
 
 			if (width == 0 && height == 0) {
 				int s = Geometry.SPACING;
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(" " + name + " ");
 				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
@@ -298,7 +298,7 @@ public abstract sealed class Pin extends LogicElement
 	public void remove(Circuit circ) {
 
 		if (circ.isImported()) {
-			TellUser.error(JLSInfo.frame,
+			TellUser.error(null,
 					"Can't remove " + pinKind().toLowerCase() + " pin "
 					+ name + " from a subcircuit", "Error");
 			return;
@@ -346,7 +346,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g) {
+	public void rotate(Orientation direction, jls.core.TextMetrics g) {
 
 		if (direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
@@ -367,7 +367,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void flip(java.awt.Graphics g) {
+	public void flip(jls.core.TextMetrics g) {
 
 		orientation = orientation.flipped();
 		inputs.clear();

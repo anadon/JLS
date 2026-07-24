@@ -25,10 +25,10 @@ public final class WireEndRenderer implements ElementRenderer {
 
 		Color inside;
 		if (we.isTouching()) {
-			inside = JLSInfo.touchColor;
+			inside = JLSInfo.Palette.touchColor;
 		}
 		else if (we.isHighlighted()) {
-			inside = JLSInfo.highlightColor;
+			inside = JLSInfo.Palette.highlightColor;
 		}
 		else if (we.getPut() != null) {
 			if (we.isAttached())
@@ -53,7 +53,7 @@ public final class WireEndRenderer implements ElementRenderer {
 			// second, color-independent channel (issue #76): an open
 			// ring around the point marks a connection lining up even
 			// when the touch color cannot be told apart
-			g.setColor(JLSInfo.wireZeroColor);
+			g.setColor(JLSInfo.Palette.wireZeroColor);
 			int rd = pd+4;
 			g.drawOval(x-rd/2,y-rd/2,rd,rd);
 		}

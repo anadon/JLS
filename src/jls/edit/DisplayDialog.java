@@ -45,7 +45,7 @@ public final class DisplayDialog implements ElementDialog {
 		}
 
 		// complete initialization and place the element
-		disp.init(g);
+		disp.init(SwingTextMetrics.forGraphics(g));
 		Point p = Placement.dropPoint(editWindow, x, y,
 				disp.getWidth(), disp.getHeight());
 		disp.setXY(p.x, p.y);

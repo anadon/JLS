@@ -46,7 +46,7 @@ public final class Wire extends Element {
 	 * This form of init not used.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// do nothing
 	} // end of init method
@@ -185,16 +185,17 @@ public final class Wire extends Element {
 	 * @return the index bounds.
 	 */
 	@Override
-	public java.awt.Rectangle getIndexBounds() {
+	public jls.core.Bounds getIndexBounds() {
 
 		int x1 = end1.getX();
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		java.awt.Rectangle bounds = new java.awt.Rectangle(Math.min(x1, x2), Math.min(y1, y2),
-				Math.abs(x2 - x1), Math.abs(y2 - y1));
-		bounds.grow(Geometry.SPACING, Geometry.SPACING);
-		return bounds;
+		int s = Geometry.SPACING;
+		// bounding box of the two ends, grown by the snap spacing (matches
+		// the AWT Rectangle grow the wire index used to do)
+		return new jls.core.Bounds(Math.min(x1, x2) - s, Math.min(y1, y2) - s,
+				Math.abs(x2 - x1) + 2 * s, Math.abs(y2 - y1) + 2 * s);
 	} // end of getIndexBounds method
 
 	/**
@@ -206,7 +207,7 @@ public final class Wire extends Element {
 	 * @return the wire's real bounding rectangle.
 	 */
 	@Override
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
 		return getIndexBounds();
 	} // end of getRect method
@@ -228,8 +229,8 @@ public final class Wire extends Element {
 		int x2 = end2.getX();
 		int y2 = end2.getY();
 		int d = Geometry.POINT_DIAMETER;
-		if (java.awt.geom.Line2D.ptSegDist(x1,y1,x2,y2,x,y) < Geometry.SPACING/2 &&
-				java.awt.geom.Point2D.distance(x1,y1,x,y) > d && java.awt.geom.Point2D.distance(x2,y2,x,y) > d) {
+		if (jls.core.SegmentGeometry.ptSegDist(x1,y1,x2,y2,x,y) < Geometry.SPACING/2 &&
+				jls.core.SegmentGeometry.distance(x1,y1,x,y) > d && jls.core.SegmentGeometry.distance(x2,y2,x,y) > d) {
 			return true;
 		}
 		else {
@@ -244,7 +245,7 @@ public final class Wire extends Element {
 	 * 
 	 * @return true if it it does, false if it does not.
 	 */
-	public boolean intersects(java.awt.Rectangle rect) {
+	public boolean intersects(jls.core.Bounds rect) {
 
 		// get end points of wire
 		int x1 = end1.getX();
@@ -253,12 +254,12 @@ public final class Wire extends Element {
 		int y2 = end2.getY();
 
 		// if the rectangle intersects the wire...
-		java.awt.geom.Rectangle2D r = (java.awt.geom.Rectangle2D)rect;
-		if (r.intersectsLine(x1,y1,x2,y2)) {
+		if (jls.core.SegmentGeometry.segmentIntersectsRectangle(
+				rect.x(), rect.y(), rect.width(), rect.height(), x1, y1, x2, y2)) {
 
 			// then exclude end points (smaller rectangle a kludge 'cause contains
 			// means inside, not including on the edge)
-			java.awt.Rectangle rs = new java.awt.Rectangle(rect.x-1,rect.y-1,rect.width+2,rect.height+2);
+			jls.core.Bounds rs = new jls.core.Bounds(rect.x()-1,rect.y()-1,rect.width()+2,rect.height()+2);
 			if (rs.contains(x1,y1) || rs.contains(x2,y2)) {
 				return false;
 			}
@@ -287,11 +288,11 @@ public final class Wire extends Element {
 		int x2 = end2.getX();
 		int y2 = end2.getY();
 		int d = Geometry.POINT_DIAMETER;
-		if (java.awt.geom.Line2D.ptSegDist(x1,y1,x2,y2,x,y) < d/2) {
-			if (java.awt.geom.Point2D.distance(x,y,x1,y1) < d/2) {
+		if (jls.core.SegmentGeometry.ptSegDist(x1,y1,x2,y2,x,y) < d/2) {
+			if (jls.core.SegmentGeometry.distance(x,y,x1,y1) < d/2) {
 				return false;
 			}
-			if (java.awt.geom.Point2D.distance(x,y,x2,y2) < d/2) {
+			if (jls.core.SegmentGeometry.distance(x,y,x2,y2) < d/2) {
 				return false;
 			}
 			return true;
@@ -401,7 +402,7 @@ public final class Wire extends Element {
 	 * @return true if it is, false if not.
 	 */
 	@Override
-	public boolean isInside(java.awt.Rectangle rect) {
+	public boolean isInside(jls.core.Bounds rect) {
 
 		if (rect.contains(end1.getX(),end1.getY()) && rect.contains(end2.getX(),end2.getY())) {
 			return true;
@@ -429,7 +430,7 @@ public final class Wire extends Element {
 	 */
 	public int length() {
 		
-		return (int)(java.awt.geom.Point2D.distance(end1.getX(),end1.getY(),end2.getX(),end2.getY()));
+		return (int)(jls.core.SegmentGeometry.distance(end1.getX(),end1.getY(),end2.getX(),end2.getY()));
 	} // end of length method
 
 	/**

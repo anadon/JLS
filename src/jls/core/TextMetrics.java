@@ -3,7 +3,7 @@ package jls.core;
 /**
  * Headless text measurement (issue #77). Elements size themselves from
  * the width and height of their labels; today they read those from an
- * AWT {@link java.awt.FontMetrics} obtained from a live
+ * AWT {@code FontMetrics} obtained from a live
  * {@code Graphics}, which forces the whole element hierarchy to depend
  * on AWT. This interface is the seam that breaks that dependency: an
  * element's layout takes a {@code TextMetrics} instead of a

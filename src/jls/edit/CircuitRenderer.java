@@ -82,7 +82,7 @@ public final class CircuitRenderer implements Printable {
 
 		// finish up loading process if necessary
 		if (circuit.isLoadPending()) {
-			if (!circuit.finishLoad(g)) {
+			if (!circuit.finishLoad(SwingTextMetrics.forGraphics(g))) {
 				// report once instead of silently re-failing on every
 				// repaint (#58)
 				circuit.reportDeferredFinishFailure();
@@ -92,7 +92,7 @@ public final class CircuitRenderer implements Printable {
 			// needed area
 			Rectangle rect = new Rectangle(0, 0, Geometry.CIRCUITSIZE,
 					Geometry.CIRCUITSIZE);
-			rect.add(circuit.getBounds());
+			rect.add(AwtGeom.awt(circuit.getBounds()));
 			if (ed != null) {
 				ed.setCircuitSize(rect.getSize());
 			}
@@ -118,7 +118,7 @@ public final class CircuitRenderer implements Printable {
 		} else {
 			Rectangle query = new Rectangle(clip);
 			query.grow(DRAW_MARGIN, DRAW_MARGIN);
-			candidates = circuit.elementsNear(query);
+			candidates = circuit.elementsNear(AwtGeom.bounds(query));
 		}
 		List<Element> wires = new ArrayList<Element>();
 		List<Element> parts = new ArrayList<Element>();
@@ -159,7 +159,7 @@ public final class CircuitRenderer implements Printable {
 	 */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 
-		Rectangle b = el.getIndexBounds();
+		Rectangle b = AwtGeom.awt(el.getIndexBounds());
 		b.grow(DRAW_MARGIN, DRAW_MARGIN);
 		return b.intersects(clip);
 	} // end of mayBeVisible method
@@ -198,7 +198,7 @@ public final class CircuitRenderer implements Printable {
 		int fontHeight = ascent + descent;
 
 		// get bounds of actual circuit
-		Rectangle rect = circuit.getBounds();
+		Rectangle rect = AwtGeom.awt(circuit.getBounds());
 
 		// translate to page area
 		double width = format.getImageableWidth();
@@ -295,7 +295,7 @@ public final class CircuitRenderer implements Printable {
 	public void exportImage(String file) throws Exception {
 
 		// get bounds of actual circuit
-		Rectangle rect = circuit.getBounds();
+		Rectangle rect = AwtGeom.awt(circuit.getBounds());
 
 		// add 10 pixels on all edges
 		int border = 10;
@@ -330,10 +330,10 @@ public final class CircuitRenderer implements Printable {
 			// order on index bounds, not x/y: wires keep x/y at their
 			// defaults, but their bounds are derived from their ends
 			java.util.Comparator<Element> drawOrder = java.util.Comparator
-					.comparingInt((Element el) -> el.getIndexBounds().x)
-					.thenComparingInt(el -> el.getIndexBounds().y)
-					.thenComparingInt(el -> el.getIndexBounds().width)
-					.thenComparingInt(el -> el.getIndexBounds().height)
+					.comparingInt((Element el) -> el.getIndexBounds().x())
+					.thenComparingInt(el -> el.getIndexBounds().y())
+					.thenComparingInt(el -> el.getIndexBounds().width())
+					.thenComparingInt(el -> el.getIndexBounds().height())
 					.thenComparing(el -> el.getClass().getName())
 					.thenComparingInt(Element::getID);
 			wireLayer.sort(drawOrder);

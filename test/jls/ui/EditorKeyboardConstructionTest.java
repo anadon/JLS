@@ -164,9 +164,9 @@ class EditorKeyboardConstructionTest {
 			// 2. arrow-key nudge of a selected element: move the caret onto
 			// the OR gate, Enter to select it, then an arrow to nudge it one
 			// grid step through the undoable move op
-			Rectangle orRect = or.getRect();
-			driveCaretToward(ui, orRect.x + orRect.width / 2,
-					orRect.y + orRect.height / 2);
+			jls.core.Bounds orRect = or.getRect();
+			driveCaretToward(ui, orRect.x() + orRect.width() / 2,
+					orRect.y() + orRect.height() / 2);
 			ui.pressKeyThroughFocusOwner(KeyEvent.VK_ENTER);
 			int beforeX = or.getX();
 			ui.pressKeyThroughFocusOwner(KeyEvent.VK_RIGHT);
@@ -271,8 +271,8 @@ class EditorKeyboardConstructionTest {
 
 			// the drawn wire now spans the four grid steps the arrows ran out
 			Element wire = firstPresent(circuit, wireClass());
-			Rectangle wr = wire.getRect();
-			assertEquals(4 * step, wr.width - 2 * step,
+			jls.core.Bounds wr = wire.getRect();
+			assertEquals(4 * step, wr.width() - 2 * step,
 					"wire spans the four grid steps (bounds grow one spacing "
 							+ "each side)");
 

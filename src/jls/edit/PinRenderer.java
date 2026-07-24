@@ -67,7 +67,7 @@ public final class PinRenderer implements ElementRenderer {
 		}
 		// draw watched background
 		if (pin.isWatched()) {
-			g.setColor(JLSInfo.watchColor);
+			g.setColor(JLSInfo.Palette.watchColor);
 			g.fillPolygon(p);
 		}
 

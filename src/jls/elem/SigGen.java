@@ -38,7 +38,7 @@ public final class SigGen extends SigSim {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// do nothing if no graphics object
 		if (g == null)
@@ -49,7 +49,7 @@ public final class SigGen extends SigSim {
 			return;
 
 		int s = Geometry.SPACING;
-		java.awt.FontMetrics fm = g.getFontMetrics();
+		jls.core.TextMetrics fm = g;
 		int w = fm.stringWidth(title);
 		width = (w+s-1)/s*s;
 		height = 2*s;
@@ -195,13 +195,13 @@ public final class SigGen extends SigSim {
 	@Override
 	protected void specError(String msg) {
 		
-		if (JLSInfo.batch && JLSInfo.frame == null) {
+		if (JLSInfo.noWindow()) {
 			System.out.println("error in test file");
 			System.out.println(msg);
 			System.exit(1);
 		}
 		else {
-			TellUser.error(JLSInfo.frame,"error in test file: " + msg, "Error");
+			TellUser.error(null,"error in test file: " + msg, "Error");
 			return;
 		}
 	} // end of specError method

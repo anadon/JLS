@@ -47,9 +47,11 @@ class ProofBridgeTest {
 	private static boolean boundsTouch(Rectangle a, Rectangle b)
 			throws Exception {
 		Method m = SpatialIndex.class.getDeclaredMethod("boundsTouch",
-				Rectangle.class, Rectangle.class);
+				jls.core.Bounds.class, jls.core.Bounds.class);
 		m.setAccessible(true);
-		return (Boolean) m.invoke(null, a, b);
+		return (Boolean) m.invoke(null,
+				new jls.core.Bounds(a.x, a.y, a.width, a.height),
+				new jls.core.Bounds(b.x, b.y, b.width, b.height));
 	}
 
 	private static int drawMargin() throws Exception {
@@ -78,8 +80,8 @@ class ProofBridgeTest {
 		Random random = new Random(SEED);
 		for (int round = 0; round < 20; round += 1) {
 			for (Element el : circuit.getElements()) {
-				Rectangle b = el.getIndexBounds();
-				assertTrue(b.width >= 0 && b.height >= 0,
+				jls.core.Bounds b = el.getIndexBounds();
+				assertTrue(b.width() >= 0 && b.height() >= 0,
 						"index bounds must be non-empty (A1): " + b + " for " + el);
 				if (random.nextBoolean()) {
 					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
@@ -197,11 +199,11 @@ class ProofBridgeTest {
 					random.nextInt(600) - 150,
 					random.nextInt(300) + 1, random.nextInt(300) + 1);
 			for (Element el : circuit.getElements()) {
-				Rectangle b = el.getIndexBounds();
-				long loX = (long) b.x - m;
-				long hiX = (long) b.x + b.width + m;
-				long loY = (long) b.y - m;
-				long hiY = (long) b.y + b.height + m;
+				jls.core.Bounds b = el.getIndexBounds();
+				long loX = (long) b.x() - m;
+				long hiX = (long) b.x() + b.width() + m;
+				long loY = (long) b.y() - m;
+				long hiY = (long) b.y() + b.height() + m;
 				boolean model = loX < clip.x + (long) clip.width
 						&& clip.x < hiX
 						&& loY < clip.y + (long) clip.height

@@ -73,7 +73,7 @@ public final class WireEnd extends LogicElement {
 	 * @param g The Graphics object needed by overridden methods.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// do nothing
 	} // end of init method
@@ -213,7 +213,7 @@ public final class WireEnd extends LogicElement {
 	 * @return true if the element is inside, false if not.
 	 */
 	@Override
-	public boolean isInside(java.awt.Rectangle rect) {
+	public boolean isInside(jls.core.Bounds rect) {
 
 		return rect.contains(x,y);
 	} // end of isInside method
@@ -513,11 +513,11 @@ public final class WireEnd extends LogicElement {
 	 * @return the bounding rectangle.
 	 */
 	@Override
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
 		int d = Geometry.POINT_DIAMETER;
 		int r = d/2;
-		return new java.awt.Rectangle(x-r,y-r,d,d);
+		return new jls.core.Bounds(x-r,y-r,d,d);
 	} // end of getRect method
 	
 	/**

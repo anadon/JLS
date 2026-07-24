@@ -54,7 +54,7 @@ public final class SigGenDialog implements ElementDialog {
 			if (form.cancelled) {
 				return false;
 			}
-			sg.init(g);
+			sg.init(SwingTextMetrics.forGraphics(g));
 			Point p = Placement.dropPoint(editWindow, x, y,
 					sg.getWidth(), sg.getHeight());
 			sg.setXY(p.x, p.y);

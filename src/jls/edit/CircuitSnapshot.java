@@ -85,7 +85,7 @@ public final class CircuitSnapshot {
 		String text = new String(inflate(deflated), StandardCharsets.UTF_8);
 		Circuit restored = new Circuit(name);
 		try {
-			if (!restored.load(new Scanner(text)) || !restored.finishLoad(g)) {
+			if (!restored.load(new Scanner(text)) || !restored.finishLoad(SwingTextMetrics.forGraphics(g))) {
 				return null;
 			}
 		} catch (Exception ex) {

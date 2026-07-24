@@ -143,13 +143,13 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				width = fm.stringWidth(" " + name + " ");
 				for (Element el : subCircuit.getElements()) {
 					if (el instanceof InputPin || el instanceof OutputPin) {
@@ -527,7 +527,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param g The Graphics object used to draw this element.
 	 */
 	@Override
-	public void flip(java.awt.Graphics g) {
+	public void flip(jls.core.TextMetrics g) {
 		if(orientation == Orientation.LEFT)
 		{
 			orientation = Orientation.RIGHT;

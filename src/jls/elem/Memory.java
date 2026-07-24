@@ -125,8 +125,8 @@ public final class Memory extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// set up
 		if (type == Type.RAM) {
 			specs = " " + capacity + "x" + bits + " RAM ";
@@ -134,14 +134,14 @@ public final class Memory extends LogicElement
 		else {
 			specs = " " + capacity + "x" + bits + " ROM ";
 		}
-		
+
 		// set up size if there is a graphics object
 		int s = Geometry.SPACING;
 		if (g != null) {
-			
+
 			// set up size if it doesn't already have one
 			if (width == 0 && height == 0) {
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int w1 = (fm.stringWidth(" " + name + " ")+s/2)/s*s;
 				int minW = 0;
 				if (type == Type.RAM) {
@@ -292,7 +292,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @param g The Graphics object to use to recompute size.
 	 */
-	public void reinit(java.awt.Graphics g) {
+	public void reinit(jls.core.TextMetrics g) {
 
 		detach();
 		width = 0;
@@ -1203,12 +1203,12 @@ public final class Memory extends LogicElement
 				input.close();
 				String msg = initOK(new String(info),capacity,bits,true);
 				if (msg != null) {
-					if (JLSInfo.batch && JLSInfo.frame == null) {
+					if (JLSInfo.noWindow()) {
 						System.out.println(msg + " in memory file " +
 								name + ", all zeros assumed");
 					}
 					else {
-						TellUser.error(JLSInfo.frame,
+						TellUser.error(null,
 								msg + "in memory file " +
 								name + ", all zeros assumed", "Error");
 					}
@@ -1217,12 +1217,12 @@ public final class Memory extends LogicElement
 			}
 			catch (IOException ex) {
 				
-				if (JLSInfo.batch && JLSInfo.frame == null) {
+				if (JLSInfo.noWindow()) {
 					System.out.println("Initialization file for memory " +
 							name + " cannot be read, all zeros assumed");
 				}
 				else {
-					TellUser.error(JLSInfo.frame,
+					TellUser.error(null,
 							"Initialization file for memory " +
 							name + " cannot be read, all zeros assumed", "Error");
 				}
@@ -1234,12 +1234,12 @@ public final class Memory extends LogicElement
 			// parse built-in values
 			String msg = initOK(initialValue,capacity,bits,true);
 			if (msg != null) {
-				if (JLSInfo.batch && JLSInfo.frame == null) {
+				if (JLSInfo.noWindow()) {
 					System.out.println(msg + " in memory file " +
 							name + ", all zeros assumed");
 				}
 				else {
-					TellUser.error(JLSInfo.frame,
+					TellUser.error(null,
 							msg + " in memory file " +
 							name + ", all zeros assumed", "Error");
 				}
@@ -1449,80 +1449,24 @@ public final class Memory extends LogicElement
 	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 */
 	public BitSet getCurrentValue(int loc){
-		
+
 	   return mem.get(loc);
 	   } // end of getCurrentValue method
-	
+
 	/**
-	 * Show memory contents.
-	 * 
-	 * @param where Where on the screen to display.
+	 * The addresses of the currently-stored (non-zero) memory words,
+	 * creating an empty store if the simulator has not run yet (issue #77:
+	 * exposed so the GUI-side memory-contents dialog can list them without
+	 * the model holding any Swing).
+	 *
+	 * @return the set of stored addresses, ascending.
 	 */
-	@Override
-	public void showCurrentValue(int whereX, int whereY) {
+	public SortedSet<Integer> storedAddresses() {
 
-		// set up
-		final javax.swing.JDialog contents = new javax.swing.JDialog(JLSInfo.frame,true);
-		java.awt.Container window = contents.getContentPane();
-		window.setLayout(new java.awt.BorderLayout());
-
-		// if simulator not run yet, make a dummy mem array
 		if (mem == null) {
 			mem = newWordStore();
 		}
+		return mem.addresses();
+	} // end of storedAddresses method
 
-		// create addr/data display
-		SortedSet<Integer> addrs = mem.addresses();
-		javax.swing.JPanel display = new javax.swing.JPanel(new java.awt.GridLayout(addrs.size(),2,10,3));
-		for (int addr : addrs) {
-
-			// address info
-			String hexAddr = Integer.toHexString(addr);
-			String allAddr = "0x" + hexAddr + " (" + addr + "):";
-			javax.swing.JLabel addrLabel = new javax.swing.JLabel(allAddr,javax.swing.SwingConstants.RIGHT);
-			addrLabel.setOpaque(true);
-			addrLabel.setBackground(java.awt.Color.WHITE);
-			display.add(addrLabel);
-
-			// data info
-			BitSet temp = new BitSet(1);
-			if (mem.get(addr) != null) {
-				temp = mem.get(addr);
-			}
-			String hex = BitSetUtils.ToString(temp,16);
-			String unsigned = BitSetUtils.ToString(temp,10);
-			String signed = BitSetUtils.ToStringSigned(temp,bits);
-			String value = "0x" + hex + " (" + unsigned + " unsigned, " + signed + " signed)";
-			javax.swing.JLabel dataLabel = new javax.swing.JLabel(value);
-			dataLabel.setOpaque(true);
-			dataLabel.setBackground(java.awt.Color.WHITE);
-			display.add(dataLabel);
-		}
-		javax.swing.JScrollPane pane = new javax.swing.JScrollPane(display);
-		int width = (int)(display.getPreferredSize().getWidth());
-		int height = (int)(display.getPreferredSize().getHeight());
-		pane.setPreferredSize(new java.awt.Dimension(width+50,Math.min(height,400)));
-		window.add(pane,java.awt.BorderLayout.CENTER);
-		javax.swing.JButton ok = new javax.swing.JButton("ok");
-		ok.addActionListener(new java.awt.event.ActionListener() {
-			/**
-			 * Close the memory-contents dialog.
-			 *
-			 * @param event The event object for this action.
-			 */
-			@Override
-			public void actionPerformed(java.awt.event.ActionEvent event) {
-				contents.dispose();
-			}
-		});
-		window.add(ok,java.awt.BorderLayout.SOUTH);
-		window.add(new javax.swing.JLabel("Non-Zero Words:",javax.swing.SwingConstants.CENTER),java.awt.BorderLayout.NORTH);
-
-		contents.pack();
-		contents.setLocation(10,10);
-		contents.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		contents.setVisible(true);
-
-	} // end of showCurrentValue method
-	
 } // end of Memory class

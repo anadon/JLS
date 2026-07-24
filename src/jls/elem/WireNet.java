@@ -461,7 +461,7 @@ public class WireNet {
 			}
 			else if (!conflictReported) {
 				conflictReported = true;
-				TellUser.warn(JLSInfo.frame,
+				TellUser.warn(null,
 						"bus conflict at time " + now
 						+ ": two or more tri-state drivers are simultaneously"
 						+ " active with different values on one wire net;"

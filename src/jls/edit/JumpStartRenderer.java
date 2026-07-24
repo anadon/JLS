@@ -41,7 +41,7 @@ public final class JumpStartRenderer implements ElementRenderer {
 				if (other.isHighlighted()) {
 					g.setColor(Color.orange);
 					Graphics2D gg = (Graphics2D)g;
-					gg.fill(js.getRect());
+					gg.fill(AwtGeom.awt(js.getRect()));
 				}
 			}
 		}
@@ -53,7 +53,7 @@ public final class JumpStartRenderer implements ElementRenderer {
 
 		// draw watched background
 		if (js.isWatched()) {
-			g.setColor(JLSInfo.watchColor);
+			g.setColor(JLSInfo.Palette.watchColor);
 			g.fillRect(x, top, width-s, bottom-top);
 		}
 

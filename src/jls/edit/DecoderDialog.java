@@ -46,7 +46,7 @@ public final class DecoderDialog implements ElementDialog {
 		}
 
 		// complete initialization
-		decoder.init(g);
+		decoder.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

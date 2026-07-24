@@ -34,7 +34,7 @@ public final class MemoryRenderer implements ElementRenderer {
 		int s = Geometry.SPACING;
 		int d2 = Geometry.POINT_DIAMETER/2;
 		if (m.isWatched()) {
-			g.setColor(JLSInfo.watchColor);
+			g.setColor(JLSInfo.Palette.watchColor);
 			g.fillRect(x,y,width,height);
 		}
 

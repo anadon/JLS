@@ -66,7 +66,7 @@ public final class ConstantDialog implements ElementDialog {
 			// save values for next create
 			c.saveAsPrevious();
 			// complete initialization
-			c.init(g);
+			c.init(SwingTextMetrics.forGraphics(g));
 			// save position
 			Point p = Placement.dropPoint(editWindow, x, y,
 					c.getWidth(), c.getHeight());
@@ -83,7 +83,7 @@ public final class ConstantDialog implements ElementDialog {
 		c.getCircuit().markChanged();
 		// if bigger, detach and resize
 		if (form.changed) {
-			c.resizeToFit(g);
+			c.resizeToFit(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 		// no need to reposition
@@ -379,7 +379,7 @@ public final class ConstantDialog implements ElementDialog {
 			c.setValue(temp);
 
 			// decide if the element must be redrawn
-			if (!c.valueFits(g, Util.convert(temp, c.getBase(), true))) {
+			if (!c.valueFits(SwingTextMetrics.forGraphics(g), Util.convert(temp, c.getBase(), true))) {
 				changed = true;
 			} else {
 				changed = false;

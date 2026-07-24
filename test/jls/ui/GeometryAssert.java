@@ -61,8 +61,8 @@ public final class GeometryAssert {
 	 * grid spacing above and below for its value label).
 	 */
 	public static void assertDimensions(Element el, int width, int height) {
-		Rectangle rect = el.getRect();
-		assertEquals(width + "x" + height, rect.width + "x" + rect.height,
+		jls.core.Bounds rect = el.getRect();
+		assertEquals(width + "x" + height, rect.width() + "x" + rect.height(),
 				"dimensions of " + CircuitAssert.describe(el));
 	}
 
@@ -72,23 +72,23 @@ public final class GeometryAssert {
 
 	/** Assert a's bounding box lies entirely left of b's (no x overlap). */
 	public static void assertLeftOf(Element a, Element b) {
-		Rectangle ra = a.getRect();
-		Rectangle rb = b.getRect();
-		assertTrue(ra.x + ra.width <= rb.x,
+		jls.core.Bounds ra = a.getRect();
+		jls.core.Bounds rb = b.getRect();
+		assertTrue(ra.x() + ra.width() <= rb.x(),
 				CircuitAssert.describe(a) + " (right edge "
-						+ (ra.x + ra.width) + ") is not left of "
-						+ CircuitAssert.describe(b) + " (left edge " + rb.x
+						+ (ra.x() + ra.width()) + ") is not left of "
+						+ CircuitAssert.describe(b) + " (left edge " + rb.x()
 						+ ")");
 	}
 
 	/** Assert a's bounding box lies entirely above b's (no y overlap). */
 	public static void assertAbove(Element a, Element b) {
-		Rectangle ra = a.getRect();
-		Rectangle rb = b.getRect();
-		assertTrue(ra.y + ra.height <= rb.y,
+		jls.core.Bounds ra = a.getRect();
+		jls.core.Bounds rb = b.getRect();
+		assertTrue(ra.y() + ra.height() <= rb.y(),
 				CircuitAssert.describe(a) + " (bottom edge "
-						+ (ra.y + ra.height) + ") is not above "
-						+ CircuitAssert.describe(b) + " (top edge " + rb.y
+						+ (ra.y() + ra.height()) + ") is not above "
+						+ CircuitAssert.describe(b) + " (top edge " + rb.y()
 						+ ")");
 	}
 
@@ -97,10 +97,10 @@ public final class GeometryAssert {
 	 * {@code units} grid units on both axes (overlap counts as zero gap).
 	 */
 	public static void assertWithinGridUnits(Element a, Element b, int units) {
-		int gap = Math.max(axisGap(a.getRect().x, a.getRect().width,
-						b.getRect().x, b.getRect().width),
-				axisGap(a.getRect().y, a.getRect().height, b.getRect().y,
-						b.getRect().height));
+		int gap = Math.max(axisGap(a.getRect().x(), a.getRect().width(),
+						b.getRect().x(), b.getRect().width()),
+				axisGap(a.getRect().y(), a.getRect().height(), b.getRect().y(),
+						b.getRect().height()));
 		assertTrue(gap <= units * Geometry.SPACING,
 				CircuitAssert.describe(a) + " and " + CircuitAssert.describe(b)
 						+ " are " + gap + " model units apart, more than "

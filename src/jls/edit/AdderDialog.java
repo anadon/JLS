@@ -48,7 +48,7 @@ public final class AdderDialog implements ElementDialog {
 		// set propagation delay based on number of bits, complete
 		// initialization, and place the element
 		adder.resetPropDelay();
-		adder.init(g);
+		adder.init(SwingTextMetrics.forGraphics(g));
 		Point p = Placement.dropPoint(editWindow, x, y,
 				adder.getWidth(), adder.getHeight());
 		adder.setXY(p.x, p.y);

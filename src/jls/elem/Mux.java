@@ -116,7 +116,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
 		// output orientation (#24); the selector side is independent of
@@ -420,7 +420,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		selectorOrientation = selectorOrientation.flipped();
 		inputs.clear();
@@ -436,7 +436,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{

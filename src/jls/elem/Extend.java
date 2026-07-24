@@ -80,7 +80,7 @@ public final class Extend extends Gate implements TriProp {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		super.init(g);
 		inputs.clear();

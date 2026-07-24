@@ -125,7 +125,7 @@ class DialogConstructionSmokeTest {
 				Element el = (Element) Class
 						.forName("jls.elem." + elementClass)
 						.getConstructor(Circuit.class).newInstance(circuit);
-				el.setup(img.createGraphics(), new JPanel(), 100, 100);
+				jls.edit.ElementDialogs.setup(el, img.createGraphics(), new JPanel(), 100, 100);
 			} catch (Throwable t) {
 				thrown[0] = t;
 			} finally {
@@ -280,7 +280,7 @@ class DialogConstructionSmokeTest {
 		SwingUtilities.invokeLater(() -> {
 			try {
 				Element el = new AndGate(circuit);
-				el.changeTiming();
+				jls.edit.DelayChangeDialog.open(el);
 			} catch (Throwable t) {
 				thrown[0] = t;
 			} finally {

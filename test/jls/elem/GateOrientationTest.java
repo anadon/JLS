@@ -59,7 +59,7 @@ class GateOrientationTest {
 		BufferedImage img = new BufferedImage(64, 64,
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
-		boolean ok = circuit.finishLoad(g);
+		boolean ok = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 		g.dispose();
 		assertTrue(ok, () -> "finishLoad failed: " + JLSInfo.loadError);
 		Gate gate = null;
@@ -115,7 +115,7 @@ class GateOrientationTest {
 		Graphics2D g = img.createGraphics();
 		String[] cycle = {"left", "down", "right", "up"};
 		for (String expected : cycle) {
-			gate.rotate(Orientation.LEFT, g);
+			gate.rotate(Orientation.LEFT, jls.edit.SwingTextMetrics.of(g));
 			assertEquals(expected, savedOrientation(gate),
 					"rotate LEFT must be a quarter-turn "
 							+ "counterclockwise");
@@ -132,7 +132,7 @@ class GateOrientationTest {
 		Graphics2D g = img.createGraphics();
 		String[] cycle = {"right", "down", "left", "up"};
 		for (String expected : cycle) {
-			gate.rotate(Orientation.RIGHT, g);
+			gate.rotate(Orientation.RIGHT, jls.edit.SwingTextMetrics.of(g));
 			assertEquals(expected, savedOrientation(gate),
 					"rotate RIGHT must be a quarter-turn clockwise");
 		}
@@ -149,7 +149,7 @@ class GateOrientationTest {
 				{"up", "down"}, {"down", "up"}};
 		for (String[] pair : pairs) {
 			Gate gate = loadGate(pair[0]);
-			gate.flip(g);
+			gate.flip(jls.edit.SwingTextMetrics.of(g));
 			assertEquals(pair[1], savedOrientation(gate),
 					"flip must reverse '" + pair[0] + "'");
 		}

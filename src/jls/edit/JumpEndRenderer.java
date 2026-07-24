@@ -40,7 +40,7 @@ public final class JumpEndRenderer implements ElementRenderer {
 				if (other.isHighlighted()) {
 					g.setColor(Color.orange);
 					Graphics2D gg = (Graphics2D)g;
-					gg.fill(je.getRect());
+					gg.fill(AwtGeom.awt(je.getRect()));
 				}
 			}
 		}

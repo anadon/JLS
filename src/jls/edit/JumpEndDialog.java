@@ -70,7 +70,7 @@ public final class JumpEndDialog implements ElementDialog {
 			return false;
 
 		// complete initialization
-		end.init(g);
+		end.init(SwingTextMetrics.forGraphics(g));
 
 		// set tri-state status
 		JumpStart start = circuit.getJumpStart(end.getName());

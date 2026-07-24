@@ -44,7 +44,7 @@ public final class SubCircuitDialog implements ElementDialog {
 		}
 
 		// complete initialization and place the element
-		sc.init(g);
+		sc.init(SwingTextMetrics.forGraphics(g));
 		Point p = Placement.dropPoint(editWindow, x, y,
 				sc.getWidth(), sc.getHeight());
 		sc.setXY(p.x, p.y);

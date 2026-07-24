@@ -15,8 +15,7 @@ import java.util.*;
  *
  * @author David A. Poplawski
  */
-public final class Constant extends LogicElement
-		implements java.awt.event.ActionListener {
+public final class Constant extends LogicElement {
 	
 	// named constants
 	/** Default constant value. */
@@ -57,7 +56,7 @@ public final class Constant extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		int s = Geometry.SPACING;
 		// set up size if there is a graphics object
@@ -65,7 +64,7 @@ public final class Constant extends LogicElement
 
 			// if element already has a size, use it
 			if (width == 0 && height == 0) {
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(Util.convert(value,base,true))+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
 				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
@@ -291,13 +290,13 @@ public final class Constant extends LogicElement
 	 * @return the rectangle bounding this element.
 	 */
 	@Override
-	public java.awt.Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
-			return new java.awt.Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
+			return new jls.core.Bounds(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else
-			return new java.awt.Rectangle(x,y,width,height);
+			return new jls.core.Bounds(x,y,width,height);
 
 	} // end of getRect method
 
@@ -339,7 +338,7 @@ public final class Constant extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -371,7 +370,7 @@ public final class Constant extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -387,7 +386,7 @@ public final class Constant extends LogicElement
 	 *
 	 * @param g The graphics context used to recompute the size.
 	 */
-	public void resizeToFit(java.awt.Graphics g) {
+	public void resizeToFit(jls.core.TextMetrics g) {
 
 		detach();
 		width = 0;
@@ -403,10 +402,10 @@ public final class Constant extends LogicElement
 	 *
 	 * @return true if it fits, false if not.
 	 */
-	public boolean valueFits(java.awt.Graphics g, String value) {
+	public boolean valueFits(jls.core.TextMetrics g, String value) {
 
 		int s = Geometry.SPACING;
-		java.awt.FontMetrics fm = g.getFontMetrics();
+		jls.core.TextMetrics fm = g;
 		int w = fm.stringWidth(value)+s;
 		int rw = Math.max((w+s/2)/s*s,2*s);
 		return rw <= width;
@@ -434,72 +433,24 @@ public final class Constant extends LogicElement
 		
 		return true;
 	} // end of quickChange method
-	
-	/** The editor to reset after a quick change. */
-	private jls.edit.SimpleEditor sed;
-	/** Quick-change shortcut menu. */
-	private javax.swing.JMenu quick = new javax.swing.JMenu("shortcuts");
-	/** Menu item to set the value to 0. */
-	private javax.swing.JMenuItem zero = new javax.swing.JMenuItem("0");
-	/** Menu item to set the value to 1. */
-	private javax.swing.JMenuItem one = new javax.swing.JMenuItem("1");
-	/** Menu item to add 1 to the value. */
-	private javax.swing.JMenuItem plus = new javax.swing.JMenuItem("add 1");
-	/** Menu item to subtract 1 from the value (but not below 0). */
-	private javax.swing.JMenuItem minus = new javax.swing.JMenuItem("subtract 1");
-	/** True once the quick-change menu has been built. */
-	private boolean menuMade = false;
-	
 	/**
-	 * Create menu and submenus for quick changes to the constant value.
-	 * 
-	 * @return menu.
+	 * Add one to this constant's value (for the relocated quick-change
+	 * shortcut menu, issue #77).
 	 */
-	@Override
-	public javax.swing.JMenuItem setupQuickMenu(jls.edit.SimpleEditor sed) {
-		
-		if (menuMade)
-			return quick;
-		this.sed = sed;
-		menuMade = true;
-		quick.add(zero);
-		quick.add(one);
-		quick.add(plus);
-		quick.add(minus);
-		zero.addActionListener(this);
-		one.addActionListener(this);
-		plus.addActionListener(this);
-		minus.addActionListener(this);
-		return quick;
-	} // end of setupQuickChange method
-	
-	/**
-	 * Respond to quick change button pushes.
-	 * 
-	 * @param event The event object for the button push.
-	 */
-	@Override
-	public void actionPerformed(java.awt.event.ActionEvent event) {
+	public void incrementValue() {
 
-		if (event.getSource() == zero) {
-			value = BigInteger.ZERO;
-		}
-		else if (event.getSource() == one) {
-			value = BigInteger.ONE;
-		}
-		else if (event.getSource() == plus) {
-			value = value.add(BigInteger.ONE);
-		}
-		else if (event.getSource() == minus) {
-			value = value.subtract(BigInteger.ONE);
-			value = value.max(BigInteger.ZERO);
-		}
-		jls.edit.Editor ed = jls.edit.Editors.of(getCircuit());
-		if (ed != null) {
-			sed.quickReset();
-			ed.repaint();
-		}
-	} // end of actionPerformed method
+		value = value.add(BigInteger.ONE);
+	} // end of incrementValue method
+
+	/**
+	 * Subtract one from this constant's value, but not below zero (for the
+	 * relocated quick-change shortcut menu, issue #77).
+	 */
+	public void decrementValue() {
+
+		value = value.subtract(BigInteger.ONE);
+		value = value.max(BigInteger.ZERO);
+	} // end of decrementValue method
 	
 //	-------------------------------------------------------------------------------
 //	Simulation

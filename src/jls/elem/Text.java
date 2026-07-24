@@ -24,8 +24,9 @@ public final class Text extends DisplayElement {
 	private boolean isBold = false;
 	/** True if the text is drawn in italics. */
 	private boolean isItalic = false;
-	/** The color the text is drawn in. */
-	private java.awt.Color color = java.awt.Color.black;
+	/** The color the text is drawn in, as a packed ARGB int (opaque black
+	 *  by default; #77 keeps the model free of {@code Color}). */
+	private int colorRGB = 0xFF000000;
 
 	// running properties
 	/** The text split into individual display lines. */
@@ -45,14 +46,16 @@ public final class Text extends DisplayElement {
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
 	 *
-	 * <p>Issue #77: the AWT types in this load-time sizing path are
-	 * fully-qualified so the model file imports no {@code java.awt}; the
-	 * computation is byte-identical to the original.
+	 * <p>Issue #77: sizing is done through a {@link jls.core.TextMetrics}
+	 * that also supplies named-font metrics (its {@link
+	 * jls.core.TextMetrics.Provider} facet), so the model needs no
+	 * AWT font types; the computation is byte-identical to
+	 * the original.
 	 *
-	 * @param g The Graphics object to use.
+	 * @param g The text metrics to size with (also a font Provider).
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// first split lines
 		lines.clear();
@@ -71,28 +74,27 @@ public final class Text extends DisplayElement {
 			lines.add(str);
 		}
 
-		// if no graphics object, done
+		// if no metrics, done
 		if (g == null) {
 			return;
 		}
 
+		// the Text element chooses its own font family/style/size, so it
+		// measures through the Provider facet of the supplied metrics
+		jls.core.TextMetrics.Provider prov = (jls.core.TextMetrics.Provider) g;
+
 		// initialize font info defaults if not set from file
 		if (fontName.isEmpty()) {
-			fontName = g.getFont().getFamily();
+			fontName = prov.defaultFontName();
 		}
 		if (fontSize == 0) {
-			fontSize = g.getFont().getSize();
+			fontSize = prov.defaultFontSize();
 		}
-		int bi = 0;
-		if (isBold) bi |= java.awt.Font.BOLD;
-		if (isItalic) bi |= java.awt.Font.ITALIC;
-		java.awt.Font f = new java.awt.Font(fontName,bi,fontSize);
-		java.awt.Graphics gg = g.create();
-		gg.setFont(f);
+		jls.core.TextMetrics fm = prov.forFont(fontName, isBold, isItalic,
+				fontSize);
 
 		// get info for bounding rectangle
-		java.awt.FontMetrics fm = gg.getFontMetrics();
-		int textHeight = fm.getAscent() + fm.getDescent();
+		int textHeight = fm.ascent() + fm.descent();
 		width = 0;
 		height = 0;
 		for (String line : lines) {
@@ -210,26 +212,27 @@ public final class Text extends DisplayElement {
 	} // end of setItalic method
 
 	/**
-	 * The color the text is drawn in (issue #77: read by the GUI-side
-	 * renderer and dialog). Fully-qualified so the model imports no AWT.
+	 * The color the text is drawn in, as a packed ARGB int (issue #77:
+	 * read by the GUI-side renderer and dialog, which wrap it in a
+	 * {@code Color}). Kept as an int so the model imports no AWT.
 	 *
-	 * @return the text color.
+	 * @return the text color as a packed ARGB int.
 	 */
-	public java.awt.Color getColor() {
+	public int getColorRGB() {
 
-		return color;
-	} // end of getColor method
+		return colorRGB;
+	} // end of getColorRGB method
 
 	/**
-	 * Set the color the text is drawn in (issue #77: applied by the
-	 * GUI-side dialog).
+	 * Set the color the text is drawn in, as a packed ARGB int (issue #77:
+	 * applied by the GUI-side dialog from a {@code Color}).
 	 *
-	 * @param color The new text color.
+	 * @param colorRGB The new text color as a packed ARGB int.
 	 */
-	public void setColor(java.awt.Color color) {
+	public void setColorRGB(int colorRGB) {
 
-		this.color = color;
-	} // end of setColor method
+		this.colorRGB = colorRGB;
+	} // end of setColorRGB method
 
 	/**
 	 * The individual display lines (issue #77: iterated by the GUI-side
@@ -367,7 +370,7 @@ public final class Text extends DisplayElement {
 			 * @return The element's color as an RGB integer.
 			 */
 			@Override
-			protected int get(Element el) { return ((Text)el).color.getRGB(); } // FQN color field (#77)
+			protected int get(Element el) { return ((Text)el).colorRGB; } // packed ARGB (#77)
 			/**
 			 * Set the color on the given element from a packed RGB int.
 			 *
@@ -375,7 +378,7 @@ public final class Text extends DisplayElement {
 			 * @param v The new color as an RGB integer.
 			 */
 			@Override
-			protected void set(Element el, int v) { ((Text)el).color = new java.awt.Color(v); }
+			protected void set(Element el, int v) { ((Text)el).colorRGB = v; }
 		}
 	);
 

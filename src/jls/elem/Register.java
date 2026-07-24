@@ -172,7 +172,7 @@ public final class Register extends LogicElement
 	 *
 	 * @param g The Graphics object to use for sizing.
 	 */
-	public void resizeForNewName(java.awt.Graphics g) {
+	public void resizeForNewName(jls.core.TextMetrics g) {
 
 		detach();
 		width = 0;
@@ -187,14 +187,14 @@ public final class Register extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// set up size if there is a graphics object
 		if (g != null) {
 
 			if (width == 0 && height == 0) {
 				int s = Geometry.SPACING;
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(" " + name + " ");
 				width = Math.max((w+s/2)/s*s,2*s)+2*s;
 				if(width % (2*s) != 0)
@@ -599,7 +599,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g) {
+	public void rotate(Orientation direction, jls.core.TextMetrics g) {
 		
 		if(direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
@@ -640,7 +640,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g) {
+	public void flip(jls.core.TextMetrics g) {
 		
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -848,7 +848,7 @@ public final class Register extends LogicElement
 		String unsigned = BitSetUtils.ToString(currentValue,10);
 		String signed = BitSetUtils.ToStringSigned(currentValue,bits);
 		String value = "0x" +hex + " (" + unsigned + " unsigned, " + signed + " signed)";
-		TellUser.info(JLSInfo.frame, value, "Information");
+		TellUser.info(null, value, "Information");
 	} // end of showCurrentValue method
 	
 } // end of Register class

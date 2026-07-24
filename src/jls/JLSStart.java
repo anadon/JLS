@@ -1850,9 +1850,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.gridColor);
+				Color newColor = JColorChooser.showDialog(null, "Select Grid Color", JLSInfo.Palette.gridColor);
 				if (newColor != null) {
-					JLSInfo.gridColor = newColor;
+					JLSInfo.Palette.gridColor = newColor;
 					prefs.rememberGridColor(newColor);
 				}
 				Editor ed = (Editor)edits.getSelectedComponent();
@@ -1874,9 +1874,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.backgroundColor);
+				Color newColor = JColorChooser.showDialog(null, "Select Background Color", JLSInfo.Palette.backgroundColor);
 				if (newColor != null) {
-					JLSInfo.backgroundColor = newColor;
+					JLSInfo.Palette.backgroundColor = newColor;
 					prefs.rememberBackgroundColor(newColor);
 				}
 				Editor ed = (Editor)edits.getSelectedComponent();

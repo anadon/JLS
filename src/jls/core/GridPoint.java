@@ -2,7 +2,7 @@ package jls.core;
 
 /**
  * An exact integer point on the snap grid (issue #77): a headless value
- * type replacing {@link java.awt.Point} in the grid-geometry transforms
+ * type replacing {@code Point} in the grid-geometry transforms
  * ({@link GridTransform}), so element geometry can be computed without
  * an AWT dependency. Component names mirror {@code Point}'s fields, so
  * {@code .x}/{@code .y} reads become {@code .x()}/{@code .y()}.

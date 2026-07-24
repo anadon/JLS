@@ -120,13 +120,13 @@ public final class StateMachine extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				String dname = name;
 				if (name.isEmpty()) 
 					dname = "State Machine";
@@ -601,7 +601,7 @@ public final class StateMachine extends LogicElement
 	 *
 	 * @param g The Graphics object to use to determine size.
 	 */
-	public void reinit(java.awt.Graphics g) {
+	public void reinit(jls.core.TextMetrics g) {
 
 		detach();
 		width = 0;
@@ -772,7 +772,7 @@ public final class StateMachine extends LogicElement
 				oldClock = newClock;
 				if (!noMatchReported) {
 					noMatchReported = true;
-					TellUser.warn(JLSInfo.frame,
+					TellUser.warn(null,
 							"state machine \"" + name + "\": no transition"
 							+ " matches from state \""
 							+ currentState.getName() + "\" at time " + now

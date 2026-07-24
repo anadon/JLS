@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Point;
+import jls.core.GridPoint;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -90,7 +91,7 @@ public final class StateMachineDialog implements ElementDialog {
 			}
 
 			// complete initialization
-			machine.init(g);
+			machine.init(SwingTextMetrics.forGraphics(g));
 
 			// save position
 			Point p = Placement.dropPoint(editWindow, x, y,
@@ -112,7 +113,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if name has changed, detach
 		if (ed.nameChanged()) {
-			machine.reinit(g);
+			machine.reinit(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 
@@ -131,7 +132,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if not the same, detach
 		if (!oldNames.equals(newNames)) {
-			machine.reinit(g);
+			machine.reinit(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 
@@ -142,7 +143,7 @@ public final class StateMachineDialog implements ElementDialog {
 				for (String inp : state.getInputs()) {
 					if (input.getName().equals(inp)
 							&& state.inputBits(inp) != bits) {
-						machine.reinit(g);
+						machine.reinit(SwingTextMetrics.forGraphics(g));
 						return true;
 					}
 				}
@@ -163,7 +164,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if not the same, detach
 		if (!oldNames.equals(newNames)) {
-			machine.reinit(g);
+			machine.reinit(SwingTextMetrics.forGraphics(g));
 			return true;
 		}
 
@@ -174,7 +175,7 @@ public final class StateMachineDialog implements ElementDialog {
 				for (String out : state.getOutputs()) {
 					if (output.getName().equals(out)
 							&& state.outputBits(out) != bits) {
-						machine.reinit(g);
+						machine.reinit(SwingTextMetrics.forGraphics(g));
 						return true;
 					}
 				}
@@ -265,9 +266,9 @@ public final class StateMachineDialog implements ElementDialog {
 		/** Popup menu item to align the selected states vertically. */
 		private JMenuItem alignVer = new JMenuItem("align states vertically");
 		/** Midpoints of the transition being drawn; the last entry is the current end point. */
-		private Vector<Point> points = new Vector<Point>();
-		/** The transition corner point being dragged. */
-		private Point movingPoint;
+		private Vector<GridPoint> points = new Vector<GridPoint>();
+		/** The transition whose highlighted corner point is being dragged. */
+		private State.@org.jspecify.annotations.Nullable Transition movingTrans;
 		/** True if the machine's name was changed when the dialog was accepted. */
 		private boolean nameChange;
 
@@ -486,18 +487,18 @@ public final class StateMachineDialog implements ElementDialog {
 		 * @param points Midpoints, last entry is current end point.
 		 * @param g The Graphics object to use.
 		 */
-		public void drawTrans(State from, Vector<Point> points, Graphics g) {
+		public void drawTrans(State from, Vector<GridPoint> points, Graphics g) {
 
-			Point last = from.getLocation();
-			Point prev = null;
-			for (Point p : points) {
+			GridPoint last = from.getLocation();
+			GridPoint prev = null;
+			for (GridPoint p : points) {
 				g.setColor(Color.black);
-				g.drawLine(last.x,last.y,p.x,p.y);
+				g.drawLine(last.x(),last.y(),p.x(),p.y());
 				prev = last;
 				last = p;
 			}
 			if (prev != null) {
-				StateRenderer.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
+				StateRenderer.drawArrow(last.x(),last.y(),SMUtil.getAngle(last.x()-prev.x(),prev.y()-last.y()),g);
 			}
 		} // end of drawTrans method
 
@@ -513,7 +514,7 @@ public final class StateMachineDialog implements ElementDialog {
 				if (on != null) {
 					CreateState cs = new CreateState(machine,"Change",on.getName());
 					if (!cs.wasCancelled()) {
-						boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
+						boolean ok = on.changeName(cs.getName(),SwingTextMetrics.forGraphics(editArea.getGraphics()));
 						if (!ok) {
 							TellUser.error(this,
 									"Name won't fit", "Error");
@@ -540,7 +541,7 @@ public final class StateMachineDialog implements ElementDialog {
 			}
 			else if (event.getSource() == addTrans) {
 				points.clear();
-				points.add(new Point(x,y));
+				points.add(new GridPoint(x,y));
 				setDrawState(DrawState.newTrans);
 			}
 			else if (event.getSource() == deleteAllTrans) {
@@ -764,9 +765,9 @@ public final class StateMachineDialog implements ElementDialog {
 
 					// see if a transition point is at x,y
 					for (State state : machine.getStates()) {
-						Point p = state.highlightTransPoints(x,y);
-						if (p != null) {
-							movingPoint = p;
+						State.Transition tr = state.highlightTransPoints(x,y);
+						if (tr != null) {
+							movingTrans = tr;
 							setDrawState(DrawState.pointMoving);
 							return;
 						}
@@ -947,7 +948,7 @@ public final class StateMachineDialog implements ElementDialog {
 					}
 				}
 				if (target == null) {
-					points.add(new Point(x,y));
+					points.add(new GridPoint(x,y));
 					editArea.repaint();
 					return;
 				}
@@ -973,7 +974,7 @@ public final class StateMachineDialog implements ElementDialog {
 		 * @param to The state the transition is to.
 		 * @param points The midpoints (the last one is not used).
 		 */
-		private void makeTransition(State from, State to, Vector<Point> points) {
+		private void makeTransition(State from, State to, Vector<GridPoint> points) {
 
 			State.Transition newTrans = from.buildTransition(to, points);
 			if (newTrans == null) {
@@ -985,7 +986,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 			// if it wasn't canceled, validate and add it
 			if (!ct.wasCancelled()) {
-				from.addTransition(newTrans, this);
+				from.addTransition(newTrans);
 			}
 		} // end of makeTransition method
 
@@ -998,7 +999,7 @@ public final class StateMachineDialog implements ElementDialog {
 			if (cs.wasCancelled()) {
 				return;
 			}
-			State state = new State(machine,cs.getName(),editArea.getGraphics());
+			State state = new State(machine,cs.getName(),SwingTextMetrics.forGraphics(editArea.getGraphics()));
 
 			// display it at the current mouse position (if possible)
 			Point p = editArea.getMousePosition();
@@ -1070,10 +1071,10 @@ public final class StateMachineDialog implements ElementDialog {
 				selrect = null;
 				for (State state : selected) {
 					if (selrect == null) {
-						selrect = state.getRect();
+						selrect = AwtGeom.awt(state.getRect());
 					}
 					else {
-						selrect.add(state.getRect());
+						selrect.add(AwtGeom.awt(state.getRect()));
 					}
 				}
 				setDrawState(DrawState.selected);
@@ -1150,9 +1151,7 @@ public final class StateMachineDialog implements ElementDialog {
 			if (drawState == DrawState.newTrans) {
 
 				// update position of last point in points list
-				Point p = points.lastElement();
-				p.x = x;
-				p.y = y;
+				points.set(points.size()-1, new GridPoint(x,y));
 
 				// highlight state if under cursor
 				for (State state : machine.getStates()) {
@@ -1211,7 +1210,7 @@ public final class StateMachineDialog implements ElementDialog {
 				selected.clear();
 				for (State state : machine.getStates()) {
 					state.setHighlight(false);
-					if (state.isInside(selrect)) {
+					if (state.isInside(AwtGeom.bounds(selrect))) {
 						selected.add(state);
 						state.setHighlight(true);
 						state.savePosition();
@@ -1237,8 +1236,7 @@ public final class StateMachineDialog implements ElementDialog {
 				}
 
 				// move point
-				movingPoint.x = x;
-				movingPoint.y = y;
+				movingTrans.moveHighlight(x, y);
 				editArea.repaint();
 				return;
 			}
@@ -1862,7 +1860,7 @@ public final class StateMachineDialog implements ElementDialog {
 							"Value or bits not valid", "Error");
 					return;
 				}
-				State.Out newOut = state.addOutput(signal, value, bits, this);
+				State.Out newOut = state.addOutput(signal, value, bits);
 				if (newOut != null) {
 					model.addElement(newOut);
 				}

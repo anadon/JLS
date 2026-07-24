@@ -48,7 +48,7 @@ public final class TriStateDialog implements ElementDialog {
 		}
 
 		// set up inputs and outputs, then place the element
-		ts.init(g);
+		ts.init(SwingTextMetrics.forGraphics(g));
 		Point p = Placement.dropPoint(editWindow, x, y,
 				ts.getWidth(), ts.getHeight());
 		ts.setXY(p.x, p.y);

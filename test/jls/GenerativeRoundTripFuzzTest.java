@@ -239,7 +239,7 @@ class GenerativeRoundTripFuzzTest {
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 		try {
-			ok = circuit.finishLoad(g);
+			ok = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 		} catch (Exception | Error e) {
 			throw new AssertionError("seed " + seed
 					+ ": finishLoad threw instead of classifying:\n" + text, e);

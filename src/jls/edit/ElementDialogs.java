@@ -76,7 +76,10 @@ public final class ElementDialogs {
 		if (dialog != null) {
 			return dialog.setup(el, g, editWindow, x, y);
 		}
-		return el.change(g, editWindow, x, y);
+		// every changeable element now registers a dialog (issue #77); an
+		// element with none simply has no change dialog, matching the
+		// former Element.change default of "did not change".
+		return false;
 	} // end of change method
 
 	/**
@@ -96,7 +99,10 @@ public final class ElementDialogs {
 		if (dialog != null) {
 			return dialog.setup(el, g, editWindow, x, y);
 		}
-		return el.setup(g, editWindow, x, y);
+		// every element with a creation dialog now registers one (issue
+		// #77); an element with none is placed without a dialog, matching
+		// the former Element.setup default of "not cancelled".
+		return false;
 	} // end of setup method
 
 } // end of ElementDialogs class

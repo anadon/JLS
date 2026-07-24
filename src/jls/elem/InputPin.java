@@ -42,7 +42,7 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param g The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		super.init(g);
 		if(orientation == Orientation.RIGHT)
@@ -214,7 +214,7 @@ public final class InputPin extends Pin implements TriProp {
 			String signed = BitSetUtils.ToStringSigned(currentValue,bits);
 			value = "0x" + hex + " (" + unsigned + " unsigned, " + signed + " signed)";
 		}
-		TellUser.info(JLSInfo.frame, value, "Information");
+		TellUser.info(null, value, "Information");
 	} // end of showCurrentValue method
 
 } // end of InputPin class

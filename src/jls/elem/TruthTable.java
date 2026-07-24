@@ -77,9 +77,6 @@ public final class TruthTable extends LogicElement
 	private boolean nameChanged;
 	/** True if the edit dialog changed the signals or table entries. */
 	private boolean anyChanges;
-	/** The current edit dialog window (parent for error popups), GUI-side;
-	 *  null when no dialog is open (e.g. headless model tests). */
-	private java.awt.Component edit;
 	/** GUI hook: re-lays out and repaints the edit-dialog display after a
 	 *  model change. Null when no display exists (headless), so the table
 	 *  mutators run identically with or without a dialog. */
@@ -115,13 +112,13 @@ public final class TruthTable extends LogicElement
 	 * @param g The graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				String dname = name;
 				if (name.isEmpty()) 
 					dname = "Logic";
@@ -437,7 +434,7 @@ public final class TruthTable extends LogicElement
 	 *
 	 * @return true if element must be re-placed in the circuit, false if not.
 	 */
-	public boolean finishChange(java.awt.Graphics g) {
+	public boolean finishChange(jls.core.TextMetrics g) {
 
 		// mark circuit changed if there were any changes in truth table
 		if (anyChanges) {
@@ -582,27 +579,6 @@ public final class TruthTable extends LogicElement
 	} // end of getTable method
 
 	/**
-	 * Set the GUI dialog window used as the parent for error popups; null
-	 * when no dialog is open.
-	 *
-	 * @param edit The dialog window, or null.
-	 */
-	public void setEditParent(java.awt.Component edit) {
-
-		this.edit = edit;
-	} // end of setEditParent method
-
-	/**
-	 * Get the GUI dialog window used as the parent for error popups.
-	 *
-	 * @return the dialog window, or null.
-	 */
-	public java.awt.Component getEditParent() {
-
-		return edit;
-	} // end of getEditParent method
-
-	/**
 	 * Register the GUI hook that re-lays out and repaints the edit-dialog
 	 * display after a model change; null (the default) makes
 	 * refreshDisplay a no-op for headless use.
@@ -642,13 +618,13 @@ public final class TruthTable extends LogicElement
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
@@ -733,20 +709,20 @@ public final class TruthTable extends LogicElement
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 
 		// can't add an output until there is at least one input
 		if (inputNames.size() == 0) {
-			TellUser.error(edit,"add at least one input first", "Error");
+			TellUser.error(null,"add at least one input first", "Error");
 			return;
 		}
 
@@ -802,7 +778,7 @@ public final class TruthTable extends LogicElement
 			}
 			int matchingRow = findMatchingRow(r,col);
 			if (matchingRow == -1) {
-				TellUser.error(edit,"cannot remove: output conflict",
+				TellUser.error(null,"cannot remove: output conflict",
 						"Error");
 				return;
 			}
@@ -897,7 +873,7 @@ public final class TruthTable extends LogicElement
 		// find matching row, if there is one
 		int matchingRow = findMatchingRow(row,col);
 		if (matchingRow == -1) {
-			TellUser.error(edit,"not possible", "Error");
+			TellUser.error(null,"not possible", "Error");
 			return;
 		}
 
@@ -1143,7 +1119,7 @@ public final class TruthTable extends LogicElement
 
 		// get name
 		String newSignal =
-			TellUser.prompt(edit,"Enter new output signal name");
+			TellUser.prompt(null,"Enter new output signal name");
 
 		if (newSignal == null)
 			return null;
@@ -1153,20 +1129,20 @@ public final class TruthTable extends LogicElement
 
 		// don't allow null
 		if (newSignal.isEmpty()) {
-			TellUser.error(edit,"invalid name", "Error");
+			TellUser.error(null,"invalid name", "Error");
 			return null;
 		}
 
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (newSignal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return null;
 			}
 		}
 		for (String name : outputNames) {
 			if (newSignal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return null;
 			}
 		}

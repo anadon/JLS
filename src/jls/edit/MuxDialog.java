@@ -49,7 +49,7 @@ public final class MuxDialog implements ElementDialog {
 		}
 
 		// complete initialization
-		mux.init(g);
+		mux.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

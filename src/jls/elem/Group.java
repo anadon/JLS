@@ -75,7 +75,7 @@ public abstract sealed class Group extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// no need to do anything if no graphics object
 		if (g == null)
@@ -86,7 +86,7 @@ public abstract sealed class Group extends LogicElement
 			return;
 
 		// set up
-		java.awt.FontMetrics fm = g.getFontMetrics();
+		jls.core.TextMetrics fm = g;
 		int s = Geometry.SPACING;
 		int puts = ranges.size();
 
@@ -218,7 +218,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -235,7 +235,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{

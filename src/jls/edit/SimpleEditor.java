@@ -369,9 +369,9 @@ public abstract class SimpleEditor extends JPanel {
 	static boolean wireCollidesAlongSpan(Circuit circuit,
 			Set<Element> selected, Element sel, Wire wire) {
 
-		Rectangle span = wire.getIndexBounds();
+		Rectangle span = AwtGeom.awt(wire.getIndexBounds());
 		span.grow(Geometry.POINT_DIAMETER,Geometry.POINT_DIAMETER);
-		for (Element elm : circuit.elementsNear(span)) {
+		for (Element elm : circuit.elementsNear(AwtGeom.bounds(span))) {
 			if (sel == elm)
 				continue;
 			if (elm instanceof WireEnd wend) {
@@ -582,7 +582,7 @@ public abstract class SimpleEditor extends JPanel {
 	 */
 	public void changeBackgroundColor() {
 
-		ew.setBackground(JLSInfo.backgroundColor);
+		ew.setBackground(JLSInfo.Palette.backgroundColor);
 	} // end of changeBackgroundColor method
 
 	/**
@@ -1005,7 +1005,7 @@ public abstract class SimpleEditor extends JPanel {
 			public EditWindow() {
 
 				// set up GUI
-				setBackground(JLSInfo.backgroundColor);
+				setBackground(JLSInfo.Palette.backgroundColor);
 
 				// the canvas holds keyboard focus like any other component:
 				// it is focusable, takes focus on click (mousePressed) and
@@ -1452,7 +1452,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (selected.size() != 1)
 								return;
 							Element el = (Element)selected.toArray()[0];
-							el.showCurrentValue(x, y);
+							ElementValueDisplays.show(el, x, y);
 							clearSelected();
 							setState(State.idle);
 							repaint();
@@ -1781,7 +1781,7 @@ public abstract class SimpleEditor extends JPanel {
 				int margin = 10*Geometry.SPACING;
 				int needW = Math.max(mx + margin, modelSize.width);
 				int needH = Math.max(my + margin, modelSize.height);
-				Rectangle b = circuit.getBounds();
+				Rectangle b = AwtGeom.awt(circuit.getBounds());
 				if (b != null) {
 					needW = Math.max(needW, b.x + b.width + margin);
 					needH = Math.max(needH, b.y + b.height + margin);
@@ -1912,7 +1912,7 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			void zoomFit() {
 
-				Rectangle b = circuit.getBounds();
+				Rectangle b = AwtGeom.awt(circuit.getBounds());
 				JViewport vp = pane.getViewport();
 				Dimension ext = vp.getExtentSize();
 				if (b == null || b.width <= 0 || b.height <= 0
@@ -2593,7 +2593,7 @@ public abstract class SimpleEditor extends JPanel {
 				// draw background grid, but only across the visible (clipped)
 				// model region so a large zoomed-out canvas does not draw
 				// thousands of off-screen lines
-				gg.setColor(JLSInfo.gridColor);
+				gg.setColor(JLSInfo.Palette.gridColor);
 				Rectangle clip = gg.getClipBounds();
 				int mx0 = clip == null ? 0 : Math.max(0,clip.x);
 				int my0 = clip == null ? 0 : Math.max(0,clip.y);
@@ -2612,7 +2612,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				// draw selection rectangle if elements selected
 				if (currentState == State.selected) {
-					gg.setColor(JLSInfo.selectionColor);
+					gg.setColor(JLSInfo.Palette.selectionColor);
 					gg.fill(selRect);
 				}
 
@@ -2639,7 +2639,7 @@ public abstract class SimpleEditor extends JPanel {
 				if (caret != null
 						&& (currentState == State.idle
 							|| currentState == State.selected)) {
-					gg.setColor(JLSInfo.selectionColor);
+					gg.setColor(JLSInfo.Palette.selectionColor);
 					int r = Geometry.SPACING/2;
 					gg.drawLine(caret.x-r,caret.y,caret.x+r,caret.y);
 					gg.drawLine(caret.x,caret.y-r,caret.x,caret.y+r);
@@ -3340,7 +3340,7 @@ public abstract class SimpleEditor extends JPanel {
 						selected.add(el);
 						el.setHighlight(true);
 						el.savePosition();
-						selRect = new Rectangle(el.getRect());
+						selRect = AwtGeom.awt(el.getRect());
 						setState(State.selected);
 						repaint();
 						return;
@@ -3358,7 +3358,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				optionMenu.removeAll();
 				if (el.quickChange() && !el.isUneditable()) {
-					optionMenu.add(el.setupQuickMenu(me));
+					optionMenu.add(ElementQuickMenus.build(el, me));
 				}
 				if (el.canChange() && !el.isUneditable()) {
 					optionMenu.add(modify);
@@ -3523,16 +3523,16 @@ public abstract class SimpleEditor extends JPanel {
 						for (Element el : selected) {
 
 							// ignore degenerate rectangles (from wires)
-							if (el.getRect().equals(new Rectangle())) {
+							if (AwtGeom.awt(el.getRect()).equals(new Rectangle())) {
 								continue;
 							}
 
 							// add to building rectangle (create if the first)
 							if (selRect == null) {
-								selRect = new Rectangle(el.getRect());
+								selRect = AwtGeom.awt(el.getRect());
 							}
 							else {
-								selRect.add(el.getRect());
+								selRect.add(AwtGeom.awt(el.getRect()));
 							}
 						}
 
@@ -3647,8 +3647,8 @@ public abstract class SimpleEditor extends JPanel {
 					// rectangle are left untouched, exactly as before
 					Set<Element> inside = new HashSet<Element>();
 					Set<Element> attachedInside = new HashSet<Element>();
-					for (Element el : circuit.elementsNear(selRect)) {
-						if (el.isInside(selRect)) {
+					for (Element el : circuit.elementsNear(AwtGeom.bounds(selRect))) {
+						if (el.isInside(AwtGeom.bounds(selRect))) {
 							if (el instanceof WireEnd wend && wend.isAttached()) {
 								attachedInside.add(el);
 								continue;
@@ -3669,12 +3669,12 @@ public abstract class SimpleEditor extends JPanel {
 						if (!inside.contains(el) && !attachedInside.contains(el)) {
 							el.setHighlight(false);
 							selected.remove(el);
-							dirty = union(dirty, el.getRect());
+							dirty = union(dirty, AwtGeom.awt(el.getRect()));
 						}
 					}
 					for (Element el : inside) {
 						if (!wasHighlighted.contains(el)) {
-							dirty = union(dirty, el.getRect());
+							dirty = union(dirty, AwtGeom.awt(el.getRect()));
 						}
 						el.setHighlight(true);
 						selected.add(el);
@@ -3720,18 +3720,18 @@ public abstract class SimpleEditor extends JPanel {
 
 				Rectangle acc = null;
 				for (Element el : selected) {
-					acc = union(acc, el.getRect());
+					acc = union(acc, AwtGeom.awt(el.getRect()));
 					if (el instanceof WireEnd wend) {
 						for (Wire w : wend.getWires()) {
-							acc = union(acc, w.getRect());
+							acc = union(acc, AwtGeom.awt(w.getRect()));
 						}
 					}
 					for (Put p : el.getAllPuts()) {
 						WireEnd end = p.getWireEnd();
 						if (end != null) {
-							acc = union(acc, end.getRect());
+							acc = union(acc, AwtGeom.awt(end.getRect()));
 							for (Wire w : end.getWires()) {
-								acc = union(acc, w.getRect());
+								acc = union(acc, AwtGeom.awt(w.getRect()));
 							}
 						}
 					}
@@ -3753,7 +3753,7 @@ public abstract class SimpleEditor extends JPanel {
 
 				Rectangle acc = null;
 				for (Element el : touchedElements) {
-					acc = union(acc, el.getRect());
+					acc = union(acc, AwtGeom.awt(el.getRect()));
 				}
 				int d = Geometry.POINT_DIAMETER;
 				for (Put put : touchedPuts) {
@@ -3836,7 +3836,7 @@ public abstract class SimpleEditor extends JPanel {
 					for (Element el : wasHighlighted) {
 						if (!under.contains(el) && !attachedUnder.contains(el)) {
 							el.setHighlight(false);
-							dirty = union(dirty, el.getRect());
+							dirty = union(dirty, AwtGeom.awt(el.getRect()));
 						}
 					}
 
@@ -3844,7 +3844,7 @@ public abstract class SimpleEditor extends JPanel {
 					for (Element el : under) {
 						selected.add(el);
 						if (!wasHighlighted.contains(el)) {
-							dirty = union(dirty, el.getRect());
+							dirty = union(dirty, AwtGeom.awt(el.getRect()));
 						}
 						el.setHighlight(true);
 						info.setText(el.infoText());
@@ -4547,9 +4547,9 @@ public abstract class SimpleEditor extends JPanel {
 							// check against every element near the selection
 							// (grown so edge-touching put alignments are
 							// included)
-							Rectangle near = sel.getIndexBounds();
+							Rectangle near = AwtGeom.awt(sel.getIndexBounds());
 							near.grow(Geometry.SPACING,Geometry.SPACING);
-							for (Element el : circuit.elementsNear(near)) {
+							for (Element el : circuit.elementsNear(AwtGeom.bounds(near))) {
 
 								// ignore elements in the selected set
 								if (selected.contains(el))
@@ -4739,9 +4739,9 @@ public abstract class SimpleEditor extends JPanel {
 							// check against every element near the selection
 							// (grown so edge-touching put alignments are
 							// included), as in overlap() (#3, #17)
-							Rectangle near = sel.getIndexBounds();
+							Rectangle near = AwtGeom.awt(sel.getIndexBounds());
 							near.grow(Geometry.SPACING,Geometry.SPACING);
-							for (Element el : circuit.elementsNear(near)) {
+							for (Element el : circuit.elementsNear(AwtGeom.bounds(near))) {
 
 								// ignore elements in the selected set
 								if (selected.contains(el))
@@ -5154,10 +5154,10 @@ public abstract class SimpleEditor extends JPanel {
 							if (el instanceof Wire)
 								continue;
 							if (selRect == null) {
-								selRect = new Rectangle(el.getRect());
+								selRect = AwtGeom.awt(el.getRect());
 							}
 							else {
-								selRect.add(el.getRect());
+								selRect.add(AwtGeom.awt(el.getRect()));
 							}
 						}
 						if (selRect != null)
@@ -5191,7 +5191,7 @@ public abstract class SimpleEditor extends JPanel {
 							}
 							subcirc.setImported(sub);
 							Editor ed = new Editor(tabbedParent,subcirc,sub.getName(),clipboard);
-							Dimension all = subcirc.getBounds().getSize();
+							Dimension all = AwtGeom.awt(subcirc.getBounds()).getSize();
 							ed.setCircuitSize(all);
 							Editors.register(subcirc, ed);
 
@@ -5282,7 +5282,7 @@ public abstract class SimpleEditor extends JPanel {
 						Element el = (Element)(selected.toArray()[0]);
 
 						// change its timing info
-						el.changeTiming();
+						DelayChangeDialog.open(el);
 
 						// clean up
 						clearSelected();

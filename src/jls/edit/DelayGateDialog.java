@@ -50,7 +50,7 @@ public final class DelayGateDialog implements ElementDialog {
 
 		// set up inputs and outputs
 		delay.setNumInputs(1);
-		delay.init(g);
+		delay.init(SwingTextMetrics.forGraphics(g));
 
 		// save position
 		Point p = Placement.dropPoint(editWindow, x, y,

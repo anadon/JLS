@@ -32,7 +32,7 @@ public final class ElementRenderSupport {
 		if (el.isHighlighted()) {
 			g.setColor(Color.pink);
 			Graphics2D gg = (Graphics2D) g;
-			gg.fill(el.getRect());
+			gg.fill(AwtGeom.awt(el.getRect()));
 		}
 	} // end of drawHighlight method
 
@@ -50,7 +50,7 @@ public final class ElementRenderSupport {
 
 		Color inside;
 		if (p.isTouching()) {
-			inside = JLSInfo.touchColor;
+			inside = JLSInfo.Palette.touchColor;
 		} else if (p.isAttached()) {
 			return;
 		} else {
@@ -68,7 +68,7 @@ public final class ElementRenderSupport {
 			// second, color-independent channel (issue #76): an open ring
 			// around the point marks a connection lining up even when the
 			// touch color cannot be told apart
-			g.setColor(JLSInfo.wireZeroColor);
+			g.setColor(JLSInfo.Palette.wireZeroColor);
 			int rd = d + 4;
 			g.drawOval(x - rd / 2, y - rd / 2, rd, rd);
 		}

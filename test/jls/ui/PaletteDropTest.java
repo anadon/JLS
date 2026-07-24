@@ -125,7 +125,7 @@ class PaletteDropTest {
 			assertNotNull(pane, "editor canvas is hosted in a scroll pane");
 			Point viewPos = pane.getViewport().getViewPosition();
 			Rectangle viewport = new Rectangle(viewPos, pane.getViewport().getExtentSize());
-			assertTrue(viewport.contains(gate.getRect()),
+			assertTrue(viewport.contains(jls.edit.AwtGeom.awt(gate.getRect())),
 					CircuitAssert.describe(gate) + " with bounds " + gate.getRect()
 							+ " is not within the visible canvas viewport " + viewport);
 		}

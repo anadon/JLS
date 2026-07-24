@@ -101,19 +101,19 @@ class KeyboardEditingFaithfulTest {
 	}
 
 	private static int centerX(Element el) {
-		return el.getX() + el.getRect().width / 2;
+		return el.getX() + el.getRect().width() / 2;
 	}
 
 	private static int centerY(Element el) {
-		return el.getY() + el.getRect().height / 2;
+		return el.getY() + el.getRect().height() / 2;
 	}
 
 	/** Rubber-band select the gate and make the canvas the real focus owner. */
 	private static void selectGateAndFocusCanvas(EditorGestureSupport ui,
 			Element gate) throws Exception {
 		int x0 = gate.getX() - 40, y0 = gate.getY() - 40;
-		int x1 = gate.getX() + gate.getRect().width + 40;
-		int y1 = gate.getY() + gate.getRect().height + 40;
+		int x1 = gate.getX() + gate.getRect().width() + 40;
+		int y1 = gate.getY() + gate.getRect().height() + 40;
 		ui.leftDrag(x0, y0, x1, y1);
 		ui.waitFor(gate::isHighlighted, "gate rubber-band selected");
 		ui.focusCanvas();
@@ -404,8 +404,8 @@ class KeyboardEditingFaithfulTest {
 			}
 			// touch a rect so the import is used and the gate is real
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
-			Rectangle r = gate.getRect();
-			assertTrue(r.width > 0 && r.height > 0, "gate has bounds");
+			jls.core.Bounds r = gate.getRect();
+			assertTrue(r.width() > 0 && r.height() > 0, "gate has bounds");
 			assertTrue(centerX(gate) > 0 && centerY(gate) > 0, "gate centered");
 		}
 	}

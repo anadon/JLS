@@ -61,7 +61,7 @@ class CircuitOpTest {
 		assertTrue(circuit.load(new Scanner(
 				Files.readString(FORK_FIXTURE, StandardCharsets.UTF_8))),
 				() -> "load failed: " + JLSInfo.loadError);
-		assertTrue(circuit.finishLoad(graphics()),
+		assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(graphics())),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
 		return circuit;
 	}
@@ -71,7 +71,7 @@ class CircuitOpTest {
 		Circuit copy = new Circuit("");
 		assertTrue(copy.load(new Scanner(save(circuit))),
 				() -> "restore load failed: " + JLSInfo.loadError);
-		assertTrue(copy.finishLoad(graphics()),
+		assertTrue(copy.finishLoad(jls.edit.SwingTextMetrics.of(graphics())),
 				() -> "restore finishLoad failed: " + JLSInfo.loadError);
 		return copy;
 	}
@@ -88,7 +88,7 @@ class CircuitOpTest {
 						+ " int y 240\n int bits 4\n String orient \"LEFT\"\n"
 						+ " int delay 10\nEND\nENDCIRCUIT\n")),
 				() -> "load failed: " + JLSInfo.loadError);
-		assertTrue(circuit.finishLoad(graphics()),
+		assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(graphics())),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
 		return circuit;
 	}
@@ -98,7 +98,7 @@ class CircuitOpTest {
 		Circuit circuit = new Circuit("");
 		assertTrue(circuit.load(new Scanner(text)),
 				() -> "load failed: " + JLSInfo.loadError);
-		assertTrue(circuit.finishLoad(graphics()),
+		assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(graphics())),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
 		return circuit;
 	}
@@ -192,7 +192,7 @@ class CircuitOpTest {
 		new RotateElement(adder.getStableId(), true)
 				.apply(viaOp, graphics());
 		find(inline, Element::canRotate)
-				.rotate(Orientation.RIGHT, graphics());
+				.rotate(Orientation.RIGHT, jls.edit.SwingTextMetrics.of(graphics()));
 		assertEquals(save(inline), save(viaOp),
 				"op and inline rotation must produce identical bytes");
 	}

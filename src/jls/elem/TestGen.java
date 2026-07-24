@@ -37,7 +37,7 @@ public final class TestGen extends SigSim {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 		
 	} // end of init method
 	
@@ -74,7 +74,7 @@ public final class TestGen extends SigSim {
 				System.exit(1);
 			}
 			else {
-				TellUser.error(JLSInfo.frame,"Can't open test file: " + file, "Error");
+				TellUser.error(null,"Can't open test file: " + file, "Error");
 				return;
 			}
 		}
@@ -91,13 +91,13 @@ public final class TestGen extends SigSim {
 	@Override
 	protected void specError(String msg) {
 		
-		if (JLSInfo.batch && JLSInfo.frame == null) {
+		if (JLSInfo.noWindow()) {
 			System.out.println("error in test file");
 			System.out.println(msg);
 			System.exit(1);
 		}
 		else {
-			TellUser.error(JLSInfo.frame,"error in test file: " + msg, "Error");
+			TellUser.error(null,"error in test file: " + msg, "Error");
 			return;
 		}
 	} // end of specError method

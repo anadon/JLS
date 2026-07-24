@@ -88,7 +88,7 @@ public final class Display extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// set up size
 		int s = Geometry.SPACING;
@@ -97,7 +97,7 @@ public final class Display extends LogicElement {
 			// use existing size if it has one
 			if (width == 0 && height == 0) {
 				height = 2*s;
-				java.awt.FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				BigInteger maxVal = new BigInteger("1").shiftLeft(bits).subtract(new BigInteger("1"));
 				
 				String longest = maxVal.toString(base).replaceAll(".","0");
@@ -297,7 +297,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, java.awt.Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		// No-op
 	}
@@ -329,7 +329,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(java.awt.Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		// No-op
 	}

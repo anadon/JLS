@@ -1,16 +1,10 @@
 package jls.elem;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.*;
-import javax.swing.*;
-import java.math.*;
 import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
 
 /**
  * Signal generator.
@@ -23,16 +17,11 @@ public final class SigGen extends SigSim {
 	/** Title drawn inside the element's box. */
 	private final String title = " Signal Generator ";
 	/** Width and height of the edit dialog's text pane, in pixels. */
-	private final int size = 300;	// width and height of dialog
 	
 	// saved properties
 	/** The signal specification text entered by the user. */
 	private String signals = "";
 	
-	// running properties
-	/** True if the user cancelled the edit dialog or made no change. */
-	private boolean cancelled = false;
-
 	/**
 	 * Create new element.
 	 * 
@@ -44,90 +33,61 @@ public final class SigGen extends SigSim {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if canceled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// make sure there isn't a signal generator in the circuit already
-		for (Element el : circuit.getElements()) {
-			if (el instanceof SigGen) {
-				TellUser.error(JLSInfo.frame,
-						"Only one signal generator per circuit", "Error");
-				return false;
-			}
-		}
-		
-		// show creation dialog
-		new EditSignals(true);
-		
-		// don't do anything if user canceled element
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
-	/**
 	 * Initialize this element.
 	 * 
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(java.awt.Graphics g) {
+
 		// do nothing if no graphics object
 		if (g == null)
 			return;
-		
+
 		// do nothing if element already has a size
 		if (width != 0 || height != 0)
 			return;
-		
+
 		int s = Geometry.SPACING;
-		FontMetrics fm = g.getFontMetrics();
+		java.awt.FontMetrics fm = g.getFontMetrics();
 		int w = fm.stringWidth(title);
 		width = (w+s-1)/s*s;
 		height = 2*s;
 	} // end of init method
 
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * The signal-generator title text (issue #77: read by the GUI-side
+	 * renderer).
+	 *
+	 * @return the title string.
 	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		
-		// draw title
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int hi = ascent + fm.getDescent();
-		int w = fm.stringWidth(title);
-		g.drawString(title,x+(width-w)/2,y+(height-hi)/2+ascent);
-		
-	} // end of draw method
+	public String getTitle() {
+
+		return title;
+	} // end of getTitle method
+
+	/**
+	 * The current signal specification (issue #77: read by the GUI-side
+	 * dialog).
+	 *
+	 * @return the signal specification text.
+	 */
+	public String getSignals() {
+
+		return signals;
+	} // end of getSignals method
+
+	/**
+	 * Set the signal specification (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param signals The new signal specification text.
+	 */
+	public void setSignals(String signals) {
+
+		this.signals = signals;
+	} // end of setSignals method
+
 	/**
 	 * Save this element.
 	 * 
@@ -205,84 +165,6 @@ public final class SigGen extends SigSim {
 		return true;
 	} // end of canChange method
 
-	/**
-	 * Show edit dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return false.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show dialog
-		new EditSignals(false);
-		
-		if (!cancelled) {
-			circuit.markChanged();
-		}
-		return false;
-	} // end of change method
-
-	/**
-	 * Dialog to get text information from user.
-	 */
-	private class EditSignals extends ElementDialog {
-
-		// properties
-		/** Text area holding the signal specification. */
-		private JTextArea textArea = new JTextArea();
-
-		/**
-		 * Initialize the dialog at a given position.
-		 *
-		 * @param creating True if creating, false if changing.
-		 */
-		public EditSignals(boolean creating) {
-
-			super("Create Signal Specification","siggen");
-
-			// set up GUI
-			Container window = getContentPane();
-			if (!creating) {
-				textArea.setText(signals);
-			}
-			JScrollPane pane = new JScrollPane(textArea);
-			pane.setPreferredSize(new Dimension(size,size));
-			window.add(pane);
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Accept the signal specification.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			String newSignals = textArea.getText();
-			if (newSignals.equals(signals)) {
-				cancelled = true;
-			}
-			signals = newSignals;
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this edit.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of EditSignals class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

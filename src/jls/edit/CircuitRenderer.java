@@ -135,16 +135,16 @@ public final class CircuitRenderer implements Printable {
 			}
 		}
 		for (Element el : wires) {
-			el.draw(g);
+			ElementRenderers.draw(g, el);
 		}
 		for (Element el : parts) {
-			el.draw(g);
+			ElementRenderers.draw(g, el);
 		}
 		for (Element el : secondWires) {
-			el.draw(g);
+			ElementRenderers.draw(g, el);
 		}
 		for (Element el : secondParts) {
-			el.draw(g);
+			ElementRenderers.draw(g, el);
 		}
 	} // end of draw method
 
@@ -339,10 +339,10 @@ public final class CircuitRenderer implements Printable {
 			wireLayer.sort(drawOrder);
 			partLayer.sort(drawOrder);
 			for (Element el : wireLayer) {
-				el.draw(svg);
+				ElementRenderers.draw(svg, el);
 			}
 			for (Element el : partLayer) {
-				el.draw(svg);
+				ElementRenderers.draw(svg, el);
 			}
 			try {
 				java.nio.file.Files.writeString(java.nio.file.Path.of(file),

@@ -86,7 +86,6 @@ class HeadlessCoreRatchetTest {
 	 */
 	private static final Set<String> BASELINE = Set.of(
 			"src/jls/Circuit.java",
-			"src/jls/elem/Adder.java",
 			"src/jls/elem/Binder.java",
 			"src/jls/elem/Clock.java",
 			"src/jls/elem/Constant.java",
@@ -117,15 +116,12 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/Put.java",
 			"src/jls/elem/Register.java",
 			"src/jls/elem/SigEntry.java",
-			"src/jls/elem/SigGen.java",
 			"src/jls/elem/Splitter.java",
 			"src/jls/elem/State.java",
 			"src/jls/elem/StateMachine.java",
 			"src/jls/elem/Stop.java",
 			"src/jls/elem/SubCircuit.java",
-			"src/jls/elem/TestGen.java",
 			"src/jls/elem/Text.java",
-			"src/jls/elem/TriState.java",
 			"src/jls/elem/TruthTable.java",
 			"src/jls/elem/VLine.java",
 			"src/jls/elem/ValEntry.java",

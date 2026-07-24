@@ -5,13 +5,6 @@ import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-
-import javax.swing.*;
 
 import java.io.*;
 import java.util.*;
@@ -38,10 +31,6 @@ public final class Adder extends LogicElement implements Timed {
 	/** Which way the adder faces. */
 	private Orientation orientation = Orientation.RIGHT;
 
-	// running properties
-	/** Whether the user cancelled the creation dialog. */
-	private boolean cancelled;
-
 	/**
 	 * Create a new adder element.
 	 * 
@@ -53,45 +42,43 @@ public final class Adder extends LogicElement implements Timed {
 	} // end of constructor
 	
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The direction this adder faces (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new AdderCreate();
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// set propagation delay based on number of bits
-		propDelay = defaultPropDelay * bits;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param bits The new number of bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
@@ -136,141 +123,6 @@ public final class Adder extends LogicElement implements Timed {
 		}
 		return t;
 	} // end of placement method
-	
-	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		
-		// draw plus sign
-		int s = Geometry.SPACING;
-		if(orientation == Orientation.UP || orientation == Orientation.DOWN)
-		{
-			g.drawLine(x+2*s,y+s,x+2*s,y+2*s);
-			g.drawLine(x+3*s/2,y+3*s/2,x+5*s/2,y+3*s/2);
-		}
-		else if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
-		{
-			g.drawLine(x+2*s,y+3*s/2,x+2*s,y+5*s/2);
-			g.drawLine(x+3*s/2,y+2*s,x+5*s/2,y+2*s);
-		}
-		
-		// draw input and output labels
-		int d = Geometry.POINT_DIAMETER;
-		FontMetrics fm = g.getFontMetrics();
-		if(orientation == Orientation.RIGHT)
-		{
-			int ascent = fm.getAscent();
-			Rectangle2D t = fm.getStringBounds("A",g);
-			g.drawString("A", x+d/2, (int)(y+s-t.getHeight()/2)+ascent);
-			t = fm.getStringBounds("B",g);
-			g.drawString("B", x+d/2, (int)(y+3*s-t.getHeight()/2)+ascent);
-			t = fm.getStringBounds("S",g);
-			g.drawString("S", (int)(x+width-t.getWidth()-d/2),
-				(int)(y+2*s-t.getHeight()/2)+ascent);
-		
-			Font f = g.getFont();
-			float fs = f.getSize2D();
-			Font nf = f.deriveFont((float)(fs*0.75));
-			g.setFont(nf);
-			fm = g.getFontMetrics();
-			ascent = fm.getAscent();
-			int descent = fm.getDescent();
-			t = fm.getStringBounds("Cin",g);
-			g.drawString("Cin", x+(int)(width-t.getWidth())/2, y+ascent);
-			t = fm.getStringBounds("Cout",g);
-			g.drawString("Cout", x+(int)(width-t.getWidth())/2, y+height-descent);
-			g.setFont(f);
-		}
-		else if(orientation == Orientation.LEFT)
-		{
-			int ascent = fm.getAscent();
-			Rectangle2D t = fm.getStringBounds("A",g);
-			g.drawString("A", (int)(x+width-t.getWidth()-d/2), (int)(y+s-t.getHeight()/2)+ascent);
-			t = fm.getStringBounds("B",g);
-			g.drawString("B", (int)(x+width-t.getWidth()-d/2), (int)(y+3*s-t.getHeight()/2)+ascent);
-			t = fm.getStringBounds("S",g);
-			g.drawString("S", (int)(x+d/2),
-				(int)(y+2*s-t.getHeight()/2)+ascent);
-		
-			Font f = g.getFont();
-			float fs = f.getSize2D();
-			Font nf = f.deriveFont((float)(fs*0.75));
-			g.setFont(nf);
-			fm = g.getFontMetrics();
-			ascent = fm.getAscent();
-			int descent = fm.getDescent();
-			t = fm.getStringBounds("Cin",g);
-			g.drawString("Cin", x+(int)(width-t.getWidth())/2, y+ascent);
-			t = fm.getStringBounds("Cout",g);
-			g.drawString("Cout", x+(int)(width-t.getWidth())/2, y+height-descent);
-			g.setFont(f);
-		}
-		else if(orientation == Orientation.DOWN)
-		{
-			int ascent = fm.getAscent();
-			int descent = fm.getDescent();
-			Rectangle2D t = fm.getStringBounds("A",g);
-			g.drawString("A", (int)(x+s-t.getWidth()/2), (int)(y+t.getHeight()/4)+ascent);
-			t = fm.getStringBounds("B",g);
-			g.drawString("B", (int)(x+width-t.getWidth()-d/2), (int)(y+t.getHeight()/4)+ascent);
-			t = fm.getStringBounds("S",g);
-			g.drawString("S", x+(int)(width-t.getWidth())/2, y+height-descent);
-		
-			Font f = g.getFont();
-			float fs = f.getSize2D();
-			Font nf = f.deriveFont((float)(fs*0.70));
-			g.setFont(nf);
-			fm = g.getFontMetrics();
-			ascent = fm.getAscent();
-			descent = fm.getDescent();
-			t = fm.getStringBounds("Cin",g);
-			g.drawString("Cin", x+5, y+height/2+ascent);
-			t = fm.getStringBounds("Cout",g);
-			g.drawString("Cout", x+(int)(width-t.getWidth()-5), y+height/2+ascent);
-			g.setFont(f);	
-		}
-		else if(orientation == Orientation.UP)
-		{
-			int ascent = fm.getAscent();
-			Rectangle2D t = fm.getStringBounds("A",g);
-			g.drawString("A", (int)(x+s-t.getWidth()/2), (int)(y+height-t.getHeight())+ascent);
-			t = fm.getStringBounds("B",g);
-			g.drawString("B", (int)(x+width-t.getWidth()-d/2), (int)(y+height-t.getHeight())+ascent);
-			t = fm.getStringBounds("S",g);
-			g.drawString("S", x+(int)(width-t.getWidth())/2, y+(int)(t.getHeight()));
-		
-			Font f = g.getFont();
-			float fs = f.getSize2D();
-			Font nf = f.deriveFont((float)(fs*0.70));
-			g.setFont(nf);
-			fm = g.getFontMetrics();
-			ascent = fm.getAscent();
-			t = fm.getStringBounds("Cin",g);
-			g.drawString("Cin", x+5, y+height/2+ascent);
-			t = fm.getStringBounds("Cout",g);
-			g.drawString("Cout", x+(int)(width-t.getWidth()-5), y+height/2+ascent);
-			g.setFont(f);
-		}
-		// draw inputs and outputs
-		for (Input input : inputs) {
-			input.draw(g);
-		}
-		for (Output output : outputs) {
-			output.draw(g);
-		}
-		
-	} // end of draw method
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
@@ -386,7 +238,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		info.setText(bits + " bit adder");
 	} // end of showInfo method
@@ -451,7 +303,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -483,7 +335,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -492,128 +344,6 @@ public final class Adder extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-
-	/**
-	 * Dialog box to set bits.
-	 */
-	@SuppressWarnings("serial")
-	private class AdderCreate extends ElementDialog {
-		
-		// properties
-		/** Field to enter the number of bits. */
-		private JTextField bitsField = new JTextField(defaultBits+"",10);
-		/** Keypad for the bits field. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Button selecting the left orientation. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Button selecting the right orientation (the default). */
-		private JRadioButton right = new JRadioButton("Right", true);
-		/** Button selecting the up orientation. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Button selecting the down orientation. */
-		private JRadioButton down = new JRadioButton("Down");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private AdderCreate() {
-			
-			// set up window title
-			super("Create Adder","adder");
-			
-			// set not cancelled
-			cancelled = false;
-			
-			// set up window
-			Container window = getContentPane();
-			
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel bits = new JLabel("Input Bits: ",SwingConstants.RIGHT);
-			info.add(bits,BorderLayout.WEST);
-			info.add(bitsField,BorderLayout.CENTER);
-			info.add(bitsPad,BorderLayout.EAST);
-			window.add(info);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			window.add(orients);
-			
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-		
-		/**
-		 * Validate the form and create the adder.
-		 */
-		@Override
-		protected void validateAndAccept() {
-			
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (bits < 1) {
-				reject("Must be at least 1 bit");
-				return;
-			}
-			if(left.isSelected())
-			{
-				orientation = Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = Orientation.DOWN;
-			}
-			dispose();
-		} // end of validateAndAccept method
-		
-		/**
-		 * Cancel this element.
-		 */
-		@Override
-		protected void cancelDialog() {
-			
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-		
-	} // end of AdderCreate class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

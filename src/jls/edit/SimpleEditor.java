@@ -2679,7 +2679,7 @@ public abstract class SimpleEditor extends JPanel {
 					JumpEnd nel = new JumpEnd(circuit);
 					nel.setName(el.getName());
 					// place at the last tracked mouse position (event-local; #103)
-					nel.setup(this.getGraphics(), this, x, y);
+					ElementDialogs.setup(nel, this.getGraphics(), this, x, y);
 
 					clearSelected();
 					circuit.addElement(nel);
@@ -5215,7 +5215,7 @@ public abstract class SimpleEditor extends JPanel {
 
 						// otherwise element will change itself
 						else {
-							boolean mustReplace = el.change(this.getGraphics(), this, x, y);
+							boolean mustReplace = ElementDialogs.change(el, this.getGraphics(), this, x, y);
 
 							// if size has changed, force user to reposition
 							if (mustReplace) {
@@ -5425,7 +5425,7 @@ public abstract class SimpleEditor extends JPanel {
 						autoGrow(dx,dy);
 
 						// if not cancelled...
-						if (item.setup(this.getGraphics(),this,dx,dy)) {
+						if (ElementDialogs.setup(item, this.getGraphics(),this,dx,dy)) {
 
 							// put into circuit
 							Point pos = getMousePosition();

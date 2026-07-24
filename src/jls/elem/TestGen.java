@@ -5,10 +5,7 @@ import java.nio.charset.StandardCharsets;
 import jls.*;
 import jls.sim.*;
 
-import java.awt.*;
-import javax.swing.*;
 import java.io.*;
-import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -40,7 +37,7 @@ public final class TestGen extends SigSim {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 		
 	} // end of init method
 	

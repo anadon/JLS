@@ -168,7 +168,28 @@ public abstract sealed class Element
 
 		return y;
 	} // end of getY method
-	
+
+	/**
+	 * The element's width, in pixels (issue #77: a read-only accessor the
+	 * GUI-side renderers use so element drawing can leave the model).
+	 *
+	 * @return the width.
+	 */
+	public int getWidth() {
+
+		return width;
+	} // end of getWidth method
+
+	/**
+	 * The element's height, in pixels (issue #77).
+	 *
+	 * @return the height.
+	 */
+	public int getHeight() {
+
+		return height;
+	} // end of getHeight method
+
 	/**
 	 * Get the trace position of this element.
 	 * 

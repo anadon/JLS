@@ -66,11 +66,17 @@ class DialogCoverageRatchetTest {
 					|| "jls.elem.ElementDialog".equals(c.getName())) {
 				continue;
 			}
-			// dialogs are inner classes; charge them to the top-level
-			// element that owns them
+			// charge each dialog to the top-level element that owns it.
+			// Legacy dialogs are inner classes of the element
+			// (jls.elem.Clock$ClockCreate -> Clock); dialogs relocated to
+			// the GUI side by the #77 element wave follow the
+			// jls.edit.<Element>Dialog convention
+			// (jls.edit.AdderDialog$Form -> AdderDialog -> Adder).
 			String owner = c.getName()
 					.replace("jls.elem.", "")
-					.replaceAll("[$.].*", "");
+					.replace("jls.edit.", "")
+					.replaceAll("[$.].*", "")
+					.replaceAll("Dialog$", "");
 			if (!SWEPT.contains(owner)
 					&& !REPRESENTED.containsKey(owner)) {
 				unrepresented.add(owner + " (" + c.getName() + ")");

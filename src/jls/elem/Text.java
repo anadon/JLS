@@ -378,7 +378,7 @@ public final class Text extends DisplayElement {
 			 * @param v The new color as an RGB integer.
 			 */
 			@Override
-			protected void set(Element el, int v) { ((Text)el).colorRGB = v; }
+			protected void set(Element el, int v) { ((Text)el).colorRGB = 0xFF000000 | (v & 0xFFFFFF); } // force opaque, as new Color(v) did (#77)
 		}
 	);
 

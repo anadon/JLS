@@ -94,13 +94,13 @@ public final class DelayGate extends Gate implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		String pd = ", delay = " + propDelay;
 		if (bits == 1)
-			info.setText("DELAY gate" + pd);
+			return "DELAY gate" + pd;
 		else
-			info.setText(bits + " DELAY gates" + pd);
+			return bits + " DELAY gates" + pd;
 	} // end of showInfo method
 	
 	/**

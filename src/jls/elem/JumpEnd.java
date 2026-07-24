@@ -291,10 +291,10 @@ public final class JumpEnd extends LogicElement {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-		info.setText(bits + " bit wire connection, value = " +
-				BitSetUtils.toDisplay(currentValue,bits));
+		return bits + " bit wire connection, value = " +
+				BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
 
 	/**

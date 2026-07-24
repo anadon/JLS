@@ -307,9 +307,9 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
-		info.setText(bits + " to " + (1<<bits) + " decoder");
+		return bits + " to " + (1<<bits) + " decoder";
 
 	} // end of showInfo method
 

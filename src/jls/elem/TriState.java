@@ -292,12 +292,12 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		if (bits == 1)
-			info.setText("tri-state gate");
+			return "tri-state gate";
 		else
-			info.setText(bits + " tri-state gates");
+			return bits + " tri-state gates";
 	} // end of showInfo method
 
 	/**

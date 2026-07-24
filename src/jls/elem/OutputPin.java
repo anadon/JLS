@@ -106,7 +106,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
 		String value = ", value = " + BitSetUtils.toDisplay(currentValue, bits);
 		String tri = "";
@@ -114,7 +114,7 @@ public final class OutputPin extends Pin implements TriProp {
 			if (inputs.get(0).getWireEnd().getNet().isTriState())
 				tri = " (tri-state) ";
 		}
-		info.setText(bits + " bit output pin" + tri + value);
+		return bits + " bit output pin" + tri + value;
 	} // end of showInfo method
 
 	/**
@@ -205,7 +205,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            Unused.
 	 */
 	@Override
-	public void showCurrentValue(java.awt.Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 
 		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(
 				currentValue, bits), "Information");

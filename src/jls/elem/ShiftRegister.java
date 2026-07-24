@@ -407,7 +407,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
 		String kind = "";
 		switch (type) {
@@ -415,7 +415,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		case LogicalRight: kind = "logical right"; break;
 		default: kind = "arithmetic right"; break;
 		}
-		info.setText(bits + " bit " + kind + " shift register");
+		return bits + " bit " + kind + " shift register";
 	} // end of showInfo method
 
 	/**

@@ -495,7 +495,7 @@ public final class StateMachine extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		String trig = "falling";
 		if (trigger == 1) {
@@ -503,10 +503,10 @@ public final class StateMachine extends LogicElement
 		}
 		String msg = "state machine (" + trig + " edge triggered), ";
 		if (currentState == null) {
-			info.setText(msg + "no current state");
+			return msg + "no current state";
 		}
 		else {
-			info.setText(msg + "current state = " + currentState.getName());
+			return msg + "current state = " + currentState.getName();
 		}
 	} // end of showInfo method
 	

@@ -302,10 +302,10 @@ public final class Clock extends LogicElement {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
-		info.setText("clock, cycle time = " + cycleTime +
-				" (zero for " + (cycleTime-oneTime) + ", one for " + oneTime + ")");
+		return "clock, cycle time = " + cycleTime +
+				" (zero for " + (cycleTime-oneTime) + ", one for " + oneTime + ")";
 	} // end of showInfo method
 
 	/**

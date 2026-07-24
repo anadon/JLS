@@ -385,9 +385,9 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
-		info.setText(subCircuit.getName() + " (a subcircuit)");
+		return subCircuit.getName() + " (a subcircuit)";
 	} // end of showInfo method
 	
 	/**

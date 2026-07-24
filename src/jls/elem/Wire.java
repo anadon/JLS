@@ -307,7 +307,7 @@ public final class Wire extends Element {
 	 * @param info A JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		String tri = "";
 		if (net.isTriState())
@@ -325,13 +325,13 @@ public final class Wire extends Element {
 		if (probeName != null)
 			probe = " (probe: " + probeName + ")";
 		if (bits <= 0) {
-			info.setText(tri + "bits unknown" + probe);
+			return tri + "bits unknown" + probe;
 		}
 		else if (bits == 1) {
-			info.setText(tri + "1 bit" + inp + probe + value);
+			return tri + "1 bit" + inp + probe + value;
 		} 
 		else {
-			info.setText(tri + bits + " bits" + inp + probe + value);
+			return tri + bits + " bits" + inp + probe + value;
 		}
 	} // end of showInfo method
 	

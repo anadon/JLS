@@ -113,13 +113,13 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
 		String tri = "";
 		if (outputs.get(0).isTriState())
 			tri = " (tri-state) ";
-		info.setText(bits + " bit input pin" + tri + ", value = " +
-				BitSetUtils.toDisplay(currentValue,bits));
+		return bits + " bit input pin" + tri + ", value = " +
+				BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
 
 	/**
@@ -205,7 +205,7 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param where Unused.
 	 */
 	@Override
-	public void showCurrentValue(java.awt.Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 		
 		String value = "off";
 		if (currentValue != null) {

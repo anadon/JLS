@@ -446,7 +446,7 @@ public final class Register extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		String ty = "";
 		switch (type) {
@@ -454,8 +454,8 @@ public final class Register extends LogicElement
 		case PosFF: ty = "positive edge triggered flip-flop"; break;
 		case NegFF: ty = "negative edge triggered flip-flop"; break;
 		}
-		info.setText(bits + " bit " + ty + ", value = " +
-				BitSetUtils.toDisplay(currentValue,bits));
+		return bits + " bit " + ty + ", value = " +
+				BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
 	
 	/**
@@ -842,7 +842,7 @@ public final class Register extends LogicElement
 	 * @param where Unused.
 	 */
 	@Override
-	public void showCurrentValue(java.awt.Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 		
 		String hex = BitSetUtils.ToString(currentValue,16);
 		String unsigned = BitSetUtils.ToString(currentValue,10);

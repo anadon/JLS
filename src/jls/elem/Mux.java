@@ -341,9 +341,9 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
-		info.setText(numInputs + " input, " + bits + " bit multiplexor");
+		return numInputs + " input, " + bits + " bit multiplexor";
 	} // end of showInfo method
 
 	/**

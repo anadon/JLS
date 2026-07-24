@@ -238,9 +238,9 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
-		info.setText(bits + " bit adder");
+		return bits + " bit adder";
 	} // end of showInfo method
 
 	/**

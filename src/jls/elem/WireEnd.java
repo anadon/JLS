@@ -393,7 +393,7 @@ public final class WireEnd extends LogicElement {
 	 * @param info A JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		String inp = "";
 		if (!net.hasInput()) {
@@ -401,13 +401,13 @@ public final class WireEnd extends LogicElement {
 		}
 		int bits = net.getBits();
 		if (bits <= 0) {
-			info.setText("not connected");
+			return "not connected";
 		}
 		else if (bits == 1) {
-			info.setText("1 bit" + inp);
+			return "1 bit" + inp;
 		} 
 		else {
-			info.setText(bits + " bits" + inp);
+			return bits + " bits" + inp;
 		}
 	} // end of showInfo method
 	

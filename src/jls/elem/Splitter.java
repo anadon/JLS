@@ -129,9 +129,9 @@ public final class Splitter extends Group implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-		info.setText("unbundle " + bits + " bits");
+		return "unbundle " + bits + " bits";
 	} // end of showInfo method
 	
 	/**

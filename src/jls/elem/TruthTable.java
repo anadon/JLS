@@ -355,9 +355,9 @@ public final class TruthTable extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-		info.setText("circuit determined by truth table");
+		return "circuit determined by truth table";
 
 	} // end of showInfo method
 

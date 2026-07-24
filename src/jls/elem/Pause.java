@@ -114,9 +114,9 @@ public final class Pause extends LogicElement {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-		info.setText("pause simulation");
+		return "pause simulation";
 	} // end of showInfo method
 
 

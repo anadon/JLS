@@ -716,9 +716,10 @@ public abstract sealed class Element
 	 * 
 	 * @param info A JLabel to display with.
 	 */
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-	} // end of showInfo method
+		return "";
+	} // end of infoText method
 
 	/**
 	 * See if this element is touching (for possible connections).
@@ -1014,7 +1015,7 @@ public abstract sealed class Element
 	 * 
 	 * @param where The point on the screen to display at.
 	 */
-	public void showCurrentValue(java.awt.Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 
 	} // end of showCurrent value method
 

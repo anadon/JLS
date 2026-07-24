@@ -618,13 +618,13 @@ public final class Memory extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 		
 		if (fileName.isEmpty()) {
-			info.setText(specs + ", built-in initializaion");
+			return specs + ", built-in initializaion";
 		}
 		else {
-			info.setText(specs + ", initialization file = \"" + fileName + "\"");
+			return specs + ", initialization file = \"" + fileName + "\"";
 		}
 	} // end of showInfo method
 	
@@ -1459,7 +1459,7 @@ public final class Memory extends LogicElement
 	 * @param where Where on the screen to display.
 	 */
 	@Override
-	public void showCurrentValue(java.awt.Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 
 		// set up
 		final javax.swing.JDialog contents = new javax.swing.JDialog(JLSInfo.frame,true);

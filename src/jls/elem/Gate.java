@@ -140,13 +140,13 @@ public abstract sealed class Gate extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
 		String type = kind().displayName;
 		if (bits == 1)
-			info.setText(numInputs + "-input " + type + " gate");
+			return numInputs + "-input " + type + " gate";
 		else
-			info.setText(bits + " " + numInputs + "-input " + type + " gate");
+			return bits + " " + numInputs + "-input " + type + " gate";
 	} // end of showInfo method
 	
 	/**

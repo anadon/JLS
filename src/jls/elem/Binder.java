@@ -126,9 +126,9 @@ public final class Binder extends Group implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
-		info.setText("bundle " + bits + " bits");
+		return "bundle " + bits + " bits";
 	} // end of showInfo method
 	
 	/**

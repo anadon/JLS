@@ -1452,7 +1452,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (selected.size() != 1)
 								return;
 							Element el = (Element)selected.toArray()[0];
-							el.showCurrentValue(new Point(x,y));
+							el.showCurrentValue(x, y);
 							clearSelected();
 							setState(State.idle);
 							repaint();
@@ -3847,7 +3847,7 @@ public abstract class SimpleEditor extends JPanel {
 							dirty = union(dirty, el.getRect());
 						}
 						el.setHighlight(true);
-						el.showInfo(info);
+						info.setText(el.infoText());
 					}
 					if (dirty != null) {
 						dirty.grow(Geometry.SPACING, Geometry.SPACING);

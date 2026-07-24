@@ -30,6 +30,12 @@ import jls.util.Placement;
  */
 public final class ShiftRegisterDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code ShiftRegisterDialog}.
+	 */
+	public ShiftRegisterDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {
@@ -60,27 +66,49 @@ public final class ShiftRegisterDialog implements ElementDialog {
 	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
+		/** The shift register being configured by this form. */
 		private final ShiftRegister sr;
+		/** Whether the user cancelled the dialog instead of confirming it. */
 		private boolean cancelled;
 
+		/** Entry field for the bit count. */
 		private final JTextField bitsField =
 				new JTextField(ShiftRegister.defaultBits() + "", 5);
+		/** Numeric keypad bound to {@link #bitsField}. */
 		private final KeyPad bitsPad;
+		/** Shift-type radio button: logical left, default selected. */
 		private final JRadioButton shiftLeft =
 				new JRadioButton("Shift Left", true);
+		/** Shift-type radio button: logical right. */
 		private final JRadioButton shiftRight = new JRadioButton("Shift Right");
+		/** Shift-type radio button: arithmetic right. */
 		private final JRadioButton shiftRightArith =
 				new JRadioButton("Shift Right Arithmetic");
+		/** Output-orientation radio button: left. */
 		private final JRadioButton oLeft = new JRadioButton("Left");
+		/** Output-orientation radio button: right, default selected. */
 		private final JRadioButton oRight = new JRadioButton("Right", true);
+		/** Output-orientation radio button: up. */
 		private final JRadioButton oUp = new JRadioButton("Up");
+		/** Output-orientation radio button: down. */
 		private final JRadioButton oDown = new JRadioButton("Down");
+		/** Amount-orientation radio button: left (for up/down output orientation). */
 		private final JRadioButton sLeft = new JRadioButton("Left");
+		/** Amount-orientation radio button: right (for up/down output orientation). */
 		private final JRadioButton sRight = new JRadioButton("Right");
+		/** Amount-orientation radio button: up (for left/right output orientation). */
 		private final JRadioButton sUp = new JRadioButton("Up");
+		/** Amount-orientation radio button: down (for left/right output orientation), default selected. */
 		private final JRadioButton sDown = new JRadioButton("Down", true);
+		/** Label for the amount-orientation buttons; hidden until an output orientation is chosen. */
 		private final JLabel olbl2 = new JLabel("Amount Orientation");
 
+		/**
+		 * Creates the form, wiring up its controls from the given shift
+		 * register's current settings.
+		 *
+		 * @param sr The shift register being configured.
+		 */
 		private Form(ShiftRegister sr) {
 
 			super("Create Shift Register", "shiftregister");

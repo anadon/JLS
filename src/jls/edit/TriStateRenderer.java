@@ -16,6 +16,12 @@ import jls.elem.TriState;
  */
 public final class TriStateRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code TriStateRenderer}.
+	 */
+	public TriStateRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

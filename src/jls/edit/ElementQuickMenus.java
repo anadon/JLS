@@ -17,6 +17,9 @@ import jls.elem.Element;
  */
 public final class ElementQuickMenus {
 
+	/**
+	 * Creates {@code ElementQuickMenus}.
+	 */
 	private ElementQuickMenus() {
 	} // no instances
 
@@ -41,6 +44,10 @@ public final class ElementQuickMenus {
 	/**
 	 * The constant's value-shortcut submenu: set to 0 or 1, add 1, or
 	 * subtract 1.
+	 *
+	 * @param c The constant the menu is for.
+	 * @param sed The editor to reset and repaint after a quick change.
+	 * @return the constant's value-shortcut submenu.
 	 */
 	private static JMenu constantMenu(Constant c, SimpleEditor sed) {
 
@@ -63,6 +70,10 @@ public final class ElementQuickMenus {
 	/**
 	 * Apply a value change and, if the constant is in a live editor,
 	 * re-size (quickReset) and repaint — the former actionPerformed tail.
+	 *
+	 * @param c The constant whose value changed.
+	 * @param sed The editor to reset after the change.
+	 * @param change The value change to apply.
 	 */
 	private static void apply(Constant c, SimpleEditor sed, Runnable change) {
 

@@ -22,6 +22,12 @@ import jls.elem.Input;
  */
 public final class DisplayRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code DisplayRenderer}.
+	 */
+	public DisplayRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

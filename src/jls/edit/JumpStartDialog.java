@@ -31,6 +31,12 @@ import jls.util.Placement;
  */
 public final class JumpStartDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code JumpStartDialog}.
+	 */
+	public JumpStartDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {
@@ -62,7 +68,9 @@ public final class JumpStartDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The jump start being created. */
 		private final JumpStart start;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
 		/** The text field for the wire name. */
 		private final JTextField nameField = new JTextField("",12);
@@ -75,6 +83,11 @@ public final class JumpStartDialog implements ElementDialog {
 		/** Selects right orientation. */
 		private final JRadioButton right = new JRadioButton("right");
 
+		/**
+		 * Creates the create-wire-start form for a jump start.
+		 *
+		 * @param start The jump start being created.
+		 */
 		private Form(JumpStart start) {
 
 			// set up window title

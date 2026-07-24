@@ -44,9 +44,12 @@ public final class MemoryDialog implements ElementDialog {
 	/** The default capacity, in words (matches {@code Memory.defaultCapacity}). */
 	private static final int DEFAULT_CAPACITY = 2;
 
+	/** True for the create dialog, false for the edit dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates a memory creation or change dialog.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */
@@ -96,26 +99,47 @@ public final class MemoryDialog implements ElementDialog {
 	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
+		/** The memory element being created or edited. */
 		private final Memory mem;
 		/** Graphics saved so nameFits can measure name widths. */
 		private final Graphics saveg;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
+		/** True if the memory's bits/name changed and it must be resized. */
 		private boolean changed;
 		/** True if creating a new memory element, false if changing one. */
 		private final boolean create;
 
+		/** Entry field for the memory's name. */
 		private final JTextField nameField;
+		/** Entry field for the memory's bit width. */
 		private final JTextField bitsField;
+		/** Entry field for the memory's capacity, in words. */
 		private final JTextField capacityField;
+		/** Keypad wired to {@link #bitsField}. */
 		private final KeyPad bitsPad;
+		/** Keypad wired to {@link #capacityField}. */
 		private final KeyPad capacityPad;
+		/** Radio button selecting RAM as the memory type. */
 		private final JRadioButton ram = new JRadioButton("RAM");
+		/** Radio button selecting ROM as the memory type. */
 		private final JRadioButton rom = new JRadioButton("ROM");
+		/** Button that loads the initial contents from a file. */
 		private final JButton fromFile = new JButton("from File");
+		/** Button that opens the built-in initial-value editor. */
 		private final JButton builtIn = new JButton("Built In");
 		/** Working copy of the built-in initial value text, committed on OK. */
 		String tempInit;
 
+		/**
+		 * Builds the memory creation/change form and populates its fields
+		 * from the given memory.
+		 *
+		 * @param mem The memory element to create or edit.
+		 * @param create True to build the create form, false for the
+		 *        change form.
+		 * @param g The Graphics used to measure name widths.
+		 */
 		private Form(Memory mem, boolean create, Graphics g) {
 
 			// set up window title

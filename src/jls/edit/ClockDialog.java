@@ -30,12 +30,17 @@ import jls.util.Placement;
  */
 public final class ClockDialog implements ElementDialog {
 
+	/** Default cycle time offered by the cycle-time key pad. */
 	private static final int DEFAULT_CYCLE_TIME = 2;
+	/** Default one time offered by the one-time key pad. */
 	private static final int DEFAULT_ONE_TIME = DEFAULT_CYCLE_TIME / 2;
 
+	/** True for the create dialog, false for the edit dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates a {@code ClockDialog}.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */
@@ -82,15 +87,28 @@ public final class ClockDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The clock being created or edited. */
 		private final Clock clock;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
+		/** The text field for the cycle time. */
 		private final JTextField cycleTimeField;
+		/** The text field for the one time. */
 		private final JTextField oneTimeField;
+		/** Selects left orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Selects right orientation (the default). */
 		private final JRadioButton right = new JRadioButton("Right", true);
+		/** Selects up orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Selects down orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Set up dialog window.
+		 *
+		 * @param clock The clock being created or edited.
+		 */
 		private Form(Clock clock) {
 
 			// set up window title

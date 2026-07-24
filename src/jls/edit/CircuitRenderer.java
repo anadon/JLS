@@ -47,8 +47,14 @@ public final class CircuitRenderer implements Printable {
 	 */
 	private static final int DRAW_MARGIN = 8 * Geometry.SPACING;
 
+	/** The circuit this renderer draws. */
 	private final Circuit circuit;
 
+	/**
+	 * Creates a renderer for a circuit.
+	 *
+	 * @param circuit The circuit to render.
+	 */
 	private CircuitRenderer(Circuit circuit) {
 		this.circuit = circuit;
 	} // end of constructor

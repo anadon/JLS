@@ -29,6 +29,12 @@ import jls.util.Placement;
  */
 public final class DelayGateDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code DelayGateDialog}.
+	 */
+	public DelayGateDialog() {
+	}
+
 	/** Default propagation delay shown in the creation dialog. */
 	private static final int DEFAULT_DELAY = 1;
 	/** Default number of gates (bits) shown in the creation dialog. */
@@ -67,21 +73,36 @@ public final class DelayGateDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The delay gate being created. */
 		private final DelayGate delay;
+		/** True if the user cancelled this dialog. */
 		private boolean cancelled;
+		/** Entry field for the propagation delay. */
 		private final JTextField delayField =
 				new JTextField(DEFAULT_DELAY + "", 5);
+		/** Entry field for the number of gates (bits). */
 		private final JTextField gatesField =
 				new JTextField(DEFAULT_BITS + "", 5);
+		/** Keypad for entering the propagation delay. */
 		private final KeyPad delayPad =
 				new KeyPad(delayField, 10, DEFAULT_DELAY, this);
+		/** Keypad for entering the number of gates (bits). */
 		private final KeyPad gatesPad =
 				new KeyPad(gatesField, 10, DEFAULT_BITS, this);
+		/** Selects the left orientation. */
 		private final JRadioButton left = new JRadioButton("left");
+		/** Selects the up orientation. */
 		private final JRadioButton up = new JRadioButton("up");
+		/** Selects the down orientation. */
 		private final JRadioButton down = new JRadioButton("down");
+		/** Selects the right orientation. */
 		private final JRadioButton right = new JRadioButton("right");
 
+		/**
+		 * Set up create dialog window.
+		 *
+		 * @param delay The delay gate being created.
+		 */
 		private Form(DelayGate delay) {
 
 			// set up window title

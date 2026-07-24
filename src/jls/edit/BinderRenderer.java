@@ -20,6 +20,12 @@ import jls.elem.Output;
  */
 public final class BinderRenderer extends GroupRenderer {
 
+	/**
+	 * Creates a {@code BinderRenderer}.
+	 */
+	public BinderRenderer() {
+	} // end of constructor
+
 	@Override
 	void drawBody(Graphics g, Group group) {
 

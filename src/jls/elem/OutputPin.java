@@ -102,8 +102,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info
-	 *            The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
@@ -201,8 +200,8 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Display current value.
 	 * 
-	 * @param where
-	 *            Unused.
+	 * @param whereX the x-coordinate on screen (unused here).
+	 * @param whereY the y-coordinate on screen (unused here).
 	 */
 	@Override
 	public void showCurrentValue(int whereX, int whereY) {

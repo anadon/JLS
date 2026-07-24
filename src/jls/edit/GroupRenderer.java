@@ -19,6 +19,12 @@ import jls.elem.Output;
  */
 abstract class GroupRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code GroupRenderer}.
+	 */
+	GroupRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

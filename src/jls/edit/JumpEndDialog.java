@@ -35,6 +35,12 @@ import jls.util.Placement;
  */
 public final class JumpEndDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code JumpEndDialog}.
+	 */
+	public JumpEndDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {
@@ -96,8 +102,11 @@ public final class JumpEndDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The jump end being configured by this form. */
 		private final JumpEnd end;
+		/** The circuit containing the jump end, used to look up jump starts. */
 		private final Circuit circuit;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
 		/** List of named wire (jump start) names to pick from. */
 		private JList<String> starts;
@@ -106,6 +115,11 @@ public final class JumpEndDialog implements ElementDialog {
 		/** Selects rightward orientation. */
 		private final JRadioButton right = new JRadioButton("right");
 
+		/**
+		 * Creates the create-wire-end form for the given jump end.
+		 *
+		 * @param end the jump end to configure
+		 */
 		private Form(JumpEnd end) {
 
 			// set up window title

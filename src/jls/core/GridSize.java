@@ -3,7 +3,7 @@ package jls.core;
 /**
  * An exact integer box size on the snap grid (issue #77): a headless
  * value type replacing {@code Dimension} in the grid-geometry
- * transforms ({@link GridTransform}), so element geometry can be
+ * transforms ({@link Geometry}), so element geometry can be
  * computed without an AWT dependency. Component names mirror
  * {@code Dimension}'s fields, so {@code .width}/{@code .height} reads
  * become {@code .width()}/{@code .height()}.

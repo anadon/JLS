@@ -21,6 +21,12 @@ import jls.elem.Output;
  */
 public final class MemoryRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code MemoryRenderer}.
+	 */
+	public MemoryRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

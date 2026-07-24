@@ -21,6 +21,12 @@ import jls.elem.Output;
  */
 public final class AdderRenderer implements ElementRenderer {
 
+	/**
+	 * Creates an {@code AdderRenderer}.
+	 */
+	public AdderRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

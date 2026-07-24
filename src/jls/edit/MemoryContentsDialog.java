@@ -28,6 +28,9 @@ import jls.elem.Memory;
  */
 public final class MemoryContentsDialog {
 
+	/**
+	 * Prevents instantiation; this class only holds a static entry point.
+	 */
 	private MemoryContentsDialog() {
 	} // no instances
 

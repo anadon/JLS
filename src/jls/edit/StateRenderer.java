@@ -27,6 +27,9 @@ import jls.elem.State.Transition;
  */
 public final class StateRenderer {
 
+	/**
+	 * No instances.
+	 */
 	private StateRenderer() {} // no instances
 
 	/**

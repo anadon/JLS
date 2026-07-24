@@ -16,6 +16,12 @@ import jls.elem.WireEnd;
  */
 public final class WireEndRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code WireEndRenderer}.
+	 */
+	public WireEndRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

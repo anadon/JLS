@@ -21,6 +21,12 @@ import jls.elem.Wire;
 public final class WireRenderer implements ElementRenderer {
 
 	/**
+	 * Creates a {@code WireRenderer}.
+	 */
+	public WireRenderer() {
+	}
+
+	/**
 	 * The stroke communicating a wire's value state independently of
 	 * color (issue #76): a wire carrying no value (tri-state HiZ) is
 	 * dashed, a wire carrying a non-zero value is thick, and a wire

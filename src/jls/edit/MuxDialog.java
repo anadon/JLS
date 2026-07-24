@@ -31,7 +31,15 @@ import jls.util.Placement;
  */
 public final class MuxDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code MuxDialog}.
+	 */
+	public MuxDialog() {
+	}
+
+	/** Default number of inputs presented in the creation form. */
 	private static final int DEFAULT_INPUTS = 2;
+	/** Default bit width presented in the creation form. */
 	private static final int DEFAULT_BITS = 1;
 
 	@Override
@@ -67,26 +75,46 @@ public final class MuxDialog implements ElementDialog {
 	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
+		/** The multiplexor being configured by this form. */
 		private final Mux mux;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the number of inputs. */
 		private final JTextField inputsField =
 				new JTextField(DEFAULT_INPUTS + "", 5);
+		/** Entry field for the bit width. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 5);
+		/** Numeric keypad bound to {@link #inputsField}. */
 		private final KeyPad inputsPad =
 				new KeyPad(inputsField, 10, DEFAULT_INPUTS, this);
+		/** Numeric keypad bound to {@link #bitsField}. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Selects a left-facing output orientation. */
 		private final JRadioButton oLeft = new JRadioButton("Left");
+		/** Selects a right-facing output orientation (default). */
 		private final JRadioButton oRight = new JRadioButton("Right", true);
+		/** Selects an up-facing output orientation. */
 		private final JRadioButton oUp = new JRadioButton("Up");
+		/** Selects a down-facing output orientation. */
 		private final JRadioButton oDown = new JRadioButton("Down");
+		/** Selects a left-facing selector orientation. */
 		private final JRadioButton sLeft = new JRadioButton("Left");
+		/** Selects a right-facing selector orientation. */
 		private final JRadioButton sRight = new JRadioButton("Right");
+		/** Selects an up-facing selector orientation. */
 		private final JRadioButton sUp = new JRadioButton("Up");
+		/** Selects a down-facing selector orientation (default). */
 		private final JRadioButton sDown = new JRadioButton("Down", true);
+		/** Label heading the selector-orientation buttons. */
 		private final JLabel olbl2 = new JLabel("Selector Orientation");
 
+		/**
+		 * Creates the create-multiplexor form and builds its layout.
+		 *
+		 * @param mux the multiplexor being configured.
+		 */
 		private Form(Mux mux) {
 
 			// set up window title

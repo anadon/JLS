@@ -19,6 +19,12 @@ import jls.elem.Mux;
  */
 public final class MuxRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code MuxRenderer}.
+	 */
+	public MuxRenderer() {
+	} // end of constructor
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

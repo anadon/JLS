@@ -18,6 +18,12 @@ import jls.elem.Text;
  */
 public final class TextRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code TextRenderer}.
+	 */
+	public TextRenderer() {
+	} // end of constructor
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

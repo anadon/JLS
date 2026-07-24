@@ -21,8 +21,10 @@ import jls.elem.Element;
  */
 public final class ElementDialogs {
 
+	/** Registered creation dialogs, keyed by element class. */
 	private static final Map<Class<?>, ElementDialog> BY_TYPE =
 			new HashMap<Class<?>, ElementDialog>();
+	/** Registered change (edit) dialogs, keyed by element class. */
 	private static final Map<Class<?>, ElementDialog> CHANGE_BY_TYPE =
 			new HashMap<Class<?>, ElementDialog>();
 
@@ -30,6 +32,9 @@ public final class ElementDialogs {
 		BuiltinElementRenderers.install();
 	}
 
+	/**
+	 * No instances.
+	 */
 	private ElementDialogs() {} // no instances
 
 	/**

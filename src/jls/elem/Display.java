@@ -283,7 +283,7 @@ public final class Display extends LogicElement {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

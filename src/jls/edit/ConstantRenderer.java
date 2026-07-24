@@ -23,6 +23,12 @@ import jls.elem.Element;
  */
 public final class ConstantRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code ConstantRenderer}.
+	 */
+	public ConstantRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

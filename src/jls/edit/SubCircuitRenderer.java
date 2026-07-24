@@ -21,6 +21,12 @@ import jls.elem.SubCircuit;
  */
 public final class SubCircuitRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code SubCircuitRenderer}.
+	 */
+	public SubCircuitRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

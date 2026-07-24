@@ -41,9 +41,12 @@ public final class TextDialog implements ElementDialog {
 	/** Width and height of the text edit dialog, in pixels. */
 	private static final int SIZE = 500;
 
+	/** True for the create dialog, false for the edit dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates a {@code TextDialog}.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */

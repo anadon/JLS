@@ -18,6 +18,12 @@ import jls.elem.TruthTable;
  */
 public final class TruthTableRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code TruthTableRenderer}.
+	 */
+	public TruthTableRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

@@ -18,6 +18,12 @@ import jls.elem.Element;
  */
 public final class DecoderRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code DecoderRenderer}.
+	 */
+	public DecoderRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

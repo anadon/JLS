@@ -64,9 +64,12 @@ import jls.util.Placement;
  */
 public final class StateMachineDialog implements ElementDialog {
 
+	/** True for the create dialog, false for the edit (change) dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates a {@code StateMachineDialog}.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */

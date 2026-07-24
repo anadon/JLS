@@ -37,6 +37,12 @@ import jls.util.Placement;
  */
 public final class GateDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code GateDialog}.
+	 */
+	public GateDialog() {
+	}
+
 	/** Default number of inputs shown in the creation dialog. */
 	private static final int DEFAULT_INPUTS = 2;
 	/** Default number of gates (bits) shown in the creation dialog. */

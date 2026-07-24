@@ -20,6 +20,12 @@ import jls.elem.Output;
  */
 public final class SplitterRenderer extends GroupRenderer {
 
+	/**
+	 * Creates a {@code SplitterRenderer}.
+	 */
+	public SplitterRenderer() {
+	}
+
 	@Override
 	void drawBody(Graphics g, Group group) {
 

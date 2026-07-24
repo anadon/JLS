@@ -42,7 +42,7 @@ public final class DelayGate extends Gate implements Timed {
 	 * The DELAY gate body: a right-pointing triangle (issue #77 model/render
 	 * split - the symbol as headless data). Byte-identical to the former
 	 * inline {@code GeneralPath}: two connected lines then a connected line
-	 * back, closed, so {@link Gate#gatePathFrom(GateOutline)} rebuilds the
+	 * back, closed, so {@code GateRenderer.gatePathFrom(GateOutline)} rebuilds the
 	 * same closed path.
 	 */
 	@Override
@@ -91,7 +91,7 @@ public final class DelayGate extends Gate implements Timed {
 	/**
 	 * Display info about this DELAY gate.
 	 *
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

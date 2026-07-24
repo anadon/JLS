@@ -23,11 +23,15 @@ import jls.util.Placement;
  */
 public final class SigGenDialog implements ElementDialog {
 
+	/** Width and height of the dialog. */
 	private static final int SIZE = 300; // width and height of dialog
 
+	/** True for the create dialog, false for the edit dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates a {@code SigGenDialog}.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */
@@ -75,10 +79,20 @@ public final class SigGenDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The signal generator being created or edited. */
 		private final SigGen sg;
+		/** True if the dialog was dismissed without a change. */
 		private boolean cancelled;
+		/** The text area holding the signal specification text. */
 		private final JTextArea textArea = new JTextArea();
 
+		/**
+		 * Creates the signal-specification form.
+		 *
+		 * @param sg The signal generator being created or edited.
+		 * @param creating True when creating a new signal generator,
+		 *        false when editing an existing one.
+		 */
 		private Form(SigGen sg, boolean creating) {
 
 			super("Create Signal Specification", "siggen");

@@ -762,6 +762,12 @@ public class State {
 		return newTrans;
 	} // end of buildTransition method
 
+	/**
+	 * Validate a filled-in transition against this state's existing
+	 * transitions and, if consistent, add it.
+	 *
+	 * @param newTrans The filled-in transition to add.
+	 */
 	public void addTransition(Transition newTrans) {
 
 		{
@@ -1278,7 +1284,6 @@ public class State {
 	 * @param signal The (trimmed) output signal name.
 	 * @param value The value the signal is set to.
 	 * @param bits The number of bits in the signal.
-	 * @param dialog The dialog to display error messages in.
 	 *
 	 * @return the added output, or null if the input was rejected.
 	 */

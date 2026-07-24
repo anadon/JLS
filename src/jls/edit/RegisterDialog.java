@@ -37,9 +37,12 @@ import jls.util.Placement;
  */
 public final class RegisterDialog implements ElementDialog {
 
+	/** True for the create dialog, false for the edit dialog. */
 	private final boolean creating;
 
 	/**
+	 * Creates the dialog registration.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        dialog.
 	 */
@@ -92,6 +95,7 @@ public final class RegisterDialog implements ElementDialog {
 	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
+		/** The register being created or modified. */
 		private final Register reg;
 		/** True if creating a new register, false if modifying one. */
 		private final boolean creating;
@@ -102,22 +106,45 @@ public final class RegisterDialog implements ElementDialog {
 		/** True if a modify changed the name to one that no longer fits. */
 		private boolean nameChanged;
 
+		/** Entry field for the register name. */
 		private final JTextField nameField;
+		/** Entry field for the bit count. */
 		private final JTextField bitsField;
+		/** Entry field for the initial value. */
 		private final JTextField valueField = new JTextField("");
+		/** Numeric keypad bound to {@link #bitsField}. */
 		private final KeyPad bitsPad;
+		/** Numeric keypad bound to {@link #valueField}. */
 		private final KeyPad valuePad;
+		/** Radio button selecting base 2 for the initial value. */
 		private final JRadioButton base2 = new JRadioButton("2");
+		/** Radio button selecting base 10 for the initial value. */
 		private final JRadioButton base10 = new JRadioButton("10");
+		/** Radio button selecting base 16 for the initial value. */
 		private final JRadioButton base16 = new JRadioButton("16");
+		/** Radio button selecting level-triggered operation. */
 		private final JRadioButton latch = new JRadioButton("Level-Trig");
+		/** Radio button selecting positive-edge-triggered operation. */
 		private final JRadioButton posFF = new JRadioButton("Pos-Trig");
+		/** Radio button selecting negative-edge-triggered operation. */
 		private final JRadioButton negFF = new JRadioButton("Neg-Trig");
+		/** Radio button selecting left orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Radio button selecting right orientation. */
 		private final JRadioButton right = new JRadioButton("Right");
+		/** Radio button selecting up orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Radio button selecting down orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Builds the create/modify form and populates it from the register.
+		 *
+		 * @param reg The register being created or modified.
+		 * @param creating True for the create dialog, false for the edit
+		 *        dialog.
+		 * @param saveg Graphics used to size the value field.
+		 */
 		private Form(Register reg, boolean creating, Graphics saveg) {
 
 			// set up window title

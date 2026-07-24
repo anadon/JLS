@@ -18,6 +18,7 @@ import jls.elem.Put;
  */
 public final class ElementRenderSupport {
 
+	/** Private constructor; this class only holds static helpers. */
 	private ElementRenderSupport() {} // no instances
 
 	/**

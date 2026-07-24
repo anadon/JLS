@@ -29,6 +29,12 @@ import jls.util.Placement;
  */
 public final class SubCircuitDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code SubCircuitDialog}.
+	 */
+	public SubCircuitDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {
@@ -58,12 +64,22 @@ public final class SubCircuitDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The subcircuit being created. */
 		private final SubCircuit sc;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the subcircuit name. */
 		private final JTextField nameField = new JTextField("", 12);
+		/** Radio button selecting left-facing orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Radio button selecting right-facing orientation. */
 		private final JRadioButton right = new JRadioButton("Right", true);
 
+		/**
+		 * Builds and shows the create-subcircuit form.
+		 *
+		 * @param sc the subcircuit to configure
+		 */
 		private Form(SubCircuit sc) {
 
 			super("Create Subcircuit", "import");

@@ -13,6 +13,7 @@ import jls.elem.Memory;
  */
 public final class ElementValueDisplays {
 
+	/** Prevents instantiation; this class is a static-method holder only. */
 	private ElementValueDisplays() {
 	} // no instances
 

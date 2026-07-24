@@ -390,7 +390,7 @@ public final class WireEnd extends LogicElement {
 	/**
 	 * Display information about this wire end.
 	 * 
-	 * @param info A JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

@@ -29,6 +29,12 @@ import jls.elem.Output;
  */
 public final class GateRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code GateRenderer}.
+	 */
+	public GateRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

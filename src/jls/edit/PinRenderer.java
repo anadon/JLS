@@ -26,6 +26,12 @@ import jls.elem.Pin;
  */
 public final class PinRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code PinRenderer}.
+	 */
+	public PinRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

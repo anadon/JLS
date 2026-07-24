@@ -289,7 +289,7 @@ public final class TriState extends LogicElement implements Timed {
 	/**
 	 * Display info about this and gate.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

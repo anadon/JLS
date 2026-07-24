@@ -22,6 +22,12 @@ import jls.elem.Register;
  */
 public final class RegisterRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code RegisterRenderer}.
+	 */
+	public RegisterRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

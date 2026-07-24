@@ -21,6 +21,12 @@ import jls.elem.Pause;
  */
 public final class PauseRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code PauseRenderer}.
+	 */
+	public PauseRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

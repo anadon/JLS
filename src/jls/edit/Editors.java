@@ -28,6 +28,9 @@ public final class Editors {
 	private static final Map<Circuit, Editor> EDITORS =
 			new IdentityHashMap<Circuit, Editor>();
 
+	/**
+	 * Creates {@code Editors}.
+	 */
 	private Editors() {} // no instances
 
 	/**

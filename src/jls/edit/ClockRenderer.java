@@ -15,6 +15,12 @@ import jls.elem.Element;
  */
 public final class ClockRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code ClockRenderer}.
+	 */
+	public ClockRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

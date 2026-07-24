@@ -13,6 +13,12 @@ import jls.elem.SigGen;
  */
 public final class SigGenRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code SigGenRenderer}.
+	 */
+	public SigGenRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

@@ -19,6 +19,12 @@ import jls.elem.ShiftRegister;
  */
 public final class ShiftRegisterRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code ShiftRegisterRenderer}.
+	 */
+	public ShiftRegisterRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

@@ -31,6 +31,13 @@ import jls.util.Placement;
  */
 public final class TriStateDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code TriStateDialog}.
+	 */
+	public TriStateDialog() {
+	}
+
+	/** Default bit width offered when the dialog opens. */
 	private static final int DEFAULT_BITS = 1;
 
 	@Override
@@ -64,22 +71,40 @@ public final class TriStateDialog implements ElementDialog {
 	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
+		/** The tristate element being configured. */
 		private final TriState ts;
+		/** Whether the dialog was cancelled by the user. */
 		private boolean cancelled;
+		/** Entry field for the bit count. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 10);
+		/** Numeric keypad that feeds digits into {@link #bitsField}. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Output-orientation radio button: gate faces left. */
 		private final JRadioButton oLeft = new JRadioButton("Left");
+		/** Output-orientation radio button: gate faces right (default). */
 		private final JRadioButton oRight = new JRadioButton("Right", true);
+		/** Output-orientation radio button: gate faces up. */
 		private final JRadioButton oUp = new JRadioButton("Up");
+		/** Output-orientation radio button: gate faces down. */
 		private final JRadioButton oDown = new JRadioButton("Down");
+		/** Control-orientation radio button: control faces left. */
 		private final JRadioButton sLeft = new JRadioButton("Left");
+		/** Control-orientation radio button: control faces right. */
 		private final JRadioButton sRight = new JRadioButton("Right");
+		/** Control-orientation radio button: control faces up. */
 		private final JRadioButton sUp = new JRadioButton("Up");
+		/** Control-orientation radio button: control faces down (default). */
 		private final JRadioButton sDown = new JRadioButton("Down", true);
+		/** Label for the control-orientation radio buttons. */
 		private final JLabel olbl2 = new JLabel("Control Orientation");
 
+		/**
+		 * Creates the create-tristate form for the given element.
+		 *
+		 * @param ts The tristate element being configured.
+		 */
 		private Form(TriState ts) {
 
 			super("Create TriState", "TRISTATE");

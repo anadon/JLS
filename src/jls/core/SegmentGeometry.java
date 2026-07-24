@@ -12,13 +12,20 @@ package jls.core;
  */
 public final class SegmentGeometry {
 
+	/**
+	 * Prevents instantiation; all members are static.
+	 */
 	private SegmentGeometry() {
 	} // no instances
 
 	// Rectangle2D outcode bits (same values AWT uses).
+	/** Outcode bit set when the point is to the left of the rectangle. */
 	private static final int OUT_LEFT = 1;
+	/** Outcode bit set when the point is above the rectangle. */
 	private static final int OUT_TOP = 2;
+	/** Outcode bit set when the point is to the right of the rectangle. */
 	private static final int OUT_RIGHT = 4;
+	/** Outcode bit set when the point is below the rectangle. */
 	private static final int OUT_BOTTOM = 8;
 
 	/**
@@ -145,6 +152,15 @@ public final class SegmentGeometry {
 	/**
 	 * The Rectangle2D outcode of a point relative to a rectangle, exactly
 	 * as {@code Rectangle2D.outcode} computes it.
+	 *
+	 * @param rx The rectangle's left edge.
+	 * @param ry The rectangle's top edge.
+	 * @param rw The rectangle's width.
+	 * @param rh The rectangle's height.
+	 * @param x The point's x.
+	 * @param y The point's y.
+	 * @return the outcode bits describing the point's position relative
+	 *         to the rectangle.
 	 */
 	private static int outcode(double rx, double ry, double rw, double rh,
 			double x, double y) {

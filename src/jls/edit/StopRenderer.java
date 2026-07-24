@@ -20,6 +20,12 @@ import jls.elem.Stop;
  */
 public final class StopRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code StopRenderer}.
+	 */
+	public StopRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

@@ -20,6 +20,7 @@ import jls.elem.Element;
  */
 public final class ElementRenderers {
 
+	/** Registered renderers, keyed by element class. */
 	private static final Map<Class<?>, ElementRenderer> BY_TYPE =
 			new HashMap<Class<?>, ElementRenderer>();
 
@@ -27,6 +28,7 @@ public final class ElementRenderers {
 		BuiltinElementRenderers.install();
 	}
 
+	/** Prevents instantiation. */
 	private ElementRenderers() {} // no instances
 
 	/**

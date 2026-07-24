@@ -137,7 +137,7 @@ public abstract sealed class Gate extends LogicElement
 	/**
 	 * Display info about this gate.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

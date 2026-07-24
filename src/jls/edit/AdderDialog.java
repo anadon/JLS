@@ -29,6 +29,13 @@ import jls.util.Placement;
  */
 public final class AdderDialog implements ElementDialog {
 
+	/**
+	 * Creates an {@code AdderDialog}.
+	 */
+	public AdderDialog() {
+	}
+
+	/** Default bit width offered when the create-adder form is opened. */
 	private static final int DEFAULT_BITS = 1;
 
 	@Override
@@ -62,17 +69,30 @@ public final class AdderDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The adder being configured by this form. */
 		private final Adder adder;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the number of input bits. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 10);
+		/** Numeric keypad wired to {@link #bitsField}. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Selects leftward orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Selects rightward orientation. */
 		private final JRadioButton right = new JRadioButton("Right", true);
+		/** Selects upward orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Selects downward orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Creates the create-adder form for the given adder.
+		 *
+		 * @param adder the adder to configure
+		 */
 		private Form(Adder adder) {
 
 			super("Create Adder", "adder");

@@ -21,6 +21,12 @@ import jls.elem.JumpStart;
  */
 public final class JumpStartRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code JumpStartRenderer}.
+	 */
+	public JumpStartRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

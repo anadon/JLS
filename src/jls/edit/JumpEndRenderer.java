@@ -20,6 +20,12 @@ import jls.elem.JumpStart;
  */
 public final class JumpEndRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code JumpEndRenderer}.
+	 */
+	public JumpEndRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 

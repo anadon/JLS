@@ -123,6 +123,9 @@ public final class JLSInfo {
 	 */
 	public static final class Palette {
 
+		/**
+		 * Private constructor to keep this class from being instantiated.
+		 */
 		private Palette() {} // no instances
 
 		/** Color used when connections line up (touch). */

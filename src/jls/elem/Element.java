@@ -696,7 +696,7 @@ public abstract sealed class Element
 	/**
 	 * Display infomation about element (overridden).
 	 * 
-	 * @param info A JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	public String infoText() {
 
@@ -949,7 +949,8 @@ public abstract sealed class Element
 	 * Display the current value of this element.
 	 * Only works for watchable elements, and is overridden there.
 	 * 
-	 * @param where The point on the screen to display at.
+	 * @param whereX the x-coordinate on screen to display at.
+	 * @param whereY the y-coordinate on screen to display at.
 	 */
 	public void showCurrentValue(int whereX, int whereY) {
 

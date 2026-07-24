@@ -24,6 +24,9 @@ public final class Geometry {
 	/** Size of state machine transition arrowheads, in pixels. */
 	public static final int ARROW_SIZE = 6;
 
+	/**
+	 * Prevents instantiation; all members are static.
+	 */
 	private Geometry() {} // no instances
 
 } // end of Geometry class

@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
  * Headless by construction (issue #77): this abstract engine and its
  * hooks (issue #25) must not import AWT, Swing, or {@code jls.edit} -
  * the HeadlessCoreRatchetTest enforces it. GUI concerns live in the
- * GUI-side subclass ({@link InteractiveSimulator}) and its
+ * GUI-side subclass ({@code jls.edit.InteractiveSimulator}) and its
  * collaborators, never here.
  *
  * @author David A. Poplawski

@@ -13,6 +13,9 @@ import jls.core.Bounds;
  */
 public final class AwtGeom {
 
+	/**
+	 * Prevents instantiation; this class only holds static conversions.
+	 */
 	private AwtGeom() {
 	} // no instances
 

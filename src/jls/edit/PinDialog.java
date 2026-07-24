@@ -33,6 +33,12 @@ import jls.util.Placement;
  */
 public final class PinDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code PinDialog}.
+	 */
+	public PinDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {
@@ -67,7 +73,9 @@ public final class PinDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class CreateForm extends ElementFormDialog {
 
+		/** The pin being created. */
 		private final Pin pin;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
 		/** The text field for the pin name. */
 		private final JTextField nameField = new JTextField("", 12);

@@ -29,6 +29,13 @@ import jls.util.Placement;
  */
 public final class DecoderDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code DecoderDialog}.
+	 */
+	public DecoderDialog() {
+	}
+
+	/** Default number of input bits offered when the form opens. */
 	private static final int DEFAULT_BITS = 1;
 
 	@Override
@@ -62,17 +69,30 @@ public final class DecoderDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The decoder being created. */
 		private final Decoder decoder;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the number of input bits. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 10);
+		/** Keypad for the bits field. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Selects left-facing orientation. */
 		private final JRadioButton left = new JRadioButton("Left", true);
+		/** Selects right-facing orientation. */
 		private final JRadioButton right = new JRadioButton("Right");
+		/** Selects upward-facing orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Selects downward-facing orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Set up the create-decoder form.
+		 *
+		 * @param decoder The decoder being created.
+		 */
 		private Form(Decoder decoder) {
 
 			// set up window title

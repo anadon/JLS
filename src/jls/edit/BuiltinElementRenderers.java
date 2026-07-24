@@ -20,6 +20,7 @@ final class BuiltinElementRenderers {
 	/** True once the registrations have run, so it happens exactly once. */
 	private static boolean installed = false;
 
+	/** Prevents instantiation. */
 	private BuiltinElementRenderers() {} // no instances
 
 	/**

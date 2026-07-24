@@ -305,7 +305,7 @@ public final class Wire extends Element {
 	/**
 	 * Display information about this wire.
 	 * 
-	 * @param info A JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

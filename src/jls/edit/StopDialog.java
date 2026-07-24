@@ -17,6 +17,12 @@ import jls.util.Placement;
  */
 public final class StopDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code StopDialog}.
+	 */
+	public StopDialog() {
+	}
+
 	@Override
 	public boolean setup(Element el, Graphics g, JPanel editWindow,
 			int x, int y) {

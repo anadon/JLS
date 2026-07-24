@@ -15,7 +15,7 @@ import jls.elem.Timed;
 /**
  * GUI-side "Change Timing" dialog (issue #77). Moved from the former
  * {@code Element.DelayChange} inner dialog so the element model stays
- * headless; {@link jls.elem.Element#changeTiming()} opens it through
+ * headless; the editor's "Change Timing" action opens it through
  * {@link #open(Element)}. The dialog reads and writes the element's
  * propagation delay / access time through its public
  * {@link Element#getDelay()} / {@link Element#setDelay(int)} accessors, so
@@ -23,6 +23,9 @@ import jls.elem.Timed;
  */
 public final class DelayChangeDialog {
 
+	/**
+	 * Prevents instantiation; this class only holds a static entry point.
+	 */
 	private DelayChangeDialog() {} // no instances
 
 	/**

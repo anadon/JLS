@@ -41,9 +41,12 @@ public final class ConstantDialog implements ElementDialog {
 	/** Default display radix, mirroring the element's own default. */
 	private static final int DEFAULT_BASE = 10;
 
+	/** True when this dialog creates a new constant; false when it edits one. */
 	private final boolean creating;
 
 	/**
+	 * Creates a {@code ConstantDialog}.
+	 *
 	 * @param creating True for the create dialog, false for the edit
 	 *        (change) dialog.
 	 */
@@ -99,21 +102,38 @@ public final class ConstantDialog implements ElementDialog {
 	private static final class CreateForm extends ElementFormDialog
 			implements ActionListener {
 
+		/** The constant being created. */
 		private final Constant c;
+		/** True if the dialog was cancelled by the user. */
 		private boolean cancelled;
+		/** Button that repeats the previously entered value. */
 		private JButton repeat;
+		/** Entry field for the constant's value. */
 		private final JTextField valueField =
 				new JTextField(DEFAULT_VALUE + "", DEFAULT_BASE);
+		/** On-screen keypad bound to {@link #valueField}. */
 		private final KeyPad valuePad =
 				new KeyPad(valueField, 16, DEFAULT_VALUE.longValue(), this);
+		/** Radio button selecting base 2 (binary). */
 		private final JRadioButton base2 = new JRadioButton("2");
+		/** Radio button selecting base 10 (decimal). */
 		private final JRadioButton base10 = new JRadioButton("10");
+		/** Radio button selecting base 16 (hexadecimal). */
 		private final JRadioButton base16 = new JRadioButton("16");
+		/** Radio button selecting left-facing orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Radio button selecting right-facing orientation (default). */
 		private final JRadioButton right = new JRadioButton("Right", true);
+		/** Radio button selecting upward-facing orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Radio button selecting downward-facing orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Creates the create-constant form.
+		 *
+		 * @param c The constant being created.
+		 */
 		private CreateForm(Constant c) {
 
 			super("Create Constant", "const");
@@ -286,16 +306,31 @@ public final class ConstantDialog implements ElementDialog {
 	private static final class ChangeForm extends ElementFormDialog
 			implements ActionListener {
 
+		/** The constant being edited. */
 		private final Constant c;
+		/** Graphics context used for text-metric fit checks. */
 		private final Graphics g;
+		/** True if the dialog was cancelled by the user. */
 		private boolean cancelled;
+		/** True if the element no longer fits and must be resized. */
 		private boolean changed;
+		/** Entry field for the new value. */
 		private final JTextField valueField;
+		/** On-screen keypad bound to {@link #valueField}. */
 		private final KeyPad valuePad;
+		/** Radio button selecting base 2 (binary). */
 		private final JRadioButton base2 = new JRadioButton("2");
+		/** Radio button selecting base 10 (decimal). */
 		private final JRadioButton base10 = new JRadioButton("10");
+		/** Radio button selecting base 16 (hexadecimal). */
 		private final JRadioButton base16 = new JRadioButton("16");
 
+		/**
+		 * Creates the change-constant form.
+		 *
+		 * @param c The constant being edited.
+		 * @param g Graphics context used for text-metric fit checks.
+		 */
 		private ChangeForm(Constant c, Graphics g) {
 
 			super("Change Constant", "const");

@@ -16,7 +16,9 @@ import jls.core.TextMetrics;
  */
 public final class SwingTextMetrics implements TextMetrics, TextMetrics.Provider {
 
+	/** The backing font metrics. */
 	private final FontMetrics fm;
+	/** The graphics used to derive metrics for other fonts, or null. */
 	private final @org.jspecify.annotations.Nullable Graphics g;
 
 	/**
@@ -29,6 +31,11 @@ public final class SwingTextMetrics implements TextMetrics, TextMetrics.Provider
 		this.g = null;
 	} // end of constructor
 
+	/**
+	 * Wrap a graphics context, measuring its current font.
+	 *
+	 * @param g The graphics to measure in.
+	 */
 	private SwingTextMetrics(Graphics g) {
 		this.g = g;
 		this.fm = g.getFontMetrics();
@@ -109,9 +116,12 @@ public final class SwingTextMetrics implements TextMetrics, TextMetrics.Provider
 	public static final class GraphicsProvider
 			implements TextMetrics.Provider {
 
+		/** The graphics whose fonts this provider measures. */
 		private final Graphics g;
 
 		/**
+		 * Wrap a graphics context.
+		 *
 		 * @param g The graphics to measure fonts against.
 		 */
 		public GraphicsProvider(Graphics g) {

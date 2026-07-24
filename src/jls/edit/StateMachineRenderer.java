@@ -32,6 +32,12 @@ import jls.elem.StateMachine;
  */
 public final class StateMachineRenderer implements ElementRenderer {
 
+	/**
+	 * Creates a {@code StateMachineRenderer}.
+	 */
+	public StateMachineRenderer() {
+	}
+
 	@Override
 	public void draw(Graphics g, Element el) {
 
@@ -108,6 +114,8 @@ public final class StateMachineRenderer implements ElementRenderer {
 		private final StateMachine machine;
 
 		/**
+		 * Creates a page that prints the given state machine's diagram.
+		 *
 		 * @param machine The state machine to print.
 		 */
 		DiagramPage(StateMachine machine) {

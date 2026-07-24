@@ -41,6 +41,13 @@ import jls.util.Placement;
  */
 public final class GroupDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code GroupDialog}.
+	 */
+	public GroupDialog() {
+	}
+
+	/** Default bit width shown in the bits field. */
 	private static final int DEFAULT_BITS = 2;
 
 	@Override
@@ -74,20 +81,37 @@ public final class GroupDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class CreateForm extends ElementFormDialog {
 
+		/** Group element being configured. */
 		private final Group group;
+		/** Element type, {@code "Bundler"} or {@code "Unbundler"}. */
 		private final String type;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the bit count. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 10);
+		/** Keypad that feeds numeric input into {@link #bitsField}. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Radio button selecting single-bit ranges. */
 		private final JRadioButton single = new JRadioButton("Single Bits");
+		/** Radio button selecting grouped bit ranges. */
 		private final JRadioButton groupBits = new JRadioButton("Group Bits");
+		/** Radio button selecting left orientation. */
 		private final JRadioButton left = new JRadioButton("Left");
+		/** Radio button selecting right orientation (default). */
 		private final JRadioButton right = new JRadioButton("Right", true);
+		/** Radio button selecting up orientation. */
 		private final JRadioButton up = new JRadioButton("Up");
+		/** Radio button selecting down orientation. */
 		private final JRadioButton down = new JRadioButton("Down");
 
+		/**
+		 * Creates the create-group form.
+		 *
+		 * @param group group being configured
+		 * @param type element type, {@code "Bundler"} or {@code "Unbundler"}
+		 */
 		private CreateForm(Group group, String type) {
 
 			super("Create " + type,
@@ -227,25 +251,44 @@ public final class GroupDialog implements ElementDialog {
 	private static final class RangesForm extends ElementFormDialog
 			implements ActionListener {
 
+		/** Group element being configured. */
 		private final Group group;
+		/** Element type label passed in from the calling form. */
 		private final String type;
+		/** True if the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Model backing the {@link #choose} list of selectable bits. */
 		private final DefaultListModel<Group.Entry> pick =
 				new DefaultListModel<Group.Entry>();
+		/** List of bits available to choose from. */
 		private final JList<Group.Entry> choose =
 				new JList<Group.Entry>(pick);
+		/** Model backing the {@link #chosen} list of picked bit groups. */
 		private final DefaultListModel<Group.Entry> picked =
 				new DefaultListModel<Group.Entry>();
+		/** List of bit groups the user has picked. */
 		private final JList<Group.Entry> chosen =
 				new JList<Group.Entry>(picked);
+		/** Button that moves selected bits into the chosen list. */
 		private final JButton add = new JButton(">>");
+		/** Button that removes the selected group from the chosen list. */
 		private final JButton remove = new JButton("<<");
+		/** Button that moves the selected group to the top of the list. */
 		private final JButton upjumper = new JButton("Move bundle to top");
+		/** Button that moves the selected group up one position. */
 		private final JButton upshifter = new JButton("Move bundle up");
+		/** Button that moves the selected group down one position. */
 		private final JButton downshifter = new JButton("Move bundle down");
+		/** Button that moves the selected group to the bottom of the list. */
 		private final JButton downjumper =
 				new JButton("Move bundle to bottom");
 
+		/**
+		 * Creates the pick-bit-groups form.
+		 *
+		 * @param group group being configured
+		 * @param type element type label used for wording
+		 */
 		private RangesForm(Group group, String type) {
 
 			super("Pick Bit Groups",

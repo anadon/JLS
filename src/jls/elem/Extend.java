@@ -46,7 +46,7 @@ public final class Extend extends Gate implements TriProp {
 	 * three open arcs (issue #77 model/render split - the symbol as headless
 	 * data). Byte-identical to the former inline {@code GeneralPath}: each
 	 * primitive is appended with connect=false in the same order, so
-	 * {@link Gate#gatePathFrom(GateOutline)} rebuilds the same path.
+	 * {@code GateRenderer.gatePathFrom(GateOutline)} rebuilds the same path.
 	 */
 	@Override
 	public GateOutline outline() {
@@ -134,7 +134,7 @@ public final class Extend extends Gate implements TriProp {
 	/**
 	 * Display info about this extend.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {

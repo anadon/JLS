@@ -28,6 +28,13 @@ import jls.util.Placement;
  */
 public final class DisplayDialog implements ElementDialog {
 
+	/**
+	 * Creates a {@code DisplayDialog}.
+	 */
+	public DisplayDialog() {
+	}
+
+	/** Default bit width offered when the create-display form is opened. */
 	private static final int DEFAULT_BITS = 1;
 
 	@Override
@@ -59,16 +66,28 @@ public final class DisplayDialog implements ElementDialog {
 	@SuppressWarnings("serial")
 	private static final class Form extends ElementFormDialog {
 
+		/** The display being created. */
 		private final Display disp;
+		/** Whether the user cancelled the dialog. */
 		private boolean cancelled;
+		/** Entry field for the bit count. */
 		private final JTextField bitsField =
 				new JTextField(DEFAULT_BITS + "", 5);
+		/** Numeric keypad that feeds digits into {@link #bitsField}. */
 		private final KeyPad bitsPad =
 				new KeyPad(bitsField, 10, DEFAULT_BITS, this);
+		/** Radio button selecting binary display radix. */
 		private final JRadioButton b2 = new JRadioButton("2");
+		/** Radio button selecting decimal display radix. */
 		private final JRadioButton b10 = new JRadioButton("10");
+		/** Radio button selecting hexadecimal display radix. */
 		private final JRadioButton b16 = new JRadioButton("16");
 
+		/**
+		 * Builds and shows the create-display form.
+		 *
+		 * @param disp the display to configure
+		 */
 		private Form(Display disp) {
 
 			// set up window title

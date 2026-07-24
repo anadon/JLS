@@ -17,7 +17,7 @@ import java.util.List;
  * a converted gate leaf (AndGate, OrGate, NandGate, NorGate, NotGate,
  * XorGate) carries no forbidden import and drops out of the headless-core
  * ratchet baseline in {@code jls.HeadlessCoreRatchetTest}. The reverse
- * translation lives entirely in {@link Gate#gatePathFrom(GateOutline)},
+ * translation lives entirely in {@code GateRenderer.gatePathFrom(GateOutline)},
  * which reconstructs the exact same {@code Line2D}/{@code Arc2D}/
  * {@code CubicCurve2D}/{@code Ellipse2D} appends the leaves used to make
  * inline, so rendering is byte-for-byte unchanged.

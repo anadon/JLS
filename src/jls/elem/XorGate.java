@@ -44,7 +44,7 @@ public final class XorGate extends Gate implements Timed {
 	 * from pptop=(0,0), ppbottom=(0,2s).
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		int gap = 2;

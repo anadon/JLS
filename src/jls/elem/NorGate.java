@@ -42,7 +42,7 @@ public final class NorGate extends Gate implements Timed {
 	 * points pright=(2s-d,s), ptop=(0,0), pbottom=(0,2s).
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		int d = Geometry.POINT_DIAMETER;

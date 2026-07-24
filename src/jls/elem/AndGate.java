@@ -40,7 +40,7 @@ public final class AndGate extends Gate implements Timed {
 	 * (issue #77 model/render split - the symbol as headless data).
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		return GateOutline.builder()

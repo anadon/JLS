@@ -122,6 +122,29 @@ final class BuiltinElementRenderers {
 		// ExtendDelay family
 		ElementDialogs.register(jls.elem.DelayGate.class,
 				new DelayGateDialog());
+		// Gate family
+		GateRenderer gateRenderer = new GateRenderer();
+		GateDialog gateDialog = new GateDialog();
+		ElementRenderers.register(jls.elem.AndGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.AndGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.OrGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.OrGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.NandGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.NandGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.NorGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.NorGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.XorGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.XorGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.NotGate.class, gateRenderer);
+		ElementDialogs.register(jls.elem.NotGate.class, gateDialog);
+		ElementRenderers.register(jls.elem.Extend.class, gateRenderer);
+		ElementDialogs.register(jls.elem.Extend.class, gateDialog);
+		ElementRenderers.register(jls.elem.DelayGate.class, gateRenderer); // DelayGate keeps its existing DelayGateDialog
+		// Pin family
+		ElementRenderers.register(jls.elem.InputPin.class, new PinRenderer());
+		ElementDialogs.register(jls.elem.InputPin.class, new PinDialog());
+		ElementRenderers.register(jls.elem.OutputPin.class, new PinRenderer());
+		ElementDialogs.register(jls.elem.OutputPin.class, new PinDialog());
 	} // end of install method
 
 } // end of BuiltinElementRenderers class

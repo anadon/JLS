@@ -4,12 +4,8 @@ import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
 import java.io.*;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * Output pin of a subcircuit.
@@ -42,26 +38,6 @@ public final class OutputPin extends Pin implements TriProp {
 	} // end of toString method
 
 	/**
-	 * Display dialog to get pin name and bits.
-	 * 
-	 * @param g
-	 *            The Graphics object to use to determine the name's size.
-	 * @param editWindow
-	 *            The editor window this pin is displayed in.
-	 * @param x
-	 *            The x-coordinate of the last known mouse position.
-	 * @param y
-	 *            The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		return super.setup(g, editWindow, x, y, "Output");
-	} // end of setup method
-
-	/**
 	 * The pin kind for user-facing messages.
 	 */
 	@Override
@@ -78,7 +54,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 
 		super.init(g);
 		if (orientation == Orientation.RIGHT) {
@@ -130,7 +106,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 
 		String value = ", value = " + BitSetUtils.toDisplay(currentValue, bits);
 		String tri = "";
@@ -229,7 +205,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            Unused.
 	 */
 	@Override
-	public void showCurrentValue(Point where) {
+	public void showCurrentValue(java.awt.Point where) {
 
 		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(
 				currentValue, bits), "Information");

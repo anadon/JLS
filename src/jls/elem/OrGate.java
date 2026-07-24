@@ -42,7 +42,7 @@ public final class OrGate extends Gate implements Timed {
 	 * the points pright=(2s,s), ptop=(0,0), pbottom=(0,2s).
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		return GateOutline.builder()

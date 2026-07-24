@@ -46,7 +46,7 @@ public final class DelayGate extends Gate implements Timed {
 	 * same closed path.
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		return GateOutline.builder()

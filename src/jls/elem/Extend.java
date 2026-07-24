@@ -49,7 +49,7 @@ public final class Extend extends Gate implements TriProp {
 	 * {@link Gate#gatePathFrom(GateOutline)} rebuilds the same path.
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		int s2 = s/2;
@@ -73,36 +73,6 @@ public final class Extend extends Gate implements TriProp {
 				.line(false, s+s2, s, 2*s, s)
 				.build();
 	} // end of outline method
-	
-	/**
-	 * Initialize this element in a GUI context.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
-			int x, int y) {
-
-		boolean ok = super.setup(g,editWindow,x,y,"Extend");
-		
-		// must have at least 2 output bits
-		if (ok && bits < 2) {
-			TellUser.error(JLSInfo.frame,"must have at least 2 bits of output", "Error");
-			return false;
-		}
-		
-		// finish up initialization
-		if (ok) {
-			numInputs = 1;
-		}
-		return ok;
-		
-	} // end of setup method
 	
 	/**
 	 * Initialize internal info for this element.

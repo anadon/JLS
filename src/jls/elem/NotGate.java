@@ -40,7 +40,7 @@ public final class NotGate extends Gate implements Timed {
 	 * (issue #77 model/render split - the symbol as headless data).
 	 */
 	@Override
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		int s = Geometry.SPACING;
 		int d = Geometry.POINT_DIAMETER;

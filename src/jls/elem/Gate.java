@@ -4,18 +4,12 @@ import jls.core.Geometry;
 import jls.*;
 import jls.core.Orientation;
 import jls.sim.*;
-import jls.util.Placement;
 
 import java.util.Locale;
 
 import java.util.BitSet;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
 import java.io.*;
-
-import javax.swing.*;
 
 /**
  * Superclass of all simple gates (AND, OR, etc).
@@ -48,12 +42,6 @@ public abstract sealed class Gate extends LogicElement
 	/** Propagation delay of this gate. */
 	protected int propDelay;
 
-	// running properties
-	/** Outline shape of this gate, set by the subclass. */
-	protected GeneralPath gateShape;
-	/** True if the creation dialog was cancelled. */
-	protected boolean cancelled;
-	
 	/**
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
@@ -119,32 +107,22 @@ public abstract sealed class Gate extends LogicElement
 	protected abstract Kind kind();
 	
 	/**
-	 * Initialize this element in a GUI context: show the creation dialog
-	 * for this kind and remember the accepted settings for the next gate
-	 * of the same kind.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * Remember the accepted settings for the next gate of the same kind.
+	 * Called by the GUI-side creation dialog ({@code jls.edit.GateDialog})
+	 * after the user accepts, so the "Repeat Previous" button and
+	 * {@link #setToPrevious()} reproduce them. A gate with a fixed input
+	 * count keeps its previous count unchanged.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
+	public void rememberPrevious() {
+
 		Kind k = kind();
-		boolean ok = setup(g,editWindow,x,y,k.displayName);
-		if (ok) {
-			if (k.fixedInputs < 0) {
-				k.previousInputs = numInputs;
-			}
-			k.previousBits = bits;
-			k.previousOrientation = orientation;
+		if (k.fixedInputs < 0) {
+			k.previousInputs = numInputs;
 		}
-		return ok;
-	} // end of setup method
-	
+		k.previousBits = bits;
+		k.previousOrientation = orientation;
+	} // end of rememberPrevious method
+
 	/**
 	 * Save this element in a file, under its kind's save name.
 	 * 
@@ -162,61 +140,23 @@ public abstract sealed class Gate extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
-		showInfo(info,kind().displayName);
+	public void showInfo(javax.swing.JLabel info) {
+
+		String type = kind().displayName;
+		if (bits == 1)
+			info.setText(numInputs + "-input " + type + " gate");
+		else
+			info.setText(bits + " " + numInputs + "-input " + type + " gate");
 	} // end of showInfo method
-	
-	/**
-	 * Initialize this element in a GUI context.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * @param type The type of gate (e.g., "AND").
-	 * 
-	 * @return false if canceled, true otherwise.
-	 */
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y, String type) {
-		
-		// show creation dialog
-		GateCreate gate = new GateCreate(type);
-		
-		// don't do anything if user canceled gate
-		if (cancelled)
-			return false;
-		
-		// get info
-		if (type.equals("NOT") || type.equals("DELAY") || type.equals("Extend")) {
-			numInputs = 1;
-		}
-		else {
-			numInputs = gate.getInputs();
-		}
-		bits = gate.getGates();
-		orientation = gate.getOrientation();
-		propDelay = getDefaultDelay();
-		
-		// set up inputs and outputs
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-		
-	} // end of setup method
 	
 	/**
 	 * Initialize internal info for this element.
 	 * Sets up size, inputs and outputs.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 		
 		// set up size
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
@@ -291,158 +231,18 @@ public abstract sealed class Gate extends LogicElement
 	} // end of init method
 	
 	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-
-		// draw context
-		jls.edit.ElementRenderSupport.drawHighlight(g, this);
-
-		// build the outline path on first draw for gates that describe
-		// their symbol headlessly (issue #77 model/render split); gates
-		// that still build gateShape inline (DelayGate, Extend) set it in
-		// their constructor and skip this
-		if (gateShape == null) {
-			GateOutline model = outline();
-			if (model != null) {
-				gateShape = gatePathFrom(model);
-			}
-		}
-
-		// draw the gate
-		int s = Geometry.SPACING;
-		int dist = (Math.max(numInputs,4)-3)/2*s;
-		int ox = 0;
-		int oy = 0;
-		AffineTransform trans = new AffineTransform();
-		if (orientation == Orientation.RIGHT) {
-			trans.translate(x+s,y+dist);
-			ox = -s;
-		}
-		else if (orientation == Orientation.LEFT) {
-			trans.translate(x+s,y+dist);
-			trans.rotate(Math.toRadians(180),s,s);
-			ox = s;
-		}
-		else if (orientation == Orientation.UP) {
-			trans.translate(x+dist,y+s);
-			trans.rotate(Math.toRadians(-90),s,s);
-			oy = s;
-		}
-		else if (orientation == Orientation.DOWN) {
-			trans.translate(x+dist,y+s);
-			trans.rotate(Math.toRadians(90),s,s);
-			oy = -s;
-		}
-		GeneralPath temp = (GeneralPath)(gateShape.clone());
-		temp.transform(trans);
-		g.setColor(Color.black);
-		Graphics2D gg = (Graphics2D)g;
-		gg.draw(temp);
-		
-		// draw input/output points and line to them
-		Output out = outputs.get(0);
-		double inc = 2.0*s/(2*numInputs);
-		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			
-			// output
-			int lx = out.getX();
-			g.drawLine(lx,y+dist+s,lx+ox,y+dist+s);
-			jls.edit.ElementRenderSupport.drawPut(g, out);
-			
-			// inputs
-			double ye = y + dist + inc;
-			for (int p=0; p<numInputs; p+=1) {
-				lx = inputs.get(p).getX();
-				int ly = inputs.get(p).getY();
-				g.setColor(Color.black);
-				g.drawLine(lx,ly,lx-ox,(int)(ye+0.5));
-				ye += inc*2;
-				jls.edit.ElementRenderSupport.drawPut(g, inputs.get(p));
-			}
-		}
-		else { // up or down
-			
-			// output
-			int ly = out.getY();
-			g.drawLine(x+dist+s,ly,x+dist+s,ly+oy);
-			jls.edit.ElementRenderSupport.drawPut(g, out);
-			
-			// inputs
-			double xe = x + dist + inc;
-			for (int p=0; p<numInputs; p+=1) {;
-			ly = inputs.get(p).getY();
-			int lx = inputs.get(p).getX();
-			g.setColor(Color.black);
-			g.drawLine(lx,ly,(int)(xe+0.5),ly-oy);
-			xe += inc*2;
-			jls.edit.ElementRenderSupport.drawPut(g, inputs.get(p));
-			}
-		}
-		
-	} // end of draw method
-
-	/**
 	 * The headless outline geometry of this gate's body symbol (issue #77
-	 * model/render split). A gate leaf that describes its symbol as data
-	 * returns a {@link GateOutline} here and leaves {@link #gateShape}
-	 * null; {@link #draw(Graphics)} builds the {@link GeneralPath} on first
-	 * paint via {@link #gatePathFrom(GateOutline)}. Gates that still build
-	 * {@code gateShape} inline in their constructor (DelayGate, Extend)
-	 * inherit this default and return null.
+	 * model/render split). Each gate leaf describes its symbol as data by
+	 * returning a {@link GateOutline} here; the GUI-side
+	 * {@code jls.edit.GateRenderer} builds the general path from it each
+	 * paint, so the gate model holds no AWT.
 	 *
-	 * @return the outline model, or null if this gate builds
-	 *         {@code gateShape} directly.
+	 * @return the outline model for this gate's body symbol.
 	 */
-	protected GateOutline outline() {
+	public GateOutline outline() {
 
 		return null;
 	} // end of outline method
-
-	/**
-	 * Translate a headless {@link GateOutline} into the exact
-	 * {@link GeneralPath} the gate leaves used to build inline: each
-	 * primitive is reconstructed as the same {@code java.awt.geom} shape
-	 * and appended (or used to open the path) with the same connect flag,
-	 * so the rendered symbol is byte-for-byte unchanged. This is the one
-	 * place the AWT conversion lives, keeping the leaves import-clean.
-	 *
-	 * @param model The outline to translate.
-	 *
-	 * @return the general path for the gate body.
-	 */
-	private GeneralPath gatePathFrom(GateOutline model) {
-
-		GeneralPath path = null;
-		for (GateOutline.Segment seg : model.segments()) {
-			double[] c = seg.coords();
-			Shape shape = switch (seg.kind()) {
-				case LINE ->
-						new Line2D.Double(c[0], c[1], c[2], c[3]);
-				case ARC ->
-						new Arc2D.Double(c[0], c[1], c[2], c[3], c[4], c[5],
-								Arc2D.OPEN);
-				case CUBIC ->
-						new CubicCurve2D.Double(c[0], c[1], c[2], c[3],
-								c[4], c[5], c[6], c[7]);
-				case ELLIPSE ->
-						new Ellipse2D.Double(c[0], c[1], c[2], c[3]);
-			};
-			if (path == null) {
-				path = new GeneralPath(shape);
-			}
-			else {
-				path.append(shape, seg.connect());
-			}
-			if (seg.closeAfter()) {
-				path.closePath();
-			}
-		}
-		return path;
-	} // end of gatePathFrom method
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by every gate kind.
@@ -589,35 +389,96 @@ public abstract sealed class Gate extends LogicElement
 	} // end of save method
 	
 	/**
-	 * Display info about this and gate.
-	 * 
-	 * @param info The JLabel to display with.
-	 * @param type The type of element (e.g., "AND"), all capitals.
+	 * The display name of this gate's kind (e.g. "AND"). Used by the
+	 * GUI-side creation dialog ({@code jls.edit.GateDialog}) to lay out
+	 * the form and title.
+	 *
+	 * @return the kind's display name.
 	 */
-	public void showInfo(JLabel info, String type) {
-		
-		if (bits == 1)
-			info.setText(numInputs + "-input " + type + " gate");
-		else
-			info.setText(bits + " " + numInputs + "-input " + type + " gate");
-	} // end of showInfo method
-	
+	public String getKindName() {
+
+		return kind().displayName;
+	} // end of getKindName method
+
+	/**
+	 * Get the number of inputs to this gate. Used by the GUI-side renderer
+	 * and creation dialog after the model went headless.
+	 *
+	 * @return the number of inputs.
+	 */
+	public int getNumInputs() {
+
+		return numInputs;
+	} // end of getNumInputs method
+
+	/**
+	 * Get the number of gates (bits). Used by the GUI-side creation dialog.
+	 *
+	 * @return the number of gates (bits).
+	 */
+	public int getBits() {
+
+		return bits;
+	} // end of getBits method
+
+	/**
+	 * Get the orientation this gate faces. Used by the GUI-side renderer
+	 * and creation dialog.
+	 *
+	 * @return the orientation.
+	 */
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the number of inputs. Used by the GUI-side creation dialog.
+	 *
+	 * @param numInputs The number of inputs.
+	 */
+	public void setNumInputs(int numInputs) {
+
+		this.numInputs = numInputs;
+	} // end of setNumInputs method
+
+	/**
+	 * Set the number of gates (bits). Used by the GUI-side creation dialog.
+	 *
+	 * @param bits The number of gates (bits).
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the orientation this gate faces. Used by the GUI-side creation
+	 * dialog.
+	 *
+	 * @param orientation The orientation this gate faces.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Get the rectangle bounding this element.
 	 * For gates this will be 1/2 space higher and lower (for left/right gates)
 	 * or 1/2 space wider on each side (for up/down gates).
-	 * 
+	 *
 	 * @return a rectangle that bounds the element on the screen.
 	 * @jls.testedby jls.ui.EditorGestureTest#rubberBandSelectHighlightsEnclosedElements()
 	 */
 	@Override
-	public Rectangle getRect() {
-		
+	public java.awt.Rectangle getRect() {
+
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			return new Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
+			return new java.awt.Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else {
-			return new Rectangle(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
+			return new java.awt.Rectangle(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
 		}
 	} // end of getRect method
 	
@@ -694,7 +555,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		// one shared enum (issue #78 H3), so the quarter-turn is its
 		// ccw()/cw() instead of a hand-rolled transition table
@@ -770,7 +631,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -780,238 +641,6 @@ public abstract sealed class Gate extends LogicElement
 		init(g);
 	}
 	
-	/**
-	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
-	 * Used by all simple gates (nand, and, nor, or, xor).
-	 */
-	@SuppressWarnings("serial")
-	protected class GateCreate extends ElementDialog implements ActionListener {
-		
-		// properties
-		/** Button to repeat the previously created gate's settings. */
-		private JButton repeat;
-		/** Text field for the number of inputs. */
-		private JTextField inputsField = new JTextField(defaultInputs+"",5);
-		/** Text field for the number of gates (bits). */
-		private JTextField gatesField = new JTextField(defaultBits+"",5);
-		/** Keypad for the inputs field. */
-		private KeyPad inputsPad = new KeyPad(inputsField,10,defaultInputs,this);
-		/** Keypad for the gates field. */
-		private KeyPad gatesPad = new KeyPad(gatesField,10,defaultBits,this);
-		/** Left orientation choice. */
-		private JRadioButton left = new JRadioButton("left");
-		/** Up orientation choice. */
-		private JRadioButton up = new JRadioButton("up");
-		/** Down orientation choice. */
-		private JRadioButton down = new JRadioButton("down");
-		/** Right orientation choice. */
-		private JRadioButton right = new JRadioButton("right");
-		/** The type of gate (e.g. "AND"). */
-		private String type;
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 * @param type The type of gate (e.g. "AND").
-		 */
-		protected GateCreate(String type) {
-			
-			// set up window title
-			super("Create " + type + " Gate",type);
-			
-			// set not canceled
-			cancelled = false;
-			
-			// set up window
-			Container window = getContentPane();
-			
-			// set up input panel
-			this.type = type;
-			JPanel info = null;
-			if (type.equals("NOT") || type.equals("XOR") || type.equals("Extend")) {
-				info = new JPanel(new GridLayout(1,2));
-			}
-			else {
-				info = new JPanel(new GridLayout(2,2));
-				JLabel inputs = new JLabel("Inputs: ",SwingConstants.RIGHT);
-				info.add(inputs);
-				JPanel in = new JPanel(new FlowLayout());
-				in.add(inputsField);
-				in.add(inputsPad);
-				info.add(in);
-			}
-			JLabel gates;
-			if (type.equals("Extend")) {
-				gates = new JLabel("Outputs: ",SwingConstants.RIGHT);
-				gatesField.setText("2");
-			}
-			else {
-				gates = new JLabel("Gates (bits): ",SwingConstants.RIGHT);
-			}
-		
-			info.add(gates);
-			JPanel ga = new JPanel(new FlowLayout());
-			ga.add(gatesField);
-			ga.add(gatesPad);
-			info.add(ga);
-			window.add(info);
-			
-			// set up orientation panel
-			window.add(new JLabel(" "));
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup group = new ButtonGroup();
-			group.add(left);
-			group.add(up);
-			group.add(down);
-			group.add(right);
-			right.setSelected(true);
-			window.add(orients);
-			
-			// set up repeat button
-			if (!type.equals("Extend")) {
-				window.add(new JLabel(" "));
-				JPanel rep = new JPanel();
-				repeat = new JButton("Repeat Previous " + type + " Gate");
-				repeat.setBackground(Color.yellow);
-				rep.add(repeat);
-				window.add(rep);
-				repeat.addActionListener(this);
-			}
-			
-			confirmOnEnter(inputsField);
-			confirmOnEnter(gatesField);
-			finishDialog();
-		} // end of constructor
-		
-		/**
-		 * Validate the form and create the gate.
-		 */
-		@Override
-		protected void validateAndAccept() {
-			
-			try {
-				numInputs = Integer.parseInt(inputsField.getText());
-				bits = Integer.parseInt(gatesField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric");
-				return;
-			}
-			if (numInputs < 2) {
-				reject("Must have at least 2 inputs");
-				return;
-			}
-			if (bits < 1 && !"Extend".equals(type)) {
-				reject("Must have at least 1 gate (bit)");
-				return;
-			}
-			if (left.isSelected()) {
-				orientation = Orientation.LEFT;
-			}
-			else if (right.isSelected()) {
-				orientation = Orientation.RIGHT;
-			}
-			else if (up.isSelected()) {
-				orientation = Orientation.UP;
-			}
-			else {
-				orientation = Orientation.DOWN;
-			}
-			inputsPad.close();
-			gatesPad.close();
-			dispose();
-		} // end of validateAndAccept method
-		
-		/**
-		 * React to the repeat previous button.
-		 * 
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-			
-			// if repeat previous button, set previous values
-			if (event.getSource() == repeat) {
-				setToPrevious();
-				inputsField.setText(""+numInputs);
-				gatesField.setText(""+bits);
-				left.setSelected(false);
-				right.setSelected(false);
-				up.setSelected(false);
-				down.setSelected(false);
-				if (orientation == Orientation.LEFT)
-					left.setSelected(true);
-				else if (orientation == Orientation.RIGHT)
-					right.setSelected(true);
-				else if (orientation == Orientation.UP)
-					up.setSelected(true);
-				else 
-					down.setSelected(true);
-			}
-		} // end of actionPerformed method
-		
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-			
-			cancelled = true;
-			inputsPad.close();
-			gatesPad.close();
-			dispose();
-		} // end of cancelDialog method
-		
-		/**
-		 * Get number of gates.
-		 * 
-		 * @return The the number of gates selected.
-		 */
-		public int getGates() {
-			
-			return bits;
-		} // end of getGates method
-		
-		/**
-		 * Get number of inputs (bits).
-		 * 
-		 * @return The the number of inputs selected.
-		 */
-		public int getInputs() {
-			
-			return numInputs;
-		} // end of getInputs method
-		
-		/**
-		 * Get the orientation of the gate.
-		 * 
-		 * @return the orientation.
-		 */
-		public Orientation getOrientation() {
-			
-			return orientation;
-		} // end of get Orientation method
-		
-	} // end of GateCreate class
-	
-
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------

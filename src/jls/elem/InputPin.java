@@ -5,10 +5,7 @@ import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 
-import java.awt.*;
-import java.awt.geom.*;
 import java.io.*;
-import javax.swing.*;
 
 import java.util.*;
 
@@ -30,22 +27,6 @@ public final class InputPin extends Pin implements TriProp {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get pin name and bits.
-	 * 
-	 * @param g The Graphics object to use to determine the name's size.
-	 * @param editWindow The editor window this pin is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		return super.setup(g,editWindow,x,y,"Input");
-	} // end of setup method
-
-	/**
 	 * The pin kind for user-facing messages.
 	 */
 	@Override
@@ -53,15 +34,15 @@ public final class InputPin extends Pin implements TriProp {
 
 		return "Input";
 	} // end of pinKind method
-	
+
 	/**
 	 * Initialize internal info for this element.
 	 * Most work done in superclass, but output point added here.
-	 * 
+	 *
 	 * @param g The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 
 		super.init(g);
 		if(orientation == Orientation.RIGHT)
@@ -132,8 +113,8 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
+	public void showInfo(javax.swing.JLabel info) {
+
 		String tri = "";
 		if (outputs.get(0).isTriState())
 			tri = " (tri-state) ";
@@ -224,7 +205,7 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param where Unused.
 	 */
 	@Override
-	public void showCurrentValue(Point where) {
+	public void showCurrentValue(java.awt.Point where) {
 		
 		String value = "off";
 		if (currentValue != null) {

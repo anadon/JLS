@@ -92,7 +92,6 @@ class HeadlessCoreRatchetTest {
 			"src/jls/elem/InputPin.java",
 			"src/jls/elem/OutputPin.java",
 			"src/jls/elem/Pin.java",
-			"src/jls/elem/Put.java",
 			"src/jls/sim/InteractiveSimulator.java",
 			"src/jls/sim/Trace.java");
 

@@ -71,14 +71,14 @@ public final class StateMachineRenderer implements ElementRenderer {
 			int dy = input.getY();
 			g.setColor(Color.black);
 			g.drawString(input.getName(),x+d2,dy-fontHeight/2+ascent);
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 		for (Output output : sm.getOutputs()) {
 			int dy = output.getY();
 			int ow = fm.stringWidth(output.getName());
 			g.setColor(Color.black);
 			g.drawString(output.getName(),x+width-ow-d2,dy-fontHeight/2+ascent);
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 
 	} // end of draw method

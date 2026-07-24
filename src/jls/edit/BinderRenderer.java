@@ -39,7 +39,7 @@ public final class BinderRenderer extends GroupRenderer {
 		if(orientation == Orientation.RIGHT)
 		{
 			for (Input input : group.getInputList()) {
-				input.draw(g);
+				ElementRenderSupport.drawPut(g, input);
 				int ypos = input.getY();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
@@ -57,12 +57,12 @@ public final class BinderRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int ypos = output.getY();
 			g.drawLine(x+width,ypos,x+width-s/2,ypos);
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 		else if(orientation == Orientation.LEFT)
 		{
 			for (Input input : group.getInputList()) {
-				input.draw(g);
+				ElementRenderSupport.drawPut(g, input);
 				int ypos = input.getY();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
@@ -80,13 +80,13 @@ public final class BinderRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int ypos = output.getY();
 			g.drawLine(x,ypos,x+s/2,ypos);
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 		else if(orientation == Orientation.DOWN)
 		{
 			int inum = 0;
 			for (Input input : group.getInputList()) {
-				input.draw(g);
+				ElementRenderSupport.drawPut(g, input);
 				int xpos = input.getX();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
@@ -108,13 +108,13 @@ public final class BinderRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int xpos = output.getX();
 			g.drawLine(xpos,y+height-s,xpos,y+height);
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 		else if(orientation == Orientation.UP)
 		{
 			int inum = 0;
 			for (Input input : group.getInputList()) {
-				input.draw(g);
+				ElementRenderSupport.drawPut(g, input);
 				int xpos = input.getX();
 				Rectangle2D t = fm.getStringBounds(input.getName(),g);
 				g.setColor(Color.BLACK);
@@ -136,7 +136,7 @@ public final class BinderRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int xpos = output.getX();
 			g.drawLine(xpos,y+s,xpos,y);
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 	} // end of drawBody method
 

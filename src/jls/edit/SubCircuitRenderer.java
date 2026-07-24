@@ -52,7 +52,7 @@ public final class SubCircuitRenderer implements ElementRenderer {
 
 		// draw inputs and outputs
 		for (Input input : sc.getInputList()) {
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 			String inputName = input.getName();
 			rect = fm.getStringBounds(inputName, g);
 			g.setColor(Color.BLACK);
@@ -67,7 +67,7 @@ public final class SubCircuitRenderer implements ElementRenderer {
 			g.drawString(inputName, x + dx, input.getY() + dy);
 		}
 		for (Output output : sc.getOutputList()) {
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 			String outputName = output.getName();
 			rect = fm.getStringBounds(outputName, g);
 			g.setColor(Color.BLACK);

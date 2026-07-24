@@ -38,9 +38,9 @@ public final class TriStateRenderer implements ElementRenderer {
 		drawMapped(g, t, x, y, 3 * s, s, 4 * s, s);		// output wire
 		drawMapped(g, t, x, y, 2 * s, 3 * s / 2, 2 * s, 3 * s);	// control wire
 		// draw inputs and outputs
-		ts.getInputList().get(0).draw(g);
-		ts.getInputList().get(1).draw(g);
-		ts.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, ts.getInputList().get(0));
+		ElementRenderSupport.drawPut(g, ts.getInputList().get(1));
+		ElementRenderSupport.drawPut(g, ts.getOutputList().get(0));
 
 	} // end of draw method
 

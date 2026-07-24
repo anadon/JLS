@@ -40,7 +40,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int ypos = input.getY();
 			g.drawLine(x,ypos,x+s/2,ypos);
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 
 			// draw split line
 			g.setColor(Color.BLACK);
@@ -49,7 +49,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			// draw outputs and lines to them
 			FontMetrics fm = g.getFontMetrics();
 			for (Output output : group.getOutputList()) {
-				output.draw(g);
+				ElementRenderSupport.drawPut(g, output);
 				ypos = output.getY();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
@@ -65,7 +65,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int ypos = input.getY();
 			g.drawLine(x+width,ypos,x+width-s/2,ypos);
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 
 			// draw split line
 			g.setColor(Color.BLACK);
@@ -74,7 +74,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			// draw outputs and lines to them
 			FontMetrics fm = g.getFontMetrics();
 			for (Output output : group.getOutputList()) {
-				output.draw(g);
+				ElementRenderSupport.drawPut(g, output);
 				ypos = output.getY();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
@@ -88,7 +88,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			int inum = 0;
 			FontMetrics fm = g.getFontMetrics();
 			for (Output output : group.getOutputList()) {
-				output.draw(g);
+				ElementRenderSupport.drawPut(g, output);
 				int xpos = output.getX();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
@@ -110,14 +110,14 @@ public final class SplitterRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int xpos = input.getX();
 			g.drawLine(xpos,y+s,xpos,y);
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 		else if(orientation == Orientation.UP)
 		{
 			int inum = 0;
 			FontMetrics fm = g.getFontMetrics();
 			for (Output output : group.getOutputList()) {
-				output.draw(g);
+				ElementRenderSupport.drawPut(g, output);
 				int xpos = output.getX();
 				Rectangle2D t = fm.getStringBounds(output.getName(),g);
 				g.setColor(Color.BLACK);
@@ -139,7 +139,7 @@ public final class SplitterRenderer extends GroupRenderer {
 			g.setColor(Color.black);
 			int xpos = input.getX();
 			g.drawLine(xpos,y+height-s,xpos,y+height);
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 
 	} // end of drawBody method

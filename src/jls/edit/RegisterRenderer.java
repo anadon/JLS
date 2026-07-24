@@ -85,7 +85,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.drawLine(lx,ly,lx+s,ly);
 			int h = fm.getAscent()+fm.getDescent();
 			g.drawString("D",lx+s+1,ly-h/2+fm.getAscent());
-			one.draw(g);
+			ElementRenderSupport.drawPut(g, one);
 
 			// draw C input, line to it, label and type
 			Input two = reg.getInputList().get(1);
@@ -112,7 +112,7 @@ public final class RegisterRenderer implements ElementRenderer {
 				g.drawString("C",lx+s+d+1,ly-h/2+fm.getAscent());
 				break;
 			}
-			two.draw(g);
+			ElementRenderSupport.drawPut(g, two);
 
 			// draw Q output and label
 			Output three = reg.getOutputList().get(0);
@@ -120,7 +120,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			ly = three.getY();
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")-1,ly-h/2+fm.getAscent());
-			three.draw(g);
+			ElementRenderSupport.drawPut(g, three);
 
 			// draw notQ output and label
 			Output four = reg.getOutputList().get(1);
@@ -129,7 +129,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")-1,ly-h/2+fm.getAscent());
 			g.drawLine(lx-fm.stringWidth("Q")-1,ly-h/2,lx-2,ly-h/2);
-			four.draw(g);
+			ElementRenderSupport.drawPut(g, four);
 		}
 		else if(orientation == Orientation.LEFT)
 		{
@@ -152,7 +152,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.drawLine(lx,ly,lx-s,ly);
 			int h = fm.getAscent()+fm.getDescent();
 			g.drawString("D",lx-s-10,ly-h/2+fm.getAscent());
-			one.draw(g);
+			ElementRenderSupport.drawPut(g, one);
 
 			// draw C input, line to it, label and type
 			Input two = reg.getInputList().get(1);
@@ -179,7 +179,7 @@ public final class RegisterRenderer implements ElementRenderer {
 				g.drawString("C",lx-s-d-9,ly-h/2+fm.getAscent());
 				break;
 			}
-			two.draw(g);
+			ElementRenderSupport.drawPut(g, two);
 
 			// draw Q output and label
 			Output three = reg.getOutputList().get(0);
@@ -187,7 +187,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			ly = three.getY();
 			g.setColor(Color.black);
 			g.drawString("Q",lx+3,ly-h/2+fm.getAscent());
-			three.draw(g);
+			ElementRenderSupport.drawPut(g, three);
 
 			// draw notQ output and label
 			Output four = reg.getOutputList().get(1);
@@ -196,7 +196,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.setColor(Color.black);
 			g.drawString("Q",lx+3,ly-h/2+fm.getAscent());
 			g.drawLine(lx+fm.stringWidth("Q")+2,ly-h/2,lx+2,ly-h/2);
-			four.draw(g);
+			ElementRenderSupport.drawPut(g, four);
 		}
 		else if(orientation == Orientation.UP)
 		{
@@ -219,7 +219,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.drawLine(lx,ly,lx,ly-s);
 			int h = fm.getAscent()+fm.getDescent();
 			g.drawString("D",lx-fm.stringWidth("D")/2,ly-s-h+fm.getAscent());
-			one.draw(g);
+			ElementRenderSupport.drawPut(g, one);
 
 			// draw C input, line to it, label and type
 			Input two = reg.getInputList().get(1);
@@ -246,7 +246,7 @@ public final class RegisterRenderer implements ElementRenderer {
 				g.drawString("C",lx-fm.stringWidth("C")/2,ly-s-d-h+fm.getAscent());
 				break;
 			}
-			two.draw(g);
+			ElementRenderSupport.drawPut(g, two);
 
 			// draw Q output and label
 			Output three = reg.getOutputList().get(0);
@@ -254,7 +254,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			ly = three.getY();
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly+d+fm.getAscent());
-			three.draw(g);
+			ElementRenderSupport.drawPut(g, three);
 
 			// draw notQ output and label
 			Output four = reg.getOutputList().get(1);
@@ -263,7 +263,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly+d+fm.getAscent());
 			g.drawLine(lx-fm.stringWidth("Q")/2,ly+d-1,lx+fm.stringWidth("Q")/2,ly+d-1);
-			four.draw(g);
+			ElementRenderSupport.drawPut(g, four);
 
 		}
 		else if(orientation == Orientation.DOWN)
@@ -287,7 +287,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.drawLine(lx,ly+s,lx,ly);
 			int h = fm.getAscent()+fm.getDescent();
 			g.drawString("D",lx-fm.stringWidth("D")/2,ly+s+1+fm.getAscent());
-			one.draw(g);
+			ElementRenderSupport.drawPut(g, one);
 
 			// draw C input, line to it, label and type
 			Input two = reg.getInputList().get(1);
@@ -314,7 +314,7 @@ public final class RegisterRenderer implements ElementRenderer {
 				g.drawString("C",lx-fm.stringWidth("C")/2,ly+s+d+fm.getAscent());
 				break;
 			}
-			two.draw(g);
+			ElementRenderSupport.drawPut(g, two);
 
 			// draw Q output and label
 			Output three = reg.getOutputList().get(0);
@@ -322,7 +322,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			ly = three.getY();
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly-h+fm.getAscent());
-			three.draw(g);
+			ElementRenderSupport.drawPut(g, three);
 
 			// draw notQ output and label
 			Output four = reg.getOutputList().get(1);
@@ -331,7 +331,7 @@ public final class RegisterRenderer implements ElementRenderer {
 			g.setColor(Color.black);
 			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly-h+fm.getAscent());
 			g.drawLine(lx-fm.stringWidth("Q")/2,ly-h,lx+fm.stringWidth("Q")/2,ly-h);
-			four.draw(g);
+			ElementRenderSupport.drawPut(g, four);
 
 		}
 

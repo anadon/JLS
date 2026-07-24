@@ -46,7 +46,7 @@ public final class PauseRenderer implements ElementRenderer {
 
 		// draw inputs
 		for (Input input : p.getInputList()) {
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 
 		// draw "pause"

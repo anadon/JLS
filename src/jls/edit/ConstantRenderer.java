@@ -56,7 +56,7 @@ public final class ConstantRenderer implements ElementRenderer {
 		}
 
 		// draw output
-		c.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, c.getOutputList().get(0));
 
 	} // end of draw method
 

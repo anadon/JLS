@@ -72,7 +72,7 @@ public final class MemoryRenderer implements ElementRenderer {
 		int h = fm.getAscent()+fm.getDescent();
 		g.setColor(Color.black);
 		g.drawString("addr",lx+d2,ly-h/2+ascent);
-		addr.draw(g);
+		ElementRenderSupport.drawPut(g, addr);
 
 		// draw data input and label
 		if (m.isRAM()) {
@@ -82,7 +82,7 @@ public final class MemoryRenderer implements ElementRenderer {
 			h = fm.getAscent()+fm.getDescent();
 			g.setColor(Color.black);
 			g.drawString("data",lx+d2,ly-h/2+ascent);
-			in.draw(g);
+			ElementRenderSupport.drawPut(g, in);
 		}
 
 		// draw data output and label
@@ -91,7 +91,7 @@ public final class MemoryRenderer implements ElementRenderer {
 		ly = out.getY();
 		g.setColor(Color.black);
 		g.drawString("out",lx-fm.stringWidth("out")-d2,ly-h/2+ascent);
-		out.draw(g);
+		ElementRenderSupport.drawPut(g, out);
 
 		// draw WE input and label
 		int inum = 1;
@@ -103,7 +103,7 @@ public final class MemoryRenderer implements ElementRenderer {
 			g.setColor(Color.black);
 			g.drawString("WE",lx-w/2,ly-d2-fm.getDescent());
 			g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-			we.draw(g);
+			ElementRenderSupport.drawPut(g, we);
 			inum = 3;
 		}
 
@@ -115,7 +115,7 @@ public final class MemoryRenderer implements ElementRenderer {
 		g.setColor(Color.black);
 		g.drawString("OE",lx-w/2,ly-d2-fm.getDescent());
 		g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-		oe.draw(g);
+		ElementRenderSupport.drawPut(g, oe);
 
 		// draw CS input and label
 		Input cs = m.getInputList().get(inum+1);
@@ -125,7 +125,7 @@ public final class MemoryRenderer implements ElementRenderer {
 		g.setColor(Color.black);
 		g.drawString("CS",lx-w/2,ly-d2-fm.getDescent());
 		g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-		cs.draw(g);
+		ElementRenderSupport.drawPut(g, cs);
 
 	} // end of draw method
 

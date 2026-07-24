@@ -64,8 +64,8 @@ public final class DecoderRenderer implements ElementRenderer {
 		}
 
 		// draw input and output
-		d.getInputList().get(0).draw(g);
-		d.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, d.getInputList().get(0));
+		ElementRenderSupport.drawPut(g, d.getOutputList().get(0));
 
 	} // end of draw method
 

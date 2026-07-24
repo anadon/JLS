@@ -50,7 +50,7 @@ public final class ClockRenderer implements ElementRenderer {
 		g.drawLine(left,top,left+s4,top);
 
 		// draw output
-		c.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, c.getOutputList().get(0));
 	} // end of draw method
 
 } // end of ClockRenderer class

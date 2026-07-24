@@ -72,7 +72,7 @@ public final class DisplayRenderer implements ElementRenderer {
 
 		// draw attached inputs
 		for (Input input : d.getInputList()) {
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 	} // end of draw method
 

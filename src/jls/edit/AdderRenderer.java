@@ -141,10 +141,10 @@ public final class AdderRenderer implements ElementRenderer {
 		}
 		// draw inputs and outputs
 		for (Input input : a.getInputList()) {
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 		for (Output output : a.getOutputList()) {
-			output.draw(g);
+			ElementRenderSupport.drawPut(g, output);
 		}
 
 	} // end of draw method

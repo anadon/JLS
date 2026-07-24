@@ -85,7 +85,7 @@ public final class JumpEndRenderer implements ElementRenderer {
 		g.drawString(name,tx,y-h/2+ascent);
 
 		// draw output
-		je.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, je.getOutputList().get(0));
 
 	} // end of draw method
 

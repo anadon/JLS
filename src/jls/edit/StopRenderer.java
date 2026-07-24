@@ -54,7 +54,7 @@ public final class StopRenderer implements ElementRenderer {
 
 		// draw inputs
 		for (Input input : stop.getInputList()) {
-			input.draw(g);
+			ElementRenderSupport.drawPut(g, input);
 		}
 
 		// draw "stop"

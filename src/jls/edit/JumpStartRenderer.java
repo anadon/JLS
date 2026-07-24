@@ -93,7 +93,7 @@ public final class JumpStartRenderer implements ElementRenderer {
 		g.drawString(name,tx,y-h/2+ascent);
 
 		// draw input
-		js.getInputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, js.getInputList().get(0));
 
 	} // end of draw method
 

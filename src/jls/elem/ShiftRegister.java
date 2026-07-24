@@ -219,7 +219,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	public void draw(java.awt.Graphics g) {
 
 		// draw context
-		super.draw(g);
+		jls.edit.ElementRenderSupport.drawHighlight(g, this);
 
 		// draw shape
 		g.setColor(java.awt.Color.black);
@@ -248,9 +248,9 @@ public final class ShiftRegister extends LogicElement implements Timed {
 
 		// draw inputs and output
 		for (Input input : inputs) {
-			input.draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, input);
 		}
-		outputs.get(0).draw(g);
+		jls.edit.ElementRenderSupport.drawPut(g, outputs.get(0));
 
 	} // end of draw method
 

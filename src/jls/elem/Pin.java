@@ -313,7 +313,7 @@ public abstract sealed class Pin extends LogicElement
 		}
 
 		// draw context
-		super.draw(g);
+		jls.edit.ElementRenderSupport.drawHighlight(g, this);
 
 		// draw box
 		g.setColor(Color.BLACK);
@@ -349,10 +349,10 @@ public abstract sealed class Pin extends LogicElement
 
 		// draw the put
 		for (Input in : inputs) {
-			in.draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, in);
 		}
 		for (Output out : outputs) {
-			out.draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, out);
 		}
 	} // end of draw method
 

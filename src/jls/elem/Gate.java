@@ -299,7 +299,7 @@ public abstract sealed class Gate extends LogicElement
 	public void draw(Graphics g) {
 
 		// draw context
-		super.draw(g);
+		jls.edit.ElementRenderSupport.drawHighlight(g, this);
 
 		// build the outline path on first draw for gates that describe
 		// their symbol headlessly (issue #77 model/render split); gates
@@ -351,7 +351,7 @@ public abstract sealed class Gate extends LogicElement
 			// output
 			int lx = out.getX();
 			g.drawLine(lx,y+dist+s,lx+ox,y+dist+s);
-			out.draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, out);
 			
 			// inputs
 			double ye = y + dist + inc;
@@ -361,7 +361,7 @@ public abstract sealed class Gate extends LogicElement
 				g.setColor(Color.black);
 				g.drawLine(lx,ly,lx-ox,(int)(ye+0.5));
 				ye += inc*2;
-				inputs.get(p).draw(g);
+				jls.edit.ElementRenderSupport.drawPut(g, inputs.get(p));
 			}
 		}
 		else { // up or down
@@ -369,7 +369,7 @@ public abstract sealed class Gate extends LogicElement
 			// output
 			int ly = out.getY();
 			g.drawLine(x+dist+s,ly,x+dist+s,ly+oy);
-			out.draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, out);
 			
 			// inputs
 			double xe = x + dist + inc;
@@ -379,7 +379,7 @@ public abstract sealed class Gate extends LogicElement
 			g.setColor(Color.black);
 			g.drawLine(lx,ly,(int)(xe+0.5),ly-oy);
 			xe += inc*2;
-			inputs.get(p).draw(g);
+			jls.edit.ElementRenderSupport.drawPut(g, inputs.get(p));
 			}
 		}
 		

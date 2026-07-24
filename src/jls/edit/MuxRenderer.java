@@ -56,7 +56,7 @@ public final class MuxRenderer implements ElementRenderer {
 		if(outputOrientation == Orientation.LEFT || outputOrientation == Orientation.RIGHT)
 		{
 			for (Input input : mux.getInputList()) {
-				input.draw(g);
+				ElementRenderSupport.drawPut(g, input);
 				if (inum >= 0) {
 					g.setColor(Color.BLACK);
 					if(outputOrientation == Orientation.RIGHT)
@@ -80,9 +80,9 @@ public final class MuxRenderer implements ElementRenderer {
 			if(mux.getInputList().size() == 3)
 			{
 
-				mux.getInputList().get(0).draw(g);
-				mux.getInputList().get(1).draw(g);
-				mux.getInputList().get(2).draw(g);
+				ElementRenderSupport.drawPut(g, mux.getInputList().get(0));
+				ElementRenderSupport.drawPut(g, mux.getInputList().get(1));
+				ElementRenderSupport.drawPut(g, mux.getInputList().get(2));
 				g.setColor(Color.BLACK);
 				g.drawString("0",mux.getInputList().get(1).getX()-4,y+5*d2);
 				g.drawString("1",mux.getInputList().get(2).getX()-4,y+5*d2);
@@ -90,7 +90,7 @@ public final class MuxRenderer implements ElementRenderer {
 			else
 			{
 				for (Input input : mux.getInputList()) {
-					input.draw(g);
+					ElementRenderSupport.drawPut(g, input);
 					if (inum >= 0 && inum%2 == 0) {
 						g.setColor(Color.BLACK);
 						if(outputOrientation == Orientation.RIGHT)
@@ -112,7 +112,7 @@ public final class MuxRenderer implements ElementRenderer {
 		}
 
 		// draw output
-		mux.getOutputList().get(0).draw(g);
+		ElementRenderSupport.drawPut(g, mux.getOutputList().get(0));
 
 	} // end of draw method
 

@@ -70,7 +70,7 @@ class MuxSymbolTest {
 			}
 		}
 		assertNotNull(mux, "Mux not found after load");
-		mux.draw(g);
+		jls.edit.ElementRenderers.draw(g, mux);
 		g.dispose();
 		return img;
 	}

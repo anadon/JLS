@@ -5,14 +5,9 @@ import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * Clock element.
@@ -45,7 +40,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkCycleTime(int cycleTime) {
+	public static String checkCycleTime(int cycleTime) {
 
 		return cycleTime < 1 ? CYCLE_CONSTRAINT : null;
 	} // end of checkCycleTime method
@@ -62,7 +57,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkOneTime(int cycleTime, int oneTime) {
+	public static String checkOneTime(int cycleTime, int oneTime) {
 
 		return (oneTime < 1 || oneTime >= cycleTime) ? ONE_CONSTRAINT : null;
 	} // end of checkOneTime method
@@ -74,55 +69,65 @@ public final class Clock extends LogicElement {
 	private int oneTime = defaultOneTime;
 	/** Which way the output pin faces. */
 	private Orientation orientation = Orientation.RIGHT;
-	/** Whether the user cancelled the creation or change dialog. */
-	private boolean cancelled;
-	
+
 	/**
 	 * Create a new clock element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Clock(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
+
 	/**
-	 * Display dialog to get value and bits.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The direction this clock's output pin faces (issue #77: read by the
+	 * GUI-side dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new ClockCreate();
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the cycle time (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param cycleTime The new cycle time.
+	 */
+	public void setCycleTime(int cycleTime) {
+
+		this.cycleTime = cycleTime;
+	} // end of setCycleTime method
+
+	/**
+	 * Set the one time (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param oneTime The new one time.
+	 */
+	public void setOneTime(int oneTime) {
+
+		this.oneTime = oneTime;
+	} // end of setOneTime method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
@@ -147,46 +152,7 @@ public final class Clock extends LogicElement {
 		outputs.add(new Output("output",this,p.x(),p.y(),1));
 
 	} // end of init method
-	
-	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw rounded rectangle
-		int s = Geometry.SPACING;
-		int s2 = s/2;
-		int s4 = s/4;
-		int d = s*2;
-		g.setColor(Color.BLACK);
-		g.drawRoundRect(x,y,d,d,s2,s2);
-		
-		// draw waveform
-		
-		int bottom = y+s+s2;
-		int top = y+s2;
-		int left = x+s4;
-		g.drawLine(left,bottom,left+s4,bottom);
-		left += s4;
-		g.drawLine(left,bottom,left,top);
-		g.drawLine(left,top,left+s2,top);
-		left += s2;
-		g.drawLine(left,top,left,bottom);
-		g.drawLine(left,bottom,left+s2,bottom);
-		left += s2;
-		g.drawLine(left,bottom,left,top);
-		g.drawLine(left,top,left+s4,top);
-		
-		// draw output
-		outputs.get(0).draw(g);
-	} // end of draw method
-	
+
 	/**
 	 * Save thiselement.
 	 * 
@@ -336,7 +302,7 @@ public final class Clock extends LogicElement {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		info.setText("clock, cycle time = " + cycleTime +
 				" (zero for " + (cycleTime-oneTime) + ", one for " + oneTime + ")");
@@ -369,7 +335,7 @@ public final class Clock extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -398,7 +364,7 @@ public final class Clock extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -406,210 +372,7 @@ public final class Clock extends LogicElement {
 		height = 0;
 		init(g);
 	}
-	
-	/**
-	 * Show change dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return false.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// display dialog
-		new ClockCreate();
-		
-		if (!cancelled)
-			circuit.markChanged();
-		return false;
-	
-	} // end of change method
-	
-	/**
-	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
-	 * Used by all simple gates (nand, and, nor, or, xor, not).
-	 */
-	@SuppressWarnings("serial")
-	private class ClockCreate extends ElementDialog {
 
-		// properties
-		/** Field to enter the cycle time. */
-		private JTextField cycleTimeField = new JTextField(cycleTime+"",10);
-		/** Field to enter the one time. */
-		private JTextField oneTimeField = new JTextField(oneTime+"",10);
-		/** Keypad for the cycle time field. */
-		private KeyPad cycleTimePad = new KeyPad(cycleTimeField,10,defaultCycleTime,this);
-		/** Keypad for the one time field. */
-		private KeyPad oneTimePad = new KeyPad(oneTimeField,10,defaultOneTime,this);
-		/** Button selecting the left orientation. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Button selecting the right orientation (the default). */
-		private JRadioButton right = new JRadioButton("Right", true);
-		/** Button selecting the up orientation. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Button selecting the down orientation. */
-		private JRadioButton down = new JRadioButton("Down");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private ClockCreate() {
-			
-			// set up window title
-			super("Create Clock","clock");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			
-			JPanel labels = new JPanel(new GridLayout(3,1,1,5));
-			JLabel ctime = new JLabel("Cycle Time: ",SwingConstants.RIGHT);
-			labels.add(ctime);
-			JLabel otime = new JLabel("One Time: ",SwingConstants.RIGHT);
-			labels.add(otime);
-			info.add(labels,BorderLayout.WEST);
-			
-			JPanel fields = new JPanel(new GridLayout(2,1,1,5));
-			JPanel ct = new JPanel(new BorderLayout());
-			ct.add(cycleTimeField,BorderLayout.CENTER);
-			ct.add(cycleTimePad,BorderLayout.EAST);
-			fields.add(ct);
-			JPanel ot = new JPanel(new BorderLayout());
-			ot.add(oneTimeField,BorderLayout.CENTER);
-			ot.add(oneTimePad,BorderLayout.EAST);
-			fields.add(ot);
-			info.add(fields,BorderLayout.CENTER);
-			window.add(info);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			window.add(orients);
-
-			confirmOnEnter(cycleTimeField);
-			confirmOnEnter(oneTimeField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Check the times against the shared clock constraints (issue
-		 * #52): a rejected dialog must leave the clock unchanged.
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			int newCycleTime;
-			int newOneTime;
-			try {
-				newCycleTime = Integer.parseInt(cycleTimeField.getText());
-			}
-			catch (NumberFormatException ex) {
-				return java.util.List.of(new Violation(
-						"Value not numeric, try again", cycleTimeField));
-			}
-			try {
-				newOneTime = Integer.parseInt(oneTimeField.getText());
-			}
-			catch (NumberFormatException ex) {
-				return java.util.List.of(new Violation(
-						"Value not numeric, try again", oneTimeField));
-			}
-			String violated = checkCycleTime(newCycleTime);
-			if (violated != null) {
-				return java.util.List.of(new Violation(violated, cycleTimeField));
-			}
-			violated = checkOneTime(newCycleTime, newOneTime);
-			if (violated != null) {
-				return java.util.List.of(new Violation(violated, oneTimeField));
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Set the clock parameters from the validated form.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			int newCycleTime;
-			int newOneTime;
-			try {
-				newCycleTime = Integer.parseInt(cycleTimeField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again", cycleTimeField);
-				return;
-			}
-			try {
-				newOneTime = Integer.parseInt(oneTimeField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again", oneTimeField);
-				return;
-			}
-			cycleTime = newCycleTime;
-			oneTime = newOneTime;
-			if(left.isSelected())
-			{
-				orientation = Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = Orientation.DOWN;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this element.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of ClockCreate class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

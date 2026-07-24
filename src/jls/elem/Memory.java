@@ -5,12 +5,7 @@ import java.nio.charset.StandardCharsets;
 import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
 import java.io.*;
-import javax.swing.*;
 import java.math.*;
 import java.util.*;
 
@@ -66,7 +61,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkCapacity(int capacity) {
+	public static String checkCapacity(int capacity) {
 
 		return capacity < 1 ? CAPACITY_CONSTRAINT : null;
 	} // end of checkCapacity method
@@ -80,7 +75,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkBits(int bits) {
+	public static String checkBits(int bits) {
 
 		return bits < 1 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -108,10 +103,6 @@ public final class Memory extends LogicElement
 	private boolean watched = false;
 
 	// running properties
-	/** True if the user cancelled the create/change dialog. */
-	private boolean cancelled;
-	/** True if a change dialog altered the element so it must be resized. */
-	private boolean changed;
 	/** The "capacity x bits" type description drawn inside the element. */
 	private String specs;
 	
@@ -126,45 +117,15 @@ public final class Memory extends LogicElement
 	} // end of constructor
 	
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new MemoryEdit(true);
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
-	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
 	 * Note input positions: RAM-> 0 - addr, 1 - input, 2 - WE, 3 - OE, 4 - CS
 	 *                       ROM-> 0 - addr, 1 - OE, 2 - CS
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 		
 		// set up
 		if (type == Type.RAM) {
@@ -180,7 +141,7 @@ public final class Memory extends LogicElement
 			
 			// set up size if it doesn't already have one
 			if (width == 0 && height == 0) {
-				FontMetrics fm = g.getFontMetrics();
+				java.awt.FontMetrics fm = g.getFontMetrics();
 				int w1 = (fm.stringWidth(" " + name + " ")+s/2)/s*s;
 				int minW = 0;
 				if (type == Type.RAM) {
@@ -216,110 +177,129 @@ public final class Memory extends LogicElement
 	} // end of init method
 	
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * The "capacity x bits" type description drawn inside the box (issue
+	 * #77: read by the GUI-side renderer).
+	 *
+	 * @return the spec string, as computed by {@link #init}.
 	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw watched background
-		int s = Geometry.SPACING;
-		int d2 = Geometry.POINT_DIAMETER/2;
-		if (watched) {
-			g.setColor(JLSInfo.watchColor);
-			g.fillRect(x,y,width,height);
-		}
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		
-		// draw specs inside box
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		Rectangle2D t = fm.getStringBounds(specs,g);
-		double tw = t.getWidth();
-		double th = t.getHeight();
-		int dx = (int)((width-tw)/2);
-		int dy = (int)(s-th/2+ascent);
-		g.drawString(specs,x+dx,y+dy);
-		
-		// draw name inside box
-		t = fm.getStringBounds(name,g);
-		tw = t.getWidth();
-		th = t.getHeight();
-		dx = (int)((width-tw)/2);
-		dy = (int)(3*s);
-		g.drawString(name,x+dx,y+dy);
-		
-		// draw address input and label
-		Input addr = inputs.get(0);
-		int lx = addr.getX();
-		int ly = addr.getY();
-		int h = fm.getAscent()+fm.getDescent();
-		g.setColor(Color.black);
-		g.drawString("addr",lx+d2,ly-h/2+ascent);
-		addr.draw(g);
-		
-		// draw data input and label
-		if (type == Type.RAM) {
-			Input in = inputs.get(1);
-			lx = in.getX();
-			ly = in.getY();
-			h = fm.getAscent()+fm.getDescent();
-			g.setColor(Color.black);
-			g.drawString("data",lx+d2,ly-h/2+ascent);
-			in.draw(g);
-		}
-		
-		// draw data output and label
-		Output out = outputs.get(0);
-		lx = out.getX();
-		ly = out.getY();
-		g.setColor(Color.black);
-		g.drawString("out",lx-fm.stringWidth("out")-d2,ly-h/2+ascent);
-		out.draw(g);
-		
-		// draw WE input and label
-		int inum = 1;
-		if (type == Type.RAM) {
-			Input we = inputs.get(2);
-			lx = we.getX();
-			ly = we.getY();
-			int w = fm.stringWidth("WE");
-			g.setColor(Color.black);
-			g.drawString("WE",lx-w/2,ly-d2-fm.getDescent());
-			g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-			we.draw(g);
-			inum = 3;
-		}
-		
-		// draw OE input and label
-		Input oe = inputs.get(inum);
-		lx = oe.getX();
-		ly = oe.getY();
-		int w = fm.stringWidth("OE");
-		g.setColor(Color.black);
-		g.drawString("OE",lx-w/2,ly-d2-fm.getDescent());
-		g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-		oe.draw(g);
-		
-		// draw CS input and label
-		Input cs = inputs.get(inum+1);
-		lx = cs.getX();
-		ly = cs.getY();
-		w = fm.stringWidth("CS");
-		g.setColor(Color.black);
-		g.drawString("CS",lx-w/2,ly-d2-fm.getDescent());
-		g.drawLine(lx-w/2,ly-h-1,lx+w/2,ly-h-1);
-		cs.draw(g);
-		
-	} // end of draw method
-	
+	public String getSpecs() {
+
+		return specs;
+	} // end of getSpecs method
+
+	/**
+	 * Whether this memory is RAM (issue #77: read by the GUI-side renderer
+	 * to lay out the data/WE ports).
+	 *
+	 * @return true if RAM, false if ROM.
+	 */
+	public boolean isRAM() {
+
+		return type == Type.RAM;
+	} // end of isRAM method
+
+	/**
+	 * The built-in initial value text (issue #77: read by the GUI-side
+	 * dialog).
+	 *
+	 * @return the initial value text, or empty if none.
+	 */
+	public String getInitialValue() {
+
+		return initialValue;
+	} // end of getInitialValue method
+
+	/**
+	 * The initialization file name (issue #77: read by the GUI-side
+	 * dialog).
+	 *
+	 * @return the file name, or empty if initialized internally.
+	 */
+	public String getFileName() {
+
+		return fileName;
+	} // end of getFileName method
+
+	/**
+	 * Set the memory name (issue #77: applied by the GUI-side dialog; the
+	 * dialog owns the circuit name-table bookkeeping).
+	 *
+	 * @param name The new name.
+	 */
+	public void setName(String name) {
+
+		this.name = name;
+	} // end of setName method
+
+	/**
+	 * Set the built-in initial value text (issue #77: applied by the
+	 * GUI-side dialog).
+	 *
+	 * @param initialValue The new initial value text.
+	 */
+	public void setInitialValue(String initialValue) {
+
+		this.initialValue = initialValue;
+	} // end of setInitialValue method
+
+	/**
+	 * Set the initialization file name (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param fileName The new file name.
+	 */
+	public void setFileName(String fileName) {
+
+		this.fileName = fileName;
+	} // end of setFileName method
+
+	/**
+	 * Set the memory type (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param ram True for RAM, false for ROM.
+	 */
+	public void setType(boolean ram) {
+
+		this.type = ram ? Type.RAM : Type.ROM;
+	} // end of setType method
+
+	/**
+	 * Set the number of bits per word (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param bits The new number of bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the capacity, in words (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param capacity The new capacity.
+	 */
+	public void setCapacity(int capacity) {
+
+		this.capacity = capacity;
+	} // end of setCapacity method
+
+	/**
+	 * Detach and re-size after a change that grew the name (issue #77:
+	 * driven by the GUI-side dialog, replacing the tail of the former
+	 * {@code change}).
+	 *
+	 * @param g The Graphics object to use to recompute size.
+	 */
+	public void reinit(java.awt.Graphics g) {
+
+		detach();
+		width = 0;
+		height = 0;
+		init(g);
+	} // end of reinit method
+
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
@@ -638,7 +618,7 @@ public final class Memory extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		if (fileName.isEmpty()) {
 			info.setText(specs + ", built-in initializaion");
@@ -782,347 +762,6 @@ public final class Memory extends LogicElement
 	} // end of remove method
 	
 	/**
-	 * Dialog box to create/modify register characteristics.
-	 */
-	private class MemoryEdit extends ElementDialog implements ActionListener {
-		
-		// properties
-		/** Input field for the element name. */
-		private JTextField nameField = new JTextField(name);
-		/** Input field for the number of bits per word. */
-		private JTextField bitsField = new JTextField(bits+"",10);
-		/** Input field for the capacity in words. */
-		private JTextField capacityField = new JTextField(defaultCapacity+"",10);
-		/** Keypad for entering the bits per word. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,bits,this);
-		/** Keypad for entering the capacity. */
-		private KeyPad capacityPad = new KeyPad(capacityField,10,defaultCapacity,this);
-		/** Radio button selecting the RAM type. */
-		private JRadioButton ram = new JRadioButton("RAM");
-		/** Radio button selecting the ROM type. */
-		private JRadioButton rom = new JRadioButton("ROM");
-		/** Button choosing initialization from a file. */
-		private JButton fromFile = new JButton("from File");
-		/** Button choosing built-in initialization. */
-		private JButton builtIn = new JButton("Built In");
-		/** True if creating a new memory element, false if changing one. */
-		private boolean create;
-		/** Working copy of the built-in initial value text, committed on OK. */
-		String tempInit = initialValue;
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 * @param create True if creating a new memory element, false if changing one.
-		 */
-		private MemoryEdit(boolean create) {
-			
-			// set up window title
-			super(create ? "Create Memory" : "Change Memory","memory");
-			
-			// save create
-			this.create = create;
-			
-			// set not cancelled
-			cancelled = false;
-			
-			// set up window
-			Container window = getContentPane();
-			
-			// set up types
-			if (create) {
-				JLabel tlbl = new JLabel("Type");
-				tlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-				window.add(tlbl);
-				JPanel types = new JPanel(new GridLayout(1,2));
-				types.add(ram);
-				ram.setToolTipText("Random Access Memory");
-				ram.setHorizontalAlignment(SwingConstants.CENTER);
-				types.add(rom);
-				rom.setToolTipText("Read Only Memory");
-				rom.setHorizontalAlignment(SwingConstants.CENTER);
-				ButtonGroup group = new ButtonGroup();
-				group.add(ram);
-				group.add(rom);
-				window.add(types);
-			}
-			
-			// set up inputs
-			if (create) {
-				window.add(new JLabel(" "));
-				JPanel info = new JPanel(new BorderLayout());
-				JPanel labels = new JPanel(new GridLayout(3,1,1,5));
-				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
-				labels.add(name);
-				JLabel bits = new JLabel("Bits/Word: ",SwingConstants.RIGHT);
-				labels.add(bits);
-				JLabel words = new JLabel("Capacity (words): ",SwingConstants.RIGHT);
-				labels.add(words);
-				info.add(labels,BorderLayout.WEST);
-				
-				JPanel fields = new JPanel(new GridLayout(3,1,1,5));
-				fields.add(nameField);
-				JPanel b = new JPanel(new BorderLayout());
-				b.add(bitsField,BorderLayout.CENTER);
-				b.add(bitsPad,BorderLayout.EAST);
-				fields.add(b);
-				
-				JPanel i = new JPanel(new BorderLayout());
-				i.add(capacityField,BorderLayout.CENTER);
-				i.add(capacityPad,BorderLayout.EAST);
-				capacityPad.setBase(10);
-				fields.add(i);
-				info.add(fields,BorderLayout.CENTER);
-				window.add(info);
-			}
-			else {
-				JPanel info = new JPanel(new BorderLayout());
-				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
-				info.add(name,BorderLayout.WEST);
-				info.add(nameField,BorderLayout.CENTER);
-				window.add(info);
-			}
-			
-			
-			// set up initial values buttons
-			window.add(new JLabel(" "));
-			JLabel ilbl = new JLabel("Initial Memory Contents:");
-			ilbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(ilbl);
-			JPanel inits = new JPanel(new GridLayout(1,2));
-			inits.add(builtIn);
-			builtIn.setToolTipText("open dialog to set initial values");
-			inits.add(fromFile);
-			fromFile.setToolTipText("open dialog to set file name");
-			window.add(inits);
-			
-			// set up listeners
-			confirmOnEnter(nameField);
-			confirmOnEnter(bitsField);
-			confirmOnEnter(capacityField);
-			fromFile.addActionListener(this);
-			builtIn.addActionListener(this);
-			
-			finishDialog();
-		} // end of constructor
-		
-		/**
-		 * Check the form against the shared memory constraints (issue
-		 * #52): a rejected dialog must leave the memory unchanged.
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			java.util.List<Violation> violations =
-					new java.util.ArrayList<Violation>();
-			String tname = nameField.getText().trim();
-			if (tname.isEmpty() || !Util.isValidName(tname)) {
-				violations.add(new Violation("Missing or invalid name",
-						nameField));
-			}
-			else if (!tname.equals(name) && circuit.hasName(tname)) {
-				violations.add(new Violation("Duplicate name", nameField));
-			}
-			int tbits = bits;
-			int tcapacity = capacity;
-			if (create) {
-				try {
-					tbits = Integer.parseInt(bitsField.getText());
-					String violated = checkBits(tbits);
-					if (violated != null) {
-						violations.add(new Violation(violated, bitsField));
-					}
-				}
-				catch (NumberFormatException ex) {
-					violations.add(new Violation("Value not numeric",
-							bitsField));
-				}
-				try {
-					tcapacity = Integer.parseInt(capacityField.getText(),10);
-					String violated = checkCapacity(tcapacity);
-					if (violated != null) {
-						violations.add(new Violation(violated, capacityField));
-					}
-				}
-				catch (NumberFormatException ex) {
-					violations.add(new Violation("Value not numeric",
-							capacityField));
-				}
-				if (!ram.isSelected() && !rom.isSelected()) {
-					violations.add(new Violation("Pick RAM or ROM", ram));
-				}
-			}
-			if (violations.isEmpty()) {
-				String msg = initOK(tempInit,tcapacity,tbits,false);
-				if (msg != null) {
-					violations.add(new Violation(
-							msg + " in built in initialization", null));
-				}
-			}
-			return violations;
-		} // end of validateInputs method
-
-		/**
-		 * Apply the validated form to the memory element.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			String tname = nameField.getText().trim();
-			int tbits = bits;
-			int tcapacity = capacity;
-			Memory.Type ttype = null;
-			if (create) {
-				try {
-					tbits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					reject("Value not numeric", bitsField);
-					return;
-				}
-				try {
-					tcapacity = Integer.parseInt(capacityField.getText(),10);
-				}
-				catch (NumberFormatException ex) {
-					reject("Value not numeric", capacityField);
-					return;
-				}
-				ttype = ram.isSelected() ? Memory.Type.RAM : Memory.Type.ROM;
-			}
-
-			// everything is ok, so make it permanent
-			if (!name.isEmpty())
-				circuit.removeName(name);
-			circuit.addName(tname);
-			name = tname;
-			initialValue = tempInit;
-			if (create) {
-				type = ttype;
-				bits = tbits;
-				capacity = tcapacity;
-				bitsPad.close();
-				capacityPad.close();
-			}
-			circuit.markChanged();
-			if (!create && !nameFits(tname)) {
-				changed = true;
-			}
-			else {
-				changed = false;
-			}
-			dispose();
-		} // end of validateAndAccept method
-		
-		/**
-		 * React to the initial-contents buttons.
-		 * 
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-			
-			if (event.getSource() == fromFile) {
-				
-				// get file name
-				String file  = TellUser.prompt(this,
-						"File name?", fileName);
-				if (file == null)
-					return;
-				file = file.trim();
-				while (!file.isEmpty() && !Util.isValidName(file)) {
-					TellUser.error(this,
-							"Missing or invalid file name, try again", "Error");
-					file = TellUser.prompt(this,
-							"File name?", fileName);
-					if (file == null)
-						return;
-					file = file.trim();
-				}
-				fileName = file;
-				initialValue = "";
-			}
-			else if (event.getSource() == builtIn) {
-				
-				// construct input dialog
-				final JDialog init = new JDialog(this,true);
-				Container window = init.getContentPane();
-				window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
-				final JTextArea area = new JTextArea(tempInit,10,12);
-				JScrollPane pane = new JScrollPane(area);
-				window.add(pane);
-				
-				Action okAction = new AbstractAction("ok") {
-					/**
-					 * Accept the edited initial-contents text, validate it,
-					 * and close the built-in dialog.
-					 *
-					 * @param event The event object for this action.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						tempInit = area.getText();
-						String msg = initOK(tempInit,Integer.MAX_VALUE,Integer.MAX_VALUE,false);
-						if (msg != null) {
-							TellUser.error(getParent(),
-									msg, "Error");
-							return;
-						}
-						fileName = "";
-						init.dispose();
-					}
-				};
-				Action cancelAction = new AbstractAction("cancel") {
-					/**
-					 * Discard the edits and close the built-in dialog.
-					 *
-					 * @param event The event object for this action.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						init.dispose();
-					}
-				};
-				window.add(new JLabel(" "));
-				JPanel okCancel = new JPanel(new GridLayout(1,2));
-				okCancel.add(new JButton(okAction));
-				okCancel.add(new JButton(cancelAction));
-				window.add(okCancel);
-				
-				init.pack();
-				Point loc = getLocation();
-				init.setLocation(loc);
-				init.setVisible(true);
-			}
-		} // end of actionPerformed method
-		
-		/**
-		 * Cancel this element.
-		 */
-		@Override
-		protected void cancelDialog() {
-			
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-		
-		/**
-		 * See if the given name fits in the box on the screen.
-		 * 
-		 * @param name The value to check.
-		 * 
-		 * @return true if it fits, false if not.
-		 */
-		public boolean nameFits(String name) {
-			
-			FontMetrics fm = saveg.getFontMetrics();
-			int w = fm.stringWidth(" " + name + " ");
-			return w <= width;
-			
-		} // end of nameFits method
-		
-	} // end of MemoryCreate class
-	
-	/**
 	 * Memories can be modified.
 	 * 
 	 * @return true.
@@ -1132,40 +771,6 @@ public final class Memory extends LogicElement
 		
 		return true;
 	} // end of canChange method
-	
-	/** Graphics object saved by change() so the dialog can measure name widths. */
-	private Graphics saveg;
-	
-	/**
-	 * Show change dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return true if the name is bigger, false if not.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// save g for valueFits method
-		saveg = g;
-		
-		// display dialog
-		new MemoryEdit(false);
-		
-		// if name too big, resize and detach
-		if (changed) {
-			detach();
-			width = 0;
-			height = 0;
-			init(g);
-			return true;
-		}
-		return false;
-		
-	} // end of change method
 	
 	/**
 	 * Parse initial value text.
@@ -1854,13 +1459,13 @@ public final class Memory extends LogicElement
 	 * @param where Where on the screen to display.
 	 */
 	@Override
-	public void showCurrentValue(Point where) {
-		
+	public void showCurrentValue(java.awt.Point where) {
+
 		// set up
-		final JDialog contents = new JDialog(JLSInfo.frame,true);
-		Container window = contents.getContentPane();
-		window.setLayout(new BorderLayout());
-		
+		final javax.swing.JDialog contents = new javax.swing.JDialog(JLSInfo.frame,true);
+		java.awt.Container window = contents.getContentPane();
+		window.setLayout(new java.awt.BorderLayout());
+
 		// if simulator not run yet, make a dummy mem array
 		if (mem == null) {
 			mem = newWordStore();
@@ -1868,17 +1473,17 @@ public final class Memory extends LogicElement
 
 		// create addr/data display
 		SortedSet<Integer> addrs = mem.addresses();
-		JPanel display = new JPanel(new GridLayout(addrs.size(),2,10,3));
+		javax.swing.JPanel display = new javax.swing.JPanel(new java.awt.GridLayout(addrs.size(),2,10,3));
 		for (int addr : addrs) {
-			
+
 			// address info
 			String hexAddr = Integer.toHexString(addr);
 			String allAddr = "0x" + hexAddr + " (" + addr + "):";
-			JLabel addrLabel = new JLabel(allAddr,SwingConstants.RIGHT);
+			javax.swing.JLabel addrLabel = new javax.swing.JLabel(allAddr,javax.swing.SwingConstants.RIGHT);
 			addrLabel.setOpaque(true);
-			addrLabel.setBackground(Color.WHITE);
+			addrLabel.setBackground(java.awt.Color.WHITE);
 			display.add(addrLabel);
-			
+
 			// data info
 			BitSet temp = new BitSet(1);
 			if (mem.get(addr) != null) {
@@ -1888,36 +1493,36 @@ public final class Memory extends LogicElement
 			String unsigned = BitSetUtils.ToString(temp,10);
 			String signed = BitSetUtils.ToStringSigned(temp,bits);
 			String value = "0x" + hex + " (" + unsigned + " unsigned, " + signed + " signed)";
-			JLabel dataLabel = new JLabel(value);
+			javax.swing.JLabel dataLabel = new javax.swing.JLabel(value);
 			dataLabel.setOpaque(true);
-			dataLabel.setBackground(Color.WHITE);
+			dataLabel.setBackground(java.awt.Color.WHITE);
 			display.add(dataLabel);
 		}
-		JScrollPane pane = new JScrollPane(display);
+		javax.swing.JScrollPane pane = new javax.swing.JScrollPane(display);
 		int width = (int)(display.getPreferredSize().getWidth());
 		int height = (int)(display.getPreferredSize().getHeight());
-		pane.setPreferredSize(new Dimension(width+50,Math.min(height,400)));
-		window.add(pane,BorderLayout.CENTER);
-		JButton ok = new JButton("ok");
-		ok.addActionListener(new ActionListener() {
+		pane.setPreferredSize(new java.awt.Dimension(width+50,Math.min(height,400)));
+		window.add(pane,java.awt.BorderLayout.CENTER);
+		javax.swing.JButton ok = new javax.swing.JButton("ok");
+		ok.addActionListener(new java.awt.event.ActionListener() {
 			/**
 			 * Close the memory-contents dialog.
 			 *
 			 * @param event The event object for this action.
 			 */
 			@Override
-			public void actionPerformed(ActionEvent event) {
+			public void actionPerformed(java.awt.event.ActionEvent event) {
 				contents.dispose();
 			}
 		});
-		window.add(ok,BorderLayout.SOUTH);
-		window.add(new JLabel("Non-Zero Words:",SwingConstants.CENTER),BorderLayout.NORTH);
-		
+		window.add(ok,java.awt.BorderLayout.SOUTH);
+		window.add(new javax.swing.JLabel("Non-Zero Words:",javax.swing.SwingConstants.CENTER),java.awt.BorderLayout.NORTH);
+
 		contents.pack();
 		contents.setLocation(10,10);
-		contents.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		contents.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		contents.setVisible(true);
-		
+
 	} // end of showCurrentValue method
 	
 } // end of Memory class

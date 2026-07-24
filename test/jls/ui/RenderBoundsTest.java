@@ -108,7 +108,7 @@ class RenderBoundsTest {
 			Graphics2D g = image.createGraphics();
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, width, height);
-			el.draw(g);
+			jls.edit.ElementRenderers.draw(g, el);
 			g.dispose();
 			RenderAssert.assertPaintsWithinBounds(image, BACKGROUND,
 					grown(el), el.getClass().getSimpleName());

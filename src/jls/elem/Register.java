@@ -4,13 +4,8 @@ import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
-import javax.swing.*;
 
 import java.math.*;
 
@@ -67,67 +62,139 @@ public final class Register extends LogicElement
 	/** The direction this register faces (position of D/C inputs vs Q outputs). */
 	private Orientation orientation = Orientation.RIGHT;
 
-	// running properties
-	/** True if the user cancelled the create/modify dialog. */
-	private boolean cancelled;
-	/** True if a modify dialog changed the name to one that no longer fits the box. */
-	private boolean nameChanged;
-	
 	/**
 	 * Create a new register element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Register(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The direction this register faces (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new RegisterEdit(true);
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
+	/**
+	 * Set the name (issue #77: applied by the GUI-side dialog after the
+	 * circuit's name table has been updated).
+	 *
+	 * @param name The new name.
+	 */
+	public void setName(String name) {
+
+		this.name = name;
+	} // end of setName method
+
+	/**
+	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param bits The new number of bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * The radix used to display/enter the initial value in the edit
+	 * dialog (issue #77: read/written by the GUI-side dialog).
+	 *
+	 * @return the current display radix.
+	 */
+	public int getBase() {
+
+		return base;
+	} // end of getBase method
+
+	/**
+	 * Set the display radix (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param base The new display radix.
+	 */
+	public void setBase(int base) {
+
+		this.base = base;
+	} // end of setBase method
+
+	/**
+	 * Set the trigger type by its save-file name: "latch", "pff" or "nff"
+	 * (issue #77: applied by the GUI-side dialog). Unknown strings leave
+	 * the type unchanged, as the file loader does.
+	 *
+	 * @param v The type name.
+	 */
+	public void setTypeName(String v) {
+
+		if (v.equals("latch"))
+			type = Type.Latch;
+		else if (v.equals("pff"))
+			type = Type.PosFF;
+		else if (v.equals("nff"))
+			type = Type.NegFF;
+	} // end of setTypeName method
+
+	/**
+	 * Apply a new initial value and reset the displayed current value to
+	 * it (issue #77: applied by the GUI-side dialog, mirroring the file
+	 * loader).
+	 *
+	 * @param value The new initial value.
+	 */
+	public void applyInitialValue(BigInteger value) {
+
+		initialValue = value.add(BigInteger.ZERO);
+		currentValue = BitSetUtils.Create(initialValue);
+	} // end of applyInitialValue method
+
+	/**
+	 * Detach wires and recompute size after a modify grew the name past
+	 * the box (issue #77: called by the GUI-side dialog in place of the
+	 * former {@code change} resize block).
+	 *
+	 * @param g The Graphics object to use for sizing.
+	 */
+	public void resizeForNewName(java.awt.Graphics g) {
+
+		detach();
+		width = 0;
+		height = 0;
 		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	} // end of resizeForNewName method
+
 	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(java.awt.Graphics g) {
+
 		// set up size if there is a graphics object
 		if (g != null) {
-			
+
 			if (width == 0 && height == 0) {
 				int s = Geometry.SPACING;
-				FontMetrics fm = g.getFontMetrics();
+				java.awt.FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(" " + name + " ");
 				width = Math.max((w+s/2)/s*s,2*s)+2*s;
 				if(width % (2*s) != 0)
@@ -189,318 +256,7 @@ public final class Register extends LogicElement
 			outputs.add(new Output("notQ",this,width-s,height,bits));
 		}
 	} // end of init method
-	
-	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw watched background
-		int s = Geometry.SPACING;
-		if (watched) {
-			
-			g.setColor(JLSInfo.watchColor);
-			if(orientation == Orientation.RIGHT)
-			{
-				g.fillRect(x+s,y,width-s,height);
-			}
-			else if(orientation == Orientation.LEFT)
-			{
-				g.fillRect(x,y,width-s,height);
-			}
-			else if(orientation == Orientation.UP)
-			{
-				g.fillRect(x,y,width,height-s);
-			}
-			else if(orientation == Orientation.DOWN)
-			{
-				g.fillRect(x,y+s,width,height-s);
-			}
-		}
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		
-		if(orientation == Orientation.RIGHT)
-		{
-		
-			g.drawRect(x+s,y,width-s,5*s);
-			
-			// draw name inside box
-			FontMetrics fm = g.getFontMetrics();
-			Rectangle2D t = fm.getStringBounds(name,g);
-			double tw = t.getWidth();
-			double th = t.getHeight();
-			int dx = (int)((width-s-tw)/2)+s;
-			int dy = (int)((5*s-th)/2+fm.getAscent());
-			g.drawString(name,x+dx,y+dy);
-			
-			// draw D input, line to it and label
-			Input one = inputs.get(0);
-			int lx = one.getX();
-			int ly = one.getY();
-			g.setColor(Color.black);
-			g.drawLine(lx,ly,lx+s,ly);
-			int h = fm.getAscent()+fm.getDescent();
-			g.drawString("D",lx+s+1,ly-h/2+fm.getAscent());
-			one.draw(g);
-		
-			// draw C input, line to it, label and type
-			Input two = inputs.get(1);
-			lx = two.getX();
-			ly = two.getY();
-			int d = Geometry.POINT_DIAMETER;
-			g.setColor(Color.black);
-			switch (type) {
-			case Latch:
-				g.drawLine(lx,ly,lx+s,ly);
-				g.drawString("C",lx+s+1,ly-h/2+fm.getAscent());
-				break;
-			case PosFF:
-				g.drawLine(lx,ly,lx+s,ly);
-				g.drawLine(lx+s,ly-d,lx+s+d,ly);
-				g.drawLine(lx+s,ly+d,lx+s+d,ly);
-				g.drawString("C",lx+s+d+1,ly-h/2+fm.getAscent());
-				break;
-			case NegFF:
-				g.drawLine(lx,ly,lx+s-d,ly);
-				g.drawOval(lx+s-d,ly-d/2,d,d);
-				g.drawLine(lx+s,ly-d,lx+s+d,ly);
-				g.drawLine(lx+s,ly+d,lx+s+d,ly);
-				g.drawString("C",lx+s+d+1,ly-h/2+fm.getAscent());
-				break;
-			}
-			two.draw(g);
-		
-			// draw Q output and label
-			Output three = outputs.get(0);
-			lx = three.getX();
-			ly = three.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")-1,ly-h/2+fm.getAscent());
-			three.draw(g);
-		
-			// draw notQ output and label
-			Output four = outputs.get(1);
-			lx = four.getX();
-			ly = four.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")-1,ly-h/2+fm.getAscent());
-			g.drawLine(lx-fm.stringWidth("Q")-1,ly-h/2,lx-2,ly-h/2);
-			four.draw(g);
-		}
-		else if(orientation == Orientation.LEFT)
-		{
-			g.drawRect(x,y,width-s,5*s);
-			
-			// draw name inside box
-			FontMetrics fm = g.getFontMetrics();
-			Rectangle2D t = fm.getStringBounds(name,g);
-			double tw = t.getWidth();
-			double th = t.getHeight();
-			int dx = (int)((width-s-tw)/2);
-			int dy = (int)((5*s-th)/2+fm.getAscent());
-			g.drawString(name,x+dx,y+dy);
-			
-			// draw D input, line to it and label
-			Input one = inputs.get(0);
-			int lx = one.getX();
-			int ly = one.getY();
-			g.setColor(Color.black);
-			g.drawLine(lx,ly,lx-s,ly);
-			int h = fm.getAscent()+fm.getDescent();
-			g.drawString("D",lx-s-10,ly-h/2+fm.getAscent());
-			one.draw(g);
-			
-			// draw C input, line to it, label and type
-			Input two = inputs.get(1);
-			lx = two.getX();
-			ly = two.getY();
-			int d = Geometry.POINT_DIAMETER;
-			g.setColor(Color.black);
-			switch (type) {
-			case Latch:
-				g.drawLine(lx,ly,lx-s,ly);
-				g.drawString("C",lx-s-10,ly-h/2+fm.getAscent());
-				break;
-			case PosFF:
-				g.drawLine(lx,ly,lx-s,ly);
-				g.drawLine(lx-s,ly-d,lx-s-d,ly);
-				g.drawLine(lx-s,ly+d,lx-s-d,ly);
-				g.drawString("C",lx-s-d-9,ly-h/2+fm.getAscent());
-				break;
-			case NegFF:
-				g.drawLine(lx,ly,lx-s+d,ly);
-				g.drawOval(lx-s,ly-d/2,d,d);
-				g.drawLine(lx-s,ly-d,lx-s-d,ly);
-				g.drawLine(lx-s,ly+d,lx-s-d,ly);
-				g.drawString("C",lx-s-d-9,ly-h/2+fm.getAscent());
-				break;
-			}
-			two.draw(g);
-			
-			// draw Q output and label
-			Output three = outputs.get(0);
-			lx = three.getX();
-			ly = three.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx+3,ly-h/2+fm.getAscent());
-			three.draw(g);
-			
-			// draw notQ output and label
-			Output four = outputs.get(1);
-			lx = four.getX();
-			ly = four.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx+3,ly-h/2+fm.getAscent());
-			g.drawLine(lx+fm.stringWidth("Q")+2,ly-h/2,lx+2,ly-h/2);
-			four.draw(g);
-		}
-		else if(orientation == Orientation.UP)
-		{
-			g.drawRect(x,y,width,height-s);
-			
-			// draw name inside box
-			FontMetrics fm = g.getFontMetrics();
-			Rectangle2D t = fm.getStringBounds(name,g);
-			double tw = t.getWidth();
-			double th = t.getHeight();
-			int dx = (int)((width-tw)/2);
-			int dy = (int)((5*s-th)/2+fm.getAscent());
-			g.drawString(name,x+dx,y+dy);
-			
-			// draw D input, line to it and label
-			Input one = inputs.get(0);
-			int lx = one.getX();
-			int ly = one.getY();
-			g.setColor(Color.black);
-			g.drawLine(lx,ly,lx,ly-s);
-			int h = fm.getAscent()+fm.getDescent();
-			g.drawString("D",lx-fm.stringWidth("D")/2,ly-s-h+fm.getAscent());
-			one.draw(g);
-			
-			// draw C input, line to it, label and type
-			Input two = inputs.get(1);
-			lx = two.getX();
-			ly = two.getY();
-			int d = Geometry.POINT_DIAMETER;
-			g.setColor(Color.black);
-			switch (type) {
-			case Latch:
-				g.drawLine(lx,ly-s,lx,ly);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly-s-h+fm.getAscent());
-				break;
-			case PosFF:
-				g.drawLine(lx,ly-s,lx,ly);
-				g.drawLine(lx-d,ly-s,lx,ly-s-d);
-				g.drawLine(lx+d,ly-s,lx,ly-s-d);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly-s-d-h+fm.getAscent());
-				break;
-			case NegFF:
-				g.drawLine(lx,ly-s+d,lx,ly);
-				g.drawOval(lx-d/2, ly-s, d, d);
-				g.drawLine(lx-d,ly-s,lx,ly-s-d);
-				g.drawLine(lx+d,ly-s,lx,ly-s-d);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly-s-d-h+fm.getAscent());
-				break;
-			}
-			two.draw(g);
-			
-			// draw Q output and label
-			Output three = outputs.get(0);
-			lx = three.getX();
-			ly = three.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly+d+fm.getAscent());
-			three.draw(g);
-			
-			// draw notQ output and label
-			Output four = outputs.get(1);
-			lx = four.getX();
-			ly = four.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly+d+fm.getAscent());
-			g.drawLine(lx-fm.stringWidth("Q")/2,ly+d-1,lx+fm.stringWidth("Q")/2,ly+d-1);
-			four.draw(g);
 
-		}
-		else if(orientation == Orientation.DOWN)
-		{
-			g.drawRect(x,y+s,width,height-s);
-			
-			// draw name inside box
-			FontMetrics fm = g.getFontMetrics();
-			Rectangle2D t = fm.getStringBounds(name,g);
-			double tw = t.getWidth();
-			double th = t.getHeight();
-			int dx = (int)((width-tw)/2);
-			int dy = (int)((5*s-th)/2+fm.getAscent());
-			g.drawString(name,x+dx,y+s+dy);
-			
-			// draw D input, line to it and label
-			Input one = inputs.get(0);
-			int lx = one.getX();
-			int ly = one.getY();
-			g.setColor(Color.black);
-			g.drawLine(lx,ly+s,lx,ly);
-			int h = fm.getAscent()+fm.getDescent();
-			g.drawString("D",lx-fm.stringWidth("D")/2,ly+s+1+fm.getAscent());
-			one.draw(g);
-			
-			// draw C input, line to it, label and type
-			Input two = inputs.get(1);
-			lx = two.getX();
-			ly = two.getY();
-			int d = Geometry.POINT_DIAMETER;
-			g.setColor(Color.black);
-			switch (type) {
-			case Latch:
-				g.drawLine(lx,ly+s,lx,ly);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly+s+1+fm.getAscent());
-				break;
-			case PosFF:
-				g.drawLine(lx,ly+s,lx,ly);
-				g.drawLine(lx-d,ly+s,lx,ly+s+d);
-				g.drawLine(lx+d,ly+s,lx,ly+s+d);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly+s+d+fm.getAscent());
-				break;
-			case NegFF:
-				g.drawLine(lx,ly+s-d,lx,ly);
-				g.drawOval(lx-d/2,ly+s-d,d,d);
-				g.drawLine(lx-d,ly+s,lx,ly+s+d);
-				g.drawLine(lx+d,ly+s,lx,ly+s+d);
-				g.drawString("C",lx-fm.stringWidth("C")/2,ly+s+d+fm.getAscent());
-				break;
-			}
-			two.draw(g);
-			
-			// draw Q output and label
-			Output three = outputs.get(0);
-			lx = three.getX();
-			ly = three.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly-h+fm.getAscent());
-			three.draw(g);
-			
-			// draw notQ output and label
-			Output four = outputs.get(1);
-			lx = four.getX();
-			ly = four.getY();
-			g.setColor(Color.black);
-			g.drawString("Q",lx-fm.stringWidth("Q")/2,ly-h+fm.getAscent());
-			g.drawLine(lx-fm.stringWidth("Q")/2,ly-h,lx+fm.stringWidth("Q")/2,ly-h);
-			four.draw(g);
-			
-		}
-		
-	} // end of draw method
-	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** This element's own saved attributes (name, bits, init, orient, delay, type, watch). */
@@ -690,7 +446,7 @@ public final class Register extends LogicElement
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		String ty = "";
 		switch (type) {
@@ -843,7 +599,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g) {
+	public void rotate(Orientation direction, java.awt.Graphics g) {
 		
 		if(direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
@@ -884,7 +640,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g) {
+	public void flip(java.awt.Graphics g) {
 		
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -895,330 +651,6 @@ public final class Register extends LogicElement
 	} // end of flip method
 
 	/**
-	 * Dialog box to create/modify register characteristics.
-	 */
-	private class RegisterEdit extends ElementDialog implements ActionListener {
-
-		// properties
-		/** Text field for the register's name. */
-		private JTextField nameField = new JTextField(name);
-		/** Text field for the number of bits. */
-		private JTextField bitsField = new JTextField(bits+"");
-		/** Text field for the initial value. */
-		private JTextField valueField = new JTextField("");
-		/** Keypad for entering the number of bits. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,bits,this);
-		/** Keypad for entering the initial value. */
-		private KeyPad valuePad = new KeyPad(valueField,16,initialValue.longValue(),this);
-		/** Radio button selecting binary display of the initial value. */
-		private JRadioButton base2 = new JRadioButton("2");
-		/** Radio button selecting decimal display of the initial value. */
-		private JRadioButton base10 = new JRadioButton("10");
-		/** Radio button selecting hexadecimal display of the initial value. */
-		private JRadioButton base16 = new JRadioButton("16");
-		/** Radio button selecting a level-triggered latch. */
-		private JRadioButton latch = new JRadioButton("Level-Trig");
-		/** Radio button selecting a positive-edge triggered flip-flop. */
-		private JRadioButton posFF = new JRadioButton("Pos-Trig");
-		/** Radio button selecting a negative-edge triggered flip-flop. */
-		private JRadioButton negFF = new JRadioButton("Neg-Trig");
-		/** Radio button selecting leftward orientation. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Radio button selecting rightward orientation. */
-		private JRadioButton right = new JRadioButton("Right");
-		/** Radio button selecting upward orientation. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Radio button selecting downward orientation. */
-		private JRadioButton down = new JRadioButton("Down");
-		/** True if creating a new register, false if modifying an existing one. */
-		private boolean creating;
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 * @param creating True if creating, false if modifying.
-		 */
-		private RegisterEdit(boolean creating) {
-			
-			// set up window title
-			super("Create Register","register");
-
-			// set not cancelled
-			cancelled = false;
-
-			// save create/modify
-			this.creating = creating;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up types
-			JLabel tlbl = new JLabel("Trigger");
-			tlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(tlbl);
-			JPanel types = new JPanel(new GridLayout(1,3));
-			types.add(latch);
-			latch.setToolTipText("Level-triggered");
-			types.add(posFF);
-			posFF.setToolTipText("{positive,leading,rising}-edge-triggered");
-			types.add(negFF);
-			negFF.setToolTipText("{negative,trailing,falling}-edge-triggered");
-			switch (type) {
-			case Latch:
-				latch.setSelected(true);
-				break;
-			case PosFF:
-				posFF.setSelected(true);
-				break;
-			case NegFF:
-				negFF.setSelected(true);
-				break;
-			}
-			latch.setHorizontalAlignment(SwingConstants.CENTER);
-			posFF.setHorizontalAlignment(SwingConstants.CENTER);
-			negFF.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup tgroup = new ButtonGroup();
-			tgroup.add(latch);
-			tgroup.add(posFF);
-			tgroup.add(negFF);
-			window.add(types);
-			
-			// set up inputs
-			int rows = 2;
-			if (creating) {
-				rows = 3;
-			}
-			window.add(new JLabel(" "));
-			JPanel info = new JPanel(new BorderLayout());
-			JPanel labels = new JPanel(new GridLayout(rows,1,1,5));
-			JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
-			labels.add(name);
-			if (creating) {
-				JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
-				labels.add(bits);
-			}
-			JLabel init = new JLabel("Initial value: ",SwingConstants.RIGHT);
-			labels.add(init);
-			info.add(labels,BorderLayout.WEST);
-			
-			JPanel fields = new JPanel(new GridLayout(rows,1,1,5));
-			fields.add(nameField);
-			if (creating) {
-				JPanel b = new JPanel(new BorderLayout());
-				b.add(bitsField,BorderLayout.CENTER);
-				b.add(bitsPad,BorderLayout.EAST);
-				fields.add(b);
-			}
-			JPanel i = new JPanel(new BorderLayout());
-			valueField.setText(Util.convert(initialValue,base,false));
-			i.add(valueField,BorderLayout.CENTER);
-			i.add(valuePad,BorderLayout.EAST);
-			valuePad.setBase(base);
-			fields.add(i);
-			info.add(fields,BorderLayout.CENTER);
-			window.add(info);
-			
-			// set up radix selection
-			window.add(new JLabel(" "));
-			JLabel rlbl = new JLabel("Radix");
-			rlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(rlbl);
-			JPanel bases = new JPanel(new GridLayout(1,3));
-			bases.add(base2);
-			bases.add(base10);
-			bases.add(base16);
-			base2.setHorizontalAlignment(SwingConstants.CENTER);
-			base10.setHorizontalAlignment(SwingConstants.CENTER);
-			base16.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup group = new ButtonGroup();
-			group.add(base2);
-			group.add(base10);
-			group.add(base16);
-			switch (base) {
-			case 2:
-				base2.setSelected(true);
-				break;
-			case 10:
-				base10.setSelected(true);
-				break;
-			case 16:
-				base16.setSelected(true);
-				break;
-			}
-			window.add(bases);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			switch(orientation) {
-			case LEFT:
-				left.setSelected(true);
-				break;
-			case RIGHT:
-				right.setSelected(true);
-				break;
-			case UP:
-				up.setSelected(true);
-				break;
-			case DOWN:
-				down.setSelected(true);
-				break;
-			}
-			window.add(orients);
-
-			base2.addActionListener(this);
-			base10.addActionListener(this);
-			base16.addActionListener(this);
-
-			confirmOnEnter(nameField);
-			confirmOnEnter(bitsField);
-			confirmOnEnter(valueField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and apply it to the register.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			String tname = nameField.getText().trim();
-			if (tname.isEmpty() || !Util.isValidName(tname)) {
-				reject("Missing or invalid name");
-				return;
-			}
-			int tbits = bits;
-			BigInteger tinitialValue = BigInteger.ZERO;
-			if(left.isSelected())
-			{
-				orientation = Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = Orientation.DOWN;
-			}
-			try {
-				if (creating) {
-					tbits = Integer.parseInt(bitsField.getText());
-				}
-				tinitialValue = new BigInteger(valueField.getText(),base);
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric");
-				return;
-			}
-			if (tbits < 1) {
-				reject("Must have at least 1 bit");
-				return;
-			}
-			if (tinitialValue.bitLength() > tbits) {
-				reject("Value too large for number of bits");
-				return;
-			}
-			if (!creating) {
-				circuit.removeName(name);
-			}
-			if (!circuit.addName(tname)) {
-				reject("Duplicate name");
-				return;
-			}
-			name = tname;
-			bits = tbits;
-			initialValue = tinitialValue.add(BigInteger.ZERO);
-			currentValue = BitSetUtils.Create(initialValue);
-			if (latch.isSelected())
-				type = Register.Type.Latch;
-			else if (negFF.isSelected())
-				type = Register.Type.NegFF;
-			else
-				type = Register.Type.PosFF;
-			bitsPad.close();
-			valuePad.close();
-			circuit.markChanged();
-			if (!creating && !valueFits(tname)) {
-				nameChanged = true;
-			}
-			else {
-				nameChanged = false;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * React to radix buttons.
-		 *
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == base2) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 2;
-				valuePad.setBase(2);
-				valueField.setText(val.toString(2));
-			}
-			else if (event.getSource() == base10) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 10;
-				valuePad.setBase(10);
-				valueField.setText(val.toString(10));
-			}
-			else if (event.getSource() == base16) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 16;
-				valuePad.setBase(16);
-				valueField.setText(val.toString(16));
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of RegisterEdit class
-	
-	/**
 	 * Registers can be modified.
 	 * 
 	 * @return true.
@@ -1228,58 +660,6 @@ public final class Register extends LogicElement
 		
 		return true;
 	} // end of canChange method
-	
-	/** Graphics object saved by change() for use by the valueFits method. */
-	private Graphics saveg;
-
-	/**
-	 * Show change dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return true if the name has grown, false if not.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-	
-		// save g for valueFits method
-		saveg = g;
-		
-		// display dialog
-		new RegisterEdit(false);
-		
-		// if element got bigger, detach and make user re-position
-		if (nameChanged) {
-			detach();
-			width = 0;
-			height = 0;
-			init(g);
-			return true;
-		}
-		
-		return false;
-	
-	} // end of change method
-	
-	/**
-	 * See if the given value fits in the box on the screen.
-	 * 
-	 * @param value The value to check.
-	 * 
-	 * @return true if it fits, false if not.
-	 */
-	public boolean valueFits(String value) {
-		
-		int s = Geometry.SPACING;
-		FontMetrics fm = saveg.getFontMetrics();
-		int w = fm.stringWidth(value)+s;
-		int rw = Math.max((w+s/2)/s*s,2*s);
-		return rw <= (width-s);
-		
-	} // end of valueFits method
 	
 	/**
 	 * A register can be watched.
@@ -1462,7 +842,7 @@ public final class Register extends LogicElement
 	 * @param where Unused.
 	 */
 	@Override
-	public void showCurrentValue(Point where) {
+	public void showCurrentValue(java.awt.Point where) {
 		
 		String hex = BitSetUtils.ToString(currentValue,16);
 		String unsigned = BitSetUtils.ToString(currentValue,10);

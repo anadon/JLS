@@ -42,6 +42,53 @@ final class BuiltinElementRenderers {
 		ElementDialogs.register(jls.elem.SigGen.class, new SigGenDialog(true));
 		ElementDialogs.registerChange(jls.elem.SigGen.class,
 				new SigGenDialog(false));
+		// Clock
+		ElementRenderers.register(jls.elem.Clock.class, new ClockRenderer());
+		ElementDialogs.register(jls.elem.Clock.class, new ClockDialog(true));
+		ElementDialogs.registerChange(jls.elem.Clock.class,
+				new ClockDialog(false));
+		// Constant
+		ElementRenderers.register(jls.elem.Constant.class,
+				new ConstantRenderer());
+		ElementDialogs.register(jls.elem.Constant.class,
+				new ConstantDialog(true));
+		ElementDialogs.registerChange(jls.elem.Constant.class,
+				new ConstantDialog(false));
+		// Decoder
+		ElementRenderers.register(jls.elem.Decoder.class, new DecoderRenderer());
+		ElementDialogs.register(jls.elem.Decoder.class, new DecoderDialog());
+		// Display
+		ElementRenderers.register(jls.elem.Display.class, new DisplayRenderer());
+		ElementDialogs.register(jls.elem.Display.class, new DisplayDialog());
+		// Mux
+		ElementRenderers.register(jls.elem.Mux.class, new MuxRenderer());
+		ElementDialogs.register(jls.elem.Mux.class, new MuxDialog());
+		// Memory
+		ElementRenderers.register(jls.elem.Memory.class, new MemoryRenderer());
+		ElementDialogs.register(jls.elem.Memory.class, new MemoryDialog(true));
+		ElementDialogs.registerChange(jls.elem.Memory.class,
+				new MemoryDialog(false));
+		// Register
+		ElementRenderers.register(jls.elem.Register.class, new RegisterRenderer());
+		ElementDialogs.register(jls.elem.Register.class, new RegisterDialog(true));
+		ElementDialogs.registerChange(jls.elem.Register.class,
+				new RegisterDialog(false));
+		// Text
+		ElementRenderers.register(jls.elem.Text.class, new TextRenderer());
+		ElementDialogs.register(jls.elem.Text.class, new TextDialog(true));
+		ElementDialogs.registerChange(jls.elem.Text.class,
+				new TextDialog(false));
+		// SubCircuit
+		ElementRenderers.register(jls.elem.SubCircuit.class,
+				new SubCircuitRenderer());
+		ElementDialogs.register(jls.elem.SubCircuit.class,
+				new SubCircuitDialog());
+		// Stop
+		ElementRenderers.register(jls.elem.Stop.class, new StopRenderer());
+		ElementDialogs.register(jls.elem.Stop.class, new StopDialog());
+		// Pause
+		ElementRenderers.register(jls.elem.Pause.class, new PauseRenderer());
+		ElementDialogs.register(jls.elem.Pause.class, new PauseDialog());
 	} // end of install method
 
 } // end of BuiltinElementRenderers class

@@ -3,26 +3,20 @@ package jls.elem;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
-import jls.edit.*;
 import jls.sim.*;
-import jls.util.Placement;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
 import java.io.*;
-
-import javax.swing.*;
 
 import java.math.*;
 import java.util.*;
 
 /**
  * Constant output value.
- * 
+ *
  * @author David A. Poplawski
  */
-public final class Constant extends LogicElement implements ActionListener {
+public final class Constant extends LogicElement
+		implements java.awt.event.ActionListener {
 	
 	// named constants
 	/** Default constant value. */
@@ -45,72 +39,33 @@ public final class Constant extends LogicElement implements ActionListener {
 	private static int previousBase = defaultBase;
 	/** Orientation of the previously created constant. */
 	private static Orientation previousOrientation = Orientation.RIGHT;
-	/** True if the creation or change dialog was cancelled. */
-	private boolean cancelled;
-	/** True if a changed value no longer fits, so the element must resize. */
-	private boolean changed;
-	
+
 	/**
 	 * Create a new constant element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Constant(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
-	/**
-	 * Display dialog to get value and bits.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new ConstantCreate();
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// save values for next create
-		previousValue = value;
-		previousBase = base;
-		previousOrientation = orientation;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+
 	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(java.awt.Graphics g) {
+
 		int s = Geometry.SPACING;
 		// set up size if there is a graphics object
 		if (g != null) {
-			
+
 			// if element already has a size, use it
 			if (width == 0 && height == 0) {
-				FontMetrics fm = g.getFontMetrics();
+				java.awt.FontMetrics fm = g.getFontMetrics();
 				int w = fm.stringWidth(Util.convert(value,base,true))+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
 				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
@@ -142,47 +97,7 @@ public final class Constant extends LogicElement implements ActionListener {
 			outputs.add(new Output("output",this,width/2,height,0));
 		}
 	} // end of init method
-	
-	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		Graphics2D gg = (Graphics2D)g;
-		Rectangle r = getRect();
-		gg.setColor(Color.BLACK);
-		Rectangle drawn = new Rectangle(r.x,r.y,r.width,r.height);
-		gg.draw(drawn);
-		
-		// draw value inside box
-		FontMetrics fm = g.getFontMetrics();
-		String str = Util.convert(value,base,true);
-		Rectangle2D t = fm.getStringBounds(str,g);
-		double tw = t.getWidth();
-		double th = t.getHeight();
-		int dx = (int)((r.width-tw)/2);
-		int dy = (int)((r.height-th)/2+fm.getAscent());
-		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
-		{
-			g.drawString(str,x+dx,y-Geometry.SPACING/2+dy);
-		}
-		else
-		{
-			g.drawString(str,x+dx,y+dy);
-		}
-		
-		// draw output
-		outputs.get(0).draw(g);
-		
-	} // end of draw method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** The persistence attributes specific to constants. */
@@ -305,41 +220,108 @@ public final class Constant extends LogicElement implements ActionListener {
 	} // end of getValue method
 
 	/**
+	 * Set the value of this constant (for the relocated creation/change
+	 * dialog, issue #77).
+	 *
+	 * @param value The new value.
+	 */
+	public void setValue(BigInteger value) {
+
+		this.value = value;
+	} // end of setValue method
+
+	/**
+	 * Get the display radix of this constant (for the relocated
+	 * creation/change dialog and renderer, issue #77).
+	 *
+	 * @return the base.
+	 */
+	public int getBase() {
+
+		return base;
+	} // end of getBase method
+
+	/**
+	 * Set the display radix of this constant (for the relocated
+	 * creation/change dialog, issue #77).
+	 *
+	 * @param base The new base.
+	 */
+	public void setBase(int base) {
+
+		this.base = base;
+	} // end of setBase method
+
+	/**
+	 * Get the orientation of this constant (for the relocated creation
+	 * dialog and renderer, issue #77).
+	 *
+	 * @return the orientation.
+	 */
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the orientation of this constant (for the relocated creation
+	 * dialog, issue #77).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
+	/**
 	 * Display info about this element.
 	 *
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 
 		info.setText("a constant value");
 	} // end of showInfo method
-	
+
 	/**
 	 * Get the rectangle bounding this element.
-	 * 
+	 *
 	 * @return the rectangle bounding this element.
 	 */
 	@Override
-	public Rectangle getRect() {
+	public java.awt.Rectangle getRect() {
 		if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 		{
-			return new Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
+			return new java.awt.Rectangle(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 		}
 		else
-			return new Rectangle(x,y,width,height);
-			
+			return new java.awt.Rectangle(x,y,width,height);
+
 	} // end of getRect method
-	
+
 	/**
 	 * Set values to those from previous constant element created.
 	 */
 	public void setToPrevious() {
-		
+
 		value = previousValue;
 		base = previousBase;
 		orientation = previousOrientation;
 	} // end of setToPrevious method
+
+	/**
+	 * Save this constant's current value, radix and orientation as the
+	 * defaults for the next constant created (for the relocated creation
+	 * dialog, issue #77).
+	 */
+	public void saveAsPrevious() {
+
+		previousValue = value;
+		previousBase = base;
+		previousOrientation = orientation;
+	} // end of saveAsPrevious method
 	
 	/**
 	 * Tells if a constant is capable of rotatating, can only rotate when output has no attachment.
@@ -357,7 +339,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -389,7 +371,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -397,226 +379,40 @@ public final class Constant extends LogicElement implements ActionListener {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
-	 * Dialog box to set multi-input gate parameters (number of inputs, number of gates).
-	 * Used by all simple gates (nand, and, nor, or, xor, not).
+	 * Detach the constant, reset its size, and re-initialize so it grows
+	 * to fit a newly-entered value (for the relocated change dialog, issue
+	 * #77). This runs the former {@code Constant.change} resize step.
+	 *
+	 * @param g The graphics context used to recompute the size.
 	 */
-	@SuppressWarnings("serial")
-	private class ConstantCreate extends ElementDialog implements ActionListener {
+	public void resizeToFit(java.awt.Graphics g) {
 
-		// properties
-		/** Button to repeat the previously created constant's settings. */
-		private JButton repeat;
-		/** Text field for the constant's value. */
-		private JTextField valueField = new JTextField(defaultValue+"",defaultBase);
-		/** Keypad for the value field. */
-		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
-		/** Binary radix choice. */
-		private JRadioButton base2 = new JRadioButton("2");
-		/** Decimal radix choice. */
-		private JRadioButton base10 = new JRadioButton("10");
-		/** Hexadecimal radix choice. */
-		private JRadioButton base16 = new JRadioButton("16");
-		/** Left orientation choice. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Right orientation choice. */
-		private JRadioButton right = new JRadioButton("Right", true);
-		/** Up orientation choice. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Down orientation choice. */
-		private JRadioButton down = new JRadioButton("Down");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private ConstantCreate() {
-			
-			// set up window title
-			super("Create Constant","const");
+		detach();
+		width = 0;
+		height = 0;
+		init(g);
+	} // end of resizeToFit method
 
-			// set not cancelled
-			cancelled = false;
+	/**
+	 * See if the given value fits in the box on the screen.
+	 *
+	 * @param g The graphics context (for font metrics).
+	 * @param value The value to check.
+	 *
+	 * @return true if it fits, false if not.
+	 */
+	public boolean valueFits(java.awt.Graphics g, String value) {
 
-			// set up window
-			Container window = getContentPane();
+		int s = Geometry.SPACING;
+		java.awt.FontMetrics fm = g.getFontMetrics();
+		int w = fm.stringWidth(value)+s;
+		int rw = Math.max((w+s/2)/s*s,2*s);
+		return rw <= width;
 
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel inputs = new JLabel("Value: ",SwingConstants.RIGHT);
-			info.add(inputs,BorderLayout.WEST);
-			info.add(valueField,BorderLayout.CENTER);
-			info.add(valuePad,BorderLayout.EAST);
-			valuePad.setBase(10);
-			window.add(info);
-			
-			// set up radix selection
-			window.add(new JLabel(" "));
-			JLabel rlbl = new JLabel("Radix");
-			rlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(rlbl);
-			JPanel bases = new JPanel(new GridLayout(1,3));
-			bases.add(base2);
-			bases.add(base10);
-			bases.add(base16);
-			base2.setHorizontalAlignment(SwingConstants.CENTER);
-			base10.setHorizontalAlignment(SwingConstants.CENTER);
-			base16.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup group = new ButtonGroup();
-			group.add(base2);
-			group.add(base10);
-			group.add(base16);
-			base10.setSelected(true);
-			window.add(bases);
-			
-			// set up repeat
-			window.add(new JLabel(" "));
-			JPanel rep = new JPanel();
-			repeat = new JButton("Repeat Previous Value");
-			repeat.setBackground(Color.yellow);
-			rep.add(repeat);
-			window.add(rep);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			window.add(orients);
+	} // end of valueFits method
 
-			repeat.addActionListener(this);
-			base2.addActionListener(this);
-			base10.addActionListener(this);
-			base16.addActionListener(this);
-
-			confirmOnEnter(valueField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and set the constant's value.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				value = new BigInteger(valueField.getText(),base);
-				//bits = Integer.parseInt(bitsField.getText());
-				if(left.isSelected())
-				{
-					orientation = Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = Orientation.RIGHT;
-				}
-				else if(up.isSelected())
-				{
-					orientation = Orientation.UP;
-				}
-				else if(down.isSelected())
-				{
-					orientation = Orientation.DOWN;
-				}
-
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * React to repeat and radix buttons.
-		 *
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == repeat) {
-				setToPrevious();
-				base2.setSelected(false);
-				base10.setSelected(false);
-				base16.setSelected(false);
-				if (base == 2)
-					base2.setSelected(true);
-				else if (base == 10)
-					base10.setSelected(true);
-				else {
-					base16.setSelected(true);
-				}
-				valueField.setText(value.toString(base));
-				valuePad.setBase(base);
-				valuePad.reset();
-				System.out.println(orientation);
-				if (orientation == Orientation.LEFT)
-					left.setSelected(true);
-				else if (orientation == Orientation.RIGHT)
-					right.setSelected(true);
-				else if (orientation == Orientation.UP)
-					up.setSelected(true);
-				else
-					down.setSelected(true);
-			}
-			else if (event.getSource() == base2) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 2;
-				valuePad.setBase(2);
-				valueField.setText(val.toString(2));
-			}
-			else if (event.getSource() == base10) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 10;
-				valuePad.setBase(10);
-				valueField.setText(val.toString(10));
-			}
-			else if (event.getSource() == base16) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 16;
-				valuePad.setBase(16);
-				valueField.setText(val.toString(16));
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of ConstantCreate class
-	
 	/**
 	 * Constants can be changed.
 	 * 
@@ -627,228 +423,6 @@ public final class Constant extends LogicElement implements ActionListener {
 		
 		return true;
 	} // end of canChange method
-	
-	/**
-	 * Show change dialog.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return false.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-	
-		// save g for valueFits method
-		saveg = g;
-		
-		// display dialog
-		new ConstantChange();
-		
-		// no change if cancelled
-		if (cancelled)
-			return false;
-		
-		// record a change to the circuit
-		circuit.markChanged();
-		
-		// if bigger, detach and resize
-		if (changed) {
-			detach();
-			width = 0;
-			height = 0;
-			init(g);
-			return true;
-		}
-		
-		// no need to reposition
-		return false;
-	
-	} // end of change method
-	
-	/** Graphics object saved by the change method for use by valueFits. */
-	private Graphics saveg;	// saved by change method, used by valueFits method
-	
-	/**
-	 * See if the given value fits in the box on the screen.
-	 * 
-	 * @param value The value to check.
-	 * 
-	 * @return true if it fits, false if not.
-	 */
-	public boolean valueFits(String value) {
-		
-		int s = Geometry.SPACING;
-		FontMetrics fm = saveg.getFontMetrics();
-		int w = fm.stringWidth(value)+s;
-		int rw = Math.max((w+s/2)/s*s,2*s);
-		return rw <= width;
-		
-	} // end of valueFits method
-	
-	/**
-	 * Display dialog letting user change the value of the constant.
-	 * New value must fit in current element.
-	 */
-	@SuppressWarnings("serial")
-	private class ConstantChange extends ElementDialog implements ActionListener {
-
-		// properties
-		/** Text field for the constant's new value. */
-		private JTextField valueField = new JTextField(Util.convert(value,base,false),10);
-		/** Keypad for the value field. */
-		private KeyPad valuePad = new KeyPad(valueField,16,defaultValue.longValue(),this);
-		/** Binary radix choice. */
-		private JRadioButton base2 = new JRadioButton("2");
-		/** Decimal radix choice. */
-		private JRadioButton base10 = new JRadioButton("10");
-		/** Hexadecimal radix choice. */
-		private JRadioButton base16 = new JRadioButton("16");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private ConstantChange() {
-			
-			// set up window title
-			super("Change Constant","const");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up input
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel inputs = new JLabel("Value: ",SwingConstants.RIGHT);
-			info.add(inputs,BorderLayout.WEST);
-			info.add(valueField,BorderLayout.CENTER);
-			valueField.setText(value.toString(base));
-			valuePad.setBase(base);
-			info.add(valuePad,BorderLayout.EAST);
-			window.add(info);
-			
-			// set up radix selection
-			window.add(new JLabel(" "));
-			JLabel rlbl = new JLabel("Radix");
-			rlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(rlbl);
-			JPanel bases = new JPanel(new GridLayout(1,3));
-			bases.add(base2);
-			bases.add(base10);
-			bases.add(base16);
-			if (base == 2)
-				base2.setSelected(true);
-			else if (base == 10)
-				base10.setSelected(true);
-			else if (base == 16)
-				base16.setSelected(true);
-			valuePad.setBase(base);
-			ButtonGroup group = new ButtonGroup();
-			group.add(base2);
-			group.add(base10);
-			group.add(base16);
-			window.add(bases);
-
-			base2.addActionListener(this);
-			base10.addActionListener(this);
-			base16.addActionListener(this);
-
-			confirmOnEnter(valueField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and change the constant's value.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			// get base
-			if (base2.isSelected())
-				base = 2;
-			else if (base10.isSelected())
-				base = 10;
-			else
-				base = 16;
-
-			// get value
-			BigInteger temp = BigInteger.ZERO;
-			try {
-				temp = new BigInteger(valueField.getText(),base);
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-
-			// cancel if the new value is the same as the old value
-			// (value comparison: == on BigInteger never fired, #51)
-			if (temp.equals(value)) {
-				cancelDialog();
-				return;
-			}
-			value = temp;
-
-			// decide if the element must be redrawn
-			if (!valueFits(Util.convert(temp,base,true))) {
-				changed = true;
-			}
-			else {
-				changed = false;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * React to radix buttons.
-		 *
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == base2) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 2;
-				valuePad.setBase(2);
-				valueField.setText(val.toString(2));
-			}
-			else if (event.getSource() == base10) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 10;
-				valuePad.setBase(10);
-				valueField.setText(val.toString(10));
-			}
-			else if (event.getSource() == base16) {
-				BigInteger val = BigInteger.ZERO;
-				if (!valueField.getText().isEmpty())
-					val = new BigInteger(valueField.getText(),base);
-				base = 16;
-				valuePad.setBase(16);
-				valueField.setText(val.toString(16));
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of ConstantChange class
 	
 	/**
 	 * This element has a quick change ability.
@@ -862,17 +436,17 @@ public final class Constant extends LogicElement implements ActionListener {
 	} // end of quickChange method
 	
 	/** The editor to reset after a quick change. */
-	private SimpleEditor sed;
+	private jls.edit.SimpleEditor sed;
 	/** Quick-change shortcut menu. */
-	private JMenu quick = new JMenu("shortcuts");
+	private javax.swing.JMenu quick = new javax.swing.JMenu("shortcuts");
 	/** Menu item to set the value to 0. */
-	private JMenuItem zero = new JMenuItem("0");
+	private javax.swing.JMenuItem zero = new javax.swing.JMenuItem("0");
 	/** Menu item to set the value to 1. */
-	private JMenuItem one = new JMenuItem("1");
+	private javax.swing.JMenuItem one = new javax.swing.JMenuItem("1");
 	/** Menu item to add 1 to the value. */
-	private JMenuItem plus = new JMenuItem("add 1");
+	private javax.swing.JMenuItem plus = new javax.swing.JMenuItem("add 1");
 	/** Menu item to subtract 1 from the value (but not below 0). */
-	private JMenuItem minus = new JMenuItem("subtract 1");
+	private javax.swing.JMenuItem minus = new javax.swing.JMenuItem("subtract 1");
 	/** True once the quick-change menu has been built. */
 	private boolean menuMade = false;
 	
@@ -882,7 +456,7 @@ public final class Constant extends LogicElement implements ActionListener {
 	 * @return menu.
 	 */
 	@Override
-	public JMenuItem setupQuickMenu(SimpleEditor sed) {
+	public javax.swing.JMenuItem setupQuickMenu(jls.edit.SimpleEditor sed) {
 		
 		if (menuMade)
 			return quick;
@@ -905,8 +479,8 @@ public final class Constant extends LogicElement implements ActionListener {
 	 * @param event The event object for the button push.
 	 */
 	@Override
-	public void actionPerformed(ActionEvent event) {
-		
+	public void actionPerformed(java.awt.event.ActionEvent event) {
+
 		if (event.getSource() == zero) {
 			value = BigInteger.ZERO;
 		}
@@ -920,7 +494,7 @@ public final class Constant extends LogicElement implements ActionListener {
 			value = value.subtract(BigInteger.ONE);
 			value = value.max(BigInteger.ZERO);
 		}
-		Editor ed = Editors.of(getCircuit());
+		jls.edit.Editor ed = jls.edit.Editors.of(getCircuit());
 		if (ed != null) {
 			sed.quickReset();
 			ed.repaint();

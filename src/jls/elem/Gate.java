@@ -416,6 +416,7 @@ public abstract sealed class Gate extends LogicElement
 	 *
 	 * @return the number of gates (bits).
 	 */
+	@Override
 	public int getBits() {
 
 		return bits;

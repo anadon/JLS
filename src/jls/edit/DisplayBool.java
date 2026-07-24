@@ -95,6 +95,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	 *
 	 * @param g The Graphics object to print with.
 	 */
+	@Override
 	public void print(Graphics g) {
 
 		// don't draw anything until there is something to draw

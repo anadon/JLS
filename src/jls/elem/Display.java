@@ -47,6 +47,7 @@ public final class Display extends LogicElement {
 	 *
 	 * @return the number of bits.
 	 */
+	@Override
 	public int getBits() {
 
 		return bits;
@@ -347,6 +348,7 @@ public final class Display extends LogicElement {
 	 *
 	 * @return the current value, or null for HiZ.
 	 */
+	@Override
 	public BitSet getCurrentValue() {
 
 		return currentValue;

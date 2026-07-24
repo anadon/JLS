@@ -63,6 +63,7 @@ public final class DelayGate extends Gate implements Timed {
 	 *
 	 * @param bits The number of gates (bits).
 	 */
+	@Override
 	public void setBits(int bits) {
 
 		this.bits = bits;
@@ -73,6 +74,7 @@ public final class DelayGate extends Gate implements Timed {
 	 *
 	 * @param numInputs The number of inputs.
 	 */
+	@Override
 	public void setNumInputs(int numInputs) {
 
 		this.numInputs = numInputs;
@@ -83,6 +85,7 @@ public final class DelayGate extends Gate implements Timed {
 	 *
 	 * @param orientation The orientation this gate faces.
 	 */
+	@Override
 	public void setOrientation(Orientation orientation) {
 
 		this.orientation = orientation;

@@ -65,7 +65,7 @@ public final class PinDialog implements ElementDialog {
 	 * name with the circuit exactly as the former inner dialog did.
 	 */
 	@SuppressWarnings("serial")
-	private static final class CreateForm extends jls.elem.ElementDialog {
+	private static final class CreateForm extends ElementFormDialog {
 
 		private final Pin pin;
 		private boolean cancelled;

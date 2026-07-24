@@ -94,7 +94,7 @@ public final class JumpEndDialog implements ElementDialog {
 	 * the selected name/bits/orientation to the jump end.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final JumpEnd end;
 		private final Circuit circuit;

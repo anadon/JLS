@@ -56,7 +56,7 @@ public final class SubCircuitDialog implements ElementDialog {
 	 * the subcircuit and applies the entered orientation.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final SubCircuit sc;
 		private boolean cancelled;

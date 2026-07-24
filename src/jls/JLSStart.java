@@ -73,7 +73,7 @@ import jls.elem.OutputPin;
 import jls.elem.Register;
 import jls.elem.SubCircuit;
 import jls.sim.BatchSimulator;
-import jls.sim.InteractiveSimulator;
+import jls.edit.InteractiveSimulator;
 
 import org.jspecify.annotations.Nullable;
 

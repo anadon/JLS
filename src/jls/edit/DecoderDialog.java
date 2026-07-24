@@ -60,7 +60,7 @@ public final class DecoderDialog implements ElementDialog {
 	 * the entered bits/orientation to the decoder.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final Decoder decoder;
 		private boolean cancelled;

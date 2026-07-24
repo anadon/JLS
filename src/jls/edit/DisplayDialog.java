@@ -57,7 +57,7 @@ public final class DisplayDialog implements ElementDialog {
 	 * the entered bits/radix to the display.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final Display disp;
 		private boolean cancelled;

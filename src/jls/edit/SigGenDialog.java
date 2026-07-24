@@ -73,7 +73,7 @@ public final class SigGenDialog implements ElementDialog {
 	 * The signal-specification form.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final SigGen sg;
 		private boolean cancelled;

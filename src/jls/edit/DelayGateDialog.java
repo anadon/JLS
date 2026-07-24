@@ -65,7 +65,7 @@ public final class DelayGateDialog implements ElementDialog {
 	 * the entered delay/bits/orientation to the delay gate.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final DelayGate delay;
 		private boolean cancelled;

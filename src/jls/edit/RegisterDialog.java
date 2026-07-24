@@ -89,7 +89,7 @@ public final class RegisterDialog implements ElementDialog {
 	 * and applies the entered characteristics to the register.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog
+	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
 		private final Register reg;

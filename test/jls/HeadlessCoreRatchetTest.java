@@ -84,12 +84,7 @@ class HeadlessCoreRatchetTest {
 	 * the {@code GeneralPath} translation stayed on the Gate/Swing side
 	 * (issue #77 renderer/model split).
 	 */
-	private static final Set<String> BASELINE = Set.of(
-			"src/jls/Circuit.java",
-			"src/jls/elem/Element.java",
-			"src/jls/elem/ElementDialog.java",
-			"src/jls/sim/InteractiveSimulator.java",
-			"src/jls/sim/Trace.java");
+	private static final Set<String> BASELINE = Set.of();
 
 	@Test
 	void coreCandidatesGainNoForbiddenImports() throws IOException {

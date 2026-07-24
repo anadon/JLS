@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
-import jls.sim.InteractiveSimulator;
+import jls.edit.InteractiveSimulator;
 
 /**
  * Layer-2 interactive-simulator smoke (issue #162, prediction P3):

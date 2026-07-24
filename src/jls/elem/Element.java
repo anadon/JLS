@@ -2,13 +2,8 @@ package jls.elem;
 
 import jls.core.Orientation;
 import jls.*;
-import jls.edit.*;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
-
-import javax.swing.*;
 
 import java.util.*;
 import java.math.*;
@@ -76,7 +71,8 @@ public abstract sealed class Element
 	 *
 	 * @jls.testedby jls.ui.DialogConstructionSmokeTest#constructAndCancel()
 	 */
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
+	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
+			int x, int y) {
 
 		return false;
 	} // end of init method
@@ -428,7 +424,7 @@ public abstract sealed class Element
 	 *
 	 * @throws Exception always, unless overridden by a subclass.
 	 */
-	public void init(Graphics g) throws Exception{
+	public void init(java.awt.Graphics g) throws Exception{
 		throw new Exception("ERROR: using undefined function from " + this.getName());
 	}
 
@@ -516,7 +512,7 @@ public abstract sealed class Element
 	 */
 	public boolean contains(int x, int y) {
 
-		Rectangle thisRect = getRect();
+		java.awt.Rectangle thisRect = getRect();
 		return thisRect.contains(x,y);
 	} // end of contains method
 
@@ -553,8 +549,8 @@ public abstract sealed class Element
 		}
 
 		// simply see if the elements' bounding rectangles intersect
-		Rectangle thisRect = getRect();
-		Rectangle otherRect = other.getRect();
+		java.awt.Rectangle thisRect = getRect();
+		java.awt.Rectangle otherRect = other.getRect();
 		return thisRect.intersects(otherRect);
 	} // end of intersects method
 
@@ -567,9 +563,9 @@ public abstract sealed class Element
 	 *
 	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
 	 */
-	public boolean isInside(Rectangle rect) {
+	public boolean isInside(java.awt.Rectangle rect) {
 
-		Rectangle me = getRect();
+		java.awt.Rectangle me = getRect();
 		return rect.contains(me);
 	} // end of isInside method
 
@@ -690,24 +686,6 @@ public abstract sealed class Element
 	} // end of sizeIsRecomputedOnLoad method
 
 	/**
-	 * Highlight this element on the screen.
-	 * Subclasses draw the element itself.
-	 * 
-	 * @param g The Graphics object to draw with.
-	 *
-	 * @jls.testedby jls.elem.MuxSymbolTest#render()
-	 */
-	public void draw(Graphics g) {
-
-		// highlight if necessary
-		if (highlight) {
-			g.setColor(Color.pink);
-			Graphics2D gg = (Graphics2D)g;
-			gg.fill(getRect());
-		}
-	} // end of draw method
-
-	/**
 	 * This element will be removed, so do whatever is needed.
 	 * 
 	 * @param circ A reference back to the circuit the element is in.
@@ -738,7 +716,7 @@ public abstract sealed class Element
 	 * 
 	 * @param info A JLabel to display with.
 	 */
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 
 	} // end of showInfo method
 
@@ -789,9 +767,9 @@ public abstract sealed class Element
 	 * @jls.testedby jls.ui.GeometryAssert#assertLeftOf()
 	 * @jls.testedby jls.ui.GeometryAssert#assertWithinGridUnits()
 	 */
-	public Rectangle getRect() {
+	public java.awt.Rectangle getRect() {
 
-		return new Rectangle(x,y,width,height);
+		return new java.awt.Rectangle(x,y,width,height);
 	} // end of getRect method
 
 	/**
@@ -808,7 +786,7 @@ public abstract sealed class Element
 	 * @jls.testedby jls.ProofBridgeTest#a5DrawMarginAndMayBeVisibleMatchModel()
 	 * @jls.testedby jls.SpatialIndexTest#bruteForceNear()
 	 */
-	public Rectangle getIndexBounds() {
+	public java.awt.Rectangle getIndexBounds() {
 
 		return getRect();
 	} // end of getIndexBounds method
@@ -859,7 +837,8 @@ public abstract sealed class Element
 	 * 
 	 * @return true if the element did change, false if not.
 	 */
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
+	public boolean change(java.awt.Graphics g, javax.swing.JPanel editWindow,
+			int x, int y) {
 
 		return false;
 	} // end of change method
@@ -886,7 +865,7 @@ public abstract sealed class Element
 	 *
 	 * @throws UnsupportedOperationException if called and not overridden.
 	 */
-	public JMenuItem setupQuickMenu(SimpleEditor sed) {
+	public javax.swing.JMenuItem setupQuickMenu(jls.edit.SimpleEditor sed) {
 
 		throw new UnsupportedOperationException("setupQuickMenu");
 	} // end of setupQuickMenu method
@@ -908,11 +887,11 @@ public abstract sealed class Element
 	 */
 	public void changeTiming() {
 
-		// display dialog; the "access time" vs "propagation delay"
-		// wording is the element's own concern, declared through the
-		// Timed capability (issue #78) rather than a base-class
-		// instanceof branch on a concrete leaf type.
-		new DelayChange(this instanceof Timed t && t.usesAccessTime());
+		// the timing dialog is GUI-side (issue #77); the model routes to
+		// it by fully-qualified reference so it keeps no Swing import. The
+		// "access time" vs "propagation delay" wording is the element's
+		// own concern, declared through the Timed capability (issue #78).
+		jls.edit.DelayChangeDialog.open(this);
 
 	} // end of changeTiming method
 
@@ -946,7 +925,7 @@ public abstract sealed class Element
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		throw new UnsupportedOperationException("Rotate");
 	}
@@ -965,78 +944,10 @@ public abstract sealed class Element
 	 * This method will flip an element, it must be overridden by classes that support it
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		throw new UnsupportedOperationException("Flip");
 	}
-
-	/**
-	 * Display dialog letting user change the propagation delay or access time.
-	 */
-	@SuppressWarnings("serial")
-	private class DelayChange extends ElementDialog {
-
-		// properties
-		/** Field to enter the delay or access time. */
-		private JTextField delayField = new JTextField(10);
-		/** Keypad for the delay field. */
-		private KeyPad delayPad = new KeyPad(delayField,10,0,this);
-
-		/**
-		 * Set up create dialog window.
-		 * 
-		 * @param isMemory True if this is a memory element, false if not.
-		 */
-		private DelayChange(boolean isMemory) {
-
-			// set up window title
-			super("Change Timing",null);
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up input
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel delay;
-			if (isMemory) {
-				delay = new JLabel("Memory access time: ",SwingConstants.RIGHT);
-			}
-			else {
-				delay = new JLabel("Propagation delay: ",SwingConstants.RIGHT);
-			}
-			info.add(delay,BorderLayout.WEST);
-			info.add(delayField,BorderLayout.CENTER);
-			delayField.setText(getDelay()+"");
-			info.add(delayPad,BorderLayout.EAST);
-			window.add(info);
-
-			confirmOnEnter(delayField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate and apply the new delay.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			int temp = 0;
-			try {
-				temp = Integer.parseInt(delayField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (temp <= 0) {
-				reject("Propagation delay must be greater than 0");
-				return;
-			}
-			setDelay(temp);
-			dispose();
-		} // end of validateAndAccept method
-
-	} // end of DelayChange class
 
 	/**
 	 * Get the propagation delay or access time in this element.
@@ -1103,7 +1014,7 @@ public abstract sealed class Element
 	 * 
 	 * @param where The point on the screen to display at.
 	 */
-	public void showCurrentValue(Point where) {
+	public void showCurrentValue(java.awt.Point where) {
 
 	} // end of showCurrent value method
 

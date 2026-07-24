@@ -72,7 +72,7 @@ public final class GroupDialog implements ElementDialog {
 	 * pick the bit groups.
 	 */
 	@SuppressWarnings("serial")
-	private static final class CreateForm extends jls.elem.ElementDialog {
+	private static final class CreateForm extends ElementFormDialog {
 
 		private final Group group;
 		private final String type;
@@ -224,7 +224,7 @@ public final class GroupDialog implements ElementDialog {
 	 * narrow put. Applies the chosen groups to the element in order.
 	 */
 	@SuppressWarnings("serial")
-	private static final class RangesForm extends jls.elem.ElementDialog
+	private static final class RangesForm extends ElementFormDialog
 			implements ActionListener {
 
 		private final Group group;

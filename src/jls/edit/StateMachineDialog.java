@@ -213,7 +213,7 @@ public final class StateMachineDialog implements ElementDialog {
 	 * The state machine editor dialog.
 	 */
 	@SuppressWarnings("serial")
-	private static final class StateEditor extends jls.elem.ElementDialog
+	private static final class StateEditor extends ElementFormDialog
 		implements ActionListener, MouseListener, MouseMotionListener {
 
 		/** The state machine being edited. */
@@ -1267,7 +1267,7 @@ public final class StateMachineDialog implements ElementDialog {
 	 * Create a new state with a name.
 	 */
 	@SuppressWarnings("serial")
-	private static final class CreateState extends jls.elem.ElementDialog {
+	private static final class CreateState extends ElementFormDialog {
 
 		/** The state machine the new state will belong to. */
 		private final StateMachine machine;
@@ -1376,7 +1376,7 @@ public final class StateMachineDialog implements ElementDialog {
 	 * Dialog to create info about a transition.
 	 */
 	@SuppressWarnings("serial")
-	private static final class CreateTrans extends jls.elem.ElementDialog
+	private static final class CreateTrans extends ElementFormDialog
 			implements ActionListener {
 
 		// properties
@@ -1734,7 +1734,7 @@ public final class StateMachineDialog implements ElementDialog {
 	 * Dialog to create outputs for a state.
 	 */
 	@SuppressWarnings("serial")
-	private static final class EditOutputs extends jls.elem.ElementDialog
+	private static final class EditOutputs extends ElementFormDialog
 			implements ActionListener {
 
 		// properties

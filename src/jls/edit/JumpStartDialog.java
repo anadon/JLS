@@ -60,7 +60,7 @@ public final class JumpStartDialog implements ElementDialog {
 	 * applies the entered name/bits/orientation to the jump start.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final JumpStart start;
 		private boolean cancelled;

@@ -140,6 +140,9 @@ final class BuiltinElementRenderers {
 		ElementRenderers.register(jls.elem.Extend.class, gateRenderer);
 		ElementDialogs.register(jls.elem.Extend.class, gateDialog);
 		ElementRenderers.register(jls.elem.DelayGate.class, gateRenderer); // DelayGate keeps its existing DelayGateDialog
+		// ShiftRegister
+		ElementRenderers.register(jls.elem.ShiftRegister.class,
+				new ShiftRegisterRenderer());
 		// Pin family
 		ElementRenderers.register(jls.elem.InputPin.class, new PinRenderer());
 		ElementDialogs.register(jls.elem.InputPin.class, new PinDialog());

@@ -34,7 +34,8 @@ class DialogCoverageRatchetTest {
 	 */
 	private static final Set<String> SWEPT = Set.of(
 			"Adder", "AndGate", "Binder", "Clock", "Constant", "Decoder",
-			"DelayGate", "Display", "Element", "Extend", "InputPin",
+			"DelayChange", "DelayGate", "Display", "Element", "Extend",
+			"InputPin",
 			"JumpEnd", "JumpStart", "Memory", "Mux", "OutputPin",
 			"Register", "ShiftRegister", "SigGen", "Splitter",
 			"StateMachine", "SubCircuit", "Text", "TriState",
@@ -62,8 +63,8 @@ class DialogCoverageRatchetTest {
 				.importPath("target/classes");
 		Set<String> unrepresented = new TreeSet<String>();
 		for (JavaClass c : classes) {
-			if (!c.isAssignableTo("jls.elem.ElementDialog")
-					|| "jls.elem.ElementDialog".equals(c.getName())) {
+			if (!c.isAssignableTo("jls.edit.ElementFormDialog")
+					|| "jls.edit.ElementFormDialog".equals(c.getName())) {
 				continue;
 			}
 			// charge each dialog to the top-level element that owns it.

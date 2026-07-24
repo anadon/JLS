@@ -19,7 +19,7 @@ import javax.swing.event.MouseInputListener;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.edit.Editor;
-import jls.sim.InteractiveSimulator;
+import jls.edit.InteractiveSimulator;
 
 /**
  * Layer-2 gesture harness (issue #91): boots a real {@link Editor} on a

@@ -52,7 +52,7 @@ public final class ElementRenderers {
 		if (renderer != null) {
 			renderer.draw(g, el);
 		} else {
-			el.draw(g);
+			ElementRenderSupport.drawHighlight(g, el);
 		}
 	} // end of draw method
 

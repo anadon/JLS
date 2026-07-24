@@ -92,7 +92,7 @@ public final class GateDialog implements ElementDialog {
 	 * inputs/bits/orientation to the gate.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog
+	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
 		/** The gate being created. */

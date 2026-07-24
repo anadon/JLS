@@ -211,48 +211,16 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	} // end of placement method
 
 	/**
-	 * Draw this shift register.
+	 * The output orientation of this shift register (issue #77: a read-only
+	 * accessor the GUI-side {@code ShiftRegisterRenderer} uses so the "in"
+	 * label placement can leave the model).
 	 *
-	 * @param g The graphics object to draw with.
+	 * @return the output orientation.
 	 */
-	@Override
-	public void draw(java.awt.Graphics g) {
+	public Orientation getOutputOrientation() {
 
-		// draw context
-		jls.edit.ElementRenderSupport.drawHighlight(g, this);
-
-		// draw shape
-		g.setColor(java.awt.Color.black);
-		g.drawRect(x,y,width,height);
-
-		// label the data input so it can't be confused with the
-		// (narrower) amount input
-		java.awt.FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int hi = ascent + fm.getDescent();
-		int d2 = Geometry.POINT_DIAMETER/2;
-		Input data = inputs.get(1);
-		g.setColor(java.awt.Color.BLACK);
-		if(outputOrientation == Orientation.RIGHT)
-		{
-			g.drawString("in",x+d2,data.getY()-hi/2+ascent);
-		}
-		else if(outputOrientation == Orientation.LEFT)
-		{
-			g.drawString("in",x+width-5*d2,data.getY()-hi/2+ascent);
-		}
-		else // UP or DOWN
-		{
-			g.drawString("in",data.getX()-4,y+5*d2);
-		}
-
-		// draw inputs and output
-		for (Input input : inputs) {
-			jls.edit.ElementRenderSupport.drawPut(g, input);
-		}
-		jls.edit.ElementRenderSupport.drawPut(g, outputs.get(0));
-
-	} // end of draw method
+		return outputOrientation;
+	} // end of getOutputOrientation method
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes. The names
@@ -580,7 +548,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	/**
 	 * Dialog box to set bits, shift kind and orientations.
 	 */
-	private class ShiftRegisterCreate extends ElementDialog
+	private class ShiftRegisterCreate extends jls.edit.ElementFormDialog
 			implements java.awt.event.ActionListener {
 
 		// properties
@@ -759,19 +727,19 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		 * (issue #52: the same rule strings the loader rejects with).
 		 */
 		@Override
-		protected java.util.List<Violation> validateInputs() {
+		protected java.util.List<jls.edit.ElementFormDialog.Violation> validateInputs() {
 
 			int newBits;
 			try {
 				newBits = Integer.parseInt(bitsField.getText());
 			}
 			catch (NumberFormatException ex) {
-				return java.util.List.of(new Violation(
+				return java.util.List.of(new jls.edit.ElementFormDialog.Violation(
 						"Value not numeric, try again", bitsField));
 			}
 			String violated = checkBits(newBits);
 			if (violated != null) {
-				return java.util.List.of(new Violation(violated, bitsField));
+				return java.util.List.of(new jls.edit.ElementFormDialog.Violation(violated, bitsField));
 			}
 			return java.util.List.of();
 		} // end of validateInputs method

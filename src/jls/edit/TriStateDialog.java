@@ -61,7 +61,7 @@ public final class TriStateDialog implements ElementDialog {
 	 * are visible.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog
+	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
 		private final TriState ts;

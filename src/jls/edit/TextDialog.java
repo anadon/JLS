@@ -104,7 +104,7 @@ public final class TextDialog implements ElementDialog {
 	 * Dialog to get text information from user.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog
+	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
 		/** The text element being created or edited. */

@@ -1,4 +1,4 @@
-package jls.elem;
+package jls.edit;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -51,7 +51,7 @@ import jls.JLSInfo;
  * surfaces).
  */
 @SuppressWarnings("serial")
-public abstract class ElementDialog extends JDialog {
+public abstract class ElementFormDialog extends JDialog {
 
 	/** The confirm button; also triggered by Enter. */
 	protected final JButton ok = new JButton("OK");
@@ -122,7 +122,7 @@ public abstract class ElementDialog extends JDialog {
 	 * @param helpTopic The help topic id for the Help button, or null for
 	 *            no Help button.
 	 */
-	protected ElementDialog(String title, String helpTopic) {
+	protected ElementFormDialog(String title, String helpTopic) {
 
 		super(JLSInfo.frame, title, true);
 		this.helpTopic = helpTopic;
@@ -362,4 +362,4 @@ public abstract class ElementDialog extends JDialog {
 		dispose();
 	} // end of cancelDialog method
 
-} // end of ElementDialog class
+} // end of ElementFormDialog class

@@ -29,7 +29,7 @@ import jls.elem.TruthTable;
  * @author David A. Poplawski
  */
 @SuppressWarnings("serial")
-public final class TruthTableEditor extends jls.elem.ElementDialog
+public final class TruthTableEditor extends ElementFormDialog
 		implements ActionListener {
 
 	/** Initial width of the edit dialog, in pixels. */

@@ -96,7 +96,7 @@ public final class ConstantDialog implements ElementDialog {
 	 * to the constant through its public setters.
 	 */
 	@SuppressWarnings("serial")
-	private static final class CreateForm extends jls.elem.ElementDialog
+	private static final class CreateForm extends ElementFormDialog
 			implements ActionListener {
 
 		private final Constant c;
@@ -283,7 +283,7 @@ public final class ConstantDialog implements ElementDialog {
 	 * fits and must be resized.
 	 */
 	@SuppressWarnings("serial")
-	private static final class ChangeForm extends jls.elem.ElementDialog
+	private static final class ChangeForm extends ElementFormDialog
 			implements ActionListener {
 
 		private final Constant c;

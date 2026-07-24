@@ -93,7 +93,7 @@ public final class MemoryDialog implements ElementDialog {
 	 * applies the entered values to the memory.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog
+	private static final class Form extends ElementFormDialog
 			implements ActionListener {
 
 		private final Memory mem;

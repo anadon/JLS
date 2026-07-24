@@ -80,7 +80,7 @@ public final class ClockDialog implements ElementDialog {
 	 * clock.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final Clock clock;
 		private boolean cancelled;

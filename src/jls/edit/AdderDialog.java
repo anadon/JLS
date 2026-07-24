@@ -60,7 +60,7 @@ public final class AdderDialog implements ElementDialog {
 	 * the entered bits/orientation to the adder.
 	 */
 	@SuppressWarnings("serial")
-	private static final class Form extends jls.elem.ElementDialog {
+	private static final class Form extends ElementFormDialog {
 
 		private final Adder adder;
 		private boolean cancelled;

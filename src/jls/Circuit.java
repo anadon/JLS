@@ -1,7 +1,5 @@
 package jls;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -567,7 +565,7 @@ public class Circuit {
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
 	 */
-	public Set<Element> elementsNear(Rectangle rect) {
+	public Set<Element> elementsNear(java.awt.Rectangle rect) {
 
 		if (index.isDirty()) {
 			index.rebuild(elements);
@@ -593,7 +591,7 @@ public class Circuit {
 	public Set<Element> elementsAt(int x, int y) {
 
 		int pad = Geometry.SPACING;
-		return elementsNear(new Rectangle(x - pad, y - pad, 2 * pad, 2 * pad));
+		return elementsNear(new java.awt.Rectangle(x - pad, y - pad, 2 * pad, 2 * pad));
 	} // end of elementsAt method
 
 	/**
@@ -1302,7 +1300,7 @@ public class Circuit {
 	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
 	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
-	public boolean finishLoad(@Nullable Graphics g) throws Exception {
+	public boolean finishLoad(java.awt.@Nullable Graphics g) throws Exception {
 
 		// if any exceptions, assume load problem
 		try {
@@ -1430,9 +1428,9 @@ public class Circuit {
 	 * 
 	 * @return the smallest rectangle.
 	 */
-	public Rectangle getBounds() {
+	public java.awt.Rectangle getBounds() {
 
-		Rectangle rect = new Rectangle();
+		java.awt.Rectangle rect = new java.awt.Rectangle();
 		boolean firstTime = true;
 		for (Element el : elements) {
 			if (el instanceof Wire)

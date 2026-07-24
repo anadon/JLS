@@ -71,12 +71,15 @@ class DialogCoverageRatchetTest {
 			// (jls.elem.Clock$ClockCreate -> Clock); dialogs relocated to
 			// the GUI side by the #77 element wave follow the
 			// jls.edit.<Element>Dialog convention
-			// (jls.edit.AdderDialog$Form -> AdderDialog -> Adder).
+			// (jls.edit.AdderDialog$Form -> AdderDialog -> Adder), and a
+			// relocated full edit window is named jls.edit.<Element>Editor
+			// (jls.edit.TruthTableEditor -> TruthTable).
 			String owner = c.getName()
 					.replace("jls.elem.", "")
 					.replace("jls.edit.", "")
 					.replaceAll("[$.].*", "")
-					.replaceAll("Dialog$", "");
+					.replaceAll("Dialog$", "")
+					.replaceAll("Editor$", "");
 			if (!SWEPT.contains(owner)
 					&& !REPRESENTED.containsKey(owner)) {
 				unrepresented.add(owner + " (" + c.getName() + ")");

@@ -1,7 +1,6 @@
 package jls.elem;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.awt.geom.Arc2D;
 import java.awt.geom.CubicCurve2D;
@@ -211,15 +210,43 @@ class GateOutlineParityTest {
 	} // end of xorGateOutlineMatches method
 
 	@Test
-	void inlineGatesReportNoOutline() {
+	void delayGateOutlineMatches() {
 
-		// DelayGate and Extend still build gateShape in their constructor;
-		// they inherit the null default so Gate.draw keeps using their
-		// inline path
-		assertNull(new DelayGate(CIRCUIT).outline(),
-				"DelayGate still builds gateShape inline");
-		assertNull(new Extend(CIRCUIT).outline(),
-				"Extend still builds gateShape inline");
-	} // end of inlineGatesReportNoOutline method
+		int s = S;
+		GeneralPath ref = new GeneralPath(new Line2D.Double(0, 0, 2 * s, s));
+		ref.append(new Line2D.Double(2 * s, s, 0, 2 * s), true);
+		ref.append(new Line2D.Double(0, 2 * s, 0, 0), true);
+		ref.closePath();
+		assertParity(new DelayGate(CIRCUIT), ref);
+	} // end of delayGateOutlineMatches method
+
+	@Test
+	void extendOutlineMatches() {
+
+		int s = S;
+		int s2 = s / 2;
+		int s4 = s / 4;
+		GeneralPath ref = new GeneralPath(new Line2D.Double(0, s, s2, s));
+		ref.append(new Line2D.Double(s2, 0, s2, 2 * s), false);
+		ref.append(new Line2D.Double(s2, 0, s, 0), false);
+		ref.append(new Line2D.Double(s2, s2, s, s2), false);
+		ref.append(new Line2D.Double(s2, 2 * s, s, 2 * s), false);
+		ref.append(new Ellipse2D.Double(3 * s4 - 1, s - 1, 2, 2), false);
+		ref.append(new Ellipse2D.Double(3 * s4, s, 1, 1), false);
+		ref.append(new Ellipse2D.Double(3 * s4 - 1, s + s2 - 1, 2, 2), false);
+		ref.append(new Ellipse2D.Double(3 * s4, s + s2, 1, 1), false);
+		ref.append(new Arc2D.Double(s - s4, -s4, s2, s2, 0, 90, Arc2D.OPEN),
+				false);
+		ref.append(new Line2D.Double(s + s4, 0, s + s4, 3 * s4), false);
+		ref.append(new Arc2D.Double(s + s4, s2, s2, s2, 180, 90, Arc2D.OPEN),
+				false);
+		ref.append(new Arc2D.Double(s + s4, s, s2, s2, 90, 90, Arc2D.OPEN),
+				false);
+		ref.append(new Line2D.Double(s + s4, s + s4, s + s4, 2 * s), false);
+		ref.append(new Arc2D.Double(s - s4, 2 * s - s4, s2, s2, 270, 90,
+				Arc2D.OPEN), false);
+		ref.append(new Line2D.Double(s + s2, s, 2 * s, s), false);
+		assertParity(new Extend(CIRCUIT), ref);
+	} // end of extendOutlineMatches method
 
 } // end of GateOutlineParityTest class

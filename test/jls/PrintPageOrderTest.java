@@ -77,13 +77,22 @@ class PrintPageOrderTest {
 		assertEquals(2, expectedTables.size(),
 				"the fixture must contain two truth tables");
 
-		List<Printable> bookedMachines = new ArrayList<Printable>();
-		List<Printable> bookedTables = new ArrayList<Printable>();
+		// the state-machine diagram page moved off the model (issue #77):
+		// each machine now books a StateMachineRenderer.DiagramPage that
+		// carries its machine, so the order check reads the machine back
+		// off the page.
+		List<Element> bookedMachines = new ArrayList<Element>();
+		// truth tables and state-machine diagrams are booked as wrapper
+		// pages now (issue #77): neither element implements Printable, so
+		// the booked order is checked against the wrapped elements.
+		List<Element> bookedTables = new ArrayList<Element>();
 		for (Printable page : pages) {
-			if (page instanceof StateMachine) {
-				bookedMachines.add(page);
-			} else if (page instanceof TruthTable) {
-				bookedTables.add(page);
+			if (page instanceof jls.edit.StateMachineRenderer.DiagramPage) {
+				bookedMachines.add(
+						((jls.edit.StateMachineRenderer.DiagramPage) page)
+								.machine());
+			} else if (page instanceof jls.edit.TruthTablePrintable ttp) {
+				bookedTables.add(ttp.getTruthTable());
 			}
 		}
 		assertEquals(expectedMachines, bookedMachines,

@@ -3,10 +3,8 @@ package jls.elem;
 import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import java.awt.*;
 import java.io.PrintWriter;
 import java.util.*;
-import javax.swing.*;
 
 /**
  * The end of a wire segment (displayed as a circle until connected).
@@ -75,8 +73,8 @@ public final class WireEnd extends LogicElement {
 	 * @param g The Graphics object needed by overridden methods.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(java.awt.Graphics g) {
+
 		// do nothing
 	} // end of init method
 	
@@ -215,54 +213,10 @@ public final class WireEnd extends LogicElement {
 	 * @return true if the element is inside, false if not.
 	 */
 	@Override
-	public boolean isInside(Rectangle rect) {
-		
+	public boolean isInside(java.awt.Rectangle rect) {
+
 		return rect.contains(x,y);
 	} // end of isInside method
-	
-	/**
-	 * Draw this element.
-	 * 
-	 * @param g The Graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		Color inside;
-		if (touching) {
-			inside = JLSInfo.touchColor;
-		}
-		else if (highlight) {
-			inside = JLSInfo.highlightColor;
-		}
-		else if (put != null) {
-			if (isAttached())
-				return;
-			inside = Color.black;
-		}
-		else if (wires.size() <= 1) {
-			inside = Color.WHITE;
-		}
-		else {
-			if (degree() == 2)
-				return;
-			inside = Color.black;
-		}
-		g.setColor(Color.BLACK);
-		int pd = Geometry.POINT_DIAMETER;
-		int pr = pd/2;
-		g.fillOval(x-pr,y-pr,pd,pd);
-		g.setColor(inside);
-		g.fillOval(x-pr+1,y-pr+1,pd-2,pd-2);
-		if (touching) {
-			// second, color-independent channel (issue #76): an open
-			// ring around the point marks a connection lining up even
-			// when the touch color cannot be told apart
-			g.setColor(JLSInfo.wireZeroColor);
-			int rd = pd+4;
-			g.drawOval(x-rd/2,y-rd/2,rd,rd);
-		}
-	} // end of draw method
 	
 	/**
 	 * This wire end will be removed, so remove wires it connects to.
@@ -439,7 +393,7 @@ public final class WireEnd extends LogicElement {
 	 * @param info A JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		String inp = "";
 		if (!net.hasInput()) {
@@ -559,11 +513,11 @@ public final class WireEnd extends LogicElement {
 	 * @return the bounding rectangle.
 	 */
 	@Override
-	public Rectangle getRect() {
-		
+	public java.awt.Rectangle getRect() {
+
 		int d = Geometry.POINT_DIAMETER;
 		int r = d/2;
-		return new Rectangle(x-r,y-r,d,d);
+		return new java.awt.Rectangle(x-r,y-r,d,d);
 	} // end of getRect method
 	
 	/**

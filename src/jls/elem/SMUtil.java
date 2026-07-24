@@ -22,7 +22,7 @@ public class SMUtil {
 	 * 
 	 * @return the angle, in degrees.
 	 */
-	static double getAngle(int w, int h) {
+	public static double getAngle(int w, int h) {
 
 		double angle;
 

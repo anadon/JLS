@@ -89,6 +89,39 @@ final class BuiltinElementRenderers {
 		// Pause
 		ElementRenderers.register(jls.elem.Pause.class, new PauseRenderer());
 		ElementDialogs.register(jls.elem.Pause.class, new PauseDialog());
+		// Group family
+		ElementRenderers.register(jls.elem.Binder.class, new BinderRenderer());
+		ElementDialogs.register(jls.elem.Binder.class, new GroupDialog());
+		ElementRenderers.register(jls.elem.Splitter.class,
+				new SplitterRenderer());
+		ElementDialogs.register(jls.elem.Splitter.class, new GroupDialog());
+		// Wire family
+		ElementRenderers.register(jls.elem.Wire.class, new WireRenderer());
+		ElementRenderers.register(jls.elem.WireEnd.class, new WireEndRenderer());
+		// Jump family
+		ElementRenderers.register(jls.elem.JumpStart.class,
+				new JumpStartRenderer());
+		ElementDialogs.register(jls.elem.JumpStart.class,
+				new JumpStartDialog());
+		ElementRenderers.register(jls.elem.JumpEnd.class, new JumpEndRenderer());
+		ElementDialogs.register(jls.elem.JumpEnd.class, new JumpEndDialog());
+		// State family
+		ElementRenderers.register(jls.elem.StateMachine.class,
+				new StateMachineRenderer());
+		ElementDialogs.register(jls.elem.StateMachine.class,
+				new StateMachineDialog(true));
+		ElementDialogs.registerChange(jls.elem.StateMachine.class,
+				new StateMachineDialog(false));
+		// TruthTable family
+		ElementRenderers.register(jls.elem.TruthTable.class,
+				new TruthTableRenderer());
+		ElementDialogs.register(jls.elem.TruthTable.class,
+				new TruthTableDialog(true));
+		ElementDialogs.registerChange(jls.elem.TruthTable.class,
+				new TruthTableDialog(false));
+		// ExtendDelay family
+		ElementDialogs.register(jls.elem.DelayGate.class,
+				new DelayGateDialog());
 	} // end of install method
 
 } // end of BuiltinElementRenderers class

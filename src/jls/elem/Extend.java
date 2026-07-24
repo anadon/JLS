@@ -3,9 +3,6 @@ package jls.elem;
 import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
-import javax.swing.*;
 import java.io.*;
 import java.util.*;
 
@@ -40,46 +37,42 @@ public final class Extend extends Gate implements TriProp {
 	 * @param circuit The circuit this extend is in.
 	 */
 	public Extend(Circuit circuit) {
-		
+
 		super(circuit);
-		
-		// create image for draw
+	} // end of constructor
+
+	/**
+	 * The Extend body: the vertical spreader symbol with two dot pairs and
+	 * three open arcs (issue #77 model/render split - the symbol as headless
+	 * data). Byte-identical to the former inline {@code GeneralPath}: each
+	 * primitive is appended with connect=false in the same order, so
+	 * {@link Gate#gatePathFrom(GateOutline)} rebuilds the same path.
+	 */
+	@Override
+	protected GateOutline outline() {
+
 		int s = Geometry.SPACING;
 		int s2 = s/2;
 		int s4 = s/4;
-		Line2D left = new Line2D.Double(0,s,s2,s);
-		Line2D vert = new Line2D.Double(s2,0,s2,2*s);
-		Line2D top = new Line2D.Double(s2,0,s,0);
-		Line2D mid = new Line2D.Double(s2,s2,s,s2);
-		Line2D bottom = new Line2D.Double(s2,2*s,s,2*s);
-		Ellipse2D dot1 = new Ellipse2D.Double(3*s4-1,s-1,2,2);
-		Ellipse2D dot1a = new Ellipse2D.Double(3*s4,s,1,1);
-		Ellipse2D dot2 = new Ellipse2D.Double(3*s4-1,s+s2-1,2,2);
-		Ellipse2D dot2a = new Ellipse2D.Double(3*s4,s+s2,1,1);
-		Arc2D topArc = new Arc2D.Double(s-s4,-s4,s2,s2,0,90,Arc2D.OPEN);
-		Line2D upper = new Line2D.Double(s+s4,0,s+s4,3*s4);
-		Arc2D midArc1 = new Arc2D.Double(s+s4,s2,s2,s2,180,90,Arc2D.OPEN);
-		Arc2D midArc2 = new Arc2D.Double(s+s4,s,s2,s2,90,90,Arc2D.OPEN);
-		Line2D lower = new Line2D.Double(s+s4,s+s4,s+s4,2*s);
-		Arc2D bottomArc = new Arc2D.Double(s-s4,2*s-s4,s2,s2,270,90,Arc2D.OPEN);
-		Line2D right = new Line2D.Double(s+s2,s,2*s,s);
-		gateShape = new GeneralPath(left);
-		gateShape.append(vert,false);
-		gateShape.append(top,false);
-		gateShape.append(mid,false);
-		gateShape.append(bottom,false);
-		gateShape.append(dot1,false);
-		gateShape.append(dot1a,false);
-		gateShape.append(dot2,false);
-		gateShape.append(dot2a,false);
-		gateShape.append(topArc,false);
-		gateShape.append(upper,false);
-		gateShape.append(midArc1,false);
-		gateShape.append(midArc2,false);
-		gateShape.append(lower,false);
-		gateShape.append(bottomArc,false);
-		gateShape.append(right,false);
-	} // end of constructor
+		return GateOutline.builder()
+				.line(false, 0, s, s2, s)
+				.line(false, s2, 0, s2, 2*s)
+				.line(false, s2, 0, s, 0)
+				.line(false, s2, s2, s, s2)
+				.line(false, s2, 2*s, s, 2*s)
+				.ellipse(false, 3*s4-1, s-1, 2, 2)
+				.ellipse(false, 3*s4, s, 1, 1)
+				.ellipse(false, 3*s4-1, s+s2-1, 2, 2)
+				.ellipse(false, 3*s4, s+s2, 1, 1)
+				.arc(false, s-s4, -s4, s2, s2, 0, 90)
+				.line(false, s+s4, 0, s+s4, 3*s4)
+				.arc(false, s+s4, s2, s2, s2, 180, 90)
+				.arc(false, s+s4, s, s2, s2, 90, 90)
+				.line(false, s+s4, s+s4, s+s4, 2*s)
+				.arc(false, s-s4, 2*s-s4, s2, s2, 270, 90)
+				.line(false, s+s2, s, 2*s, s)
+				.build();
+	} // end of outline method
 	
 	/**
 	 * Initialize this element in a GUI context.
@@ -92,8 +85,9 @@ public final class Extend extends Gate implements TriProp {
 	 * @return false if cancelled, true otherwise.
 	 */
 	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
+	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
+			int x, int y) {
+
 		boolean ok = super.setup(g,editWindow,x,y,"Extend");
 		
 		// must have at least 2 output bits
@@ -116,8 +110,8 @@ public final class Extend extends Gate implements TriProp {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(java.awt.Graphics g) {
+
 		super.init(g);
 		inputs.clear();
 		int s = Geometry.SPACING;
@@ -173,8 +167,8 @@ public final class Extend extends Gate implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
+	public void showInfo(javax.swing.JLabel info) {
+
 		info.setText("1 bit to " + bits + " bits");
 	} // end of showInfo method
 

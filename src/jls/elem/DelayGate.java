@@ -3,16 +3,7 @@ package jls.elem;
 import jls.core.Geometry;
 import jls.*;
 import jls.core.Orientation;
-import jls.sim.*;
-import jls.util.Placement;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-
-import javax.swing.*;
-
-import java.io.*;
 import java.util.*;
 
 /**
@@ -37,69 +28,73 @@ public final class DelayGate extends Gate implements Timed {
 		return KIND;
 	} // end of kind method
 	
-	// default values
-	/** Default propagation delay shown in the creation dialog. */
-	private static final int defaultPropDelay = 1;
-	
 	/**
 	 * Create DELAY gate.
-	 * 
+	 *
 	 * @param circuit The circuit this DELAY gate is in.
 	 */
 	public DelayGate(Circuit circuit) {
-		
+
 		super(circuit);
-		
-		// create image for draw
-		int s = Geometry.SPACING;
-		Line2D top = new Line2D.Double(0,0,2*s,s);
-		Line2D bottom = new Line2D.Double(2*s,s,0,2*s);
-		Line2D side = new Line2D.Double(0,2*s,0,0);
-		gateShape = new GeneralPath(top);
-		gateShape.append(bottom,true);
-		gateShape.append(side,true);
-		gateShape.closePath();
 	} // end of constructor
-	
+
 	/**
-	 * Initialize this element in a GUI context.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if canceled, true otherwise.
+	 * The DELAY gate body: a right-pointing triangle (issue #77 model/render
+	 * split - the symbol as headless data). Byte-identical to the former
+	 * inline {@code GeneralPath}: two connected lines then a connected line
+	 * back, closed, so {@link Gate#gatePathFrom(GateOutline)} rebuilds the
+	 * same closed path.
 	 */
 	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
+	protected GateOutline outline() {
 
-		// show creation dialog
-		new DelayCreate();
-		
-		// don't do anything if user canceled gate
-		if (cancelled)
-			return false;
-
-		// set up inputs and outputs
-		numInputs = 1;
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-		
-	} // end of setup method
+		int s = Geometry.SPACING;
+		return GateOutline.builder()
+				.line(false, 0, 0, 2*s, s)
+				.line(true, 2*s, s, 0, 2*s)
+				.line(true, 0, 2*s, 0, 0)
+				.close()
+				.build();
+	} // end of outline method
 	
 	/**
+	 * Set the number of gates (bits). Used by the GUI-side creation dialog
+	 * ({@code jls.edit.DelayGateDialog}) after the model went headless.
+	 *
+	 * @param bits The number of gates (bits).
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the number of inputs. Used by the GUI-side creation dialog.
+	 *
+	 * @param numInputs The number of inputs.
+	 */
+	public void setNumInputs(int numInputs) {
+
+		this.numInputs = numInputs;
+	} // end of setNumInputs method
+
+	/**
+	 * Set the orientation. Used by the GUI-side creation dialog.
+	 *
+	 * @param orientation The orientation this gate faces.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
+	/**
 	 * Display info about this DELAY gate.
-	 * 
+	 *
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public void showInfo(javax.swing.JLabel info) {
 		
 		String pd = ", delay = " + propDelay;
 		if (bits == 1)
@@ -116,145 +111,6 @@ public final class DelayGate extends Gate implements Timed {
 		
 		// do nothing
 	} // end of resetPropDelay method
-
-	/**
-	 * Dialog box to set delay gate parameters.
-	 */
-	@SuppressWarnings("serial")
-	private class DelayCreate extends ElementDialog {
-
-			// properties
-			/** Text field for the propagation delay. */
-			private JTextField delayField = new JTextField(defaultPropDelay+"",5);
-			/** Text field for the number of gates (bits). */
-			private JTextField gatesField = new JTextField(defaultBits+"",5);
-			/** Pop-up keypad for the delay field. */
-			private KeyPad delayPad = new KeyPad(delayField,10,defaultPropDelay,this);
-			/** Pop-up keypad for the gates field. */
-			private KeyPad gatesPad = new KeyPad(gatesField,10,defaultBits,this);
-			/** Button selecting leftward orientation. */
-			private JRadioButton left = new JRadioButton("left");
-			/** Button selecting upward orientation. */
-			private JRadioButton up = new JRadioButton("up");
-			/** Button selecting downward orientation. */
-			private JRadioButton down = new JRadioButton("down");
-			/** Button selecting rightward orientation. */
-			private JRadioButton right = new JRadioButton("right");
-
-			/**
-			 * Set up dialog window.
-			 * 
-			 */
-			public DelayCreate() {
-
-				// set up window title
-				super("Create DELAY Gate","DELAY");
-
-				// set not cancelled
-				cancelled = false;
-
-				// set up window
-				Container window = getContentPane();
-
-				// set up input panel
-				JPanel info = new JPanel(new GridLayout(2,2));
-				JLabel inputs = new JLabel("Propagation Delay: ",SwingConstants.RIGHT);
-				info.add(inputs);
-				JPanel in = new JPanel(new FlowLayout());
-				in.add(delayField);
-				in.add(delayPad);
-				info.add(in);
-				JLabel gates = new JLabel("Gates (bits): ",SwingConstants.RIGHT);
-				info.add(gates);
-				JPanel ga = new JPanel(new FlowLayout());
-				ga.add(gatesField);
-				ga.add(gatesPad);
-				info.add(ga);
-				window.add(info);
-				
-				// set up orientation panel
-				window.add(new JLabel(" "));
-				JLabel olbl = new JLabel("Orientation");
-				olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-				window.add(olbl);
-				JPanel orients = new JPanel(new GridLayout(3,3));
-				orients.add(new JLabel(""));
-				orients.add(up);
-				orients.add(new JLabel(""));
-				orients.add(left);
-				orients.add(new JLabel(""));
-				orients.add(right);
-				orients.add(new JLabel(""));
-				orients.add(down);
-				orients.add(new JLabel(""));
-				
-				left.setHorizontalAlignment(SwingConstants.CENTER);
-				right.setHorizontalAlignment(SwingConstants.CENTER);
-				up.setHorizontalAlignment(SwingConstants.CENTER);
-				down.setHorizontalAlignment(SwingConstants.CENTER);
-				ButtonGroup group = new ButtonGroup();
-				group.add(left);
-				group.add(right);
-				group.add(up);
-				group.add(down);
-				right.setSelected(true);
-				window.add(orients);
-
-				confirmOnEnter(delayField);
-				confirmOnEnter(gatesField);
-				finishDialog();
-			} // end of constructor
-
-			/**
-			 * Validate the form and create the delay gate.
-			 */
-			@Override
-			protected void validateAndAccept() {
-
-				try {
-					propDelay = Integer.parseInt(delayField.getText());
-					bits = Integer.parseInt(gatesField.getText());
-				}
-				catch (NumberFormatException ex) {
-					reject("Value not numeric, try again");
-					propDelay = 0;
-					return;
-				}
-				if (bits < 1) {
-					reject("Must have at least 1 gate");
-					propDelay = 0;
-					return;
-				}
-				if (left.isSelected()) {
-					orientation = Orientation.LEFT;
-				}
-				else if (right.isSelected()) {
-					orientation = Orientation.RIGHT;
-				}
-				else if (up.isSelected()) {
-					orientation = Orientation.UP;
-				}
-				else {
-					orientation = Orientation.DOWN;
-				}
-				delayPad.close();
-				gatesPad.close();
-				dispose();
-			} // end of validateAndAccept method
-
-			/**
-			 * Cancel this gate.
-			 */
-			@Override
-			protected void cancelDialog() {
-
-				cancelled = true;
-				delayPad.close();
-				gatesPad.close();
-				dispose();
-			} // end of cancelDialog method
-
-		} // end of DelayCreate class
 
 //-------------------------------------------------------------------------------
 // Simulation

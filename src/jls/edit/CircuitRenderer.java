@@ -258,8 +258,8 @@ public final class CircuitRenderer implements Printable {
 		// add state machines
 		for (Element el : ordered) {
 			if (el instanceof StateMachine sm) {
-				book.append(sm, format);
-				Printable p = sm.makeOutSum();
+				book.append(StateMachineRenderer.diagramPage(sm), format);
+				Printable p = StateMachineRenderer.outSummaryPage(sm);
 				if (p != null)
 					book.append(p, format);
 			}
@@ -268,7 +268,7 @@ public final class CircuitRenderer implements Printable {
 		// add truth tables
 		for (Element el : ordered) {
 			if (el instanceof TruthTable tt) {
-				book.append(tt, format);
+				book.append(new TruthTablePrintable(tt), format);
 			}
 		}
 

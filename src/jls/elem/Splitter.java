@@ -5,14 +5,8 @@ import jls.core.Orientation;
 import jls.*;
 import jls.elem.Group.Entry;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 /**
  * Split an n-bit input signal into multiple single or multiple bit outputs.
@@ -32,42 +26,12 @@ public final class Splitter extends Group implements TriProp {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new GroupCreate("Unbundler");
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
-	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(java.awt.Graphics g) {
 		
 		// set up height and width
 		super.init(g);
@@ -137,132 +101,6 @@ public final class Splitter extends Group implements TriProp {
 	} // end of init method
 	
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// set up
-		int d2 = Geometry.POINT_DIAMETER/2;
-		int s = Geometry.SPACING;
-		
-		if(orientation == Orientation.RIGHT)
-		{
-			// draw input and line from it
-			Input input = inputs.get(0);
-			g.setColor(Color.black);
-			int ypos = input.getY();
-			g.drawLine(x,ypos,x+s/2,ypos);
-			input.draw(g);
-		
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s/2,y+s,x+s/2,y+height-s);
-		
-			// draw outputs and lines to them
-			FontMetrics fm = g.getFontMetrics();
-			for (Output output : outputs) {
-				output.draw(g);
-				ypos = output.getY();
-				Rectangle2D t = fm.getStringBounds(output.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(x+width-t.getWidth()-d2);
-				g.drawString(output.getName(),edge,(int)(ypos-t.getHeight()/2+fm.getAscent()));
-				g.drawLine(x+s/2,ypos,edge-d2,ypos);
-			}
-		}
-		else if(orientation == Orientation.LEFT)
-		{
-			// draw input and line from it
-			Input input = inputs.get(0);
-			g.setColor(Color.black);
-			int ypos = input.getY();
-			g.drawLine(x+width,ypos,x+width-s/2,ypos);
-			input.draw(g);
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+width-s/2,y+s,x+width-s/2,y+height-s);
-			
-			// draw outputs and lines to them
-			FontMetrics fm = g.getFontMetrics();
-			for (Output output : outputs) {
-				output.draw(g);
-				ypos = output.getY();
-				Rectangle2D t = fm.getStringBounds(output.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(x+Geometry.POINT_DIAMETER/2);
-				g.drawString(output.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
-				g.drawLine(x+width-s/2,ypos,(int)(edge+t.getWidth()+d2),ypos);
-			}
-		}
-		else if(orientation == Orientation.DOWN)
-		{
-			int inum = 0;
-			FontMetrics fm = g.getFontMetrics();
-			for (Output output : outputs) {
-				output.draw(g);
-				int xpos = output.getX();
-				Rectangle2D t = fm.getStringBounds(output.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(y+height-Geometry.POINT_DIAMETER/2);
-				if(inum%2 == 0)
-				{
-					g.drawString(output.getName(),xpos-(int)t.getWidth()/2, (int)(edge-t.getHeight()/2+6));
-				}
-				g.drawLine(xpos,y+s,xpos,(int)(edge-t.getHeight()+d2));
-				inum++;
-			}
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s,y+s,x+width-s,y+s);
-			
-			// draw output and line to it
-			Input input = inputs.get(0);
-			g.setColor(Color.black);
-			int xpos = input.getX();
-			g.drawLine(xpos,y+s,xpos,y);
-			input.draw(g);
-		}
-		else if(orientation == Orientation.UP)
-		{
-			int inum = 0;
-			FontMetrics fm = g.getFontMetrics();
-			for (Output output : outputs) {
-				output.draw(g);
-				int xpos = output.getX();
-				Rectangle2D t = fm.getStringBounds(output.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(y+Geometry.POINT_DIAMETER/2);
-				if(inum%2 == 0)
-				{
-					g.drawString(output.getName(),xpos-(int)t.getWidth()/2, (int)(edge+t.getHeight()/2+6));
-				}
-				g.drawLine(xpos,y+height-s,xpos,(int)(edge+t.getHeight()+d2));
-				inum++;
-			}
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s,y+height-s,x+width-s,y+height-s);
-			
-			// draw output and line to it
-			Input input = inputs.get(0);
-			g.setColor(Color.black);
-			int xpos = input.getX();
-			g.drawLine(xpos,y+height-s,xpos,y+height);
-			input.draw(g);
-		}
-		
-	} // end of draw method
-	
-	/**
 	 * Copy this element.
 	 */
 	@Override
@@ -291,8 +129,8 @@ public final class Splitter extends Group implements TriProp {
 	 * @param info The JLabel to display with.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
+	public void showInfo(javax.swing.JLabel info) {
+
 		info.setText("unbundle " + bits + " bits");
 	} // end of showInfo method
 	
@@ -316,7 +154,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, Graphics g)
+	public void rotate(Orientation direction, java.awt.Graphics g)
 	{
 		super.rotate(direction, g);
 		init(g);
@@ -327,7 +165,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(java.awt.Graphics g)
 	{
 		super.flip(g);
 		init(g);

@@ -1,22 +1,5 @@
 package jls.elem;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Line2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -25,25 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
-
 import jls.core.Geometry;
 import jls.BitSetUtils;
-import jls.JLSInfo;
-import jls.KeyPad;
 import jls.TellUser;
 import jls.sim.Simulator;
 
@@ -110,7 +76,7 @@ public class State {
 	/**
 	 * Outputs from this state.
 	 */
-	private static class Out {
+	public static class Out {
 
 		/** the output signal name. */
 		public String signal;
@@ -137,7 +103,7 @@ public class State {
 	/**
 	 * Transitions from a given state
 	 */
-	private static class Transition {
+	public static class Transition {
 
 		/** the input signal tested by the condition (empty if none). */
 		public String signal = "";
@@ -156,9 +122,9 @@ public class State {
 		/** the name of the state this transition goes to. */
 		public String nextStateName = null; // temporarily used during load
 		/** the intermediate points the transition line is drawn through. */
-		public Vector<Point>points = new Vector<Point>();
+		public Vector<java.awt.Point>points = new Vector<java.awt.Point>();
 		/** the corner point currently highlighted, or null if none. */
-		public Point highlight = null;
+		public java.awt.Point highlight = null;
 		/** true if this transition is drawn highlighted. */
 		public boolean highlighted;
 
@@ -177,337 +143,15 @@ public class State {
 	 * @param name The name of the state.
 	 * @param g The Graphics object to use.
 	 */
-	public State(StateMachine machine, String name, Graphics g) {
+	public State(StateMachine machine, String name, java.awt.Graphics g) {
 
 		this.machine = machine;
 		this.name = name;
 		if (g != null) {
-			FontMetrics fm = g.getFontMetrics();
+			java.awt.FontMetrics fm = g.getFontMetrics();
 			diameter = Math.max(fm.stringWidth("  " + name + "  "),Geometry.STATE_DIAMETER);
 		}
 	} // end of constructor
-
-	/**
-	 * Draw this state.
-	 * 
-	 * @param g The Graphics object to use.
-	 */
-	public void draw(Graphics g) {
-
-		// set up
-		int d = diameter;
-		int r = d/2;
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int height = ascent + descent;
-
-		// draw transitions
-		for (Transition tr : trans) {
-
-			// set line color
-			Color color = Color.black;
-			if (tr.highlighted) {
-				color = JLSInfo.highlightColor;
-			}
-
-			// if no midpoints, draw straight from this state to the other
-			if (tr.points.isEmpty()) {
-
-				// draw line from start state edge to end state edge
-				int w = tr.nextState.x - x;
-				int h = y - tr.nextState.y;
-				double dist = Math.sqrt(w*w+h*h);
-				int dxf = (int)Math.rint(w*r/dist); // start edge
-				int dyf = (int)Math.rint(h*r/dist);
-				int or = tr.nextState.diameter/2;
-				int dxt = (int)Math.rint(w*or/dist);
-				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.x-dxt;	// end edge
-				int endy = tr.nextState.y+dyt;
-				g.setColor(color);
-				g.drawLine(x+dxf,y-dyf,endx,endy);
-
-				// draw arrow
-				double angle = SMUtil.getAngle(w,h);
-				drawArrow(endx,endy,angle,g);
-
-				// draw condition info
-				int midx = (x+dxf+endx)/2;
-				int midy = (y-dyf+endy)/2;
-				drawCond(tr,midx,midy,angle,g);
-			}
-
-			// otherwise draw transition in segments
-			else {
-
-				// draw first segment
-				int nx = tr.points.get(0).x;
-				int ny = tr.points.get(0).y;
-				int w = nx - x;
-				int h = y - ny;
-				double dist = Math.sqrt(w*w+h*h);
-				int dxf = (int)Math.rint(w*r/dist);
-				int dyf = (int)Math.rint(h*r/dist);
-				g.setColor(color);
-				g.drawLine(x+dxf,y-dyf,nx,ny);
-
-				// draw condition info
-				int midx = (x+dxf+nx)/2;
-				int midy = (y-dyf+ny)/2;
-				drawCond(tr,midx,midy,SMUtil.getAngle(w,h),g);
-
-				// draw all but last segment
-				int px = nx;
-				int py = ny;
-				for (int i=1; i<tr.points.size(); i+=1) {
-					nx = tr.points.get(i).x;
-					ny = tr.points.get(i).y;
-					g.drawLine(px,py,nx,ny);
-					px = nx;
-					py = ny;
-				}
-
-				// draw last segment
-				w = tr.nextState.x - px;
-				h = py - tr.nextState.y;
-				dist = Math.sqrt(w*w+h*h);
-				int or = tr.nextState.diameter/2;
-				int dxt = (int)Math.rint(w*or/dist);
-				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.x-dxt;	// end edge
-				int endy = tr.nextState.y+dyt;
-				g.drawLine(px,py,endx,endy);
-
-				// draw arrow
-				double angle = SMUtil.getAngle(w,h);
-				drawArrow(endx,endy,angle,g);
-
-				// draw highlight point if there is one
-				if (tr.highlight != null) {
-					int pd = Geometry.POINT_DIAMETER;
-					g.setColor(JLSInfo.highlightColor);
-					g.fillOval(tr.highlight.x-pd/2,tr.highlight.y-pd/2,pd,pd);
-				}
-			}
-		}
-
-		// show initial if necessary
-		if (initial) {
-			g.setColor(JLSInfo.initialStateColor);
-			g.fillOval(x-r,y-r,d+1,d+1);
-		}
-
-		// highlight if necessary
-		if (highlight) {
-			g.setColor(JLSInfo.highlightColor);
-			g.fillOval(x-r,y-r,d+1,d+1);
-		}
-
-		// draw circle
-		g.setColor(Color.BLACK);
-		g.drawOval(x-r,y-r,d,d);
-
-		// draw name
-		int width = fm.stringWidth(name);
-		g.drawString(name,x-width/2,y-height/2+ascent);
-
-	} // end of draw method
-
-	/*
-	 * Draw the condition information on a transition.
-	 * 
-	 * @param trans A transition.
-	 * @param x The x-coordinate of the middle of a line segment.
-	 * @param y The y-coordinate of the middle of a line segment.
-	 * @param angle The angle of a line segment (in degrees).
-	 * @param g The Graphics object to use.
-	 */
-	/**
-	 * Draw the condition information on a transition.
-	 *
-	 * @param trans A transition.
-	 * @param x The x-coordinate of the middle of a line segment.
-	 * @param y The y-coordinate of the middle of a line segment.
-	 * @param angle The angle of a line segment (in degrees).
-	 * @param g The Graphics object to use.
-	 */
-	public void drawCond(Transition trans, int x, int y, double angle, Graphics g) {
-
-		String cond = "";
-		if (trans.other) {
-			cond = "else";
-		}
-		else if (!trans.unconditional) {
-			String rel = " != ";
-			if (trans.equal) {
-				rel = " = ";
-			}
-			cond = trans.signal + "[" + trans.bits + "]"+ rel + trans.value;
-		}
-		FontMetrics fm = g.getFontMetrics();
-		int descent = fm.getDescent();
-		int width = fm.stringWidth(cond);
-
-		if (angle == 0.0 || angle == 180) {
-			g.drawString(cond,x-width/2,y-descent-1);
-		}
-		else if (0.0 < angle && angle <= 90.0 || 180.0 < angle && angle < 270.0) {
-			g.drawString(cond,x-width,y-descent-1);
-		}
-		else {
-			g.drawString(cond,x+1,y-descent-1);
-		}
-	} // end of drawCond method
-
-	/**
-	 * Draw a transition arrowhead at a point and angle. Moved here from
-	 * the former {@code SMUtil.drawArrow} (issue #77) so the shared
-	 * state-machine helper {@code SMUtil} stays headless; the rendering
-	 * lives with {@code State}, which draws transitions, and
-	 * {@code StateMachine} calls it for the last segment.
-	 *
-	 * @param x The x-coordinate of the end point of the arrow.
-	 * @param y The y-coordinate of the end point of the arrow.
-	 * @param angle The angle the arrow points.
-	 * @param g The Graphics object to use.
-	 */
-	static void drawArrow(int x, int y, double angle, Graphics g) {
-
-		int p = Geometry.ARROW_SIZE;
-		Line2D top = new Line2D.Double(-p,-p,0,0);
-		Line2D bottom = new Line2D.Double(0,0,-p,p);
-		Line2D back = new Line2D.Double(-p,p,-p,-p);
-		GeneralPath arrow = new GeneralPath(top);
-		arrow.append(bottom,true);
-		arrow.append(back,true);
-		arrow.closePath();
-		AffineTransform trans = new AffineTransform();
-		trans.translate(x,y);
-		trans.rotate(Math.toRadians(-angle));
-		arrow.transform(trans);
-		Graphics2D gg = (Graphics2D)g;
-		g.setColor(Color.black);
-		gg.fill(arrow);
-
-	} // end of drawArrow method
-
-	/**
-	 * Get the bounds of this state.
-	 * 
-	 * @param g The graphics object to use.
-	 * 
-	 * @return The bounds of this state and all of its outward transitions.
-	 */
-	public Rectangle getBounds(Graphics g) {
-
-		// add circle to bounds
-		int d = diameter;
-		int r = d/2;
-		Rectangle bounds = new Rectangle(x-r,y-r,d,d);
-
-		// add transition to bounds
-		for (Transition tr : trans) {
-
-			// add points to bounds
-			for (Point p : tr.points) {
-				bounds.add(p);
-			}
-
-			// add condition to bounds
-			if (tr.points.isEmpty()) {
-
-				// direct
-				int w = tr.nextState.x - x;
-				int h = y - tr.nextState.y;
-				double dist = Math.sqrt(w*w+h*h);
-				int dxf = (int)Math.rint(w*r/dist); // start edge
-				int dyf = (int)Math.rint(h*r/dist);
-				int or = tr.nextState.diameter/2;
-				int dxt = (int)Math.rint(w*or/dist);
-				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.x-dxt;	// end edge
-				int endy = tr.nextState.y+dyt;
-				double angle = SMUtil.getAngle(w,h);
-				int midx = (x+dxf+endx)/2;
-				int midy = (y-dyf+endy)/2;
-				bounds.add(boundCond(tr,midx,midy,angle,g));
-			}
-
-			// otherwise get bounds of segments
-			else {
-
-				// draw first segment
-				int nx = tr.points.get(0).x;
-				int ny = tr.points.get(0).y;
-				int w = nx - x;
-				int h = y - ny;
-				double dist = Math.sqrt(w*w+h*h);
-				int dxf = (int)Math.rint(w*r/dist);
-				int dyf = (int)Math.rint(h*r/dist);
-				int midx = (x+dxf+nx)/2;
-				int midy = (y-dyf+ny)/2;
-				bounds.add(boundCond(tr,midx,midy,SMUtil.getAngle(w,h),g));
-			}
-		}
-		return bounds;
-	} // end of getBounds method
-
-	/*
-	 * Get the bounds on the condition.
-	 * If g is null, then return a 0x0 rectangle at x,y.
-	 * 
-	 * @param trans A transition.
-	 * @param x The x-coordinate of the middle of a line segment.
-	 * @param y The y-coordinate of the middle of a line segment.
-	 * @param angle The angle of a line segment (in degrees).
-	 * @param g The Graphics object to use.
-	 * 
-	 * @return The bounds of the condition on this transition.
-	 */
-	/**
-	 * Get the bounds on the condition.
-	 * If g is null, then return a 0x0 rectangle at x,y.
-	 *
-	 * @param trans A transition.
-	 * @param x The x-coordinate of the middle of a line segment.
-	 * @param y The y-coordinate of the middle of a line segment.
-	 * @param angle The angle of a line segment (in degrees).
-	 * @param g The Graphics object to use.
-	 *
-	 * @return The bounds of the condition on this transition.
-	 */
-	public Rectangle boundCond(Transition trans, int x, int y, double angle, Graphics g) {
-
-		if (g == null) {
-			return new Rectangle(x,y,0,0);
-		}
-		String cond = "";
-		if (trans.other) {
-			cond = "else";
-		}
-		else if (!trans.unconditional) {
-			String rel = " != ";
-			if (trans.equal) {
-				rel = " = ";
-			}
-			cond = trans.signal + "[" + trans.bits + "]"+ rel + trans.value;
-		}
-		FontMetrics fm = g.getFontMetrics();
-		int descent = fm.getDescent();
-		int height = descent + fm.getAscent();
-		int width = fm.stringWidth(cond);
-
-		if (angle == 0.0 || angle == 180) {
-			return new Rectangle(x-width/2,y,width,height);
-		}
-		else if (0.0 < angle && angle <= 90.0 || 180.0 < angle && angle < 270.0) {
-			return new Rectangle(x-width,y,width,height);
-		}
-		else {
-			return new Rectangle(x,y,width,height);
-		}
-	} // end of boundCond method
 
 	/**
 	 * Make a copy of this state.
@@ -547,8 +191,8 @@ public class State {
 			newTrans.value = tran.value;
 			newTrans.bits = tran.bits;
 			newTrans.nextStateName = tran.nextState.getName();
-			for (Point p : tran.points) {
-				newTrans.points.add(new Point(p.x,p.y));
+			for (java.awt.Point p : tran.points) {
+				newTrans.points.add(new java.awt.Point(p.x,p.y));
 			}
 			newState.trans.add(newTrans);
 		}
@@ -661,7 +305,7 @@ public class State {
 				output.println("   int bits " + tr.bits);
 			}
 			output.println("   String next \"" + tr.nextState.getName() + "\"");
-			for (Point p : tr.points) {
+			for (java.awt.Point p : tr.points) {
 				output.println("    pair " + p.x + " " + p.y);
 			}
 		}
@@ -816,7 +460,7 @@ public class State {
 	 */
 	public void setTransPair(int v1, int v2) {
 
-		buildTrans.points.add(new Point(v1,v2));
+		buildTrans.points.add(new java.awt.Point(v1,v2));
 
 	} // end of setPair method
 
@@ -920,7 +564,7 @@ public class State {
 	 * 
 	 * @return true if it is inside, false if not.
 	 */
-	public boolean isInside(Rectangle rect) {
+	public boolean isInside(java.awt.Rectangle rect) {
 
 		return rect.contains(getRect());
 	} // end of isInside method
@@ -950,7 +594,7 @@ public class State {
 		y += dy;
 		for (Transition tr : trans) {
 			if (selected.contains(tr.nextState)) {
-				for (Point p : tr.points) {
+				for (java.awt.Point p : tr.points) {
 					p.translate(dx,dy);
 				}
 			}
@@ -992,11 +636,11 @@ public class State {
 	 * 
 	 * @return the bounding rectangle.
 	 */
-	public Rectangle getRect() {
+	public java.awt.Rectangle getRect() {
 
 		int d = diameter;
 		int r = d/2;
-		return new Rectangle(x-r,y-r,d,d);
+		return new java.awt.Rectangle(x-r,y-r,d,d);
 	} // end of getRect method
 
 	/**
@@ -1027,9 +671,9 @@ public class State {
 	 *
 	 * @return true if the name fits and was changed, false if not.
 	 */
-	public boolean changeName(String name, Graphics g) {
+	public boolean changeName(String name, java.awt.Graphics g) {
 
-		FontMetrics fm = g.getFontMetrics();
+		java.awt.FontMetrics fm = g.getFontMetrics();
 		int w = fm.stringWidth("  " + name + "  ");
 		if (w > diameter) {
 			return false;
@@ -1041,20 +685,38 @@ public class State {
 	} // end of changeName method
 
 	/**
-	 * Make a new transition from this state.
-	 * 
-	 * @param to The state the transition is to.
-	 * @param points The list of points in the transition (the last one will not be used).
+	 * Validate a filled-in transition against this state's existing
+	 * transitions and, if consistent, add it. Extracted from the former
+	 * {@code newTransition} (issue #77): the GUI-side transition dialog
+	 * ({@code jls.edit.StateMachineDialog}) builds and fills the
+	 * {@link Transition}, then hands it here for the headless
+	 * model-consistency checks and the bitmap bookkeeping.
+	 *
+	 * @param newTrans The filled-in transition to add.
 	 * @param mainDialog The dialog to display error messages in.
 	 */
-	public void newTransition(State to, Vector<Point> points, JDialog mainDialog) {
+	/**
+	 * Build (but do not yet add) a candidate transition from this state to
+	 * another (issue #77): the pre-dialog half of the former
+	 * {@code newTransition}. The GUI-side dialog fills in the returned
+	 * transition's condition, then hands it back to
+	 * {@link #addTransition}. Returns null for a self-transition with
+	 * fewer than three midpoints (it would not look good), matching the
+	 * former behavior.
+	 *
+	 * @param to The state the transition is to.
+	 * @param points The midpoints (the last one is not used).
+	 *
+	 * @return the candidate transition, or null if it should not be made.
+	 */
+	public Transition buildTransition(State to, Vector<java.awt.Point> points) {
 
 		// if transition is to the same state, then make sure
 		// there are at least three points in the transition else
 		// it won't look good
 		if (this == to) {
 			if (points.size() < 3) {
-				return;
+				return null;
 			}
 		}
 
@@ -1076,12 +738,12 @@ public class State {
 				newTrans.bits = oldTrans.bits;
 			}
 		}
+		return newTrans;
+	} // end of buildTransition method
 
-		// get condition info
-		CreateTrans ct = new CreateTrans(newTrans,this);
+	public void addTransition(Transition newTrans, java.awt.Component mainDialog) {
 
-		// if it wasn't canceled...
-		if (!ct.wasCancelled()) {
+		{
 
 			// get properties of existing transition set
 			boolean hasUnconditional = false;
@@ -1239,9 +901,9 @@ public class State {
 	 * 
 	 * @return The x,y coordinates of the center.
 	 */
-	public Point getLocation() {
+	public java.awt.Point getLocation() {
 
-		return new Point(x,y);
+		return new java.awt.Point(x,y);
 	} // end of getLocation method
 
 	/**
@@ -1278,12 +940,12 @@ public class State {
 	 * 
 	 * @return the point if there is one, else null.
 	 */
-	public Point highlightTransPoints(int x, int y) {
+	public java.awt.Point highlightTransPoints(int x, int y) {
 
 		int ds = Geometry.POINT_DIAMETER*Geometry.POINT_DIAMETER;
 		for (Transition tr : trans) {
 			tr.highlight = null;
-			for (Point p : tr.points) {
+			for (java.awt.Point p : tr.points) {
 				if ((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y) < ds) {
 					tr.highlight = p;
 					return p;
@@ -1315,7 +977,7 @@ public class State {
 			// if a single segment line...
 			if (tran.points.isEmpty()) {
 				double maind =
-					Line2D.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
+					java.awt.geom.Line2D.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
 				if (maind < d && !contains(xp,yp) && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -1325,8 +987,8 @@ public class State {
 			else {
 
 				// check out first segment
-				Point p = tran.points.get(0);
-				double maind = Line2D.ptSegDist(x,y,p.x,p.y,xp,yp);
+				java.awt.Point p = tran.points.get(0);
+				double maind = java.awt.geom.Line2D.ptSegDist(x,y,p.x,p.y,xp,yp);
 				if (maind < d && !contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -1335,9 +997,9 @@ public class State {
 
 				// check out middle segments
 				for (int i=1; i<tran.points.size(); i+=1) {
-					Point p1 = tran.points.get(i-1);
-					Point p2 = tran.points.get(i);
-					maind = Line2D.ptSegDist(p1.x,p1.y,p2.x,p2.y,xp,yp);
+					java.awt.Point p1 = tran.points.get(i-1);
+					java.awt.Point p2 = tran.points.get(i);
+					maind = java.awt.geom.Line2D.ptSegDist(p1.x,p1.y,p2.x,p2.y,xp,yp);
 					if (maind < d) {
 						tran.highlighted = true;
 						lastHighlighted = tran;
@@ -1347,7 +1009,7 @@ public class State {
 
 				// check out last segment
 				p = tran.points.get(tran.points.size()-1);
-				maind = Line2D.ptSegDist(p.x,p.y,tran.nextState.x,tran.nextState.y,xp,yp);
+				maind = java.awt.geom.Line2D.ptSegDist(p.x,p.y,tran.nextState.x,tran.nextState.y,xp,yp);
 				if (maind < d && !tran.nextState.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
@@ -1413,7 +1075,7 @@ public class State {
 	 * 
 	 * @return the maximum width.
 	 */
-	public int getWidthInfo(FontMetrics fm) {
+	public int getWidthInfo(java.awt.FontMetrics fm) {
 
 		int width = 0;
 		for (Out out : outs) {
@@ -1453,614 +1115,6 @@ public class State {
 		}
 		return outputs;
 	} // end of getInputs method
-
-	/**
-	 * Dialog to create info about a transition.
-	 */
-	@SuppressWarnings("serial")
-	private class CreateTrans extends ElementDialog implements ActionListener {
-
-		// properties
-		/** the transition being created or edited. */
-		private Transition trans;
-		/** the state the transition is from. */
-		private State myState;
-		/** input field for the condition signal name. */
-		private JTextField signalField = new JTextField(10);
-		/** button to toggle the condition between = and !=. */
-		private JButton equalOrNot = new JButton("=");
-		/** input field for the condition value. */
-		private JTextField valueField = new JTextField(10);
-		/** keypad for entering the condition value. */
-		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
-		/** input field for the number of bits in the condition signal. */
-		private JTextField bitsField = new JTextField(10);
-		/** keypad for entering the number of bits. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
-		/** selects a conditional transition. */
-		private JRadioButton conditional = new JRadioButton("conditional");
-		/** selects an unconditional transition. */
-		private JRadioButton unconditional = new JRadioButton("unconditional");
-		/** selects a transition taken when no other condition holds. */
-		private JRadioButton otherwise = new JRadioButton("if no other condition");
-		/** true if the dialog was cancelled. */
-		private boolean cancelled;
-
-		/**
-		 * Initialize dialog.
-		 *
-		 * @param tr The transition to edit.
-		 * @param st The state the transition is from.
-		 */
-		public CreateTrans(Transition tr, State st) {
-
-			// set up
-			super("Create Transition",null);
-			cancelled = false;
-
-			// save working transition and its state
-			trans = tr;
-			myState = st;
-
-			// get window
-			Container window = getContentPane();
-
-			// set up signal/value
-			JPanel sigval = new JPanel(new BorderLayout());
-			JPanel sig = new JPanel(new GridLayout(3,1));
-			sig.add(new JLabel("signal",SwingConstants.CENTER));
-			sig.add(signalField);
-			sig.add(new JLabel(" "));
-			sigval.add(sig,BorderLayout.WEST);
-			JPanel other = new JPanel(new BorderLayout());
-			JPanel misc = new JPanel(new GridLayout(3,1));
-			misc.add(new JLabel(" "));
-			misc.add(equalOrNot);
-			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
-			other.add(misc,BorderLayout.WEST);
-			JPanel values = new JPanel(new GridLayout(3,1));
-			values.add(new JLabel("value",SwingConstants.CENTER));
-			JPanel val = new JPanel(new BorderLayout());
-			val.add(valueField,BorderLayout.CENTER);
-			val.add(valuePad,BorderLayout.EAST);
-			values.add(val);
-			JPanel bits = new JPanel(new BorderLayout());
-			bits.add(bitsField,BorderLayout.CENTER);
-			bits.add(bitsPad,BorderLayout.EAST);
-			values.add(bits);
-			other.add(values,BorderLayout.CENTER);
-			sigval.add(other,BorderLayout.CENTER);
-			window.add(sigval);
-
-			// add radio buttons
-			window.add(new JLabel(" "));
-			window.add(conditional);
-			if (trans.signal.isEmpty()) {
-				window.add(unconditional);
-			}
-			window.add(otherwise);
-			ButtonGroup g = new ButtonGroup();
-			g.add(conditional);
-			g.add(unconditional);
-			g.add(otherwise);
-
-			// give initial values
-			signalField.setText(tr.signal);
-			if (tr.equal) {
-				equalOrNot.setText("=");
-			}
-			else {
-				equalOrNot.setText("!=");
-			}
-			valueField.setText(tr.value+"");
-			if (tr.bits == -1)
-				bitsField.setText("1");
-			else
-				bitsField.setText(tr.bits+"");
-			if (tr.unconditional) {
-				unconditional.setSelected(true);
-				signalField.setEditable(false);
-				valueField.setEditable(false);
-				bitsField.setEditable(false);
-			}
-			else if (tr.other) {
-				otherwise.setSelected(true);
-				signalField.setEditable(false);
-				valueField.setEditable(false);
-				bitsField.setEditable(false);
-			}
-			else if (!tr.signal.isEmpty()) {
-				signalField.setEditable(false);
-				bitsField.setEditable(false);
-			}
-
-			// add listeners
-			equalOrNot.addActionListener(this);
-			conditional.addActionListener(this);
-			unconditional.addActionListener(this);
-			otherwise.addActionListener(this);
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and set up the transition.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			// handle unconditional transition
-			if (unconditional.isSelected()) {
-				trans.unconditional = true;
-				trans.other = false;
-				dispose();
-				return;
-			}
-
-			// handle else transition
-			if (otherwise.isSelected()) {
-				trans.unconditional = false;
-				trans.other = true;
-				dispose();
-				return;
-			}
-
-			// check for missing signal name
-			if (signalField.getText().isEmpty()) {
-				reject("Missing signal name");
-				return;
-			}
-
-			// check for invalid signal names
-			if (signalField.getText().equals("else")) {
-				reject("Invalid signal name");
-				return;
-			}
-			if (signalField.getText().equals("clock")) {
-				reject("Invalid signal name");
-				return;
-			}
-
-			// if input signal already exists, get bit count for it
-			int hasBits = -1;
-			for (State st : machine.getStates()) {
-				for (Transition tr : st.trans) {
-					if (tr.signal.equals(signalField.getText())) {
-						hasBits = tr.bits;
-					}
-				}
-			}
-
-			// get value and bits from dialog
-			int tempValue = 0;
-			int tempBits = 0;
-			try {
-				tempValue = Integer.parseInt(valueField.getText());
-				tempBits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Invalid numeric value");
-				return;
-			}
-
-			// make sure bits match with existing input
-			if (hasBits > 0 && tempBits != hasBits) {
-				reject("Bits don't match with previous signal specification of " +
-						hasBits + " bits");
-				return;
-			}
-			int newbits = tempBits;
-			if (trans.bits != -1 && trans.bits != newbits) {
-				reject("Bits don't match with previous signal specification of " +
-						trans.bits + " bits");
-				return;
-			}
-
-			// make sure value will fit
-			if (Math.log(tempValue+1)/Math.log(2) > tempBits) {
-				reject("Value too large for number of bits");
-				return;
-			}
-
-			// finish conditional transition
-			trans.unconditional = false;
-			trans.other = false;
-			trans.signal = signalField.getText();
-			if (equalOrNot.getText().equals("=")) {
-				trans.equal = true;
-			}
-			else {
-				trans.equal = false;
-			}
-			trans.value = tempValue;
-			trans.bits = newbits;
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel the new transition.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-		/**
-		 * React to events.
-		 *
-		 * @param event The event object.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			// save equality type check
-			if (event.getSource() == equalOrNot) {
-				if (equalOrNot.getText().equals("=")) {
-					equalOrNot.setText("!=");
-				}
-				else {
-					equalOrNot.setText("=");
-				}
-			}
-			
-			// handle new conditional transition
-			else if (event.getSource() == conditional) {
-				if (trans.signal.isEmpty()) {
-					signalField.setEditable(true);
-					valueField.setEditable(true);
-					bitsField.setEditable(true);
-				}
-				else {
-					signalField.setEditable(false);
-					valueField.setEditable(true);
-					bitsField.setEditable(false);
-
-					// find unused value and put in value field
-					BitSet used = new BitSet();
-					int bits = 0;
-					for (Transition tran : myState.trans) {
-						bits = trans.bits;
-						used.set(tran.value);
-					}
-					int val = used.nextClearBit(0);
-					if (val < 1<<bits) {
-						valueField.setText(val+"");
-					}
-				}
-			}
-			
-			// handle new unconditional or else transition
-			else if (event.getSource() == unconditional ||
-					event.getSource() == otherwise) {
-				signalField.setEditable(false);
-				valueField.setEditable(false);
-				bitsField.setEditable(false);
-			}
-
-		} // end of actionPerformed method
-
-		/**
-		 * See if this dialog was canceled.
-		 * 
-		 * @return true if canceled, false if not.
-		 */
-		public boolean wasCancelled() {
-
-			return cancelled;
-		} // end of wasCancelled method
-
-	} // end of CreateTrans class
-
-	/**
-	 * Show outputs, no editing possible.
-	 *
-	 * @param theDialog The state machine edit dialog this hangs off of.
-	 */
-	public void showOuts(JDialog theDialog) {
-
-		// set up dialog
-		final JDialog show = new JDialog(theDialog,false);
-		Container window = show.getContentPane();
-		addOuts(window);
-		JButton close = new JButton("close window");
-		close.setBackground(Color.green);
-		window.add(close);
-		close.addActionListener(new ActionListener() {
-			/**
-			 * Dispose the outputs window when the close button is pressed.
-			 */
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				show.dispose();
-			}
-		});
-
-		// finish up
-		show.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		show.pack();
-		show.setLocationRelativeTo(theDialog);
-		show.setVisible(true);
-	} // end of showOuts method
-
-	/**
-	 * Add labels for each output signal to a container.
-	 * Give the container a grid layout of the appropriate size.
-	 * 
-	 * @param window The container to add to.
-	 */
-	public void addOuts(Container window) {
-
-		// set up container
-		window.setBackground(Color.WHITE);
-		window.setLayout(new GridLayout(outs.size()+2,1));
-
-		// add title
-		JLabel title = new JLabel("Outputs for state: " + name);
-		title.setOpaque(true);
-		title.setBackground(Color.LIGHT_GRAY);
-		window.add(title);
-
-		// add labels, one per output
-		for (Out out : outs) {
-			window.add(new JLabel(out.toString(),SwingConstants.CENTER));
-		}
-
-	}
-
-	/**
-	 * Edit outputs.
-	 */
-	public void editOuts() {
-		new EditOutputs();
-	} // end of editOuts method
-
-	/**
-	 * Dialog to create outputs for a state.
-	 */
-	private class EditOutputs extends ElementDialog implements ActionListener {
-
-		// properties
-		/** displays the outputs of this state. */
-		private JList<Out> outList;
-		/** the list model backing the output list. */
-		DefaultListModel<Out> model;
-		/** button to add a new output. */
-		private JButton add = new JButton("add new output");
-		/** button to delete the selected output. */
-		private JButton delete = new JButton("delete selected output");
-		/** input field for the output signal name. */
-		private JTextField signalField = new JTextField(10);
-		/** input field for the output value. */
-		private JTextField valueField = new JTextField("1");
-		/** keypad for entering the output value. */
-		private KeyPad valuePad = new KeyPad(valueField,10,0,this);
-		/** input field for the number of bits in the output signal. */
-		private JTextField bitsField = new JTextField("1");
-		/** keypad for entering the number of bits. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
-		/** true if the dialog was cancelled. */
-		private boolean cancelled;
-
-		/**
-		 * Initialize dialog.
-		 */
-		public EditOutputs() {
-
-			// set up
-			super("Edit Outputs",null);
-			cancelled = false;
-
-			// get window
-			Container window = getContentPane();
-
-			// set up output list
-			model = new DefaultListModel<Out>();
-			for (Out output : outs) {
-				model.addElement(output);
-			}
-			outList = new JList<Out>(model);
-			outList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			JScrollPane pane =  new JScrollPane(outList);
-			pane.setSize(400,400);
-			window.add(pane);
-
-			// set up add/delete buttons
-			JPanel addDel = new JPanel(new FlowLayout());
-			addDel.add(add);
-			addDel.add(delete);
-			window.add(addDel);
-
-			// set up signal/value
-			JPanel sigval = new JPanel(new BorderLayout());
-			JPanel sig = new JPanel(new GridLayout(3,1));
-			sig.add(new JLabel("signal",SwingConstants.CENTER));
-			sig.add(signalField);
-			sig.add(new JLabel(" "));
-			sigval.add(sig,BorderLayout.WEST);
-			JPanel other = new JPanel(new BorderLayout());
-			JPanel misc = new JPanel(new GridLayout(3,1));
-			misc.add(new JLabel(" "));
-			misc.add(new JLabel("="));
-			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
-			other.add(misc,BorderLayout.WEST);
-			JPanel values = new JPanel(new GridLayout(3,1));
-			values.add(new JLabel("value",SwingConstants.CENTER));
-			JPanel val = new JPanel(new BorderLayout());
-			val.add(valueField,BorderLayout.CENTER);
-			val.add(valuePad,BorderLayout.EAST);
-			values.add(val);
-			JPanel bits = new JPanel(new BorderLayout());
-			bits.add(bitsField,BorderLayout.CENTER);
-			bits.add(bitsPad,BorderLayout.EAST);
-			values.add(bits);
-			other.add(values,BorderLayout.CENTER);
-			sigval.add(other,BorderLayout.CENTER);
-			window.add(sigval);
-
-			// add listeners
-			add.addActionListener(this);
-			delete.addActionListener(this);
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Close the dialog (outputs are edited in place).
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * React to events.
-		 *
-		 * @param event The event object.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == add) {
-				Out newOut = new Out();
-				newOut.signal = signalField.getText().trim();
-				if (newOut.signal.isEmpty()) {
-					TellUser.error(this,
-							"Missing signal name", "Error");
-					return;
-				}
-				try {
-					newOut.value = Integer.parseInt(valueField.getText());
-					newOut.bits = Integer.parseInt(bitsField.getText());
-				}
-				catch (NumberFormatException ex) {
-					TellUser.error(this,
-							"Value or bits not valid", "Error");
-					return;
-				}
-				if (Math.log(newOut.value+1)/Math.log(2) > newOut.bits) {
-					TellUser.error(this,
-							"Value too large for number of bits", "Error");
-					return;
-				}
-
-				// make sure this output doesn't conflict with existing outputs
-				// in this state
-				for (Out out : outs) {
-					if (out.signal.equals(newOut.signal)) {
-						TellUser.error(this,
-								"Already an output with this name", "Error");
-						return;
-					}
-				}
-
-				// check for consistentcy for this signal throughout state machine
-				Check ch = bitmap.get(newOut.signal);
-				if (ch == null) {
-					ch = new Check();
-					ch.bits = newOut.bits;
-					ch.isInput = false;
-					ch.refs = 1;
-					bitmap.put(newOut.signal,ch);
-				}
-				else {
-					if (ch.isInput) {
-						TellUser.error(this,
-								"This signal is already an input", "Error");
-						return;
-					}
-					if (ch.bits != newOut.bits) {
-						TellUser.error(this,
-								"Bits not consistent with previous use of this signal",
-								"Error");
-						return;
-					}
-					ch.refs += 1;
-				}
-				outs.add(newOut);
-				model.addElement(newOut);
-			}
-			else if (event.getSource() == delete) {
-				int pos = outList.getSelectedIndex();
-				if (pos >= 0) {
-					Out out = (Out)model.getElementAt(pos);
-					Check ch = bitmap.get(out.signal);
-					ch.refs -= 1;
-					if (ch.refs == 0) {
-						bitmap.remove(out.signal);
-					}
-					outs.remove(pos);
-					model.remove(pos);
-				}
-			}
-
-		} // end of actionPerformed method
-
-		/**
-		 * See if this dialog was cancelled.
-		 * 
-		 * @return true if cancelled, false if not.
-		 */
-		@SuppressWarnings("unused")
-		public boolean wasCancelled() {
-
-			return cancelled;
-		} // end of wasCancelled method
-
-	} // end of EditOutputs class
-
-	/**
-	 * Determine the maximum printing width of this state.
-	 * 
-	 * @param g The Graphics object to use to determine sizes.
-	 * 
-	 * @return the maximum printing width.
-	 */
-	public int maxWidth(Graphics g) {
-
-		FontMetrics fm = g.getFontMetrics();
-		int max = fm.stringWidth("state: " + name);
-		for (Out out : outs) {
-			max = Math.max(max,fm.stringWidth(out.signal + "=" + out.value));
-		}
-		return max;
-	} // end of maxWidth method
-
-	/**
-	 * Determine the maximum printing height of this state.
-	 * 
-	 * @param g The Graphics object to use to determine sizes.
-	 * 
-	 * @return the maximum printing height.
-	 */
-	public int maxHeight(Graphics g) {
-
-		FontMetrics fm = g.getFontMetrics();
-		int height = fm.getAscent() + fm.getDescent();
-		return (outs.size()+1)*height;
-	} // end of maxHeight method
-
-	/**
-	 * Print this state's outputs.
-	 * 
-	 * @param g The Graphics object to use.
-	 * @param x The x-coordinate of the upper left corner of the print area.
-	 * @param y The y-coordinate of the upper left corner of the print area.
-	 */
-	public void print(Graphics g, int x, int y) {
-
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int height = ascent + fm.getDescent();
-		g.drawString("State: " + name,x,y+ascent);
-		y += height;
-		for (Out out : outs) {
-			g.drawString(out.signal + "=" + out.value,x,y+ascent);
-			y += height;
-		}
-	} // end of print method
 
 	//-----------------------------
 	// simulation
@@ -2139,17 +1193,147 @@ public class State {
 	 * 
 	 * @return the x-coordinate.
 	 */
-	int getX() {
+	public int getX() {
 
 		return x;
 	} // end of getX method
+
+	/**
+	 * Get the diameter of the circle representing this state (issue #77:
+	 * the GUI-side renderer reads it to draw the circle and lay out
+	 * transition endpoints).
+	 *
+	 * @return the diameter.
+	 */
+	public int getDiameter() {
+
+		return diameter;
+	} // end of getDiameter method
+
+	/**
+	 * Get this state's transitions (issue #77: the GUI-side renderer and
+	 * dialog iterate them to draw and edit the machine).
+	 *
+	 * @return the set of transitions.
+	 */
+	public Set<Transition> getTransitions() {
+
+		return trans;
+	} // end of getTransitions method
+
+	/**
+	 * Get every state in this state's machine (issue #77: the GUI-side
+	 * transition dialog scans them to find an existing signal's bit
+	 * width).
+	 *
+	 * @return the machine's states.
+	 */
+	public Set<State> getMachineStates() {
+
+		return machine.getStates();
+	} // end of getMachineStates method
+
+	/**
+	 * Get this state's asserted outputs (issue #77: the GUI-side output
+	 * dialog and print summary read them).
+	 *
+	 * @return the outputs.
+	 */
+	public Vector<Out> getOuts() {
+
+		return outs;
+	} // end of getOuts method
+
+	/**
+	 * Validate and add an output to this state (issue #77): the
+	 * GUI-side output dialog collects the signal/value/bits and hands
+	 * them here for the headless conflict and bitmap-consistency checks.
+	 *
+	 * @param signal The (trimmed) output signal name.
+	 * @param value The value the signal is set to.
+	 * @param bits The number of bits in the signal.
+	 * @param dialog The dialog to display error messages in.
+	 *
+	 * @return the added output, or null if the input was rejected.
+	 */
+	public Out addOutput(String signal, long value, int bits,
+			java.awt.Component dialog) {
+
+		if (signal.isEmpty()) {
+			TellUser.error(dialog, "Missing signal name", "Error");
+			return null;
+		}
+		if (Math.log(value+1)/Math.log(2) > bits) {
+			TellUser.error(dialog,
+					"Value too large for number of bits", "Error");
+			return null;
+		}
+
+		// make sure this output doesn't conflict with existing outputs
+		// in this state
+		for (Out out : outs) {
+			if (out.signal.equals(signal)) {
+				TellUser.error(dialog,
+						"Already an output with this name", "Error");
+				return null;
+			}
+		}
+
+		// check for consistency for this signal throughout state machine
+		Check ch = bitmap.get(signal);
+		if (ch == null) {
+			ch = new Check();
+			ch.bits = bits;
+			ch.isInput = false;
+			ch.refs = 1;
+			bitmap.put(signal, ch);
+		}
+		else {
+			if (ch.isInput) {
+				TellUser.error(dialog,
+						"This signal is already an input", "Error");
+				return null;
+			}
+			if (ch.bits != bits) {
+				TellUser.error(dialog,
+						"Bits not consistent with previous use of this signal",
+						"Error");
+				return null;
+			}
+			ch.refs += 1;
+		}
+		Out newOut = new Out();
+		newOut.signal = signal;
+		newOut.value = value;
+		newOut.bits = bits;
+		outs.add(newOut);
+		return newOut;
+	} // end of addOutput method
+
+	/**
+	 * Delete the output at the given index and update the signal bitmap
+	 * (issue #77: the headless half of the former {@code EditOutputs}
+	 * delete button).
+	 *
+	 * @param pos The index of the output to remove.
+	 */
+	public void deleteOutput(int pos) {
+
+		Out out = outs.get(pos);
+		Check ch = bitmap.get(out.signal);
+		ch.refs -= 1;
+		if (ch.refs == 0) {
+			bitmap.remove(out.signal);
+		}
+		outs.remove(pos);
+	} // end of deleteOutput method
 
 	/**
 	 * Get the y-coordinate of this state.
 	 * 
 	 * @return the y-coordinate.
 	 */
-	int getY() {
+	public int getY() {
 
 		return y;
 	} // end of getY method
@@ -2159,7 +1343,7 @@ public class State {
 	 * 
 	 * @param newx The new x-coordinate.
 	 */
-	void setX(int newx) {
+	public void setX(int newx) {
 
 		x = newx;
 	} // end of setX method
@@ -2170,7 +1354,7 @@ public class State {
 	 * 
 	 * @param newy The new y-coordinate.
 	 */
-	void setY(int newy) {
+	public void setY(int newy) {
 
 		y = newy;
 	} // end of setY method
@@ -2180,17 +1364,28 @@ public class State {
 	 * 
 	 * @return true if it is, false if it is not.
 	 */
-	boolean isInitial() {
+	public boolean isInitial() {
 
 		return initial;
 	} // end of isInitial method
+
+	/**
+	 * See if this state is drawn highlighted (issue #77: the GUI-side
+	 * renderer reads it to pick the fill).
+	 *
+	 * @return true if highlighted, false if not.
+	 */
+	public boolean isHighlighted() {
+
+		return highlight;
+	} // end of isHighlighted method
 
 	/**
 	 * Get total number of output signals from this state.
 	 * 
 	 * @return the total number of output signals.
 	 */
-	int numOuts() {
+	public int numOuts() {
 
 		return outs.size();
 	} // end of numOuts method

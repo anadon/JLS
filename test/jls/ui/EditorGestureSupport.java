@@ -58,6 +58,15 @@ final class EditorGestureSupport implements AutoCloseable {
 	private final Component canvas;
 	private long when = 1_000_000L;
 
+	/**
+	 * The point of the most recent right-press (the popup trigger),
+	 * remembered so {@link #waitForMenuItem} can re-raise a popup that the
+	 * #162 WM-less Xvfb intermittently drops, without the caller threading
+	 * the location through. Both are -1 until the first right-press.
+	 */
+	private int lastPopupX = -1;
+	private int lastPopupY = -1;
+
 	EditorGestureSupport(Circuit circuit) throws Exception {
 		this.circuit = circuit;
 		this.clipboardCircuit = new Circuit("clipboard");
@@ -177,6 +186,8 @@ final class EditorGestureSupport implements AutoCloseable {
 
 	/** A right press (the popup trigger the editor checks for). */
 	void rightPress(int x, int y) throws Exception {
+		lastPopupX = x;
+		lastPopupY = y;
 		dispatch(MouseEvent.MOUSE_PRESSED, x, y, MouseEvent.BUTTON3,
 				InputEvent.BUTTON3_DOWN_MASK, true);
 	}
@@ -305,18 +316,7 @@ final class EditorGestureSupport implements AutoCloseable {
 	 * @throws Exception if the EDT dispatch fails.
 	 */
 	boolean isPopupItemShowing(String text) throws Exception {
-		AtomicReference<JMenuItem> found = new AtomicReference<>();
-		SwingUtilities.invokeAndWait(() -> {
-			for (Window w : Window.getWindows()) {
-				JMenuItem item = findMenuItem(w, text);
-				if (item != null) {
-					found.set(item);
-					return;
-				}
-			}
-			found.set(findMenuItem(frame, text));
-		});
-		return found.get() != null;
+		return findShowingMenuItem(text) != null;
 	}
 
 	/**
@@ -599,31 +599,102 @@ final class EditorGestureSupport implements AutoCloseable {
 	}
 
 	private JMenuItem waitForMenuItem(String text) {
-		// ~10s budget: opening a popup and materializing its items can
-		// exceed a 5s bound on a loaded CI runner (observed on #196).
-		for (int i = 0; i < 400; i++) {
-			AtomicReference<JMenuItem> found = new AtomicReference<>();
+		// Raising a popup is the one editor gesture that flakes under the
+		// #162 WM-less Xvfb: a single synthetic BUTTON3 press intermittently
+		// fails to materialize an enumerable popup window, so a plain poll
+		// waits out its whole budget on a popup that never appeared (the
+		// "timed out waiting for popup item" failures, e.g. #196). Recover
+		// the way PopupOperationBehaviorTest.openPopupTo proved out: re-issue
+		// the popup trigger while no popup is up, so materialization is
+		// self-healing and the wait is deterministic. Re-press only when
+		// nothing is showing, so a popup that did appear is never dismissed
+		// or stacked; the caller's own initial press is attempt 0, and each
+		// attempt still waits a bounded ~2s so a genuinely broken popup fails
+		// fast rather than hanging.
+		for (int attempt = 0; attempt < 6; attempt++) {
+			for (int i = 0; i < 40; i++) {
+				JMenuItem item = findShowingMenuItem(text);
+				if (item != null) {
+					return item;
+				}
+				pause(50);
+			}
+			if (lastPopupX < 0 || anyPopupShowing()) {
+				// No right-press to retry, or a popup is up but lacks the
+				// item: re-pressing cannot help and could disrupt it.
+				break;
+			}
 			try {
-				SwingUtilities.invokeAndWait(() -> {
-					for (Window w : Window.getWindows()) {
-						JMenuItem item = findMenuItem(w, text);
-						if (item != null) {
-							found.set(item);
-							return;
-						}
-					}
-					found.set(findMenuItem(frame, text));
-				});
+				rightPress(lastPopupX, lastPopupY);
 			} catch (Exception e) {
-				throw new AssertionError("EDT lookup failed", e);
+				throw new AssertionError("re-raising popup failed", e);
 			}
-			if (found.get() != null) {
-				return found.get();
-			}
-			pause(25);
 		}
 		throw new AssertionError("timed out waiting for popup item '"
 				+ text + "'");
+	}
+
+	/**
+	 * The showing popup-menu item with the given text, or null if none is
+	 * showing, looked up on the EDT.
+	 *
+	 * @param text the item's label.
+	 * @return the item, or null.
+	 */
+	private JMenuItem findShowingMenuItem(String text) {
+		AtomicReference<JMenuItem> found = new AtomicReference<>();
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				for (Window w : Window.getWindows()) {
+					JMenuItem item = findMenuItem(w, text);
+					if (item != null) {
+						found.set(item);
+						return;
+					}
+				}
+				found.set(findMenuItem(frame, text));
+			});
+		} catch (Exception e) {
+			throw new AssertionError("EDT lookup failed", e);
+		}
+		return found.get();
+	}
+
+	/**
+	 * Whether any popup menu is currently showing, read on the EDT. Guards
+	 * the {@link #waitForMenuItem} re-press so it only re-raises a popup when
+	 * none is up.
+	 *
+	 * @return true if a visible popup menu exists in any window.
+	 */
+	private boolean anyPopupShowing() {
+		AtomicReference<Boolean> up = new AtomicReference<>(Boolean.FALSE);
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				for (Window w : Window.getWindows()) {
+					if (w.isShowing() && hasVisiblePopup(w)) {
+						up.set(Boolean.TRUE);
+						return;
+					}
+				}
+			});
+		} catch (Exception e) {
+			throw new AssertionError("EDT popup probe failed", e);
+		}
+		return up.get();
+	}
+
+	/** Whether a container tree holds a visible {@link JPopupMenu}. */
+	private static boolean hasVisiblePopup(Container root) {
+		for (Component c : root.getComponents()) {
+			if (c instanceof JPopupMenu menu && menu.isVisible()) {
+				return true;
+			}
+			if (c instanceof Container inner && hasVisiblePopup(inner)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The drawing canvas: the scroll pane's mouse-listening view. */

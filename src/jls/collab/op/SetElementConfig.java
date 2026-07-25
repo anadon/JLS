@@ -1,6 +1,7 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
+import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 
 import jls.Circuit;
@@ -59,7 +60,7 @@ public record SetElementConfig(ElementId id, String block)
 		old.remove(circuit);
 		Element fresh = ElementBlocks.load(circuit, block);
 		try {
-			fresh.init(g);
+			fresh.init(SwingTextMetrics.forGraphics(g));
 		} catch (Exception ex) {
 			throw new OpRejected("the reconfigured element could not "
 					+ "initialize"
@@ -113,7 +114,7 @@ public record SetElementConfig(ElementId id, String block)
 		requireNameFree(circuit, old, fresh);
 		if (g != null) {
 			try {
-				fresh.init(g);
+				fresh.init(SwingTextMetrics.forGraphics(g));
 			} catch (Exception ex) {
 				throw new OpRejected("the reconfigured element could not "
 						+ "initialize"

@@ -12,12 +12,13 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 
 /**
  * Pins gate orientation behavior across the issue #78 H3 unification:
- * gates now share the one {@link JLSInfo.Orientation} enum instead of
+ * gates now share the one {@link Orientation} enum instead of
  * their private lowercase duplicate, and these tests hold the two
  * contracts that must not move.
  *
@@ -29,9 +30,9 @@ import jls.JLSInfo;
  *    three of them).
  *
  * 2. Rotation and flip semantics are unchanged now that the hand-rolled
- *    transition tables are {@link JLSInfo.Orientation#ccw()},
- *    {@link JLSInfo.Orientation#cw()}, and
- *    {@link JLSInfo.Orientation#flipped()}: rotating LEFT is a
+ *    transition tables are {@link Orientation#ccw()},
+ *    {@link Orientation#cw()}, and
+ *    {@link Orientation#flipped()}: rotating LEFT is a
  *    quarter-turn counterclockwise, RIGHT clockwise, flip reverses.
  */
 class GateOrientationTest {
@@ -58,7 +59,7 @@ class GateOrientationTest {
 		BufferedImage img = new BufferedImage(64, 64,
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
-		boolean ok = circuit.finishLoad(g);
+		boolean ok = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 		g.dispose();
 		assertTrue(ok, () -> "finishLoad failed: " + JLSInfo.loadError);
 		Gate gate = null;
@@ -114,7 +115,7 @@ class GateOrientationTest {
 		Graphics2D g = img.createGraphics();
 		String[] cycle = {"left", "down", "right", "up"};
 		for (String expected : cycle) {
-			gate.rotate(JLSInfo.Orientation.LEFT, g);
+			gate.rotate(Orientation.LEFT, jls.edit.SwingTextMetrics.of(g));
 			assertEquals(expected, savedOrientation(gate),
 					"rotate LEFT must be a quarter-turn "
 							+ "counterclockwise");
@@ -131,7 +132,7 @@ class GateOrientationTest {
 		Graphics2D g = img.createGraphics();
 		String[] cycle = {"right", "down", "left", "up"};
 		for (String expected : cycle) {
-			gate.rotate(JLSInfo.Orientation.RIGHT, g);
+			gate.rotate(Orientation.RIGHT, jls.edit.SwingTextMetrics.of(g));
 			assertEquals(expected, savedOrientation(gate),
 					"rotate RIGHT must be a quarter-turn clockwise");
 		}
@@ -148,7 +149,7 @@ class GateOrientationTest {
 				{"up", "down"}, {"down", "up"}};
 		for (String[] pair : pairs) {
 			Gate gate = loadGate(pair[0]);
-			gate.flip(g);
+			gate.flip(jls.edit.SwingTextMetrics.of(g));
 			assertEquals(pair[1], savedOrientation(gate),
 					"flip must reverse '" + pair[0] + "'");
 		}

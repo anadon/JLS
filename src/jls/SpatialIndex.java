@@ -1,6 +1,5 @@
 package jls;
 
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jls.core.Bounds;
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -43,12 +44,12 @@ public final class SpatialIndex {
 	 * that typical elements cover only a few cells, small enough that a
 	 * cell holds few elements.
 	 */
-	private static final int CELL = 4 * JLSInfo.spacing;
+	private static final int CELL = 4 * Geometry.SPACING;
 
 	/** Grid cells, keyed by packed cell coordinates, holding the elements that overlap them. */
 	private final Map<Long, List<Element>> cells = new HashMap<Long, List<Element>>();
 	/** The bounds each tracked element was indexed under. */
-	private final Map<Element, Rectangle> indexed = new HashMap<Element, Rectangle>();
+	private final Map<Element, Bounds> indexed = new HashMap<Element, Bounds>();
 	/** True when the index is stale and must be rebuilt before answering queries. */
 	private boolean dirty = true;
 
@@ -113,12 +114,12 @@ public final class SpatialIndex {
 	 */
 	public void insert(Element el) {
 
-		Rectangle b = el.getIndexBounds();
+		Bounds b = el.getIndexBounds();
 		indexed.put(el, b);
-		int cx1 = Math.floorDiv(b.x, CELL);
-		int cy1 = Math.floorDiv(b.y, CELL);
-		int cx2 = Math.floorDiv(b.x + Math.max(b.width, 0), CELL);
-		int cy2 = Math.floorDiv(b.y + Math.max(b.height, 0), CELL);
+		int cx1 = Math.floorDiv(b.x(), CELL);
+		int cy1 = Math.floorDiv(b.y(), CELL);
+		int cx2 = Math.floorDiv(b.x() + Math.max(b.width(), 0), CELL);
+		int cy2 = Math.floorDiv(b.y() + Math.max(b.height(), 0), CELL);
 		for (int cx = cx1; cx <= cx2; cx += 1) {
 			for (int cy = cy1; cy <= cy2; cy += 1) {
 				Long k = key(cx, cy);
@@ -140,14 +141,14 @@ public final class SpatialIndex {
 	 */
 	public void remove(Element el) {
 
-		Rectangle b = indexed.remove(el);
+		Bounds b = indexed.remove(el);
 		if (b == null) {
 			return;
 		}
-		int cx1 = Math.floorDiv(b.x, CELL);
-		int cy1 = Math.floorDiv(b.y, CELL);
-		int cx2 = Math.floorDiv(b.x + Math.max(b.width, 0), CELL);
-		int cy2 = Math.floorDiv(b.y + Math.max(b.height, 0), CELL);
+		int cx1 = Math.floorDiv(b.x(), CELL);
+		int cy1 = Math.floorDiv(b.y(), CELL);
+		int cx2 = Math.floorDiv(b.x() + Math.max(b.width(), 0), CELL);
+		int cy2 = Math.floorDiv(b.y() + Math.max(b.height(), 0), CELL);
 		for (int cx = cx1; cx <= cx2; cx += 1) {
 			for (int cy = cy1; cy <= cy2; cy += 1) {
 				Long k = key(cx, cy);
@@ -185,19 +186,19 @@ public final class SpatialIndex {
 	 *
 	 * @return the candidate set.
 	 */
-	public Set<Element> query(Rectangle rect) {
+	public Set<Element> query(Bounds rect) {
 
 		Set<Element> result = new HashSet<Element>();
-		int cx1 = Math.floorDiv(rect.x, CELL);
-		int cy1 = Math.floorDiv(rect.y, CELL);
-		int cx2 = Math.floorDiv(rect.x + Math.max(rect.width, 0), CELL);
-		int cy2 = Math.floorDiv(rect.y + Math.max(rect.height, 0), CELL);
+		int cx1 = Math.floorDiv(rect.x(), CELL);
+		int cy1 = Math.floorDiv(rect.y(), CELL);
+		int cx2 = Math.floorDiv(rect.x() + Math.max(rect.width(), 0), CELL);
+		int cy2 = Math.floorDiv(rect.y() + Math.max(rect.height(), 0), CELL);
 
 		// a huge query rectangle (e.g. select-all rubber band) can cover
 		// more cells than there are elements; walk the elements instead
 		long cellCount = (long) (cx2 - cx1 + 1) * (cy2 - cy1 + 1);
 		if (cellCount > indexed.size()) {
-			for (Map.Entry<Element, Rectangle> e : indexed.entrySet()) {
+			for (Map.Entry<Element, Bounds> e : indexed.entrySet()) {
 				if (boundsTouch(e.getValue(), rect)) {
 					result.add(e.getKey());
 				}
@@ -212,7 +213,7 @@ public final class SpatialIndex {
 					continue;
 				}
 				for (Element el : cell) {
-					Rectangle bounds = indexed.get(el);
+					Bounds bounds = indexed.get(el);
 						if (bounds != null && boundsTouch(bounds, rect)) {
 							result.add(el);
 						}
@@ -232,10 +233,10 @@ public final class SpatialIndex {
 	 *
 	 * @return true if the rectangles overlap or touch, false otherwise.
 	 */
-	private static boolean boundsTouch(Rectangle a, Rectangle b) {
+	private static boolean boundsTouch(Bounds a, Bounds b) {
 
-		return a.x <= b.x + b.width && b.x <= a.x + a.width
-				&& a.y <= b.y + b.height && b.y <= a.y + a.height;
+		return a.x() <= b.x() + b.width() && b.x() <= a.x() + a.width()
+				&& a.y() <= b.y() + b.height() && b.y() <= a.y() + a.height();
 	} // end of boundsTouch method
 
 } // end of SpatialIndex class

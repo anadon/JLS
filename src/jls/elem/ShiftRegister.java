@@ -1,8 +1,9 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
 import java.io.PrintWriter;
 import java.util.BitSet;
 
@@ -23,7 +24,7 @@ import java.util.BitSet;
  * docs/simulation-semantics.md).
  *
  * GUI classes are referenced fully qualified, not imported: new files
- * in jls.elem may not import java.awt/javax.swing (issue #77,
+ * in jls.elem may not import AWT/Swing (issue #77,
  * HeadlessCoreRatchetTest).
  *
  * @author David A. Poplawski
@@ -47,10 +48,21 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkBits(int bits) {
+	public static String checkBits(int bits) {
 
 		return bits < 2 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
+
+	/**
+	 * The data width a new instance starts with (issue #77: read by the
+	 * GUI-side creation dialog to seed its field).
+	 *
+	 * @return the default number of data bits.
+	 */
+	public static int defaultBits() {
+
+		return defaultBits;
+	} // end of defaultBits method
 
 	// shift kinds (save-file names are the enum names, fixed by the
 	// fork's 4.6 file format)
@@ -85,13 +97,9 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	/** The propagation delay of this instance. */
 	private int propDelay = defaultPropDelay;
 	/** Which side of the element the output is on. */
-	private JLSInfo.Orientation outputOrientation = JLSInfo.Orientation.RIGHT;
+	private Orientation outputOrientation = Orientation.RIGHT;
 	/** Which side of the element the amount input is on. */
-	private JLSInfo.Orientation amountOrientation = JLSInfo.Orientation.DOWN;
-
-	// running properties
-	/** True if the user cancelled the creation dialog. */
-	private boolean cancelled;
+	private Orientation amountOrientation = Orientation.DOWN;
 
 	/**
 	 * Create a new shift register element.
@@ -104,35 +112,64 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
+	 * Set the data width (issue #77: applied by the GUI-side creation
+	 * dialog).
 	 *
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this element will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 *
-	 * @return false if cancelled, true otherwise.
+	 * @param bits The number of data bits.
 	 */
-	@Override
-	public boolean setup(java.awt.Graphics g, javax.swing.JPanel editWindow,
-			int x, int y) {
+	public void setDataBits(int bits) {
 
-		// show creation dialog
-		new ShiftRegisterCreate();
+		this.bits = bits;
+	} // end of setDataBits method
 
-		// don't do anything if user cancelled element
-		if (cancelled)
-			return false;
+	/**
+	 * Fix this instance to shift logically left (zero fill) (issue #77:
+	 * applied by the GUI-side creation dialog).
+	 */
+	public void setShiftLogicalLeft() {
 
-		// complete initialization
-		init(g);
+		type = Type.LogicalLeft;
+	} // end of setShiftLogicalLeft method
 
-		// save position
-		java.awt.Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
+	/**
+	 * Fix this instance to shift logically right (zero fill) (issue #77:
+	 * applied by the GUI-side creation dialog).
+	 */
+	public void setShiftLogicalRight() {
 
-		return true;
-	} // end of setup method
+		type = Type.LogicalRight;
+	} // end of setShiftLogicalRight method
+
+	/**
+	 * Fix this instance to shift arithmetically right (sign fill) (issue
+	 * #77: applied by the GUI-side creation dialog).
+	 */
+	public void setShiftArithmeticRight() {
+
+		type = Type.ArithmeticRight;
+	} // end of setShiftArithmeticRight method
+
+	/**
+	 * Set which side of the element the output is on (issue #77: applied
+	 * by the GUI-side creation dialog).
+	 *
+	 * @param o The output orientation.
+	 */
+	public void setOutputOrientation(Orientation o) {
+
+		outputOrientation = o;
+	} // end of setOutputOrientation method
+
+	/**
+	 * Set which side of the element the amount input is on (issue #77:
+	 * applied by the GUI-side creation dialog).
+	 *
+	 * @param o The amount-input orientation.
+	 */
+	public void setAmountOrientation(Orientation o) {
+
+		amountOrientation = o;
+	} // end of setAmountOrientation method
 
 	/**
 	 * Initialize internal info for this element.
@@ -140,45 +177,45 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(java.awt.Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
 		// output orientation (#24); the amount side is independent of
 		// that transform, so its put is placed directly from its own
 		// orientation - the same scheme as Mux, whose geometry this
 		// element inherited in the fork
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
-		java.awt.Dimension d = t.size();
-		width = d.width;
-		height = d.height;
+		jls.core.GridSize d = t.size();
+		width = d.width();
+		height = d.height();
 
 		// determine number of amount bits
 		int sbits = 32 - Integer.numberOfLeadingZeros(bits-1);
 
 		// create amount input
-		if(amountOrientation == JLSInfo.Orientation.DOWN)
+		if(amountOrientation == Orientation.DOWN)
 		{
 			inputs.add(new Input("amount",this,s,height,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.UP)
+		else if(amountOrientation == Orientation.UP)
 		{
 			inputs.add(new Input("amount",this,s,0,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.LEFT)
+		else if(amountOrientation == Orientation.LEFT)
 		{
 			inputs.add(new Input("amount",this,0,s,sbits));
 		}
-		else if(amountOrientation == JLSInfo.Orientation.RIGHT)
+		else if(amountOrientation == Orientation.RIGHT)
 		{
 			inputs.add(new Input("amount",this,width,s,sbits));
 		}
 
 		// create data input and output
-		java.awt.Point in = t.map(0,s);
-		inputs.add(new Input("input",this,in.x,in.y,bits));
-		java.awt.Point out = t.map(2*s,s);
-		outputs.add(new Output("output",this,out.x,out.y,bits));
+		jls.core.GridPoint in = t.map(0,s);
+		inputs.add(new Input("input",this,in.x(),in.y(),bits));
+		jls.core.GridPoint out = t.map(2*s,s);
+		outputs.add(new Output("output",this,out.x(),out.y(),bits));
 
 	} // end of init method
 
@@ -190,7 +227,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 */
 	private GridTransform.Chain placement() {
 
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(2*s,2*s);
 		switch (outputOrientation) {
 		case RIGHT:
@@ -209,48 +246,16 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	} // end of placement method
 
 	/**
-	 * Draw this shift register.
+	 * The output orientation of this shift register (issue #77: a read-only
+	 * accessor the GUI-side {@code ShiftRegisterRenderer} uses so the "in"
+	 * label placement can leave the model).
 	 *
-	 * @param g The graphics object to draw with.
+	 * @return the output orientation.
 	 */
-	@Override
-	public void draw(java.awt.Graphics g) {
+	public Orientation getOutputOrientation() {
 
-		// draw context
-		super.draw(g);
-
-		// draw shape
-		g.setColor(java.awt.Color.black);
-		g.drawRect(x,y,width,height);
-
-		// label the data input so it can't be confused with the
-		// (narrower) amount input
-		java.awt.FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int hi = ascent + fm.getDescent();
-		int d2 = JLSInfo.pointDiameter/2;
-		Input data = inputs.get(1);
-		g.setColor(java.awt.Color.BLACK);
-		if(outputOrientation == JLSInfo.Orientation.RIGHT)
-		{
-			g.drawString("in",x+d2,data.getY()-hi/2+ascent);
-		}
-		else if(outputOrientation == JLSInfo.Orientation.LEFT)
-		{
-			g.drawString("in",x+width-5*d2,data.getY()-hi/2+ascent);
-		}
-		else // UP or DOWN
-		{
-			g.drawString("in",data.getX()-4,y+5*d2);
-		}
-
-		// draw inputs and output
-		for (Input input : inputs) {
-			input.draw(g);
-		}
-		outputs.get(0).draw(g);
-
-	} // end of draw method
+		return outputOrientation;
+	} // end of getOutputOrientation method
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes. The names
@@ -347,7 +352,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @return the output orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).outputOrientation;
 			}
 			/**
@@ -357,7 +362,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @param o The new output orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((ShiftRegister)el).outputOrientation = o;
 			}
 		},
@@ -370,7 +375,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @return the amount-input orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((ShiftRegister)el).amountOrientation;
 			}
 			/**
@@ -380,7 +385,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			 * @param o The new amount-input orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((ShiftRegister)el).amountOrientation = o;
 			}
 		}
@@ -434,10 +439,10 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	/**
 	 * Display info about this element.
 	 *
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(javax.swing.JLabel info) {
+	public String infoText() {
 
 		String kind = "";
 		switch (type) {
@@ -445,7 +450,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		case LogicalRight: kind = "logical right"; break;
 		default: kind = "arithmetic right"; break;
 		}
-		info.setText(bits + " bit " + kind + " shift register");
+		return bits + " bit " + kind + " shift register";
 	} // end of showInfo method
 
 	/**
@@ -519,7 +524,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 *          of size when flipping.
 	 */
 	@Override
-	public void flip(java.awt.Graphics g) {
+	public void flip(jls.core.TextMetrics g) {
 
 		amountOrientation = amountOrientation.flipped();
 		inputs.clear();
@@ -536,13 +541,13 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size.
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, java.awt.Graphics g) {
+	public void rotate(Orientation direction, jls.core.TextMetrics g) {
 
-		if (direction == JLSInfo.Orientation.LEFT) {
+		if (direction == Orientation.LEFT) {
 			amountOrientation = amountOrientation.ccw();
 			outputOrientation = outputOrientation.ccw();
 		}
-		else if (direction == JLSInfo.Orientation.RIGHT) {
+		else if (direction == Orientation.RIGHT) {
 			amountOrientation = amountOrientation.cw();
 			outputOrientation = outputOrientation.cw();
 		}
@@ -574,281 +579,6 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		}
 		return true;
 	} // end of canRotate method
-
-	/**
-	 * Dialog box to set bits, shift kind and orientations.
-	 */
-	private class ShiftRegisterCreate extends ElementDialog
-			implements java.awt.event.ActionListener {
-
-		// properties
-		/** Input field for the number of data bits. */
-		private javax.swing.JTextField bitsField =
-				new javax.swing.JTextField(defaultBits+"",5);
-		/** Keypad for entering the number of data bits. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Selects logical left shift. */
-		private javax.swing.JRadioButton shiftLeft =
-				new javax.swing.JRadioButton("Shift Left",true);
-		/** Selects logical right shift. */
-		private javax.swing.JRadioButton shiftRight =
-				new javax.swing.JRadioButton("Shift Right");
-		/** Selects arithmetic right shift. */
-		private javax.swing.JRadioButton shiftRightArith =
-				new javax.swing.JRadioButton("Shift Right Arithmetic");
-		/** Puts the output on the left side. */
-		private javax.swing.JRadioButton oLeft =
-				new javax.swing.JRadioButton("Left");
-		/** Puts the output on the right side. */
-		private javax.swing.JRadioButton oRight =
-				new javax.swing.JRadioButton("Right", true);
-		/** Puts the output on the top side. */
-		private javax.swing.JRadioButton oUp =
-				new javax.swing.JRadioButton("Up");
-		/** Puts the output on the bottom side. */
-		private javax.swing.JRadioButton oDown =
-				new javax.swing.JRadioButton("Down");
-		/** Puts the amount input on the left side. */
-		private javax.swing.JRadioButton sLeft =
-				new javax.swing.JRadioButton("Left");
-		/** Puts the amount input on the right side. */
-		private javax.swing.JRadioButton sRight =
-				new javax.swing.JRadioButton("Right");
-		/** Puts the amount input on the top side. */
-		private javax.swing.JRadioButton sUp =
-				new javax.swing.JRadioButton("Up");
-		/** Puts the amount input on the bottom side. */
-		private javax.swing.JRadioButton sDown =
-				new javax.swing.JRadioButton("Down",true);
-		/** Label above the amount orientation buttons. */
-		private javax.swing.JLabel olbl2 =
-				new javax.swing.JLabel("Amount Orientation");
-
-		/**
-		 * Set up dialog window.
-		 */
-		private ShiftRegisterCreate() {
-
-			// set up window title
-			super("Create Shift Register","shiftregister");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			java.awt.Container window = getContentPane();
-
-			// set up input panel
-			javax.swing.JPanel info =
-					new javax.swing.JPanel(new java.awt.GridLayout(1,2));
-			javax.swing.JLabel gates = new javax.swing.JLabel("Bits: ",
-					javax.swing.SwingConstants.RIGHT);
-			info.add(gates);
-			javax.swing.JPanel ga =
-					new javax.swing.JPanel(new java.awt.FlowLayout());
-			ga.add(bitsField);
-			ga.add(bitsPad);
-			info.add(ga);
-			window.add(info);
-
-			// set up shift kind
-			javax.swing.JLabel tlbl = new javax.swing.JLabel("Shift Type");
-			tlbl.setAlignmentX(CENTER_ALIGNMENT);
-			window.add(tlbl);
-			javax.swing.JPanel types =
-					new javax.swing.JPanel(new java.awt.GridLayout(3,1));
-			javax.swing.ButtonGroup tgroup = new javax.swing.ButtonGroup();
-			tgroup.add(shiftLeft);
-			tgroup.add(shiftRight);
-			tgroup.add(shiftRightArith);
-			types.add(shiftLeft);
-			types.add(shiftRight);
-			types.add(shiftRightArith);
-			javax.swing.JPanel containing = new javax.swing.JPanel();
-			containing.add(types);
-			containing.setAlignmentX(CENTER_ALIGNMENT);
-			window.add(containing);
-
-			// set up orientation radio buttons
-			javax.swing.JPanel orient =
-					new javax.swing.JPanel(new java.awt.GridLayout(3,3));
-			javax.swing.JPanel orient2 =
-					new javax.swing.JPanel(new java.awt.GridLayout(3,3));
-			javax.swing.ButtonGroup gr = new javax.swing.ButtonGroup();
-			javax.swing.ButtonGroup gr2 = new javax.swing.ButtonGroup();
-			gr.add(oLeft);
-			gr.add(oRight);
-			gr.add(oDown);
-			gr.add(oUp);
-			gr2.add(sDown);
-			gr2.add(sUp);
-			gr2.add(sLeft);
-			gr2.add(sRight);
-			orient.add(new javax.swing.JLabel(""));
-			orient.add(oUp);
-			orient.add(new javax.swing.JLabel(""));
-			orient.add(oLeft);
-			orient.add(new javax.swing.JLabel(""));
-			orient.add(oRight);
-			orient.add(new javax.swing.JLabel(""));
-			orient.add(oDown);
-			orient.add(new javax.swing.JLabel(""));
-
-			orient2.add(new javax.swing.JLabel(""));
-			orient2.add(sUp);
-			orient2.add(new javax.swing.JLabel(""));
-			orient2.add(sLeft);
-			orient2.add(new javax.swing.JLabel(""));
-			orient2.add(sRight);
-			orient2.add(new javax.swing.JLabel(""));
-			orient2.add(sDown);
-			orient2.add(new javax.swing.JLabel(""));
-
-			javax.swing.JLabel olbl =
-					new javax.swing.JLabel("Output Orientation");
-			olbl.setAlignmentX(CENTER_ALIGNMENT);
-			window.add(olbl);
-			window.add(orient);
-
-			olbl2.setAlignmentX(CENTER_ALIGNMENT);
-			window.add(olbl2);
-			window.add(orient2);
-
-			sLeft.setVisible(false);
-			sRight.setVisible(false);
-
-			oLeft.addActionListener(this);
-			oRight.addActionListener(this);
-			oUp.addActionListener(this);
-			oDown.addActionListener(this);
-
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * React to output orientation buttons.
-		 *
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(java.awt.event.ActionEvent event) {
-
-			if (event.getSource() == oLeft || event.getSource() == oRight) {
-				olbl2.setVisible(true);
-				sUp.setVisible(true);
-				sDown.setVisible(true);
-				sDown.setSelected(true);
-				sLeft.setVisible(false);
-				sRight.setVisible(false);
-			}
-			else if (event.getSource() == oUp || event.getSource() == oDown) {
-				olbl2.setVisible(true);
-				sLeft.setVisible(true);
-				sLeft.setSelected(true);
-				sRight.setVisible(true);
-				sUp.setVisible(false);
-				sDown.setVisible(false);
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Check the form against the element's parameter constraints
-		 * (issue #52: the same rule strings the loader rejects with).
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			int newBits;
-			try {
-				newBits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				return java.util.List.of(new Violation(
-						"Value not numeric, try again", bitsField));
-			}
-			String violated = checkBits(newBits);
-			if (violated != null) {
-				return java.util.List.of(new Violation(violated, bitsField));
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Set the shift register parameters from the validated form.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again", bitsField);
-				return;
-			}
-			if (shiftRight.isSelected()) {
-				type = ShiftRegister.Type.LogicalRight;
-			}
-			else if (shiftRightArith.isSelected()) {
-				type = ShiftRegister.Type.ArithmeticRight;
-			}
-			else {
-				type = ShiftRegister.Type.LogicalLeft;
-			}
-			if (oLeft.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.LEFT;
-				if (sUp.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.UP;
-				}
-				else if (sDown.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.DOWN;
-				}
-			}
-			else if (oRight.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.RIGHT;
-				if (sUp.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.UP;
-				}
-				else if (sDown.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.DOWN;
-				}
-			}
-			else if (oDown.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.DOWN;
-				if (sLeft.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.LEFT;
-				}
-				else if (sRight.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.RIGHT;
-				}
-			}
-			else if (oUp.isSelected()) {
-				outputOrientation = JLSInfo.Orientation.UP;
-				if (sLeft.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.LEFT;
-				}
-				else if (sRight.isSelected()) {
-					amountOrientation = JLSInfo.Orientation.RIGHT;
-				}
-			}
-			bitsPad.close();
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this shift register.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			bitsPad.close();
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of ShiftRegisterCreate class
-
 
 //	-------------------------------------------------------------------------------
 //	Simulation

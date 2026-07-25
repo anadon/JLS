@@ -1,42 +1,15 @@
 package jls.elem;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.Vector;
 
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
-
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
-import jls.Help;
-import jls.JLSInfo;
-import jls.KeyPad;
-import jls.Util;
 import jls.sim.Simulator;
-import jls.util.Placement;
 
 /**
  * Display an input value on the circuit editor screen.
@@ -55,10 +28,6 @@ public final class Display extends LogicElement {
 	/** The radix (2, 10 or 16) the value is displayed in. */
 	private int base = 10;
 	
-	// running properties
-	/** True if the user cancelled the creation dialog. */
-	private boolean cancelled = false;
-	
 	// legacy
 	/** Legacy single-input orientation marker; -1 means "new save format". */
 	int orient = -1;
@@ -74,51 +43,62 @@ public final class Display extends LogicElement {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The number of input bits (issue #77: read by the GUI-side renderer).
+	 *
+	 * @return the number of bits.
 	 */
 	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new DispCreate();
-		
-		// don't do anything if user cancelled element
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	public int getBits() {
+
+		return bits;
+	} // end of getBits method
+
+	/**
+	 * The display radix (issue #77: read by the GUI-side renderer).
+	 *
+	 * @return the radix (2, 10 or 16).
+	 */
+	public int getBase() {
+
+		return base;
+	} // end of getBase method
+
+	/**
+	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param bits The new number of bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the display radix (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param base The new radix (2, 10 or 16).
+	 */
+	public void setBase(int base) {
+
+		this.base = base;
+	} // end of setBase method
+
 	/**
 	 * Initialize this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// set up size
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
-			
+
 			// use existing size if it has one
 			if (width == 0 && height == 0) {
 				height = 2*s;
-				FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				BigInteger maxVal = new BigInteger("1").shiftLeft(bits).subtract(new BigInteger("1"));
 				
 				String longest = maxVal.toString(base).replaceAll(".","0");
@@ -160,62 +140,33 @@ public final class Display extends LogicElement {
 	} // end of init method
 
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * Prune detached inputs (issue #77: the model-mutating step formerly
+	 * run inside {@code draw}, now called first by the GUI-side renderer).
+	 * If one, two or three of the four inputs are unattached they are
+	 * removed; if that would leave none, all four are restored. Saved-file
+	 * bytes depend on the resulting input set, so the renderer runs this in
+	 * the same order the old draw did.
 	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw shape
-		int s = JLSInfo.spacing;
-		g.setColor(Color.black);
-		g.drawRect(x,y,width,height);
-		g.drawRoundRect(x,y,width,height,s,s);
-		
-		// draw value inside shape
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int hi = ascent + fm.getDescent();
-		String value = " HiZ ";
-		if (currentValue != null) {
-			value = BitSetUtils.ToString(currentValue,base);
-			switch (base) {
-			case 2:
-				while (value.length() < bits)
-					value = "0" + value;
-				value = value + "B";
-				break;
-			case 16:
-				while (value.length()*4 < bits)
-					value = "0" + value;
-				value = "0x" + value;
-			}
-			value = " " + value + " ";
-		}
-		int sw = fm.stringWidth(value);
-		g.drawString(value,x+(width-sw)/2,y+(height-hi)/2+ascent);
-		
+	public void prune() {
+
 		// draw attached input (draw all four if nothing is attached)
 		// get unattached inputs
+		int s = Geometry.SPACING;
 		Vector<Input>detach = new Vector<Input>(4);
 		for (Input input : inputs) {
 			if (!input.isAttached())
 				detach.add(input);
 		}
-		
+
 		// if there are one, two or three unattached ones
 		int count = detach.size();
 		if (count > 0 && count < 4) {
-			
+
 			// remove unattached inputs
 			inputs.removeAll(detach);
-			
+
 			// if one input remains, fix its bit number
-			
+
 			// if no inputs left, put all four back
 			if (inputs.size() == 0) {
 				inputs.add(new Input("input0",this,0,s,bits)); // Left
@@ -224,10 +175,7 @@ public final class Display extends LogicElement {
 				inputs.add(new Input("input3",this,width,s,bits)); // Right
 			}
 		}
-		for (Input input : inputs) {
-			input.draw(g);
-		}
-	} // end of draw method
+	} // end of prune method
 
 	/**
 	 * Save this element.
@@ -336,12 +284,12 @@ public final class Display extends LogicElement {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
-		info.setText(bits + " bit display, value = " + BitSetUtils.toDisplay(currentValue,bits));
+		return bits + " bit display, value = " + BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
 	
 	/**
@@ -350,7 +298,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		// No-op
 	}
@@ -382,113 +330,10 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		// No-op
 	}
-
-
-	/**
-	 * Dialog box to set inputs and bits.
-	 */
-	@SuppressWarnings("serial")
-	protected class DispCreate extends ElementDialog {
-
-		// properties
-		/** Text field for entering the number of input bits. */
-		private JTextField bitsField = new JTextField(defaultBits+"",5);
-		/** Pop-up keypad for the bits field. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Radio button selecting base 2 (binary) display. */
-		private JRadioButton b2 = new JRadioButton("2");
-		/** Radio button selecting base 10 (decimal) display. */
-		private JRadioButton b10 = new JRadioButton("10");
-		/** Radio button selecting base 16 (hexadecimal) display. */
-		private JRadioButton b16 = new JRadioButton("16");
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 */
-		protected DispCreate() {
-			
-			// set up window title
-			super("Create Display","display");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up bits panel
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
-			info.add(bits,BorderLayout.WEST);
-			info.add(bitsField,BorderLayout.CENTER);
-			info.add(bitsPad,BorderLayout.EAST);
-			window.add(info);
-			
-			// set up radix panel
-			window.add(new JLabel(" "));
-			JLabel dlbl = new JLabel("Display Radix");
-			dlbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(dlbl);
-			JPanel radix = new JPanel(new GridLayout(1,3));
-			radix.add(b2);
-			radix.add(b10);
-			radix.add(b16);
-			ButtonGroup rgroup = new ButtonGroup();
-			rgroup.add(b2);
-			rgroup.add(b10);
-			rgroup.add(b16);
-			b10.setSelected(true);
-			window.add(radix);
-
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and create the display.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (bits < 1) {
-				reject("Must be at least one bit");
-				return;
-			}
-
-			if (b2.isSelected())
-				base = 2;
-			else if (b10.isSelected())
-				base = 10;
-			else
-				base = 16;
-			bitsPad.close();
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this mux.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			bitsPad.close();
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of DispCreate class
 
 //	-------------------------------------------------------------------------------
 //	Simulation
@@ -496,7 +341,19 @@ public final class Display extends LogicElement {
 	
 	/** The value being displayed; null shows as HiZ. */
 	private BitSet currentValue = new BitSet();
-	
+
+	/**
+	 * The value currently being displayed (issue #77: read by the GUI-side
+	 * renderer); null shows as HiZ.
+	 *
+	 * @return the current value, or null for HiZ.
+	 */
+	@Override
+	public BitSet getCurrentValue() {
+
+		return currentValue;
+	} // end of getCurrentValue method
+
 	/**
 	 * Set the current display value to 0.
 	 * 

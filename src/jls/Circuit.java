@@ -1,15 +1,5 @@
 package jls;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.awt.print.Book;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,10 +17,8 @@ import java.util.TreeSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import javax.imageio.ImageIO;
 
-import jls.edit.Editor;
-import jls.edit.SimpleEditor;
+import jls.core.Geometry;
 import jls.elem.Element;
 import jls.elem.ElementRegistry;
 import jls.elem.ElementType;
@@ -52,7 +40,7 @@ import org.jspecify.annotations.Nullable;
  * 
  * @author David A. Poplawski
  */
-public class Circuit implements Printable {
+public class Circuit {
 
 	// properties
 	/** The circuit name (becomes the file name after appending .jls). */
@@ -64,8 +52,9 @@ public class Circuit implements Printable {
 	/** The subcircuit element referring to this circuit, or null if none. */
 	private @Nullable SubCircuit subElement = null; // the element referring to this
 											// circuit
-	/** This circuit's editor, or null if it has none. */
-	private @Nullable Editor editor = null; // this circuit's editor (null if none)
+	// The circuit's editor back-reference moved out of the model to
+	// jls.edit.Editors (issue #77): the editor side owns the
+	// circuit->editor mapping, inverting the former model->GUI edge.
 	/** All element names in use, so element names can be kept unique. */
 	private Set<String> namesUsed = new HashSet<String>(); // so element names
 															// can be unique
@@ -449,6 +438,33 @@ public class Circuit implements Printable {
 	} // end of getElements method
 
 	/**
+	 * Whether this circuit still has elements waiting for the deferred
+	 * finish-load pass (issue #77 seam for the GUI-side renderer, which
+	 * finishes the load on first draw).
+	 *
+	 * @return true if a finishLoad is still pending.
+	 */
+	public boolean isLoadPending() {
+
+		return loadedElements.size() > 0;
+	} // end of isLoadPending method
+
+	/**
+	 * Report a draw-time deferred {@code finishLoad} failure to stderr at
+	 * most once per circuit, instead of silently re-failing on every
+	 * repaint (issue #58). Called by the GUI-side renderer; the once-only
+	 * state stays on the model so it survives across renderer instances.
+	 */
+	public void reportDeferredFinishFailure() {
+
+		if (!deferredFinishReported) {
+			deferredFinishReported = true;
+			System.err.println("deferred finishLoad of circuit "
+					+ name + " failed: " + JLSInfo.loadError);
+		}
+	} // end of reportDeferredFinishFailure method
+
+	/**
 	 * Get the elements in the circuit's canonical order: sorted by
 	 * stable id (#165/#166). {@link #getElements()} iterates in hash
 	 * order, which depends on identity hashes and so varies between
@@ -549,7 +565,7 @@ public class Circuit implements Printable {
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#diagonalWireIsCandidateButNotCollisionOffTheDiagonal()
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#indexShortlistsMatchOutlineGeometry()
 	 */
-	public Set<Element> elementsNear(Rectangle rect) {
+	public Set<Element> elementsNear(jls.core.Bounds rect) {
 
 		if (index.isDirty()) {
 			index.rebuild(elements);
@@ -574,8 +590,8 @@ public class Circuit implements Printable {
 	 */
 	public Set<Element> elementsAt(int x, int y) {
 
-		int pad = JLSInfo.spacing;
-		return elementsNear(new Rectangle(x - pad, y - pad, 2 * pad, 2 * pad));
+		int pad = Geometry.SPACING;
+		return elementsNear(new jls.core.Bounds(x - pad, y - pad, 2 * pad, 2 * pad));
 	} // end of elementsAt method
 
 	/**
@@ -1284,7 +1300,7 @@ public class Circuit implements Printable {
 	 * @jls.testedby jls.ui.EditorGestureTest#oneGate()
 	 * @jls.testedby jls.ui.UiHarnessPilotTest#load()
 	 */
-	public boolean finishLoad(@Nullable Graphics g) throws Exception {
+	public boolean finishLoad(jls.core.@Nullable TextMetrics g) throws Exception {
 
 		// if any exceptions, assume load problem
 		try {
@@ -1412,9 +1428,9 @@ public class Circuit implements Printable {
 	 * 
 	 * @return the smallest rectangle.
 	 */
-	public Rectangle getBounds() {
+	public jls.core.Bounds getBounds() {
 
-		Rectangle rect = new Rectangle();
+		jls.core.Bounds rect = new jls.core.Bounds(0, 0, 0, 0);
 		boolean firstTime = true;
 		for (Element el : elements) {
 			if (el instanceof Wire)
@@ -1423,7 +1439,7 @@ public class Circuit implements Printable {
 				rect = el.getRect();
 				firstTime = false;
 			} else {
-				rect.add(el.getRect());
+				rect = rect.union(el.getRect());
 			}
 		}
 		return rect;
@@ -1571,342 +1587,6 @@ public class Circuit implements Printable {
 		}
 		return version;
 	} // end of formatVersionNeeded method
-
-	/**
-	 * Draw the circuit by drawing every element. First the set of elements not
-	 * in the second set are drawn, then the ones in the second set are drawn.
-	 * Wires are drawn first in each set.
-	 *
-	 * @param g
-	 *            The graphics object to draw with.
-	 * @param second
-	 *            The second set of elements to draw.
-	 * @param ed
-	 *            The editor window doing the drawing.
-	 * @throws Exception
-	 *             if an unexpected problem stops the deferred
-	 *             finish-load or the drawing pass.
-	 *
-	 * @jls.testedby jls.DrawCullingParityTest#tiledClippedDrawsMatchFullDraw()
-	 */
-	public void draw(Graphics g, Set<Element> second, @Nullable SimpleEditor ed)
-			throws Exception {
-
-		// finish up loading process if necessary
-		if (loadedElements.size() > 0) {
-			if (!finishLoad(g)) {
-				// report once instead of silently re-failing on every
-				// repaint (#58)
-				if (!deferredFinishReported) {
-					deferredFinishReported = true;
-					System.err.println("deferred finishLoad of circuit "
-							+ name + " failed: " + JLSInfo.loadError);
-				}
-			}
-
-			// set circuit size to the largest of the default area or the needed
-			// area
-			Rectangle rect = new Rectangle(0, 0, JLSInfo.circuitsize,
-					JLSInfo.circuitsize);
-			rect.add(getBounds());
-			if (ed != null) {
-				ed.setCircuitSize(rect.getSize());
-			}
-		}
-
-		// partition into draw layers in one pass instead of four full
-		// scans (#27 S3): wires under non-wires, the second (selected)
-		// set on top of both. Elements far outside the clip cannot be
-		// visible and are skipped, so a scrolled view pays for what it
-		// shows, not for the whole circuit (#17). The candidates come
-		// from the spatial index, not a full scan, so a dirty-region
-		// repaint during a drag costs O(visible), not O(circuit); the
-		// query pads the clip by the same margin mayBeVisible allows
-		// for labels, so its exact check below accepts the same
-		// elements a full scan would. That parity is machine-checked:
-		// THEOREM 2 (culling-parity) in
-		// proofs/SpatialIndexCorrectness.agda, with the margin/grow/
-		// intersects assumptions pinned by jls.ProofBridgeTest.
-		Rectangle clip = g.getClipBounds();
-		java.util.Collection<Element> candidates;
-		if (clip == null) {
-			candidates = elements;
-		} else {
-			Rectangle query = new Rectangle(clip);
-			query.grow(DRAW_MARGIN, DRAW_MARGIN);
-			candidates = elementsNear(query);
-		}
-		java.util.List<Element> wires = new java.util.ArrayList<Element>();
-		java.util.List<Element> parts = new java.util.ArrayList<Element>();
-		java.util.List<Element> secondWires = new java.util.ArrayList<Element>();
-		java.util.List<Element> secondParts = new java.util.ArrayList<Element>();
-		for (Element el : candidates) {
-			if (clip != null && !mayBeVisible(el, clip)) {
-				continue;
-			}
-			if (el instanceof Wire) {
-				(second.contains(el) ? secondWires : wires).add(el);
-			} else {
-				(second.contains(el) ? secondParts : parts).add(el);
-			}
-		}
-		for (Element el : wires) {
-			el.draw(g);
-		}
-		for (Element el : parts) {
-			el.draw(g);
-		}
-		for (Element el : secondWires) {
-			el.draw(g);
-		}
-		for (Element el : secondParts) {
-			el.draw(g);
-		}
-	} // end of draw method
-
-	/**
-	 * How far outside its index bounds an element may draw (labels and
-	 * similar decorations). Draw culling pads by this margin on both the
-	 * index query and the exact visibility check.
-	 */
-	private static final int DRAW_MARGIN = 8 * JLSInfo.spacing;
-
-	/**
-	 * Whether an element could draw inside the clip. The margin generously
-	 * covers labels drawn near (but outside) an element's bounds.
-	 *
-	 * @param el The element to test.
-	 * @param clip The clip rectangle.
-	 *
-	 * @return true if the element's margin-padded bounds intersect the clip.
-	 */
-	private static boolean mayBeVisible(Element el, Rectangle clip) {
-
-		Rectangle b = el.getIndexBounds();
-		b.grow(DRAW_MARGIN, DRAW_MARGIN);
-		return b.intersects(clip);
-	} // end of mayBeVisible method
-
-	/**
-	 * Print the circuit.
-	 * 
-	 * @param g
-	 *            The graphics object to use
-	 * @param format
-	 *            Page format info.
-	 * @param pagenum
-	 *            Ignored.
-	 * 
-	 * @return Printable.PAGE_EXISTS.
-	 *
-	 * @jls.testedby jls.PrintPathSmokeTest#printingTheCircuitDirectlyRenders()
-	 */
-	@Override
-	public int print(Graphics g, PageFormat format, int pagenum) {
-
-		// use better graphics
-		Graphics2D gg = (Graphics2D) g;
-
-		// construct name
-		Circuit c = this;
-		String nm = name;
-		SubCircuit se;
-		while ((se = c.getSubElement()) != null) {
-			c = se.getCircuit();
-			nm += " in " + c.getName();
-		}
-
-		// set up
-		FontMetrics fm = gg.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int fontHeight = ascent + descent;
-
-		// get bounds of actual circuit
-		Rectangle rect = getBounds();
-
-		// translate to page area
-		double width = format.getImageableWidth();
-		double height = format.getImageableHeight();
-		gg.translate(format.getImageableX(), format.getImageableY());
-
-		// draw title
-		gg.drawString(nm, 0, ascent);
-
-		// translate and scale to fit circuit to remaining page area
-		gg.translate(0, fontHeight * 2);
-		height -= fontHeight * 2;
-		double scale = 1.0;
-		if (rect.width > width) {
-			scale = width / rect.width;
-		}
-		if (rect.height + JLSInfo.pointDiameter > height) {
-			scale = Math.min(scale, height
-					/ (rect.height + JLSInfo.pointDiameter));
-		}
-		gg.scale(scale, scale);
-		gg.translate(-rect.x + JLSInfo.pointDiameter / 2, -rect.y
-				+ JLSInfo.pointDiameter / 2);
-
-		// print
-		try {
-			draw(gg, new HashSet<Element>(), null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return Printable.PAGE_EXISTS;
-	} // end of print method
-
-	/**
-	 * Add this circuit to the print book, add any of its state machines, truth
-	 * tables and all subcircuits.
-	 * 
-	 * @param book
-	 *            The book to add to.
-	 * @param format
-	 *            The page format to use.
-	 *
-	 * @jls.testedby jls.PrintPathSmokeTest#everyBookedPagePrintsIntoAGraphics()
-	 */
-	public void addToBook(Book book, PageFormat format) {
-
-		// add this circuit
-		book.append(this, format);
-
-		// canonical page order (#182): iterating the element HashSet
-		// would order the pages by identity hash, which varies between
-		// runs - two prints of one circuit could page differently
-		List<Element> ordered = getElementsInStableOrder();
-
-		// add state machines
-		for (Element el : ordered) {
-			if (el instanceof StateMachine sm) {
-				book.append(sm, format);
-				Printable p = sm.makeOutSum();
-				if (p != null)
-					book.append(p, format);
-			}
-		}
-
-		// add truth tables
-		for (Element el : ordered) {
-			if (el instanceof TruthTable tt) {
-				book.append(tt, format);
-			}
-		}
-
-		// add subcircuits
-		for (Element el : ordered) {
-			if (el instanceof SubCircuit sub) {
-				sub.getSubCircuit().addToBook(book, format);
-			}
-		}
-	} // end of addToBook method
-
-	/**
-	 * Export an image of the circuit.
-	 *
-	 * @param file
-	 *            The name of the file to write to.
-	 * @throws Exception
-	 *             if the image file cannot be written.
-	 *
-	 * @jls.testedby jls.ElementDrawSmokeTest#everyElementDrawsOnTheRasterExportPath()
-	 * @jls.testedby jls.ElementDrawSmokeTest#everyElementDrawsOnTheSvgExportPath()
-	 * @jls.testedby jls.SvgExportTest#exportingTwiceIsByteIdentical()
-	 * @jls.testedby jls.SvgExportTest#theDocumentIsAnSvgImageWithDrawnContent()
-	 */
-	public void exportImage(String file) throws Exception {
-
-		// get bounds of actual circuit
-		Rectangle rect = getBounds();
-
-		// add 10 pixels on all edges
-		int border = 10;
-		rect = new Rectangle(rect.x - border, rect.y - border, rect.width + 2
-				* border, rect.height + 2 * border);
-
-		// vector export (issue #154): the same element paint path that
-		// fills a bitmap below draws into JFreeSVG's Graphics2D instead,
-		// so .svg output needs no per-element work
-		if (file.toLowerCase(java.util.Locale.ROOT).endsWith(".svg")) {
-			org.jfree.svg.SVGGraphics2D svg =
-					new org.jfree.svg.SVGGraphics2D(rect.width, rect.height);
-			// a fixed defs prefix keeps two exports of the same circuit
-			// byte-identical (the default prefix is instance-derived)
-			svg.setDefsKeyPrefix("jls");
-			AffineTransform svgTranslate = new AffineTransform();
-			svgTranslate.translate(-rect.x, -rect.y);
-			svg.setTransform(svgTranslate);
-			svg.setColor(Color.white);
-			svg.fill(rect);
-			// draw in a deterministic order: elements live in a
-			// HashSet, and while raster export doesn't care (same
-			// pixels either way, overlaps aside), SVG serializes the
-			// draw order into the file - an unstable order would break
-			// byte-identical goldens across load instances. Wires
-			// under non-wires, like the interactive draw path.
-			java.util.List<Element> wireLayer = new java.util.ArrayList<Element>();
-			java.util.List<Element> partLayer = new java.util.ArrayList<Element>();
-			for (Element el : elements) {
-				(el instanceof jls.elem.Wire ? wireLayer : partLayer).add(el);
-			}
-			// order on index bounds, not x/y: wires keep x/y at their
-			// defaults, but their bounds are derived from their ends
-			java.util.Comparator<Element> drawOrder = java.util.Comparator
-					.comparingInt((Element el) -> el.getIndexBounds().x)
-					.thenComparingInt(el -> el.getIndexBounds().y)
-					.thenComparingInt(el -> el.getIndexBounds().width)
-					.thenComparingInt(el -> el.getIndexBounds().height)
-					.thenComparing(el -> el.getClass().getName())
-					.thenComparingInt(Element::getID);
-			wireLayer.sort(drawOrder);
-			partLayer.sort(drawOrder);
-			for (Element el : wireLayer) {
-				el.draw(svg);
-			}
-			for (Element el : partLayer) {
-				el.draw(svg);
-			}
-			try {
-				java.nio.file.Files.writeString(java.nio.file.Path.of(file),
-						svg.getSVGDocument(),
-						java.nio.charset.StandardCharsets.UTF_8);
-			} finally {
-				svg.dispose();
-			}
-			return;
-		}
-
-		// set up image
-		BufferedImage image = new BufferedImage(rect.width, rect.height,
-				BufferedImage.TYPE_INT_RGB);
-		Graphics2D g = image.createGraphics();
-		AffineTransform translate = new AffineTransform();
-		translate.translate(-rect.x, -rect.y);
-		g.setTransform(translate);
-
-		// draw the image
-		g.setColor(Color.white);
-		g.fill(rect);
-		draw(g, new HashSet<Element>(), null);
-
-		// write the image, the format following the file extension
-		// (issue #71): .png produces PNG, anything else the legacy JPEG
-		try {
-			String format = file.toLowerCase(java.util.Locale.ROOT)
-					.endsWith(".png") ? "png" : "jpg";
-			if (!ImageIO.write(image, format, new File(file))) {
-				throw new IOException("no " + format + " image writer available");
-			}
-		} finally {
-			// clean up
-			g.dispose();
-			image.flush();
-		}
-
-	} // end of print method
 
 	/**
 	 * Untouch inputs and outputs of all logic elements.
@@ -2107,27 +1787,6 @@ public class Circuit implements Printable {
 
 		starts.remove(name);
 	} // end of removeJumpStart
-
-	/**
-	 * Set the editor of this circuit.
-	 * 
-	 * @param ed
-	 *            The current editor, or null to indicate not being edited.
-	 */
-	public void setEditor(Editor ed) {
-
-		editor = ed;
-	} // end of setEditor method
-
-	/**
-	 * Get the editor of this circuit.
-	 * 
-	 * @return The current editor, or null if not being edited.
-	 */
-	public @Nullable Editor getEditor() {
-
-		return editor;
-	} // end of getEditor method
 
 	/**
 	 * Get the current line number of the loaded circuit file. Used when an

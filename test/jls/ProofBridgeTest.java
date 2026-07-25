@@ -1,5 +1,6 @@
 package jls;
 
+import jls.edit.CircuitRenderer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,6 +11,7 @@ import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -45,20 +47,22 @@ class ProofBridgeTest {
 	private static boolean boundsTouch(Rectangle a, Rectangle b)
 			throws Exception {
 		Method m = SpatialIndex.class.getDeclaredMethod("boundsTouch",
-				Rectangle.class, Rectangle.class);
+				jls.core.Bounds.class, jls.core.Bounds.class);
 		m.setAccessible(true);
-		return (Boolean) m.invoke(null, a, b);
+		return (Boolean) m.invoke(null,
+				new jls.core.Bounds(a.x, a.y, a.width, a.height),
+				new jls.core.Bounds(b.x, b.y, b.width, b.height));
 	}
 
 	private static int drawMargin() throws Exception {
-		Field margin = Circuit.class.getDeclaredField("DRAW_MARGIN");
+		Field margin = CircuitRenderer.class.getDeclaredField("DRAW_MARGIN");
 		margin.setAccessible(true);
 		return margin.getInt(null);
 	}
 
 	private static boolean mayBeVisible(Element el, Rectangle clip)
 			throws Exception {
-		Method m = Circuit.class.getDeclaredMethod("mayBeVisible",
+		Method m = CircuitRenderer.class.getDeclaredMethod("mayBeVisible",
 				Element.class, Rectangle.class);
 		m.setAccessible(true);
 		return (Boolean) m.invoke(null, el, clip);
@@ -76,12 +80,12 @@ class ProofBridgeTest {
 		Random random = new Random(SEED);
 		for (int round = 0; round < 20; round += 1) {
 			for (Element el : circuit.getElements()) {
-				Rectangle b = el.getIndexBounds();
-				assertTrue(b.width >= 0 && b.height >= 0,
+				jls.core.Bounds b = el.getIndexBounds();
+				assertTrue(b.width() >= 0 && b.height() >= 0,
 						"index bounds must be non-empty (A1): " + b + " for " + el);
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 				}
 			}
 		}
@@ -195,11 +199,11 @@ class ProofBridgeTest {
 					random.nextInt(600) - 150,
 					random.nextInt(300) + 1, random.nextInt(300) + 1);
 			for (Element el : circuit.getElements()) {
-				Rectangle b = el.getIndexBounds();
-				long loX = (long) b.x - m;
-				long hiX = (long) b.x + b.width + m;
-				long loY = (long) b.y - m;
-				long hiY = (long) b.y + b.height + m;
+				jls.core.Bounds b = el.getIndexBounds();
+				long loX = (long) b.x() - m;
+				long hiX = (long) b.x() + b.width() + m;
+				long loY = (long) b.y() - m;
+				long hiY = (long) b.y() + b.height() + m;
 				boolean model = loX < clip.x + (long) clip.width
 						&& clip.x < hiX
 						&& loY < clip.y + (long) clip.height

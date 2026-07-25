@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Rectangle;
 
+import jls.core.Geometry;
 import jls.JLSInfo;
 import jls.elem.Element;
 
@@ -17,7 +18,7 @@ import jls.elem.Element;
  * issue #74; Swing interaction and rendering are Layers 2 and 3).
  *
  * <p>All coordinates are model units: one grid unit is
- * {@link JLSInfo#spacing} model units, and snapped elements sit at
+ * {@link jls.core.Geometry#SPACING} model units, and snapped elements sit at
  * multiples of it. Relative assertions compare bounding boxes
  * ({@link Element#getRect()}), so "left of" means the whole box of A is
  * left of the whole box of B, not just its origin.</p>
@@ -39,10 +40,10 @@ public final class GeometryAssert {
 
 	/**
 	 * Assert the element sits on the snap-to grid: both coordinates are
-	 * multiples of {@link JLSInfo#spacing}.
+	 * multiples of {@link jls.core.Geometry#SPACING}.
 	 */
 	public static void assertOnGrid(Element el) {
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		assertTrue(el.getX() % s == 0 && el.getY() % s == 0,
 				CircuitAssert.describe(el) + " is off the " + s
 						+ "-unit snap grid");
@@ -60,8 +61,8 @@ public final class GeometryAssert {
 	 * grid spacing above and below for its value label).
 	 */
 	public static void assertDimensions(Element el, int width, int height) {
-		Rectangle rect = el.getRect();
-		assertEquals(width + "x" + height, rect.width + "x" + rect.height,
+		jls.core.Bounds rect = el.getRect();
+		assertEquals(width + "x" + height, rect.width() + "x" + rect.height(),
 				"dimensions of " + CircuitAssert.describe(el));
 	}
 
@@ -71,23 +72,23 @@ public final class GeometryAssert {
 
 	/** Assert a's bounding box lies entirely left of b's (no x overlap). */
 	public static void assertLeftOf(Element a, Element b) {
-		Rectangle ra = a.getRect();
-		Rectangle rb = b.getRect();
-		assertTrue(ra.x + ra.width <= rb.x,
+		jls.core.Bounds ra = a.getRect();
+		jls.core.Bounds rb = b.getRect();
+		assertTrue(ra.x() + ra.width() <= rb.x(),
 				CircuitAssert.describe(a) + " (right edge "
-						+ (ra.x + ra.width) + ") is not left of "
-						+ CircuitAssert.describe(b) + " (left edge " + rb.x
+						+ (ra.x() + ra.width()) + ") is not left of "
+						+ CircuitAssert.describe(b) + " (left edge " + rb.x()
 						+ ")");
 	}
 
 	/** Assert a's bounding box lies entirely above b's (no y overlap). */
 	public static void assertAbove(Element a, Element b) {
-		Rectangle ra = a.getRect();
-		Rectangle rb = b.getRect();
-		assertTrue(ra.y + ra.height <= rb.y,
+		jls.core.Bounds ra = a.getRect();
+		jls.core.Bounds rb = b.getRect();
+		assertTrue(ra.y() + ra.height() <= rb.y(),
 				CircuitAssert.describe(a) + " (bottom edge "
-						+ (ra.y + ra.height) + ") is not above "
-						+ CircuitAssert.describe(b) + " (top edge " + rb.y
+						+ (ra.y() + ra.height()) + ") is not above "
+						+ CircuitAssert.describe(b) + " (top edge " + rb.y()
 						+ ")");
 	}
 
@@ -96,14 +97,14 @@ public final class GeometryAssert {
 	 * {@code units} grid units on both axes (overlap counts as zero gap).
 	 */
 	public static void assertWithinGridUnits(Element a, Element b, int units) {
-		int gap = Math.max(axisGap(a.getRect().x, a.getRect().width,
-						b.getRect().x, b.getRect().width),
-				axisGap(a.getRect().y, a.getRect().height, b.getRect().y,
-						b.getRect().height));
-		assertTrue(gap <= units * JLSInfo.spacing,
+		int gap = Math.max(axisGap(a.getRect().x(), a.getRect().width(),
+						b.getRect().x(), b.getRect().width()),
+				axisGap(a.getRect().y(), a.getRect().height(), b.getRect().y(),
+						b.getRect().height()));
+		assertTrue(gap <= units * Geometry.SPACING,
 				CircuitAssert.describe(a) + " and " + CircuitAssert.describe(b)
 						+ " are " + gap + " model units apart, more than "
-						+ units + " grid units (" + units * JLSInfo.spacing
+						+ units + " grid units (" + units * Geometry.SPACING
 						+ ")");
 	}
 

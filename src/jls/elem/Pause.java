@@ -1,12 +1,9 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
 import java.io.*;
-
-import javax.swing.*;
 
 import java.util.*;
 
@@ -30,38 +27,15 @@ public final class Pause extends LogicElement {
 
 
 	/**
-	 * Set up element.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		// complete initialization
-		init(g);
-
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-
-		return true;
-	} // end of setup method
-
-	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// set up size
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		width = s * 2;
 		height = width;
 
@@ -73,19 +47,14 @@ public final class Pause extends LogicElement {
 	} // end of init method
 
 	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * Prune unattached inputs before drawing: draw only the attached
+	 * inputs, or all four if none are attached. This is the model-mutating
+	 * step the former {@code draw} ran first; the GUI-side renderer calls
+	 * it before drawing (issue #77).
 	 */
-	@Override
-	public void draw(Graphics g) {
+	public void pruneDetachedInputs() {
 
-		int s = JLSInfo.spacing;
-
-		// draw context
-		super.draw(g);
-
-		// draw only the attached inputs, or all four if none attached
+		int s = Geometry.SPACING;
 
 		// get unattached inputs
 		Vector<Input>detach = new Vector<Input>(4);
@@ -109,30 +78,7 @@ public final class Pause extends LogicElement {
 				inputs.add(new Input("input3",this,2*s,s,1));
 			}
 		}
-
-		// draw circle
-		g.setColor(Color.black);
-		g.drawOval(x,y,width,height);
-
-		// draw inputs
-		for (Input input : inputs) {
-			input.draw(g);
-		}
-
-		// draw "pause"
-		Font f = g.getFont();
-		Font nf = f.deriveFont((float)(f.getSize()*0.55));
-		g.setFont(nf);
-		FontMetrics fm = g.getFontMetrics();
-		int w = fm.stringWidth("PAUSE");
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int sh = ascent + descent;
-		g.setColor(Color.black);
-		g.drawString("PAUSE",x+(width-w)/2,y+s-sh/2+ascent);
-		g.setFont(f);
-
-	} // end of draw method
+	} // end of pruneDetachedInputs method
 
 
 	/**
@@ -165,12 +111,12 @@ public final class Pause extends LogicElement {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 
-		info.setText("pause simulation");
+		return "pause simulation";
 	} // end of showInfo method
 
 

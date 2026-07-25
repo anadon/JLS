@@ -1,18 +1,12 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.*;
-
-import javax.swing.*;
 
 /**
  * Receiving end of a named wire.
@@ -39,13 +33,11 @@ public final class JumpEnd extends LogicElement {
 	private String name;
 
 	// running properties
-	/** True if the user cancelled the creation dialog. */
-	private boolean cancelled;
 	/** True if the saved file marked the output tri-state. */
 	private boolean loadTriState = false;
 
 	/** Which way the element points. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	private Orientation orientation = Orientation.RIGHT;
 	
 	/**
 	 * Create a new wire jump end.
@@ -62,83 +54,51 @@ public final class JumpEnd extends LogicElement {
 	} // end of constructor
 	
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
 	 *
-	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
-	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureStillReachesDialogWithANamedWire()
-	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
+	 * @param bits The new number of bits.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		
-		if(name == null) {
+	public void setBits(int bits) {
 
-			// fail fast when there is nothing to connect to: the selection
-			// dialog would show an empty list and could never be completed
-			// (#131; prior art bsiever/JLS@26053a00)
-			if (circuit.getJumpStartNames().isEmpty()) {
-				TellUser.error(editWindow,NO_NAMED_WIRES,"Error");
-				return false;
-			}
-			new EndCreate();
-		}
-		else {
-			bits = circuit.getJumpStart(name).getBits();
-			if(circuit.getJumpStart(name).getOrientation() == JLSInfo.Orientation.LEFT)
-				orientation = JLSInfo.Orientation.RIGHT;
-			else
-				orientation = JLSInfo.Orientation.LEFT;
-			cancelled = false;
-		}
-		// don't do anything if user cancelled
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// set tri-state status
-		JumpStart start = circuit.getJumpStart(name);
-		Input in = start.getInput("input");
-		if (in.isAttached()) {
-			if (in.getWireEnd().getNet().isTriState()) {
-				for (Output out : outputs) {
-					out.setTriState(true);
-				}
-			}
-		}
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
+	/**
+	 * Get the orientation of this jump end (issue #77: read by the
+	 * GUI-side renderer and dialog).
+	 *
+	 * @return the current orientation.
+	 */
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		if (g != null) {
-			
+
 			if (width == 0 && height == 0) {
 
 				// set up size
-				int s = JLSInfo.spacing;
-				FontMetrics fm = g.getFontMetrics();
+				int s = Geometry.SPACING;
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(" " + name + " ")+s;
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
 				height = 0;	// not really, but bounding rectangle will be large enough
@@ -148,7 +108,7 @@ public final class JumpEnd extends LogicElement {
 		
 		// create output
 		Output out;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 			out = new Output("output",this,width,0,bits);
 		else
 			out = new Output("output",this,0,0,bits);
@@ -160,81 +120,14 @@ public final class JumpEnd extends LogicElement {
 	} // end of init method
 	
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// highlight if corresponding start is selected
-		for (Element el : circuit.getElements()) {
-			if (!(el instanceof JumpStart jstart))
-				continue;
-			if (name.equals(jstart.getName())) {
-				if (el.highlight) {
-					g.setColor(Color.orange);
-					Graphics2D gg = (Graphics2D)g;
-					gg.fill(getRect());
-				}
-			}
-		}
-		
-		// draw box
-		int s = JLSInfo.spacing;
-		int top = y-s/2;
-		int bottom = y+s/2;
-		
-		if(orientation == JLSInfo.Orientation.LEFT) {
-			g.setColor(Color.BLACK);
-			g.drawLine(x+width-s/2,top,x+width-s/2,bottom);
-			g.drawLine(x+s/2,top,x+width-s/2,top);
-			g.drawLine(x+s/2,bottom,x+width-s/2,bottom);
-			g.drawArc(x,top,s,s,-90,-180);
-			g.drawLine(x+width-s/2,y,x+width,y);
-			g.drawLine(x+width-s/2,y,x+width-s/4,y-s/4);
-			g.drawLine(x+width-s/2,y,x+width-s/4,y+s/4);
-		}
-		else if(orientation == JLSInfo.Orientation.RIGHT) {
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s/2,top,x+s/2,bottom);
-			g.drawLine(x+s/2,top,x+width-s/2,top);
-			g.drawLine(x+s/2,bottom,x+width-s/2,bottom);
-			g.drawArc(x+width-s,top,s,s,-90,180);
-			g.drawLine(x,y,x+s/2,y);
-			g.drawLine(x+s/2,y,x+s/4,y-s/4);
-			g.drawLine(x+s/2,y,x+s/4,y+s/4);
-		}
-		
-		// draw name
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int h = fm.getDescent() + ascent;
-		int w = fm.stringWidth(name);
-		int tx = 0;
-		if(orientation == JLSInfo.Orientation.RIGHT)
-			tx = x+s/2+(width-s-w)/2+JLSInfo.pointDiameter/2;
-		else if(orientation == JLSInfo.Orientation.LEFT)
-			tx = x+s/2+(width-2*s-w)/2+JLSInfo.pointDiameter/2;
-		g.drawString(name,tx,y-h/2+ascent);
-		
-		// draw output
-		outputs.get(0).draw(g);
-		
-	} // end of draw method
-	
-	/**
 	 * Get the rectangle bounding this element.
-	 * 
+	 *
 	 * @return the rectangle bounding this element.
 	 */
 	@Override
-	public Rectangle getRect() {
-		
-		return new Rectangle(x,y-JLSInfo.spacing/2,width,height+JLSInfo.spacing);
+	public jls.core.Bounds getRect() {
+
+		return new jls.core.Bounds(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 	} // end of getRect method
 	
 	// Declarative persistence (#23): one declaration drives save, load
@@ -307,7 +200,7 @@ public final class JumpEnd extends LogicElement {
 			 * @return the element's orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((JumpEnd)el).orientation;
 			}
 			/**
@@ -317,7 +210,7 @@ public final class JumpEnd extends LogicElement {
 			 * @param o The orientation read from the file.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((JumpEnd)el).orientation = o;
 			}
 		}
@@ -395,13 +288,13 @@ public final class JumpEnd extends LogicElement {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
-		info.setText(bits + " bit wire connection, value = " +
-				BitSetUtils.toDisplay(currentValue,bits));
+	public String infoText() {
+
+		return bits + " bit wire connection, value = " +
+				BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
 
 	/**
@@ -431,22 +324,22 @@ public final class JumpEnd extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = Orientation.RIGHT;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = Orientation.LEFT;
 		}
 
 		outputs.clear();
 		
 		// create output
 		Output out;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		if(orientation == Orientation.RIGHT)
 			out = new Output("output",this,width,0,bits);
 		else
 			out = new Output("output",this,0,0,bits);
@@ -455,105 +348,6 @@ public final class JumpEnd extends LogicElement {
 			out.loadSetTriState();
 		}
 	}
-	
-	/**
-	 * Dialog box to set jump end characteristics.
-	 */
-	@SuppressWarnings("serial")
-	private class EndCreate extends ElementDialog {
-
-		// properties
-		/** List of named wire (jump start) names to pick from. */
-		private JList starts;
-		/** Selects leftward orientation. */
-		private JRadioButton left = new JRadioButton("left");
-		/** Selects rightward orientation. */
-		private JRadioButton right = new JRadioButton("right");
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 */
-		private EndCreate() {
-			
-			// set up window title
-			super("Create Wire End","end");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up jumpstart name list
-			JLabel heading = new JLabel("Select Wire Name",SwingConstants.CENTER);
-			heading.setAlignmentX((float)0.5);
-			window.add(heading);
-
-			starts = new JList<String>(circuit.getJumpStartNames().toArray(new String[0]));
-			starts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			starts.setVisibleRowCount(Math.min(circuit.getJumpStartNames().size(),10));
-			JScrollPane pane = new JScrollPane(starts);
-			window.add(pane);
-			
-			// highlight name if there is only one
-			if (circuit.getJumpStartNames().size() == 1) {
-				starts.setSelectedIndex(0);
-			}
-			
-			// set up orientation panel
-			window.add(new JLabel(" "));
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(1,3));
-
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup group = new ButtonGroup();
-			group.add(left);
-			group.add(right);
-			right.setSelected(true);
-			window.add(orients);
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and create the jump end.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			if (starts.getSelectedIndex() < 0) {
-				reject("Nothing selected");
-				return;
-			}
-			name = (String)starts.getSelectedValue();
-			bits = circuit.getJumpStart(name).getBits();
-			if (right.isSelected()) {
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else {
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this jump end.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of EndCreate class
 	
 //	-------------------------------------------------------------------------------
 //	Simulation

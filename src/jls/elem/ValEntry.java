@@ -1,13 +1,11 @@
 package jls.elem;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-
 /**
- * A truth-table value cell (0, 1, or don't-care) (#27 S4): InputVal and
- * OutputVal drew and sized identically and differ only in what a click
- * does, which stays in the subclasses' selected() methods.
+ * A truth-table value cell (0, 1, or don't-care) (#27 S4). Pure data
+ * (issue #77): it holds the cell value; the GUI
+ * ({@code jls.edit.DisplayBool}) draws it. InputVal and OutputVal differ
+ * only in what a click does, which stays in the subclasses' selected()
+ * methods.
  *
  * @author David A. Poplawski
  */
@@ -22,15 +20,11 @@ public abstract class ValEntry extends Entry {
 	 *
 	 * @param ttelem A reference to the TruthTable object this is a part of.
 	 * @param value The value of this signal in this place.
-	 * @param g A Graphics object to size the value with.
 	 */
-	public ValEntry(TruthTable ttelem, int value, Graphics g) {
+	public ValEntry(TruthTable ttelem, int value) {
 
 		super(ttelem);
 		this.value = value;
-		FontMetrics fm = g.getFontMetrics();
-		minHeight = fm.getAscent()+fm.getDescent();
-		minWidth = fm.stringWidth(" " + value + " ");
 	} // end of constructor
 
 	/**
@@ -42,24 +36,5 @@ public abstract class ValEntry extends Entry {
 
 		return value;
 	} // end of getValue method
-
-	/**
-	 * Draw this entry.
-	 *
-	 * @param g The Graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int height = ascent + fm.getDescent();
-		String str = "" + value;
-		if (value == 2)
-			str = "x";
-		int width = fm.stringWidth(str);
-		g.setColor(Color.BLACK);
-		g.drawString(str,x+(this.width-width)/2,y+(this.height-height)/2+ascent);
-	} // end of draw method
 
 } // end of ValEntry class

@@ -11,6 +11,7 @@ import java.util.Scanner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -74,7 +75,7 @@ class UndoManagerTest {
 	private CircuitSnapshot changedSnapshot() {
 
 		for (Element el : circuit.getElements()) {
-			el.move(JLSInfo.spacing, 0);
+			el.move(Geometry.SPACING, 0);
 			break;
 		}
 		return snapshot();

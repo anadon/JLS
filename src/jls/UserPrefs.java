@@ -107,10 +107,10 @@ public final class UserPrefs {
 	private static void overrideColors(@Nullable Color grid, @Nullable Color background) {
 
 		if (grid != null) {
-			JLSInfo.gridColor = grid;
+			JLSInfo.Palette.gridColor = grid;
 		}
 		if (background != null) {
-			JLSInfo.backgroundColor = background;
+			JLSInfo.Palette.backgroundColor = background;
 		}
 	} // end of overrideColors method
 

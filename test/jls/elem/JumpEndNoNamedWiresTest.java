@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.edit.JumpEndDialog;
 
 /**
  * Fail-fast guard on the wire-name END gesture (issue #131): placing a
@@ -62,7 +63,7 @@ class JumpEndNoNamedWiresTest {
 					StandardCharsets.UTF_8));
 			// pre-fix this throws HeadlessException: the empty selection
 			// dialog is constructed anyway
-			ok = end.setup(null, null, 100, 100);
+			ok = new JumpEndDialog().setup(end, null, null, 100, 100);
 		} finally {
 			System.setErr(oldErr);
 		}
@@ -88,7 +89,7 @@ class JumpEndNoNamedWiresTest {
 		// proceeds to dialog construction, which headless surfaces as
 		// HeadlessException from the JDialog constructor
 		assertThrows(HeadlessException.class,
-				() -> end.setup(null, null, 100, 100),
+				() -> new JumpEndDialog().setup(end, null, null, 100, 100),
 				"the selection dialog must still be offered");
 	}
 
@@ -100,7 +101,7 @@ class JumpEndNoNamedWiresTest {
 		Circuit circuit = circuitWithNamedWire();
 		JumpEnd end = new JumpEnd(circuit);
 		end.setName("js");
-		assertTrue(end.setup(null, null, 120, 120),
+		assertTrue(new JumpEndDialog().setup(end, null, null, 120, 120),
 				"a preset name must still place without any dialog");
 	}
 }

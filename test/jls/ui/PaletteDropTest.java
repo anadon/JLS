@@ -113,7 +113,7 @@ class PaletteDropTest {
 
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
 
-			// on-grid: snapped to the JLSInfo.spacing grid, like any
+			// on-grid: snapped to the Geometry.SPACING grid, like any
 			// placed element
 			GeometryAssert.assertOnGrid(gate);
 
@@ -125,7 +125,7 @@ class PaletteDropTest {
 			assertNotNull(pane, "editor canvas is hosted in a scroll pane");
 			Point viewPos = pane.getViewport().getViewPosition();
 			Rectangle viewport = new Rectangle(viewPos, pane.getViewport().getExtentSize());
-			assertTrue(viewport.contains(gate.getRect()),
+			assertTrue(viewport.contains(jls.edit.AwtGeom.awt(gate.getRect())),
 					CircuitAssert.describe(gate) + " with bounds " + gate.getRect()
 							+ " is not within the visible canvas viewport " + viewport);
 		}

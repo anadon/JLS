@@ -61,7 +61,7 @@ class MuxSymbolTest {
 		Graphics2D g = img.createGraphics();
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, img.getWidth(), img.getHeight());
-		assertTrue(circuit.finishLoad(g),
+		assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(g)),
 				() -> "finishLoad failed: " + JLSInfo.loadError);
 		Element mux = null;
 		for (Element e : circuit.getElements()) {
@@ -70,7 +70,7 @@ class MuxSymbolTest {
 			}
 		}
 		assertNotNull(mux, "Mux not found after load");
-		mux.draw(g);
+		jls.edit.ElementRenderers.draw(g, mux);
 		g.dispose();
 		return img;
 	}

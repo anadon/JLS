@@ -146,16 +146,16 @@ public record Theme(String name, Color touch, Color highlight,
 	 */
 	private static void install(Theme theme) {
 
-		JLSInfo.touchColor = theme.touch;
-		JLSInfo.highlightColor = theme.highlight;
-		JLSInfo.selectionColor = theme.selection;
-		JLSInfo.watchColor = theme.watch;
-		JLSInfo.nonZeroColor = theme.nonZero;
-		JLSInfo.initialStateColor = theme.initialState;
-		JLSInfo.wireOffColor = theme.wireOff;
-		JLSInfo.wireZeroColor = theme.wireZero;
-		JLSInfo.gridColor = theme.grid;
-		JLSInfo.backgroundColor = theme.background;
+		JLSInfo.Palette.touchColor = theme.touch;
+		JLSInfo.Palette.highlightColor = theme.highlight;
+		JLSInfo.Palette.selectionColor = theme.selection;
+		JLSInfo.Palette.watchColor = theme.watch;
+		JLSInfo.Palette.nonZeroColor = theme.nonZero;
+		JLSInfo.Palette.initialStateColor = theme.initialState;
+		JLSInfo.Palette.wireOffColor = theme.wireOff;
+		JLSInfo.Palette.wireZeroColor = theme.wireZero;
+		JLSInfo.Palette.gridColor = theme.grid;
+		JLSInfo.Palette.backgroundColor = theme.background;
 		active = theme;
 	} // end of install method
 

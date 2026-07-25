@@ -289,7 +289,7 @@ public final class Editor extends SimpleEditor {
 			// enable editing for enclosing circuit
 			Element s = circuit.getSubElement();
 			Circuit c = s.getCircuit();
-			Editor ed = c.getEditor();
+			Editor ed = Editors.of(c);
 			if (ed != null) {
 				ed.enableEdits();
 			}
@@ -321,7 +321,7 @@ public final class Editor extends SimpleEditor {
 		}
 
 		// remove editor from circuit it edits
-		circuit.setEditor(null);
+		Editors.unregister(circuit);
 
 		// remove editor from tabs
 		tabbedParent.remove(this);

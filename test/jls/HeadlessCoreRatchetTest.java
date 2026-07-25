@@ -66,11 +66,14 @@ class HeadlessCoreRatchetTest {
 
 	/** Whole packages that belong to the intended core. jls.hdl (the
 	 *  HDL exporter, issue #60) was born clean and must stay clean -
-	 *  it has no baseline entries and never gets one. */
+	 *  it has no baseline entries and never gets one. jls.core (issue
+	 *  #77) is the new headless home - born clean, policed from birth,
+	 *  never gets a baseline entry. */
 	private static final Set<String> CORE_PACKAGE_PREFIXES = Set.of(
 			"src/jls/sim/",
 			"src/jls/elem/",
-			"src/jls/hdl/");
+			"src/jls/hdl/",
+			"src/jls/core/");
 
 	/**
 	 * Core-candidate files that imported a forbidden package when this
@@ -81,57 +84,7 @@ class HeadlessCoreRatchetTest {
 	 * the {@code GeneralPath} translation stayed on the Gate/Swing side
 	 * (issue #77 renderer/model split).
 	 */
-	private static final Set<String> BASELINE = Set.of(
-			"src/jls/Circuit.java",
-			"src/jls/elem/Adder.java",
-			"src/jls/elem/Binder.java",
-			"src/jls/elem/Clock.java",
-			"src/jls/elem/Constant.java",
-			"src/jls/elem/Cross.java",
-			"src/jls/elem/Decoder.java",
-			"src/jls/elem/DelayGate.java",
-			"src/jls/elem/Display.java",
-			"src/jls/elem/DisplayBool.java",
-			"src/jls/elem/Element.java",
-			"src/jls/elem/ElementDialog.java",
-			"src/jls/elem/Entry.java",
-			"src/jls/elem/Extend.java",
-			"src/jls/elem/Gate.java",
-			"src/jls/elem/GridTransform.java",
-			"src/jls/elem/Group.java",
-			"src/jls/elem/HLine.java",
-			"src/jls/elem/InputPin.java",
-			"src/jls/elem/InputSig.java",
-			"src/jls/elem/InputVal.java",
-			"src/jls/elem/JumpEnd.java",
-			"src/jls/elem/JumpStart.java",
-			"src/jls/elem/Memory.java",
-			"src/jls/elem/Mux.java",
-			"src/jls/elem/OutputPin.java",
-			"src/jls/elem/OutputSig.java",
-			"src/jls/elem/OutputVal.java",
-			"src/jls/elem/Pause.java",
-			"src/jls/elem/Pin.java",
-			"src/jls/elem/Put.java",
-			"src/jls/elem/Register.java",
-			"src/jls/elem/SMUtil.java",
-			"src/jls/elem/SigEntry.java",
-			"src/jls/elem/SigGen.java",
-			"src/jls/elem/Splitter.java",
-			"src/jls/elem/State.java",
-			"src/jls/elem/StateMachine.java",
-			"src/jls/elem/Stop.java",
-			"src/jls/elem/SubCircuit.java",
-			"src/jls/elem/TestGen.java",
-			"src/jls/elem/Text.java",
-			"src/jls/elem/TriState.java",
-			"src/jls/elem/TruthTable.java",
-			"src/jls/elem/VLine.java",
-			"src/jls/elem/ValEntry.java",
-			"src/jls/elem/Wire.java",
-			"src/jls/elem/WireEnd.java",
-			"src/jls/sim/InteractiveSimulator.java",
-			"src/jls/sim/Trace.java");
+	private static final Set<String> BASELINE = Set.of();
 
 	@Test
 	void coreCandidatesGainNoForbiddenImports() throws IOException {

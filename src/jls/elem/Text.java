@@ -1,13 +1,9 @@
 package jls.elem;
 
 import jls.*;
-import jls.util.Placement;
 
-import java.awt.*;
 import java.util.*;
 import java.io.*;
-import java.awt.event.*;
-import javax.swing.*;
 
 /**
  * Put text into the circuit.
@@ -16,10 +12,6 @@ import javax.swing.*;
  * @author David A. Poplawski
  */
 public final class Text extends DisplayElement {
-
-	// named constants
-	/** Width and height of the text edit dialog, in pixels. */
-	private final int size = 500;	// width and height of dialog
 
 	// saved properties
 	/** The text to display, lines separated by newlines. */
@@ -32,16 +24,13 @@ public final class Text extends DisplayElement {
 	private boolean isBold = false;
 	/** True if the text is drawn in italics. */
 	private boolean isItalic = false;
-	/** The color the text is drawn in. */
-	private Color color = Color.black;
+	/** The color the text is drawn in, as a packed ARGB int (opaque black
+	 *  by default; #77 keeps the model free of {@code Color}). */
+	private int colorRGB = 0xFF000000;
 
 	// running properties
 	/** The text split into individual display lines. */
 	private Vector<String> lines = new Vector<String>();
-	/** True if the user cancelled the creation or edit dialog. */
-	private boolean cancelled = false;
-	/** True if the user changed font, size, style or color in the dialog. */
-	private boolean changed;
 
 	/**
 	 * Create a new Text element.
@@ -54,49 +43,19 @@ public final class Text extends DisplayElement {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get text info.
-	 * 
-	 * @param g The Graphics object to use.
-	 * @param editWindow The window this element will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return true if there is text, false if not.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		// show creation dialog
-		cancelled = false;
-		text = new TextEdit(true).getText();
-
-		// if cancelled, return
-		if (cancelled)
-			return false;
-
-		// if no text, return
-		if (text.length() == 0)
-			return false;
-
-		// complete initialization
-		init(g);
-
-		// set position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-
-		return true;
-
-	} // end of init method
-
-	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
-	 * 
-	 * @param g The Graphics object to use.
+	 *
+	 * <p>Issue #77: sizing is done through a {@link jls.core.TextMetrics}
+	 * that also supplies named-font metrics (its {@link
+	 * jls.core.TextMetrics.Provider} facet), so the model needs no
+	 * AWT font types; the computation is byte-identical to
+	 * the original.
+	 *
+	 * @param g The text metrics to size with (also a font Provider).
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// first split lines
 		lines.clear();
@@ -115,28 +74,27 @@ public final class Text extends DisplayElement {
 			lines.add(str);
 		}
 
-		// if no graphics object, done
+		// if no metrics, done
 		if (g == null) {
 			return;
 		}
 
+		// the Text element chooses its own font family/style/size, so it
+		// measures through the Provider facet of the supplied metrics
+		jls.core.TextMetrics.Provider prov = (jls.core.TextMetrics.Provider) g;
+
 		// initialize font info defaults if not set from file
 		if (fontName.isEmpty()) {
-			fontName = g.getFont().getFamily();
+			fontName = prov.defaultFontName();
 		}
 		if (fontSize == 0) {
-			fontSize = g.getFont().getSize();
+			fontSize = prov.defaultFontSize();
 		}
-		int bi = 0;
-		if (isBold) bi |= Font.BOLD;
-		if (isItalic) bi |= Font.ITALIC;
-		Font f = new Font(fontName,bi,fontSize);
-		Graphics gg = g.create();
-		gg.setFont(f);
+		jls.core.TextMetrics fm = prov.forFont(fontName, isBold, isItalic,
+				fontSize);
 
 		// get info for bounding rectangle
-		FontMetrics fm = gg.getFontMetrics();
-		int textHeight = fm.getAscent() + fm.getDescent();
+		int textHeight = fm.ascent() + fm.descent();
 		width = 0;
 		height = 0;
 		for (String line : lines) {
@@ -146,6 +104,168 @@ public final class Text extends DisplayElement {
 		}
 
 	} // end of init method
+
+	/**
+	 * The text string (issue #77: read/written by the GUI-side dialog).
+	 *
+	 * @return the text to display.
+	 */
+	public String getText() {
+
+		return text;
+	} // end of getText method
+
+	/**
+	 * Set the text string (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param text The new text to display.
+	 */
+	public void setText(String text) {
+
+		this.text = text;
+	} // end of setText method
+
+	/**
+	 * The font family name (issue #77: read by the GUI-side renderer and
+	 * dialog).
+	 *
+	 * @return the font family name.
+	 */
+	public String getFontName() {
+
+		return fontName;
+	} // end of getFontName method
+
+	/**
+	 * Set the font family name (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param fontName The new font family name.
+	 */
+	public void setFontName(String fontName) {
+
+		this.fontName = fontName;
+	} // end of setFontName method
+
+	/**
+	 * The font point size (issue #77: read by the GUI-side renderer and
+	 * dialog).
+	 *
+	 * @return the font point size.
+	 */
+	public int getFontSize() {
+
+		return fontSize;
+	} // end of getFontSize method
+
+	/**
+	 * Set the font point size (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param fontSize The new font point size.
+	 */
+	public void setFontSize(int fontSize) {
+
+		this.fontSize = fontSize;
+	} // end of setFontSize method
+
+	/**
+	 * Whether the text is drawn in bold (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return true if bold.
+	 */
+	public boolean isBold() {
+
+		return isBold;
+	} // end of isBold method
+
+	/**
+	 * Set whether the text is drawn in bold (issue #77: applied by the
+	 * GUI-side dialog).
+	 *
+	 * @param isBold true to draw in bold.
+	 */
+	public void setBold(boolean isBold) {
+
+		this.isBold = isBold;
+	} // end of setBold method
+
+	/**
+	 * Whether the text is drawn in italics (issue #77: read by the
+	 * GUI-side renderer and dialog).
+	 *
+	 * @return true if italic.
+	 */
+	public boolean isItalic() {
+
+		return isItalic;
+	} // end of isItalic method
+
+	/**
+	 * Set whether the text is drawn in italics (issue #77: applied by the
+	 * GUI-side dialog).
+	 *
+	 * @param isItalic true to draw in italics.
+	 */
+	public void setItalic(boolean isItalic) {
+
+		this.isItalic = isItalic;
+	} // end of setItalic method
+
+	/**
+	 * The color the text is drawn in, as a packed ARGB int (issue #77:
+	 * read by the GUI-side renderer and dialog, which wrap it in a
+	 * {@code Color}). Kept as an int so the model imports no AWT.
+	 *
+	 * @return the text color as a packed ARGB int.
+	 */
+	public int getColorRGB() {
+
+		return colorRGB;
+	} // end of getColorRGB method
+
+	/**
+	 * Set the color the text is drawn in, as a packed ARGB int (issue #77:
+	 * applied by the GUI-side dialog from a {@code Color}).
+	 *
+	 * @param colorRGB The new text color as a packed ARGB int.
+	 */
+	public void setColorRGB(int colorRGB) {
+
+		this.colorRGB = colorRGB;
+	} // end of setColorRGB method
+
+	/**
+	 * The individual display lines (issue #77: iterated by the GUI-side
+	 * renderer).
+	 *
+	 * @return the text split into display lines.
+	 */
+	public java.util.List<String> getLines() {
+
+		return lines;
+	} // end of getLines method
+
+	/**
+	 * Set this element's width (issue #77: the GUI-side renderer recomputes
+	 * the bounding box from live font metrics at draw time).
+	 *
+	 * @param width The new width.
+	 */
+	public void setWidth(int width) {
+
+		this.width = width;
+	} // end of setWidth method
+
+	/**
+	 * Set this element's height (issue #77: the GUI-side renderer recomputes
+	 * the bounding box from live font metrics at draw time).
+	 *
+	 * @param height The new height.
+	 */
+	public void setHeight(int height) {
+
+		this.height = height;
+	} // end of setHeight method
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
@@ -250,7 +370,7 @@ public final class Text extends DisplayElement {
 			 * @return The element's color as an RGB integer.
 			 */
 			@Override
-			protected int get(Element el) { return ((Text)el).color.getRGB(); }
+			protected int get(Element el) { return ((Text)el).colorRGB; } // packed ARGB (#77)
 			/**
 			 * Set the color on the given element from a packed RGB int.
 			 *
@@ -258,7 +378,7 @@ public final class Text extends DisplayElement {
 			 * @param v The new color as an RGB integer.
 			 */
 			@Override
-			protected void set(Element el, int v) { ((Text)el).color = new Color(v); }
+			protected void set(Element el, int v) { ((Text)el).colorRGB = 0xFF000000 | (v & 0xFFFFFF); } // force opaque, as new Color(v) did (#77)
 		}
 	);
 
@@ -305,43 +425,6 @@ public final class Text extends DisplayElement {
 	} // end of save method
 
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The Graphics element to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-
-		// save current graphics object
-		Graphics myg = g.create();
-
-		// draw the text
-		int bi = 0;
-		if (isBold) bi |= Font.BOLD;
-		if (isItalic) bi |= Font.ITALIC;
-		myg.setFont(new Font(fontName,bi,fontSize));
-		FontMetrics fm = myg.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int height = ascent + descent;
-		this.height = 0;
-		this.width = 0;
-		for (String str : lines) {
-			this.height += height;
-			this.width = Math.max(this.width,fm.stringWidth(str));
-		}
-
-		super.draw(g);
-		int y = this.y + ascent;
-		myg.setColor(color);
-		for (String str : lines) {
-			myg.drawString(str,x,y);
-			y += height;
-		}
-
-	} // end of draw method
-
-	/**
 	 * Text areas can be changed.
 	 * 
 	 * @return true.
@@ -351,278 +434,5 @@ public final class Text extends DisplayElement {
 
 		return true;
 	} // end of canChange method
-
-	/**
-	 * Show edit dialog.
-	 * Make user re-place element if any changes are made.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return true if element must be re-placed in the circuit, false if not.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-
-		// show dialog
-		cancelled = false;
-		changed = false;
-		TextEdit ed = new TextEdit(false);
-
-		// if cancelled, return
-		if (cancelled)
-			return false;
-
-		// if no changes, just return
-		if (text.equals(ed.getText()) && !changed)
-			return false;
-
-		// otherwise force replace
-		text = ed.getText();
-		width = 0;
-		height = 0;
-		init(g);
-		return true;
-	} // end of change method
-
-	/**
-	 * Dialog to get text information from user.
-	 */
-	@SuppressWarnings("serial")
-	private class TextEdit extends ElementDialog implements ActionListener {
-
-		// GUI elements
-		/** Font family selector. */
-		private JComboBox<String> fonts;
-		/** Choices offered by the font size selector. */
-		private String [] fontSizes = {"8","9","10","11","12","13","14","15","16","17","18","19","20","24","28","32","36","40","48","56","64","72"};
-		/** Font size selector. */
-		private JComboBox<String> fontSz = new JComboBox<String>(fontSizes);
-		/** Button selecting bold text. */
-		private JRadioButton bold = new JRadioButton("Bold");
-		/** Button selecting italic text. */
-		private JRadioButton italic = new JRadioButton("Italic");
-		/** Button that brings up the color chooser. */
-		private JButton colorButton = new JButton("Color");
-		/** Area the user types the text into. */
-		private JTextArea textArea = new JTextArea();
-
-		// properties
-		/** The text as accepted by the dialog. */
-		private String result = "";
-		/** The currently selected font family name. */
-		private String fn = "";
-		/** The currently selected font size. */
-		private int fs = 0;
-		/** True if bold is currently selected. */
-		private boolean isB = false;
-		/** True if italic is currently selected. */
-		private boolean isI = false;
-		/** The currently chosen text color. */
-		private Color col = Color.black;
-
-		/**
-		 * Initialize the dialog at a given position.
-		 * 
-		 * @param creating True if creating, false if changing.
-		 */
-		public TextEdit(boolean creating) {
-
-			super("Create/Modify Text Element","text");
-
-			// set up GUI
-			Container window = getContentPane();
-
-			// set up font inputs
-			JPanel details = new JPanel(new FlowLayout());
-
-			// set up font name
-			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			String [] names = ge.getAvailableFontFamilyNames();
-			if (fontName.isEmpty()) {
-				Font f = textArea.getFont();
-				fn = f.getFamily();
-			}
-			else {
-				fn = fontName;
-			}
-			fonts = new JComboBox<String>(names);
-			fonts.setSelectedItem(fn);
-			details.add(new JLabel("Font:"));
-			details.add(fonts);
-
-			if (fontSize == 0) {
-				fs = textArea.getFont().getSize();
-			}
-			else {
-				fs = fontSize;
-			}
-			fontSz.setSelectedItem(fs+"");
-			fontSz.setEditable(true);
-			details.add(new JLabel("Size:"));
-			details.add(fontSz);
-
-			if (isBold) {
-				bold.setSelected(true);
-				isB = true;
-			}
-			details.add(bold);
-
-			if (isItalic) {
-				italic.setSelected(true);
-				isI = true;
-			}
-			details.add(italic);
-
-			details.add(colorButton);
-
-			fonts.addActionListener(this);
-			fontSz.addActionListener(this);
-			bold.addActionListener(this);
-			italic.addActionListener(this);
-			colorButton.addActionListener(this);
-			window.add(details);
-			if (!creating) {
-				textArea.setText(text);
-				int bi = 0;
-				if (isBold) bi |= Font.BOLD;
-				if (isItalic) bi |= Font.ITALIC;
-				textArea.setFont(new Font(fontName,bi,fontSize));
-				textArea.setForeground(color);
-			}
-			JScrollPane pane = new JScrollPane(textArea);
-			pane.setPreferredSize(new Dimension(size,size));
-			window.add(pane);
-
-			// make the text area get the focus
-			this.addWindowFocusListener(new WindowAdapter() {
-			    /**
-			     * Move focus to the text area when the dialog gains focus.
-			     *
-			     * @param e The window focus event.
-			     */
-			    @Override
-			    public void windowGainedFocus(WindowEvent e) {
-			        textArea.requestFocusInWindow();
-			    }
-			});
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Accept the entered text.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			result = textArea.getText();
-			if (changed) {
-				fontName = fn;
-				fontSize = fs;
-				isBold = isB;
-				isItalic = isI;
-				color = col;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this text element.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-		/**
-		 * React to buttons.
-		 * 
-		 * @param event The event object for this event.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == fonts) {
-				fn = (String)fonts.getSelectedItem();
-				int bi = 0;
-				if (isB) bi |= Font.BOLD;
-				if (isI) bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn,bi,fs));
-				changed = true;
-				return;
-			}
-			else if (event.getSource() == fontSz) {
-				try {
-					fs = Integer.parseInt((String)fontSz.getSelectedItem());
-				}
-				catch (NumberFormatException ex) {
-					TellUser.error(this, "Invalid Font Size", "Error");
-					return;
-				}
-				if (fs < 1) {
-					TellUser.error(this, "Invalid Font Size", "Error");
-					return;
-				}
-				int bi = 0;
-				if (isB) bi |= Font.BOLD;
-				if (isI) bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn,bi,fs));
-				changed = true;
-				return;
-			}
-			else if (event.getSource() == bold) {
-				isB = bold.isSelected();
-				int bi = 0;
-				if (isB) bi |= Font.BOLD;
-				if (isI) bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn,bi,fs));
-				changed = true;
-				return;
-			}
-			else if (event.getSource() == italic) {
-				isI = italic.isSelected();
-				int bi = 0;
-				if (isB) bi |= Font.BOLD;
-				if (isI) bi |= Font.ITALIC;
-				textArea.setFont(new Font(fn,bi,fs));
-				changed = true;
-				return;
-			}
-			else if (event.getSource() == colorButton) {
-				final JColorChooser ch = new JColorChooser(color);
-				ch.setPreviewPanel(new JPanel());
-				ActionListener ok = new ActionListener(){
-				/**
-				 * Apply the chosen color to the text and mark it changed.
-				 *
-				 * @param event The event from the color chooser's OK button.
-				 */
-				@Override public void actionPerformed(ActionEvent event) {
-					col = ch.getColor();
-					textArea.setForeground(col);
-					changed = true;
-				}};
-				JDialog cl = JColorChooser.createDialog(this, "pick", true, ch, ok, null);
-				cl.setVisible(true);
-				cl.dispose();
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Get text input.
-		 * 
-		 * @return The text entered into the text area.
-		 */
-		public String getText() {
-
-			return result;
-		} // end of getText method
-
-	} // end of TextEdit class
 
 } // end of Text method

@@ -1,5 +1,6 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
 
@@ -61,7 +62,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		ly = y;
 		
 		// compute snap-to position
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int nx = (x+s/2)/s*s;
 		int ny = (y+s/2)/s*s;
 		
@@ -118,7 +119,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		ly += dy;
 		
 		// compute and set snap-to position
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		int nx = (lx+s/2)/s*s;
 		int ny = (ly+s/2)/s*s;
 		super.setXY(nx,ny);
@@ -255,7 +256,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	/**
 	 * Find input or output in this element that a given x,y is close to (if any).
 	 * Clears all touching flags.
-	 * Close is less than JLSInfo.spacing/2 in any direction.
+	 * Close is less than Geometry.SPACING/2 in any direction.
 	 * 
 	 * @param x The given x-coordinate.
 	 * @param y The given y-coordinate.
@@ -268,15 +269,15 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		
 		for (Input input : inputs) {
 			//input.setTouching(false);
-			if (Math.abs(x-input.getX()) < JLSInfo.spacing/2 &&
-					Math.abs(y-input.getY()) < JLSInfo.spacing/2) {
+			if (Math.abs(x-input.getX()) < Geometry.SPACING/2 &&
+					Math.abs(y-input.getY()) < Geometry.SPACING/2) {
 				return input;
 			}
 		}
 		for (Output output : outputs) {
 			//output.setTouching(false);
-			if (Math.abs(x-output.getX()) < JLSInfo.spacing/2 &&
-					Math.abs(y-output.getY()) < JLSInfo.spacing/2) {
+			if (Math.abs(x-output.getX()) < Geometry.SPACING/2 &&
+					Math.abs(y-output.getY()) < Geometry.SPACING/2) {
 				return output;
 			}
 		}

@@ -1,14 +1,9 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
-
-import javax.swing.*;
-
-import java.awt.event.*;
-import java.awt.geom.*;
 import java.io.*;
 import java.util.*;
 
@@ -29,12 +24,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	/** Map from the subcircuit's output pins to this element's corresponding outputs. */
 	private Map<OutputPin,Output> outmap = new HashMap<OutputPin,Output>();
 	/** The direction this element faces (side its inputs are on). */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
-	
-	// editing properties
-	/** True if the user cancelled the most recent dialog. */
-	protected boolean cancelled;
-	
+	private Orientation orientation = Orientation.RIGHT;
+
 	/**
 	 * Create printable view of this element.
 	 * 
@@ -125,49 +116,40 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	} // end of setName method
 	
 	/**
-	 * Display dialog to get value and bits.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this subcircuit will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if canceled, true otherwise.
+	 * The direction this subcircuit faces (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
+	public Orientation getOrientation() {
 
-		// show creation dialog
-		new SubCreate();
-		
-		// don't do anything if user canceled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				width = fm.stringWidth(" " + name + " ");
 				for (Element el : subCircuit.getElements()) {
 					if (el instanceof InputPin || el instanceof OutputPin) {
@@ -235,7 +217,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		for (Pin el : pins) {
 			if (el instanceof InputPin pin) {
 				Input in;
-				if(orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.RIGHT)
 				{
 					in = new Input(pin.getName(),this,0,height,pin.getBits());
 				}
@@ -249,7 +231,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			}
 			else if (el instanceof OutputPin pin) {
 				Output out;
-				if(orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.RIGHT)
 				{
 					out = new Output(pin.getName(),this,width,height,pin.getBits());
 				}
@@ -273,71 +255,6 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		height += 2*s;
 		
 	} // end of init method
-	
-	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		int s = JLSInfo.spacing;
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		int yy = y+height-2*s;
-		g.drawLine(x,yy,x+width,yy);
-		
-		// draw subcircuit name
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		Rectangle2D rect = fm.getStringBounds(name,g);
-		int dx = (int)Math.round((width-rect.getWidth())/2);
-		int dy = (int)Math.round((2*s-rect.getHeight())/2);
-		g.drawString(name,x+dx,yy+dy+ascent);
-		
-		// draw inputs and outputs
-		for (Input input : inputs) {
-			input.draw(g);
-			String inputName = input.getName();
-			rect = fm.getStringBounds(inputName,g);
-			g.setColor(Color.BLACK);
-
-			if(orientation == JLSInfo.Orientation.RIGHT)
-			{
-				dx = JLSInfo.pointDiameter/2+1;
-				dy = ascent - (int)Math.round(rect.getHeight()/2);
-			}
-			else
-			{
-				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
-				dy = ascent - (int)Math.round(rect.getHeight()/2);
-			}
-			g.drawString(inputName,x+dx,input.getY()+dy);
-		}
-		for (Output output : outputs) {
-			output.draw(g);
-			String outputName = output.getName();
-			rect = fm.getStringBounds(outputName,g);
-			g.setColor(Color.BLACK);
-			if(orientation == JLSInfo.Orientation.LEFT)
-			{
-				dx = JLSInfo.pointDiameter/2+1;
-				dy = ascent - (int)Math.round(rect.getHeight()/2);
-			}
-			else
-			{
-				dx = (int)(width - rect.getWidth() - (JLSInfo.pointDiameter/2+1));
-				dy = ascent - (int)Math.round(rect.getHeight()/2);
-			}
-			g.drawString(outputName,x+dx,output.getY()+dy);
-		}
-		
-	} // end of draw method
 	
 	/**
 	 * Save this element in a file.
@@ -379,11 +296,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		if (name.equals("orient")) {
 			if(value.equals("LEFT"))
 			{
-				orientation = JLSInfo.Orientation.LEFT;
+				orientation = Orientation.LEFT;
 			}
 			else if(value.equals("RIGHT"))
 			{
-				orientation = JLSInfo.Orientation.RIGHT;
+				orientation = Orientation.RIGHT;
 			}
 			
 		} else {
@@ -465,12 +382,12 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
-		info.setText(subCircuit.getName() + " (a subcircuit)");
+		return subCircuit.getName() + " (a subcircuit)";
 	} // end of showInfo method
 	
 	/**
@@ -610,14 +527,14 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param g The Graphics object used to draw this element.
 	 */
 	@Override
-	public void flip(Graphics g) {
-		if(orientation == JLSInfo.Orientation.LEFT)
+	public void flip(jls.core.TextMetrics g) {
+		if(orientation == Orientation.LEFT)
 		{
-			orientation = JLSInfo.Orientation.RIGHT;
+			orientation = Orientation.RIGHT;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
-			orientation = JLSInfo.Orientation.LEFT;
+			orientation = Orientation.LEFT;
 		}
 		inputs.clear();
 		outputs.clear();
@@ -626,105 +543,6 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		init(g);
 	} // end of flip method
 
-	/**
-	 * Dialog box to give the subcircuit a name within this circuit.
-	 */
-	private class SubCreate extends ElementDialog {
-			// properties
-			/** Text field for the subcircuit's name in this circuit. */
-			private JTextField nameField = new JTextField("",12);
-			/** Radio button selecting leftward orientation. */
-			private JRadioButton left = new JRadioButton("Left");
-			/** Radio button selecting rightward orientation. */
-			private JRadioButton right = new JRadioButton("Right",true);
-			
-			/**
-			 * Set up dialog window.
-			 * 
-			 */
-			private SubCreate() {
-
-				// set up window title
-				super("Create Subcircuit","import");
-
-				// set not cancelled
-				cancelled = false;
-
-				// set up window
-				Container window = getContentPane();
-
-				// set up input
-				JPanel info = new JPanel(new BorderLayout());
-				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
-				info.add(name,BorderLayout.WEST);
-				info.add(nameField,BorderLayout.CENTER);
-				window.add(info);
-				
-				//Setup orientation radio buttons
-				JLabel olbl = new JLabel("Orientation");
-				olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-				window.add(olbl);
-				JPanel orients = new JPanel(new GridLayout(3,3));
-				orients.add(new JLabel(""));
-				orients.add(new JLabel(""));
-				orients.add(new JLabel(""));
-				orients.add(left);
-				orients.add(new JLabel(""));
-				orients.add(right);
-				orients.add(new JLabel(""));
-				orients.add(new JLabel(""));
-				orients.add(new JLabel(""));
-				left.setHorizontalAlignment(SwingConstants.CENTER);
-				right.setHorizontalAlignment(SwingConstants.CENTER);
-				ButtonGroup gr = new ButtonGroup();
-				gr.add(left);
-				gr.add(right);
-				window.add(orients);
-
-				confirmOnEnter(nameField);
-				finishDialog();
-			} // end of constructor
-
-			/**
-			 * Validate the form and name the subcircuit.
-			 */
-			@Override
-			protected void validateAndAccept() {
-
-				String tname = nameField.getText().trim();
-				if (tname.length() < 1 || !Util.isValidName(tname)) {
-					reject("Invalid name");
-					return;
-				}
-				if (!circuit.addName(tname)) {
-					reject("Name already used");
-					return;
-				}
-				if(left.isSelected())
-				{
-					orientation = JLSInfo.Orientation.LEFT;
-				}
-				else if(right.isSelected())
-				{
-					orientation = JLSInfo.Orientation.RIGHT;
-				}
-				name = tname;
-				subCircuit.setName(name);
-				dispose();
-			} // end of validateAndAccept method
-
-			/**
-			 * Cancel this pin.
-			 */
-			@Override
-			protected void cancelDialog() {
-
-				cancelled = true;
-				dispose();
-			} // end of cancelDialog method
-
-		} // end of SubCreate class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

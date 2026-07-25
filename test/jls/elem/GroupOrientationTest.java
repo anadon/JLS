@@ -14,6 +14,8 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -44,7 +46,7 @@ import jls.JLSInfo;
  */
 class GroupOrientationTest {
 
-	private static final int S = JLSInfo.spacing;
+	private static final int S = Geometry.SPACING;
 
 	/** One bundler/unbundler of 2 single bits at the given orientation. */
 	private static String groupText(String type, String orient) {
@@ -69,7 +71,7 @@ class GroupOrientationTest {
 				new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 		try {
-			assertTrue(circuit.finishLoad(g),
+			assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(g)),
 					() -> "finishLoad failed: " + JLSInfo.loadError);
 		} catch (Exception ex) {
 			throw new AssertionError("finishLoad threw", ex);
@@ -116,8 +118,8 @@ class GroupOrientationTest {
 		Group up = group(load(groupText("Splitter", "UP")));
 		// along the horizontal axis: one grid step per put plus one;
 		// across the vertical axis: the snapped label width
-		assertEquals(3 * S, up.getRect().width, "width must be the along size");
-		assertEquals(2 * S, up.getRect().height, "height must be the across size");
+		assertEquals(3 * S, up.getRect().width(), "width must be the along size");
+		assertEquals(2 * S, up.getRect().height(), "height must be the across size");
 		assertEquals(List.of("0@12,0", "1@24,0", "input@12,24"), puts(up),
 				"UP splitter: outputs across the top, input at the bottom");
 
@@ -129,8 +131,8 @@ class GroupOrientationTest {
 	@Test
 	void verticalBinderLoadsWithVerticalGeometry() {
 		Group up = group(load(groupText("Binder", "UP")));
-		assertEquals(3 * S, up.getRect().width);
-		assertEquals(2 * S, up.getRect().height);
+		assertEquals(3 * S, up.getRect().width());
+		assertEquals(2 * S, up.getRect().height());
 		assertEquals(List.of("0@12,24", "1@24,24", "output@12,0"), puts(up),
 				"UP binder: inputs across the bottom, output at the top");
 
@@ -144,8 +146,8 @@ class GroupOrientationTest {
 		// the pre-#124 layout, pinned so the across/along rewrite cannot
 		// move existing puts (wires attach to these coordinates)
 		Group right = group(load(groupText("Binder", "RIGHT")));
-		assertEquals(2 * S, right.getRect().width);
-		assertEquals(3 * S, right.getRect().height);
+		assertEquals(2 * S, right.getRect().width());
+		assertEquals(3 * S, right.getRect().height());
 		assertEquals(List.of("0@0,12", "1@0,24", "output@24,12"), puts(right));
 
 		Group left = group(load(groupText("Splitter", "LEFT")));
@@ -184,7 +186,7 @@ class GroupOrientationTest {
 		try {
 			List<String> seen = new ArrayList<>();
 			for (int i = 0; i < 4; i++) {
-				group.rotate(JLSInfo.Orientation.RIGHT, g);
+				group.rotate(Orientation.RIGHT, jls.edit.SwingTextMetrics.of(g));
 				seen.add(orientOf(group));
 			}
 			assertEquals(List.of("DOWN", "LEFT", "UP", "RIGHT"), seen,
@@ -192,7 +194,7 @@ class GroupOrientationTest {
 			assertEquals(savedBefore, save(circuit),
 					"four quarter-turns must restore the identical save");
 
-			group.rotate(JLSInfo.Orientation.LEFT, g);
+			group.rotate(Orientation.LEFT, jls.edit.SwingTextMetrics.of(g));
 			assertEquals("UP", orientOf(group),
 					"counterclockwise from RIGHT is UP");
 		} finally {
@@ -211,9 +213,9 @@ class GroupOrientationTest {
 		Graphics2D g = img.createGraphics();
 		try {
 			// Splitter.flip re-runs init itself
-			group.flip(g);
+			group.flip(jls.edit.SwingTextMetrics.of(g));
 			assertEquals("DOWN", orientOf(group));
-			group.flip(g);
+			group.flip(jls.edit.SwingTextMetrics.of(g));
 			assertEquals("UP", orientOf(group));
 		} finally {
 			g.dispose();

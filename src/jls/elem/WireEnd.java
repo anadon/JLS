@@ -1,11 +1,10 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import java.awt.*;
 import java.io.PrintWriter;
 import java.util.*;
-import javax.swing.*;
 
 /**
  * The end of a wire segment (displayed as a circle until connected).
@@ -74,8 +73,8 @@ public final class WireEnd extends LogicElement {
 	 * @param g The Graphics object needed by overridden methods.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// do nothing
 	} // end of init method
 	
@@ -88,8 +87,8 @@ public final class WireEnd extends LogicElement {
 	 */
 	public void init(Circuit circ) {
 		
-		width = JLSInfo.pointDiameter;
-		height = JLSInfo.pointDiameter;
+		width = Geometry.POINT_DIAMETER;
+		height = Geometry.POINT_DIAMETER;
 		
 		fixPosition();
 		
@@ -214,54 +213,10 @@ public final class WireEnd extends LogicElement {
 	 * @return true if the element is inside, false if not.
 	 */
 	@Override
-	public boolean isInside(Rectangle rect) {
-		
+	public boolean isInside(jls.core.Bounds rect) {
+
 		return rect.contains(x,y);
 	} // end of isInside method
-	
-	/**
-	 * Draw this element.
-	 * 
-	 * @param g The Graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		Color inside;
-		if (touching) {
-			inside = JLSInfo.touchColor;
-		}
-		else if (highlight) {
-			inside = JLSInfo.highlightColor;
-		}
-		else if (put != null) {
-			if (isAttached())
-				return;
-			inside = Color.black;
-		}
-		else if (wires.size() <= 1) {
-			inside = Color.WHITE;
-		}
-		else {
-			if (degree() == 2)
-				return;
-			inside = Color.black;
-		}
-		g.setColor(Color.BLACK);
-		int pd = JLSInfo.pointDiameter;
-		int pr = pd/2;
-		g.fillOval(x-pr,y-pr,pd,pd);
-		g.setColor(inside);
-		g.fillOval(x-pr+1,y-pr+1,pd-2,pd-2);
-		if (touching) {
-			// second, color-independent channel (issue #76): an open
-			// ring around the point marks a connection lining up even
-			// when the touch color cannot be told apart
-			g.setColor(JLSInfo.wireZeroColor);
-			int rd = pd+4;
-			g.drawOval(x-rd/2,y-rd/2,rd,rd);
-		}
-	} // end of draw method
 	
 	/**
 	 * This wire end will be removed, so remove wires it connects to.
@@ -435,10 +390,10 @@ public final class WireEnd extends LogicElement {
 	/**
 	 * Display information about this wire end.
 	 * 
-	 * @param info A JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
 		String inp = "";
 		if (!net.hasInput()) {
@@ -446,13 +401,13 @@ public final class WireEnd extends LogicElement {
 		}
 		int bits = net.getBits();
 		if (bits <= 0) {
-			info.setText("not connected");
+			return "not connected";
 		}
 		else if (bits == 1) {
-			info.setText("1 bit" + inp);
+			return "1 bit" + inp;
 		} 
 		else {
-			info.setText(bits + " bits" + inp);
+			return bits + " bits" + inp;
 		}
 	} // end of showInfo method
 	
@@ -558,11 +513,11 @@ public final class WireEnd extends LogicElement {
 	 * @return the bounding rectangle.
 	 */
 	@Override
-	public Rectangle getRect() {
-		
-		int d = JLSInfo.pointDiameter;
+	public jls.core.Bounds getRect() {
+
+		int d = Geometry.POINT_DIAMETER;
 		int r = d/2;
-		return new Rectangle(x-r,y-r,d,d);
+		return new jls.core.Bounds(x-r,y-r,d,d);
 	} // end of getRect method
 	
 	/**
@@ -586,7 +541,7 @@ public final class WireEnd extends LogicElement {
 	} // end of getCopy method
 	
 	/**
-	 * Wire ends are always JLSInfo.pointDiameter squares, set by init()
+	 * Wire ends are always Geometry.POINT_DIAMETER squares, set by init()
 	 * on every load, so their size is not saved (#21). They dominate
 	 * saved files: every wire segment endpoint is one of these blocks.
 	 */

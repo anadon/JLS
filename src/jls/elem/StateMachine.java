@@ -1,63 +1,22 @@
 package jls.elem;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
 import java.io.PrintWriter;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
-
+import jls.core.Geometry;
 import jls.BitSetUtils;
 import jls.Circuit;
-import jls.Help;
 import jls.JLSInfo;
 import jls.TellUser;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
-import jls.util.Placement;
 
 /**
  * The state machine editor and simulation code.
@@ -65,7 +24,7 @@ import jls.util.Placement;
  * @author David A. Poplawski
  */
 public final class StateMachine extends LogicElement
-		implements Printable, Timed {
+		implements Timed {
 
 	// default values
 	/** Propagation delay a new state machine starts with. */
@@ -110,15 +69,6 @@ public final class StateMachine extends LogicElement
 	/** The state currently being built by the file loader. */
 	private State buildState;
 	
-	// running properties
-	/** True if the user cancelled the edit dialog. */
-	private boolean canceled;
-	/** The open editor dialog, used as the owner of child dialogs. */
-	private JDialog currentDialog;
-	/** The bounding box of all states, computed for scaled printing. */
-	private Rectangle bounds;
-	/** A copy of this machine made before editing, restored on cancel. */
-	private StateMachine original;
 
 	/**
 	 * Create a new adder element.
@@ -158,40 +108,11 @@ public final class StateMachine extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
-	String checkInitialState() {
+	public String checkInitialState() {
 
 		return findInitialState() == null ? INITIAL_STATE_CONSTRAINT : null;
 	} // end of checkInitialState method
 
-	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if canceled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new StateEditor(this,true);
-		
-		// don't do anything if user canceled
-		if (canceled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
 	
 	/**
 	 * Initialize internal info for this element.
@@ -199,13 +120,13 @@ public final class StateMachine extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				String dname = name;
 				if (name.isEmpty()) 
 					dname = "State Machine";
@@ -303,113 +224,6 @@ public final class StateMachine extends LogicElement
 		return 0; // should never do this
 	} // end of inputBits method
 	
-	/**
-	 * Draw this statemachine element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// set up
-		int s = JLSInfo.spacing;
-		int d2 = JLSInfo.pointDiameter/2;
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int fontHeight = ascent + descent;
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRoundRect(x,y,width,height,6,6);
-		g.drawLine(x,y+height-4*s,x+width,y+height-4*s);
-		g.drawLine(x,y+height-2*s,x+width,y+height-2*s);
-		
-		// draw name
-		String dname = name;
-		if (name.isEmpty()) {
-			dname = "State Machine";
-		}
-		int w = fm.stringWidth(dname);
-		g.drawString(dname,x+(width-w)/2,y+height-3*s-fontHeight/2+ascent);
-		
-		// draw inputs and outputs and their names
-		for (Input input : inputs) {
-			int dy = input.getY();
-			g.setColor(Color.black);
-			g.drawString(input.getName(),x+d2,dy-fontHeight/2+ascent);
-			input.draw(g);
-		}
-		for (Output output : outputs) {
-			int dy = output.getY();
-			int ow = fm.stringWidth(output.getName());
-			g.setColor(Color.black);
-			g.drawString(output.getName(),x+width-ow-d2,dy-fontHeight/2+ascent);
-			output.draw(g);
-		}
-		
-	} // end of draw method
-
-	/**
-	 * Print the state machine.
-	 */
-	@Override
-	public int print(Graphics g, PageFormat format, int pagenum) {
-		
-		// use better graphics
-		Graphics2D gg = (Graphics2D)g;
-
-		// construct name
-		Circuit c = circuit;
-		String nm = name + " in " + circuit.getName();
-		while (c.isImported()) {
-			c = c.getSubElement().getCircuit();
-			nm += " in " + c.getName();
-		}
-		
-		// set up
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int fontHeight = ascent + descent;
-		
-		// get bounds
-		bounds = null;
-		for (State state : states) {
-			if (bounds == null)
-				bounds = state.getBounds(g);
-			else
-				bounds.add(state.getBounds(g));
-		}
-		if (bounds == null) {
-			bounds = new Rectangle(0,0,1,1);
-		}
-		
-		// scale and adjust as needed
-		double width = format.getImageableWidth();
-		double height = format.getImageableHeight();
-		double scale = 1.0;
-		if (bounds.width > width) {
-			scale = 1.0*width/bounds.width;
-		}
-		if (bounds.height > height) {
-			scale = Math.min(scale,1.0*height/bounds.height);
-		}
-		gg.translate(format.getImageableX(),format.getImageableY());
-		gg.drawString(nm,0,ascent);
-		gg.translate(0,2*fontHeight);
-		gg.scale(scale,scale);
-		gg.translate(-bounds.x,-bounds.y);
-		
-		// print
-		for (State state : states) {
-			state.draw(gg);
-		}
-		return Printable.PAGE_EXISTS;
-	} // end of print method
 
 	/**
 	 * Save this element in a file.
@@ -678,10 +492,10 @@ public final class StateMachine extends LogicElement
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
 		String trig = "falling";
 		if (trigger == 1) {
@@ -689,10 +503,10 @@ public final class StateMachine extends LogicElement
 		}
 		String msg = "state machine (" + trig + " edge triggered), ";
 		if (currentState == null) {
-			info.setText(msg + "no current state");
+			return msg + "no current state";
 		}
 		else {
-			info.setText(msg + "current state = " + currentState.getName());
+			return msg + "current state = " + currentState.getName();
 		}
 	} // end of showInfo method
 	
@@ -712,7 +526,7 @@ public final class StateMachine extends LogicElement
 	 * 
 	 * @return the set of states.
 	 */
-	Set<State> getStates() {
+	public Set<State> getStates() {
 		
 		return states;
 	} // end of getStates method
@@ -722,7 +536,7 @@ public final class StateMachine extends LogicElement
 	 * 
 	 * @return all outputs.
 	 */
-	Vector<Input> getInputs() {
+	public Vector<Input> getInputs() {
 		
 		return inputs;
 	} // end of getInputs method
@@ -732,10 +546,68 @@ public final class StateMachine extends LogicElement
 	 * 
 	 * @return all outputs.
 	 */
-	Vector<Output> getOutputs() {
-		
+	public Vector<Output> getOutputs() {
+
 		return outputs;
 	} // end of getOutputs method
+
+	/**
+	 * Get the triggering clock edge (issue #77: the GUI-side editor
+	 * dialog reads and writes it through these accessors).
+	 *
+	 * @return 1 for rising, -1 for falling.
+	 */
+	public int getTrigger() {
+
+		return trigger;
+	} // end of getTrigger method
+
+	/**
+	 * Set the triggering clock edge.
+	 *
+	 * @param trigger 1 for rising, -1 for falling.
+	 */
+	public void setTrigger(int trigger) {
+
+		this.trigger = trigger;
+	} // end of setTrigger method
+
+	/**
+	 * Set this state machine's name (issue #77: the editor dialog applies
+	 * the entered name here).
+	 *
+	 * @param name The new name.
+	 */
+	public void setName(String name) {
+
+		this.name = name;
+	} // end of setName method
+
+	/**
+	 * Replace this machine's state set (issue #77: the editor dialog
+	 * restores the pre-edit states on cancel).
+	 *
+	 * @param states The state set to install.
+	 */
+	public void setStates(Set<State> states) {
+
+		this.states = states;
+	} // end of setStates method
+
+	/**
+	 * Detach from all wires and recompute size (issue #77: the editor
+	 * dialog calls this when a change altered the input/output signature,
+	 * reproducing the former {@code change} body's detach/re-init step).
+	 *
+	 * @param g The Graphics object to use to determine size.
+	 */
+	public void reinit(jls.core.TextMetrics g) {
+
+		detach();
+		width = 0;
+		height = 0;
+		init(g);
+	} // end of reinit method
 
 	/**
 	 * State machines have timing info (propagation delay).
@@ -790,1354 +662,6 @@ public final class StateMachine extends LogicElement
 		return true;
 	} // end of canChange method
 	
-	/**
-	 * Show edit dialog.
-	 * When done, make sure inputs and outputs are still the same, and that the name
-	 * is still the same.
-	 * If not, detach existing element from all wires and go into "moving" editor
-	 * state.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return true if element must be re-placed in the circuit, false if not.
-	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
-	
-		// save current state machine
-		original = (StateMachine)copy();
-		
-		// display dialog
-		StateEditor ed = new StateEditor(this,false);
-		
-		// if canceled, restore original state machine
-		if (canceled) {
-			states = original.states;
-		}
-		
-		// if name has changed, detach
-		if (ed.nameChanged()) {
-			detach();
-			width = 0;
-			height =  0;
-			init(g);
-			return true;
-		}
-		
-		// make a set of all old input names
-		Set<String> oldNames = new HashSet<String>();
-		for (Input input : inputs) {
-			oldNames.add(input.getName());
-		}
-		
-		// make a set of all new input names
-		Set<String> newNames = new HashSet<String>();
-		newNames.add("clock");
-		for (State state : states) {
-			newNames.addAll(state.getInputs());
-		}
-		
-		// if not the same, detach
-		if (!oldNames.equals(newNames)) {
-			detach();
-			width = 0;
-			height =  0;
-			init(g);
-			return true;
-		}
-		
-		// detach if any input signal's #bits changed
-		for (Input input : inputs) {
-			int bits = input.getBits();
-			for (State state : states) {
-				for (String inp : state.getInputs()) {
-					if (input.getName().equals(inp) && state.inputBits(inp) != bits) {
-						detach();
-						width = 0;
-						height =  0;
-						init(g);
-						return true;
-					}
-				}
-			}
-		}
-
-		// make a set of all old output names
-		oldNames.clear();
-		for (Output output : outputs) {
-			oldNames.add(output.getName());
-		}
-		
-		// make a set of all new output names
-		newNames.clear();
-		for (State state : states) {
-			newNames.addAll(state.getOutputs());
-		}
-
-		// if not the same, detach
-		if (!oldNames.equals(newNames)) {
-			detach();
-			width = 0;
-			height =  0;
-			init(g);
-			return true;
-		}
-
-		// detach if any out signal's #bits changed
-		for (Output output : outputs) {
-			int bits = output.getBits();
-			for (State state : states) {
-				for (String out : state.getOutputs()) {
-					if (output.getName().equals(out) && state.outputBits(out) != bits) {
-						detach();
-						width = 0;
-						height =  0;
-						init(g);
-						return true;
-					}
-				}
-			}
-		}
-		
-		return false;
-	
-	} // end of change method
-	
-	
-	// drawing states
-	/**
-	 * Interaction mode of the editor's drawing area, tracking what the user
-	 * is currently doing (idle, placing or moving states, drawing transitions,
-	 * selecting, etc.) so mouse events are handled accordingly.
-	 */
-	private enum DrawState {
-		/** No gesture in progress. */
-		idle,
-		/** A new state has just been created. */
-		created,
-		/** A new state is following the cursor to its place. */
-		placing,
-		/** A selection rectangle is being dragged out. */
-		selecting,
-		/** A selection exists and awaits a command. */
-		selected,
-		/** Selected states are being dragged. */
-		moving,
-		/** A new transition is being drawn. */
-		newTrans,
-		/** A transition corner point is being dragged. */
-		pointMoving
-	};
-	
-	/**
-	 * Create dialog.
-	 */
-	@SuppressWarnings("serial")
-	private class StateEditor extends ElementDialog
-		implements ActionListener, MouseListener, MouseMotionListener {
-
-		// properties
-		/** The drawing area the states are edited in. */
-		private JPanel editArea;
-		/** Message display at the top of the dialog. */
-		private JLabel msgLabel = new JLabel("");
-		/** Shows the current interaction mode at the top right. */
-		private JLabel stateLabel = new JLabel(" ");
-		/** The current interaction mode of the drawing area. */
-		private DrawState drawState = DrawState.idle;
-		/** The latest mouse x-coordinate. */
-		private int x;
-		/** The latest mouse y-coordinate. */
-		private int y;
-		/** The selection rectangle being dragged out, or null if none. */
-		private Rectangle selrect = null;
-		/** The currently selected states. */
-		private Set<State> selected = new HashSet<State>();
-		/** The state under the most recent mouse press, or null if none. */
-		private State on;
-		/** Selects triggering on the rising clock edge. */
-		private JRadioButton rising = new JRadioButton("rising edge");
-		/** Selects triggering on the falling clock edge. */
-		private JRadioButton falling = new JRadioButton("falling edge");
-		/** Expands the drawing area. */
-		private JButton enlarge = new JButton("+");
-		/** Input field for the state machine's name. */
-		private JTextField nameField = new JTextField(30);
-		/** Popup menu item to rename a state. */
-		private JMenuItem changeName = new JMenuItem("change name");
-		/** Popup menu item to make a state the initial state. */
-		private JMenuItem makeInit = new JMenuItem("make initial state");
-		/** Popup menu item to start a new transition from a state. */
-		private JMenuItem addTrans = new JMenuItem("add transition");
-		/** Popup menu item to delete all transitions from a state. */
-		private JMenuItem deleteAllTrans = new JMenuItem("delete all transitions");
-		/** Popup menu item to edit a state's outputs. */
-		private JMenuItem editOutputs = new JMenuItem("edit outputs");
-		/** Popup menu item to view a state's outputs. */
-		private JMenuItem showOutputs = new JMenuItem("view outputs");
-		/** Popup menu item to delete the selected state(s). */
-		private JMenuItem delete = new JMenuItem("delete state(s)");
-		/** Popup menu item to align the selected states horizontally. */
-		private JMenuItem alignHor = new JMenuItem("align states horizontally");
-		/** Popup menu item to align the selected states vertically. */
-		private JMenuItem alignVer = new JMenuItem("align states vertically");
-		/** Midpoints of the transition being drawn; the last entry is the current end point. */
-		private Vector<Point> points = new Vector<Point>();
-		/** The transition corner point being dragged. */
-		private Point movingPoint;
-		/** True if the machine's name was changed when the dialog was accepted. */
-		private boolean nameChange;
-		/** The state machine being edited. */
-		private StateMachine machine;
-
-		/**
-		 * Set up create dialog window.
-		 * 
-		 * @param machine The state machine the new state will be in.
-		 * @param creating True if creating a new element, false if editing an existing one.
-		 */
-		private StateEditor(StateMachine machine, boolean creating) {
-
-			// set up window title
-			super("Edit State Machine",null);
-
-			// save reference to me
-			currentDialog = this;
-			this.machine = machine;
-			
-			// set not canceled
-			canceled = false;
-			
-			// set up window
-			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
-			
-			// set up message area
-			JPanel messages = new JPanel(new BorderLayout());
-			messages.setBackground(Color.cyan);
-			messages.add(msgLabel,BorderLayout.CENTER);
-			messages.add(stateLabel,BorderLayout.EAST);
-			window.add(messages,BorderLayout.NORTH);
-			
-			// set up editing area
-			editArea = new JPanel() {
-				/**
-				 * Paint the states, any selection rectangle and an
-				 * in-progress transition in the editing area.
-				 */
-				@Override
-				public void paintComponent(Graphics g) {
-					super.paintComponent(g);
-					if (selrect != null) {
-						if (drawState == DrawState.selecting) {
-							g.setColor(Color.GRAY);
-							g.drawRect(selrect.x,selrect.y,selrect.width,selrect.height);
-						}
-						else {
-							g.setColor(Color.lightGray);
-							g.fillRect(selrect.x,selrect.y,selrect.width,selrect.height);
-						}
-					}
-					if (drawState == DrawState.newTrans) {
-						drawTrans(on,points,g);
-					}
-					for (State state : states) {
-						state.draw(g);
-					}
-				}
-			};
-			if (creating) {
-				Rectangle screen = getGraphicsConfiguration().getBounds();
-				editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
-			}
-			else {
-				Rectangle es = null;
-				for (State state : states) {
-					if (es == null)
-						es = state.getBounds(null);
-					else
-						es.add(state.getBounds(null));
-				}
-				if (es != null) {
-					int w = (int)((es.x+es.width)*1.1);
-					int h = (int)((es.y+es.height)*1.1);
-					editArea.setPreferredSize(new Dimension(w,h));
-				}
-				else {
-					Rectangle screen = getGraphicsConfiguration().getBounds();
-					editArea.setPreferredSize(new Dimension(screen.width-100,screen.height-100));
-				}
-			}
-			editArea.setBackground(Color.white);
-			editArea.addMouseListener(this);
-			editArea.addMouseMotionListener(this);
-			JScrollPane pane = new JScrollPane(editArea);
-			window.add(pane,BorderLayout.CENTER);
-			
-			// set up bottom stuff
-			JPanel bottom = new JPanel(new GridLayout(4,1));
-			
-			JPanel stuff = new JPanel(new BorderLayout());
-			
-			JPanel trig = new JPanel(new FlowLayout(FlowLayout.CENTER));
-			trig.add(new JLabel("Trigger: "));
-			trig.add(rising);
-			trig.add(falling);
-			ButtonGroup group = new ButtonGroup();
-			group.add(rising);
-			group.add(falling);
-			if (trigger == 1)
-				rising.setSelected(true);
-			else
-				falling.setSelected(true);
-			stuff.add(trig,BorderLayout.CENTER);
-			stuff.add(enlarge,BorderLayout.EAST);
-			bottom.add(stuff);
-			enlarge.setToolTipText("expand drawing area");
-			
-			JPanel namePanel = new JPanel(new FlowLayout());
-			namePanel.add(new JLabel("Name: "));
-			namePanel.add(nameField);
-			nameField.setText(name);
-			bottom.add(namePanel);
-
-			bottom.add(getErrorLabel());
-
-			JPanel okCancel = new JPanel(new GridLayout(1,3));
-			okCancel.add(ok);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "stmach");
-			okCancel.add(help);
-			bottom.add(okCancel);
-
-			window.add(bottom,BorderLayout.SOUTH);
-
-			// set up listeners (OK, Cancel, Escape and the close box are
-			// wired by the shared dialog base, issue #26)
-			installDialogBehavior();
-			enlarge.addActionListener(this);
-			changeName.addActionListener(this);
-			makeInit.addActionListener(this);
-			addTrans.addActionListener(this);
-			deleteAllTrans.addActionListener(this);
-			editOutputs.addActionListener(this);
-			showOutputs.addActionListener(this);
-			delete.addActionListener(this);
-			alignHor.addActionListener(this);
-			alignVer.addActionListener(this);
-
-			// set up new state key binding
-			Action newState = new AbstractAction() {
-				/**
-				 * Handle the new-state key binding by creating a state.
-				 */
-				@Override
-				public void actionPerformed(ActionEvent event) {
-					
-					createNewState();
-				}
-			};
-			editArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_N,Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()),"new state");
-			editArea.getActionMap().put("new state", newState);
-
-			// finish up GUI: size to the monitor this dialog will appear
-			// on and place relative to the owner window (#104)
-			Rectangle screen = getGraphicsConfiguration().getBounds();
-			Dimension dialog = getPreferredSize();
-			int w = Math.min(dialog.width,screen.width-100);
-			int h = Math.min(dialog.height+100,screen.height-100);
-			setSize(w,h);
-			setLocationRelativeTo(getOwner());
-			setVisible(true);
-			
-		} // end of constructor
-		
-		/**
-		 * Set and display current drawing state.
-		 * 
-		 * @param state The new drawing state.
-		 */
-		public void setDrawState(DrawState state) {
-			
-			drawState = state;
-			switch(state) {
-			case idle:
-				stateLabel.setText(" ");
-				break;
-			case created:
-				stateLabel.setText("created new state");
-				break;
-			case placing:
-				stateLabel.setText("left click to place, right click to cancel");
-				break;
-			case selecting:
-				stateLabel.setText("selecting states");
-				break;
-			case selected:
-				stateLabel.setText("selected states");
-				break;
-			case moving:
-				stateLabel.setText("moving state(s)");
-				break;
-			case newTrans:
-				stateLabel.setText("creating new transition");
-				break;
-			case pointMoving:
-				stateLabel.setText("moving a transition corner");
-			}
-		} // end of setDrawState method
-		
-		/**
-		 * Draw a partial transition.
-		 * Does not draw arrow, used during transition creation.
-		 * 
-		 * @param from Starting state.
-		 * @param points Midpoints, last entry is current end point.
-		 * @param g The Graphics object to use.
-		 */
-		public void drawTrans(State from, Vector<Point> points, Graphics g) {
-			
-			Point last = from.getLocation();
-			Point prev = null;
-			for (Point p : points) {
-				g.setColor(Color.black);
-				g.drawLine(last.x,last.y,p.x,p.y);
-				prev = last;
-				last = p;
-			}
-			if (prev != null) {
-				SMUtil.drawArrow(last.x,last.y,SMUtil.getAngle(last.x-prev.x,prev.y-last.y),g);
-			}
-		} // end of drawTrans method
-		
-		/**
-		 * React to events.
-		 * 
-		 * @param event The event.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if (event.getSource() == changeName) {
-				if (on != null) {
-					CreateState cs = new CreateState("Change",on.getName());
-					if (!cs.wasCancelled()) {
-						boolean ok = on.changeName(cs.getName(),editArea.getGraphics());
-						if (!ok) {
-							TellUser.error(this,
-									"Name won't fit", "Error");
-							return;
-						}
-						editArea.repaint();
-					}
-				}
-			}
-			else if (event.getSource() == makeInit) {
-
-				if (on != null) {
-
-					// turn off initial state anywhere else
-					for (State state : states) {
-						state.setInitial(false);
-					}
-
-					// make current state initial
-					on.setInitial(true);
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-				}
-			}
-			else if (event.getSource() == addTrans) {
-				points.clear();
-				points.add(new Point(x,y));
-				setDrawState(DrawState.newTrans);
-			}
-			else if (event.getSource() == deleteAllTrans) {
-				if (on != null) {
-					on.deleteAllTrans();
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-				}
-			}
-			else if (event.getSource() == editOutputs) {
-				if (on != null) {
-					on.editOuts();
-				}
-			}
-			else if (event.getSource() == showOutputs) {
-				if (on != null) {
-					on.showOuts(currentDialog);
-				}
-			}
-			else if (event.getSource() == delete) {
-				if (on != null) {
-					
-					// remove all transitions to this state
-					for (State state : states) {
-						state.removeTrans(on);
-					}
-					
-					// remove this state and its transitions
-					states.remove(on);
-					
-					// finish up
-					selrect = null;
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-				}
-				else {
-					
-					// remove every selected state
-					for (State state : selected) {
-						
-						// remove transitions to each state first
-						for (State st : states) {
-							st.removeTrans(state);
-						}
-						
-						// then remove the each state
-						states.remove(state);
-					}
-					
-					// finish up
-					selrect = null;
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-				}
-			}
-			else if (event.getSource() == alignHor) {
-
-				// find average x-value
-				int sum = 0;
-				for (State state : selected) {
-					sum += state.getX();
-				}
-				int newx = sum/selected.size();
-				
-				// move states
-				for (State state : selected) {
-					state.savePosition();
-					state.setX(newx);
-				}
-				
-				// check for overlaps
-				if (stateOverlap()) {
-					TellUser.error(this,"Can't do - states will overlap", "Error");
-					for (State state : selected) {
-						state.restorePosition();
-					}
-				}
-
-				// finish up
-				selected.clear();
-				selrect = null;
-				setDrawState(DrawState.idle);
-				editArea.repaint();
-			}
-			else if (event.getSource() == alignVer) {
-				
-				// find average y-value
-				int sum = 0;
-				for (State state : selected) {
-					sum += state.getY();
-				}
-				int newy = sum/selected.size();
-				
-				// move states
-				for (State state : selected) {
-					state.savePosition();
-					state.setY(newy);
-				}
-
-				// check for overlaps
-				if (stateOverlap()) {
-					TellUser.error(this,"Can't do - states overlap", "Error");
-					for (State state : selected) {
-						state.restorePosition();
-					}
-				}
-
-				// finish up
-				selected.clear();
-				selrect = null;
-				setDrawState(DrawState.idle);
-				editArea.repaint();
-			}
-			else if (event.getSource() == enlarge) {
-				Dimension cs = editArea.getPreferredSize();
-				int width = (int)(cs.width*1.1);
-				int height = (int)(cs.height*1.1);
-				editArea.setPreferredSize(new Dimension(width,height));
-				editArea.revalidate();
-			}
-			
-		} // end of actionPerformed method
-		
-		/**
-		 * See if any states in the selected set overlap any state.
-		 * 
-		 * @return true if there is overlap, false if not
-		 */
-		private boolean stateOverlap() {
-			
-			for (State sel : selected) {
-				for (State state : states) {
-					if (sel == state)
-						continue;
-					if (sel.overlaps(state)) {
-						return true;
-					}
-				}
-			}
-			return false;
-		} // end of stateOverlap method
-
-		/**
-		 * A machine must have an initial state before the editor closes
-		 * (issue #52, M13); the same rule simulation start repairs for
-		 * hand-edited files. The remedy is in the editor itself: right
-		 * click a state and choose "make initial state".
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			String violated = checkInitialState();
-			if (violated != null) {
-				return java.util.List.of(new Violation(violated, null));
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Apply the validated form to the state machine.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			if (rising.isSelected()) {
-				trigger = 1;
-			}
-			else {
-				trigger = -1;
-			}
-			String oldName =  name;
-			name = nameField.getText().trim();
-			if (oldName.equals(name)) {
-				nameChange = false;
-			}
-			else {
-				nameChange = true;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this dialog.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			canceled = true;
-			dispose();
-		} // end of cancelDialog method
-		
-		/**
-		 * See if the name of this element has changed.
-		 * 
-		 * @return true if the name has changed, false if it hasn't.
-		 */
-		public boolean nameChanged() {
-			
-			return nameChange;
-		} // end of nameChanged method
-		
-		/**
-		 * React to mouse pressed events.
-		 * 
-		 * @param event The mouse event.
-		 */
-		@Override
-		public void mousePressed(MouseEvent event) {
-			
-			// get info
-			x = event.getX();
-			y = event.getY();
-			boolean leftButton = event.getButton() == MouseEvent.BUTTON1;
-			boolean rightButton = event.getButton() == MouseEvent.BUTTON3;
-			
-			if (drawState == DrawState.idle) {
-				
-				// if left button
-				if (leftButton) {
-					
-					// see if a transition point is at x,y
-					for (State state : states) {
-						Point p = state.highlightTransPoints(x,y);
-						if (p != null) {
-							movingPoint = p;
-							setDrawState(DrawState.pointMoving);
-							return;
-						}
-					}
-					
-					// see if a state is at x,y
-					selected.clear();
-					for (State state : states) {
-						if (state.contains(x,y)) {
-							state.setHighlight(true);
-							selected.add(state);
-							state.savePosition();
-						}
-					}
-					
-					// if no state there, then start selection rectangle
-					if (selected.isEmpty()) {
-						selrect = new Rectangle(x,y,0,0);
-						setDrawState(DrawState.selecting);
-						editArea.repaint();
-						return;
-					}
-					
-					// otherwise start moving stuff
-					else {
-						setDrawState(DrawState.moving);
-						editArea.repaint();
-						return;
-					}
-				}
-				
-				// if right button...
-				else if (rightButton){
-					
-					// see if over a transition
-					for (State state : states) {
-						if (state.highlightTrans(x,y)) {
-							boolean result = TellUser.confirm(this,
-						            "delete transition?", "option");
-							if (result) {
-								state.deleteLastHighlighted();
-								editArea.repaint();
-							}
-							return;
-						}
-					}
-					
-					// see if there is a single state at this position
-					on = null;
-					for (State state : states) {
-						if (state.contains(x,y)) {
-							on = state;
-							break;
-						}
-					}
-					
-					// if so, construct and show state option menu
-					if (on != null) {
-						JPopupMenu menu = new JPopupMenu();
-						menu.add(addTrans);
-						menu.add(showOutputs);
-						menu.add(editOutputs);
-						menu.add(changeName);
-						menu.add(makeInit);
-						menu.add(deleteAllTrans);
-						menu.add(delete);
-						menu.show(editArea,x,y);
-					}
-					
-					// otherwise create a new state
-					else {
-						createNewState();
-						return;
-					}
-				}
-			}
-			
-			// if just created
-			if (drawState == DrawState.created) {
-				Point p = editArea.getMousePosition();
-				if (p != null) {
-					for (State state : selected) {
-						state.moveTo(p.x,p.y);
-					}
-				}
-				repaint();
-				return;
-			}
-			
-			// if placing...
-			if (drawState == DrawState.placing) {
-				
-				// right click cancels
-				if (rightButton) {
-					setDrawState(DrawState.idle);
-					for (State state : selected) {
-						states.remove(state);
-					}
-					selected.clear();
-					editArea.repaint();
-					return;
-				}
-			
-				// check for overlap
-				boolean overlaps = false;
-				for (State sel : selected) {
-					for (State st : states) {
-						if (sel != st && sel.overlaps(st)) {
-							overlaps = true;
-						}
-					}
-				}
-				if (overlaps) {
-					return;
-				}
-				
-				// finish up
-				setDrawState(DrawState.idle);
-				for (State state : selected) {
-					state.setHighlight(false);
-				}
-				selected.clear();
-				editArea.repaint();
-				mouseMoved(event);
-				return;
-			}
-			
-			// if selected...
-			if (drawState == DrawState.selected) {
-				
-				if (leftButton) {
-					if (selrect != null && selrect.contains(x,y)) {
-						setDrawState(DrawState.moving);
-						selrect = null;
-						repaint();
-					}
-					else {
-						setDrawState(DrawState.idle);
-						selrect = null;
-						mousePressed(event);
-					}
-				}
-				else { // right button
-
-					// see if it is in the selected area
-					if (selrect != null && selrect.contains(x,y)) {
-						JPopupMenu menu = new JPopupMenu();
-						menu.add(delete);
-						if (selected.size() > 1) {
-							menu.add(alignHor);
-							menu.add(alignVer);
-						}
-						menu.show(editArea,x,y);
-					}
-				}
-			}
-			
-			// if adding a new transition
-			if (drawState == DrawState.newTrans) {
-				
-				// right button cancels
-				if (rightButton) {
-					points.clear();
-					for (State state : states) {
-						state.setHighlight(false);
-					}
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-					return;
-				}
-				
-				// if not on a state, add point
-				State target = null;
-				for (State state : states) {
-					if (state.contains(x,y)) {
-						target = state;
-						break;
-					}
-				}
-				if (target == null) {
-					points.add(new Point(x,y));
-					editArea.repaint();
-					return;
-				}
-				
-				// otherwise create new transition
-				on.newTransition(target,points,currentDialog);
-				points.clear();
-				on.setHighlight(false);
-				setDrawState(DrawState.idle);
-				editArea.repaint();
-				return;
-			}
-			
-		} // end of mousePressed method
-		
-		/**
-		 * Create a new state.
-		 */
-		private void createNewState() {
-			
-			CreateState cs = new CreateState("Create","");
-			if (cs.wasCancelled()) {
-				return;
-			}
-			State state = new State(machine,cs.getName(),editArea.getGraphics());
-			
-			// display it at the current mouse position (if possible)
-			Point p = editArea.getMousePosition();
-			if (p == null) {
-				int d = JLSInfo.stateDiameter;
-				state.moveTo(-d,-d);	// anywhere off screen
-			}
-			else {
-				state.moveTo(p.x,p.y);
-			}
-			state.setHighlight(true);
-			if (states.isEmpty()) {
-				state.setInitial(true);
-			}
-			states.add(state);
-			selected.clear();
-			selected.add(state);
-			setDrawState(DrawState.created);
-			editArea.repaint();
-			return;
-		} // end of createNewState method
-
-		/**
-		 * React to mouse released events.
-		 * 
-		 * @param event The mouse event.
-		 */
-		@Override
-		public void mouseReleased(MouseEvent event) {
-			
-			if (drawState == DrawState.moving || drawState == DrawState.placing) {
-				
-				// check for overlap
-				boolean overlaps = false;
-				for (State sel : selected) {
-					for (State st : states) {
-						if (sel != st && sel.overlaps(st)) {
-							overlaps = true;
-						}
-					}
-				}
-				if (overlaps) {
-					if (drawState == DrawState.placing)
-						return;
-					for (State sel : selected) {
-						sel.restorePosition();
-					}
-				}
-				
-				// finish up
-				selected.clear();
-				setDrawState(DrawState.idle);
-				editArea.repaint();
-				return;
-			}
-			
-			// if selecting...
-			if (drawState == DrawState.selecting) {
-				
-				// if nothing selected, return to idle
-				if (selected.isEmpty()) {
-					selrect = null;
-					setDrawState(DrawState.idle);
-					editArea.repaint();
-					return;
-				}
-				
-				// shrink selected rectangle
-				selrect = null;
-				for (State state : selected) {
-					if (selrect == null) {
-						selrect = state.getRect();
-					}
-					else {
-						selrect.add(state.getRect());
-					}
-				}
-				setDrawState(DrawState.selected);
-				repaint();
-				return;
-			}
-			
-			// if moving a point
-			if (drawState == DrawState.pointMoving) {
-				setDrawState(DrawState.idle);
-			}
-		} // end of mouseReleased method
-
-		/**
-		 * React to mouse moved events.
-		 * 
-		 * @param event The mouse event.
-		 */
-		@Override
-		public void mouseMoved(MouseEvent event) {
-			
-			// get info
-			int oldx = x;
-			int oldy = y;
-			x = event.getX();
-			y = event.getY();
-			
-			// if just moving cursor around...
-			if (drawState == DrawState.idle) {
-				
-				// highlight state cursor is over, unhighlight the rest
-				for (State state : states) {
-					
-					if (state.contains(x,y)) {
-						state.setHighlight(true);
-					}
-					else {
-						state.setHighlight(false);
-					}
-					
-					// highlight any transition points from this state too
-					state.highlightTransPoints(x,y);
-					
-					// highlight any transitions from this state too
-					state.highlightTrans(x,y);
-				}
-				editArea.repaint();
-				return;
-			}
-			
-			// if just created
-			if (drawState == DrawState.created ) {
-				Point p = editArea.getMousePosition();
-				if (p == null) {
-					p = new Point(x,y);
-				}
-				oldx = p.x;
-				oldy = p.y;
-				for (State state : selected) {
-					state.moveTo(p.x,p.y);
-				}
-				setDrawState(DrawState.placing);
-			}
-			
-			// if placing or moving
-			if (drawState == DrawState.placing || drawState == DrawState.moving) {
-				for (State state : selected) {
-					state.move(x-oldx,y-oldy,selected);
-				}
-				editArea.repaint();
-			}
-			
-			// if making a transition
-			if (drawState == DrawState.newTrans) {
-				
-				// update position of last point in points list
-				Point p = points.lastElement();
-				p.x = x;
-				p.y = y;
-				
-				// highlight state if under cursor
-				for (State state : states) {
-					if (state == on)
-						continue;
-					state.setHighlight(false);
-					if (state.contains(x,y)) {
-						state.setHighlight(true);
-						break;
-					}
-				}
-				repaint();
-			}
-		} // end of mouseMoved method
-
-		/**
-		 * React to mouse dragged events.
-		 * 
-		 * @param event The mouse event.
-		 */
-		@Override
-		public void mouseDragged(MouseEvent event) {
-			
-			// if moving
-			if (drawState == DrawState.moving) {
-
-				// get info
-				int oldx = x;
-				int oldy = y;
-				x = event.getX();
-				y = event.getY();
-				
-				// move all states that are selected
-				for (State state : selected) {
-					state.move(x-oldx,y-oldy,selected);
-				}
-				editArea.repaint();
-				return;
-			}
-			
-			// if selecting
-			if (drawState == DrawState.selecting) {
-				
-				// get info
-				int nx = event.getX();
-				int ny = event.getY();
-				
-				// modify selection rectangle
-				int rx = Math.min(nx,x);
-				int ry = Math.min(ny,y);
-				int rw = Math.abs(nx-x);
-				int rh = Math.abs(ny-y);
-				selrect.setBounds(rx,ry,rw,rh);
-				
-				// highlight selected elements
-				selected.clear();
-				for (State state : states) {
-					state.setHighlight(false);
-					if (state.isInside(selrect)) {
-						selected.add(state);
-						state.setHighlight(true);
-						state.savePosition();
-					}
-				}
-				
-				// finish up
-				editArea.repaint();
-				return;
-			}
-			
-			// if moving a transition point
-			if (drawState == DrawState.pointMoving) {
-
-				// get info
-				x = event.getX();
-				y = event.getY();
-				
-				// if there is a state at the point, don't move there
-				for (State state : states) {
-					if (state.contains(x,y))
-						return;
-				}
-				
-				// move point
-				movingPoint.x = x;
-				movingPoint.y = y;
-				editArea.repaint();
-				return;
-			}
-		} // end of mouseDragged method
-
-		// unused
-		/**
-		 * Unused mouse listener method.
-		 */
-		@Override
-		public void mouseClicked(MouseEvent event) {}
-		/**
-		 * Unused mouse listener method.
-		 */
-		@Override
-		public void mouseEntered(MouseEvent event) {}
-		/**
-		 * Unused mouse listener method.
-		 */
-		@Override
-		public void mouseExited(MouseEvent event) {}
-		
-	} // end of Create class
-	
-	/**
-	 * Create a new state with a name.
-	 */
-	@SuppressWarnings("serial")
-	private class CreateState extends ElementDialog {
-
-		/** The accepted state name. */
-		private String name;
-		/** Input field for the state name. */
-		private JTextField nameField = new JTextField(10);
-		/** True if the user cancelled this dialog. */
-		private boolean stateCancelled;
-
-		/**
-		 * Create a new state.
-		 *
-		 * @param title The partial title of this dialog (e.g., "Create" or "Change");
-		 * @param currentName The name the name field starts with.
-		 */
-		public CreateState(String title, String currentName) {
-
-			// set up window title
-			super(title + " State",null);
-
-			// set not cancelled
-			stateCancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up name field
-			JPanel name = new JPanel(new BorderLayout());
-			name.add(new JLabel("Name: ",SwingConstants.RIGHT),BorderLayout.WEST);
-			name.add(nameField,BorderLayout.CENTER);
-			nameField.setText(currentName);
-			window.add(name);
-
-			confirmOnEnter(nameField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Check the state name: present and unique in this machine.
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			String newName = nameField.getText().trim();
-			if (newName.isEmpty()) {
-				return java.util.List.of(new Violation("Missing name",
-						nameField));
-			}
-			for (State state : states) {
-				if (state.getName().equals(newName)) {
-					return java.util.List.of(new Violation("Duplicate name",
-							nameField));
-				}
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Accept the validated name.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			name = nameField.getText().trim();
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel state creation.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			stateCancelled = true;
-			dispose();
-		} // end of cancelDialog method
-		
-		/**
-		 * Get the name given to the state.
-		 * 
-		 * @return the name.
-		 */
-		@Override
-		public String getName() {
-			
-			return name;
-		} // end of getName method
-		
-		/**
-		 * See if new state dialog was cancelled.
-		 * 
-		 * @return true if it was cancelled, false if not.
-		 */
-		public boolean wasCancelled() {
-			
-			return stateCancelled;
-		} // end of wasCancelled method
-		
-	} // end of CreateState class
-	
-	
-	/**
-	 * Make a state output summary object for printing.
-	 * 
-	 * @return the object that will do the printing when asked, or null if no outputs
-	 *         in any of the states.
-	 */
-	public Printable makeOutSum() {
-		
-		// return null if no outputs
-		int outs = 0;
-		for (State state : states) {
-			outs += state.numOuts();
-		}
-		if (outs == 0)
-			return null;
-		
-		return new Printable() {
-			
-			/**
-			 * Print a grid summarizing every state's output values.
-			 */
-			@Override
-			public int print(Graphics g, PageFormat format, int pagenum) {
-				
-				// set up
-				int pageWidth = (int)format.getImageableWidth();
-				g.translate((int)(format.getImageableX()),(int)(format.getImageableY()));
-				int x = 0;
-				int y = 0;
-				
-				// sort states by name
-				SortedMap<String,State> sorted = new TreeMap<String,State>();
-				for (State state : states) {
-					sorted.put(state.getName(),state);
-				}
-				
-				// print outputs for each state
-				int maxHeight = 0;
-				SortedSet<Integer> borderX = new TreeSet<Integer>();
-				for (String sname : sorted.keySet()) {
-					State state = sorted.get(sname);
-					
-					// determine maximum width and height
-					int stateWidth = state.maxWidth(g);
-					maxHeight = Math.max(maxHeight,state.maxHeight(g));
-					
-					// print next state to right unless no more room
-					if (x+stateWidth > pageWidth) {
-						g.drawLine(0,y+maxHeight+5,x-10,y+maxHeight+5);
-						int lines = borderX.size()-1;
-						for (int i=0; i<lines; i+=1) {
-							int bx = borderX.first();
-							g.drawLine(bx,y,bx,y+maxHeight);
-							borderX.remove(bx);
-						}
-						x = 0;
-						y += maxHeight+10;
-						maxHeight = 0;
-						borderX.clear();
-					}
-					
-					// print state name and outputs
-					borderX.add(x+stateWidth+5);
-					state.print(g,x,y);
-					x += stateWidth + 10;
-					
-				}
-
-				// print vertical borders on last line
-				if (borderX.size() > 1) {
-					int lines = borderX.size()-1;
-					for (int i=0; i<lines; i+=1) {
-						int bx = borderX.first();
-						g.drawLine(bx,y,bx,y+maxHeight);
-						borderX.remove(bx);
-					}
-				}
-				
-				return Printable.PAGE_EXISTS;
-			}
-		};
-		
-	} // end of makeOutSum method
-
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
@@ -2248,7 +772,7 @@ public final class StateMachine extends LogicElement
 				oldClock = newClock;
 				if (!noMatchReported) {
 					noMatchReported = true;
-					TellUser.warn(JLSInfo.frame,
+					TellUser.warn(null,
 							"state machine \"" + name + "\": no transition"
 							+ " matches from state \""
 							+ currentState.getName() + "\" at time " + now

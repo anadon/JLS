@@ -1,6 +1,7 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
+import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,7 +58,7 @@ public record AddElements(List<String> blocks) implements CircuitOp {
 		for (String block : blocks) {
 			Element el = ElementBlocks.load(circuit, block);
 			try {
-				el.init(g);
+				el.init(SwingTextMetrics.forGraphics(g));
 			} catch (Exception ex) {
 				throw new OpRejected("element could not initialize"
 						+ (ex.getMessage() == null ? ""
@@ -114,7 +115,7 @@ public record AddElements(List<String> blocks) implements CircuitOp {
 							+ el.getStableId() + "'");
 				}
 			}
-			if (el.getRect().x < 0 || el.getRect().y < 0) {
+			if (el.getRect().x() < 0 || el.getRect().y() < 0) {
 				throw new OpRejected("element '" + el.getStableId()
 						+ "' would arrive off the canvas");
 			}

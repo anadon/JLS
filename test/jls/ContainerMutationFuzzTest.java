@@ -150,7 +150,7 @@ class ContainerMutationFuzzTest {
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 		try {
-			ok = circuit.finishLoad(g);
+			ok = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 		} catch (Exception | Error e) {
 			throw new AssertionError(label
 					+ ": finishLoad threw instead of classifying", e);
@@ -219,7 +219,7 @@ class ContainerMutationFuzzTest {
 			BufferedImage img = new BufferedImage(64, 64,
 					BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = img.createGraphics();
-			assertTrue(circuit.finishLoad(g),
+			assertTrue(circuit.finishLoad(jls.edit.SwingTextMetrics.of(g)),
 					file.getName() + ": " + JLSInfo.loadError);
 			g.dispose();
 		}

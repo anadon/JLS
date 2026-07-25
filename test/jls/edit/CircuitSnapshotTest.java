@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -116,7 +117,7 @@ class CircuitSnapshotTest {
 			if (el instanceof jls.elem.Wire) {
 				continue;
 			}
-			el.move(JLSInfo.spacing, 0);
+			el.move(Geometry.SPACING, 0);
 			break;
 		}
 		CircuitSnapshot second = CircuitSnapshot.capture(circuit);

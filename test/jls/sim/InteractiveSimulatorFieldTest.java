@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jls.JLSInfo;
+import jls.edit.InteractiveSimulator;
 
 /**
  * Regression tests for issue #119: the interactive simulator's control

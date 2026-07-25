@@ -78,8 +78,8 @@ public class TellUser {
 	 *
 	 * @return the component to parent the dialog on.
 	 */
-	static private @Nullable Component parentFor(@Nullable Component parent) {
-		return parent != null ? parent : JLSInfo.frame;
+	static private @Nullable Component parentFor(@Nullable Object parent) {
+		return parent instanceof Component c ? c : JLSInfo.frame;
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class TellUser {
 	 * @param message The message to show.
 	 * @param title The dialog title.
 	 */
-	static public void info(@Nullable Component parent, String message, String title) {
+	static public void info(@Nullable Object parent, String message, String title) {
 
 		if (!interactive()) {
 			// diagnostics go to stderr; stdout is reserved for
@@ -110,7 +110,7 @@ public class TellUser {
 	 * @param message The message to show.
 	 * @param title The dialog title.
 	 */
-	static public void warn(@Nullable Component parent, String message, String title) {
+	static public void warn(@Nullable Object parent, String message, String title) {
 
 		if (!interactive()) {
 			System.err.println("jls: warning: " + message);
@@ -128,7 +128,7 @@ public class TellUser {
 	 * @param message The message to show.
 	 * @param title The dialog title.
 	 */
-	static public void error(@Nullable Component parent, String message, String title) {
+	static public void error(@Nullable Object parent, String message, String title) {
 
 		if (!interactive()) {
 			System.err.println("jls: error: " + message);
@@ -150,7 +150,7 @@ public class TellUser {
 	 *         closed the dialog, or always in batch/headless mode (the
 	 *         safe default).
 	 */
-	static public boolean confirm(@Nullable Component parent, String question,
+	static public boolean confirm(@Nullable Object parent, String question,
 			String title) {
 
 		if (!interactive()) {
@@ -175,7 +175,7 @@ public class TellUser {
 	 *         and batch/headless mode always answers CANCEL (the safe
 	 *         default).
 	 */
-	static public Answer confirmOrCancel(@Nullable Component parent, String question,
+	static public Answer confirmOrCancel(@Nullable Object parent, String question,
 			String title) {
 
 		if (!interactive()) {
@@ -202,7 +202,7 @@ public class TellUser {
 	 * @return what the user typed, or null if the user cancelled or the
 	 *         run is batch/headless (the safe default).
 	 */
-	static public @Nullable String prompt(@Nullable Component parent, String message) {
+	static public @Nullable String prompt(@Nullable Object parent, String message) {
 
 		if (!interactive()) {
 			System.err.println("jls: warning: " + message
@@ -224,7 +224,7 @@ public class TellUser {
 	 * @return what the user typed, or null if the user cancelled or the
 	 *         run is batch/headless (the safe default).
 	 */
-	static public @Nullable String prompt(@Nullable Component parent, String message,
+	static public @Nullable String prompt(@Nullable Object parent, String message,
 			String initial) {
 
 		if (!interactive()) {

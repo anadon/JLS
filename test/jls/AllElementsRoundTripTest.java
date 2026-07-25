@@ -127,7 +127,7 @@ class AllElementsRoundTripTest {
 				() -> "load failed: " + JLSInfo.loadError);
 		BufferedImage img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
-		boolean ok = circuit.finishLoad(g);
+		boolean ok = circuit.finishLoad(jls.edit.SwingTextMetrics.of(g));
 		g.dispose();
 		assertTrue(ok, () -> "finishLoad failed: " + JLSInfo.loadError);
 		return circuit;

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -92,9 +93,9 @@ class SpatialIndexTest {
 	private static Set<Element> bruteForceNear(Circuit circuit, Rectangle rect) {
 		Set<Element> expected = new HashSet<Element>();
 		for (Element el : circuit.getElements()) {
-			Rectangle b = el.getIndexBounds();
-			boolean touch = b.x <= rect.x + rect.width && rect.x <= b.x + b.width
-					&& b.y <= rect.y + rect.height && rect.y <= b.y + b.height;
+			jls.core.Bounds b = el.getIndexBounds();
+			boolean touch = b.x() <= rect.x + rect.width && rect.x <= b.x() + b.width()
+					&& b.y() <= rect.y + rect.height && rect.y <= b.y() + b.height();
 			if (touch) {
 				expected.add(el);
 			}
@@ -106,7 +107,7 @@ class SpatialIndexTest {
 		for (int i = 0; i < trials; i += 1) {
 			Rectangle rect = new Rectangle(random.nextInt(700) - 50,
 					random.nextInt(400) - 50, random.nextInt(200), random.nextInt(200));
-			assertEquals(bruteForceNear(circuit, rect), circuit.elementsNear(rect),
+			assertEquals(bruteForceNear(circuit, rect), circuit.elementsNear(jls.edit.AwtGeom.bounds(rect)),
 					"index query must match brute force for " + rect);
 		}
 	}
@@ -142,9 +143,9 @@ class SpatialIndexTest {
 		for (int i = 0; i < 500; i += 1) {
 			Rectangle rect = new Rectangle(random.nextInt(700) - 50,
 					random.nextInt(400) - 50, random.nextInt(300), random.nextInt(300));
-			Set<Element> candidates = circuit.elementsNear(rect);
+			Set<Element> candidates = circuit.elementsNear(jls.edit.AwtGeom.bounds(rect));
 			for (Element el : circuit.getElements()) {
-				if (el.isInside(rect)) {
+				if (el.isInside(jls.edit.AwtGeom.bounds(rect))) {
 					assertTrue(candidates.contains(el),
 							"element inside " + rect + " missing from candidates: " + el);
 				}
@@ -158,7 +159,7 @@ class SpatialIndexTest {
 		Random random = new Random(SEED + 3);
 
 		// prime the index
-		circuit.elementsNear(new Rectangle(0, 0, 100, 100));
+		circuit.elementsNear(new jls.core.Bounds(0, 0, 100, 100));
 
 		// move a changing subset the way a drag does, keeping the index
 		// current incrementally, and re-check exactness each round
@@ -166,8 +167,8 @@ class SpatialIndexTest {
 			Set<Element> moved = new HashSet<Element>();
 			for (Element el : circuit.getElements()) {
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 					moved.add(el);
 				}
 			}

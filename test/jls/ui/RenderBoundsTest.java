@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
@@ -35,7 +36,7 @@ import jls.elem.WireEnd;
 class RenderBoundsTest {
 
 	/** Mirrors Circuit.DRAW_MARGIN: the exact culling margin. */
-	private static final int DRAW_MARGIN = 8 * JLSInfo.spacing;
+	private static final int DRAW_MARGIN = 8 * Geometry.SPACING;
 
 	/** Slack past the allowed envelope so strays are detectable. */
 	private static final int SLACK = 40;
@@ -107,7 +108,7 @@ class RenderBoundsTest {
 			Graphics2D g = image.createGraphics();
 			g.setColor(Color.WHITE);
 			g.fillRect(0, 0, width, height);
-			el.draw(g);
+			jls.edit.ElementRenderers.draw(g, el);
 			g.dispose();
 			RenderAssert.assertPaintsWithinBounds(image, BACKGROUND,
 					grown(el), el.getClass().getSimpleName());
@@ -121,7 +122,7 @@ class RenderBoundsTest {
 	 * @return the allowed painting envelope.
 	 */
 	private static Rectangle grown(Element el) {
-		Rectangle allowed = el.getIndexBounds();
+		Rectangle allowed = jls.edit.AwtGeom.awt(el.getIndexBounds());
 		allowed.grow(DRAW_MARGIN, DRAW_MARGIN);
 		return allowed;
 	} // end of grown method

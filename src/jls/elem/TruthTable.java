@@ -1,20 +1,5 @@
 package jls.elem;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
 import java.io.PrintWriter;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -25,31 +10,21 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
+import jls.core.Geometry;
 import jls.Circuit;
-import jls.Help;
-import jls.JLSInfo;
 import jls.TellUser;
-import jls.Util;
-import jls.util.Placement;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
 /**
  * Logic specified via a truth table.
- * Editor and simulation code.
- * 
+ * Simulation and table-model code; the GUI (drawing, print, and the
+ * create/edit dialog) lives in the {@code jls.edit} package (issue #77).
+ *
  * @author David A. Poplawski
  */
 public final class TruthTable extends LogicElement
-		implements Printable, Timed {
+		implements Timed {
 
 	// default values
 	/** Default propagation delay (simulation time units). */
@@ -62,7 +37,7 @@ public final class TruthTable extends LogicElement
 	// dialog-side constraint (issue #52): a table with no signals cannot
 	// compute anything
 	/** Error message shown when the table has no input or no output signal. */
-	static final String SIGNALS_CONSTRAINT =
+	public static final String SIGNALS_CONSTRAINT =
 			"Must have at least one input signal and one output signal";
 
 	/**
@@ -102,10 +77,10 @@ public final class TruthTable extends LogicElement
 	private boolean nameChanged;
 	/** True if the edit dialog changed the signals or table entries. */
 	private boolean anyChanges;
-	/** The current edit dialog (parent for error popups). */
-	TTEditor edit;
-	/** The panel that draws the truth table in the edit dialog and when printing. */
-	DisplayBool disp;
+	/** GUI hook: re-lays out and repaints the edit-dialog display after a
+	 *  model change. Null when no display exists (headless), so the table
+	 *  mutators run identically with or without a dialog. */
+	private Runnable displayRefresher;
 	/** Number of rows in the table. */
 	private int rows;
 	/** Number of columns in the table (inputs plus outputs). */
@@ -132,48 +107,18 @@ public final class TruthTable extends LogicElement
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		// show creation dialog
-		edit = new TTEditor(this);
-
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-
-		// complete initialization
-		init(g);
-
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-
-		return true;
-	} // end of setup method
-
-	/**
 	 * Initialize element.
-	 * 
+	 *
 	 * @param g The graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// determine width if needed
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		if (g != null) {
 			if (width == 0 && height == 0) {
-				FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				String dname = name;
 				if (name.isEmpty()) 
 					dname = "Logic";
@@ -230,55 +175,6 @@ public final class TruthTable extends LogicElement
 		height += 2*s;
 
 	} // end of init method
-
-	/**
-	 * Draw this truth table element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-
-		// set up
-		int s = JLSInfo.spacing;
-		int d2 = JLSInfo.pointDiameter/2;
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int fontHeight = ascent + descent;
-
-		// draw context
-		super.draw(g);
-
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		g.drawLine(x,y+height-2*s,x+width,y+height-2*s);
-
-		// draw name
-		String dname = name;
-		if (name.isEmpty()) {
-			dname = "Logic";
-		}
-		int w = fm.stringWidth(dname);
-		g.drawString(dname,x+(width-w)/2,y+height-s-fontHeight/2+ascent);
-
-		// draw inputs and outputs and their names
-		for (Input input : inputs) {
-			int dy = input.getY();
-			g.setColor(Color.black);
-			g.drawString(input.getName(),x+d2,dy-fontHeight/2+ascent);
-			input.draw(g);
-		}
-		for (Output output : outputs) {
-			int dy = output.getY();
-			int ow = fm.stringWidth(output.getName());
-			g.setColor(Color.black);
-			g.drawString(output.getName(),x+width-ow-d2,dy-fontHeight/2+ascent);
-			output.draw(g);
-		}
-
-	} // end of draw method
 
 	/**
 	 * Save this element in a file.
@@ -453,12 +349,12 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 
-		info.setText("circuit determined by truth table");
+		return "circuit determined by truth table";
 
 	} // end of showInfo method
 
@@ -475,61 +371,6 @@ public final class TruthTable extends LogicElement
 	} // end of remove method
 
 	/**
-	 * Print the truth table.
-	 */
-	@Override
-	public int print(Graphics g, PageFormat format, int pagenum) {
-
-		// use better graphics
-		Graphics2D gg = (Graphics2D)g;
-
-		// the display panel is otherwise created only when the edit
-		// dialog opens, so printing a freshly loaded circuit crashed
-		// here with an NPE (found by PrintPathSmokeTest, issue #91)
-		if (disp == null) {
-			disp = new DisplayBool(this);
-		}
-
-		// construct name
-		Circuit c = circuit;
-		String nm = name + " in " + circuit.getName();
-		while (c.isImported()) {
-			c = c.getSubElement().getCircuit();
-			nm += " in " + c.getName();
-		}
-
-		// set up
-		FontMetrics fm = g.getFontMetrics();
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int fontHeight = ascent + descent;
-
-		// get bounds
-		disp.doLayout(inputNames,outputNames,table,gg);
-		Dimension bounds = disp.getPreferredSize();
-
-		// scale and adjust as needed
-		double width = format.getImageableWidth();
-		double height = format.getImageableHeight();
-		double scale = 1.0;
-		if (bounds.width > width) {
-			scale = 1.0*width/bounds.width;
-		}
-		if (bounds.height > height) {
-			scale = Math.min(scale,1.0*height/bounds.height);
-		}
-		gg.translate(format.getImageableX(),format.getImageableY());
-		gg.drawString(nm,0,ascent);
-		gg.translate(0,2*fontHeight);
-		gg.scale(scale,scale);
-
-		// print
-		disp.print(gg);
-
-		return Printable.PAGE_EXISTS;
-	} // end of print method
-
-	/**
 	 * Get the name of this truth table.
 	 * 
 	 * @return the name.
@@ -540,16 +381,6 @@ public final class TruthTable extends LogicElement
 		return name;
 	} // end of getName method
 	
-	/**
-	 * Get the display.
-	 * 
-	 * @return the display object.
-	 */
-	public DisplayBool getDisplay() {
-
-		return disp;
-	} // end of getDisplay method
-
 	/**
 	 * Truth tables can be modified.
 	 * 
@@ -572,21 +403,12 @@ public final class TruthTable extends LogicElement
 	} // end of canCopy method
 
 	/**
-	 * Show edit dialog.
-	 * When done, make sure inputs and outputs are still the same, and that the name
-	 * is still the same.
-	 * If not, detatch existing element from all wires and go into "moving" editor
-	 * state.
-	 * 
-	 * @param g The Graphics object to use to determine size.
-	 * @param editWindow The editor window this element is in.
-	 * @param x The current x-coordinate of the mouse.
-	 * @param y The current y-coordinate of the mouse.
-	 * 
-	 * @return true if element must be re-placed in the circuit, false if not.
+	 * Snapshot the current signals and table before an edit begins, so a
+	 * cancelled edit can be rolled back (issue #77: the model half of the
+	 * former change() prologue; the GUI-side dialog lives in
+	 * {@code jls.edit.TruthTableDialog}).
 	 */
-	@Override
-	public boolean change(Graphics g, JPanel editWindow, int x, int y) {
+	public void beginChange() {
 
 		// save current truth table info
 		iNCopy = new Vector<String>(inputNames);
@@ -600,14 +422,19 @@ public final class TruthTable extends LogicElement
 			}
 		}
 		anyChanges = false;
+	} // end of beginChange method
 
-		// display dialog
-		new TTEditor(this);
-
-		// quit if cancelled
-		if (cancelled) {
-			return false;
-		}
+	/**
+	 * Reconcile the element after an accepted edit: mark the circuit
+	 * changed, and if the name, inputs or outputs changed, detach from all
+	 * wires and re-initialize so the element must be re-placed (issue #77:
+	 * the model half of the former change() epilogue).
+	 *
+	 * @param g The Graphics object to use to determine size.
+	 *
+	 * @return true if element must be re-placed in the circuit, false if not.
+	 */
+	public boolean finishChange(jls.core.TextMetrics g) {
 
 		// mark circuit changed if there were any changes in truth table
 		if (anyChanges) {
@@ -663,171 +490,105 @@ public final class TruthTable extends LogicElement
 
 		return false;
 
-	} // end of change method
+	} // end of finishChange method
 
 	/**
-	 * Dialog to create/edit a truth table.
+	 * Apply an accepted element name from the edit dialog (issue #77: the
+	 * model half of the former dialog's validateAndAccept).
+	 *
+	 * @param tname The new (already validated) element name.
 	 */
-	@SuppressWarnings("serial")
-	private class TTEditor extends ElementDialog implements ActionListener {
+	public void acceptName(String tname) {
 
-		// properties
-		/** Text field for typing the name of a new input signal. */
-		private JTextField inputField = new JTextField(10);
-		/** Text field for typing the name of a new output signal. */
-		private JTextField outputField = new JTextField(10);
-		/** Text field for editing the element's name. */
-		private JTextField nameField = new JTextField(10);
+		if (tname.equals(name))
+			nameChanged = false;
+		else {
+			circuit.addName(tname);
+			nameChanged = true;
+			anyChanges = true;
+		}
 
-		/**
-		 * Initialize and show dialog.
-		 *
-		 * @param ttelem The truth table element being created or edited.
-		 */
-		public TTEditor(TruthTable ttelem) {
+		name = tname;
+	} // end of acceptName method
 
-			// set up window title
-			super("Edit Truth Table",null);
+	/**
+	 * Roll the signals and table back to the pre-edit snapshot and record
+	 * the cancellation (issue #77: the model half of the former dialog's
+	 * cancelDialog).
+	 */
+	public void restoreFromCancel() {
 
-			// set up display
-			disp = new DisplayBool(ttelem);
+		// restore info
+		inputNames = iNCopy;
+		outputNames = oNCopy;
+		table = tcopy;
 
-			// set not cancelled
-			cancelled = false;
+		// tell caller what happened
+		cancelled = true;
+	} // end of restoreFromCancel method
 
-			// set up window
-			Container window = getContentPane();
-			window.setLayout(new BorderLayout());
+	/**
+	 * Whether the last edit dialog was cancelled.
+	 *
+	 * @return true if the edit was cancelled.
+	 */
+	public boolean wasCancelled() {
 
-			// add components
-			JScrollPane pane = new JScrollPane(disp);
-			window.add(pane,BorderLayout.CENTER);
-			JPanel other = new JPanel(new BorderLayout());
-			JPanel info = new JPanel(new BorderLayout());
-			JPanel labels = new JPanel(new GridLayout(3,1));
-			labels.add(new JLabel("new input: ",SwingConstants.RIGHT));
-			labels.add(new JLabel("new output: ",SwingConstants.RIGHT));
-			labels.add(new JLabel("name: ",SwingConstants.RIGHT));
-			info.add(labels,BorderLayout.WEST);
-			JPanel inputs = new JPanel(new GridLayout(3,1));
-			inputs.add(inputField);
-			inputs.add(outputField);
-			inputs.add(nameField);
-			nameField.setText(name);
-			info.add(inputs,BorderLayout.CENTER);
-			other.add(info,BorderLayout.NORTH);
-			other.add(getErrorLabel(),BorderLayout.CENTER);
-			JPanel okCancel = new JPanel(new GridLayout(1,3));
-			okCancel.add(ok);
-			okCancel.add(cancel);
-			JButton help = new JButton("Help");
-			Help.enableHelpOnButton(help, "truth");
-			okCancel.add(help);
-			other.add(okCancel,BorderLayout.SOUTH);
-			window.add(other,BorderLayout.SOUTH);
+		return cancelled;
+	} // end of wasCancelled method
 
-			// add listeners (OK, Cancel, Escape and the close box are
-			// wired by the shared dialog base, issue #26)
-			inputField.addActionListener(this);
-			outputField.addActionListener(this);
-			confirmOnEnter(nameField);
-			installDialogBehavior();
+	/**
+	 * Set (or clear) the cancelled flag; the edit dialog clears it before
+	 * showing.
+	 *
+	 * @param cancelled The new cancelled state.
+	 */
+	public void setCancelled(boolean cancelled) {
 
-			// lay out the table once the window exists
-			addWindowListener (
-					new WindowAdapter() {
-						/** Lays out the table display once the dialog window is open. */
-						@Override
-						public void windowOpened(WindowEvent event) {
-							disp.doLayout(inputNames,outputNames,table,null);
-							disp.repaint();
-						}
-					}
-			);
+		this.cancelled = cancelled;
+	} // end of setCancelled method
 
-			// finish up: place relative to the owner window (#104)
-			setSize(dialogWidth,dialogHeight);
-			setLocationRelativeTo(getOwner());
-			setVisible(true);
-		} // end of constructor
+	/**
+	 * Get the input signal names, in column order.
+	 *
+	 * @return the input signal names.
+	 */
+	public Vector<String> getInputNames() {
 
-		/**
-		 * Listen for the new-signal field events.
-		 *
-		 * @param event The event object.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
+		return inputNames;
+	} // end of getInputNames method
 
-			if (event.getSource() == inputField) {
-				addInput(inputField.getText().trim());
-				inputField.setText("");
-			}
-			else if (event.getSource() == outputField) {
-				addOutput(outputField.getText().trim());
-				outputField.setText("");
-			}
-		} // end of actionPerformed method
+	/**
+	 * Get the output signal names, in column order.
+	 *
+	 * @return the output signal names.
+	 */
+	public Vector<String> getOutputNames() {
 
-		/**
-		 * Check the form against the truth table constraints (issue #52).
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
+		return outputNames;
+	} // end of getOutputNames method
 
-			java.util.List<Violation> violations =
-					new java.util.ArrayList<Violation>();
-			String tname = nameField.getText().trim();
-			if (tname.isEmpty() || !Util.isValidName(tname)) {
-				violations.add(new Violation("Missing or invalid element name",
-						nameField));
-			}
-			else if (!tname.equals(name) && circuit.hasName(tname)) {
-				violations.add(new Violation("Duplicate element name",
-						nameField));
-			}
-			if (inputNames.size() == 0 || outputNames.size() == 0) {
-				violations.add(new Violation(SIGNALS_CONSTRAINT, inputField));
-			}
-			return violations;
-		} // end of validateInputs method
+	/**
+	 * Get the table entries, indexed by row then column.
+	 *
+	 * @return the value table.
+	 */
+	public int[][] getTable() {
 
-		/**
-		 * Apply the validated form to the truth table.
-		 */
-		@Override
-		protected void validateAndAccept() {
+		return table;
+	} // end of getTable method
 
-			String tname = nameField.getText().trim();
-			if (tname.equals(name))
-				nameChanged = false;
-			else {
-				circuit.addName(tname);
-				nameChanged = true;
-				anyChanges = true;
-			}
+	/**
+	 * Register the GUI hook that re-lays out and repaints the edit-dialog
+	 * display after a model change; null (the default) makes
+	 * refreshDisplay a no-op for headless use.
+	 *
+	 * @param displayRefresher The refresh hook, or null.
+	 */
+	public void setDisplayRefresher(Runnable displayRefresher) {
 
-			name = tname;
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel the edit.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			// restore info
-			inputNames = iNCopy;
-			outputNames = oNCopy;
-			table = tcopy;
-
-			// tell caller what happened
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of TTEditor class
+		this.displayRefresher = displayRefresher;
+	} // end of setDisplayRefresher method
 
 	/**
 	 * Relayout and repaint the table display, if one exists.
@@ -838,10 +599,9 @@ public final class TruthTable extends LogicElement
 	 */
 	private void refreshDisplay() {
 
-		if (disp == null)
+		if (displayRefresher == null)
 			return;
-		disp.doLayout(inputNames,outputNames,table,null);
-		disp.repaint();
+		displayRefresher.run();
 	} // end of refreshDisplay method
 
 	/**
@@ -858,13 +618,13 @@ public final class TruthTable extends LogicElement
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
@@ -949,20 +709,20 @@ public final class TruthTable extends LogicElement
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 		for (String name : outputNames) {
 			if (signal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return;
 			}
 		}
 
 		// can't add an output until there is at least one input
 		if (inputNames.size() == 0) {
-			TellUser.error(edit,"add at least one input first", "Error");
+			TellUser.error(null,"add at least one input first", "Error");
 			return;
 		}
 
@@ -1018,7 +778,7 @@ public final class TruthTable extends LogicElement
 			}
 			int matchingRow = findMatchingRow(r,col);
 			if (matchingRow == -1) {
-				TellUser.error(edit,"cannot remove: output conflict",
+				TellUser.error(null,"cannot remove: output conflict",
 						"Error");
 				return;
 			}
@@ -1113,7 +873,7 @@ public final class TruthTable extends LogicElement
 		// find matching row, if there is one
 		int matchingRow = findMatchingRow(row,col);
 		if (matchingRow == -1) {
-			TellUser.error(edit,"not possible", "Error");
+			TellUser.error(null,"not possible", "Error");
 			return;
 		}
 
@@ -1359,7 +1119,7 @@ public final class TruthTable extends LogicElement
 
 		// get name
 		String newSignal =
-			TellUser.prompt(edit,"Enter new output signal name");
+			TellUser.prompt(null,"Enter new output signal name");
 
 		if (newSignal == null)
 			return null;
@@ -1369,20 +1129,20 @@ public final class TruthTable extends LogicElement
 
 		// don't allow null
 		if (newSignal.isEmpty()) {
-			TellUser.error(edit,"invalid name", "Error");
+			TellUser.error(null,"invalid name", "Error");
 			return null;
 		}
 
 		// don't allow duplicate names
 		for (String name : inputNames) {
 			if (newSignal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return null;
 			}
 		}
 		for (String name : outputNames) {
 			if (newSignal.equals(name)) {
-				TellUser.error(edit,"duplicate signal name", "Error");
+				TellUser.error(null,"duplicate signal name", "Error");
 				return null;
 			}
 		}

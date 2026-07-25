@@ -15,6 +15,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.edit.CircuitRenderer;
+import jls.core.Geometry;
 import jls.elem.Element;
 
 /**
@@ -31,12 +33,12 @@ class DrawCullingParityTest {
 	private static final long SEED = 20260717L;
 
 	/** Mirrors Circuit's draw margin (labels drawn outside bounds). */
-	private static final int MARGIN = 8 * JLSInfo.spacing;
+	private static final int MARGIN = 8 * Geometry.SPACING;
 
 	/** Mirrors Circuit.mayBeVisible: the exact culling predicate. */
 	private static boolean mayBeVisible(Element el, Rectangle clip) {
 
-		Rectangle b = el.getIndexBounds();
+		Rectangle b = jls.edit.AwtGeom.awt(el.getIndexBounds());
 		b.grow(MARGIN, MARGIN);
 		return b.intersects(clip);
 	}
@@ -69,7 +71,7 @@ class DrawCullingParityTest {
 				Rectangle query = new Rectangle(clip);
 				query.grow(MARGIN, MARGIN);
 				Set<Element> actual = new HashSet<Element>();
-				for (Element el : circuit.elementsNear(query)) {
+				for (Element el : circuit.elementsNear(jls.edit.AwtGeom.bounds(query))) {
 					if (mayBeVisible(el, clip)) {
 						actual.add(el);
 					}
@@ -83,8 +85,8 @@ class DrawCullingParityTest {
 			Set<Element> moved = new HashSet<Element>();
 			for (Element el : circuit.getElements()) {
 				if (random.nextBoolean()) {
-					el.move(JLSInfo.spacing * (random.nextInt(5) - 2),
-							JLSInfo.spacing * (random.nextInt(5) - 2));
+					el.move(Geometry.SPACING * (random.nextInt(5) - 2),
+							Geometry.SPACING * (random.nextInt(5) - 2));
 					moved.add(el);
 				}
 			}
@@ -125,7 +127,7 @@ class DrawCullingParityTest {
 		Graphics2D g = full.createGraphics();
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, width, height);
-		circuit.draw(g, new HashSet<Element>(), null);
+		CircuitRenderer.of(circuit).draw(g, new HashSet<Element>(), null);
 		g.dispose();
 
 		BufferedImage tiled = new BufferedImage(width, height,
@@ -137,7 +139,7 @@ class DrawCullingParityTest {
 		for (int tx = 0; tx < width; tx += tile) {
 			for (int ty = 0; ty < height; ty += tile) {
 				g.setClip(tx, ty, tile, tile);
-				circuit.draw(g, new HashSet<Element>(), null);
+				CircuitRenderer.of(circuit).draw(g, new HashSet<Element>(), null);
 			}
 		}
 		g.dispose();

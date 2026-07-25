@@ -1,13 +1,9 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
-import java.awt.*;
-import java.awt.geom.*;
 import java.io.*;
-import javax.swing.*;
 import java.util.*;
-
-import javax.swing.JLabel;
 
 /**
  * A wire segment (between two WireEnds), part of a WireNet.
@@ -50,8 +46,8 @@ public final class Wire extends Element {
 	 * This form of init not used.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// do nothing
 	} // end of init method
 	
@@ -126,109 +122,38 @@ public final class Wire extends Element {
 	} // end of save method
 	
 	/**
-	 * The stroke communicating a wire's value state independently of
-	 * color (issue #76): a wire carrying no value (tri-state HiZ) is
-	 * dashed, a wire carrying a non-zero value is thick, and a wire
-	 * carrying all zeros is a plain thin line.  This is the second
-	 * visual channel that keeps the states distinguishable without
-	 * relying on color vision.
+	 * Get the other end of this wire (the second endpoint). Used by the
+	 * GUI-side renderer, which reads both endpoints' coordinates.
 	 *
-	 * @param value The wire's value (null when off/HiZ).
-	 *
-	 * @return the stroke to draw the wire with.
+	 * @return the second end.
 	 */
-	static BasicStroke strokeFor(BitSet value) {
+	public WireEnd getEnd2() {
 
-		if (value == null) {
-			return new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
-					BasicStroke.JOIN_MITER, 10.0f,
-					new float[] {4.0f, 3.0f}, 0.0f);
-		}
-		if (!value.isEmpty()) {
-			return new BasicStroke(3.0f, BasicStroke.CAP_ROUND,
-					BasicStroke.JOIN_ROUND);
-		}
-		return new BasicStroke(1.0f);
-	} // end of strokeFor method
+		return end2;
+	} // end of getEnd2 method
 
 	/**
-	 * Draw this wire.
+	 * See if this wire is part of a wire net yet. A wire being drawn while
+	 * a net is (re)built may have no net, in which case it has no value.
 	 *
-	 * @param g Graphics object to draw with.
+	 * @return true if this wire has a net, false if not.
+	 */
+	public boolean hasNet() {
+
+		return net != null;
+	} // end of hasNet method
+
+	/**
+	 * See if the mouse is currently touching this wire.
+	 *
+	 * @return true if it is, false if not.
 	 */
 	@Override
-	public void draw(Graphics g) {
+	public boolean isTouching() {
 
-		BitSet value = net == null ? null : getValue();
-		if (touching) {
-			g.setColor(JLSInfo.touchColor);
-		}
-		else if (highlight) {
-			g.setColor(JLSInfo.highlightColor);
-		}
-		else if (value == null) { // off
-			g.setColor(JLSInfo.wireOffColor);
-		}
-		else if (!(value.isEmpty())) {
-			g.setColor(JLSInfo.nonZeroColor);
-		}
-		else {
-			g.setColor(JLSInfo.wireZeroColor);
-		}
-		int x1 = end1.getX();
-		int y1 = end1.getY();
-		int x2 = end2.getX();
-		int y2 = end2.getY();
-		if (g instanceof Graphics2D g2) {
-			// value state is also carried by the stroke (issue #76)
-			Stroke saved = g2.getStroke();
-			g2.setStroke(strokeFor(value));
-			g2.drawLine(x1,y1,x2,y2);
-			g2.setStroke(saved);
-		}
-		else {
-			g.drawLine(x1,y1,x2,y2);
-		}
+		return touching;
+	} // end of isTouching method
 
-		// draw probe name if there is one
-		if (probeName == null)
-			return;
-		FontMetrics fm = g.getFontMetrics();
-		int len = fm.stringWidth(probeName);
-		g.setColor(Color.BLUE);
-		
-		// handle orientation cases
-		if (y1 == y2) {
-			
-			// horizontal
-			int mid = (x1+x2)/2;
-			g.drawString(probeName,mid-len/2,y1-fm.getDescent());
-		}
-		else if (x1 == x2) {
-			
-			// vertical
-			int mid = (y1+y2)/2;
-			g.drawString(probeName,x1+1,mid);
-		}
-		else {
-			
-			// compute slope
-			double slope = (double)(y2-y1)/(x2-x1);
-			int midx = (x1+x2)/2;
-			int midy = (y1+y2)/2;
-			if (slope > 0) {
-				
-				// down to the right
-				g.drawString(probeName,midx,midy-fm.getDescent());
-			}
-			else {
-				
-				// up to the right
-				g.drawString(probeName,midx-len,midy-fm.getDescent());
-			}
-		}
-	} // end of draw method
-	
 	/**
 	 * Set bits in the wire net this wire is in.
 	 * 
@@ -260,16 +185,17 @@ public final class Wire extends Element {
 	 * @return the index bounds.
 	 */
 	@Override
-	public Rectangle getIndexBounds() {
+	public jls.core.Bounds getIndexBounds() {
 
 		int x1 = end1.getX();
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		Rectangle bounds = new Rectangle(Math.min(x1, x2), Math.min(y1, y2),
-				Math.abs(x2 - x1), Math.abs(y2 - y1));
-		bounds.grow(JLSInfo.spacing, JLSInfo.spacing);
-		return bounds;
+		int s = Geometry.SPACING;
+		// bounding box of the two ends, grown by the snap spacing (matches
+		// the AWT Rectangle grow the wire index used to do)
+		return new jls.core.Bounds(Math.min(x1, x2) - s, Math.min(y1, y2) - s,
+				Math.abs(x2 - x1) + 2 * s, Math.abs(y2 - y1) + 2 * s);
 	} // end of getIndexBounds method
 
 	/**
@@ -281,7 +207,7 @@ public final class Wire extends Element {
 	 * @return the wire's real bounding rectangle.
 	 */
 	@Override
-	public Rectangle getRect() {
+	public jls.core.Bounds getRect() {
 
 		return getIndexBounds();
 	} // end of getRect method
@@ -302,9 +228,9 @@ public final class Wire extends Element {
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		int d = JLSInfo.pointDiameter;
-		if (Line2D.ptSegDist(x1,y1,x2,y2,x,y) < JLSInfo.spacing/2 &&
-				Point2D.distance(x1,y1,x,y) > d && Point2D.distance(x2,y2,x,y) > d) {
+		int d = Geometry.POINT_DIAMETER;
+		if (jls.core.SegmentGeometry.ptSegDist(x1,y1,x2,y2,x,y) < Geometry.SPACING/2 &&
+				jls.core.SegmentGeometry.distance(x1,y1,x,y) > d && jls.core.SegmentGeometry.distance(x2,y2,x,y) > d) {
 			return true;
 		}
 		else {
@@ -319,21 +245,21 @@ public final class Wire extends Element {
 	 * 
 	 * @return true if it it does, false if it does not.
 	 */
-	public boolean intersects(Rectangle rect) {
-		
+	public boolean intersects(jls.core.Bounds rect) {
+
 		// get end points of wire
 		int x1 = end1.getX();
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		
+
 		// if the rectangle intersects the wire...
-		Rectangle2D r = (Rectangle2D)rect;
-		if (r.intersectsLine(x1,y1,x2,y2)) {
-			
+		if (jls.core.SegmentGeometry.segmentIntersectsRectangle(
+				rect.x(), rect.y(), rect.width(), rect.height(), x1, y1, x2, y2)) {
+
 			// then exclude end points (smaller rectangle a kludge 'cause contains
 			// means inside, not including on the edge)
-			Rectangle rs = new Rectangle(rect.x-1,rect.y-1,rect.width+2,rect.height+2);
+			jls.core.Bounds rs = new jls.core.Bounds(rect.x()-1,rect.y()-1,rect.width()+2,rect.height()+2);
 			if (rs.contains(x1,y1) || rs.contains(x2,y2)) {
 				return false;
 			}
@@ -361,12 +287,12 @@ public final class Wire extends Element {
 		int y1 = end1.getY();
 		int x2 = end2.getX();
 		int y2 = end2.getY();
-		int d = JLSInfo.pointDiameter;
-		if (Line2D.ptSegDist(x1,y1,x2,y2,x,y) < d/2) {
-			if (Point.distance(x,y,x1,y1) < d/2) {
+		int d = Geometry.POINT_DIAMETER;
+		if (jls.core.SegmentGeometry.ptSegDist(x1,y1,x2,y2,x,y) < d/2) {
+			if (jls.core.SegmentGeometry.distance(x,y,x1,y1) < d/2) {
 				return false;
 			}
-			if (Point.distance(x,y,x2,y2) < d/2) {
+			if (jls.core.SegmentGeometry.distance(x,y,x2,y2) < d/2) {
 				return false;
 			}
 			return true;
@@ -379,10 +305,10 @@ public final class Wire extends Element {
 	/**
 	 * Display information about this wire.
 	 * 
-	 * @param info A JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
 		String tri = "";
 		if (net.isTriState())
@@ -400,13 +326,13 @@ public final class Wire extends Element {
 		if (probeName != null)
 			probe = " (probe: " + probeName + ")";
 		if (bits <= 0) {
-			info.setText(tri + "bits unknown" + probe);
+			return tri + "bits unknown" + probe;
 		}
 		else if (bits == 1) {
-			info.setText(tri + "1 bit" + inp + probe + value);
+			return tri + "1 bit" + inp + probe + value;
 		} 
 		else {
-			info.setText(tri + bits + " bits" + inp + probe + value);
+			return tri + bits + " bits" + inp + probe + value;
 		}
 	} // end of showInfo method
 	
@@ -476,8 +402,8 @@ public final class Wire extends Element {
 	 * @return true if it is, false if not.
 	 */
 	@Override
-	public boolean isInside(Rectangle rect) {
-		
+	public boolean isInside(jls.core.Bounds rect) {
+
 		if (rect.contains(end1.getX(),end1.getY()) && rect.contains(end2.getX(),end2.getY())) {
 			return true;
 		}
@@ -504,7 +430,7 @@ public final class Wire extends Element {
 	 */
 	public int length() {
 		
-		return (int)(Point.distance(end1.getX(),end1.getY(),end2.getX(),end2.getY()));
+		return (int)(jls.core.SegmentGeometry.distance(end1.getX(),end1.getY(),end2.getX(),end2.getY()));
 	} // end of length method
 
 	/**

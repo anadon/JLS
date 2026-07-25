@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Element;
@@ -126,7 +127,7 @@ class FocusFaithfulKeyboardTest {
 	void keyboardInputRoutesThroughTheRealFocusOwnerNotTheCanvas()
 			throws Exception {
 		Circuit circuit = new Circuit("focus-faithful");
-		int step = JLSInfo.spacing;
+		int step = Geometry.SPACING;
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 
 			JButton orButton = findToolbarButton(ui.editor, "OR gate");

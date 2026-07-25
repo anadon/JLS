@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -42,7 +43,7 @@ import jls.JLSInfo;
  */
 class HollowVsFilledCollisionTest {
 
-	private static final int S = JLSInfo.spacing; // 12
+	private static final int S = Geometry.SPACING; // 12
 
 	/** A rectangular probe element standing in for a dragged selection. */
 	private static SubCircuit probe(int x, int y, int w, int h) {
@@ -252,7 +253,7 @@ class HollowVsFilledCollisionTest {
 		Rectangle onPath = new Rectangle(516, 144, 2 * S, 2 * S);
 		SubCircuit onDiagonal = probe(onPath.x, onPath.y, onPath.width,
 				onPath.height);
-		assertTrue(circuit.elementsNear(onPath).contains(diag),
+		assertTrue(circuit.elementsNear(jls.edit.AwtGeom.bounds(onPath)).contains(diag),
 				"an on-diagonal placement is also a candidate");
 		assertTrue(onDiagonal.intersects(diag),
 				"and the exact predicate confirms the collision");

@@ -1,13 +1,11 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import java.awt.*;
-import java.awt.geom.*;
 import java.io.*;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * Output pin of a subcircuit.
@@ -25,7 +23,7 @@ public final class OutputPin extends Pin implements TriProp {
 	public OutputPin(Circuit circ) {
 
 		super(circ);
-		orientation = JLSInfo.Orientation.RIGHT;
+		orientation = Orientation.RIGHT;
 	} // end of constructor
 	
 	/**
@@ -38,26 +36,6 @@ public final class OutputPin extends Pin implements TriProp {
 		
 		return "OutputPin[" + super.toString() + "]";
 	} // end of toString method
-
-	/**
-	 * Display dialog to get pin name and bits.
-	 * 
-	 * @param g
-	 *            The Graphics object to use to determine the name's size.
-	 * @param editWindow
-	 *            The editor window this pin is displayed in.
-	 * @param x
-	 *            The x-coordinate of the last known mouse position.
-	 * @param y
-	 *            The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-
-		return super.setup(g, editWindow, x, y, "Output");
-	} // end of setup method
 
 	/**
 	 * The pin kind for user-facing messages.
@@ -76,16 +54,16 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		super.init(g);
-		if (orientation == JLSInfo.Orientation.RIGHT) {
-			inputs.add(new Input("input", this, 0, JLSInfo.spacing, bits));
-		} else if (orientation == JLSInfo.Orientation.LEFT) {
-			inputs.add(new Input("input", this, width, JLSInfo.spacing, bits));
-		} else if (orientation == JLSInfo.Orientation.DOWN) {
+		if (orientation == Orientation.RIGHT) {
+			inputs.add(new Input("input", this, 0, Geometry.SPACING, bits));
+		} else if (orientation == Orientation.LEFT) {
+			inputs.add(new Input("input", this, width, Geometry.SPACING, bits));
+		} else if (orientation == Orientation.DOWN) {
 			inputs.add(new Input("input", this, width / 2, 0, bits));
-		} else if (orientation == JLSInfo.Orientation.UP) {
+		} else if (orientation == Orientation.UP) {
 			inputs.add(new Input("input", this, width / 2, height, bits));
 		}
 	} // end of init method
@@ -124,11 +102,10 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info
-	 *            The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 
 		String value = ", value = " + BitSetUtils.toDisplay(currentValue, bits);
 		String tri = "";
@@ -136,7 +113,7 @@ public final class OutputPin extends Pin implements TriProp {
 			if (inputs.get(0).getWireEnd().getNet().isTriState())
 				tri = " (tri-state) ";
 		}
-		info.setText(bits + " bit output pin" + tri + value);
+		return bits + " bit output pin" + tri + value;
 	} // end of showInfo method
 
 	/**
@@ -223,13 +200,13 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Display current value.
 	 * 
-	 * @param where
-	 *            Unused.
+	 * @param whereX the x-coordinate on screen (unused here).
+	 * @param whereY the y-coordinate on screen (unused here).
 	 */
 	@Override
-	public void showCurrentValue(Point where) {
+	public void showCurrentValue(int whereX, int whereY) {
 
-		TellUser.info(JLSInfo.frame, BitSetUtils.toDisplay(
+		TellUser.info(null, BitSetUtils.toDisplay(
 				currentValue, bits), "Information");
 	} // end of showCurrentValue method
 

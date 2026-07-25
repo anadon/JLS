@@ -100,6 +100,40 @@ class ArchitectureRulesTest {
 	}
 
 	/**
+	 * The issue #77 capstone, bytecode half: the headless core - the
+	 * circuit model ({@code jls.elem}), simulation engine
+	 * ({@code jls.sim}), HDL export ({@code jls.hdl}), the new headless
+	 * value/geometry home ({@code jls.core}), and Circuit's load/save
+	 * collaborators ({@code jls.Circuit}, {@code jls.FileAbstractor},
+	 * {@code jls.LoadError}, {@code jls.BitSetUtils}) - must not depend on
+	 * AWT, Swing, or the editor at the bytecode level. This catches what
+	 * the source-text {@code HeadlessCoreRatchetTest} cannot: a
+	 * fully-qualified {@code java.awt.Rectangle} return type, a field of
+	 * type {@code java.awt.Frame} reached through another class, a
+	 * {@code jls.edit} call with no import. Zero-tolerance: the whole
+	 * conversion (#77) landed the core AWT-free, so any regression fails
+	 * here immediately.
+	 */
+	@Test
+	void coreDependsOnNoGuiClasses() {
+		noClasses()
+				.that().resideInAnyPackage("jls.core..", "jls.elem..",
+						"jls.sim..", "jls.hdl..")
+				.or().haveNameMatching("jls\\.Circuit(\\$.*)?")
+				.or().haveNameMatching("jls\\.FileAbstractor(\\$.*)?")
+				.or().haveNameMatching("jls\\.LoadError(\\$.*)?")
+				.or().haveNameMatching("jls\\.BitSetUtils(\\$.*)?")
+				.should().dependOnClassesThat()
+				.resideInAnyPackage("java.awt..", "javax.swing..",
+						"jls.edit..")
+				.because("the headless core must load no AWT, Swing, or"
+						+ " editor class - it is embeddable in a headless"
+						+ " host (issue #77); the HeadlessCoreCanaryTest"
+						+ " proves the same property at runtime")
+				.check(classes);
+	}
+
+	/**
 	 * The collaboration layering rule from issue #163: everything under
 	 * jls.collab except the (future) jls.collab.ui package is headless -
 	 * ops, session, CRDT, and network code never touch Swing. UI effects

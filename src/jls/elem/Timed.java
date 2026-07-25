@@ -13,7 +13,7 @@ package jls.elem;
  * instead of the base class branching on concrete leaf types.
  *
  * <p>Concretely, this interface retires the {@code this instanceof
- * Memory} branch that {@link Element#changeTiming()} used only to pick
+ * Memory} branch that {@code Element.changeTiming()} used only to pick
  * the timing dialog's wording ("access time" vs "propagation delay") -
  * the audit's "base knows its leaves" smell (F3). That distinction now
  * belongs to the element, through {@link #usesAccessTime()}.

@@ -1,20 +1,12 @@
 package jls.elem;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.Circuit;
-import jls.JLSInfo;
 import jls.sim.Simulator;
-import jls.util.Placement;
 
 /**
  * Bind multiple input wires (or bundles) into a single bundle.
@@ -35,49 +27,19 @@ public final class Binder extends Group implements TriProp {
 	} // end of constructor
 
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new GroupCreate("Bundler");
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
-	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 		
 		// set up height and width
 		super.init(g);
 		
 		// set up inputs
-		int s = JLSInfo.spacing;
-		if(orientation == JLSInfo.Orientation.RIGHT)
+		int s = Geometry.SPACING;
+		if(orientation == Orientation.RIGHT)
 		{
 			int ypos = s;
 			for(Entry e : ranges) {
@@ -91,7 +53,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
+		else if(orientation == Orientation.LEFT)
 		{
 			int ypos = s;
 			for(Entry e : ranges) {
@@ -105,7 +67,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			int xpos = s;
 			for(Entry e : ranges) {
@@ -119,7 +81,7 @@ public final class Binder extends Group implements TriProp {
 				outputs.get(0).loadSetTriState();
 			}
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			int xpos = s;
 			for(Entry e : ranges) {
@@ -134,128 +96,6 @@ public final class Binder extends Group implements TriProp {
 			}
 		}
 	} // end of init method
-	
-	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// set up
-		int d2 = JLSInfo.pointDiameter/2;
-		int s = JLSInfo.spacing;
-		
-		// draw inputs
-		FontMetrics fm = g.getFontMetrics();
-		
-		if(orientation == JLSInfo.Orientation.RIGHT)
-		{
-			for (Input input : inputs) {
-				input.draw(g);
-				int ypos = input.getY();
-				Rectangle2D t = fm.getStringBounds(input.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(x+JLSInfo.pointDiameter/2);
-				g.drawString(input.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
-				g.drawLine(x+width-s/2,ypos,(int)(edge+t.getWidth()+d2),ypos);
-			}
-		
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+width-s/2,y+s,x+width-s/2,y+height-s);
-		
-			// draw output and line to it
-			Output output = outputs.get(0);
-			g.setColor(Color.black);
-			int ypos = output.getY();
-			g.drawLine(x+width,ypos,x+width-s/2,ypos);
-			output.draw(g);
-		}
-		else if(orientation == JLSInfo.Orientation.LEFT)
-		{
-			for (Input input : inputs) {
-				input.draw(g);
-				int ypos = input.getY();
-				Rectangle2D t = fm.getStringBounds(input.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(x+width-JLSInfo.pointDiameter/2-t.getWidth());
-				g.drawString(input.getName(),edge, (int)(ypos-t.getHeight()/2+fm.getAscent()));
-				g.drawLine(x+s/2,ypos,(int)(edge-d2),ypos);
-			}
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s/2,y+s,x+s/2,y+height-s);
-			
-			// draw output and line to it
-			Output output = outputs.get(0);
-			g.setColor(Color.black);
-			int ypos = output.getY();
-			g.drawLine(x,ypos,x+s/2,ypos);
-			output.draw(g);
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			int inum = 0;
-			for (Input input : inputs) {
-				input.draw(g);
-				int xpos = input.getX();
-				Rectangle2D t = fm.getStringBounds(input.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(y+JLSInfo.pointDiameter/2);
-				if(inum%2 == 0)
-				{
-					g.drawString(input.getName(),xpos-(int)t.getWidth()/2, (int)(edge+t.getHeight()/2+6));
-				}
-				g.drawLine(xpos,y+height-s,xpos,(int)(edge+t.getHeight()+d2));
-				inum++;
-			}
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s,y+height-s,x+width-s,y+height-s);
-			
-			// draw output and line to it
-			Output output = outputs.get(0);
-			g.setColor(Color.black);
-			int xpos = output.getX();
-			g.drawLine(xpos,y+height-s,xpos,y+height);
-			output.draw(g);
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			int inum = 0;
-			for (Input input : inputs) {
-				input.draw(g);
-				int xpos = input.getX();
-				Rectangle2D t = fm.getStringBounds(input.getName(),g);
-				g.setColor(Color.BLACK);
-				int edge = (int)(y+height-JLSInfo.pointDiameter/2);
-				if(inum%2 == 0)
-				{
-					g.drawString(input.getName(),xpos-(int)t.getWidth()/2, (int)(edge-t.getHeight()/2+6));
-				}
-				g.drawLine(xpos,y+s,xpos,(int)(edge-t.getHeight()+d2));
-				inum++;
-			}
-			
-			// draw split line
-			g.setColor(Color.BLACK);
-			g.drawLine(x+s,y+s,x+width-s,y+s);
-			
-			// draw output and line to it
-			Output output = outputs.get(0);
-			g.setColor(Color.black);
-			int xpos = output.getX();
-			g.drawLine(xpos,y+s,xpos,y);
-			output.draw(g);
-		}
-	} // end of draw method
 	
 	/**
 	 * Copy this element.
@@ -283,12 +123,12 @@ public final class Binder extends Group implements TriProp {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
-		info.setText("bundle " + bits + " bits");
+	public String infoText() {
+
+		return "bundle " + bits + " bits";
 	} // end of showInfo method
 	
 	/**
@@ -338,7 +178,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
 		super.rotate(direction, g);
 		init(g);
@@ -349,7 +189,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		super.flip(g);
 		init(g);

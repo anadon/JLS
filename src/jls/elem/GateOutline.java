@@ -11,13 +11,13 @@ import java.util.List;
  * open arcs, cubic curves, and inversion bubbles, all measured in the
  * gate-local pixel frame - with no dependency on AWT, Swing, or the
  * editor. The Swing half, {@link Gate}, turns that data into a
- * {@code java.awt.geom.GeneralPath} the first time the gate is drawn.
+ * {@code GeneralPath} the first time the gate is drawn.
  *
- * <p>Because the geometry is data rather than {@code java.awt.geom} calls,
+ * <p>Because the geometry is data rather than {@code geom} calls,
  * a converted gate leaf (AndGate, OrGate, NandGate, NorGate, NotGate,
  * XorGate) carries no forbidden import and drops out of the headless-core
  * ratchet baseline in {@code jls.HeadlessCoreRatchetTest}. The reverse
- * translation lives entirely in {@link Gate#gatePathFrom(GateOutline)},
+ * translation lives entirely in {@code GateRenderer.gatePathFrom(GateOutline)},
  * which reconstructs the exact same {@code Line2D}/{@code Arc2D}/
  * {@code CubicCurve2D}/{@code Ellipse2D} appends the leaves used to make
  * inline, so rendering is byte-for-byte unchanged.

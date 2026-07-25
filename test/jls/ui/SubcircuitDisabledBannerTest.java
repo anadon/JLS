@@ -94,8 +94,8 @@ class SubcircuitDisabledBannerTest {
 		Circuit circuit = oneGate();
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			AndGate gate = assertElementPresent(circuit, AndGate.class);
-			int fromX = gate.getX() + gate.getRect().width / 2;
-			int fromY = gate.getY() + gate.getRect().height / 2;
+			int fromX = gate.getX() + gate.getRect().width() / 2;
+			int fromY = gate.getY() + gate.getRect().height() / 2;
 
 			// the banner exists but is hidden while editing is enabled
 			AtomicReference<JLabel> bannerRef = new AtomicReference<>();

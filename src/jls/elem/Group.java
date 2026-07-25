@@ -1,12 +1,10 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
-
-import javax.swing.*;
 
 import java.util.*;
 
@@ -39,7 +37,7 @@ public abstract sealed class Group extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	static String checkBits(int bits) {
+	public static String checkBits(int bits) {
 
 		return bits < 2 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -53,11 +51,9 @@ public abstract sealed class Group extends LogicElement
 	/** True if the bundled wire is tri-state. */
 	protected boolean triState = false;
 	/** Which way the element faces (the direction of the bundled side). */
-	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	protected Orientation orientation = Orientation.RIGHT;
 
 	// running properties
-	/** True if the user cancelled the creation dialog. */
-	protected boolean cancelled;
 	/** True if the save file being loaded says the bundle is tri-state. */
 	protected boolean loadTriState = false;
 	/** True if loaded from the newer save format that allows non-contiguous bit groups. */
@@ -79,19 +75,19 @@ public abstract sealed class Group extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// no need to do anything if no graphics object
 		if (g == null)
 			return;
-		
+
 		// do nothing if element already has a size
 		if (width != 0 || height != 0)
 			return;
-		
+
 		// set up
-		FontMetrics fm = g.getFontMetrics();
-		int s = JLSInfo.spacing;
+		jls.core.TextMetrics fm = g;
+		int s = Geometry.SPACING;
 		int puts = ranges.size();
 
 		// the size decomposes into an across axis (from the narrow puts
@@ -106,8 +102,8 @@ public abstract sealed class Group extends LogicElement
 		across = (across+2*s)/s*s;
 		int along = (puts+1)*s;
 
-		if (orientation == JLSInfo.Orientation.LEFT
-				|| orientation == JLSInfo.Orientation.RIGHT) {
+		if (orientation == Orientation.LEFT
+				|| orientation == Orientation.RIGHT) {
 			width = across;
 			height = along;
 		}
@@ -119,34 +115,59 @@ public abstract sealed class Group extends LogicElement
 	} // end of init method
 	
 	/**
-	 * Draw this element.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * The direction this group faces (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw the box if some input or output is unattached
-		boolean doit = false;
-		for (Input input : inputs) {
-			if (!input.isAttached())
-				doit = true;
-		}
-		for (Output output : outputs) {
-			if (!output.isAttached()) {
-				doit = true;
-			}
-		}
-		if (doit) {
-			g.setColor(Color.gray);
-			g.drawRect(x,y,width,height);
-		}
-		
-	} // end of draw method
-	
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
+	/**
+	 * The number of bits on the bundled side (issue #77: read by the
+	 * GUI-side dialog).
+	 *
+	 * @return the number of bundled bits.
+	 */
+	public int getBits() {
+
+		return bits;
+	} // end of getBits method
+
+	/**
+	 * Set the number of bundled bits (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param bits The new number of bundled bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Append a bit-group entry to this group's ranges (issue #77: called
+	 * by the GUI-side creation dialog as the user picks bit groups).
+	 *
+	 * @param entry The bit-group entry to add.
+	 */
+	public void addRange(Entry entry) {
+
+		ranges.add(entry);
+	} // end of addRange method
+
 	/**
 	 * Set an int instance variable value (during a load).
 	 * 
@@ -182,7 +203,7 @@ public abstract sealed class Group extends LogicElement
 		if (name.equals("orient")) {
 			// unknown strings leave the orientation unchanged, matching
 			// the historical loaders (issue #124: all four orientations)
-			orientation = JLSInfo.Orientation.parse(value, orientation);
+			orientation = Orientation.parse(value, orientation);
 		} else if(name.equals("noncontig")) {
 			if(value.equals("true")) noncontig = true;
 			else noncontig = false;
@@ -197,7 +218,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -214,13 +235,13 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -436,8 +457,8 @@ public abstract sealed class Group extends LogicElement
 	@Override
 	public int saveFormatVersion() {
 
-		if (orientation == JLSInfo.Orientation.UP
-				|| orientation == JLSInfo.Orientation.DOWN) {
+		if (orientation == Orientation.UP
+				|| orientation == Orientation.DOWN) {
 			return 2;
 		}
 		return 1;
@@ -467,467 +488,9 @@ public abstract sealed class Group extends LogicElement
 	} // end of copy method
 	
 	/**
-	 * Dialog box to set bits.
-	 */
-	@SuppressWarnings("serial")
-	protected class GroupCreate extends ElementDialog {
-
-		// properties
-		/** Input field for the number of bundled bits. */
-		private JTextField bitsField = new JTextField(defaultBits+"",10);
-		/** Pop-up keypad for the bits field. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Choice to split the bundle into single bits. */
-		private JRadioButton single = new JRadioButton("Single Bits");
-		/** Choice to pick bit groups by hand. */
-		private JRadioButton group = new JRadioButton("Group Bits");
-		/** Orientation choice: element faces left. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Orientation choice: element faces right (the default). */
-		private JRadioButton right = new JRadioButton("Right", true);
-		/** Orientation choice: element faces up. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Orientation choice: element faces down. */
-		private JRadioButton down = new JRadioButton("Down");
-		/** Either "Bundler" or "Unbundler". */
-		private String type;
-
-		/**
-		 * Set up create dialog window.
-		 *
-		 * @param type Either "Bundler" or "Unbundler".
-		 */
-		protected GroupCreate(String type) {
-
-			// set up window title
-			super("Create " + type,
-					type.equals("Unbundler") ? "unbundle" : "bundle");
-
-			// save type
-			this.type = type;
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel bits;
-			if (type.equals("Unbundler")) {
-				bits = new JLabel("Input Bits: ",SwingConstants.RIGHT);
-			}
-			else {
-				bits = new JLabel("Output Bits: ",SwingConstants.RIGHT);
-			}
-			info.add(bits,BorderLayout.WEST);
-			info.add(bitsField,BorderLayout.CENTER);
-			info.add(bitsPad,BorderLayout.EAST);
-			window.add(info);
-			
-			// set up single bits or grouped choice
-			window.add(new JLabel(" "));
-			JPanel choice = new JPanel(new GridLayout(1,2));
-			single.setSelected(true);
-			choice.add(single);
-			choice.add(group);
-			window.add(choice);
-			ButtonGroup choices = new ButtonGroup();
-			choices.add(single);
-			choices.add(group);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(up);
-			gr.add(down);
-			window.add(orients);
-
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Check the bit count against the shared group constraint (issue
-		 * #52): a rejected dialog must leave the element unchanged.
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			int newBits;
-			try {
-				newBits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				return java.util.List.of(new Violation(
-						"Value not numeric, try again", bitsField));
-			}
-			String violated = checkBits(newBits);
-			if (violated != null) {
-				return java.util.List.of(new Violation(violated, bitsField));
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Create the bundler/unbundler from the validated form.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again", bitsField);
-				return;
-			}
-
-			// set up ranges
-			if (single.isSelected()) {
-				for (int b=0; b<bits; b+=1) {
-					ranges.add(new Entry(b, b));
-				}
-			}
-			else {
-				dispose();
-				new GetRanges(type);
-			}
-			if(left.isSelected())
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this element.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of GroupCreate class
-	
-	/**
-	 * Get bit group info.
-	 */
-	@SuppressWarnings("serial")
-	protected class GetRanges extends ElementDialog implements ActionListener {
-
-		// properties
-		/** Model of single bits available to choose from. */
-		private DefaultListModel<Entry> pick = new DefaultListModel<Entry>();
-		/** The "choose from" list display. */
-		private JList<Entry> choose = new JList<Entry>(pick); // LeftList?
-		/** Model of the bit groups chosen so far. */
-		private DefaultListModel<Entry> picked = new DefaultListModel<Entry>();
-		/** The "chosen" list display. */
-		private JList<Entry> chosen = new JList<Entry>(picked);
-		/** Button to bundle the selected bits into a new group. */
-		private JButton add = new JButton(">>");
-		/** Button to remove the selected group. */
-		private JButton remove = new JButton("<<");
-		/** Button to move the selected group to the top. */
-		private JButton upjumper = new JButton("Move bundle to top");
-		/** Button to move the selected group up one place. */
-		private JButton upshifter = new JButton("Move bundle up");
-		/** Button to move the selected group down one place. */
-		private JButton downshifter = new JButton("Move bundle down");
-		/** Button to move the selected group to the bottom. */
-		private JButton downjumper = new JButton("Move bundle to bottom");
-		/** Either "Bundler" or "Unbundler". */
-		private String type;
-		
-		/**
-		 * Dummy constructor, for internal use only.
-		 * Permits use of a kludgy fix that permits instantiation
-		 * of an Entry from within a GroupCreate object. Since Entry
-		 * is a subclass of GetRanges, which is in turn a sibling of
-		 * GroupCreate, Java will not allow GroupCreate to instantiate
-		 * an Entry unless it has a reference to an instance of
-		 * GetRanges. This protected constructor allows us to do
-		 * exactly that, without creating the entire Swing dialog.
-		 */
-		protected GetRanges() {
-			// No-op. This object will get garbage collected.
-			super("Pick Bit Groups",null);
-		}
-		
-		/**
-		 * Construct dialog.
-		 * 
-		 * @param type Either "Bundler" or "Unbundler".
-		 */
-		public GetRanges(String type) {
-
-			super("Pick Bit Groups",
-					type.equals("unbundle") ? "unbundle" : "bundle");
-
-			this.type = type;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up selections
-			for (int b=0; b<bits; b+=1) {
-				pick.addElement(new Entry(new int[]{b}));
-			}
-			choose.setSelectedIndex(0);
-			
-			// set up automatic disabling of already-bundled bits
-			choose.setCellRenderer(new DefaultListCellRenderer() {
-				/**
-				 * Render an already-bundled bit as unselectable so it cannot
-				 * be picked into a second group.
-				 */
-				@Override
-				public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-					boolean allow = true;
-					Entry e = (Entry) pick.get(index);
-					if(e.isPicked()) {
-						allow = false;
-					}
-					super.getListCellRendererComponent(list, value, index, isSelected && allow, cellHasFocus && allow);
-					return this;
-			    }
-			});
-			
-			// set up list display
-			JPanel lists = new JPanel(new FlowLayout());
-			
-			JPanel leftList = new JPanel(new BorderLayout());
-			JLabel left = new JLabel("choose from",SwingConstants.CENTER);
-			leftList.add(left,BorderLayout.NORTH);
-			JScrollPane chpane = new JScrollPane(choose);
-			leftList.add(chpane,BorderLayout.CENTER);
-			lists.add(leftList);
-			
-			JPanel buttons = new JPanel(new GridLayout(2,1));
-			buttons.add(add);
-			buttons.add(remove);
-			lists.add(buttons);
-			
-			JPanel rightList = new JPanel(new BorderLayout());
-			JLabel right = new JLabel("chosen",SwingConstants.CENTER);
-			rightList.add(right,BorderLayout.NORTH);
-			chosen.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			JScrollPane rpane = new JScrollPane(chosen);
-			rightList.add(rpane,BorderLayout.CENTER);
-			lists.add(rightList);
-			
-			JPanel shifters = new JPanel(new GridLayout(4,1));
-			shifters.add(upjumper);
-			shifters.add(upshifter);
-			shifters.add(downshifter);
-			shifters.add(downjumper);
-			lists.add(shifters);
-			
-			window.add(lists);
-
-			// set up listeners
-			add.addActionListener(this);
-			remove.addActionListener(this);
-			upjumper.addActionListener(this);
-			upshifter.addActionListener(this);
-			downshifter.addActionListener(this);
-			downjumper.addActionListener(this);
-
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * There must be at least one chosen group.
-		 */
-		@Override
-		protected java.util.List<Violation> validateInputs() {
-
-			if (picked.size() == 0) {
-				return java.util.List.of(new Violation("No groups chosen",
-						chosen));
-			}
-			return java.util.List.of();
-		} // end of validateInputs method
-
-		/**
-		 * Create the range entries from the validated choices.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			// generate range entries
-			for (int i=0; i<picked.size(); i+=1) {
-				Entry e = (Entry)(picked.elementAt(i));
-				ranges.add(new Entry(e.getValues()));
-			}
-			dispose();
-		} // end of validateAndAccept method
-		
-		/**
-		 * React to ok, reset and cancel buttons.
-		 * 
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-			if (event.getSource() == add) {
-				
-				// make sure no bit is already picked
-				// (only can happen for a Bundler)
-				
-				int[] selected = choose.getSelectedIndices();
-				for(int s : selected) {
-					Entry ent = (Entry)(pick.elementAt(s));
-					if (ent.isPicked()) {
-						choose.removeSelectionInterval(s, s);
-					}
-				}
-				
-				selected = choose.getSelectedIndices();
-				
-				// Don't go indexing things that don't exist
-				if(selected.length == 0) return;
-				
-				// add entry to the end of the list (user can resort it themselves)
-				picked.addElement(new Entry(selected));
-				
-				// mark chosen bits as picked if a bundler
-				if (type.equals("Bundler")) {
-					for (int p : selected) {
-						Entry ent = (Entry)(pick.elementAt(p));
-						ent.setPicked(true);
-						pick.setElementAt(ent,p);
-					}
-				}
-				
-				// move selection to next unchosen bit
-				int first = -1;
-				int where = (selected[selected.length - 1]+1)%pick.size();
-				for (int i=0; i<pick.size(); i+=1) {
-					Entry ent = (Entry)(pick.elementAt(where));
-					if (!ent.isPicked()) {
-						first = where;
-						break;
-					}
-					where = (where+1)%pick.size();
-				}
-				if (first != -1) {
-					choose.setSelectedIndex(first);
-				}
-				else {
-					choose.clearSelection();
-				}
-			}
-			
-			else if (event.getSource() == remove) {
-				
-				// remove from chosen list (if something to remove)
-				int where = chosen.getSelectedIndex();
-				if (where < 0)
-					return;
-				Entry ent = (Entry)picked.elementAt(where);
-				picked.removeElement(ent);
-				
-				for(int i : ent.getValues()) {
-					Entry e = (Entry) pick.elementAt(i);
-					e.setPicked(false);
-					pick.setElementAt(e, i);
-				}
-			}
-			else if (event.getSource() == upjumper) {
-				int selected = chosen.getSelectedIndex();
-				Entry a = (Entry) picked.getElementAt(selected);
-				while(selected > 0) {
-					Entry b = (Entry) picked.getElementAt(selected - 1);
-					picked.setElementAt(b, selected);
-					picked.setElementAt(a, selected - 1);
-					selected -= 1;
-				}
-				chosen.setSelectedIndex(0);
-			}
-			else if (event.getSource() == upshifter) {
-				int selected = chosen.getSelectedIndex();
-				if(selected > 0) {
-					Entry a = (Entry) picked.getElementAt(selected);
-					Entry b = (Entry) picked.getElementAt(selected - 1);
-					picked.setElementAt(b, selected);
-					picked.setElementAt(a, selected - 1);
-					chosen.setSelectedIndex(selected - 1);
-				}
-			}
-			else if (event.getSource() == downshifter) {
-				int selected = chosen.getSelectedIndex();
-				if(selected >= 0 && selected < picked.getSize() - 1) {
-					Entry a = (Entry) picked.getElementAt(selected);
-					Entry b = (Entry) picked.getElementAt(selected + 1);
-					picked.setElementAt(b, selected);
-					picked.setElementAt(a, selected + 1);
-					chosen.setSelectedIndex(selected + 1);
-				}
-			}
-			else if (event.getSource() == downjumper) {
-				int selected = chosen.getSelectedIndex();
-				Entry a = (Entry) picked.getElementAt(selected);
-				while (selected >= 0 && selected < picked.getSize() - 1) {
-					Entry b = (Entry) picked.getElementAt(selected + 1);
-					picked.setElementAt(b, selected);
-					picked.setElementAt(a, selected + 1);
-					selected += 1;
-				}
-				chosen.setSelectedIndex(picked.getSize() - 1);
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of GetRanges class
-	
-	/**
 	 * A bit range entry.
 	 */
-	protected static class Entry {
+	public static class Entry {
 		
 		// properties
 		//private int from;

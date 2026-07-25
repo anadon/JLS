@@ -1,7 +1,8 @@
-package jls.sim;
+package jls.edit;
 
 import jls.*;
 import jls.elem.*;
+import jls.sim.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;

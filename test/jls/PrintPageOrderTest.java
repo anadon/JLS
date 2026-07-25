@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
+import jls.edit.CircuitRenderer;
 import jls.elem.Element;
 import jls.elem.StateMachine;
 import jls.elem.TruthTable;
@@ -51,14 +52,14 @@ class PrintPageOrderTest {
 	void bookedPagesFollowStableIdOrder() throws Exception {
 		Circuit circuit = load();
 		Book book = new Book();
-		circuit.addToBook(book, new PageFormat());
+		CircuitRenderer.of(circuit).addToBook(book, new PageFormat());
 
 		List<Printable> pages = new ArrayList<Printable>();
 		for (int i = 0; i < book.getNumberOfPages(); i++) {
 			pages.add(book.getPrintable(i));
 		}
-		assertSame(circuit, pages.get(0),
-				"the circuit's own page must come first");
+		assertTrue(pages.get(0) instanceof CircuitRenderer,
+				"the circuit's own page (its renderer) must come first");
 
 		// the state-machine pages, in booked order, must be the state
 		// machines in canonical stable-id order; likewise truth tables
@@ -76,13 +77,22 @@ class PrintPageOrderTest {
 		assertEquals(2, expectedTables.size(),
 				"the fixture must contain two truth tables");
 
-		List<Printable> bookedMachines = new ArrayList<Printable>();
-		List<Printable> bookedTables = new ArrayList<Printable>();
+		// the state-machine diagram page moved off the model (issue #77):
+		// each machine now books a StateMachineRenderer.DiagramPage that
+		// carries its machine, so the order check reads the machine back
+		// off the page.
+		List<Element> bookedMachines = new ArrayList<Element>();
+		// truth tables and state-machine diagrams are booked as wrapper
+		// pages now (issue #77): neither element implements Printable, so
+		// the booked order is checked against the wrapped elements.
+		List<Element> bookedTables = new ArrayList<Element>();
 		for (Printable page : pages) {
-			if (page instanceof StateMachine) {
-				bookedMachines.add(page);
-			} else if (page instanceof TruthTable) {
-				bookedTables.add(page);
+			if (page instanceof jls.edit.StateMachineRenderer.DiagramPage) {
+				bookedMachines.add(
+						((jls.edit.StateMachineRenderer.DiagramPage) page)
+								.machine());
+			} else if (page instanceof jls.edit.TruthTablePrintable ttp) {
+				bookedTables.add(ttp.getTruthTable());
 			}
 		}
 		assertEquals(expectedMachines, bookedMachines,

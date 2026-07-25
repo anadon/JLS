@@ -29,7 +29,7 @@ class WireValueChannelTest {
 
 	@Test
 	void strokeMappingCoversAllThreeValueStates() {
-		BasicStroke off = Wire.strokeFor(null);
+		BasicStroke off = jls.edit.WireRenderer.strokeFor(null);
 		assertNotNull(off.getDashArray(),
 				"a HiZ wire must draw dashed");
 		assertEquals(1.0f, off.getLineWidth(),
@@ -37,13 +37,13 @@ class WireValueChannelTest {
 
 		BitSet nonZero = new BitSet();
 		nonZero.set(0);
-		BasicStroke carrying = Wire.strokeFor(nonZero);
+		BasicStroke carrying = jls.edit.WireRenderer.strokeFor(nonZero);
 		assertNull(carrying.getDashArray(),
 				"a value-carrying wire draws solid");
 		assertTrue(carrying.getLineWidth() > 1.0f,
 				"a non-zero wire must draw thicker than a zero wire");
 
-		BasicStroke zero = Wire.strokeFor(new BitSet());
+		BasicStroke zero = jls.edit.WireRenderer.strokeFor(new BitSet());
 		assertNull(zero.getDashArray(), "an all-zero wire draws solid");
 		assertEquals(1.0f, zero.getLineWidth(),
 				"an all-zero wire draws as the classic thin line");
@@ -87,7 +87,7 @@ class WireValueChannelTest {
 		net.add(wire);
 		wire.setNet(net);
 		net.setValue(value);
-		return render(g -> wire.draw(g));
+		return render(g -> jls.edit.ElementRenderers.draw(g, wire));
 	}
 
 	/** Non-background pixels left by a single wire end point. */
@@ -96,7 +96,7 @@ class WireValueChannelTest {
 		WireEnd end = new WireEnd(circuit);
 		end.setXY(48, 24);
 		end.setTouching(touching);
-		return render(g -> end.draw(g));
+		return render(g -> jls.edit.ElementRenderers.draw(g, end));
 	}
 
 	/** Run a draw callback on a white canvas and count non-white. */

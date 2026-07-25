@@ -1,7 +1,7 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
-import java.awt.*;
 import java.util.*;
 
 /**
@@ -131,10 +131,32 @@ public abstract sealed class Put
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public LogicElement getElement() {
-		
+
 		return element;
 	} // end of getElement method
-	
+
+	/**
+	 * The x offset of this put's center relative to its element (issue
+	 * #77: read by the GUI-side put renderer).
+	 *
+	 * @return the relative x offset.
+	 */
+	public int getXr() {
+
+		return xr;
+	} // end of getXr method
+
+	/**
+	 * The y offset of this put's center relative to its element (issue
+	 * #77: read by the GUI-side put renderer).
+	 *
+	 * @return the relative y offset.
+	 */
+	public int getYr() {
+
+		return yr;
+	} // end of getYr method
+
 	/**
 	 * Get wire end this put is attached to, or null if not attached.
 	 *
@@ -235,42 +257,6 @@ public abstract sealed class Put
 		xr = savex;
 		yr = savey;
 	} // end of restorePosition method
-	
-	/**
-	 * Draw this put.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	public void draw(Graphics g) {
-		
-		Color inside;
-		if (touching) {
-			inside = JLSInfo.touchColor;
-		}
-		else if (isAttached()) {
-			inside = Color.BLACK;
-			return;
-		}
-		else {
-			inside = Color.WHITE;
-		}
-		int d = JLSInfo.pointDiameter;
-		int r = d/2;
-		int x = element.getX()+xr;
-		int y = element.getY()+yr;
-		g.setColor(Color.BLACK);
-		g.fillOval(x-r,y-r,d,d);
-		g.setColor(inside);
-		g.fillOval(x-r+1,y-r+1,d-2,d-2);
-		if (touching) {
-			// second, color-independent channel (issue #76): an open
-			// ring around the point marks a connection lining up even
-			// when the touch color cannot be told apart
-			g.setColor(JLSInfo.wireZeroColor);
-			int rd = d+4;
-			g.drawOval(x-rd/2,y-rd/2,rd,rd);
-		}
-	} // end of draw method
 	
 	/**
 	 * See if this put is at the same place as another put.

@@ -5,9 +5,10 @@
  * dispatches them to circuit elements through the {@link jls.sim.Reacts}
  * callback interface; the {@link jls.sim.BatchSimulator} runs headless for
  * command-line and test-vector use (including VCD export), while the
- * {@link jls.sim.InteractiveSimulator} adds a Swing GUI with start, step,
- * animate, pause, and stop controls. Supporting classes render signal
- * waveforms over time ({@link jls.sim.Trace}) and display memory activity
+ * {@link jls.edit.InteractiveSimulator} adds a Swing GUI with start, step,
+ * animate, pause, and stop controls (it left this package for the GUI side
+ * in issue #77). Supporting classes render signal waveforms over time
+ * ({@link jls.edit.Trace}) and display memory activity
  * ({@link jls.edit.MemTrace}).
  *
  * <p>Null-marked (issue #93): every reference in this package is

@@ -1,17 +1,13 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.GridPoint;
+import jls.core.GridSize;
+import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * Tri-state buffer(s).
@@ -32,13 +28,9 @@ public final class TriState extends LogicElement implements Timed {
 	/** The propagation delay of this element. */
 	private int propDelay = defaultPropDelay;
 	/** The direction the output points. */
-	private JLSInfo.Orientation gateOrientation = JLSInfo.Orientation.RIGHT;
+	private Orientation gateOrientation = Orientation.RIGHT;
 	/** The side the control input is on. */
-	private JLSInfo.Orientation controlOrientation = JLSInfo.Orientation.DOWN;
-	// running properties
-	/** True if the user cancelled the creation dialog. */
-	private boolean cancelled;
-	
+	private Orientation controlOrientation = Orientation.DOWN;
 	/**
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
@@ -52,59 +44,59 @@ public final class TriState extends LogicElement implements Timed {
 	} // end of constructor
 	
 	/**
-	 * Initialize this element in a GUI context.
-	 * 
-	 * @param g The graphics object to use.
-	 * @param editWindow The editor window this circuit is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param bits The new number of bits.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new TriStateCreate();
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// set up inputs and outputs
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-		
-	} // end of setup method
-	
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the gate orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new gate orientation.
+	 */
+	public void setGateOrientation(Orientation orientation) {
+
+		this.gateOrientation = orientation;
+	} // end of setGateOrientation method
+
+	/**
+	 * Set the control orientation (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param orientation The new control orientation.
+	 */
+	public void setControlOrientation(Orientation orientation) {
+
+		this.controlOrientation = orientation;
+	} // end of setControlOrientation method
+
 	/**
 	 * Initialize internal info for this element.
 	 * Sets up size, inputs and output.
-	 * 
+	 *
 	 * @param g Unused.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 
 		// canonical geometry (gate RIGHT, control DOWN), transformed to
 		// the current orientation pair (#24)
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = placement();
-		Dimension d = t.size();
-		width = d.width;
-		height = d.height;
-		Point in = t.map(0, s);
-		Point ctl = t.map(2*s, 3*s);
-		Point outAt = t.map(4*s, s);
-		inputs.add(new Input("input",this,in.x,in.y,bits));
-		inputs.add(new Input("control",this,ctl.x,ctl.y,1));
-		Output out = new Output("output",this,outAt.x,outAt.y,bits);
+		GridSize d = t.size();
+		width = d.width();
+		height = d.height();
+		GridPoint in = t.map(0, s);
+		GridPoint ctl = t.map(2*s, 3*s);
+		GridPoint outAt = t.map(4*s, s);
+		inputs.add(new Input("input",this,in.x(),in.y(),bits));
+		inputs.add(new Input("control",this,ctl.x(),ctl.y(),1));
+		Output out = new Output("output",this,outAt.x(),outAt.y(),bits);
 		outputs.add(out);
 		out.setTriState(true);
 	} // end of init method
@@ -115,31 +107,31 @@ public final class TriState extends LogicElement implements Timed {
 	 *
 	 * @return the transform for the current orientation pair.
 	 */
-	private GridTransform.Chain placement() {
+	public GridTransform.Chain placement() {
 
 		// the control must be perpendicular to the gate; loads with an
 		// invalid pair have always failed, so keep rejecting them
 		boolean gateHorizontal =
-				gateOrientation == JLSInfo.Orientation.LEFT
-				|| gateOrientation == JLSInfo.Orientation.RIGHT;
+				gateOrientation == Orientation.LEFT
+				|| gateOrientation == Orientation.RIGHT;
 		boolean controlHorizontal =
-				controlOrientation == JLSInfo.Orientation.LEFT
-				|| controlOrientation == JLSInfo.Orientation.RIGHT;
+				controlOrientation == Orientation.LEFT
+				|| controlOrientation == Orientation.RIGHT;
 		if (gateHorizontal == controlHorizontal) {
 			throw new IllegalStateException(
 					"invalid TriState orientation combination: gate "
 					+ gateOrientation + ", control " + controlOrientation);
 		}
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		GridTransform.Chain t = GridTransform.chain(4*s, 3*s);
 		switch (gateOrientation) {
 		case RIGHT:
-			if (controlOrientation == JLSInfo.Orientation.UP) {
+			if (controlOrientation == Orientation.UP) {
 				t.mirrorY();
 			}
 			break;
 		case LEFT:
-			if (controlOrientation == JLSInfo.Orientation.UP) {
+			if (controlOrientation == Orientation.UP) {
 				t.rotate180();
 			}
 			else {
@@ -148,12 +140,12 @@ public final class TriState extends LogicElement implements Timed {
 			break;
 		case UP:
 			t.rotateCCW();
-			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+			if (controlOrientation == Orientation.LEFT) {
 				t.mirrorX();
 			}
 			break;
 		default: // DOWN
-			if (controlOrientation == JLSInfo.Orientation.LEFT) {
+			if (controlOrientation == Orientation.LEFT) {
 				t.rotateCW();
 			}
 			else {
@@ -163,35 +155,6 @@ public final class TriState extends LogicElement implements Timed {
 		}
 		return t;
 	} // end of placement method
-	
-	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw gate: canonical segments (gate RIGHT, control DOWN)
-		// mapped through the orientation transform (#24)
-		int s = JLSInfo.spacing;
-		g.setColor(Color.black);
-		GridTransform.Chain t = placement();
-		t.drawLine(g,x,y,0,s,s,s);				// input wire
-		t.drawLine(g,x,y,s,0,s,2*s);			// back
-		t.drawLine(g,x,y,s,0,3*s,s);			// top
-		t.drawLine(g,x,y,s,2*s,3*s,s);			// bottom
-		t.drawLine(g,x,y,3*s,s,4*s,s);			// output wire
-		t.drawLine(g,x,y,2*s,3*s/2,2*s,3*s);	// control wire
-		// draw inputs and outputs
-		inputs.get(0).draw(g);
-		inputs.get(1).draw(g);
-		outputs.get(0).draw(g);
-		
-	} // end of draw method
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
@@ -242,7 +205,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @return the gate orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((TriState)el).gateOrientation;
 			}
 			/**
@@ -252,7 +215,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @param o The new gate orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((TriState)el).gateOrientation = o;
 			}
 		},
@@ -264,7 +227,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @return the control orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((TriState)el).controlOrientation;
 			}
 			/**
@@ -274,7 +237,7 @@ public final class TriState extends LogicElement implements Timed {
 			 * @param o The new control orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((TriState)el).controlOrientation = o;
 			}
 		}
@@ -326,15 +289,15 @@ public final class TriState extends LogicElement implements Timed {
 	/**
 	 * Display info about this and gate.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
 		if (bits == 1)
-			info.setText("tri-state gate");
+			return "tri-state gate";
 		else
-			info.setText(bits + " tri-state gates");
+			return bits + " tri-state gates";
 	} // end of showInfo method
 
 	/**
@@ -411,7 +374,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		controlOrientation = controlOrientation.flipped();
 		inputs.clear();
@@ -454,14 +417,14 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			controlOrientation = controlOrientation.ccw();
 			gateOrientation = gateOrientation.ccw();
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			controlOrientation = controlOrientation.cw();
 			gateOrientation = gateOrientation.cw();
@@ -473,220 +436,6 @@ public final class TriState extends LogicElement implements Timed {
 		init(g);
 	}
 
-	/**
-	 * Dialog box to set bits.
-	 */
-	private class TriStateCreate extends ElementDialog implements ActionListener {
-
-		// properties
-		/** Text field for the number of bits (gates). */
-		private JTextField bitsField = new JTextField(defaultBits+"",10);
-		/** Keypad for entering the number of bits. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Output orientation choice: left. */
-		private JRadioButton oLeft = new JRadioButton("Left");
-		/** Output orientation choice: right (the default). */
-		private JRadioButton oRight = new JRadioButton("Right", true);
-		/** Output orientation choice: up. */
-		private JRadioButton oUp = new JRadioButton("Up");
-		/** Output orientation choice: down. */
-		private JRadioButton oDown = new JRadioButton("Down");
-		/** Control orientation choice: left. */
-		private JRadioButton sLeft = new JRadioButton("Left");
-		/** Control orientation choice: right. */
-		private JRadioButton sRight = new JRadioButton("Right");
-		/** Control orientation choice: up. */
-		private JRadioButton sUp = new JRadioButton("Up");
-		/** Control orientation choice: down (the default). */
-		private JRadioButton sDown = new JRadioButton("Down",true);
-		/** Label for the control orientation choices. */
-		private JLabel olbl2 = new JLabel("Control Orientation");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private TriStateCreate() {
-			
-			// set up window title
-			super("Create TriState","TRISTATE");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel bits = new JLabel("Gates (bits): ",SwingConstants.RIGHT);
-			info.add(bits,BorderLayout.WEST);
-			info.add(bitsField,BorderLayout.CENTER);
-			info.add(bitsPad,BorderLayout.EAST);
-			window.add(info);
-			
-			JPanel orient = new JPanel(new GridLayout(3,3));
-			JPanel orient2 = new JPanel(new GridLayout(3,3));
-			ButtonGroup gr = new ButtonGroup();
-			ButtonGroup gr2 = new ButtonGroup();
-			gr.add(this.oLeft);
-			gr.add(this.oRight);
-			gr.add(this.oDown);
-			gr.add(this.oUp);
-			gr2.add(this.sDown);
-			gr2.add(this.sUp);
-			gr2.add(this.sLeft);
-			gr2.add(this.sRight);
-			orient.add(new JLabel(""));
-			orient.add(this.oUp);
-			orient.add(new JLabel(""));
-			orient.add(this.oLeft);
-			orient.add(new JLabel(""));
-			orient.add(this.oRight);
-			orient.add(new JLabel(""));
-			orient.add(this.oDown);
-			orient.add(new JLabel(""));
-			
-			
-			orient2.add(new JLabel(""));
-			orient2.add(this.sUp);
-			orient2.add(new JLabel(""));
-			orient2.add(this.sLeft);
-			orient2.add(new JLabel(""));
-			orient2.add(this.sRight);
-			orient2.add(new JLabel(""));
-			orient2.add(this.sDown);
-			orient2.add(new JLabel(""));
-			
-			JLabel olbl = new JLabel("Output Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			window.add(orient);
-
-			olbl2.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl2);
-			window.add(orient2);
-		
-			sLeft.setVisible(false);
-			sRight.setVisible(false);
-
-			oLeft.addActionListener(this);
-			oRight.addActionListener(this);
-			oUp.addActionListener(this);
-			oDown.addActionListener(this);
-
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * React to output orientation buttons.
-		 *
-		 * @param event The event object for this action.
-		 */
-		@Override
-		public void actionPerformed(ActionEvent event) {
-
-			if(event.getSource() == oLeft || event.getSource() == oRight)
-			{
-				olbl2.setVisible(true);
-				sUp.setVisible(true);
-				sDown.setVisible(true);
-				sDown.setSelected(true);
-				sLeft.setVisible(false);
-				sRight.setVisible(false);
-			}
-			else if(event.getSource() == oUp || event.getSource() == oDown)
-			{
-				olbl2.setVisible(true);
-				sLeft.setVisible(true);
-				sLeft.setSelected(true);
-				sRight.setVisible(true);
-				sUp.setVisible(false);
-				sDown.setVisible(false);
-			}
-		} // end of actionPerformed method
-
-		/**
-		 * Validate the form and create the tri-state gate.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (bits < 1) {
-				reject("Must be at least 1 bit");
-				return;
-			}
-			if(this.oLeft.isSelected())
-				{
-					gateOrientation = JLSInfo.Orientation.LEFT;
-					if(this.sUp.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oRight.isSelected())
-				{
-					gateOrientation = JLSInfo.Orientation.RIGHT;
-					if(this.sUp.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.UP;
-					}
-					else if(this.sDown.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.DOWN;
-					}
-				}
-				else if(this.oDown.isSelected())
-				{
-					gateOrientation = JLSInfo.Orientation.DOWN;
-					if(this.sLeft.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.LEFT;
-					}
-					else if(this.sRight.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.RIGHT;
-					}
-				}
-				else if(this.oUp.isSelected())
-				{
-					gateOrientation = JLSInfo.Orientation.UP;
-					if(this.sLeft.isSelected())
-					{
-						controlOrientation = JLSInfo.Orientation.LEFT;
-					}
-				else if(this.sRight.isSelected())
-				{
-					controlOrientation = JLSInfo.Orientation.RIGHT;
-				}
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of TriStateCreate class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

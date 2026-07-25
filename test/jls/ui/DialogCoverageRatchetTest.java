@@ -34,7 +34,8 @@ class DialogCoverageRatchetTest {
 	 */
 	private static final Set<String> SWEPT = Set.of(
 			"Adder", "AndGate", "Binder", "Clock", "Constant", "Decoder",
-			"DelayGate", "Display", "Element", "Extend", "InputPin",
+			"DelayChange", "DelayGate", "Display", "Element", "Extend",
+			"InputPin",
 			"JumpEnd", "JumpStart", "Memory", "Mux", "OutputPin",
 			"Register", "ShiftRegister", "SigGen", "Splitter",
 			"StateMachine", "SubCircuit", "Text", "TriState",
@@ -62,15 +63,24 @@ class DialogCoverageRatchetTest {
 				.importPath("target/classes");
 		Set<String> unrepresented = new TreeSet<String>();
 		for (JavaClass c : classes) {
-			if (!c.isAssignableTo("jls.elem.ElementDialog")
-					|| "jls.elem.ElementDialog".equals(c.getName())) {
+			if (!c.isAssignableTo("jls.edit.ElementFormDialog")
+					|| "jls.edit.ElementFormDialog".equals(c.getName())) {
 				continue;
 			}
-			// dialogs are inner classes; charge them to the top-level
-			// element that owns them
+			// charge each dialog to the top-level element that owns it.
+			// Legacy dialogs are inner classes of the element
+			// (jls.elem.Clock$ClockCreate -> Clock); dialogs relocated to
+			// the GUI side by the #77 element wave follow the
+			// jls.edit.<Element>Dialog convention
+			// (jls.edit.AdderDialog$Form -> AdderDialog -> Adder), and a
+			// relocated full edit window is named jls.edit.<Element>Editor
+			// (jls.edit.TruthTableEditor -> TruthTable).
 			String owner = c.getName()
 					.replace("jls.elem.", "")
-					.replaceAll("[$.].*", "");
+					.replace("jls.edit.", "")
+					.replaceAll("[$.].*", "")
+					.replaceAll("Dialog$", "")
+					.replaceAll("Editor$", "");
 			if (!SWEPT.contains(owner)
 					&& !REPRESENTED.containsKey(owner)) {
 				unrepresented.add(owner + " (" + c.getName() + ")");

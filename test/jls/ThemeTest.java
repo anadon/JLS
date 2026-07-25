@@ -57,15 +57,15 @@ class ThemeTest {
 	void applyRewritesTheJLSInfoStatics() {
 		Theme.CLASSIC.apply();
 		assertSame(Theme.CLASSIC, Theme.active());
-		assertEquals(Color.green, JLSInfo.touchColor);
-		assertEquals(Color.red, JLSInfo.nonZeroColor);
-		assertEquals(Color.blue, JLSInfo.wireOffColor);
+		assertEquals(Color.green, JLSInfo.Palette.touchColor);
+		assertEquals(Color.red, JLSInfo.Palette.nonZeroColor);
+		assertEquals(Color.blue, JLSInfo.Palette.wireOffColor);
 		Theme.DEFAULT.apply();
 		assertSame(Theme.DEFAULT, Theme.active());
-		assertEquals(Theme.DEFAULT.touch(), JLSInfo.touchColor);
-		assertEquals(Theme.DEFAULT.nonZero(), JLSInfo.nonZeroColor);
-		assertEquals(Theme.DEFAULT.grid(), JLSInfo.gridColor);
-		assertEquals(Theme.DEFAULT.background(), JLSInfo.backgroundColor);
+		assertEquals(Theme.DEFAULT.touch(), JLSInfo.Palette.touchColor);
+		assertEquals(Theme.DEFAULT.nonZero(), JLSInfo.Palette.nonZeroColor);
+		assertEquals(Theme.DEFAULT.grid(), JLSInfo.Palette.gridColor);
+		assertEquals(Theme.DEFAULT.background(), JLSInfo.Palette.backgroundColor);
 	}
 
 	@Test

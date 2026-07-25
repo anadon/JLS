@@ -1,15 +1,11 @@
 package jls.elem;
 
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.*;
-import jls.util.Placement;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
 import java.io.*;
 import java.util.BitSet;
-
-import javax.swing.*;
 
 /**
  * Superclass of input and output pins.
@@ -29,12 +25,8 @@ public abstract sealed class Pin extends LogicElement
 	/** Whether this pin is watched (shown in the signal trace). */
 	protected boolean watched = false;
 	/** The direction this pin faces. */
-	protected JLSInfo.Orientation orientation = JLSInfo.Orientation.RIGHT;
+	protected Orientation orientation = Orientation.RIGHT;
 
-	// editting properties
-	/** Whether the setup dialog was cancelled. */
-	protected boolean cancelled;
-	
 	/**
 	 * Create a new input pin.
 	 * 
@@ -85,52 +77,66 @@ public abstract sealed class Pin extends LogicElement
 	} // end of getBits method
 	
 	/**
-	 * Display dialog to get pin name and bits.
-	 * 
-	 * @param g The Graphics object to use to determine the name's size.
-	 * @param editWindow The editor window this pin is displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * @param type The type of pin ("Input" or "Output").
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * Get the orientation this pin faces (for the relocated renderer and
+	 * creation dialog, issue #77).
+	 *
+	 * @return the orientation.
 	 */
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y, String type) {
-		
-		// show creation dialog
-		new PinCreate(type);
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// finish up
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * Set the name of this pin (for the relocated creation dialog, issue
+	 * #77). The caller registers the name with the circuit.
+	 *
+	 * @param name The new name.
+	 */
+	public void setName(String name) {
+
+		this.name = name;
+	} // end of setName method
+
+	/**
+	 * Set the number of bits in this pin (for the relocated creation
+	 * dialog, issue #77).
+	 *
+	 * @param bits The new bit width.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the orientation this pin faces (for the relocated creation
+	 * dialog, issue #77).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Initialize internal info for this element.
 	 * Computes the size of the pin as a function of the name.
-	 * 
+	 *
 	 * @param g Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
+	public void init(jls.core.TextMetrics g) {
+
 		// set up size if needed
 		if (g != null) {
-			
+
 			if (width == 0 && height == 0) {
-				int s = JLSInfo.spacing;
-				FontMetrics fm = g.getFontMetrics();
+				int s = Geometry.SPACING;
+				jls.core.TextMetrics fm = g;
 				int w = fm.stringWidth(" " + name + " ");
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					width = Math.max((w+s/2)/s*s,2*s)+s;	// ceiling in spacings
 					height = 2*s;
@@ -191,12 +197,12 @@ public abstract sealed class Pin extends LogicElement
 		new Attribute.OrientationAttribute("orient") {
 			/** Read the pin's orientation for saving. */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Pin)el).orientation;
 			}
 			/** Load the pin's orientation. */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Pin)el).orientation = o;
 			}
 		}
@@ -267,94 +273,6 @@ public abstract sealed class Pin extends LogicElement
 	} // end of setValue method
 
 	/**
-	 * Draw this pin: the orientation-pointed pentagon, watched
-	 * background, centered name, and its single put (#27 S4 - the two
-	 * pin classes drew byte-identical shapes).
-	 *
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-
-		// set up shape
-		int s = JLSInfo.spacing;
-		Polygon p = new Polygon();
-		if (orientation == JLSInfo.Orientation.RIGHT) {
-			p.addPoint(x, y);
-			p.addPoint(x + width - s, y);
-			p.addPoint(x + width, y + height / 2);
-			p.addPoint(x + width - s, y + height);
-			p.addPoint(x, y + height);
-		} else if (orientation == JLSInfo.Orientation.LEFT) {
-			p.addPoint(x + s, y);
-			p.addPoint(x, y + height / 2);
-			p.addPoint(x + s, y + height);
-			p.addPoint(x + width, y + height);
-			p.addPoint(x + width, y);
-		} else if (orientation == JLSInfo.Orientation.UP) {
-			p.addPoint(x + width / 2, y);
-			p.addPoint(x + width, y + s);
-			p.addPoint(x + width, y + height);
-			p.addPoint(x, y + height);
-			p.addPoint(x, y + s);
-		} else if (orientation == JLSInfo.Orientation.DOWN) {
-			p.addPoint(x, y);
-			p.addPoint(x + width, y);
-			p.addPoint(x + width, y + height - s);
-			p.addPoint(x + width / 2, y + height);
-			p.addPoint(x, y + height - s);
-		}
-		// draw watched background
-		if (watched) {
-			g.setColor(JLSInfo.watchColor);
-			g.fillPolygon(p);
-		}
-
-		// draw context
-		super.draw(g);
-
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawPolygon(p);
-
-		// draw name inside box
-		FontMetrics fm = g.getFontMetrics();
-		Rectangle2D t = fm.getStringBounds(name, g);
-		double tw = t.getWidth();
-		double th = t.getHeight();
-		int bx = x;
-		int by = y;
-		int bwidth = width;
-		int bheight = height;
-		if (orientation == JLSInfo.Orientation.LEFT) {
-			bx = x + s;
-			bwidth = width - s;
-		}
-		else if (orientation == JLSInfo.Orientation.RIGHT) {
-			bwidth = width - s;
-		}
-		else if (orientation == JLSInfo.Orientation.UP) {
-			by = y + s;
-			bheight = height - s;
-		}
-		else { // DOWN
-			bheight = height - s;
-		}
-		int dx = (int) ((bwidth - tw) / 2);
-		int dy = (int) ((bheight - th) / 2 + fm.getAscent());
-
-		g.drawString(name, bx + dx, by + dy);
-
-		// draw the put
-		for (Input in : inputs) {
-			in.draw(g);
-		}
-		for (Output out : outputs) {
-			out.draw(g);
-		}
-	} // end of draw method
-
-	/**
 	 * Print current value to stdout.
 	 *
 	 * @param qual Qualified subcircuit name.
@@ -380,7 +298,7 @@ public abstract sealed class Pin extends LogicElement
 	public void remove(Circuit circ) {
 
 		if (circ.isImported()) {
-			TellUser.error(JLSInfo.frame,
+			TellUser.error(null,
 					"Can't remove " + pinKind().toLowerCase() + " pin "
 					+ name + " from a subcircuit", "Error");
 			return;
@@ -428,12 +346,12 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g) {
+	public void rotate(Orientation direction, jls.core.TextMetrics g) {
 
-		if (direction == JLSInfo.Orientation.LEFT) {
+		if (direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
 		}
-		else if (direction == JLSInfo.Orientation.RIGHT) {
+		else if (direction == Orientation.RIGHT) {
 			orientation = orientation.cw();
 		}
 		inputs.clear();
@@ -449,7 +367,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void flip(Graphics g) {
+	public void flip(jls.core.TextMetrics g) {
 
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -490,156 +408,13 @@ public abstract sealed class Pin extends LogicElement
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
-		
-		info.setText(bits + " bit input pin");
+	public String infoText() {
+
+		return bits + " bit input pin";
 	} // end of showInfo method
-	
-	/**
-	 * Dialog box to set input pin characteristics.
-	 */
-	private class PinCreate extends ElementDialog {
-		
-		// properties
-		/** The text field for the pin name. */
-		private JTextField nameField = new JTextField("",12);
-		/** The text field for the bit width. */
-		private JTextField bitsField = new JTextField("1",5);
-		/** The key pad for entering the bit width. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,1,this);
-		/** Selects left orientation. */
-		private JRadioButton left = new JRadioButton("Left");
-		/** Selects right orientation (the default). */
-		private JRadioButton right = new JRadioButton("Right", true);
-		/** Selects up orientation. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Selects down orientation. */
-		private JRadioButton down = new JRadioButton("Down");
-		
-		/**
-		 * Set up dialog window.
-		 * 
-		 * @param type The type of pin ("Input" or "Output").
-		 */
-		private PinCreate(String type) {
-			
-			// set up window title
-			super("Create " + type + " Pin",type);
-			
-			// set not cancelled
-			cancelled = false;
-			
-			// set up window
-			Container window = getContentPane();
-			
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JPanel labels = new JPanel(new GridLayout(2,1,1,5));
-			JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
-			labels.add(name);
-			JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
-			labels.add(bits);
-			info.add(labels,BorderLayout.WEST);
-			
-			JPanel data = new JPanel(new GridLayout(2,1,1,5));
-			data.add(nameField);
-			JPanel bitsPanel = new JPanel(new BorderLayout());
-			bitsPanel.add(bitsField,BorderLayout.CENTER);
-			bitsPanel.add(bitsPad,BorderLayout.EAST);
-			data.add(bitsPanel);
-			info.add(data,BorderLayout.CENTER);
-			window.add(info);
-			
-			//Setup orientation radio buttons
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			JPanel orients = new JPanel(new GridLayout(3,3));
-			orients.add(new JLabel(""));
-			orients.add(up);
-			orients.add(new JLabel(""));
-			orients.add(left);
-			orients.add(new JLabel(""));
-			orients.add(right);
-			orients.add(new JLabel(""));
-			orients.add(down);
-			orients.add(new JLabel(""));
-			left.setHorizontalAlignment(SwingConstants.CENTER);
-			right.setHorizontalAlignment(SwingConstants.CENTER);
-			up.setHorizontalAlignment(SwingConstants.CENTER);
-			down.setHorizontalAlignment(SwingConstants.CENTER);
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			window.add(orients);
-			
-			confirmOnEnter(nameField);
-			finishDialog();
-		} // end of constructor
-		
-		/**
-		 * Validate the form and create the pin.
-		 */
-		@Override
-		protected void validateAndAccept() {
-			
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Bits not numeric, try again");
-				return;
-			}
-			if (bits < 1) {
-				reject("Must have at least 1 bit");
-				return;
-			}
-			String tname = nameField.getText().trim();
-			if (tname.length() < 1 || !Util.isValidName(tname)) {
-				reject("Missing or invalid name, try again");
-				return;
-			}
-			if (!circuit.addName(tname)) {
-				reject("Name already used, try again");
-				return;
-			}
-			name = tname;
-			if(left.isSelected())
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			dispose();
-		} // end of validateAndAccept method
-		
-		/**
-		 * Cancel this pin.
-		 */
-		@Override
-		protected void cancelDialog() {
-			
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-		
-	} // end of PinCreate class
-	
 	/**
 	 * A pin be watched.
 	 * 

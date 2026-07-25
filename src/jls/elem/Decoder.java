@@ -1,42 +1,14 @@
 package jls.elem;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.util.BitSet;
 
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.WindowConstants;
-
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.BitSetUtils;
 import jls.Circuit;
-import jls.Help;
-import jls.JLSInfo;
-import jls.KeyPad;
-import jls.Util;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
-import jls.util.Placement;
 
 /**
  * n-input, 2^n-output decoder.
@@ -58,80 +30,102 @@ public final class Decoder extends LogicElement implements Timed {
 	private int propDelay = defaultPropDelay;
 	//Orientation is based off of where the inputs are
 	/** Which side the input is on. */
-	private JLSInfo.Orientation orientation = JLSInfo.Orientation.LEFT;
+	private Orientation orientation = Orientation.LEFT;
 	
 	// running properties
-	/** True if the user cancelled the creation dialog. */
-	private boolean cancelled;
 	/** The "decoder" label drawn on the element, abbreviated to "dec" if it doesn't fit. */
 	private String dec;
 	/** The input/output width label drawn on the element (e.g. "1-n"), oriented to match the element. */
 	private String inout;
-	
+
 	/**
 	 * Create a new decoder element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Decoder(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
-	 * Display dialog to get characteristics.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
+	 * The direction this decoder faces (issue #77: read by the GUI-side
+	 * renderer and dialog).
+	 *
+	 * @return the current orientation.
 	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// show creation dialog
-		new DecoderCreate();
-		
-		// don't do anything if user cancelled gate
-		if (cancelled)
-			return false;
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
+	public Orientation getOrientation() {
+
+		return orientation;
+	} // end of getOrientation method
+
+	/**
+	 * The input/output width label drawn inside the box (issue #77: read by
+	 * the GUI-side renderer).
+	 *
+	 * @return the input/output width label.
+	 */
+	public String getInout() {
+
+		return inout;
+	} // end of getInout method
+
+	/**
+	 * The "decoder" label drawn inside the box (issue #77: read by the
+	 * GUI-side renderer).
+	 *
+	 * @return the decoder label.
+	 */
+	public String getDec() {
+
+		return dec;
+	} // end of getDec method
+
+	/**
+	 * Set the number of input bits (issue #77: applied by the GUI-side
+	 * dialog).
+	 *
+	 * @param bits The new number of input bits.
+	 */
+	public void setBits(int bits) {
+
+		this.bits = bits;
+	} // end of setBits method
+
+	/**
+	 * Set the orientation (issue #77: applied by the GUI-side dialog).
+	 *
+	 * @param orientation The new orientation.
+	 */
+	public void setOrientation(Orientation orientation) {
+
+		this.orientation = orientation;
+	} // end of setOrientation method
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(Graphics g) {
-		
-		int s = JLSInfo.spacing;
+	public void init(jls.core.TextMetrics g) {
+
+		int s = Geometry.SPACING;
 		int outs = 1 << bits;
 	
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{
 			inout = bits + "-" + outs;
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			inout = bits + "\n | \n" + outs;
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			inout = outs + "\n | \n" + bits;
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
 			inout = outs + "-" + bits;
 		}
@@ -143,7 +137,7 @@ public final class Decoder extends LogicElement implements Timed {
 			// if element already has a size, use it
 			if (width == 0 && height == 0) {
 				
-				if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
+				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					width = 5*s;
 					height = 2*s;
@@ -153,12 +147,12 @@ public final class Decoder extends LogicElement implements Timed {
 					width = 2 * s;
 					height = 5 * s;
 				}
-				FontMetrics fm = g.getFontMetrics();
+				jls.core.TextMetrics fm = g;
 				int bw = fm.stringWidth(inout);
-				if (bw > width && orientation == JLSInfo.Orientation.LEFT) {
+				if (bw > width && orientation == Orientation.LEFT) {
 					inout = "1-n";
 				}
-				else if(bw > width && orientation == JLSInfo.Orientation.RIGHT)
+				else if(bw > width && orientation == Orientation.RIGHT)
 				{
 					inout = "n-1";
 				}
@@ -171,28 +165,28 @@ public final class Decoder extends LogicElement implements Timed {
 		}
 		
 		
-		if(orientation == JLSInfo.Orientation.LEFT)
+		if(orientation == Orientation.LEFT)
 		{	
 			// create input
 			inputs.add(new Input("input",this,0,s,bits));
 			// create output
 			outputs.add(new Output("output",this,width,s,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.RIGHT)
+		else if(orientation == Orientation.RIGHT)
 		{
 			// create input
 			inputs.add(new Input("input",this,width,s,bits));
 			// create output
 			outputs.add(new Output("output",this,0,s,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
+		else if(orientation == Orientation.DOWN)
 		{
 			// create input
 			inputs.add(new Input("input",this,s,height,bits));
 			// create output
 			outputs.add(new Output("output",this,s,0,1<<bits));
 		}
-		else if(orientation == JLSInfo.Orientation.UP)
+		else if(orientation == Orientation.UP)
 		{
 			// create input
 			inputs.add(new Input("input",this,s,0,bits));
@@ -200,53 +194,6 @@ public final class Decoder extends LogicElement implements Timed {
 			outputs.add(new Output("output",this,s,height,1<<bits));
 		}
 	} // end of init method
-	
-	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
-	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		// draw context
-		super.draw(g);
-		
-		// draw box
-		g.setColor(Color.BLACK);
-		g.drawRect(x,y,width,height);
-		
-		// draw values inside box
-		FontMetrics fm = g.getFontMetrics();
-		if(orientation == JLSInfo.Orientation.LEFT || orientation == JLSInfo.Orientation.RIGHT)
-		{
-			Rectangle2D t = fm.getStringBounds(inout,g);
-			g.drawString(inout,x+(int)(width-t.getWidth())/2,
-					y+(int)(height/2-t.getHeight())/2+fm.getAscent());
-			t = fm.getStringBounds(dec,g);
-			g.drawString(dec,x+(int)(width-t.getWidth())/2,
-					y+JLSInfo.spacing+(int)(height/2-t.getHeight())/2+fm.getAscent());
-		}
-		else if(orientation == JLSInfo.Orientation.UP)
-		{
-			Rectangle2D t = fm.getStringBounds("1", g);
-			g.drawString("1", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+5);
-			g.drawString("|", x+(width-(int)t.getWidth())/2, y+fm.getHeight() + 20);
-			g.drawString("n", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+ 35);
-		}
-		else if(orientation == JLSInfo.Orientation.DOWN)
-		{
-			Rectangle2D t = fm.getStringBounds("1", g);
-			g.drawString("n", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+5);
-			g.drawString("|", x+(width-(int)t.getWidth())/2, y+fm.getHeight() + 20);
-			g.drawString("1", x+(width-(int)t.getWidth())/2, y+fm.getHeight()+ 35);
-		}
-		
-		// draw input and output
-		inputs.get(0).draw(g);
-		outputs.get(0).draw(g);
-		
-	} // end of draw method
 	
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
@@ -297,7 +244,7 @@ public final class Decoder extends LogicElement implements Timed {
 			 * @return the current orientation.
 			 */
 			@Override
-			protected JLSInfo.Orientation getOrientation(Element el) {
+			protected Orientation getOrientation(Element el) {
 				return ((Decoder)el).orientation;
 			}
 			/**
@@ -307,7 +254,7 @@ public final class Decoder extends LogicElement implements Timed {
 			 * @param o The new orientation.
 			 */
 			@Override
-			protected void setOrientation(Element el, JLSInfo.Orientation o) {
+			protected void setOrientation(Element el, Orientation o) {
 				((Decoder)el).orientation = o;
 			}
 		}
@@ -357,12 +304,12 @@ public final class Decoder extends LogicElement implements Timed {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
-		info.setText(bits + " to " + (1<<bits) + " decoder");
+		return bits + " to " + (1<<bits) + " decoder";
 
 	} // end of showInfo method
 
@@ -424,14 +371,14 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(JLSInfo.Orientation direction, Graphics g)
+	public void rotate(Orientation direction, jls.core.TextMetrics g)
 	{
-		if(direction == JLSInfo.Orientation.LEFT)
+		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
 			
 		}
-		else if(direction == JLSInfo.Orientation.RIGHT)
+		else if(direction == Orientation.RIGHT)
 		{
 			orientation = orientation.cw();
 		}
@@ -447,7 +394,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(Graphics g)
+	public void flip(jls.core.TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -467,124 +414,6 @@ public final class Decoder extends LogicElement implements Timed {
 		return !(inputs.get(0).isAttached() || outputs.get(0).isAttached());
 	}
 
-	/**
-	 * Dialog box to set bits.
-	 */
-	@SuppressWarnings("serial")
-	private class DecoderCreate extends ElementDialog {
-
-		// properties
-		/** Text field for the number of input bits. */
-		private JTextField bitsField = new JTextField(defaultBits+"",10);
-		/** Pop-up numeric keypad attached to the bits field. */
-		private KeyPad bitsPad = new KeyPad(bitsField,10,defaultBits,this);
-		/** Selects input-on-the-left orientation (the default). */
-		private JRadioButton left = new JRadioButton("Left", true);
-		/** Selects input-on-the-right orientation. */
-		private JRadioButton right = new JRadioButton("Right");
-		/** Selects input-on-top orientation. */
-		private JRadioButton up = new JRadioButton("Up");
-		/** Selects input-on-the-bottom orientation. */
-		private JRadioButton down = new JRadioButton("Down");
-		
-		/**
-		 * Set up create dialog window.
-		 * 
-		 */
-		private DecoderCreate() {
-			
-			// set up window title
-			super("Create Decoder","decoder");
-
-			// set not cancelled
-			cancelled = false;
-
-			// set up window
-			Container window = getContentPane();
-
-			// set up inputs
-			JPanel info = new JPanel(new BorderLayout());
-			JLabel bits = new JLabel("Input Bits: ",SwingConstants.RIGHT);
-			info.add(bits,BorderLayout.WEST);
-			info.add(bitsField,BorderLayout.CENTER);
-			info.add(bitsPad,BorderLayout.EAST);
-			JPanel orient = new JPanel(new GridLayout(3,3));
-			ButtonGroup gr = new ButtonGroup();
-			gr.add(left);
-			gr.add(right);
-			gr.add(down);
-			gr.add(up);
-			orient.add(new JLabel(""));
-			orient.add(up);
-			orient.add(new JLabel(""));
-			orient.add(left);
-			orient.add(new JLabel(""));
-			orient.add(right);
-			orient.add(new JLabel(""));
-			orient.add(down);
-			orient.add(new JLabel(""));
-			window.add(info);
-			JLabel olbl = new JLabel("Orientation");
-			olbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-			window.add(olbl);
-			window.add(orient);
-
-			confirmOnEnter(bitsField);
-			finishDialog();
-		} // end of constructor
-
-		/**
-		 * Validate the form and create the decoder.
-		 */
-		@Override
-		protected void validateAndAccept() {
-
-			try {
-				bits = Integer.parseInt(bitsField.getText());
-			}
-			catch (NumberFormatException ex) {
-				reject("Value not numeric, try again");
-				return;
-			}
-			if (bits < 1) {
-				reject("Must be at least 1 bit");
-				return;
-			}
-			if (bits >= 32) {
-				reject("Must be less than 32 bits");
-				return;
-			}
-			if(left.isSelected())
-			{
-				orientation = JLSInfo.Orientation.LEFT;
-			}
-			else if(right.isSelected())
-			{
-				orientation = JLSInfo.Orientation.RIGHT;
-			}
-			else if(up.isSelected())
-			{
-				orientation = JLSInfo.Orientation.UP;
-			}
-			else if(down.isSelected())
-			{
-				orientation = JLSInfo.Orientation.DOWN;
-			}
-			dispose();
-		} // end of validateAndAccept method
-
-		/**
-		 * Cancel this gate.
-		 */
-		@Override
-		protected void cancelDialog() {
-
-			cancelled = true;
-			dispose();
-		} // end of cancelDialog method
-
-	} // end of DecoderCreate class
-	
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------

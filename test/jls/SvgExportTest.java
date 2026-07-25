@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
+import jls.edit.CircuitRenderer;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -71,8 +72,8 @@ class SvgExportTest {
 		Circuit circuit = load();
 		Path first = tmp.resolve("first.svg");
 		Path second = tmp.resolve("second.svg");
-		circuit.exportImage(first.toString());
-		circuit.exportImage(second.toString());
+		CircuitRenderer.of(circuit).exportImage(first.toString());
+		CircuitRenderer.of(circuit).exportImage(second.toString());
 		assertArrayEquals(Files.readAllBytes(first),
 				Files.readAllBytes(second),
 				"two exports of the same circuit must be byte-identical");
@@ -85,7 +86,7 @@ class SvgExportTest {
 		// raise the odds of actually getting a different order.
 		for (int i = 0; i < 4; i++) {
 			Path fresh = tmp.resolve("fresh" + i + ".svg");
-			load().exportImage(fresh.toString());
+			CircuitRenderer.of(load()).exportImage(fresh.toString());
 			assertArrayEquals(Files.readAllBytes(first),
 					Files.readAllBytes(fresh),
 					"a fresh load of the same circuit must export the"
@@ -97,7 +98,7 @@ class SvgExportTest {
 	void theDocumentIsAnSvgImageWithDrawnContent() throws Exception {
 		Circuit circuit = load();
 		Path out = tmp.resolve("out.svg");
-		circuit.exportImage(out.toString());
+		CircuitRenderer.of(circuit).exportImage(out.toString());
 		String svg = Files.readString(out, StandardCharsets.UTF_8);
 		assertTrue(svg.startsWith("<?xml"), "missing XML prolog");
 		assertTrue(svg.contains("<svg"), "no <svg element");

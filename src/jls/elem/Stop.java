@@ -1,11 +1,9 @@
 package jls.elem;
 
+import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
-import jls.util.Placement;
-import java.awt.*;
 import java.io.*;
-import javax.swing.*;
 import java.util.*;
 
 /**
@@ -28,38 +26,15 @@ public final class Stop extends LogicElement {
 	
 
 	/**
-	 * Set up element.
-	 * 
-	 * @param g The Graphics object to use to initialize sizes
-	 * @param editWindow The editor window this constant will be displayed in.
-	 * @param x The x-coordinate of the last known mouse position.
-	 * @param y The y-coordinate of the last known mouse position.
-	 * 
-	 * @return false if cancelled, true otherwise.
-	 */
-	@Override
-	public boolean setup(Graphics g, JPanel editWindow, int x, int y) {
-		
-		// complete initialization
-		init(g);
-		
-		// save position
-		Point p = Placement.dropPoint(editWindow,x,y,width,height);
-		super.setXY(p.x,p.y);
-		
-		return true;
-	} // end of setup method
-	
-	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(Graphics g) {
+	public void init(jls.core.TextMetrics g) {
 		
 		// set up size
-		int s = JLSInfo.spacing;
+		int s = Geometry.SPACING;
 		width = s * 2;
 		height = width;
 		
@@ -71,34 +46,30 @@ public final class Stop extends LogicElement {
 	} // end of init method
 
 	/**
-	 * Draw this gate.
-	 * 
-	 * @param g The graphics object to draw with.
+	 * Prune unattached inputs, leaving only the attached ones drawn (or all
+	 * four when none are attached). Formerly the leading, model-mutating
+	 * step of {@code draw}; the GUI-side renderer runs it before drawing.
 	 */
-	@Override
-	public void draw(Graphics g) {
-		
-		int s = JLSInfo.spacing;
-		
-		// draw context
-		super.draw(g);
-		
+	public void pruneDetachedInputs() {
+
+		int s = Geometry.SPACING;
+
 		// draw only the attached inputs, or all four if none attached
-		
+
 		// get unattached inputs
 		Vector<Input>detach = new Vector<Input>(4);
 		for (Input input : inputs) {
 			if (!input.isAttached())
 				detach.add(input);
 		}
-		
+
 		// if there are one, two or three unattached ones
 		int count = detach.size();
 		if (count > 0 && count < 4) {
-			
+
 			// remove unattached inputs
 			inputs.removeAll(detach);
-			
+
 			// if no inputs left, put all four back
 			if (inputs.size() == 0) {
 				inputs.add(new Input("input0",this,0,s,1));
@@ -107,43 +78,8 @@ public final class Stop extends LogicElement {
 				inputs.add(new Input("input3",this,2*s,s,1));
 			}
 		}
-		
-		// draw stop sign
-		Polygon sign = new Polygon();
-		int h = s/2;
-		int d = s*2;
-		sign.addPoint(0,h);
-		sign.addPoint(h,0);
-		sign.addPoint(s+h,0);
-		sign.addPoint(d,h);
-		sign.addPoint(d,s+h);
-		sign.addPoint(s+h,d);
-		sign.addPoint(h,d);
-		sign.addPoint(0,s+h);
-		sign.translate(x,y);
-		g.setColor(Color.black);
-		g.drawPolygon(sign);
-		
-		// draw inputs
-		for (Input input : inputs) {
-			input.draw(g);
-		}
-		
-		// draw "stop"
-		Font f = g.getFont();
-		Font nf = f.deriveFont((float)(f.getSize()*0.7));
-		g.setFont(nf);
-		FontMetrics fm = g.getFontMetrics();
-		int w = fm.stringWidth("STOP");
-		int ascent = fm.getAscent();
-		int descent = fm.getDescent();
-		int sh = ascent + descent;
-		g.setColor(Color.black);
-		g.drawString("STOP",x+(width-w)/2+1,y+s-sh/2+ascent);
-		g.setFont(f);
-		
-	} // end of draw method
-	
+	} // end of pruneDetachedInputs method
+
 
 	/**
 	 * Copy this element.
@@ -175,12 +111,12 @@ public final class Stop extends LogicElement {
 	/**
 	 * Display info about this element.
 	 * 
-	 * @param info The JLabel to display with.
+	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
-	public void showInfo(JLabel info) {
+	public String infoText() {
 		
-		info.setText("stop simulation");
+		return "stop simulation";
 	} // end of showInfo method
 	
 

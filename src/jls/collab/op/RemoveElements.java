@@ -25,12 +25,12 @@ import jls.elem.WireEnd;
  * fallback.
  *
  * The group must be removable without touching wiring: wires and wire
- * ends are not removable here (they get their own op kinds), and an
- * element with a wire attached to any of its puts is rejected, because
- * detaching would mutate wire state this op's inverse could not
- * restore. The delete gesture's wired selections keep their inline path
- * (under the snapshot-undo safety net) until the wiring vocabulary
- * lands.
+ * ends are not removable here (they travel through {@link RemoveWire}),
+ * and an element with a wire attached to any of its puts is rejected,
+ * because detaching would mutate wire state this op's inverse could not
+ * restore. A wired selection is expressed as one {@link RemoveWire} per
+ * attached net followed by this op over the then-unwired elements - the
+ * two kinds compose, and each keeps its exact inverse.
  *
  * Removing a jump start cascades to its same-name jump ends in the
  * editor, so validation requires the group to be closed under that

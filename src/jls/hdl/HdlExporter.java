@@ -2,7 +2,6 @@ package jls.hdl;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -97,25 +96,23 @@ public final class HdlExporter {
 	private HdlExporter() {
 	} // not instantiable
 
-	/** What the exporter produced: text plus non-fatal warnings. */
-	public static final class Result {
-
-		/** The rendered target-language text. */
-		public final String text;
-		/** Non-fatal messages produced during the walk, unmodifiable. */
-		public final List<String> warnings;
+	/**
+	 * What the exporter produced (a record, issue #94).
+	 *
+	 * @param text The rendered target-language text.
+	 * @param warnings Non-fatal messages produced during the walk;
+	 *                 copied and made immutable.
+	 */
+	public record Result(String text, List<String> warnings) {
 
 		/**
-		 * Captures one export's output.
-		 * @param text The rendered target-language text.
-		 * @param warnings Non-fatal messages; copied and made immutable.
+		 * Pins the warnings to an immutable copy, so the record stays a
+		 * value no matter what list the exporter handed in.
 		 */
-		Result(String text, List<String> warnings) {
-			this.text = text;
-			this.warnings = Collections.unmodifiableList(
-					new ArrayList<String>(warnings));
+		public Result {
+			warnings = List.copyOf(warnings);
 		}
-	} // end of Result class
+	} // end of Result record
 
 	/**
 	 * Export a loaded circuit through the given emitter.

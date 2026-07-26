@@ -32,78 +32,52 @@ public final class HdlModel {
 		OUTPUT
 	} // end of Direction enum
 
-	/** One module port. */
-	public static final class Port {
+	/**
+	 * One module port (a record, issue #94).
+	 *
+	 * @param name Legalized HDL identifier for the port.
+	 * @param direction Whether the port is an input or an output.
+	 * @param bits Width of the port in bits.
+	 * @param comment Human context for the port (element kind, width).
+	 */
+	public record Port(String name, Direction direction, int bits,
+			String comment) {
+	} // end of Port record
 
-		/** Legalized HDL identifier for the port. */
-		public final String name;
-		/** Whether the port is an input or an output. */
-		public final Direction direction;
-		/** Width of the port in bits. */
-		public final int bits;
-		/** Human context for the port (element kind, width), or null. */
-		public final String comment;
-
-		/**
-		 * Builds an immutable port descriptor.
-		 * @param name legalized HDL identifier for the port
-		 * @param direction whether the port is an input or an output
-		 * @param bits width of the port in bits
-		 * @param comment human context (element kind, width), or null
-		 */
-		Port(String name, Direction direction, int bits, String comment) {
-			this.name = name;
-			this.direction = direction;
-			this.bits = bits;
-			this.comment = comment;
-		}
-	} // end of Port class
-
-	/** One internal net (a wire that is not a port). */
-	public static final class Net {
-
-		/** Legalized HDL identifier for the net. */
-		public final String name;
-		/** Width of the net in bits. */
-		public final int bits;
-
-		/**
-		 * Builds an immutable internal-net descriptor.
-		 * @param name legalized HDL identifier for the net
-		 * @param bits width of the net in bits
-		 */
-		Net(String name, int bits) {
-			this.name = name;
-			this.bits = bits;
-		}
-	} // end of Net class
+	/**
+	 * One internal net (a wire that is not a port) — a record, issue #94.
+	 *
+	 * @param name Legalized HDL identifier for the net.
+	 * @param bits Width of the net in bits.
+	 */
+	public record Net(String name, int bits) {
+	} // end of Net record
 
 	/**
 	 * A statement operand: either a reference to a whole net (or port)
 	 * or a literal value of a known width. Unattached element inputs
 	 * become zero literals, matching JLS's absent-inputs-read-as-0
-	 * simulation rule (docs/simulation-semantics.md).
+	 * simulation rule (docs/simulation-semantics.md). A record (issue
+	 * #94); exactly one of {@code netName}/{@code literalValue} is
+	 * non-null, so build instances through {@link #net} or
+	 * {@link #literal}.
+	 *
+	 * @param netName Referenced net name; null for literals.
+	 * @param literalValue Literal value; null for net references.
+	 * @param bits Operand width in bits.
 	 */
-	public static final class Operand {
-
-		/** Referenced net name; null for literals. */
-		private final @Nullable String net;
-		/** Literal value; null for net references. */
-		private final @Nullable BigInteger literal;
-		/** Operand width in bits. */
-		private final int bits;
+	public record Operand(@Nullable String netName,
+			@Nullable BigInteger literalValue, int bits) {
 
 		/**
-		 * Private canonical constructor; use {@link #net} or
-		 * {@link #literal}. Exactly one of net/literal is non-null.
-		 * @param net referenced net name, or null for a literal
-		 * @param literal literal value, or null for a net reference
-		 * @param bits operand width in bits
+		 * Rejects the component mixes the factories never produce
+		 * (both null, or both non-null).
 		 */
-		private Operand(@Nullable String net, @Nullable BigInteger literal, int bits) {
-			this.net = net;
-			this.literal = literal;
-			this.bits = bits;
+		public Operand {
+			if ((netName == null) == (literalValue == null)) {
+				throw new IllegalArgumentException(
+						"exactly one of netName/literalValue must be non-null");
+			}
 		}
 
 		/**
@@ -131,33 +105,9 @@ public final class HdlModel {
 		 * @return true if this operand references a net, false if literal
 		 */
 		public boolean isNet() {
-			return net != null;
+			return netName != null;
 		}
-
-		/**
-		 * Gives the net this operand references, if any.
-		 * @return the referenced net name, or null for a literal
-		 */
-		public @Nullable String netName() {
-			return net;
-		}
-
-		/**
-		 * Gives the constant this operand carries, if any.
-		 * @return the literal value, or null for a net reference
-		 */
-		public @Nullable BigInteger literalValue() {
-			return literal;
-		}
-
-		/**
-		 * Gives the operand's width.
-		 * @return operand width in bits
-		 */
-		public int bits() {
-			return bits;
-		}
-	} // end of Operand class
+	} // end of Operand record
 
 	/** Base of all statements: one per exported element. */
 	public abstract static class Statement {

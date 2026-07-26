@@ -22,8 +22,8 @@ class VhdlEmitterPolicyTest {
 
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VhdlEmitter());
-		VhdlStructure.assertSane(result.text);
-		return result.text;
+		VhdlStructure.assertSane(result.text());
+		return result.text();
 	}
 
 	@Test
@@ -140,8 +140,8 @@ class VhdlEmitterPolicyTest {
 				HdlExporter.export(cb.load(), new VerilogEmitter());
 		HdlExporter.Result vhdl =
 				HdlExporter.export(cb.load(), new VhdlEmitter());
-		org.junit.jupiter.api.Assertions.assertEquals(verilog.warnings,
-				vhdl.warnings,
+		org.junit.jupiter.api.Assertions.assertEquals(verilog.warnings(),
+				vhdl.warnings(),
 				"one walk, one policy: warnings must match across languages");
 	}
 

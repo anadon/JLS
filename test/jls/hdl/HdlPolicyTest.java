@@ -29,15 +29,15 @@ class HdlPolicyTest {
 
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VerilogEmitter());
-		assertEquals(1, result.warnings.size(), "one skip warning expected");
-		assertTrue(result.warnings.get(0).contains("Display"),
-				result.warnings.get(0));
-		assertTrue(result.warnings.get(0).contains("skipped"),
-				result.warnings.get(0));
-		assertFalse(result.text.contains("Display"),
+		assertEquals(1, result.warnings().size(), "one skip warning expected");
+		assertTrue(result.warnings().get(0).contains("Display"),
+				result.warnings().get(0));
+		assertTrue(result.warnings().get(0).contains("skipped"),
+				result.warnings().get(0));
+		assertFalse(result.text().contains("Display"),
 				"a skipped element must leave no trace in the output");
 		// the rest of the circuit still exports
-		assertTrue(result.text.contains("assign y = a;"), result.text);
+		assertTrue(result.text().contains("assign y = a;"), result.text());
 	}
 
 	@Test
@@ -52,7 +52,7 @@ class HdlPolicyTest {
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VerilogEmitter());
 		List<String> kinds = new ArrayList<String>();
-		for (String warning : result.warnings) {
+		for (String warning : result.warnings()) {
 			kinds.add(warning.split(" ")[0]);
 		}
 		assertEquals(List.of("SigGen", "Stop"), kinds,
@@ -115,13 +115,13 @@ class HdlPolicyTest {
 
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VerilogEmitter());
-		VerilogStructure.assertSane(result.text);
-		assertTrue(result.text.contains("select unattached, reads 0"),
-				result.text);
-		assertTrue(result.text.contains("assign net_2 = a;"), result.text);
-		assertTrue(result.text.contains("assign y = net_2;"), result.text);
-		assertFalse(result.text.contains("case"),
-				"a folded mux must not emit a case: " + result.text);
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.text().contains("select unattached, reads 0"),
+				result.text());
+		assertTrue(result.text().contains("assign net_2 = a;"), result.text());
+		assertTrue(result.text().contains("assign y = net_2;"), result.text());
+		assertFalse(result.text().contains("case"),
+				"a folded mux must not emit a case: " + result.text());
 	}
 
 	@Test
@@ -136,12 +136,12 @@ class HdlPolicyTest {
 
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VerilogEmitter());
-		VerilogStructure.assertSane(result.text);
-		assertTrue(result.text.contains("input unattached, reads 0"),
-				result.text);
-		assertTrue(result.text.contains("assign net_0 = 2'h1;"),
-				result.text);
-		assertTrue(result.text.contains("assign y = net_0;"), result.text);
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.text().contains("input unattached, reads 0"),
+				result.text());
+		assertTrue(result.text().contains("assign net_0 = 2'h1;"),
+				result.text());
+		assertTrue(result.text().contains("assign y = net_0;"), result.text());
 	}
 
 	@Test
@@ -165,7 +165,7 @@ class HdlPolicyTest {
 		HdlModel model = HdlExporter.buildModel(cb.load());
 		assertEquals(1, model.nets().size(),
 				"the three jump-aliased wire nets must fuse into one");
-		assertEquals("mid", model.nets().get(0).name,
+		assertEquals("mid", model.nets().get(0).name(),
 				"the fused net carries the jump name");
 
 		String text = new VerilogEmitter().emit(model);
@@ -184,10 +184,10 @@ class HdlPolicyTest {
 
 		HdlExporter.Result result =
 				HdlExporter.export(cb.load(), new VerilogEmitter());
-		assertEquals(1, result.warnings.size());
-		assertTrue(result.warnings.get(0).contains("OutputPin \"y\""),
-				result.warnings.get(0));
-		assertFalse(result.text.contains("assign y"), result.text);
+		assertEquals(1, result.warnings().size());
+		assertTrue(result.warnings().get(0).contains("OutputPin \"y\""),
+				result.warnings().get(0));
+		assertFalse(result.text().contains("assign y"), result.text());
 	}
 
 } // end of HdlPolicyTest class

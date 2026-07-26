@@ -125,15 +125,15 @@ public final class VhdlEmitter implements HdlEmitter {
 			out.append("  port (\n");
 			for (int p = 0; p < ports.size(); p += 1) {
 				HdlModel.Port port = ports.get(p);
-				out.append("    ").append(names.of(port.name)).append(" : ")
-						.append(port.direction == HdlModel.Direction.INPUT
+				out.append("    ").append(names.of(port.name())).append(" : ")
+						.append(port.direction() == HdlModel.Direction.INPUT
 								? "in " : "out ")
-						.append(type(port.bits));
+						.append(type(port.bits()));
 				if (p < ports.size() - 1) {
 					out.append(';');
 				}
-				if (port.comment != null) {
-					out.append("  -- ").append(port.comment);
+				if (port.comment() != null) {
+					out.append("  -- ").append(port.comment());
 				}
 				out.append('\n');
 			}
@@ -157,8 +157,8 @@ public final class VhdlEmitter implements HdlEmitter {
 		out.append("architecture structural of ").append(names.moduleName)
 				.append(" is\n");
 		for (HdlModel.Net net : model.nets()) {
-			out.append("  signal ").append(names.of(net.name)).append(" : ")
-					.append(type(net.bits)).append(";\n");
+			out.append("  signal ").append(names.of(net.name())).append(" : ")
+					.append(type(net.bits())).append(";\n");
 		}
 		out.append(declarations);
 		out.append("begin\n");
@@ -727,10 +727,10 @@ public final class VhdlEmitter implements HdlEmitter {
 
 			moduleName = unique(sanitize(model.moduleName));
 			for (HdlModel.Port port : model.ports()) {
-				claim(port.name);
+				claim(port.name());
 			}
 			for (HdlModel.Net net : model.nets()) {
-				claim(net.name);
+				claim(net.name());
 			}
 			for (HdlModel.Statement statement : model.statements()) {
 				if (statement instanceof HdlModel.RegisterStatement) {

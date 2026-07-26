@@ -383,7 +383,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.exit(1);
 				return; // unreachable; keeps result definitely assigned
 			}
-			for (String warning : result.warnings) {
+			for (String warning : result.warnings()) {
 				System.err.println("jls: warning: " + warning);
 			}
 
@@ -392,7 +392,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 			Path target = Path.of(exportFile);
 			Path temp = Path.of(exportFile + ".tmp");
 			try {
-				java.nio.file.Files.writeString(temp, result.text,
+				java.nio.file.Files.writeString(temp, result.text(),
 						StandardCharsets.UTF_8);
 				try {
 					java.nio.file.Files.move(temp, target,

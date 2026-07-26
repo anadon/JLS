@@ -91,7 +91,7 @@ public final class VerilogEmitter implements HdlEmitter {
 		out.append("module ").append(model.moduleName);
 		List<String> portNames = new ArrayList<String>();
 		for (HdlModel.Port port : model.ports()) {
-			portNames.add(port.name);
+			portNames.add(port.name());
 		}
 		if (!portNames.isEmpty()) {
 			out.append(" (").append(String.join(", ", portNames))
@@ -109,12 +109,12 @@ public final class VerilogEmitter implements HdlEmitter {
 
 		for (HdlModel.Port port : model.ports()) {
 			out.append("  ").append(
-					port.direction == HdlModel.Direction.INPUT
+					port.direction() == HdlModel.Direction.INPUT
 							? "input" : "output")
-					.append(range(port.bits)).append(' ').append(port.name)
+					.append(range(port.bits())).append(' ').append(port.name())
 					.append(';');
-			if (port.comment != null) {
-				out.append("  // ").append(port.comment);
+			if (port.comment() != null) {
+				out.append("  // ").append(port.comment());
 			}
 			out.append('\n');
 		}
@@ -133,8 +133,8 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 		out.append('\n');
 		for (HdlModel.Net net : model.nets()) {
-			out.append("  wire").append(range(net.bits)).append(' ')
-					.append(net.name).append(";\n");
+			out.append("  wire").append(range(net.bits())).append(' ')
+					.append(net.name()).append(";\n");
 		}
 	} // end of netDeclarations method
 

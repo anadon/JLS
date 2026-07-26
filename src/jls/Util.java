@@ -1,5 +1,6 @@
 package jls;
 
+import jls.elem.Put;
 import jls.elem.*;
 import java.awt.Point;
 import java.math.BigInteger;
@@ -56,15 +57,17 @@ public final class Util {
 				minx = x;
 			if (y < miny)
 				miny = y;
-			Element copy = el.copy();
-			to.addElement(copy);
+			// every non-wire element (wires/ends are skipped above and
+			// copied separately) produces a non-null copy
+			to.addElement(Objects.requireNonNull(el.copy()));
 			
 			// copy all attached wire ends (since they don't show up in
 			// the selected set)
 			for (Put p : el.getAllPuts()) {
 				if (!p.isAttached())
 					continue;
-				WireEnd oldEnd = p.getWireEnd();
+				WireEnd oldEnd = Objects.requireNonNull(p.getWireEnd(),
+						"attached put has no wire end");
 				WireEnd newEnd = oldEnd.copy();
 				to.addElement(newEnd);
 				newEnd.setPut(p.getCopy());
@@ -166,9 +169,10 @@ public final class Util {
 				visited.add(vend);
 				net.add(vend);
 				vend.setNet(net);
-				if (vend.isAttached()) {
-					net.setBits(vend.getPut().getBits());
-					if (vend.getPut() instanceof Output) {
+				Put vendPut = vend.getPut();
+				if (vendPut != null) {
+					net.setBits(vendPut.getBits());
+					if (vendPut instanceof Output) {
 						net.setInput();
 					}
 				}

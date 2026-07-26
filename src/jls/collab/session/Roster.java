@@ -1,5 +1,6 @@
 package jls.collab.session;
 
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,7 +64,7 @@ public final class Roster {
 			new TreeMap<PeerId, String>();
 
 	/** Folded state: the current token holder; null while unheld. */
-	private PeerId tokenHolder;
+	private @Nullable PeerId tokenHolder;
 
 	/** Folded state: the entries that won their epoch and applied. */
 	private final Set<SessionEntry> appliedEntries =
@@ -267,7 +268,7 @@ public final class Roster {
 	 *
 	 * @return the name, or null if the peer is not a member.
 	 */
-	public String memberName(PeerId peer) {
+	public @Nullable String memberName(PeerId peer) {
 
 		return members.get(peer);
 	} // end of memberName method
@@ -279,7 +280,7 @@ public final class Roster {
 	 * @return the holder, or null while the token is unheld (after the
 	 *         holder left or was ejected, before anyone claims it).
 	 */
-	public PeerId tokenHolder() {
+	public @Nullable PeerId tokenHolder() {
 
 		return tokenHolder;
 	} // end of tokenHolder method

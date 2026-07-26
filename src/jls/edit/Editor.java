@@ -273,12 +273,15 @@ public final class Editor extends SimpleEditor {
 			Circuit circ = otherEditor.getCircuit();
 			while (circ.isImported() && circ != circuit) {
 				SubCircuit sub = circ.getSubElement();
+				if (sub == null) {
+					throw new IllegalStateException(
+							"imported circuit has no subcircuit element");
+				}
 				circ = sub.getCircuit();
 			}
 
 			// if it edits a subcircuit (to any depth) of this one, close it too
 			if (circuit == circ) {
-				otherEditor.circuit = null;
 				tabbedParent.remove(edit);
 			}
 		}
@@ -288,6 +291,10 @@ public final class Editor extends SimpleEditor {
 
 			// enable editing for enclosing circuit
 			Element s = circuit.getSubElement();
+			if (s == null) {
+				throw new IllegalStateException(
+						"imported circuit has no subcircuit element");
+			}
 			Circuit c = s.getCircuit();
 			Editor ed = Editors.of(c);
 			if (ed != null) {

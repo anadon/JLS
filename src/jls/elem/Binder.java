@@ -32,7 +32,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		// set up height and width
 		super.init(g);
@@ -103,7 +103,7 @@ public final class Binder extends Group implements TriProp {
 	@Override
 	public Element copy() {
 		
-		Binder it = new Binder(circuit);
+		Binder it = new Binder(getCircuit());
 		super.copy(it);
 		return it;
 	} // end of copy method
@@ -147,8 +147,13 @@ public final class Binder extends Group implements TriProp {
 		// see if all attached inputs are tri-state
 		int tri = 0;
 		for (Input input : inputs) {
-			if (input.isAttached() && input.getWireEnd().isTriState()) {
-				tri += 1;
+			if (input.isAttached()) {
+				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
+				if (end.isTriState()) {
+					tri += 1;
+				}
 			}
 		}
 		
@@ -178,7 +183,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.rotate(direction, g);
 		init(g);
@@ -189,7 +194,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.flip(g);
 		init(g);
@@ -224,7 +229,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// create output value
 		BitSet newValue = new BitSet(bits);

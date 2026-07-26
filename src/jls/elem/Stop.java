@@ -31,7 +31,7 @@ public final class Stop extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		// set up size
 		int s = Geometry.SPACING;
@@ -87,7 +87,7 @@ public final class Stop extends LogicElement {
 	@Override
 	public Element copy() {
 		
-		Stop it = new Stop(circuit);
+		Stop it = new Stop(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -143,7 +143,7 @@ public final class Stop extends LogicElement {
 	 * @param todo Should be null.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// find the attached input
 		for (Input input : inputs) {

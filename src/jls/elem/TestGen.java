@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import jls.*;
 import jls.sim.*;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 import java.util.*;
 
@@ -18,8 +20,8 @@ import java.util.*;
 public final class TestGen extends SigSim {
 	
 	// properties
-	/** The name of the file to read test inputs from. */
-	private String file = null;
+	/** The name of the file to read test inputs from; null until {@link #setFile(String)} supplies one. */
+	private @Nullable String file = null;
 	
 	/**
 	 * Create new element.
@@ -37,7 +39,7 @@ public final class TestGen extends SigSim {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 	} // end of init method
 	

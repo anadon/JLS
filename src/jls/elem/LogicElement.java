@@ -7,6 +7,8 @@ import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Superclass for active elements.
  * Contains common data and methods.
@@ -157,6 +159,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			input.savePosition();
 			if (input.isAttached()) {
 				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
 				end.savePosition();
 			}
 		}
@@ -164,6 +168,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			output.savePosition();
 			if (output.isAttached()) {
 				WireEnd end = output.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached output has no wire end");
 				end.savePosition();
 			}
 		}
@@ -188,6 +194,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			input.restorePosition();
 			if (input.isAttached()) {
 				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
 				end.restorePosition();
 			}
 		}
@@ -195,6 +203,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			output.restorePosition();
 			if (output.isAttached()) {
 				WireEnd end = output.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached output has no wire end");
 				end.restorePosition();
 			}
 		}
@@ -215,12 +225,16 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		for (Input input : inputs) {
 			if (input.isAttached()) {
 				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
 				end.fixPosition();
 			}
 		}
 		for (Output output : outputs) {
 			if (output.isAttached()) {
 				WireEnd end = output.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached output has no wire end");
 				end.fixPosition();
 			}
 		}
@@ -239,6 +253,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		for (Put p : inputs) {
 			if (p.isAttached()) {
 				WireEnd end = p.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached put has no wire end");
 				end.setPut(null);
 				end.getNet().recheck();
 			}
@@ -246,6 +262,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		for (Put p : outputs) {
 			if (p.isAttached()) {
 				WireEnd end = p.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached put has no wire end");
 				end.setPut(null);
 				end.getNet().recheck();
 			}
@@ -265,7 +283,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * or null if not close to any in this element.
 	 */
 	@Override
-	public Put getPut(int x, int y) {
+	public @Nullable Put getPut(int x, int y) {
 		
 		for (Input input : inputs) {
 			//input.setTouching(false);
@@ -353,7 +371,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * @jls.testedby jls.ui.CircuitAssert#assertPutBits()
 	 */
 	@Override
-	public Put getPut(String name) {
+	public @Nullable Put getPut(String name) {
 		
 		for (Put p : inputs) {
 			if (name.equals(p.getName())) {
@@ -370,36 +388,42 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	
 	/**
 	 * Get input by name.
-	 * 
+	 *
 	 * @param name The name of the input.
-	 * 
-	 * @return the input, or null if no such input.
+	 *
+	 * @return the input.
+	 *
+	 * @throws IllegalStateException if this element has no input with the
+	 * given name (callers only ask for inputs they created).
 	 */
 	public Input getInput(String name) {
-		
+
 		for (Input p : inputs) {
 			if (name.equals(p.getName())) {
 				return p;
 			}
 		}
-		return null;
+		throw new IllegalStateException("no input named " + name);
 	} // end of getInput method
 
 	/**
 	 * Get ouput by name.
-	 * 
+	 *
 	 * @param name The name of the output.
-	 * 
-	 * @return the output, or null if no such output.
+	 *
+	 * @return the output.
+	 *
+	 * @throws IllegalStateException if this element has no output with the
+	 * given name (callers only ask for outputs they created).
 	 */
 	public Output getOutput(String name) {
-		
+
 		for (Output p : outputs) {
 			if (name.equals(p.getName())) {
 				return p;
 			}
 		}
-		return null;
+		throw new IllegalStateException("no output named " + name);
 	} // end of getOutput method
 
 	/**
@@ -411,6 +435,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		for (Input input : inputs) {
 			if (input.isAttached()) {
 				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
 				end.setPut(null);
 				end.getNet().recheck();
 			}
@@ -418,6 +444,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		for (Output output : outputs) {
 			if (output.isAttached()) {
 				WireEnd end = output.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached output has no wire end");
 				end.setPut(null);
 				end.getNet().recheck();
 			}
@@ -478,8 +506,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * @jls.testedby jls.ui.CircuitAssert#describe()
 	 */
 	@Override
-	public String getName() {
-		
+	public @Nullable String getName() {
+
 		return "";
 	} // end of getName method
 	
@@ -494,9 +522,16 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		
 		Circuit circ = getCircuit();
 		String name = getName();
+		if (name == null) {
+			name = "";
+		}
 		while (circ.isImported()) {
-			name = circ.getSubElement().getName() + "." + name;
-			circ = circ.getSubElement().getCircuit();
+			SubCircuit sub = circ.getSubElement();
+			if (sub == null)
+				throw new IllegalStateException(
+						"imported circuit has no subcircuit element");
+			name = sub.getName() + "." + name;
+			circ = sub.getCircuit();
 		}
 		return name;
 	} // end of getFullName method
@@ -506,7 +541,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * Overridden by most elements.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		throw new UnsupportedOperationException("no react");
 	} // end of react method
@@ -539,8 +574,8 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 *
 	 * @throws UnsupportedOperationException always, on the base element.
 	 */
-	public BitSet getCurrentValue() {
-		
+	public @Nullable BitSet getCurrentValue() {
+
 		throw new UnsupportedOperationException("no getCurrentValue");
 	} // end of getCurrentValue method
 	

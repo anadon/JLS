@@ -4,6 +4,8 @@ import jls.core.Geometry;
 import jls.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Superclass for input and output points.
  * Contains common data and methods.
@@ -14,10 +16,12 @@ public abstract sealed class Put
 		permits Input, Output {
 
 	// properties
-	/** The name of this put. */
-	protected String name;				// name
-	/** The element this put is a part of. */
-	protected LogicElement element;		// the element it is a part of
+	/** The name of this put; null for the invisible-input sentinel that
+	 * marks a wire end as internally attached (see SimpleEditor). */
+	protected @Nullable String name;	// name
+	/** The element this put is a part of; null for the invisible-input
+	 * sentinel that marks a wire end as internally attached. */
+	protected @Nullable LogicElement element;	// the element it is a part of
 	/** The x-coordinate of the center of this put relative to the element. */
 	protected int xr;					// x-coordinate of center relative to element
 	/** The y-coordinate of the center of this put relative to the element. */
@@ -31,9 +35,9 @@ public abstract sealed class Put
 	/** True if this put is touching a WireEnd. */
 	private boolean touching = false;	// touching a WireEnd?
 	/** The WireEnd this put is attached to, or null if unattached. */
-	private WireEnd wireEnd = null;		// the WireEnd this put attached to
-	/** The copy of this put, to help cut/paste. */
-	protected Put myCopy;				// to help cut/paste
+	private @Nullable WireEnd wireEnd = null;	// the WireEnd this put attached to
+	/** The copy of this put, to help cut/paste (null until copied). */
+	protected @Nullable Put myCopy;				// to help cut/paste
 	
 	/**
 	 * Create a new put.
@@ -46,7 +50,8 @@ public abstract sealed class Put
 	 * 		corner of the element this put is in.
 	 * @param bits The number of bits in this put.  0 implies arbitrary.
 	 */
-	public Put(String name, LogicElement element, int xr, int yr, int bits) {
+	public Put(@Nullable String name, @Nullable LogicElement element,
+			int xr, int yr, int bits) {
 		
 		this.name = name;
 		this.element = element;
@@ -75,10 +80,26 @@ public abstract sealed class Put
 	 * @jls.testedby jls.elem.GroupOrientationTest#puts()
 	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
-	public String getName() {
-		
+	public @Nullable String getName() {
+
 		return name;
 	} // end of getName method
+
+	/**
+	 * The element this put belongs to, asserted present. Positional and
+	 * geometric queries are never made on the invisible-input sentinel
+	 * (whose element is null), so a null here is a programming error.
+	 *
+	 * @return the owning element, never null.
+	 */
+	private LogicElement requireElement() {
+
+		if (element == null) {
+			throw new IllegalStateException(
+					"put has no element (invisible-input sentinel)");
+		}
+		return element;
+	} // end of requireElement method
 	
 	/**
 	 * Get put's x-coordinate.
@@ -91,8 +112,8 @@ public abstract sealed class Put
 	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getX() {
-		
-		return element.getX()+xr;
+
+		return requireElement().getX()+xr;
 	} // end of getX method
 	
 	/**
@@ -106,8 +127,8 @@ public abstract sealed class Put
 	 * @jls.testedby jls.elem.OrientationGeometryTest#describe()
 	 */
 	public int getY() {
-		
-		return element.getY()+yr;
+
+		return requireElement().getY()+yr;
 	} // end of getY method
 	
 	/**
@@ -130,7 +151,7 @@ public abstract sealed class Put
 	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
-	public LogicElement getElement() {
+	public @Nullable LogicElement getElement() {
 
 		return element;
 	} // end of getElement method
@@ -165,8 +186,8 @@ public abstract sealed class Put
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
-	public WireEnd getWireEnd() {
-		
+	public @Nullable WireEnd getWireEnd() {
+
 		return wireEnd;
 	} // end of getWireEnd method
 	
@@ -191,7 +212,7 @@ public abstract sealed class Put
 	 *
 	 * @param end The wire end it is to attach to, or null if detaching.
 	 */
-	public void setAttached(WireEnd end) {
+	public void setAttached(@Nullable WireEnd end) {
 
 		wireEnd = end;
 	} // end of setAttached method
@@ -203,7 +224,7 @@ public abstract sealed class Put
 	 *
 	 * @jls.testedby jls.CircuitLoadErrorTest#duplicateWireEndAttachmentIsRejected()
 	 */
-	public WireEnd getAttached() {
+	public @Nullable WireEnd getAttached() {
 
 		return wireEnd;
 	} // end of getAttached method
@@ -267,10 +288,10 @@ public abstract sealed class Put
 	 */
 	public boolean intersects(Put other) {
 		
-		int thisx = element.getX() + xr;
-		int thisy = element.getY() + yr;
-		int otherx = other.element.getX() + other.xr;
-		int othery = other.element.getY() + other.yr;
+		int thisx = requireElement().getX() + xr;
+		int thisy = requireElement().getY() + yr;
+		int otherx = other.requireElement().getX() + other.xr;
+		int othery = other.requireElement().getY() + other.yr;
 		if (this != other && thisx == otherx && thisy == othery) {
 			return true;
 		}
@@ -283,7 +304,9 @@ public abstract sealed class Put
 	 * @return the copy.
 	 */
 	public Put getCopy() {
-		
+
+		if (myCopy == null)
+			throw new IllegalStateException("put has not been copied");
 		return myCopy;
 	} // end of getCopy method
 	
@@ -291,7 +314,7 @@ public abstract sealed class Put
 // Simulation
 //-------------------------------------------------------------------------------
 		
-	/** The current simulated value of this put. */
-	protected BitSet currentValue;
+	/** The current simulated value of this put, or null for high-impedance (tri-state). */
+	protected @Nullable BitSet currentValue;
 	
 } // end of Put class

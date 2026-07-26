@@ -17,5 +17,12 @@
  * hierarchy instances, bit-level slices/concatenations, and width
  * mismatches. The File-&gt;Import UI, the progress/cancel surface, and
  * the wider cell coverage are later increments of the same issue.</p>
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.hdl.imp;
+
+import org.jspecify.annotations.NullMarked;

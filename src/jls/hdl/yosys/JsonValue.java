@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * An immutable JSON value with a strict parser, sized exactly to what
  * Yosys {@code write_json} emits (issue #61). JLS deliberately carries
@@ -54,15 +56,16 @@ public final class JsonValue {
 	 * {@code List<JsonValue>} for arrays, a {@code String}, a
 	 * {@code Long}, a {@code Boolean}, or null for the null literal.
 	 */
-	private final Object value;
+	private final @Nullable Object value;
 
 	/**
 	 * Creates a value; instances only come from the parser.
 	 *
 	 * @param kind Which kind of value this is.
-	 * @param value The payload for that kind.
+	 * @param value The payload for that kind, or null for the null
+	 * literal.
 	 */
-	private JsonValue(Kind kind, Object value) {
+	private JsonValue(Kind kind, @Nullable Object value) {
 
 		this.kind = kind;
 		this.value = value;
@@ -146,7 +149,7 @@ public final class JsonValue {
 					"not a JSON object: " + kind);
 		}
 		return Collections.unmodifiableMap(
-				(Map<String, JsonValue>) value);
+				(Map<String, JsonValue>) requirePayload());
 	} // end of asObject method
 
 	/**
@@ -163,7 +166,8 @@ public final class JsonValue {
 			throw new IllegalStateException(
 					"not a JSON array: " + kind);
 		}
-		return Collections.unmodifiableList((List<JsonValue>) value);
+		return Collections.unmodifiableList(
+				(List<JsonValue>) requirePayload());
 	} // end of asArray method
 
 	/**
@@ -179,7 +183,7 @@ public final class JsonValue {
 			throw new IllegalStateException(
 					"not a JSON string: " + kind);
 		}
-		return (String) value;
+		return (String) requirePayload();
 	} // end of asString method
 
 	/**
@@ -195,8 +199,28 @@ public final class JsonValue {
 			throw new IllegalStateException(
 					"not a JSON number: " + kind);
 		}
-		return ((Long) value).longValue();
+		return ((Long) requirePayload()).longValue();
 	} // end of asLong method
+
+	/**
+	 * The payload, which the caller's kind guard has just proven to be
+	 * present (only the null literal carries a null payload, and it has
+	 * no accessor).
+	 *
+	 * @return the non-null payload.
+	 *
+	 * @throws IllegalStateException if the payload is absent, which
+	 * signals a coding error rather than malformed input.
+	 */
+	private Object requirePayload() {
+
+		Object payload = value;
+		if (payload == null) {
+			throw new IllegalStateException(
+					"no payload for JSON " + kind);
+		}
+		return payload;
+	} // end of requirePayload method
 
 	/**
 	 * The recursive-descent parser. One instance parses one document;

@@ -6,6 +6,9 @@ import jls.core.GridSize;
 import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
+
+import org.jspecify.annotations.Nullable;
+
 import java.io.PrintWriter;
 import java.util.BitSet;
 
@@ -116,7 +119,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
 		// output orientation (#24); the selector side is independent of
@@ -324,7 +327,7 @@ public final class Mux extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		Mux it = new Mux(circuit);
+		Mux it = new Mux(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -420,7 +423,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		selectorOrientation = selectorOrientation.flipped();
 		inputs.clear();
@@ -436,7 +439,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -487,8 +490,11 @@ public final class Mux extends LogicElement implements Timed {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	/** The value scheduled to reach the output, to suppress redundant events. */
-	private BitSet toBeValue;
+	/**
+	 * The value scheduled to reach the output, to suppress redundant events.
+	 * Null before {@link #initSim(Simulator)} seeds it at simulation start.
+	 */
+	private @Nullable BitSet toBeValue;
 	
 	/**
 	 * Initialize this element by setting its output and to-be value to 0.
@@ -514,7 +520,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param todo Null if an input change, the new output value otherwise.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if an input has changed ...
 		if (todo == null) {

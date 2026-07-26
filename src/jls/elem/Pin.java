@@ -7,6 +7,8 @@ import jls.*;
 import java.io.*;
 import java.util.BitSet;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Superclass of input and output pins.
  * Contains common data and methods.
@@ -18,8 +20,11 @@ public abstract sealed class Pin extends LogicElement
 		permits InputPin, OutputPin {
 	
 	// saved properties
-	/** The name of this pin. */
-	protected String name;
+	/**
+	 * The name of this pin, or null until it is named by {@link #setName}
+	 * or by loading it from a file (set after construction).
+	 */
+	protected @Nullable String name;
 	/** The number of bits in this pin. */
 	protected int bits;
 	/** Whether this pin is watched (shown in the signal trace). */
@@ -61,8 +66,8 @@ public abstract sealed class Pin extends LogicElement
 	 */
 	@Override
 	public String getName() {
-		
-		return name;
+
+		return name == null ? "" : name;
 	} // end of getName method
 	
 	/**
@@ -127,7 +132,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up size if needed
 		if (g != null) {
@@ -162,7 +167,7 @@ public abstract sealed class Pin extends LogicElement
 		new Attribute.StringAttribute("name") {
 			/** Read the pin's name for saving. */
 			@Override
-			protected String get(Element el) { return ((Pin)el).name; }
+			protected String get(Element el) { return ((Pin)el).getName(); }
 			/** Load the pin's name and register it with the circuit. */
 			@Override
 			protected void set(Element el, String v) {
@@ -303,7 +308,8 @@ public abstract sealed class Pin extends LogicElement
 					+ name + " from a subcircuit", "Error");
 			return;
 		}
-		circ.removeName(name);
+		if (name != null)
+			circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
 
@@ -346,7 +352,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g) {
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		if (direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
@@ -367,7 +373,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @param g The current graphics context for size recalculation.
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g) {
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -381,8 +387,11 @@ public abstract sealed class Pin extends LogicElement
 	// Simulation state shared by both pins
 	// -----------------------------------------------------------------
 
-	/** The current simulated value of this pin. */
-	protected BitSet currentValue = new BitSet();
+	/**
+	 * The current simulated value of this pin, or null when it is
+	 * high-impedance (tri-state), set during simulation.
+	 */
+	protected @Nullable BitSet currentValue = new BitSet();
 
 	/**
 	 * Get the current value.
@@ -397,7 +406,7 @@ public abstract sealed class Pin extends LogicElement
 	 * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
 	 */
 	@Override
-	public BitSet getCurrentValue() {
+	public @Nullable BitSet getCurrentValue() {
 
 		if (currentValue == null)
 			return null;

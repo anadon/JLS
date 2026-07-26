@@ -10,6 +10,8 @@ import jls.Circuit;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * n-input, 2^n-output decoder.
  * 
@@ -33,10 +35,10 @@ public final class Decoder extends LogicElement implements Timed {
 	private Orientation orientation = Orientation.LEFT;
 	
 	// running properties
-	/** The "decoder" label drawn on the element, abbreviated to "dec" if it doesn't fit. */
-	private String dec;
-	/** The input/output width label drawn on the element (e.g. "1-n"), oriented to match the element. */
-	private String inout;
+	/** The "decoder" label drawn on the element, abbreviated to "dec" if it doesn't fit; null until {@link #init(jls.core.TextMetrics)} builds it. */
+	private @Nullable String dec;
+	/** The input/output width label drawn on the element (e.g. "1-n"), oriented to match the element; null until {@link #init(jls.core.TextMetrics)} builds it. */
+	private @Nullable String inout;
 
 	/**
 	 * Create a new decoder element.
@@ -65,7 +67,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 *
 	 * @return the input/output width label.
 	 */
-	public String getInout() {
+	public @Nullable String getInout() {
 
 		return inout;
 	} // end of getInout method
@@ -76,7 +78,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 *
 	 * @return the decoder label.
 	 */
-	public String getDec() {
+	public @Nullable String getDec() {
 
 		return dec;
 	} // end of getDec method
@@ -108,7 +110,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		int s = Geometry.SPACING;
 		int outs = 1 << bits;
@@ -148,7 +150,10 @@ public final class Decoder extends LogicElement implements Timed {
 					height = 5 * s;
 				}
 				jls.core.TextMetrics fm = g;
-				int bw = fm.stringWidth(inout);
+				String inoutLabel = inout;
+				if (inoutLabel == null)
+					throw new IllegalStateException("inout label not set");
+				int bw = fm.stringWidth(inoutLabel);
 				if (bw > width && orientation == Orientation.LEFT) {
 					inout = "1-n";
 				}
@@ -292,7 +297,7 @@ public final class Decoder extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		Decoder it = new Decoder(circuit);
+		Decoder it = new Decoder(getCircuit());
 		it.inout = inout;
 		it.dec = dec;
 		it.inputs.add(inputs.get(0).copy(it));
@@ -371,7 +376,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -394,7 +399,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -418,8 +423,12 @@ public final class Decoder extends LogicElement implements Timed {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	/** The output value this decoder will take on once its propagation delay elapses. */
-	private BitSet toBeValue;
+	/**
+	 * The output value this decoder will take on once its propagation delay
+	 * elapses. Null before {@link #initSim(Simulator)} seeds it at simulation
+	 * start.
+	 */
+	private @Nullable BitSet toBeValue;
 	
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
@@ -451,7 +460,7 @@ public final class Decoder extends LogicElement implements Timed {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if the input has changed ...
 		if (todo == null) {

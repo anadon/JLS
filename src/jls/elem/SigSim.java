@@ -83,7 +83,7 @@ public abstract sealed class SigSim extends LogicElement
 			// get signal name and resolve to input pin
 			String signal = input.next();
 			InputPin pin = null;
-			for (Element el : circuit.getElements()) {
+			for (Element el : getCircuit().getElements()) {
 				if (!(el instanceof InputPin ip)) 
 					continue;
 				if (signal.equals(el.getName())) {
@@ -211,7 +211,7 @@ public abstract sealed class SigSim extends LogicElement
 	 * @param todo The value to send.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		throw new UnsupportedOperationException("react in SigGen called");
 	} // end of react method

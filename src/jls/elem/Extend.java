@@ -80,7 +80,7 @@ public final class Extend extends Gate implements TriProp {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		super.init(g);
 		inputs.clear();
@@ -213,7 +213,7 @@ public final class Extend extends Gate implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// get the input value
 		BitSet value = inputs.get(0).getValue();

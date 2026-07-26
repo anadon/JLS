@@ -14,5 +14,12 @@
  * set, per-attribute last-writer-wins, OR-set wires, RGA sequences),
  * anti-entropy resync, log compaction, and collaborative undo build on
  * top of this substrate and remain issue #171 work in progress.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.collab.crdt;
+
+import org.jspecify.annotations.NullMarked;

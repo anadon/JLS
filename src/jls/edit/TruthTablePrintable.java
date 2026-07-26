@@ -7,6 +7,8 @@ import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.elem.TruthTable;
 
@@ -21,7 +23,7 @@ public final class TruthTablePrintable implements Printable {
 	/** The truth table this page prints. */
 	private final TruthTable ttelem;
 	/** The display panel, created lazily the first time this page prints. */
-	private DisplayBool disp;
+	private @Nullable DisplayBool disp;
 
 	/**
 	 * Wrap a truth table as a printable page.
@@ -61,15 +63,22 @@ public final class TruthTablePrintable implements Printable {
 		// the display panel is otherwise created only when the edit
 		// dialog opens, so printing a freshly loaded circuit crashed
 		// here with an NPE (found by PrintPathSmokeTest, issue #91)
-		if (disp == null) {
-			disp = new DisplayBool(ttelem);
+		DisplayBool d = disp;
+		if (d == null) {
+			d = new DisplayBool(ttelem);
+			disp = d;
 		}
 
 		// construct name
 		Circuit c = ttelem.getCircuit();
 		String nm = ttelem.getName() + " in " + ttelem.getCircuit().getName();
 		while (c.isImported()) {
-			c = c.getSubElement().getCircuit();
+			jls.elem.SubCircuit sub = c.getSubElement();
+			if (sub == null) {
+				throw new IllegalStateException(
+						"imported circuit has no sub-element");
+			}
+			c = sub.getCircuit();
 			nm += " in " + c.getName();
 		}
 
@@ -80,9 +89,9 @@ public final class TruthTablePrintable implements Printable {
 		int fontHeight = ascent + descent;
 
 		// get bounds
-		disp.doLayout(ttelem.getInputNames(),ttelem.getOutputNames(),
+		d.doLayout(ttelem.getInputNames(),ttelem.getOutputNames(),
 				ttelem.getTable(),gg);
-		Dimension bounds = disp.getPreferredSize();
+		Dimension bounds = d.getPreferredSize();
 
 		// scale and adjust as needed
 		double width = format.getImageableWidth();
@@ -100,7 +109,7 @@ public final class TruthTablePrintable implements Printable {
 		gg.scale(scale,scale);
 
 		// print
-		disp.print(gg);
+		d.print(gg);
 
 		return Printable.PAGE_EXISTS;
 	} // end of print method

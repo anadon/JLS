@@ -1,5 +1,6 @@
 package jls.collab.net;
 
+import org.jspecify.annotations.Nullable;
 import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.DataOutputStream;
@@ -247,7 +248,7 @@ public final class SocketSession implements Closeable {
 	 *             fails authentication (tampered, replayed, or
 	 *             reordered), which poisons the link for good.
 	 */
-	public byte[] receive() throws IOException, FrameRejected {
+	public byte @Nullable [] receive() throws IOException, FrameRejected {
 
 		return link.open(in);
 	} // end of receive method

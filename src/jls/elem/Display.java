@@ -11,6 +11,8 @@ import jls.BitSetUtils;
 import jls.Circuit;
 import jls.sim.Simulator;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Display an input value on the circuit editor screen.
  * 
@@ -89,7 +91,7 @@ public final class Display extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up size
 		int s = Geometry.SPACING;
@@ -273,7 +275,7 @@ public final class Display extends LogicElement {
 	@Override
 	public Element copy() {
 
-		Display it = new Display(circuit);
+		Display it = new Display(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -298,7 +300,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		// No-op
 	}
@@ -330,7 +332,7 @@ public final class Display extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		// No-op
 	}
@@ -340,7 +342,7 @@ public final class Display extends LogicElement {
 //	-------------------------------------------------------------------------------
 	
 	/** The value being displayed; null shows as HiZ. */
-	private BitSet currentValue = new BitSet();
+	private @Nullable BitSet currentValue = new BitSet();
 
 	/**
 	 * The value currently being displayed (issue #77: read by the GUI-side
@@ -349,7 +351,7 @@ public final class Display extends LogicElement {
 	 * @return the current value, or null for HiZ.
 	 */
 	@Override
-	public BitSet getCurrentValue() {
+	public @Nullable BitSet getCurrentValue() {
 
 		return currentValue;
 	} // end of getCurrentValue method
@@ -363,11 +365,13 @@ public final class Display extends LogicElement {
 	public void initSim(Simulator sim) {
 		
 		Input in = inputs.get(0);
-		if (in.isAttached() && in.getWireEnd().getNet().isTriState()) {
-			currentValue = null;
-		}
-		else {
-			currentValue = new BitSet();
+		currentValue = new BitSet();
+		if (in.isAttached()) {
+			WireEnd end = in.getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached input has no wire end");
+			if (end.getNet().isTriState())
+				currentValue = null;
 		}
 	} // end of initSim method
 	
@@ -379,7 +383,7 @@ public final class Display extends LogicElement {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		currentValue = inputs.get(0).getValue();
 	} // end of react method

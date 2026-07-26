@@ -1,5 +1,6 @@
 package jls.collab.net;
 
+import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -195,7 +196,7 @@ public final class KnownPeers {
 	 *
 	 * @return the name, or null if the fingerprint is not verified.
 	 */
-	public String nameOf(String fingerprint) {
+	public @Nullable String nameOf(String fingerprint) {
 
 		Record record = peers.get(fingerprint);
 		return record == null ? null : record.name;

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The importer's gatekeeper (issue #61): checks every cell of a
  * post-pipeline netlist against the restricted set the cell-to-element
@@ -187,7 +189,7 @@ public final class CellValidator {
 	 * @throws NetlistFormatException if a memory cell's deciding
 	 * parameters are missing or malformed.
 	 */
-	private static String check(YosysNetlist.Cell cell)
+	private static @Nullable String check(YosysNetlist.Cell cell)
 			throws NetlistFormatException {
 
 		String type = cell.type();
@@ -228,7 +230,7 @@ public final class CellValidator {
 	 * @throws NetlistFormatException if the deciding parameters are
 	 * missing or malformed.
 	 */
-	private static String checkMemory(YosysNetlist.Cell cell)
+	private static @Nullable String checkMemory(YosysNetlist.Cell cell)
 			throws NetlistFormatException {
 
 		long writePorts = cell.param("WR_PORTS");

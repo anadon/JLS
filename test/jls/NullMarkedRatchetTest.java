@@ -27,8 +27,20 @@ class NullMarkedRatchetTest {
 	 */
 	private static final List<String> MARKED = List.of(
 			"src/jls",
+			"src/jls/core",
 			"src/jls/sim",
-			"src/jls/util");
+			"src/jls/util",
+			"src/jls/hdl",
+			"src/jls/hdl/imp",
+			"src/jls/hdl/layout",
+			"src/jls/hdl/scan",
+			"src/jls/hdl/yosys",
+			"src/jls/collab/crdt",
+			"src/jls/collab/net",
+			"src/jls/collab/op",
+			"src/jls/collab/session",
+			"src/jls/elem",
+			"src/jls/edit");
 
 	/**
 	 * Every package on the marked list still declares

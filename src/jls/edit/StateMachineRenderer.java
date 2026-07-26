@@ -12,6 +12,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.core.Geometry;
 import jls.elem.Element;
@@ -146,7 +148,12 @@ public final class StateMachineRenderer implements ElementRenderer {
 			Circuit c = machine.getCircuit();
 			String nm = machine.getName() + " in " + machine.getCircuit().getName();
 			while (c.isImported()) {
-				c = c.getSubElement().getCircuit();
+				jls.elem.SubCircuit sub = c.getSubElement();
+				if (sub == null) {
+					throw new IllegalStateException(
+							"imported circuit has no sub-element");
+				}
+				c = sub.getCircuit();
 				nm += " in " + c.getName();
 			}
 
@@ -202,7 +209,7 @@ public final class StateMachineRenderer implements ElementRenderer {
 	 *
 	 * @return a Printable summarizing every state's outputs, or null.
 	 */
-	public static Printable outSummaryPage(StateMachine sm) {
+	public static @Nullable Printable outSummaryPage(StateMachine sm) {
 
 		// return null if no outputs
 		int outs = 0;

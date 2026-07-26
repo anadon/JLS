@@ -4,6 +4,8 @@ import jls.*;
 import jls.sim.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Keeps track of all wires and wire ends in a "net", which is a multi-segment wire,
  * possibly with branches (a DAG).
@@ -39,7 +41,7 @@ public class WireNet {
 	 * 
 	 * @return a reference to a complete copy of this element.
 	 */
-	public Element copy() {
+	public @Nullable Element copy() {
 		return null;
 	} // end of copy method
 	
@@ -131,6 +133,8 @@ public class WireNet {
 				
 				// set bits and, if an output set hasinput and possibly tristate
 				Put put = e.getPut();
+				if (put == null)
+					continue;
 				net.bits = put.getBits();
 				if (put instanceof Output out) {
 					net.hasinput = true;
@@ -146,7 +150,10 @@ public class WireNet {
 			for (WireEnd e : net.ends) {
 				if (!e.isAttached())
 					continue;
-				Element el = e.getPut().getElement();
+				Put p = e.getPut();
+				if (p == null)
+					continue;
+				Element el = p.getElement();
 				if (el instanceof TriProp pin) {
 					pin.setTriState(false);
 				}
@@ -267,10 +274,11 @@ public class WireNet {
 		bits = 0;
 		triState = false;
 		for (WireEnd end : ends) {
-			if (end.getPut() != null) {
-				bits = Math.max(end.getPut().getBits(),bits);
+			Put p = end.getPut();
+			if (p != null) {
+				bits = Math.max(p.getBits(),bits);
 			}
-			if (end.getPut() instanceof Output out) {
+			if (p instanceof Output out) {
 				hasinput = true;
 				if (out.isTriState()) {
 					triState = true;
@@ -281,7 +289,10 @@ public class WireNet {
 			for (WireEnd end : ends) {
 				if (!end.isAttached())
 					continue;
-				Element el = end.getPut().getElement();
+				Put p = end.getPut();
+				if (p == null)
+					continue;
+				Element el = p.getElement();
 				if (el instanceof TriProp pin) {
 					pin.setTriState(false);
 				}
@@ -361,11 +372,12 @@ public class WireNet {
 				continue;
 			
 			// skip ends attached to outputs
-			if (end.getPut() instanceof Output)
+			Put p = end.getPut();
+			if (p == null || p instanceof Output)
 				continue;
-			
+
 			// if attached to a tri-state propagating element...
-			Element el = end.getPut().getElement();
+			Element el = p.getElement();
 			if (el instanceof TriProp tel) {
 				
 				// propagate tri-state
@@ -388,8 +400,8 @@ public class WireNet {
 // Simulation
 //-------------------------------------------------------------------------------
 		
-	/** The current value on this net (null when tri-stated off). */
-	private BitSet value = new BitSet(1);
+	/** The current value on this net (null when tri-stated off / high-impedance). */
+	private @Nullable BitSet value = new BitSet(1);
 	/** True once a bus conflict has been reported, until it clears. */
 	private boolean conflictReported = false;	// bus-conflict warned already? (#98, S1)
 
@@ -397,10 +409,10 @@ public class WireNet {
 	 * Set the value on this net.
 	 * Should only be used by initSim.
 	 * 
-	 * @param value The value.
+	 * @param value The value, or null for a high-impedance (tri-state) value.
 	 */
-	public void setValue(BitSet value) {
-		
+	public void setValue(@Nullable BitSet value) {
+
 		if (value == null)
 			this.value = null;
 		else
@@ -410,10 +422,10 @@ public class WireNet {
 	/**
 	 * Get the current value on this net.
 	 * 
-	 * @return the current value.
+	 * @return the current value, or null for a high-impedance (tri-state) value.
 	 */
-	public BitSet getValue() {
-		
+	public @Nullable BitSet getValue() {
+
 		if (value == null)
 			return null;
 		else
@@ -423,11 +435,11 @@ public class WireNet {
 	/**
 	 * Send a copy of the value to all inputs this net is connected to.
 	 * 
-	 * @param value The value to send.
+	 * @param value The value to send, or null for a high-impedance (tri-state) value.
 	 * @param now The current time.
 	 * @param sim The simulator object to post events to.
 	 */
-	public void propagate(BitSet value, long now, Simulator sim) {
+	public void propagate(@Nullable BitSet value, long now, Simulator sim) {
 		
 		// if tristate, resolve the value actually driven: null (HiZ) if
 		// every driver is off, otherwise the first active driver in net
@@ -487,8 +499,12 @@ public class WireNet {
 			// send it to the input
 			Input inp = (Input)p;
 			inp.setValue(newValue);
-			Reacts element = (Reacts) p.getElement();
-			sim.post(new SimEvent(now,element,null));
+			// the invisible-input sentinel has no owning element to
+			// notify, so there is nothing to react
+			LogicElement element = p.getElement();
+			if (element != null) {
+				sim.post(new SimEvent(now, (Reacts) element, null));
+			}
 		}
 		
 		// keep a copy for probes
@@ -502,8 +518,9 @@ public class WireNet {
 		// no-op in the interactive engine (Simulator.probeSample is
 		// empty) and cheap otherwise - one field check per wire.
 		for (Wire wire : wires) {
-			if (wire.hasProbe()) {
-				sim.probeSample(wire.getProbe(), bits, now, this.value);
+			String probe = wire.getProbe();
+			if (probe != null) {
+				sim.probeSample(probe, bits, now, this.value);
 			}
 		}
 

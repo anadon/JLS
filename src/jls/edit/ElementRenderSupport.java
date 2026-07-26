@@ -59,8 +59,8 @@ public final class ElementRenderSupport {
 		}
 		int d = Geometry.POINT_DIAMETER;
 		int r = d / 2;
-		int x = p.getElement().getX() + p.getXr();
-		int y = p.getElement().getY() + p.getYr();
+		int x = p.getX();
+		int y = p.getY();
 		g.setColor(Color.BLACK);
 		g.fillOval(x - r, y - r, d, d);
 		g.setColor(inside);

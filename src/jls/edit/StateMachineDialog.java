@@ -116,7 +116,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if name has changed, detach
 		if (ed.nameChanged()) {
-			machine.reinit(SwingTextMetrics.forGraphics(g));
+			machine.reinit(SwingTextMetrics.of(g));
 			return true;
 		}
 
@@ -135,7 +135,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if not the same, detach
 		if (!oldNames.equals(newNames)) {
-			machine.reinit(SwingTextMetrics.forGraphics(g));
+			machine.reinit(SwingTextMetrics.of(g));
 			return true;
 		}
 
@@ -144,9 +144,9 @@ public final class StateMachineDialog implements ElementDialog {
 			int bits = input.getBits();
 			for (State state : machine.getStates()) {
 				for (String inp : state.getInputs()) {
-					if (input.getName().equals(inp)
+					if (java.util.Objects.equals(input.getName(), inp)
 							&& state.inputBits(inp) != bits) {
-						machine.reinit(SwingTextMetrics.forGraphics(g));
+						machine.reinit(SwingTextMetrics.of(g));
 						return true;
 					}
 				}
@@ -167,7 +167,7 @@ public final class StateMachineDialog implements ElementDialog {
 
 		// if not the same, detach
 		if (!oldNames.equals(newNames)) {
-			machine.reinit(SwingTextMetrics.forGraphics(g));
+			machine.reinit(SwingTextMetrics.of(g));
 			return true;
 		}
 
@@ -176,9 +176,9 @@ public final class StateMachineDialog implements ElementDialog {
 			int bits = output.getBits();
 			for (State state : machine.getStates()) {
 				for (String out : state.getOutputs()) {
-					if (output.getName().equals(out)
+					if (java.util.Objects.equals(output.getName(), out)
 							&& state.outputBits(out) != bits) {
-						machine.reinit(SwingTextMetrics.forGraphics(g));
+						machine.reinit(SwingTextMetrics.of(g));
 						return true;
 					}
 				}
@@ -237,11 +237,11 @@ public final class StateMachineDialog implements ElementDialog {
 		/** The latest mouse y-coordinate. */
 		private int y;
 		/** The selection rectangle being dragged out, or null if none. */
-		private Rectangle selrect = null;
+		private @org.jspecify.annotations.Nullable Rectangle selrect = null;
 		/** The currently selected states. */
 		private Set<State> selected = new HashSet<State>();
 		/** The state under the most recent mouse press, or null if none. */
-		private State on;
+		private @org.jspecify.annotations.Nullable State on;
 		/** Selects triggering on the rising clock edge. */
 		private JRadioButton rising = new JRadioButton("rising edge");
 		/** Selects triggering on the falling clock edge. */
@@ -322,8 +322,9 @@ public final class StateMachineDialog implements ElementDialog {
 							g.fillRect(selrect.x,selrect.y,selrect.width,selrect.height);
 						}
 					}
-					if (drawState == DrawState.newTrans) {
-						drawTrans(on,points,g);
+					State from = on;
+					if (drawState == DrawState.newTrans && from != null) {
+						drawTrans(from,points,g);
 					}
 					for (State state : machine.getStates()) {
 						StateRenderer.draw(g, state);
@@ -517,13 +518,16 @@ public final class StateMachineDialog implements ElementDialog {
 				if (on != null) {
 					CreateState cs = new CreateState(machine,"Change",on.getName());
 					if (!cs.wasCancelled()) {
-						boolean ok = on.changeName(cs.getName(),SwingTextMetrics.forGraphics(editArea.getGraphics()));
-						if (!ok) {
-							TellUser.error(this,
-									"Name won't fit", "Error");
-							return;
+						Graphics eg = editArea.getGraphics();
+						if (eg != null) {
+							boolean ok = on.changeName(cs.getName(),SwingTextMetrics.of(eg));
+							if (!ok) {
+								TellUser.error(this,
+										"Name won't fit", "Error");
+								return;
+							}
+							editArea.repaint();
 						}
-						editArea.repaint();
 					}
 				}
 			}
@@ -957,9 +961,12 @@ public final class StateMachineDialog implements ElementDialog {
 				}
 
 				// otherwise create new transition
-				makeTransition(on,target,points);
+				State fromState = on;
+				if (fromState != null) {
+					makeTransition(fromState,target,points);
+					fromState.setHighlight(false);
+				}
 				points.clear();
-				on.setHighlight(false);
 				setDrawState(DrawState.idle);
 				editArea.repaint();
 				return;
@@ -1207,16 +1214,19 @@ public final class StateMachineDialog implements ElementDialog {
 				int ry = Math.min(ny,y);
 				int rw = Math.abs(nx-x);
 				int rh = Math.abs(ny-y);
-				selrect.setBounds(rx,ry,rw,rh);
+				Rectangle rect = selrect;
+				if (rect != null) {
+					rect.setBounds(rx,ry,rw,rh);
 
-				// highlight selected elements
-				selected.clear();
-				for (State state : machine.getStates()) {
-					state.setHighlight(false);
-					if (state.isInside(AwtGeom.bounds(selrect))) {
-						selected.add(state);
-						state.setHighlight(true);
-						state.savePosition();
+					// highlight selected elements
+					selected.clear();
+					for (State state : machine.getStates()) {
+						state.setHighlight(false);
+						if (state.isInside(AwtGeom.bounds(rect))) {
+							selected.add(state);
+							state.setHighlight(true);
+							state.savePosition();
+						}
 					}
 				}
 
@@ -1239,7 +1249,10 @@ public final class StateMachineDialog implements ElementDialog {
 				}
 
 				// move point
-				movingTrans.moveHighlight(x, y);
+				State.Transition mt = movingTrans;
+				if (mt != null) {
+					mt.moveHighlight(x, y);
+				}
 				editArea.repaint();
 				return;
 			}
@@ -1273,7 +1286,7 @@ public final class StateMachineDialog implements ElementDialog {
 		/** The state machine the new state will belong to. */
 		private final StateMachine machine;
 		/** The accepted state name. */
-		private String name;
+		private String name = "";
 		/** Input field for the state name. */
 		private JTextField nameField = new JTextField(10);
 		/** True if the user cancelled this dialog. */

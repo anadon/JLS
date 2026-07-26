@@ -6,6 +6,8 @@ import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 import java.util.*;
 
@@ -78,7 +80,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
@@ -221,7 +223,7 @@ public final class Adder extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 		
-		Adder it = new Adder(circuit);
+		Adder it = new Adder(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -303,7 +305,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -335,7 +337,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -348,8 +350,11 @@ public final class Adder extends LogicElement implements Timed {
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	/** The sum-and-carry value currently propagating through the adder. */
-	private BitSet toBeValue;
+	/**
+	 * The sum-and-carry value currently propagating through the adder. Null
+	 * before {@link #initSim(Simulator)} seeds it at simulation start.
+	 */
+	private @Nullable BitSet toBeValue;
 	
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
@@ -377,7 +382,7 @@ public final class Adder extends LogicElement implements Timed {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if the input has changed ...
 		if (todo == null) {

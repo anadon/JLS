@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.JLSInfo;
 import jls.elem.Adder;
@@ -217,7 +219,12 @@ public final class HdlExporter {
 						list = new ArrayList<WireNet>();
 						jumpNets.put(alias, list);
 					}
-					list.add(put.getWireEnd().getNet());
+					WireEnd putEnd = put.getWireEnd();
+					if (putEnd == null) {
+						throw new IllegalStateException(
+								"attached put has no wire end");
+					}
+					list.add(putEnd.getNet());
 				}
 			}
 		}
@@ -295,10 +302,10 @@ public final class HdlExporter {
 			}
 		}
 		List<Group> aliased = new ArrayList<Group>(aliases.keySet());
-		aliased.sort(Comparator.comparing(g -> aliases.get(g).first()));
+		aliased.sort(Comparator.comparing(g -> firstAlias(aliases, g)));
 		for (Group group : aliased) {
 			if (group.name == null) {
-				group.name = names.reserve(aliases.get(group).first());
+				group.name = names.reserve(firstAlias(aliases, group));
 			}
 		}
 
@@ -381,6 +388,24 @@ public final class HdlExporter {
 		return model;
 	} // end of buildModel method
 
+	/**
+	 * The alphabetically first jump alias fused onto a group.
+	 * @param aliases Group-to-alias-set map built during the naming pass.
+	 * @param group A group taken from {@code aliases.keySet()}, so it is
+	 * guaranteed to have a (non-empty) alias set.
+	 * @return the group's smallest jump alias.
+	 */
+	private static String firstAlias(Map<Group, TreeSet<String>> aliases,
+			Group group) {
+
+		TreeSet<String> set = aliases.get(group);
+		if (set == null) {
+			throw new IllegalStateException(
+					"group came from aliases.keySet() yet has no alias set");
+		}
+		return set.first();
+	} // end of firstAlias method
+
 	// ------------------------------------------------------------------
 	// policy
 	// ------------------------------------------------------------------
@@ -462,11 +487,16 @@ public final class HdlExporter {
 						+ " is not connected; its port is left undriven");
 				return;
 			}
+			String port = portNames.get(el);
+			if (port == null) {
+				throw new IllegalStateException("OutputPin " + describe(el)
+						+ " was registered in portNames by buildModel");
+			}
 			model.addStatement(new HdlModel.GateStatement(
 					"OutputPin \"" + pin.getName() + "\"",
 					HdlModel.GateStatement.Op.BUFFER,
 					List.of(operand(ins.get(0), nets, groups)),
-					portNames.get(el)));
+					port));
 			return;
 		}
 
@@ -672,7 +702,7 @@ public final class HdlExporter {
 	 * element is not a boolean gate ({@link Extend} is gate-family but has
 	 * its own bit-extension template, handled before the gate branch).
 	 */
-	private static HdlModel.GateStatement.Op gateOp(Element el) {
+	private static HdlModel.GateStatement.@Nullable Op gateOp(Element el) {
 
 		if (!(el instanceof Gate gate)) {
 			return null;
@@ -697,7 +727,7 @@ public final class HdlExporter {
 	private static final class Group {
 
 		/** Chosen HDL net name; null until the naming pass assigns one. */
-		String name = null;
+		@Nullable String name = null;
 		/** Width in bits: the widest member wire net seen so far. */
 		int bits = 0;
 		/** True when the net is a module port, not an internal net. */
@@ -743,14 +773,25 @@ public final class HdlExporter {
 		WireNet find(WireNet net) {
 			register(net);
 			WireNet root = net;
-			while (parent.get(root) != root) {
-				root = parent.get(root);
+			WireNet up = parent.get(root);
+			while (up != root) {
+				if (up == null) {
+					throw new IllegalStateException(
+							"net in the union-find chain is not registered");
+				}
+				root = up;
+				up = parent.get(root);
 			}
 			WireNet walk = net;
-			while (parent.get(walk) != root) {
-				WireNet next = parent.get(walk);
+			WireNet next = parent.get(walk);
+			while (next != root) {
+				if (next == null) {
+					throw new IllegalStateException(
+							"net in the union-find chain is not registered");
+				}
 				parent.put(walk, root);
 				walk = next;
+				next = parent.get(walk);
 			}
 			return root;
 		}
@@ -783,13 +824,17 @@ public final class HdlExporter {
 	 * @param groups Net-root-to-group map.
 	 * @return the group, or null if the put is unattached or has no net.
 	 */
-	private static Group groupOf(Put put, UnionFind nets,
+	private static @Nullable Group groupOf(Put put, UnionFind nets,
 			Map<WireNet, Group> groups) {
 
 		if (put == null || !put.isAttached()) {
 			return null;
 		}
-		WireNet net = put.getWireEnd().getNet();
+		WireEnd putEnd = put.getWireEnd();
+		if (putEnd == null) {
+			throw new IllegalStateException("attached put has no wire end");
+		}
+		WireNet net = putEnd.getNet();
 		if (net == null) {
 			return null;
 		}
@@ -857,7 +902,7 @@ public final class HdlExporter {
 	 * @return the jump name if the element is a JumpStart or JumpEnd (nets
 	 * sharing a name are fused), else null.
 	 */
-	private static String jumpAlias(Element el) {
+	private static @Nullable String jumpAlias(Element el) {
 
 		if (el instanceof JumpStart js) {
 			return js.getName();

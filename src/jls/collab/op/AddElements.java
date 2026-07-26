@@ -127,21 +127,22 @@ public record AddElements(List<String> blocks) implements CircuitOp {
 		Set<String> names = new HashSet<String>();
 		for (Element el : loaded) {
 			String name = el.getName();
-			if (el instanceof JumpEnd) {
+			if (el instanceof JumpEnd je) {
 				// a jump end needs a source; its name legitimately
 				// duplicates its jump start's, so it skips name checks
-				if (target.getJumpStart(name) == null
-						&& !jumpStartsArriving.contains(name)) {
-					throw new OpRejected("jump end '" + name
+				String jname = je.getName();
+				if (target.getJumpStart(jname) == null
+						&& !jumpStartsArriving.contains(jname)) {
+					throw new OpRejected("jump end '" + jname
 							+ "' would arrive with no matching jump "
 							+ "start");
 				}
 				continue;
 			}
-			if (el instanceof JumpStart
-					&& target.getJumpStart(name) != null) {
+			if (el instanceof JumpStart js
+					&& target.getJumpStart(js.getName()) != null) {
 				throw new OpRejected("the circuit already has a jump "
-						+ "start named '" + name + "'");
+						+ "start named '" + js.getName() + "'");
 			}
 			if (name != null && !name.isEmpty()) {
 				if (target.hasName(name)) {

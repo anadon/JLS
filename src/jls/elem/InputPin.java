@@ -42,7 +42,7 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param g The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		super.init(g);
 		if(orientation == Orientation.RIGHT)
@@ -101,7 +101,7 @@ public final class InputPin extends Pin implements TriProp {
 	@Override
 	public Element copy() {
 		
-		InputPin it = new InputPin(circuit);
+		InputPin it = new InputPin(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -157,11 +157,17 @@ public final class InputPin extends Pin implements TriProp {
 	public void initSim(Simulator sim) { 
 		
 		currentValue = new BitSet();
-		if (circuit.isImported()) {
-			SubCircuit sub = circuit.getSubElement();
-			Input input = sub.getInput(name);
+		if (getCircuit().isImported()) {
+			SubCircuit sub = getCircuit().getSubElement();
+			if (sub == null)
+				throw new IllegalStateException(
+						"imported input pin has no subcircuit element");
+			Input input = sub.getInput(getName());
 			if (input.isAttached()) {
-				if (input.getWireEnd().isTriState())
+				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
+				if (end.isTriState())
 					currentValue = null;
 			}
 		}
@@ -183,7 +189,7 @@ public final class InputPin extends Pin implements TriProp {
 	 * @param todo The value to send.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// send to output
 		Output out = outputs.get(0);

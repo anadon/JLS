@@ -3,6 +3,8 @@ package jls;
 import java.util.*;
 import java.math.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Common (static) utility methods dealing with BitSets.
  * 
@@ -232,7 +234,7 @@ public final class BitSetUtils {
 	 * 
 	 * @return A string in the form "0xn (n unsigned, n signed)" or "HiZ".
 	 */
-	public static String toDisplay(BitSet value, int bits) {
+	public static String toDisplay(@Nullable BitSet value, int bits) {
 		
 		if (value == null)
 			return "HiZ";

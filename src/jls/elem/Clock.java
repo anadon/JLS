@@ -6,6 +6,8 @@ import jls.core.Orientation;
 import jls.*;
 import jls.sim.*;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 import java.util.BitSet;
 
@@ -40,7 +42,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkCycleTime(int cycleTime) {
+	public static @Nullable String checkCycleTime(int cycleTime) {
 
 		return cycleTime < 1 ? CYCLE_CONSTRAINT : null;
 	} // end of checkCycleTime method
@@ -57,7 +59,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkOneTime(int cycleTime, int oneTime) {
+	public static @Nullable String checkOneTime(int cycleTime, int oneTime) {
 
 		return (oneTime < 1 || oneTime >= cycleTime) ? ONE_CONSTRAINT : null;
 	} // end of checkOneTime method
@@ -127,7 +129,7 @@ public final class Clock extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
@@ -290,7 +292,7 @@ public final class Clock extends LogicElement {
 	@Override
 	public Element copy() {
 
-		Clock it = new Clock(circuit);
+		Clock it = new Clock(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -335,7 +337,7 @@ public final class Clock extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -364,7 +366,7 @@ public final class Clock extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -403,10 +405,15 @@ public final class Clock extends LogicElement {
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
-		// send new value
+		// send new value; a Clock has no inputs, so it only ever
+		// reacts to its own posted value events (todo is never null)
 		BitSet send = (BitSet)todo;
+		if (send == null) {
+			throw new IllegalStateException(
+					"clock reacted without a value to output");
+		}
 		Output out = outputs.get(0);
 		out.propagate(send,now,sim);
 		

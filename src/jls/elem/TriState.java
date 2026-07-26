@@ -8,6 +8,7 @@ import jls.*;
 import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.BitSet;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Tri-state buffer(s).
@@ -82,7 +83,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (gate RIGHT, control DOWN), transformed to
 		// the current orientation pair (#24)
@@ -277,7 +278,7 @@ public final class TriState extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		TriState it = new TriState(circuit);
+		TriState it = new TriState(getCircuit());
 		it.inputs.add(inputs.get(0).copy(it));
 		it.inputs.add(inputs.get(1).copy(it));
 		it.outputs.add(outputs.get(0).copy(it));
@@ -374,7 +375,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		controlOrientation = controlOrientation.flipped();
 		inputs.clear();
@@ -417,7 +418,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -443,7 +444,7 @@ public final class TriState extends LogicElement implements Timed {
 	// the value scheduled to reach the output, null meaning off (HiZ);
 	// used to suppress redundant output events (issue #98, S6)
 	/** The value scheduled to reach the output, null meaning off (HiZ). */
-	private BitSet toBeValue;
+	private @Nullable BitSet toBeValue;
 
 	/**
 	 * Initialize this element by setting its output pin to off (null).
@@ -470,7 +471,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if the input has changed ...
 		if (todo == null) {

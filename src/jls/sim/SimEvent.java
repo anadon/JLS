@@ -1,5 +1,7 @@
 package jls.sim;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A simulation event (typically a signal value change).
  * 
@@ -22,7 +24,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 	/** The element whose react runs when this event fires. */
 	private final Reacts callBack;
 	/** The event payload; null means "inputs changed, re-read them". */
-	private final Object todo;
+	private final @Nullable Object todo;
 	
 	/**
 	 * Create a new event object with the given time and callback.
@@ -33,7 +35,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 *             reacting object should do about this event.
 	 *             Null typically means an input pin has changed value.
 	 */
-	public SimEvent(long time, Reacts callBack, Object todo) {
+	public SimEvent(long time, Reacts callBack, @Nullable Object todo) {
 		
 		this.time = time;
 		seq = sequence;
@@ -132,10 +134,11 @@ public final class SimEvent implements Comparable<SimEvent> {
 	/**
 	 * Get the todo object
 	 *
-	 * @return the todo object.
+	 * @return the todo object, or null meaning "inputs changed,
+	 *         re-read them".
 	 */
-	public Object getTodo() {
-		
+	public @Nullable Object getTodo() {
+
 		return todo;
 	} // end of getTodo method
 	

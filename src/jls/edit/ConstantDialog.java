@@ -86,7 +86,7 @@ public final class ConstantDialog implements ElementDialog {
 		c.getCircuit().markChanged();
 		// if bigger, detach and resize
 		if (form.changed) {
-			c.resizeToFit(SwingTextMetrics.forGraphics(g));
+			c.resizeToFit(SwingTextMetrics.of(g));
 			return true;
 		}
 		// no need to reposition
@@ -414,7 +414,7 @@ public final class ConstantDialog implements ElementDialog {
 			c.setValue(temp);
 
 			// decide if the element must be redrawn
-			if (!c.valueFits(SwingTextMetrics.forGraphics(g), Util.convert(temp, c.getBase(), true))) {
+			if (!c.valueFits(SwingTextMetrics.of(g), Util.convert(temp, c.getBase(), true))) {
 				changed = true;
 			} else {
 				changed = false;

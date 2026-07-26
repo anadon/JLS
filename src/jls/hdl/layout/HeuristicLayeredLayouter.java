@@ -109,14 +109,31 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 			List<LayoutGraph.Node> layer = layers.get(index);
 			for (LayoutGraph.Node node : layer) {
 				int x = columnX[index];
-				int y = MARGIN + rowOf.get(node.id) * rowPitch;
+				Integer row = rowOf.get(node.id);
+				if (row == null) {
+					throw new IllegalStateException(
+							"every node was assigned a row: " + node.id);
+				}
+				int y = MARGIN + row * rowPitch;
 				result.place(node.id, x, y);
 			}
 		}
 
 		for (LayoutGraph.Edge edge : graph.edges()) {
-			int targetLayer = layerOf.get(edge.targetNode.id);
-			int lane = laneOf.get(laneKey(edge, targetLayer));
+			Integer targetLayerBox = layerOf.get(edge.targetNode.id);
+			if (targetLayerBox == null) {
+				throw new IllegalStateException(
+						"every target node was assigned a layer: "
+						+ edge.targetNode.id);
+			}
+			int targetLayer = targetLayerBox;
+			Integer laneBox = laneOf.get(laneKey(edge, targetLayer));
+			if (laneBox == null) {
+				throw new IllegalStateException(
+						"every edge was assigned a lane: "
+						+ laneKey(edge, targetLayer));
+			}
+			int lane = laneBox;
 			int channelX = columnX[targetLayer] - GRID * (lane + 1);
 			LayoutResult.Point start =
 					result.portLocation(edge.sourceNode, edge.sourcePort);
@@ -152,7 +169,13 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 		}
 		for (LayoutGraph.Edge edge : graph.edges()) {
 			if (!edge.feedback) {
-				preds.get(edge.targetNode.id).add(edge.sourceNode.id);
+				List<String> targetPreds = preds.get(edge.targetNode.id);
+				if (targetPreds == null) {
+					throw new IllegalStateException(
+							"every node has a predecessor list: "
+							+ edge.targetNode.id);
+				}
+				targetPreds.add(edge.sourceNode.id);
 			}
 		}
 		Map<String, Integer> layer = new HashMap<String, Integer>();
@@ -183,7 +206,12 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 			return 0;
 		}
 		int depth = 0;
-		for (String pred : preds.get(id)) {
+		List<String> idPreds = preds.get(id);
+		if (idPreds == null) {
+			throw new IllegalStateException(
+					"every node has a predecessor list: " + id);
+		}
+		for (String pred : idPreds) {
 			depth = Math.max(depth,
 					longestPath(pred, preds, layer, onStack) + 1);
 		}
@@ -213,7 +241,12 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 			layers.add(new ArrayList<LayoutGraph.Node>());
 		}
 		for (LayoutGraph.Node node : nodes) {
-			layers.get(layerOf.get(node.id)).add(node);
+			Integer depth = layerOf.get(node.id);
+			if (depth == null) {
+				throw new IllegalStateException(
+						"every node was assigned a layer: " + node.id);
+			}
+			layers.get(depth).add(node);
 		}
 		return layers;
 	}
@@ -240,10 +273,17 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 		}
 		for (LayoutGraph.Edge edge : graph.edges()) {
 			if (!edge.feedback) {
-				forwardPreds.get(edge.targetNode.id)
-						.add(edge.sourceNode.id);
-				forwardSuccs.get(edge.sourceNode.id)
-						.add(edge.targetNode.id);
+				List<String> targetPreds =
+						forwardPreds.get(edge.targetNode.id);
+				List<String> sourceSuccs =
+						forwardSuccs.get(edge.sourceNode.id);
+				if (targetPreds == null || sourceSuccs == null) {
+					throw new IllegalStateException(
+							"every node has forward adjacency lists: "
+							+ edge.targetNode.id + ", " + edge.sourceNode.id);
+				}
+				targetPreds.add(edge.sourceNode.id);
+				sourceSuccs.add(edge.targetNode.id);
 			}
 		}
 		for (int sweep = 0; sweep < SWEEPS; sweep += 1) {
@@ -293,13 +333,22 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 		for (int position = 0; position < layer.size(); position += 1) {
 			LayoutGraph.Node node = layer.get(position);
 			List<String> adj = neighbours.get(node.id);
+			if (adj == null) {
+				throw new IllegalStateException(
+						"every node has a neighbour list: " + node.id);
+			}
 			double bary;
 			if (adj.isEmpty()) {
 				bary = position;
 			} else {
 				double sum = 0;
 				for (String other : adj) {
-					sum += rows.get(other);
+					Integer otherRow = rows.get(other);
+					if (otherRow == null) {
+						throw new IllegalStateException(
+								"every node has a row index: " + other);
+					}
+					sum += otherRow;
 				}
 				bary = sum / adj.size();
 			}
@@ -325,7 +374,13 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 				new HashMap<Integer, Map<String, Integer>>();
 		Map<String, Integer> lanes = new HashMap<String, Integer>();
 		for (LayoutGraph.Edge edge : graph.edges()) {
-			int target = layerOf.get(edge.targetNode.id);
+			Integer targetBox = layerOf.get(edge.targetNode.id);
+			if (targetBox == null) {
+				throw new IllegalStateException(
+						"every target node was assigned a layer: "
+						+ edge.targetNode.id);
+			}
+			int target = targetBox;
 			Map<String, Integer> netLanes = perLayer.get(target);
 			if (netLanes == null) {
 				netLanes = new LinkedHashMap<String, Integer>();
@@ -358,7 +413,13 @@ public final class HeuristicLayeredLayouter implements SchematicLayouter {
 			nets.add(new LinkedHashSet<String>());
 		}
 		for (LayoutGraph.Edge edge : graph.edges()) {
-			nets.get(layerOf.get(edge.targetNode.id)).add(edge.netName);
+			Integer target = layerOf.get(edge.targetNode.id);
+			if (target == null) {
+				throw new IllegalStateException(
+						"every target node was assigned a layer: "
+						+ edge.targetNode.id);
+			}
+			nets.get(target).add(edge.netName);
 		}
 		int[] counts = new int[layerCount];
 		for (int i = 0; i < layerCount; i += 1) {

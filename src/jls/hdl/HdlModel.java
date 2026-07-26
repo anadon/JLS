@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A language-neutral structural model of one circuit, produced by
  * {@link HdlExporter#buildModel} and consumed by an {@link HdlEmitter}
@@ -85,9 +87,9 @@ public final class HdlModel {
 	public static final class Operand {
 
 		/** Referenced net name; null for literals. */
-		private final String net;
+		private final @Nullable String net;
 		/** Literal value; null for net references. */
-		private final BigInteger literal;
+		private final @Nullable BigInteger literal;
 		/** Operand width in bits. */
 		private final int bits;
 
@@ -98,7 +100,7 @@ public final class HdlModel {
 		 * @param literal literal value, or null for a net reference
 		 * @param bits operand width in bits
 		 */
-		private Operand(String net, BigInteger literal, int bits) {
+		private Operand(@Nullable String net, @Nullable BigInteger literal, int bits) {
 			this.net = net;
 			this.literal = literal;
 			this.bits = bits;
@@ -136,7 +138,7 @@ public final class HdlModel {
 		 * Gives the net this operand references, if any.
 		 * @return the referenced net name, or null for a literal
 		 */
-		public String netName() {
+		public @Nullable String netName() {
 			return net;
 		}
 
@@ -144,7 +146,7 @@ public final class HdlModel {
 		 * Gives the constant this operand carries, if any.
 		 * @return the literal value, or null for a net reference
 		 */
-		public BigInteger literalValue() {
+		public @Nullable BigInteger literalValue() {
 			return literal;
 		}
 
@@ -160,14 +162,19 @@ public final class HdlModel {
 	/** Base of all statements: one per exported element. */
 	public abstract static class Statement {
 
-		/** Identifies the source element ("AndGate at (240,120)"). */
-		public final String comment;
+		/**
+		 * Identifies the source element ("AndGate at (240,120)"), or null
+		 * for a continuation statement that shares the prior line's element
+		 * (e.g. the 2nd..nth range of a Binder/Splitter).
+		 */
+		public final @Nullable String comment;
 
 		/**
 		 * Records the provenance shared by all statement kinds.
-		 * @param comment identifies the source element
+		 * @param comment identifies the source element, or null for a
+		 * continuation statement that carries no fresh provenance
 		 */
-		Statement(String comment) {
+		Statement(@Nullable String comment) {
 			this.comment = comment;
 		}
 
@@ -508,15 +515,18 @@ public final class HdlModel {
 
 		/**
 		 * Builds an immutable bit-routing statement.
-		 * @param comment identifies the source element
+		 * @param comment identifies the source element, or null for the
+		 * 2nd..nth range of a multi-range Binder/Splitter (only the first
+		 * range carries the element's provenance comment)
 		 * @param source the source operand being routed
 		 * @param sourceIndex source bit positions (defensively copied)
 		 * @param target net receiving the routed bits
 		 * @param targetBits width of the target in bits
 		 * @param targetIndex target bit positions (defensively copied)
 		 */
-		BitMapStatement(String comment, Operand source, int[] sourceIndex,
-				String target, int targetBits, int[] targetIndex) {
+		BitMapStatement(@Nullable String comment, Operand source,
+				int[] sourceIndex, String target, int targetBits,
+				int[] targetIndex) {
 			super(comment);
 			this.source = source;
 			this.sourceIndex = sourceIndex.clone();

@@ -6,6 +6,8 @@ import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The end of a wire segment (displayed as a circle until connected).
  * 
@@ -14,24 +16,27 @@ import java.util.*;
 public final class WireEnd extends LogicElement {
 	
 	// properties
-	/** The wire net this end is a part of. */
-	private WireNet net;							// the net it is a part of
+	/**
+	 * The wire net this end is a part of, or null until it is placed in one
+	 * (set by {@link #setNet} / {@link #init(Circuit)} after construction).
+	 */
+	private @Nullable WireNet net;					// the net it is a part of
 	// insertion order keeps wire-net construction (and so multi-driver
 	// resolution) deterministic (issue #98, S1)
 	/** The wires this end is connected to, in insertion order. */
 	private Set<Wire> wires = new LinkedHashSet<Wire>();	// the wires it is connected to
-	/** The input or output this end is attached to, if any. */
-	private Put put = null;							// the put it is attached to
+	/** The input or output this end is attached to, or null if not attached. */
+	private @Nullable Put put = null;				// the put it is attached to
 	/** True when this end overlaps something it could connect to. */
 	private boolean touching = false;				// touching something (can connect)?
 	/** Visit flag used when partitioning a wire net. */
 	private boolean marked;							// used to partition wire net
-	/** The copy of this end made during cut/paste. */
-	private WireEnd myCopy;							// for cut/paste
+	/** The copy of this end made during cut/paste, or null until copied. */
+	private @Nullable WireEnd myCopy;				// for cut/paste
 	/** Saved id of the element this end is attached to, while loading. */
 	private int loadAttach;							// for loading circuit
-	/** Saved name of the put this end is attached to, while loading. */
-	private String loadPut = null;					// for loading circuit
+	/** Saved name of the put this end is attached to, while loading, or null if none. */
+	private @Nullable String loadPut = null;		// for loading circuit
 	/** Saved tri-state flag of this end's net, while loading. */
 	private boolean loadTriState = false;			// for loading circuit
 	/** Saved ids of the wire ends this end is wired to, in file order, while loading. */
@@ -73,7 +78,7 @@ public final class WireEnd extends LogicElement {
 	 * @param g The Graphics object needed by overridden methods.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// do nothing
 	} // end of init method
@@ -97,7 +102,15 @@ public final class WireEnd extends LogicElement {
 	   		// attach to put if needed
 			if (loadPut != null) {
 				Element elem = circ.getElementByID(loadAttach);
+				if (elem == null)
+					throw new IllegalStateException("wire end is attached to"
+							+ " element id " + loadAttach + ", which is not in the"
+							+ " circuit (dangling attachment reference in save file)");
 				Put p = elem.getPut(loadPut);
+				if (p == null)
+					throw new IllegalStateException("wire end is attached to put \""
+							+ loadPut + "\" of element id " + loadAttach + ", which has"
+							+ " no such put (dangling attachment reference in save file)");
 				// A connection point (put) takes a single wire net; fan-out is
 				// several wires leaving one end, not several ends on one put.
 				// A file that attaches two different ends to the same put used
@@ -117,6 +130,10 @@ public final class WireEnd extends LogicElement {
 			
 			// see if already hooked up
 			WireEnd end = (WireEnd)(circ.getElementByID(elid));
+			if (end == null)
+				throw new IllegalStateException("wire end is wired to wire-end id "
+						+ elid + ", which is not in the circuit (dangling wire"
+						+ " reference in save file)");
 			for (Wire wire : wires) {
 				WireEnd otherEnd = wire.getOtherEnd(this);
 				if (end == otherEnd) {
@@ -145,7 +162,7 @@ public final class WireEnd extends LogicElement {
 	@Override
 	public WireEnd copy() {
 		
-		WireEnd it = new WireEnd(circuit);
+		WireEnd it = new WireEnd(getCircuit());
 		super.copy(it);
 		myCopy = it;
 		return it;
@@ -261,37 +278,40 @@ public final class WireEnd extends LogicElement {
 			
 			// disconnect from put
 			if (isAttached()) {
-				if (this.getPut() instanceof Output) {
-					put.setAttached(null);
+				Put p = getPut();
+				if (p == null)
+					throw new IllegalStateException("attached wire end has no put");
+				if (p instanceof Output) {
+					p.setAttached(null);
 					put = null;
 				}
-				else if (getNet().isTriState() && put.getElement() instanceof TriProp el) {
-					put.setAttached(null);
+				else if (getNet().isTriState() && p.getElement() instanceof TriProp el) {
+					p.setAttached(null);
 					put = null;
 					el.setTriState(false);
 				}
 				else {
-					put.setAttached(null);
+					p.setAttached(null);
 					put = null;
 				}
 			}
-			
+
 			// remove from circuit
 			circ.remove(this);
 		}
-		
+
 		// otherwise create a new wire net
 		else {
-			net = net.makeNet(this);
+			net = getNet().makeNet(this);
 		}
 	} // end of remove method
 	
 	/**
 	 * Set the put this wire end is attached to.
-	 * 
-	 * @param put The put
+	 *
+	 * @param put The put this wire end attaches to, or null to detach it.
 	 */
-	public void setPut(Put put) {
+	public void setPut(@Nullable Put put) {
 		
 		this.put = put;
 	} // end of setPut method
@@ -304,8 +324,8 @@ public final class WireEnd extends LogicElement {
 	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
-	public Put getPut() {
-		
+	public @Nullable Put getPut() {
+
 		return put;
 	} // end of getPut method
 	
@@ -350,8 +370,8 @@ public final class WireEnd extends LogicElement {
 	 */
 	@Override
 	public int getBits() {
-		
-		return net.getBits();
+
+		return getNet().getBits();
 	} // end of getBits method
 	
 	/**
@@ -360,8 +380,8 @@ public final class WireEnd extends LogicElement {
 	 * @param bits The number of bits.
 	 */
 	public void setBits(int bits) {
-		
-		net.setBits(bits);
+
+		getNet().setBits(bits);
 	} // end of setBits method
 	
 	/**
@@ -383,8 +403,8 @@ public final class WireEnd extends LogicElement {
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
 	 */
 	public boolean isTriState() {
-		
-		return net.isTriState();
+
+		return getNet().isTriState();
 	} // end of isTriState method
 	
 	/**
@@ -394,7 +414,8 @@ public final class WireEnd extends LogicElement {
 	 */
 	@Override
 	public String infoText() {
-		
+
+		WireNet net = getNet();
 		String inp = "";
 		if (!net.hasInput()) {
 			inp = ", no input";
@@ -467,7 +488,9 @@ public final class WireEnd extends LogicElement {
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public WireNet getNet() {
-		
+
+		if (net == null)
+			throw new IllegalStateException("wire end is not in a wire net yet");
 		return net;
 	} // end of getNet method
 	
@@ -499,8 +522,8 @@ public final class WireEnd extends LogicElement {
 	 * 
 	 * @return the wire, or null if there is none.
 	 */
-	public Wire getOnlyWire() {
-		
+	public @Nullable Wire getOnlyWire() {
+
 		if (wires.size() == 0) {
 			return null;
 		}
@@ -536,7 +559,9 @@ public final class WireEnd extends LogicElement {
 	 * @return the copy.
 	 */
 	public WireEnd getCopy() {
-		
+
+		if (myCopy == null)
+			throw new IllegalStateException("wire end has not been copied");
 		return myCopy;
 	} // end of getCopy method
 	
@@ -565,11 +590,20 @@ public final class WireEnd extends LogicElement {
 			output.println(" int tristate 1");
 		}
 		if (isAttached()) {
-			String putname = getPut().getName();
+			Put p = getPut();
+			if (p == null)
+				throw new IllegalStateException("attached wire end has no put");
+			String putname = p.getName();
 			output.println(" String put \"" + putname + "\"");
-			int elid = getPut().getElement().getID();
+			LogicElement putElem = p.getElement();
+			if (putElem == null) {
+				throw new IllegalStateException(
+						"cannot save a wire end attached to an "
+								+ "invisible-input sentinel");
+			}
+			int elid = putElem.getID();
 			output.println(" ref attach " + elid);
-			
+
 		}
 		for (Wire wire : wires) {
 			int elid = wire.getOtherEnd(this).getID();

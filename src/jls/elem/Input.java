@@ -8,6 +8,8 @@ import java.util.*;
  * 
  * @author David A. Poplawski
  */
+import org.jspecify.annotations.Nullable;
+
 public final class Input extends Put {
 
 	/**
@@ -21,7 +23,8 @@ public final class Input extends Put {
 	 * 		corner of the element it is in.
 	 * @param bits The number of bits in the input.
 	 */
-	public Input(String name, LogicElement element, int xr, int yr, int bits) {
+	public Input(@Nullable String name, @Nullable LogicElement element,
+			int xr, int yr, int bits) {
 		
 		super(name, element, xr, yr, bits);
 	} // end of constructor
@@ -47,25 +50,27 @@ public final class Input extends Put {
 	/**
 	 * Set the value of this input.
 	 * 
-	 * @param value The new value.
+	 * @param value The new value, or null for a high-impedance
+	 *            (tri-state) signal.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
-	public void setValue(BitSet value) {
-		
+	public void setValue(@Nullable BitSet value) {
+
 		currentValue = value;
 	} // end of setValue method
 	
 	/**
 	 * Get the current value of this input.
 	 * 
-	 * @return the current value.
+	 * @return the current value, or null for a high-impedance
+	 *         (tri-state) signal.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
-	public BitSet getValue() {
-		
+	public @Nullable BitSet getValue() {
+
 		return currentValue;
 	} // end of getValue method
 

@@ -7,6 +7,8 @@ import jls.sim.*;
 import java.io.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Circuit element connecting this circuit to an imported subcircuit.
  * 
@@ -15,10 +17,16 @@ import java.util.*;
 public final class SubCircuit extends LogicElement implements TriProp {
 	
 	// properties
-	/** The imported subcircuit this element represents. */
-	private Circuit subCircuit;		// the subcircuit
-	/** The name this subcircuit has in the circuit it was imported into. */
-	private String name;			// the name in the circuit imported into
+	/**
+	 * The imported subcircuit this element represents, or null until set by
+	 * {@link #setSubCircuit} / a load after construction.
+	 */
+	private @Nullable Circuit subCircuit;		// the subcircuit
+	/**
+	 * The name this subcircuit has in the circuit it was imported into, or
+	 * null until set by {@link #setName} / a load after construction.
+	 */
+	private @Nullable String name;			// the name in the circuit imported into
 	/** Map from this element's inputs to the corresponding input pins in the subcircuit. */
 	private Map<Input,InputPin> inmap = new HashMap<Input,InputPin>();
 	/** Map from the subcircuit's output pins to this element's corresponding outputs. */
@@ -90,7 +98,9 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
 	public Circuit getSubCircuit() {
-		
+
+		if (subCircuit == null)
+			throw new IllegalStateException("subcircuit not set yet");
 		return subCircuit;
 	} // end of getSubCircuit method
 	
@@ -101,7 +111,9 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 */
 	@Override
 	public String getName() {
-		
+
+		if (name == null)
+			throw new IllegalStateException("subcircuit name not set yet");
 		return name;
 	} // end of getName method
 	
@@ -143,7 +155,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
@@ -151,7 +163,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			if (width == 0 && height == 0) {
 				jls.core.TextMetrics fm = g;
 				width = fm.stringWidth(" " + name + " ");
-				for (Element el : subCircuit.getElements()) {
+				for (Element el : getSubCircuit().getElements()) {
 					if (el instanceof InputPin || el instanceof OutputPin) {
 						Pin p = (Pin)el;
 						String pinName = p.getName();
@@ -181,7 +193,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		};
 		SortedSet<InputPin> inputList = new TreeSet<InputPin>(cmp);
 		SortedSet<OutputPin> outputList = new TreeSet<OutputPin>(cmp);
-		for (Element el : subCircuit.getElements()) {
+		for (Element el : getSubCircuit().getElements()) {
 			if (el instanceof InputPin pin) {
 				inputList.add(pin);
 			}
@@ -244,7 +256,10 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				outmap.put(pin,out);
 				for (Input input : pin.inputs) {
 					if (input.isAttached()) {
-						out.setTriState(input.getWireEnd().isTriState());
+						WireEnd end = input.getWireEnd();
+							if (end == null)
+								throw new IllegalStateException("attached input has no wire end");
+							out.setTriState(end.isTriState());
 					}
 				}
 				if (pin.isLoadTriState()) {
@@ -267,7 +282,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		output.println("ELEMENT SubCircuit");
 		output.println(" String orient \"" + orientation.toString() + "\"");
 		super.save(output);
-		subCircuit.save(output);
+		getSubCircuit().save(output);
 		output.println("END");
 	} // end of save method
 
@@ -281,7 +296,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	@Override
 	public int saveFormatVersion() {
 
-		return subCircuit.formatVersionNeeded();
+		return getSubCircuit().formatVersionNeeded();
 	} // end of saveFormatVersion method
 	
 	/**
@@ -315,46 +330,47 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	public Element copy() {
 		
 		// create infrastructure
-		SubCircuit it = new SubCircuit(circuit);
+		SubCircuit it = new SubCircuit(getCircuit());
 		it.name = name;
-		it.subCircuit = new Circuit(subCircuit.getName());
-		it.subCircuit.setImported(it);
+		Circuit itSub = new Circuit(getSubCircuit().getName());
+		it.subCircuit = itSub;
+		itSub.setImported(it);
 		it.orientation = orientation;
-		
+
 		// make a set of all elements except attached wire ends in subcircuit
 		Set<Element> elements = new HashSet<Element>();
-		for (Element el : subCircuit.getElements()) {
+		for (Element el : getSubCircuit().getElements()) {
 			if (el instanceof WireEnd end) {
 				if (end.isAttached())
 					continue;
 			}
 			elements.add(el);
 		}
-		Util.copy(elements,it.subCircuit);
-		Util.partition(it.subCircuit);
-		
+		Util.copy(elements,itSub);
+		Util.partition(itSub);
+
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
 		for (Output output : outputs) {
 			it.outputs.add(output.copy(it));
 		}
-		
+
 		// build maps
 		for (Input input : it.inputs) {
-			for (Element el : it.subCircuit.getElements()) {
+			for (Element el : itSub.getElements()) {
 				if (!(el instanceof InputPin pin))
 					continue;
-				if (input.getName().equals(pin.getName())) {
+				if (java.util.Objects.equals(input.getName(), pin.getName())) {
 					it.inmap.put(input,pin);
 				}
 			}
 		}
 		for (Output output : it.outputs) {
-			for (Element el : it.subCircuit.getElements()) {
+			for (Element el : itSub.getElements()) {
 				if (!(el instanceof OutputPin pin))
 					continue;
-				if (output.getName().equals(pin.getName())) {
+				if (java.util.Objects.equals(output.getName(), pin.getName())) {
 					it.outmap.put(pin,output);
 				}
 			}
@@ -375,7 +391,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	@Override
 	public void remove(Circuit circ) {
 		
-		circ.removeName(name);
+		if (name != null)
+			circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
 	
@@ -387,7 +404,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	@Override
 	public String infoText() {
 		
-		return subCircuit.getName() + " (a subcircuit)";
+		return getSubCircuit().getName() + " (a subcircuit)";
 	} // end of showInfo method
 	
 	/**
@@ -399,7 +416,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	@Override
 	public void setWatched(boolean which) {
 		
-		for (Element element : subCircuit.getElements()) {
+		for (Element element : getSubCircuit().getElements()) {
 			if (element instanceof LogicElement le) {
 				le.setWatched(which);
 			}
@@ -412,7 +429,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	@Override
 	public void resetPropDelay() {
 		
-		subCircuit.resetAllDelays();
+		getSubCircuit().resetAllDelays();
 	} // end of resetPropDelay method
 
 	/**
@@ -439,14 +456,14 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		for (Element el : circ.getElements()) {
 			if (el instanceof InputPin pin) {
 				for (Input in : inputs) {
-					if (in.getName().equals(pin.getName())) {
+					if (java.util.Objects.equals(in.getName(), pin.getName())) {
 						inmap.put(in,pin);
 					}
 				}
 			}
 			else if (el instanceof OutputPin pin) {
 				for (Output out : outputs) {
-					if (out.getName().equals(pin.getName())) {
+					if (java.util.Objects.equals(out.getName(), pin.getName())) {
 						outmap.put(pin,out);
 					}
 				}
@@ -469,7 +486,9 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		
 		for (Input input : inputs) {
 			InputPin p = inmap.get(input);
-			
+			if (p == null)
+				throw new IllegalStateException("input has no mapped subcircuit input pin");
+
 			// if already checked, don't do it again
 			if (pinsChecked.contains(p))
 				continue;
@@ -485,6 +504,8 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				
 				// attached can be either, so find out which and propagate
 				WireEnd w = input.getWireEnd();
+				if (w == null)
+					throw new IllegalStateException("attached input has no wire end");
 				boolean is = w.isTriState();
 				pinsChecked.add(p);
 				p.setTriState(is);
@@ -527,7 +548,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param g The Graphics object used to draw this element.
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g) {
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		if(orientation == Orientation.LEFT)
 		{
 			orientation = Orientation.RIGHT;
@@ -558,7 +579,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		super.initInputs();
 		
 		// initialize subcircuit's elements
-		for (Element element : subCircuit.getElementsInStableOrder()) {
+		for (Element element : getSubCircuit().getElementsInStableOrder()) {
 			if (element instanceof LogicElement el) {
 				el.initInputs();
 			}
@@ -586,7 +607,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		// canonical seed order at every nesting depth (#181): the inner
 		// circuit's time-0 events must be posted in stable-id order for
 		// the same reason as Simulator.initSimulation's top-level walk
-		for (Element el : subCircuit.getElementsInStableOrder()) {
+		for (Element el : getSubCircuit().getElementsInStableOrder()) {
 			if (el instanceof LogicElement lel) {
 				lel.initSim(sim);
 			}
@@ -602,11 +623,13 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// send all input values to input pins of subcircuit
 		for (Input in : inputs) {
 			InputPin pin = inmap.get(in);
+			if (pin == null)
+				throw new IllegalStateException("input has no mapped subcircuit input pin");
 			BitSet copy = null;
 			if (in.getValue() != null)
 				copy = (BitSet)in.getValue().clone();
@@ -623,9 +646,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param now The current time.
 	 * @param sim The simulator.
 	 */
-	public void send(OutputPin pin, BitSet value, long now, Simulator sim) {
+	public void send(OutputPin pin, @Nullable BitSet value, long now, Simulator sim) {
 		
 		Output out = outmap.get(pin);
+		if (out == null)
+			throw new IllegalStateException("no output mapped for the given output pin");
 		out.propagate(value,now,sim);
 	} // end of send method
 	

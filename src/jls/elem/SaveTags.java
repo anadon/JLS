@@ -1,5 +1,6 @@
 package jls.elem;
 
+import org.jspecify.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 
@@ -105,7 +106,7 @@ public final class SaveTags {
 	 * @return the element class, or null if the tag is not part of the
 	 *         save format (the caller owns the user-facing diagnostic).
 	 */
-	public static Class<? extends Element> resolve(String tag) {
+	public static @Nullable Class<? extends Element> resolve(String tag) {
 
 		String canonical = ALIASES.getOrDefault(tag, tag);
 		Class<? extends Element> type = WRITABLE.get(canonical);

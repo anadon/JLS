@@ -4,6 +4,8 @@ import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.*;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 
 import java.util.*;
@@ -37,7 +39,7 @@ public abstract sealed class Group extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkBits(int bits) {
+	public static @Nullable String checkBits(int bits) {
 
 		return bits < 2 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -75,7 +77,7 @@ public abstract sealed class Group extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// no need to do anything if no graphics object
 		if (g == null)
@@ -218,7 +220,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -235,7 +237,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{

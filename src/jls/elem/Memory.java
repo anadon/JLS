@@ -9,6 +9,8 @@ import java.io.*;
 import java.math.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Memory element, initialized internally or from a file.
  * Implements either ROM or SRAM (no DRAM).
@@ -61,7 +63,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#memoryCapacityRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkCapacity(int capacity) {
+	public static @Nullable String checkCapacity(int capacity) {
 
 		return capacity < 1 ? CAPACITY_CONSTRAINT : null;
 	} // end of checkCapacity method
@@ -75,7 +77,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#memoryBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkBits(int bits) {
+	public static @Nullable String checkBits(int bits) {
 
 		return bits < 1 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -103,8 +105,11 @@ public final class Memory extends LogicElement
 	private boolean watched = false;
 
 	// running properties
-	/** The "capacity x bits" type description drawn inside the element. */
-	private String specs;
+	/**
+	 * The "capacity x bits" type description drawn inside the element, or
+	 * null before {@link #init} has computed it.
+	 */
+	private @Nullable String specs;
 	
 	/**
 	 * Create a new memory element.
@@ -125,15 +130,17 @@ public final class Memory extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up
+		String specs;
 		if (type == Type.RAM) {
 			specs = " " + capacity + "x" + bits + " RAM ";
 		}
 		else {
 			specs = " " + capacity + "x" + bits + " ROM ";
 		}
+		this.specs = specs;
 
 		// set up size if there is a graphics object
 		int s = Geometry.SPACING;
@@ -184,6 +191,10 @@ public final class Memory extends LogicElement
 	 */
 	public String getSpecs() {
 
+		String specs = this.specs;
+		if (specs == null) {
+			throw new IllegalStateException("getSpecs before init");
+		}
 		return specs;
 	} // end of getSpecs method
 
@@ -346,7 +357,7 @@ public final class Memory extends LogicElement
 		
 		if (name.equals("name")) {
 			this.name = value;
-			circuit.addName(value);
+			getCircuit().addName(value);
 		} else if (name.equals("type")) {
 			if (value.equals("RAM")) {
 				type = Type.RAM;
@@ -422,7 +433,7 @@ public final class Memory extends LogicElement
 	 * @jls.testedby jls.elem.MemoryInitEncodingTest#refusesNonCanonicalText()
 	 * @jls.testedby jls.elem.MemoryInitEncodingTest#toleratesMissingFinalNewline()
 	 */
-	static String encodeInitRLE(String text) {
+	static @Nullable String encodeInitRLE(String text) {
 
 		return encodeInitRLE(text, MAX_INIT_WORDS);
 	} // end of encodeInitRLE method
@@ -443,7 +454,7 @@ public final class Memory extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.MemoryInitEncodingTest#outOfCapacityAddressesStayRaw()
 	 */
-	static String encodeInitRLE(String text, long maxWords) {
+	static @Nullable String encodeInitRLE(String text, long maxWords) {
 
 		if (text.isEmpty()) {
 			return null;
@@ -594,7 +605,7 @@ public final class Memory extends LogicElement
 	@Override
 	public Element copy() {
 		
-		Memory it = new Memory(circuit);
+		Memory it = new Memory(getCircuit());
 		it.name = name;
 		it.type = type;
 		it.bits = bits;
@@ -782,7 +793,7 @@ public final class Memory extends LogicElement
 	 * 
 	 * @return null if syntax is ok, an error message if not.
 	 */
-	public String initOK(String str, int maxAddr, int bitsPerWord, boolean storing) {
+	public @Nullable String initOK(String str, int maxAddr, int bitsPerWord, boolean storing) {
 		
 		// set up scanner
 		Scanner scan = new Scanner(str);
@@ -841,6 +852,11 @@ public final class Memory extends LogicElement
 				
 				// put data in memory if storing
 				if (storing) {
+					WordStore initMem = this.initMem;
+					if (initMem == null) {
+						throw new IllegalStateException(
+								"initOK(storing) before initSim");
+					}
 					initMem.put(addr,bval);
 				}
 			}
@@ -867,24 +883,35 @@ public final class Memory extends LogicElement
 		// nothing changes in ROM's
 		if (type == Type.ROM)
 			return;
-		
+
+		// this is only called after a simulation, so the stores exist
+		WordStore mem = this.mem;
+		WordStore initMem = this.initMem;
+		if (mem == null || initMem == null) {
+			throw new IllegalStateException(
+					"printChangedValues before simulation");
+		}
+
 		// check all locations
 		boolean firstTime = true;
 		for (int addr : mem.addresses()) {
-			
+
 			// get initial value
+			BitSet stored = initMem.get(addr);
 			BitSet initial;
-			if (initMem.get(addr) == null) {
+			if (stored == null) {
 				initial = new BitSet(1);
 			}
 			else {
-				initial = initMem.get(addr);
+				initial = stored;
 			}
-			
-			// if no change, do nothing
-			if (mem.get(addr).equals(initial))
+
+			// if no change, do nothing (addr came from mem.addresses(),
+			// so the current word is present)
+			BitSet current = mem.get(addr);
+			if (current == null || current.equals(initial))
 				continue;
-			
+
 			// if first time printing, print a heading
 			if (firstTime) {
 				firstTime = false;
@@ -900,7 +927,7 @@ public final class Memory extends LogicElement
 			// print address, old value and new value
 			System.out.printf(" 0x%x: ", addr);
 			String oldValue = BitSetUtils.toDisplay(initial,bits);
-			String newValue = BitSetUtils.toDisplay(mem.get(addr),bits);
+			String newValue = BitSetUtils.toDisplay(current,bits);
 			System.out.println(oldValue + " -> " + newValue);
 		}
 		
@@ -930,20 +957,23 @@ public final class Memory extends LogicElement
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	/** The running memory contents during simulation. */
-	private WordStore mem;
-	/** The initial memory image, copied to the running memory at simulation start. */
-	private WordStore initMem;
+	/** The running memory contents during simulation, or null before initSim. */
+	private @Nullable WordStore mem;
+	/**
+	 * The initial memory image, copied to the running memory at simulation
+	 * start, or null before initSim.
+	 */
+	private @Nullable WordStore initMem;
 	/** The value currently driven on the output, or null if none. */
-	private BitSet currentValue;
+	private @Nullable BitSet currentValue;
 	/**
 	 * One entry in the write history: the value written (what), the address
 	 * written to (where), and the simulation time of the write (when). Used
 	 * to populate the activity dialog.
 	 */
 	private static class WriteRecord {
-		/** The value written. */
-		BitSet what;
+		/** The value written; null until the caller fills it in. */
+		@Nullable BitSet what;
 		/** The address written to. */
 		int where;
 		/** The simulation time of the write. */
@@ -981,7 +1011,7 @@ public final class Memory extends LogicElement
 		 *
 		 * @return the word, or null if absent.
 		 */
-		BitSet get(int addr);
+		@Nullable BitSet get(int addr);
 
 		/**
 		 * Store a word at an address.
@@ -1046,7 +1076,7 @@ public final class Memory extends LogicElement
 		 * @return the word, or null if absent.
 		 */
 		@Override
-		public BitSet get(int addr) {
+		public @Nullable BitSet get(int addr) {
 			if (!present.get(addr))
 				return null;
 			return BitSet.valueOf(new long[] { words[addr] });
@@ -1124,7 +1154,7 @@ public final class Memory extends LogicElement
 		 * @return the word, or null if absent.
 		 */
 		@Override
-		public BitSet get(int addr) {
+		public @Nullable BitSet get(int addr) {
 			return map.get(addr);
 		}
 
@@ -1187,8 +1217,9 @@ public final class Memory extends LogicElement
 	public void initSim(Simulator sim) {
 		
 		// create initial memory array
-		initMem = newWordStore();
-		
+		WordStore initMem = newWordStore();
+		this.initMem = initMem;
+
 		// if there is an initialization file specified
 		if (!fileName.isEmpty()) {
 			
@@ -1280,7 +1311,7 @@ public final class Memory extends LogicElement
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// todo
 		/**
@@ -1288,9 +1319,9 @@ public final class Memory extends LogicElement
 		 * action to perform, the target address, and the data involved.
 		 */
 		class MemAction {
-			MemoryAction action;
+			@Nullable MemoryAction action;
 			int addr;
-			BitSet data;
+			@Nullable BitSet data;
 		};
 		
 		// if an input has changed ...
@@ -1352,26 +1383,38 @@ public final class Memory extends LogicElement
 			
 			// finish read or write
 			MemAction act = (MemAction)todo;
-			
+
+			// the stores exist once the simulation has started
+			WordStore mem = this.mem;
+			if (mem == null) {
+				throw new IllegalStateException("react before initSim");
+			}
+
 			// if a write...
 			if (act.action == MemoryAction.WRITE) {
-				
+
+				// a WRITE action always carries the data to write
+				BitSet actData = act.data;
+				if (actData == null) {
+					throw new IllegalStateException("WRITE action without data");
+				}
+
 				// get the value to write
-				BitSet value = (BitSet)act.data.clone();
-				
+				BitSet value = (BitSet)actData.clone();
+
 				// if address is not legal, don't write anything
 				if (act.addr >= capacity)
 					return;
-				
+
 				// save in activity history (newest first, bounded)
 				WriteRecord rec = new WriteRecord();
-				rec.what = (BitSet)(act.data.clone());
+				rec.what = (BitSet)(actData.clone());
 				rec.where = act.addr;
 				rec.when = now;
 				activity.addFirst(rec);
 				if (activity.size() > ACTIVITY_LIMIT)
 					activity.removeLast();
-				
+
 				// store in memory
 				mem.put(act.addr, value);
 			}
@@ -1387,12 +1430,13 @@ public final class Memory extends LogicElement
 				}
 				
 				// get value from memory
+				BitSet stored = mem.get(act.addr);
 				BitSet value;
-				if (mem.get(act.addr) == null) {
+				if (stored == null) {
 					value =  new BitSet();
 				}
 				else {
-					value = (BitSet)mem.get(act.addr).clone();
+					value = (BitSet)stored.clone();
 				}
 				
 				// send to output
@@ -1420,7 +1464,10 @@ public final class Memory extends LogicElement
 		
 		String result = "";
 		for (WriteRecord rec : activity) {
-			result += "0x" + BitSetUtils.ToString(rec.what,16) +
+			BitSet what = rec.what;
+			if (what == null)
+				what = new BitSet();
+			result += "0x" + BitSetUtils.ToString(what,16) +
 			" written to location 0x" +
 			Integer.toString(rec.where,16) +
 			" at time " + rec.when + "\n";
@@ -1430,12 +1477,13 @@ public final class Memory extends LogicElement
 	
 	/**
 	 * The current value is the last value output.
-	 * 
-	 * @return the last value output.
+	 *
+	 * @return the last value output, or null if the output is not driving
+	 *         (tri-state off).
 	 */
 	@Override
-	public BitSet getCurrentValue() {
-		
+	public @Nullable BitSet getCurrentValue() {
+
 		return currentValue;
 	} // end of getCurrentValue method
 	
@@ -1443,13 +1491,17 @@ public final class Memory extends LogicElement
 	 * Get the current value of a given memory location.
 	 * 
 	 * @param loc The location.
-	 * 
-	 * @return the value at that location.
+	 *
+	 * @return the value at that location, or null if that location has
+	 *         never been set or the simulation has not run yet.
 	 *
 	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 */
-	public BitSet getCurrentValue(int loc){
+	public @Nullable BitSet getCurrentValue(int loc){
 
+	   WordStore mem = this.mem;
+	   if (mem == null)
+	      return null;
 	   return mem.get(loc);
 	   } // end of getCurrentValue method
 

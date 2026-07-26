@@ -8,6 +8,8 @@ import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Starting point of a named wire.
  * 
@@ -21,8 +23,11 @@ public final class JumpStart extends LogicElement
 	private static final int defaultBits = 1;
 
 	// saved properties
-	/** The wire name (shared with the matching jump ends). */
-	private String name;
+	/**
+	 * The wire name (shared with the matching jump ends), or null until set
+	 * by a load or by {@link #setName} after construction.
+	 */
+	private @Nullable String name;
 	/** The bit width of the wire. */
 	private int bits = defaultBits;
 	/** True if this jump start's value is watched during simulation. */
@@ -77,7 +82,7 @@ public final class JumpStart extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		if (g != null) {
 
@@ -102,7 +107,9 @@ public final class JumpStart extends LogicElement
 		}
 		
 		// save name in jumpstart list in this circuit
-		circuit.addJumpStart(name,this);
+		if (name == null)
+			throw new IllegalStateException("jump start name not set yet");
+		getCircuit().addJumpStart(name,this);
 		
 	} // end of init method
 	
@@ -130,7 +137,12 @@ public final class JumpStart extends LogicElement
 			 * @return the jump start's name.
 			 */
 			@Override
-			protected String get(Element el) { return ((JumpStart)el).name; }
+			protected String get(Element el) {
+				String n = ((JumpStart)el).name;
+				if (n == null)
+					throw new IllegalStateException("jump start has no name to save");
+				return n;
+			}
 			/**
 			 * Store a loaded name into the given jump start and register
 			 * it with the circuit.
@@ -251,7 +263,7 @@ public final class JumpStart extends LogicElement
 	@Override
 	public Element copy() {
 
-		JumpStart it = new JumpStart(circuit);
+		JumpStart it = new JumpStart(getCircuit());
 		it.inputs.add(inputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -264,8 +276,8 @@ public final class JumpStart extends LogicElement
 	 * @jls.testedby jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
-	public String getName() {
-		
+	public @Nullable String getName() {
+
 		return name;
 	} // end of getName method
 	
@@ -310,9 +322,11 @@ public final class JumpStart extends LogicElement
 	public void remove(Circuit circ) {
 		
 		// remove from list of jump starts and list of names in circuit
-		circuit.removeName(name);
+		if (name == null)
+			throw new IllegalStateException("jump start name not set yet");
+		getCircuit().removeName(name);
 		circ.removeJumpStart(name);
-		
+
 		// remove corresonding jump ends
 		Set<Element> rems = new HashSet<Element>();
 		for (Element el : circ.getElements()) {
@@ -344,7 +358,7 @@ public final class JumpStart extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(orientation == Orientation.LEFT)
 		{
@@ -407,10 +421,11 @@ public final class JumpStart extends LogicElement
 	@Override
 	public void setTriState(boolean which) {
 		
-		for (Element el : circuit.getElements()) {
+		String myName = getName();
+		for (Element el : getCircuit().getElements()) {
 			if (!(el instanceof JumpEnd jend))
 				continue;
-			if (getName().equals(jend.getName()))
+			if (myName != null && myName.equals(jend.getName()))
 				jend.setTriState(which);
 		}
 	} // end of setTriState method
@@ -419,8 +434,8 @@ public final class JumpStart extends LogicElement
 //	Simulation
 //	-------------------------------------------------------------------------------
 	
-	/** The current value of the named wire during simulation. */
-	private BitSet currentValue = new BitSet();
+	/** The current value of the named wire during simulation, or null when tri-stated off. */
+	private @Nullable BitSet currentValue = new BitSet();
 	/** The jump ends with a matching name, built at simulation start. */
 	private Set<JumpEnd> jumpEnds = new HashSet<JumpEnd>();
 	
@@ -430,8 +445,8 @@ public final class JumpStart extends LogicElement
 	 * @return the current value.
 	 */
 	@Override
-	public BitSet getCurrentValue() {
-		
+	public @Nullable BitSet getCurrentValue() {
+
 		if (currentValue == null)
 			return null;
 		else
@@ -448,8 +463,10 @@ public final class JumpStart extends LogicElement
 	public void initSim(Simulator sim) {
 		
 		// create set of matching jump ends
+		if (name == null)
+			throw new IllegalStateException("jump start name not set yet");
 		jumpEnds.clear();
-		for (Element el : circuit.getElements()) {
+		for (Element el : getCircuit().getElements()) {
 			if (!(el instanceof JumpEnd jend))
 				continue;
 			if (name.equals(jend.getName())) {
@@ -470,7 +487,7 @@ public final class JumpStart extends LogicElement
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		
 		// get the input value

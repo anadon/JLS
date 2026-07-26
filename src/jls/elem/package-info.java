@@ -10,5 +10,12 @@
  * state machines, and nested {@link jls.elem.SubCircuit}s. Each element knows
  * how to draw itself, edit its properties, persist to and load from file, and
  * react to signal changes during simulation.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.elem;
+
+import org.jspecify.annotations.NullMarked;

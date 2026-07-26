@@ -8,6 +8,7 @@ import jls.sim.*;
 import java.util.Locale;
 
 import java.util.BitSet;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 
@@ -156,7 +157,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		// set up size
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
@@ -239,10 +240,7 @@ public abstract sealed class Gate extends LogicElement
 	 *
 	 * @return the outline model for this gate's body symbol.
 	 */
-	public GateOutline outline() {
-
-		return null;
-	} // end of outline method
+	public abstract GateOutline outline();
 
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by every gate kind.
@@ -556,7 +554,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		// one shared enum (issue #78 H3), so the quarter-turn is its
 		// ccw()/cw() instead of a hand-rolled transition table
@@ -632,7 +630,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -647,7 +645,7 @@ public abstract sealed class Gate extends LogicElement
 //-------------------------------------------------------------------------------
 
 	/** The output value currently propagating through this gate. */
-	private BitSet toBeValue;
+	private @Nullable BitSet toBeValue;
 
 	/**
 	 * Compute this gate's output value from its current input values,
@@ -689,7 +687,7 @@ public abstract sealed class Gate extends LogicElement
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// if the input has changed ...
 		if (todo == null) {

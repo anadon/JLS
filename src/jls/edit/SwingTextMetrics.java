@@ -73,19 +73,38 @@ public final class SwingTextMetrics implements TextMetrics, TextMetrics.Provider
 	@Override
 	public TextMetrics forFont(String name, boolean bold, boolean italic,
 			int size) {
+		Graphics gg = requireGraphics();
 		int style = (bold ? Font.BOLD : 0) | (italic ? Font.ITALIC : 0);
-		return new SwingTextMetrics(g.getFontMetrics(new Font(name, style, size)));
+		return new SwingTextMetrics(gg.getFontMetrics(new Font(name, style, size)));
 	} // end of forFont method
 
 	@Override
 	public String defaultFontName() {
-		return g.getFont().getFamily();
+		return requireGraphics().getFont().getFamily();
 	} // end of defaultFontName method
 
 	@Override
 	public int defaultFontSize() {
-		return g.getFont().getSize();
+		return requireGraphics().getFont().getSize();
 	} // end of defaultFontSize method
+
+	/**
+	 * The backing graphics, required by the {@link TextMetrics.Provider}
+	 * role. Only a graphics-backed instance (from {@link #of(Graphics)}) can
+	 * serve as a provider; the metrics-only {@link #SwingTextMetrics(FontMetrics)}
+	 * instance has no graphics.
+	 *
+	 * @return the non-null backing graphics.
+	 * @throws IllegalStateException if this is a metrics-only instance.
+	 */
+	private Graphics requireGraphics() {
+		Graphics gg = g;
+		if (gg == null) {
+			throw new IllegalStateException(
+					"font provider requires a graphics-backed SwingTextMetrics");
+		}
+		return gg;
+	} // end of requireGraphics method
 
 	@Override
 	public int stringWidth(String s) {

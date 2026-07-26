@@ -35,6 +35,9 @@ public final class JumpStartRenderer implements ElementRenderer {
 		int y = js.getY();
 		int width = js.getWidth();
 		String name = js.getName();
+		if (name == null) {
+			name = "";
+		}
 
 		// draw context
 		ElementRenderSupport.drawHighlight(g, js);

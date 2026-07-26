@@ -56,7 +56,7 @@ public final class Constant extends LogicElement {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		int s = Geometry.SPACING;
 		// set up size if there is a graphics object
@@ -188,7 +188,7 @@ public final class Constant extends LogicElement {
 	@Override
 	public Element copy() {
 		
-		Constant it = new Constant(circuit);
+		Constant it = new Constant(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -338,7 +338,7 @@ public final class Constant extends LogicElement {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -370,7 +370,7 @@ public final class Constant extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -485,16 +485,24 @@ public final class Constant extends LogicElement {
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
-		// get the new output value
+		// get the new output value; a Constant has no inputs, so it only
+		// ever reacts to its own posted value events (todo is never null)
 		BitSet newValue = (BitSet)todo;
-		
+		if (newValue == null) {
+			throw new IllegalStateException(
+					"constant reacted without a value to output");
+		}
+
 		// send correct number of bits to output
 		Output out = (Output)(outputs.toArray()[0]);
 		if (!out.isAttached())
 			return;
-		int bits = out.getWireEnd().getBits();
+		WireEnd end = out.getWireEnd();
+		if (end == null)
+			throw new IllegalStateException("attached output has no wire end");
+		int bits = end.getBits();
 		BitSet mask = new BitSet(bits);
 		mask.set(0,bits);
 		newValue.and(mask);

@@ -18,6 +18,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.KeyPad;
 import jls.TellUser;
 import jls.core.Orientation;
@@ -106,7 +108,7 @@ public final class GateDialog implements ElementDialog {
 		/** True if the creation dialog was cancelled. */
 		private boolean cancelled;
 		/** Button to repeat the previously created gate's settings. */
-		private JButton repeat;
+		private @Nullable JButton repeat;
 		/** Text field for the number of inputs. */
 		private final JTextField inputsField =
 				new JTextField(DEFAULT_INPUTS + "", 5);

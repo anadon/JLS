@@ -10,5 +10,12 @@
  * emitters, so a new target language is added without touching the model
  * or the walker. Circuits containing elements the exporter cannot express
  * raise {@link jls.hdl.HdlExportException} and produce no output.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.hdl;
+
+import org.jspecify.annotations.NullMarked;

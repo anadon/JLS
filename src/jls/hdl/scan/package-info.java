@@ -13,5 +13,12 @@
  * {@code write_json} extraction path rather than growing the scanner
  * (issue #63 &#167;9). Everything here is dependency-free, headless, and
  * pure text processing.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.hdl.scan;
+
+import org.jspecify.annotations.NullMarked;

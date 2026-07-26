@@ -3,6 +3,8 @@ package jls.elem;
 import jls.sim.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Output point on an element.
  * WireEnds connect to these.
@@ -26,7 +28,8 @@ public final class Output extends Put {
 	 * 		corner of the element this put is in.
 	 * @param bits The number of bits in the output.  0 implies an arbitrary number.
 	 */
-	public Output(String name, LogicElement element, int xr, int yr, int bits) {
+	public Output(@Nullable String name, @Nullable LogicElement element,
+			int xr, int yr, int bits) {
 		
 		super(name, element, xr, yr, bits);
 	} // end of constructor
@@ -74,8 +77,9 @@ public final class Output extends Put {
 	public void setTriState(boolean which) {
 		
 		triState = which;
-		if (isAttached()) {
-			getWireEnd().getNet().setTriState(which);
+		WireEnd end = getWireEnd();
+		if (end != null) {
+			end.getNet().setTriState(which);
 		}
 	} // end of setTriState method
 	
@@ -98,22 +102,23 @@ public final class Output extends Put {
 	 * Should only be used by initSim.
 	 * Does not make a copy, so make sure value does not change.
 	 * 
-	 * @param value The value.
+	 * @param value The value, or null for a high-impedance (tri-state) value.
 	 */
-	public void setValue(BitSet value) {
+	public void setValue(@Nullable BitSet value) {
 		
 		currentValue = value;
-		if (isAttached())
-			getWireEnd().getNet().setValue(value);
+		WireEnd end = getWireEnd();
+		if (end != null)
+			end.getNet().setValue(value);
 	} // end of setValue method
 	
 	/**
 	 * Get the current value of this output.
 	 * 
-	 * @return a copy of the current value.
+	 * @return the current value, or null for a high-impedance (tri-state) value.
 	 */
-	public BitSet getValue() {
-		
+	public @Nullable BitSet getValue() {
+
 		return currentValue;
 	} // end of getValue method
 	
@@ -123,11 +128,11 @@ public final class Output extends Put {
 	 * Current value of this output saved.
 	 * Uses wire net to do the work.
 	 * 
-	 * @param value The value to send.
+	 * @param value The value to send, or null for a high-impedance (tri-state) value.
 	 * @param now The current time.
 	 * @param sim The simulator to post events to.
 	 */
-	public void propagate(BitSet value, long now, Simulator sim) {
+	public void propagate(@Nullable BitSet value, long now, Simulator sim) {
 		
 		// don't do anything if the value hasn't changed
 		if (currentValue == null) {
@@ -152,8 +157,11 @@ public final class Output extends Put {
 		}
 		
 		// get wire net of attached wire end
-		WireNet net = getWireEnd().getNet();
-		
+		WireEnd end = getWireEnd();
+		if (end == null)
+			return;
+		WireNet net = end.getNet();
+
 		// send value
 		net.propagate(value,now,sim);
 		

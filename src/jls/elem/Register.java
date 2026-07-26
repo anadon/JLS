@@ -6,6 +6,7 @@ import jls.*;
 import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.BitSet;
+import org.jspecify.annotations.Nullable;
 
 import java.math.*;
 
@@ -187,7 +188,7 @@ public final class Register extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up size if there is a graphics object
 		if (g != null) {
@@ -430,7 +431,7 @@ public final class Register extends LogicElement
 	@Override
 	public Element copy() {
 
-		Register it = new Register(circuit);
+		Register it = new Register(getCircuit());
 		it.base = base;	// display radix is not a saved attribute
 		it.inputs.add(inputs.get(0).copy(it));
 		it.inputs.add(inputs.get(1).copy(it));
@@ -599,7 +600,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g) {
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		if(direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
@@ -640,7 +641,7 @@ public final class Register extends LogicElement
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g) {
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -715,7 +716,7 @@ public final class Register extends LogicElement
 //	-------------------------------------------------------------------------------
 	
 	/** The value scheduled to appear on the outputs after the propagation delay. */
-	private BitSet toBeValue;
+	private @Nullable BitSet toBeValue;
 	/** The value currently stored in this register. */
 	private BitSet currentValue = new BitSet();
 	/** The most recent value seen on the clock (C) input. */
@@ -729,11 +730,8 @@ public final class Register extends LogicElement
 	 */
 	@Override
 	public BitSet getCurrentValue() {
-		
-		if (currentValue == null)
-			return null;
-		else
-			return (BitSet)currentValue.clone();
+
+		return (BitSet)currentValue.clone();
 	} // end of getCurrentValue method
 	
 	/**
@@ -770,7 +768,7 @@ public final class Register extends LogicElement
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if an input has changed ...
 		if (todo == null) {

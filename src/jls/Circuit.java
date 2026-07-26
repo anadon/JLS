@@ -19,6 +19,7 @@ import java.util.TreeMap;
 
 
 import jls.core.Geometry;
+import jls.elem.Put;
 import jls.elem.Element;
 import jls.elem.ElementRegistry;
 import jls.elem.ElementType;
@@ -1376,9 +1377,10 @@ public class Circuit {
 					if (vend.isLoadTriState()) {
 						net.loadTriState();
 					}
-					if (vend.isAttached()) {
-						net.setBits(vend.getPut().getBits());
-						if (vend.getPut() instanceof Output) {
+					Put vendPut = vend.getPut();
+					if (vendPut != null) {
+						net.setBits(vendPut.getBits());
+						if (vendPut instanceof Output) {
 							net.setInput();
 						}
 					}
@@ -1755,12 +1757,13 @@ public class Circuit {
 	 * Get the jumpstart with the given name.
 	 * 
 	 * @param name
-	 *            The name of the desired jumpstart.
-	 * 
+	 *            The name of the desired jumpstart, or null (which never
+	 *            matches).
+	 *
 	 * @return the jumpstart, or null if it no jumpstart with the given name
 	 *         exists.
 	 */
-	public @Nullable JumpStart getJumpStart(String name) {
+	public @Nullable JumpStart getJumpStart(@Nullable String name) {
 
 		return starts.get(name);
 	} // end of getJumpStart method

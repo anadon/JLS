@@ -414,9 +414,17 @@ public final class VerilogEmitter implements HdlEmitter {
 			int hi) {
 
 		if (s.source.isNet()) {
-			return select(s.source.netName(), s.source.bits(), lo, hi);
+			var name = s.source.netName();
+			if (name == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			return select(name, s.source.bits(), lo, hi);
 		}
-		BigInteger slice = s.source.literalValue().shiftRight(lo);
+		var value = s.source.literalValue();
+		if (value == null) {
+			throw new IllegalStateException("literal operand has null value");
+		}
+		BigInteger slice = value.shiftRight(lo);
 		return literal(slice, hi - lo + 1);
 	} // end of sourceSelect method
 
@@ -451,7 +459,18 @@ public final class VerilogEmitter implements HdlEmitter {
 	 */
 	private static String operand(HdlModel.Operand o) {
 
-		return o.isNet() ? o.netName() : literal(o.literalValue(), o.bits());
+		if (o.isNet()) {
+			var name = o.netName();
+			if (name == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			return name;
+		}
+		var value = o.literalValue();
+		if (value == null) {
+			throw new IllegalStateException("literal operand has null value");
+		}
+		return literal(value, o.bits());
 	} // end of operand method
 
 	/**

@@ -1,5 +1,7 @@
 package jls.elem;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.core.Orientation;
 import jls.*;
 
@@ -44,8 +46,10 @@ public abstract sealed class Element
 	private int savex;						// so it can be put back after an aborted move
 	/** The saved y-coordinate, restored after an aborted move. */
 	private int savey;
-	/** The circuit this element is part of. */
-	protected Circuit circuit;				// the circuit this element is part of
+	/** The circuit this element is part of; null for a wire not yet
+	 * placed in one (a {@link Wire} is built before it is added to a
+	 * circuit, then given its circuit via {@link #setCircuit}). */
+	protected @Nullable Circuit circuit;	// the circuit this element is part of
 
 	/**
 	 * Create a new Element object.
@@ -54,7 +58,7 @@ public abstract sealed class Element
 	 *
 	 * @jls.testedby jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
 	 */
-	public Element(Circuit circuit) {
+	public Element(@Nullable Circuit circuit) {
 
 		this.circuit = circuit;
 	} // end of constructor
@@ -90,6 +94,10 @@ public abstract sealed class Element
 	 */
 	public Circuit getCircuit() {
 
+		if (circuit == null) {
+			throw new IllegalStateException(
+					"element is not placed in a circuit yet");
+		}
 		return circuit;
 	} // end of getCircuit method
 
@@ -406,20 +414,24 @@ public abstract sealed class Element
 	 *
 	 * @throws Exception always, unless overridden by a subclass.
 	 */
-	public void init(jls.core.TextMetrics g) throws Exception{
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) throws Exception{
 		throw new Exception("ERROR: using undefined function from " + this.getName());
 	}
 
 	/**
-	 * Placeholder for element copies.
+	 * Placeholder for element copies. Elements that support copying
+	 * override this; the base returns null, which the editor treats as
+	 * "copied through another path" (wires and wire ends are copied by
+	 * the editor, not through {@code copy()}).
 	 *
-	 * @return a copy of this element, or null from this placeholder implementation.
+	 * @return a copy of this element, or null from this placeholder
+	 *         implementation.
 	 *
 	 * @jls.testedby jls.AllElementsRoundTripTest#copyPreservesEverySavedAttribute()
 	 * @jls.testedby jls.StableElementIdTest#copyMintsAFreshId()
 	 * @jls.testedby jls.elem.AttributePersistenceTest#copyIsFieldEquivalent()
 	 */
-	public Element copy() {
+	public @Nullable Element copy() {
 
 		return null;
 	} // end of copy method
@@ -688,7 +700,7 @@ public abstract sealed class Element
 	 *
 	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
 	 */
-	public Put getPut(int x, int y) {
+	public @Nullable Put getPut(int x, int y) {
 
 		return null;
 	} // end of getPut method
@@ -792,7 +804,7 @@ public abstract sealed class Element
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freeInput()
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#nonGroupPutsNeverMix()
 	 */
-	public Put getPut(String name) {
+	public @Nullable Put getPut(String name) {
 
 		return null;
 	} // end of getPut method
@@ -862,7 +874,7 @@ public abstract sealed class Element
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		throw new UnsupportedOperationException("Rotate");
 	}
@@ -881,7 +893,7 @@ public abstract sealed class Element
 	 * This method will flip an element, it must be overridden by classes that support it
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		throw new UnsupportedOperationException("Flip");
 	}
@@ -962,7 +974,7 @@ public abstract sealed class Element
 	 * 
 	 * @return null;
 	 */
-	public String getName() {
+	public @Nullable String getName() {
 
 		return null;
 	} // end of getName method

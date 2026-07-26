@@ -23,5 +23,12 @@
  * package is engine-neutral so that runner - or any future engine -
  * plugs in behind {@link jls.hdl.layout.SchematicLayouter} without
  * importer changes.</p>
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.hdl.layout;
+
+import org.jspecify.annotations.NullMarked;

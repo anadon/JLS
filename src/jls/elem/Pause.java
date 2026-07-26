@@ -3,6 +3,9 @@ package jls.elem;
 import jls.core.Geometry;
 import jls.*;
 import jls.sim.*;
+
+import org.jspecify.annotations.Nullable;
+
 import java.io.*;
 
 import java.util.*;
@@ -32,7 +35,7 @@ public final class Pause extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up size
 		int s = Geometry.SPACING;
@@ -87,7 +90,7 @@ public final class Pause extends LogicElement {
 	@Override
 	public Element copy() {
 
-		Pause it = new Pause(circuit);
+		Pause it = new Pause(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -125,7 +128,7 @@ public final class Pause extends LogicElement {
 	//	-------------------------------------------------------------------------------
 
 	/** The input value assumed at simulation start: all zeros, or null when the input net is tri-state. */
-	private BitSet currentValue = new BitSet();
+	private @Nullable BitSet currentValue = new BitSet();
 
 	/**
 	 * Initialize simulation.
@@ -140,7 +143,10 @@ public final class Pause extends LogicElement {
 		for (Input input : inputs) {
 			if (!input.isAttached())
 				continue;
-			if (input.getWireEnd().getNet().isTriState()) {
+			WireEnd end = input.getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached input has no wire end");
+			if (end.getNet().isTriState()) {
 				currentValue = null;
 			}
 			else {
@@ -159,7 +165,7 @@ public final class Pause extends LogicElement {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// find the attached input
 		for (Input input : inputs) {

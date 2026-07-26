@@ -38,7 +38,7 @@ public final class SigGen extends SigSim {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// do nothing if no graphics object
 		if (g == null)
@@ -149,7 +149,7 @@ public final class SigGen extends SigSim {
 	@Override
 	public SigGen copy() {
 
-		SigGen it = new SigGen(circuit);
+		SigGen it = new SigGen(getCircuit());
 		super.copy(it);
 		return it;
 	} // end of copy method
@@ -179,7 +179,7 @@ public final class SigGen extends SigSim {
 	public void initSim(Simulator sim) {
 		
 		// do nothing if in an imported circuit
-		if (circuit.isImported())
+		if (getCircuit().isImported())
 			return;
 		
 		Scanner input = new Scanner(signals);

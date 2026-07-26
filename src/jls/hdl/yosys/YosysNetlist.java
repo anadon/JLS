@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A parsed Yosys {@code write_json} netlist (issue #61): the modules,
  * ports, cells, and net names of a design after the restricted pass
@@ -847,7 +849,8 @@ public final class YosysNetlist {
 	 * nonnegative net numbers or the constant strings "0", "1", "x",
 	 * "z".
 	 *
-	 * @param value The JSON value holding the vector.
+	 * @param value The JSON value holding the vector, or null when
+	 * the "bits" member is absent (a malformed netlist).
 	 * @param where The path context for error messages.
 	 *
 	 * @return the encoded bit vector.
@@ -855,8 +858,8 @@ public final class YosysNetlist {
 	 * @throws NetlistFormatException if the vector is missing or any
 	 * entry is malformed.
 	 */
-	private static int[] parseBits(JsonValue value, String where)
-			throws NetlistFormatException {
+	private static int[] parseBits(@Nullable JsonValue value,
+			String where) throws NetlistFormatException {
 
 		if (value == null || !value.isArray()) {
 			throw new NetlistFormatException(where
@@ -916,7 +919,7 @@ public final class YosysNetlist {
 	 * object of strings and numbers.
 	 */
 	private static LinkedHashMap<String, String> parseAttributes(
-			JsonValue value, String where)
+			@Nullable JsonValue value, String where)
 			throws NetlistFormatException {
 
 		LinkedHashMap<String, String> attributes =

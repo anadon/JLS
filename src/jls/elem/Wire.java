@@ -5,6 +5,8 @@ import jls.*;
 import java.io.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A wire segment (between two WireEnds), part of a WireNet.
  * 
@@ -13,8 +15,9 @@ import java.util.*;
 public final class Wire extends Element {
 	
 	// properties
-	/** The wire net this wire is a part of. */
-	private WireNet net;		// the wire net it is a part of
+	/** The wire net this wire is a part of, or null until it is placed in one
+	 * (set by {@link #setNet} after construction). */
+	private @Nullable WireNet net;		// the wire net it is a part of
 	/** One end of this wire. */
 	private WireEnd end1;		// the wire ends
 	/** The other end of this wire. */
@@ -24,7 +27,7 @@ public final class Wire extends Element {
 	/** True if the mouse is currently touching this wire, so it highlights. */
 	private boolean touching;	// touching a wire end?
 	/** The name of the probe on this wire, or null if it has no probe. */
-	private String probeName = null;
+	private @Nullable String probeName = null;
 	
 	/**
 	 * Create a new wire with the given ends.
@@ -46,7 +49,7 @@ public final class Wire extends Element {
 	 * This form of init not used.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// do nothing
 	} // end of init method
@@ -144,6 +147,21 @@ public final class Wire extends Element {
 	} // end of hasNet method
 
 	/**
+	 * Get the wire net this wire is in, requiring that it is in one. A wire
+	 * being drawn while a net is (re)built may have no net; the net-dependent
+	 * methods below are only reachable once the wire is in a net.
+	 *
+	 * @return the wire net.
+	 */
+	private WireNet requireNet() {
+
+		WireNet n = net;
+		if (n == null)
+			throw new IllegalStateException("wire is not in a wire net yet");
+		return n;
+	} // end of requireNet method
+
+	/**
 	 * See if the mouse is currently touching this wire.
 	 *
 	 * @return true if it is, false if not.
@@ -160,8 +178,8 @@ public final class Wire extends Element {
 	 * @param bits The number of bits.
 	 */
 	public void setBits(int bits) {
-		
-		net.setBits(bits);
+
+		requireNet().setBits(bits);
 	} // end of setBits method
 
 	/**
@@ -170,8 +188,8 @@ public final class Wire extends Element {
 	 * @return the number of bits.
 	 */
 	public int getBits() {
-		
-		return net.getBits();
+
+		return requireNet().getBits();
 	} // end of getBits method
 	
 	/**
@@ -309,7 +327,8 @@ public final class Wire extends Element {
 	 */
 	@Override
 	public String infoText() {
-		
+
+		WireNet net = requireNet();
 		String tri = "";
 		if (net.isTriState())
 			tri = "(tri-state) ";
@@ -472,11 +491,11 @@ public final class Wire extends Element {
 	
 	/**
 	 * Get the probe name.
-	 * 
-	 * @return the name.
+	 *
+	 * @return the probe name, or null if this wire has no probe.
 	 */
-	public String getProbe() {
-		
+	public @Nullable String getProbe() {
+
 		return probeName;
 	} // end of getProbe method
 	
@@ -491,11 +510,11 @@ public final class Wire extends Element {
 	/**
 	 * Get the value on this wire (from the wire net).
 	 * 
-	 * @return the value.
+	 * @return the value, or null for a high-impedance (tri-state) value.
 	 */
-	public BitSet getValue() {
-		
-		return net.getValue();
+	public @Nullable BitSet getValue() {
+
+		return requireNet().getValue();
 	} // end of getValue method
 
 } // end of Wire class

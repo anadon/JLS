@@ -9,5 +9,12 @@
  * and platform-specific key bindings such as {@link jls.edit.DeleteKeyPolicy}.
  * This is the design-time counterpart to the runtime simulation packages: it
  * produces and edits circuits rather than executing them.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.edit;
+
+import org.jspecify.annotations.NullMarked;

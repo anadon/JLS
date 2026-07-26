@@ -8,6 +8,8 @@ import jls.sim.*;
 import java.io.*;
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Receiving end of a named wire.
  *  
@@ -29,8 +31,11 @@ public final class JumpEnd extends LogicElement {
 	// saved properties
 	/** Number of bits in the named wire. */
 	private int bits = defaultBits;
-	/** Name of the named wire this end connects to. */
-	private String name;
+	/**
+	 * Name of the named wire this end connects to, or null until set by a
+	 * load or by {@link #setName} after construction.
+	 */
+	private @Nullable String name;
 
 	// running properties
 	/** True if the saved file marked the output tri-state. */
@@ -90,7 +95,7 @@ public final class JumpEnd extends LogicElement {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		if (g != null) {
 
@@ -146,7 +151,12 @@ public final class JumpEnd extends LogicElement {
 			 * @return the wire name.
 			 */
 			@Override
-			protected String get(Element el) { return ((JumpEnd)el).name; }
+			protected String get(Element el) {
+				String n = ((JumpEnd)el).name;
+				if (n == null)
+					throw new IllegalStateException("jump end has no name to save");
+				return n;
+			}
 			/**
 			 * Restore the wire name during a load, registering it with the
 			 * circuit so later lookups resolve.
@@ -266,7 +276,7 @@ public final class JumpEnd extends LogicElement {
 	@Override
 	public Element copy() {
 
-		JumpEnd it = new JumpEnd(circuit);
+		JumpEnd it = new JumpEnd(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -280,8 +290,8 @@ public final class JumpEnd extends LogicElement {
 	 * @jls.testedby jls.ui.CircuitAssert#jumpAlias()
 	 */
 	@Override
-	public String getName() {
-		
+	public @Nullable String getName() {
+
 		return name;
 	} // end of getName method
 	
@@ -324,7 +334,7 @@ public final class JumpEnd extends LogicElement {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(orientation == Orientation.LEFT)
 		{
@@ -354,7 +364,7 @@ public final class JumpEnd extends LogicElement {
 //	-------------------------------------------------------------------------------
 	
 	/** The value currently on the output, or null when tri-stated off. */
-	private BitSet currentValue = new BitSet();
+	private @Nullable BitSet currentValue = new BitSet();
 	
 	/**
 	 * Initialize this element by setting its output to 0.
@@ -386,7 +396,7 @@ public final class JumpEnd extends LogicElement {
 	 * @param todo The value to send along.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// get the input value
 		BitSet value = (BitSet)todo;

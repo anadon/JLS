@@ -181,6 +181,11 @@ public final class LayoutMetrics {
 			}
 			net.add(edge);
 			List<LayoutResult.Point> waypoints = result.route(edge);
+			if (waypoints == null) {
+				throw new IllegalStateException("edge on net "
+						+ edge.netName + " is unrouted despite a complete"
+						+ " layout");
+			}
 			for (int i = 1; i < waypoints.size(); i += 1) {
 				Segment segment = new Segment(edge.netName,
 						waypoints.get(i - 1), waypoints.get(i));
@@ -316,6 +321,10 @@ public final class LayoutMetrics {
 		for (Segment segment : segments) {
 			for (LayoutGraph.Node node : graph.nodes()) {
 				LayoutResult.Point position = result.position(node.id);
+				if (position == null) {
+					throw new IllegalStateException("node " + node.id
+							+ " is unplaced despite a complete layout");
+				}
 				int left = position.x;
 				int right = position.x + node.width;
 				int top = position.y;
@@ -357,6 +366,10 @@ public final class LayoutMetrics {
 		int maxY = Integer.MIN_VALUE;
 		for (LayoutGraph.Node node : graph.nodes()) {
 			LayoutResult.Point position = result.position(node.id);
+			if (position == null) {
+				throw new IllegalStateException("node " + node.id
+						+ " is unplaced despite a complete layout");
+			}
 			minX = Math.min(minX, position.x);
 			minY = Math.min(minY, position.y);
 			maxX = Math.max(maxX, position.x + node.width);
@@ -382,8 +395,12 @@ public final class LayoutMetrics {
 	 */
 	private static void bump(Map<String, Integer> counts,
 			String netName) {
-		counts.put(netName,
-				Integer.valueOf(counts.get(netName).intValue() + 1));
+		Integer current = counts.get(netName);
+		if (current == null) {
+			throw new IllegalStateException("net '" + netName
+					+ "' has no seeded crossing count");
+		}
+		counts.put(netName, Integer.valueOf(current.intValue() + 1));
 	}
 
 	/**

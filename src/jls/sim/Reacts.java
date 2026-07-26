@@ -24,6 +24,7 @@ public interface Reacts {
 	 * @param todo Information needed to react to an event.
 	 *             This will typically be null for input pin signal changes.
 	 */
-    public abstract void react(long now, Simulator sim, Object todo);
+    public abstract void react(long now, Simulator sim,
+            @org.jspecify.annotations.Nullable Object todo);
 
     } // end of Reacts interface

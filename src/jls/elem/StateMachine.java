@@ -18,6 +18,8 @@ import jls.TellUser;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The state machine editor and simulation code.
  * 
@@ -66,8 +68,9 @@ public final class StateMachine extends LogicElement
 	};
 	/** Where the file loader is in the state/output/transition structure. */
 	private LoadState loadState = LoadState.machine;
-	/** The state currently being built by the file loader. */
-	private State buildState;
+	/** The state currently being built by the file loader. Null until the
+	 *  first "state" attribute is read. */
+	private @Nullable State buildState;
 	
 
 	/**
@@ -88,7 +91,7 @@ public final class StateMachine extends LogicElement
 	 *
 	 * @return the initial state, or null if none is marked.
 	 */
-	private State findInitialState() {
+	private @Nullable State findInitialState() {
 
 		for (State state : states) {
 			if (state.isInitial()) {
@@ -108,7 +111,7 @@ public final class StateMachine extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#stateMachineInitialStateRuleIsSharedWithSimStart()
 	 */
-	public String checkInitialState() {
+	public @Nullable String checkInitialState() {
 
 		return findInitialState() == null ? INITIAL_STATE_CONSTRAINT : null;
 	} // end of checkInitialState method
@@ -120,7 +123,7 @@ public final class StateMachine extends LogicElement
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
@@ -339,11 +342,11 @@ public final class StateMachine extends LogicElement
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(value);
+				if (buildState != null) buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans")) {
 				loadState = LoadState.newTransition;
-				buildState.setTransValue(name,value);
+				if (buildState != null) buildState.setTransValue(name,value);
 			}
 			break;
 		case newOutput:
@@ -355,11 +358,11 @@ public final class StateMachine extends LogicElement
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(value);
+				if (buildState != null) buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans")) {
 				loadState = LoadState.newTransition;
-				buildState.setTransValue(name,value);
+				if (buildState != null) buildState.setTransValue(name,value);
 			}
 			break;
 		case newTransition:
@@ -371,11 +374,11 @@ public final class StateMachine extends LogicElement
 			}
 			else if (name.equals("output")) {
 				loadState = LoadState.newOutput;
-				buildState.setOutputValue(value);
+				if (buildState != null) buildState.setOutputValue(value);
 			}
 			else if (name.equals("trans") || name.equals("next")) {
 				loadState = LoadState.newTransition;
-				buildState.setTransValue(name,value);
+				if (buildState != null) buildState.setTransValue(name,value);
 			}
 			break;
 		}
@@ -398,16 +401,16 @@ public final class StateMachine extends LogicElement
 			super.setValue(name,value);
 			break;
 		case newState:
-			buildState.setValue(name,value);
+			if (buildState != null) buildState.setValue(name,value);
 			break;
 		case newOutput:
-			buildState.setOutputValue(name,value);
+			if (buildState != null) buildState.setOutputValue(name,value);
 			break;
 		case newTransition:
-			buildState.setTransValue(name,value);
+			if (buildState != null) buildState.setTransValue(name,value);
 			break;
 		}
-		
+
 	} // end of setValue (int) method
 
 	/**
@@ -421,7 +424,7 @@ public final class StateMachine extends LogicElement
 
 		switch (loadState) {
 		case newOutput:
-			buildState.setOutputValue(name,value);
+			if (buildState != null) buildState.setOutputValue(name,value);
 			break;
 		case machine:
 		case newState:
@@ -440,7 +443,7 @@ public final class StateMachine extends LogicElement
 	@Override
 	public void setPair(int v1, int v2) {
 		
-		buildState.setTransPair(v1,v2);
+		if (buildState != null) buildState.setTransPair(v1,v2);
 	} // end of setPair method
 
 	/**
@@ -461,7 +464,7 @@ public final class StateMachine extends LogicElement
 		
 		// create new element; the attribute registry copies name, delay
 		// and trigger in super.copy below
-		StateMachine it = new StateMachine(circuit);
+		StateMachine it = new StateMachine(getCircuit());
 
 		// copy all the states
 		Map<String,State> stateMap = new HashMap<String,State>();
@@ -670,8 +673,9 @@ public final class StateMachine extends LogicElement
 	private int oldClock;
 	/** True between a triggering clock edge and the new output values. */
 	private boolean busy = false;	// true between edge and outputs value
-	/** The state the machine is currently in. */
-	private State currentState;
+	/** The state the machine is currently in. Null until {@link #initSim}
+	 *  selects the starting state. */
+	private @Nullable State currentState;
 	/** True once the no-matching-transition warning has been shown. */
 	private boolean noMatchReported = false;	// no-matching-transition warned already? (#98, S5)
 	
@@ -730,7 +734,7 @@ public final class StateMachine extends LogicElement
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// if an input has changed ...
 		if (todo == null) {
@@ -761,8 +765,16 @@ public final class StateMachine extends LogicElement
 				}
 			}
 			
-			// do a transition, so figure out next state
-			State newState = currentState.getNextState();
+			// do a transition, so figure out next state.
+			// currentState is null only for a zero-state machine, which
+			// initSim leaves permanently busy, so react returns above
+			// before reaching here; guard anyway rather than NPE.
+			State cur = currentState;
+			if (cur == null) {
+				oldClock = newClock;
+				return;
+			}
+			State newState = cur.getNextState();
 
 			// if no transition matches, stay in the current state:
 			// remember the clock value so later edges are still
@@ -775,7 +787,7 @@ public final class StateMachine extends LogicElement
 					TellUser.warn(null,
 							"state machine \"" + name + "\": no transition"
 							+ " matches from state \""
-							+ currentState.getName() + "\" at time " + now
+							+ cur.getName() + "\" at time " + now
 							+ "; staying in the current state",
 							"Simulation");
 				}

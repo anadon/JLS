@@ -31,7 +31,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 		
 		// set up height and width
 		super.init(g);
@@ -106,7 +106,7 @@ public final class Splitter extends Group implements TriProp {
 	@Override
 	public Element copy() {
 		
-		Splitter it = new Splitter(circuit);
+		Splitter it = new Splitter(getCircuit());
 		super.copy(it);
 		return it;
 	} // end of copy method
@@ -154,7 +154,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.rotate(direction, g);
 		init(g);
@@ -165,7 +165,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.flip(g);
 		init(g);
@@ -200,7 +200,7 @@ public final class Splitter extends Group implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 		
 		// get the input value
 		BitSet value = inputs.get(0).getValue();

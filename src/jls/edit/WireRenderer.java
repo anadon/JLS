@@ -8,6 +8,8 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.util.BitSet;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.JLSInfo;
 import jls.elem.Element;
 import jls.elem.Wire;
@@ -38,7 +40,7 @@ public final class WireRenderer implements ElementRenderer {
 	 *
 	 * @return the stroke to draw the wire with.
 	 */
-	public static BasicStroke strokeFor(BitSet value) {
+	public static BasicStroke strokeFor(@Nullable BitSet value) {
 
 		if (value == null) {
 			return new BasicStroke(1.0f, BasicStroke.CAP_BUTT,

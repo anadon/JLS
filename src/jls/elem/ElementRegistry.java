@@ -1,5 +1,6 @@
 package jls.elem;
 
+import org.jspecify.annotations.Nullable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -112,7 +113,7 @@ public final class ElementRegistry {
 	 *
 	 * @return the descriptor, or null if no element type has that tag.
 	 */
-	public static ElementType forTag(String tag) {
+	public static @Nullable ElementType forTag(String tag) {
 
 		return BY_TAG.get(tag);
 	} // end of forTag method

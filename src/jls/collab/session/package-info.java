@@ -22,5 +22,12 @@
  * transport (issue #168) authenticates and carries entries, the wire
  * grammar belongs to the network-surface work (issue #170), and the
  * architecture rules forbid this package from touching Swing.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.collab.session;
+
+import org.jspecify.annotations.NullMarked;

@@ -79,7 +79,7 @@ public final class TruthTableDialog implements ElementDialog {
 			return false;
 		}
 
-		return tt.finishChange(SwingTextMetrics.forGraphics(g));
+		return tt.finishChange(SwingTextMetrics.of(g));
 	} // end of setup method
 
 } // end of TruthTableDialog class

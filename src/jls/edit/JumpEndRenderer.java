@@ -34,6 +34,9 @@ public final class JumpEndRenderer implements ElementRenderer {
 		int y = je.getY();
 		int width = je.getWidth();
 		String name = je.getName();
+		if (name == null) {
+			name = "";
+		}
 
 		// draw context
 		ElementRenderSupport.drawHighlight(g, je);

@@ -126,7 +126,7 @@ public abstract sealed class SigSim extends LogicElement
 
 				// post event
 				BitSet bval = BitSetUtils.Create(value);
-				sim.post(new SimEvent(0,pin,bval));
+				sim.post(new SimEvent(0,pin,new SimEvent.NewValue(bval)));
 			}
 
 			// get the rest of the events for this pin and add to local event list
@@ -193,7 +193,8 @@ public abstract sealed class SigSim extends LogicElement
 
 					// post event
 					BitSet bval = BitSetUtils.Create(value);
-					sim.post(new SimEvent(newTime,pin,bval));
+					sim.post(new SimEvent(newTime,pin,
+							new SimEvent.NewValue(bval)));
 				}
 
 				// update time
@@ -210,7 +211,7 @@ public abstract sealed class SigSim extends LogicElement
 	 * @param todo The value to send.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		throw new UnsupportedOperationException("react in SigGen called");
 	} // end of react method

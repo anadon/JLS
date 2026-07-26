@@ -7,6 +7,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Input pin of a subcircuit.
@@ -185,21 +192,28 @@ public final class InputPin extends Pin implements TriProp {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo The value to send.
+	 * @param todo The value to send (TriStateOff for the undriven value).
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// send to output
 		Output out = outputs.get(0);
-		BitSet value = (BitSet)todo;
-		if (value == null) {
+		switch (todo) {
+
+		case TriStateOff _ -> {
 			currentValue = null;
-			out.propagate(value,now,sim);
+			out.propagate(null,now,sim);
 		}
-		else {
+
+		case NewValue(BitSet value) -> {
 			currentValue = (BitSet)value.clone();
 			out.propagate((BitSet)value.clone(),now,sim);
+		}
+
+		case PinChanged _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

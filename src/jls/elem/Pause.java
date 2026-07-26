@@ -164,7 +164,7 @@ public final class Pause extends LogicElement {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// find the attached input
 		for (Input input : inputs) {

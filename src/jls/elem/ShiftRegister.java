@@ -9,6 +9,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Combinational barrel shifter (issue #122). The bsiever fork lineage
@@ -611,13 +618,15 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo Null if an input change, the new output value otherwise.
+	 * @param todo PinChanged if an input change, the new output value otherwise.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if an input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get the amount to shift
 			BitSet bw = inputs.get(0).getValue();
@@ -663,17 +672,21 @@ public final class ShiftRegister extends LogicElement implements Timed {
 			// through the shifter, then post an event
 			if (!newValue.equals(toBeValue)) {
 				toBeValue = (BitSet)newValue.clone();
-				sim.post(new SimEvent(now+propDelay,this,newValue));
+				sim.post(new SimEvent(now+propDelay,this,new NewValue(newValue)));
 			}
 		}
-		else {
 
-			// get the new output value
-			BitSet value = (BitSet)todo;
+		// the new output value arriving
+		case NewValue(BitSet value) -> {
 
 			// send to output
 			Output out = outputs.get(0);
 			out.propagate(value,now,sim);
+		}
+
+		case TriStateOff _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

@@ -192,7 +192,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// send to output
 		Input in = inputs.get(0);

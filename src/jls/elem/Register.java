@@ -10,6 +10,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * n-bit register (level or edge triggered).
@@ -757,7 +764,8 @@ public final class Register extends LogicElement
 		notq.setValue(new BitSet(1));
 
 		// post output event at time 0 to drive the initial value
-		sim.post(new SimEvent(0,this,currentValue.clone()));
+		sim.post(new SimEvent(0,this,
+				new NewValue((BitSet)currentValue.clone())));
 
 	} // end of initSim method
 
@@ -766,13 +774,15 @@ public final class Register extends LogicElement
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if an input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			BitSet inVal = inputs.get(1).getValue();
 			if (inVal == null)
@@ -788,7 +798,8 @@ public final class Register extends LogicElement
 				if (d.equals(toBeValue))
 					break;
 				toBeValue = (BitSet)d.clone();
-				sim.post(new SimEvent(now+propDelay,this,d.clone()));
+				sim.post(new SimEvent(now+propDelay,this,
+						new NewValue((BitSet)d.clone())));
 				break;
 			case PosFF:
 				if (currentC == 1)
@@ -798,7 +809,8 @@ public final class Register extends LogicElement
 				if (d.equals(toBeValue))
 					break;
 				toBeValue = (BitSet)d.clone();
-				sim.post(new SimEvent(now+propDelay,this,d.clone()));
+				sim.post(new SimEvent(now+propDelay,this,
+						new NewValue((BitSet)d.clone())));
 				break;
 			case NegFF:
 				if (currentC == 0)
@@ -808,15 +820,15 @@ public final class Register extends LogicElement
 				if (d.equals(toBeValue))
 					break;
 				toBeValue = (BitSet)d.clone();
-				sim.post(new SimEvent(now+propDelay,this,d.clone()));
+				sim.post(new SimEvent(now+propDelay,this,
+						new NewValue((BitSet)d.clone())));
 				break;
 			}
 			currentC = c;
 		}
-		else {
 
-			// get the new output value
-			BitSet newQ = (BitSet)todo;
+		// the new output value arriving
+		case NewValue(BitSet newQ) -> {
 
 			// save for watch
 			currentValue = (BitSet)newQ.clone();
@@ -831,6 +843,11 @@ public final class Register extends LogicElement
 			q.propagate(qOut,now,sim);
 			Output notq = outputs.get(1);
 			notq.propagate(notQOut,now,sim);
+		}
+
+		case TriStateOff _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

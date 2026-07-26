@@ -214,7 +214,7 @@ public final class Extend extends Gate implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// get the input value
 		BitSet value = inputs.get(0).getValue();

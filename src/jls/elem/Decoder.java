@@ -10,6 +10,13 @@ import jls.Circuit;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.SimEvent;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 import jls.sim.Simulator;
 
 /**
@@ -446,7 +453,7 @@ public final class Decoder extends LogicElement implements Timed {
 		// set post output change to 1
 		BitSet one = new BitSet(1);
 		one.flip(0);
-		sim.post(new SimEvent(0,this,one));
+		sim.post(new SimEvent(0,this,new NewValue(one)));
 
 		// set to-be value
 		toBeValue = (BitSet)one.clone();
@@ -457,13 +464,15 @@ public final class Decoder extends LogicElement implements Timed {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo Unused.
+	 * @param todo PinChanged if an input has changed, otherwise the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if the input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get the input value
 			BitSet value = inputs.get(0).getValue();
@@ -479,17 +488,21 @@ public final class Decoder extends LogicElement implements Timed {
 			// the decoder, then post an event
 			if (!newValue.equals(toBeValue)) {
 				toBeValue = (BitSet)newValue.clone();
-				sim.post(new SimEvent(now+propDelay,this,newValue));
+				sim.post(new SimEvent(now+propDelay,this,new NewValue(newValue)));
 			}
 		}
-		else {
 
-			// get the new output value
-			BitSet newValue = (BitSet)todo;
+		// the new output value arriving
+		case NewValue(BitSet newValue) -> {
 
 			// send to output
 			Output out = outputs.get(0);
 			out.propagate(newValue,now,sim);
+		}
+
+		case TriStateOff _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 	} // end of react method
 

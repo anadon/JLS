@@ -475,13 +475,13 @@ class SimulationSemanticsRegressionTest {
 		CountingSimulator sim = new CountingSimulator();
 		element.initSim(sim);
 		attached.setValue(BitSetUtils.Create(0));
-		element.react(10, sim, null);
+		element.react(10, sim, new SimEvent.PinChanged());
 		assertEquals(0, sim.pauses, "a zero input must not pause");
 		attached.setValue(BitSetUtils.Create(1));
-		element.react(20, sim, null);
+		element.react(20, sim, new SimEvent.PinChanged());
 		assertEquals(1, sim.pauses, "a non-zero input must pause");
 		attached.setValue(BitSetUtils.Create(0));
-		element.react(30, sim, null);
+		element.react(30, sim, new SimEvent.PinChanged());
 		assertEquals(1, sim.pauses, "a change back to zero must not pause");
 	}
 
@@ -556,24 +556,24 @@ class SimulationSemanticsRegressionTest {
 		// turn on with data 5: one event
 		control.setValue(BitSetUtils.Create(1));
 		data.setValue(BitSetUtils.Create(5));
-		tri.react(10, sim, null);
+		tri.react(10, sim, new SimEvent.PinChanged());
 		assertEquals(1, sim.posts, "the first value must be scheduled");
 
 		// unrelated notification, same output: no new event
-		tri.react(20, sim, null);
+		tri.react(20, sim, new SimEvent.PinChanged());
 		assertEquals(1, sim.posts,
 				"an unchanged output must not be rescheduled");
 
 		// data change: one more event
 		data.setValue(BitSetUtils.Create(9));
-		tri.react(30, sim, null);
+		tri.react(30, sim, new SimEvent.PinChanged());
 		assertEquals(2, sim.posts, "a changed value must be scheduled");
 
 		// turn off: one event; turning off again: none
 		control.setValue(BitSetUtils.Create(0));
-		tri.react(40, sim, null);
+		tri.react(40, sim, new SimEvent.PinChanged());
 		assertEquals(3, sim.posts, "turning off must be scheduled");
-		tri.react(50, sim, null);
+		tri.react(50, sim, new SimEvent.PinChanged());
 		assertEquals(3, sim.posts,
 				"an already-off gate must not be rescheduled");
 	}

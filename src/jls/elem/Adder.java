@@ -10,6 +10,13 @@ import jls.core.Geometry;
 import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * An n-bit adder with carry in and carry out (n chosen by user).
@@ -379,13 +386,15 @@ public final class Adder extends LogicElement implements Timed {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo Unused.
+	 * @param todo PinChanged if an input has changed, otherwise the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if the input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get the input values
 			BitSet a = inputs.get(0).getValue();
@@ -409,13 +418,12 @@ public final class Adder extends LogicElement implements Timed {
 			// the adder, then post an event
 			if (!allsum.equals(toBeValue)) {
 				toBeValue = (BitSet)allsum.clone();
-				sim.post(new SimEvent(now+propDelay,this,allsum));
+				sim.post(new SimEvent(now+propDelay,this,new NewValue(allsum)));
 			}
 		}
-		else {
 
-			// get the new output value
-			BitSet allsum = (BitSet)todo;
+		// the new output value arriving
+		case NewValue(BitSet allsum) -> {
 
 			// break into sum and carry
 			BitSet sum = (BitSet)allsum.clone();
@@ -428,6 +436,11 @@ public final class Adder extends LogicElement implements Timed {
 			sumOut.propagate(sum,now,sim);
 			Output carryOut = outputs.get(1);
 			carryOut.propagate(carry,now,sim);
+		}
+
+		case TriStateOff _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 	} // end of react method
 

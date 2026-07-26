@@ -21,10 +21,10 @@ public interface Reacts {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim A reference to the simulator in case element needs to post an event.
-	 * @param todo Information needed to react to an event.
-	 *             This will typically be null for input pin signal changes.
+	 * @param todo The payload saying what to do about the event.
+	 *             This will be PinChanged for input pin signal changes.
 	 */
     public abstract void react(long now, Simulator sim,
-            @org.jspecify.annotations.Nullable Object todo);
+            SimEvent.Payload todo);
 
     } // end of Reacts interface

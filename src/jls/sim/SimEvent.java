@@ -1,6 +1,8 @@
 package jls.sim;
 
-import org.jspecify.annotations.Nullable;
+import java.util.BitSet;
+
+import jls.elem.State;
 
 /**
  * A simulation event (typically a signal value change).
@@ -8,6 +10,78 @@ import org.jspecify.annotations.Nullable;
  * @author David A. Poplawski
  */
 public final class SimEvent implements Comparable<SimEvent> {
+
+	/**
+	 * What the reacting element should do when this event fires
+	 * (issue #95). Sealed over the records in this compilation unit so
+	 * every react() can switch exhaustively with no default arm: adding
+	 * a payload kind is a compile error at every consumer until it is
+	 * handled. The records replace the old untyped Object todo and its
+	 * sentinels (null meant "inputs changed", the String "off" meant
+	 * "turn the tri-state output off").
+	 */
+	public sealed interface Payload {
+	} // end of Payload interface
+
+	/**
+	 * An input signal changed: re-read the inputs and react to their
+	 * current values (formerly the null todo sentinel).
+	 */
+	public record PinChanged() implements Payload {
+	} // end of PinChanged record
+
+	/**
+	 * A scheduled output change arriving: drive the given value on the
+	 * output (formerly a raw BitSet todo).
+	 *
+	 * @param value The value the output should take on.
+	 */
+	public record NewValue(BitSet value) implements Payload {
+	} // end of NewValue record
+
+	/**
+	 * A scheduled turn-off arriving: stop driving the output
+	 * (propagate the undriven/HiZ value; formerly the String "off"
+	 * sentinel and null-BitSet postings).
+	 */
+	public record TriStateOff() implements Payload {
+	} // end of TriStateOff record
+
+	/**
+	 * A state machine transition completing: enter the new state and
+	 * assert its outputs.
+	 *
+	 * @param state The state the machine is entering.
+	 */
+	public record StateChanged(State state) implements Payload {
+	} // end of StateChanged record
+
+	/**
+	 * A memory write completing: store the data in the addressed word.
+	 *
+	 * @param address The word address being written.
+	 * @param data The value to store.
+	 */
+	public record MemoryWrite(int address, BitSet data) implements Payload {
+	} // end of MemoryWrite record
+
+	/**
+	 * A memory read completing: drive the addressed word on the output.
+	 *
+	 * @param address The word address being read.
+	 */
+	public record MemoryRead(int address) implements Payload {
+	} // end of MemoryRead record
+
+	/**
+	 * A truth table output change completing: drive the value on the
+	 * output pin at the given position.
+	 *
+	 * @param position Index of the output pin in the outputs list.
+	 * @param value The value the output pin should take on.
+	 */
+	public record TableOutput(int position, BitSet value) implements Payload {
+	} // end of TableOutput record
 
 	/** The next sequence number, assigned at construction (post order). */
 	private static long sequence = 0;
@@ -23,19 +97,19 @@ public final class SimEvent implements Comparable<SimEvent> {
 	private final long seq;
 	/** The element whose react runs when this event fires. */
 	private final Reacts callBack;
-	/** The event payload; null means "inputs changed, re-read them". */
-	private final @Nullable Object todo;
+	/** The event payload: what the reacting element should do. */
+	private final Payload todo;
 
 	/**
 	 * Create a new event object with the given time and callback.
 	 *
 	 * @param time The time the event will occur
 	 * @param callBack The object to tell when the event occurs.
-	 * @param todo An object containing information about what the
-	 *             reacting object should do about this event.
-	 *             Null typically means an input pin has changed value.
+	 * @param todo The payload saying what the reacting object should do
+	 *             about this event. PinChanged means an input signal
+	 *             has changed value.
 	 */
-	public SimEvent(long time, Reacts callBack, @Nullable Object todo) {
+	public SimEvent(long time, Reacts callBack, Payload todo) {
 
 		this.time = time;
 		seq = sequence;
@@ -77,7 +151,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 	/**
 	 * Decide whether this JLSEvent object and another are equal.
 	 * They will be equal if the have the same time, the same callback
-	 * object, and the same todo object.
+	 * object, and the same todo payload.
 	 *
 	 * @param other The object to compare this one with.
 	 *
@@ -93,8 +167,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 			return false;
 		if (this.callBack != oth.callBack)
 			return false;
-		return this.todo == null ? oth.todo == null :
-			this.todo.equals(oth.todo);
+		return this.todo.equals(oth.todo);
 	} // end of equals method
 
 	/**
@@ -132,12 +205,11 @@ public final class SimEvent implements Comparable<SimEvent> {
 	} // end of getCallBack method
 
 	/**
-	 * Get the todo object
+	 * Get the todo payload.
 	 *
-	 * @return the todo object, or null meaning "inputs changed,
-	 *         re-read them".
+	 * @return the payload saying what the reacting element should do.
 	 */
-	public @Nullable Object getTodo() {
+	public Payload getTodo() {
 
 		return todo;
 	} // end of getTodo method

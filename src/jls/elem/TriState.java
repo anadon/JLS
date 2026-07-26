@@ -11,6 +11,13 @@ import jls.core.GridPoint;
 import jls.core.GridSize;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Tri-state buffer(s).
@@ -469,14 +476,17 @@ public final class TriState extends LogicElement implements Timed {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the value to
+	 *             output (TriStateOff to stop driving the output).
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if the input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get control input
 			BitSet control = inputs.get(1).getValue();
@@ -489,7 +499,7 @@ public final class TriState extends LogicElement implements Timed {
 				if (toBeValue == null)
 					return;
 				toBeValue = null;
-				sim.post(new SimEvent(now+propDelay,this,"off"));
+				sim.post(new SimEvent(now+propDelay,this,new TriStateOff()));
 			}
 			else {
 
@@ -503,25 +513,28 @@ public final class TriState extends LogicElement implements Timed {
 				if (value.equals(toBeValue))
 					return;
 				toBeValue = (BitSet)value.clone();
-				sim.post(new SimEvent(now+propDelay,this,value));
+				sim.post(new SimEvent(now+propDelay,this,new NewValue(value)));
 			}
 
 		}
 
 		// if gate is turning off, propagate null
-		else if (todo instanceof String) {
+		case TriStateOff _ -> {
 
 			Output out = outputs.get(0);
 			out.propagate(null,now,sim);
 		}
-		else {
 
-			// get the new output value
-			BitSet newValue = (BitSet)todo;
+		// the new output value arriving
+		case NewValue(BitSet newValue) -> {
 
 			// propagate value
 			Output out = outputs.get(0);
 			out.propagate(newValue,now,sim);
+		}
+
+		case StateChanged _, MemoryRead _, MemoryWrite _, TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

@@ -624,16 +624,18 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// send all input values to input pins of subcircuit
 		for (Input in : inputs) {
 			InputPin pin = inmap.get(in);
 			if (pin == null)
 				throw new IllegalStateException("input has no mapped subcircuit input pin");
-			BitSet copy = null;
+			SimEvent.Payload copy;
 			if (in.getValue() != null)
-				copy = (BitSet)in.getValue().clone();
+				copy = new SimEvent.NewValue((BitSet)in.getValue().clone());
+			else
+				copy = new SimEvent.TriStateOff();
 			sim.post(new SimEvent(now,pin,copy));
 		}
 

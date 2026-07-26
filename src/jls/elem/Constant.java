@@ -8,6 +8,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Constant output value.
@@ -473,7 +480,7 @@ public final class Constant extends LogicElement {
 		out.setValue(opposite);
 
 		// post output event
-		sim.post(new SimEvent(0,this,bitval));
+		sim.post(new SimEvent(0,this,new NewValue(bitval)));
 	} // end of initSim method
 
 	/**
@@ -481,31 +488,36 @@ public final class Constant extends LogicElement {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo The value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// get the new output value; a Constant has no inputs, so it only
-		// ever reacts to its own posted value events (todo is never null)
-		BitSet newValue = (BitSet)todo;
-		if (newValue == null) {
+		// ever reacts to its own posted value events
+		switch (todo) {
+
+		case NewValue(BitSet newValue) -> {
+
+			// send correct number of bits to output
+			Output out = (Output)(outputs.toArray()[0]);
+			if (!out.isAttached())
+				return;
+			WireEnd end = out.getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached output has no wire end");
+			int bits = end.getBits();
+			BitSet mask = new BitSet(bits);
+			mask.set(0,bits);
+			newValue.and(mask);
+			out.propagate(newValue,now,sim);
+		}
+
+		case PinChanged _, TriStateOff _, StateChanged _, MemoryRead _,
+				MemoryWrite _, TableOutput _ ->
 			throw new IllegalStateException(
 					"constant reacted without a value to output");
 		}
-
-		// send correct number of bits to output
-		Output out = (Output)(outputs.toArray()[0]);
-		if (!out.isAttached())
-			return;
-		WireEnd end = out.getWireEnd();
-		if (end == null)
-			throw new IllegalStateException("attached output has no wire end");
-		int bits = end.getBits();
-		BitSet mask = new BitSet(bits);
-		mask.set(0,bits);
-		newValue.and(mask);
-		out.propagate(newValue,now,sim);
 
 	} // end of react method
 

@@ -38,10 +38,10 @@ class VhdlExportGoldenTest {
 		Circuit circuit = cb.load();
 		HdlExporter.Result result =
 				HdlExporter.export(circuit, new VhdlEmitter());
-		VhdlStructure.assertSane(result.text);
+		VhdlStructure.assertSane(result.text());
 
 		String tokenized =
-				result.text.replace(JLSInfo.versionString, VERSION_TOKEN);
+				result.text().replace(JLSInfo.versionString, VERSION_TOKEN);
 		Path golden = GOLDEN_DIR.resolve(goldenName + ".vhdl");
 		if (Boolean.getBoolean("jls.hdl.regenerate")) {
 			Files.writeString(golden, tokenized, StandardCharsets.UTF_8);

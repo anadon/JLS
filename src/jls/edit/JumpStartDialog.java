@@ -104,8 +104,10 @@ public final class JumpStartDialog implements ElementDialog {
 			JPanel info = new JPanel(new BorderLayout());
 			JPanel labels = new JPanel(new GridLayout(2,1,1,5));
 			JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
+			labelled(name, nameField, "dialog.jumpstart.name");
 			labels.add(name);
 			JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.jumpstart.bits");
 			labels.add(bits);
 			info.add(labels,BorderLayout.WEST);
 

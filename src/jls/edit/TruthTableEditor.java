@@ -78,9 +78,15 @@ public final class TruthTableEditor extends ElementFormDialog
 		JPanel other = new JPanel(new BorderLayout());
 		JPanel info = new JPanel(new BorderLayout());
 		JPanel labels = new JPanel(new GridLayout(3,1));
-		labels.add(new JLabel("new input: ",SwingConstants.RIGHT));
-		labels.add(new JLabel("new output: ",SwingConstants.RIGHT));
-		labels.add(new JLabel("name: ",SwingConstants.RIGHT));
+		JLabel inputLabel = new JLabel("new input: ",SwingConstants.RIGHT);
+		labelled(inputLabel, inputField, "dialog.truthtable.newInput");
+		labels.add(inputLabel);
+		JLabel outputLabel = new JLabel("new output: ",SwingConstants.RIGHT);
+		labelled(outputLabel, outputField, "dialog.truthtable.newOutput");
+		labels.add(outputLabel);
+		JLabel nameLabel = new JLabel("name: ",SwingConstants.RIGHT);
+		labelled(nameLabel, nameField, "dialog.truthtable.name");
+		labels.add(nameLabel);
 		info.add(labels,BorderLayout.WEST);
 		JPanel inputs = new JPanel(new GridLayout(3,1));
 		inputs.add(inputField);

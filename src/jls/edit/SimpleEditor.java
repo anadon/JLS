@@ -31,6 +31,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,6 +88,8 @@ import jls.elem.Decoder;
 import jls.elem.DelayGate;
 import jls.elem.Element;
 import jls.elem.ElementId;
+import jls.elem.ElementRegistry;
+import jls.elem.ElementType;
 import jls.elem.Extend;
 import jls.elem.Group;
 import jls.elem.Input;
@@ -2581,12 +2584,77 @@ public abstract class SimpleEditor extends JPanel {
 				// both the tool-bar button and its mirror "elements" menu item.
 				button.getAccessibleContext().setAccessibleName(tip);
 				item.getAccessibleContext().setAccessibleName(tip);
+				// #210 stable identity: name the palette button and its
+				// mirror menu item from the element's registry tag so
+				// automation (the #91 harness) and assistive technology can
+				// resolve them without tooltip/positional heuristics. The
+				// naming scheme is documented in docs/component-naming.md.
+				String slug = paletteSlug(tip);
+				button.setName("palette." + slug);
+				item.setName("menu.elements." + slug);
 				JMenu els = elements;
 				if (els == null)
 					throw new IllegalStateException("makeElement called before makeElements built the menu");
 				els.add(item);
 				return button;
 			} // end of makeElement method
+
+			/**
+			 * The stable component-name slug for a palette tool tip
+			 * (issue #210): the {@link ElementRegistry} tag of the element
+			 * the palette entry creates, lower-cased. Sourcing the slug
+			 * from the registry keeps the names in sync with the element
+			 * table (#78); an unknown tip is a programming error caught at
+			 * tool-bar construction time.
+			 *
+			 * @param tip The palette entry's tool tip.
+			 * @return the lower-cased registry tag for the element.
+			 */
+			private static String paletteSlug(String tip) {
+
+				String tag = switch (tip) {
+					case "AND gate" -> "AndGate";
+					case "OR gate" -> "OrGate";
+					case "NOT gate" -> "NotGate";
+					case "exclusive OR gate" -> "XorGate";
+					case "NAND gate" -> "NandGate";
+					case "NOR gate" -> "NorGate";
+					case "user defined signal delay" -> "DelayGate";
+					case "tri-state gate" -> "TriState";
+					case "name a wire" -> "JumpStart";
+					case "connect to a named wire" -> "JumpEnd";
+					case "input pin" -> "InputPin";
+					case "output pin" -> "OutputPin";
+					case "unbundle wires" -> "Splitter";
+					case "bundle wires" -> "Binder";
+					case "constant value" -> "Constant";
+					case "make N copies of the input" -> "Extend";
+					case "register (various triggering)" -> "Register";
+					case "memory, various types" -> "Memory";
+					case "multiplexor" -> "Mux";
+					case "decoder" -> "Decoder";
+					case "shift register (combinational shifter)" ->
+							"ShiftRegister";
+					case "adder" -> "Adder";
+					case "clock" -> "Clock";
+					case "pause simulator when asserted" -> "Pause";
+					case "stop simulator when asserted" -> "Stop";
+					case "generate test signals" -> "SigGen";
+					case "display circuit value" -> "Display";
+					case "state machine" -> "StateMachine";
+					case "truth table" -> "TruthTable";
+					case "text (for annotations)" -> "Text";
+					default -> throw new IllegalArgumentException(
+							"no element registry tag for palette tip '"
+									+ tip + "'");
+				};
+				ElementType type = ElementRegistry.forTag(tag);
+				if (type == null) {
+					throw new IllegalStateException("palette tip '" + tip
+							+ "' names unregistered element tag " + tag);
+				}
+				return type.tag().toLowerCase(Locale.ROOT);
+			} // end of paletteSlug method
 
 			/**
 			 * Get the tool bar.
@@ -5470,8 +5538,14 @@ public abstract class SimpleEditor extends JPanel {
 						if (!enabled)
 							return;
 
-						// if in the middle of an edit, do nothing
+						// if in the middle of an edit, refuse the new element
+						// but say so (#207 acknowledge-and-ignore): silently
+						// swallowing the palette click makes a stuck
+						// placement read as a frozen editor, so tell the
+						// user why nothing happened and how to proceed.
 						if (currentState != State.idle) {
+							info.setText(
+									"finish or cancel the current placement first");
 							return;
 						}
 

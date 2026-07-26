@@ -154,6 +154,7 @@ public final class JumpEndDialog implements ElementDialog {
 			window.add(heading);
 
 			starts = new JList<String>(circuit.getJumpStartNames().toArray(new String[0]));
+			labelled(heading, starts, "dialog.jumpend.wireName");
 			starts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			starts.setVisibleRowCount(Math.min(circuit.getJumpStartNames().size(),10));
 			JScrollPane pane = new JScrollPane(starts);

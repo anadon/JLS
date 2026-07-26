@@ -177,7 +177,9 @@ public final class TextDialog implements ElementDialog {
 			}
 			fonts = new JComboBox<String>(names);
 			fonts.setSelectedItem(fn);
-			details.add(new JLabel("Font:"));
+			JLabel fontLabel = new JLabel("Font:");
+			labelled(fontLabel, fonts, "dialog.text.font");
+			details.add(fontLabel);
 			details.add(fonts);
 
 			if (elem.getFontSize() == 0) {
@@ -188,7 +190,9 @@ public final class TextDialog implements ElementDialog {
 			}
 			fontSz.setSelectedItem(fs+"");
 			fontSz.setEditable(true);
-			details.add(new JLabel("Size:"));
+			JLabel sizeLabel = new JLabel("Size:");
+			labelled(sizeLabel, fontSz, "dialog.text.size");
+			details.add(sizeLabel);
 			details.add(fontSz);
 
 			if (elem.isBold()) {
@@ -211,6 +215,10 @@ public final class TextDialog implements ElementDialog {
 			italic.addActionListener(this);
 			colorButton.addActionListener(this);
 			window.add(details);
+			// #210 stable identity: the text area has no visible label, so
+			// it gets its name and accessible name directly
+			textArea.setName("dialog.text.text");
+			textArea.getAccessibleContext().setAccessibleName("Text");
 			if (!creating) {
 				textArea.setText(elem.getText());
 				int bi = 0;

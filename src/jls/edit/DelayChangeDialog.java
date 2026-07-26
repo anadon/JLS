@@ -80,6 +80,7 @@ public final class DelayChangeDialog {
 			else {
 				delay = new JLabel("Propagation delay: ", SwingConstants.RIGHT);
 			}
+			labelled(delay, delayField, "dialog.delaychange.delay");
 			info.add(delay, BorderLayout.WEST);
 			info.add(delayField, BorderLayout.CENTER);
 			delayField.setText(el.getDelay() + "");

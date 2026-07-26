@@ -115,6 +115,7 @@ public final class TriStateDialog implements ElementDialog {
 
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Gates (bits): ", SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.tristate.bits");
 			info.add(bits, BorderLayout.WEST);
 			info.add(bitsField, BorderLayout.CENTER);
 			info.add(bitsPad, BorderLayout.EAST);

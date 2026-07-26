@@ -130,6 +130,7 @@ public final class GroupDialog implements ElementDialog {
 			else {
 				bits = new JLabel("Output Bits: ", SwingConstants.RIGHT);
 			}
+			labelled(bits, bitsField, "dialog.group.bits");
 			info.add(bits, BorderLayout.WEST);
 			info.add(bitsField, BorderLayout.CENTER);
 			info.add(bitsPad, BorderLayout.EAST);
@@ -327,6 +328,7 @@ public final class GroupDialog implements ElementDialog {
 
 			JPanel leftList = new JPanel(new BorderLayout());
 			JLabel left = new JLabel("choose from", SwingConstants.CENTER);
+			labelled(left, choose, "dialog.group.ranges");
 			leftList.add(left, BorderLayout.NORTH);
 			JScrollPane chpane = new JScrollPane(choose);
 			leftList.add(chpane, BorderLayout.CENTER);
@@ -339,6 +341,7 @@ public final class GroupDialog implements ElementDialog {
 
 			JPanel rightList = new JPanel(new BorderLayout());
 			JLabel right = new JLabel("chosen", SwingConstants.CENTER);
+			labelled(right, chosen, "dialog.group.chosen");
 			rightList.add(right, BorderLayout.NORTH);
 			chosen.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			JScrollPane rpane = new JScrollPane(chosen);

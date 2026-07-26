@@ -145,6 +145,7 @@ public final class ConstantDialog implements ElementDialog {
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel inputs = new JLabel("Value: ", SwingConstants.RIGHT);
+			labelled(inputs, valueField, "dialog.constant.value");
 			info.add(inputs, BorderLayout.WEST);
 			info.add(valueField, BorderLayout.CENTER);
 			info.add(valuePad, BorderLayout.EAST);
@@ -346,6 +347,7 @@ public final class ConstantDialog implements ElementDialog {
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel inputs = new JLabel("Value: ", SwingConstants.RIGHT);
+			labelled(inputs, valueField, "dialog.constant.value");
 			info.add(inputs, BorderLayout.WEST);
 			info.add(valueField, BorderLayout.CENTER);
 			valueField.setText(c.getValue().toString(c.getBase()));

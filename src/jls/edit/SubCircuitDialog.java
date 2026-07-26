@@ -91,6 +91,7 @@ public final class SubCircuitDialog implements ElementDialog {
 			// set up input
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel name = new JLabel("Name: ", SwingConstants.RIGHT);
+			labelled(name, nameField, "dialog.subcircuit.name");
 			info.add(name, BorderLayout.WEST);
 			info.add(nameField, BorderLayout.CENTER);
 			window.add(info);

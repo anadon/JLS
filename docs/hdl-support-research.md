@@ -502,6 +502,52 @@ black-box case, and Yosys+GHDL-plugin remains the only credible VHDL
 *import* door. No further research needed unless Stage 3 VHDL support is
 prioritized.
 
+### 7.5 Shipped: board-aware export, first slice (issue #213, July 2026)
+
+The §4 item 2 catch-up ("board-aware export") began shipping: `-export`
+now takes `-board <name>` plus `-pins <file>` and writes a pin-constraint
+file next to the HDL, generated from the same `HdlExporter.buildModel`
+port walk the Verilog/VHDL emitters render (package `jls.hdl.board`).
+
+**Supported boards** (built-in table, `jls.hdl.board.Boards`; grown on
+demand, never via a general board-description format — #213 H2):
+
+| `-board` name | FPGA | Constraint format | Named pins |
+|---|---|---|---|
+| `icestick` | Lattice iCE40-HX1K, TQ144 (Lattice iCEstick eval kit) | PCF (icestorm / `nextpnr-ice40 --pcf`) | `CLK` (12 MHz), `LED1`–`LED5`, `UART_RX`/`UART_TX`, `IR_TXD`/`IR_RXD`/`IR_SD`, Pmod `PMOD1`–`PMOD4`/`PMOD7`–`PMOD10`, headers `J1_3`–`J1_10`, `J3_3`–`J3_10` |
+
+**Usage.** The bindings file maps each top-level port (each *bit* of a
+multi-bit port) to a named board pin, one `port pin` or `port[bit] pin`
+per line, `#` comments allowed. A JLS `Clock` element exports as the
+input port `clk` — bind it like any other port:
+
+```
+$ cat pins.txt
+sw[0] PMOD1
+sw[1] PMOD2
+clk   CLK
+led[0] LED1
+led[1] LED2
+$ jls -export blinky.v -board icestick -pins pins.txt blinky.jls
+# writes blinky.v and blinky.pcf
+```
+
+Binding is all-or-nothing (#213 P3): an unbindable port set fails the
+whole export with every problem in one `jls: error:` line — a missing
+binding, an unknown port or board pin (with the valid names listed), a
+wrong scalar/indexed form, an out-of-range bit, or one pin claimed
+twice — and neither the HDL nor any partial constraint file reaches
+disk. Emission is byte-deterministic and golden-pinned
+(`test/resources/hdl/board/`).
+
+**Handoff** (external tools, per the delegation rule): the emitted
+`.pcf` feeds the open iCE40 flow, e.g. `yosys -p 'synth_ice40 -json
+blinky.json' blinky.v` then `nextpnr-ice40 --hx1k --package tq144
+--pcf blinky.pcf --json blinky.json`. The scripted end-to-end recipe is
+issue #215's deliverable. Deferred to #213 follow-ups: XDC/QSF formats,
+more boards (an ECP5 board arrives with its LPF emitter), and an
+editor-side pin-mapping panel (binding UX option (b)).
+
 ## 8. Refuted during verification (for the record)
 
 - "Digital's export is one-click/single-file and its manual documents no HDL

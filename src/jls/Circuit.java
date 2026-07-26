@@ -27,6 +27,7 @@ import jls.elem.LogicElement;
 import jls.elem.Output;
 import jls.elem.Put;
 import jls.elem.SubCircuit;
+import jls.elem.Watchable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
@@ -1708,8 +1709,8 @@ public class Circuit {
 			if (el instanceof SubCircuit sub) {
 				sub.getSubCircuit().clearAllWatches();
 			} else {
-				if (!el.isUneditable())
-					el.setWatched(false);
+				if (!el.isUneditable() && el instanceof Watchable watchable)
+					watchable.setWatched(false);
 			}
 		}
 	} // end of clearAllWatches method

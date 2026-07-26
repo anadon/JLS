@@ -18,7 +18,7 @@ import jls.sim.Simulator;
  *
  * @author David A. Poplawski
  */
-public final class Display extends LogicElement {
+public final class Display extends LogicElement implements Rotatable {
 
 	// constants
 	/** The input width a new display starts with. */

@@ -17,7 +17,7 @@ import jls.sim.Simulator;
  *
  * @author David A. Poplawski
  */
-public final class Decoder extends LogicElement implements Timed {
+public final class Decoder extends LogicElement implements Timed, Rotatable {
 
 	// default values
 	/** Default number of input bits. */
@@ -317,17 +317,6 @@ public final class Decoder extends LogicElement implements Timed {
 		return bits + " to " + (1<<bits) + " decoder";
 
 	} // end of showInfo method
-
-	/**
-	 * Decoders have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset propagation delay to default value.

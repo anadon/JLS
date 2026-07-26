@@ -17,9 +17,10 @@ import jls.elem.Timed;
  * {@code Element.DelayChange} inner dialog so the element model stays
  * headless; the editor's "Change Timing" action opens it through
  * {@link #open(Element)}. The dialog reads and writes the element's
- * propagation delay / access time through its public
- * {@link Element#getDelay()} / {@link Element#setDelay(int)} accessors, so
- * it works for any timed element without touching the model's internals.
+ * propagation delay / access time through the {@link Timed} capability's
+ * {@link Timed#getDelay()} / {@link Timed#setDelay(int)} accessors (issue
+ * #78), so it works for any timed element without touching the model's
+ * internals.
  */
 public final class DelayChangeDialog {
 
@@ -37,7 +38,9 @@ public final class DelayChangeDialog {
 	 */
 	public static void open(Element el) {
 
-		new Form(el, el instanceof Timed t && t.usesAccessTime());
+		if (el instanceof Timed timed) {
+			new Form(timed, timed.usesAccessTime());
+		}
 	} // end of open method
 
 	/**
@@ -48,7 +51,7 @@ public final class DelayChangeDialog {
 	private static final class Form extends ElementFormDialog {
 
 		/** The element whose timing this form edits. */
-		private final Element element;
+		private final Timed element;
 		/** Field to enter the delay or access time. */
 		private final JTextField delayField = new JTextField(10);
 		/** Keypad for the delay field. */
@@ -60,7 +63,7 @@ public final class DelayChangeDialog {
 		 * @param el The element whose timing is being changed.
 		 * @param isMemory True if this is a memory element, false if not.
 		 */
-		private Form(Element el, boolean isMemory) {
+		private Form(Timed el, boolean isMemory) {
 
 			// set up window title
 			super("Change Timing", null);

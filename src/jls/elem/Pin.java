@@ -16,7 +16,7 @@ import jls.core.Orientation;
  * @author David A. Poplawski
  */
 public abstract sealed class Pin extends LogicElement
-		implements Watchable
+		implements Watchable, Rotatable
 		permits InputPin, OutputPin {
 
 	// saved properties
@@ -424,16 +424,6 @@ public abstract sealed class Pin extends LogicElement
 
 		return bits + " bit input pin";
 	} // end of showInfo method
-	/**
-	 * A pin be watched.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canWatch() {
-
-		return true;
-	} // end of canWatch method
 
 	/**
 	 * See if this pin is watched.

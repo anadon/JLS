@@ -17,7 +17,7 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class TriState extends LogicElement implements Timed {
+public final class TriState extends LogicElement implements Timed, Rotatable {
 
 	// defaults
 	/** Default number of bits (gates). */
@@ -302,17 +302,6 @@ public final class TriState extends LogicElement implements Timed {
 		else
 			return bits + " tri-state gates";
 	} // end of showInfo method
-
-	/**
-	 * Tri-states have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset propagation delay to default value.

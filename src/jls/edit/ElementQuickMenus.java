@@ -6,7 +6,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import jls.elem.Constant;
-import jls.elem.Element;
+import jls.elem.QuickEditable;
 
 /**
  * GUI-side "quick change" shortcut menus (issue #77). The former
@@ -25,15 +25,15 @@ public final class ElementQuickMenus {
 
 	/**
 	 * Build the quick-change menu for an element, mirroring the element's
-	 * former {@code setupQuickMenu}. Only called for elements whose
-	 * {@code quickChange()} is true.
+	 * former {@code setupQuickMenu}. Only called for elements that declare
+	 * the {@link QuickEditable} capability (issue #78).
 	 *
 	 * @param el The element the menu is for.
 	 * @param sed The editor to reset and repaint after a quick change.
 	 * @return the menu item (a submenu) to add to the popup.
 	 * @throws UnsupportedOperationException if the element has no quick menu.
 	 */
-	public static JMenuItem build(Element el, SimpleEditor sed) {
+	public static JMenuItem build(QuickEditable el, SimpleEditor sed) {
 
 		if (el instanceof Constant c) {
 			return constantMenu(c, sed);

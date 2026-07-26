@@ -994,7 +994,7 @@ public final class InteractiveSimulator extends Simulator {
 
 			// if a watched element
 			else if (element instanceof LogicElement el) {
-				if (el.isWatched()) {
+				if (el instanceof Watchable watchable && watchable.isWatched()) {
 
 					// set up trace window
 					Trace tr = new Trace(el.getFullName(),el,el.getBits(),

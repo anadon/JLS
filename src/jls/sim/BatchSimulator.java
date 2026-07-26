@@ -146,7 +146,7 @@ public class BatchSimulator extends Simulator {
 
 		// see if changing element is watched
 		LogicElement el = (LogicElement)event.getCallBack();
-		if (el.isWatched()) {
+		if (el instanceof Watchable watchable && watchable.isWatched()) {
 
 			// get the event trace for this element,
 			// or create one if none yet
@@ -223,7 +223,7 @@ public class BatchSimulator extends Simulator {
 			if (el instanceof SubCircuit sub) {
 				findWatched(sub.getSubCircuit());
 			}
-			else if (el.isWatched()) {
+			else if (el instanceof Watchable watchable && watchable.isWatched()) {
 				LogicElement lel = (LogicElement)el;
 				List<TraceSample> events = new LinkedList<TraceSample>();
 				BitSet value = lel.getCurrentValue();

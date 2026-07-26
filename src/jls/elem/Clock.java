@@ -16,7 +16,7 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class Clock extends LogicElement {
+public final class Clock extends LogicElement implements Rotatable, Editable {
 
 	// default values
 	/** The cycle time offered by the creation dialog's keypad. */
@@ -309,17 +309,6 @@ public final class Clock extends LogicElement {
 		return "clock, cycle time = " + cycleTime +
 				" (zero for " + (cycleTime-oneTime) + ", one for " + oneTime + ")";
 	} // end of showInfo method
-
-	/**
-	 * Clock values can be changed.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 	/**
 	 * Tells if a clock is capable of rotatating, can only rotate when output has no attachment.

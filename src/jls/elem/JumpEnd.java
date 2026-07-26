@@ -15,7 +15,7 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class JumpEnd extends LogicElement {
+public final class JumpEnd extends LogicElement implements Rotatable {
 
 	// default value
 	/** Default number of bits in the named wire. */

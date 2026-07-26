@@ -15,7 +15,7 @@ import jls.core.Orientation;
  *
  * @author David A. Poplawski
  */
-public abstract sealed class Group extends LogicElement
+public abstract sealed class Group extends LogicElement implements Rotatable
 		permits Binder, Splitter {
 
 	// default values

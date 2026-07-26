@@ -18,7 +18,7 @@ import jls.sim.*;
  * @author David A. Poplawski
  */
 public final class Memory extends LogicElement
-		implements Timed, Watchable {
+		implements Timed, Watchable, Editable {
 
 	// types
 	/**
@@ -662,17 +662,6 @@ public final class Memory extends LogicElement
 	} // end of getBits method
 
 	/**
-	 * A memory can be watched.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canWatch() {
-
-		return true;
-	} // end of canWatch method
-
-	/**
 	 * See if this memory is watched.
 	 *
 	 * @return true if it is, false if it is not.
@@ -693,17 +682,6 @@ public final class Memory extends LogicElement
 
 		watched = state;
 	} // end of setWatched method
-
-	/**
-	 * Memories have timing info (access time).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset access time to default value.
@@ -771,17 +749,6 @@ public final class Memory extends LogicElement
 		circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
-
-	/**
-	 * Memories can be modified.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 	/**
 	 * Parse initial value text.

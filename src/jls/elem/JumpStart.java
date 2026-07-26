@@ -16,7 +16,7 @@ import jls.sim.*;
  * @author David A. Poplawski
  */
 public final class JumpStart extends LogicElement
-		implements TriProp, Watchable {
+		implements TriProp, Watchable, Rotatable {
 
 	// default value
 	/** The default bit width for a new jump start. */
@@ -378,17 +378,6 @@ public final class JumpStart extends LogicElement
 			inputs.add(new Input("input",this,width,0,bits));
 		}
 	}
-
-	/**
-	 * A jump start can be watched.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canWatch() {
-
-		return true;
-	} // end of canWatch method
 
 	/**
 	 * See if this jumpstart is watched.

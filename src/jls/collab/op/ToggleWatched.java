@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import jls.Circuit;
 import jls.elem.Element;
 import jls.elem.ElementId;
+import jls.elem.Watchable;
 
 /**
  * Toggle whether an element's value is watched during batch simulation
@@ -19,17 +20,17 @@ public record ToggleWatched(ElementId id) implements CircuitOp {
 	public void apply(Circuit circuit, Graphics g) throws OpRejected {
 
 		Element el = Ops.resolve(circuit, id);
-		if (!el.canWatch()) {
+		if (!(el instanceof Watchable watchable)) {
 			throw new OpRejected("element '" + id + "' cannot be watched");
 		}
-		el.setWatched(!el.isWatched());
+		watchable.setWatched(!watchable.isWatched());
 	} // end of apply method
 
 	@Override
 	public CircuitOp invert(Circuit before) throws OpRejected {
 
 		Element el = Ops.resolve(before, id);
-		if (!el.canWatch()) {
+		if (!(el instanceof Watchable)) {
 			throw new OpRejected("element '" + id + "' cannot be watched");
 		}
 		return this;

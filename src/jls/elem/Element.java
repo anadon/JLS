@@ -7,7 +7,6 @@ import java.util.*;
 import org.jspecify.annotations.Nullable;
 
 import jls.*;
-import jls.core.Orientation;
 
 /**
  * Super class for all logic elements (including non-active ones).
@@ -809,41 +808,6 @@ public abstract sealed class Element
 	} // end of getPut method
 
 	/**
-	 * Check whether the element can be changed after it is created and placed.
-	 * Default is not.
-	 * Overriden by elements that can.
-	 *
-	 * @return true if element can be change, false otherwise.
-	 */
-	public boolean canChange() {
-
-		return false;
-	} // end of canChange method
-
-	/**
-	 * Check whether element has a quick change (shortcut) option.
-	 * Overridden by elements than can.
-	 *
-	 * @return true if is does, false if not.
-	 */
-	public boolean quickChange() {
-
-		return false;
-	} // end of quicChange method
-
-	/**
-	 * Check whether the element has timing info, i.e., propagation delay or access time.
-	 * Default is do not.
-	 * Overridden by elements tht do.
-	 *
-	 * @return true if the element has timing info, false if not.
-	 */
-	public boolean hasTiming() {
-
-		return false;
-	} // end of hasTiming method
-
-	/**
 	 * The save-format version this element's current state requires
 	 * (issue #79 evolution policy: a writer emits the highest version
 	 * whose features the file uses). Almost everything is expressible
@@ -856,105 +820,6 @@ public abstract sealed class Element
 	{
 		return 1;
 	}
-
-	/**
-	 * Tells if an element is capable of rotatating, defaults to false.
-	 * This method may be overridden if an element supports rotation
-	 * @return True if an element supports rotation otherwise false
-	 */
-	public boolean canRotate()
-	{
-		return false;
-	}
-
-	/**
-	 *  This method will rotate the element if it is supported.
-	 *  This must be overridden by supporting classes.
-	 * @param direction The direction to rotate
-	 * @param g The current graphics context for use in recalculating size
-	 */
-	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
-	{
-		throw new UnsupportedOperationException("Rotate");
-	}
-
-	/**
-	 * Tells if an element is capable of flipping, defaults to false.
-	 * This method may be overridden if an element supports flipping
-	 * @return True if an element supports flipping otherwise false
-	 */
-	public boolean canFlip()
-	{
-		return false;
-	}
-
-	/**
-	 * This method will flip an element, it must be overridden by classes that support it
-	 * @param g The current graphics context to facilitate recalculation of size when flipping
-	 */
-	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
-	{
-		throw new UnsupportedOperationException("Flip");
-	}
-
-	/**
-	 * Get the propagation delay or access time in this element.
-	 * Overridden by elements with timing info.
-	 *
-	 * @return the current delay.
-	 */
-	public int getDelay() {
-
-		return 0;
-	} // end of getDelay method
-
-	/**
-	 * Set the propagation delay or access time in this element.
-	 * Overridden by elements with timing info.
-	 *
-	 * @param temp The new delay amount.
-	 *        Must be Integer, don't change to int!
-	 */
-	public void setDelay(int temp) {
-
-		// do nothing
-	} // end of setDelay method
-
-	/**
-	 * Check wether the element can be watched.
-	 * Default is not.
-	 * Overridden by elements that can be.
-	 *
-	 * @return false;
-	 */
-	public boolean canWatch() {
-
-		return false;
-	} // end of canWatch method
-
-	/**
-	 * See if element is currently watched.
-	 * Default is not.
-	 * Overridden by elements that can be watched.
-	 *
-	 * @return false.
-	 *
-	 * @jls.testedby jls.ui.CircuitAssert#assertWatched()
-	 */
-	public boolean isWatched() {
-
-		return false;
-	} // end of isWatched method
-
-	/**
-	 * Set whether this element is watched or not.
-	 * Overridden by elements that can be watched.
-	 *
-	 * @param state Unused.
-	 */
-	public void setWatched(boolean state) {
-
-	} // end of setWatched method
 
 	/**
 	 * Display the current value of this element.

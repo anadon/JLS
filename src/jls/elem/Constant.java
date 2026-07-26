@@ -14,7 +14,8 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class Constant extends LogicElement {
+public final class Constant extends LogicElement
+		implements Rotatable, Editable, QuickEditable {
 
 	// named constants
 	/** Default constant value. */
@@ -411,27 +412,6 @@ public final class Constant extends LogicElement {
 
 	} // end of valueFits method
 
-	/**
-	 * Constants can be changed.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
-
-	/**
-	 * This element has a quick change ability.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean quickChange() {
-
-		return true;
-	} // end of quickChange method
 	/**
 	 * Add one to this constant's value (for the relocated quick-change
 	 * shortcut menu, issue #77).

@@ -25,7 +25,7 @@ import jls.sim.Simulator;
  * @author David A. Poplawski
  */
 public final class StateMachine extends LogicElement
-		implements Timed {
+		implements Timed, Editable {
 
 	// default values
 	/** Propagation delay a new state machine starts with. */
@@ -612,17 +612,6 @@ public final class StateMachine extends LogicElement
 	} // end of reinit method
 
 	/**
-	 * State machines have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
-
-	/**
 	 * Reset propagation delay to default value.
 	 */
 	@Override
@@ -652,17 +641,6 @@ public final class StateMachine extends LogicElement
 
 		propDelay = temp;
 	} // end of setDelay method
-
-	/**
-	 * State machines can be modified.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 //	-------------------------------------------------------------------------------
 //	Simulation

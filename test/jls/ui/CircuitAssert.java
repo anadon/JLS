@@ -20,6 +20,7 @@ import jls.elem.JumpStart;
 import jls.elem.LogicElement;
 import jls.elem.Output;
 import jls.elem.Put;
+import jls.elem.Watchable;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
 
@@ -215,9 +216,10 @@ public final class CircuitAssert {
 				"bit width of put \"" + putName + "\" of " + describe(el));
 	}
 
-	/** Assert the element's watched flag (per {@link Element#isWatched()}). */
+	/** Assert the element's watched flag (per {@link Watchable#isWatched()}). */
 	public static void assertWatched(Element el, boolean expected) {
-		assertEquals(expected, el.isWatched(),
+		assertEquals(expected,
+				el instanceof Watchable watchable && watchable.isWatched(),
 				"watched flag of " + describe(el));
 	}
 

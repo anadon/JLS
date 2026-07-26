@@ -8,6 +8,7 @@ import jls.core.Orientation;
 import jls.edit.SwingTextMetrics;
 import jls.elem.Element;
 import jls.elem.ElementId;
+import jls.elem.Rotatable;
 
 /**
  * Rotate an element a quarter turn (issue #167). Inverse: the opposite
@@ -23,10 +24,10 @@ public record RotateElement(ElementId id, boolean clockwise)
 	public void apply(Circuit circuit, Graphics g) throws OpRejected {
 
 		Element el = Ops.resolve(circuit, id);
-		if (!el.canRotate()) {
+		if (!(el instanceof Rotatable rot) || !rot.canRotate()) {
 			throw new OpRejected("element '" + id + "' cannot rotate");
 		}
-		el.rotate(clockwise ? Orientation.RIGHT
+		rot.rotate(clockwise ? Orientation.RIGHT
 				: Orientation.LEFT, SwingTextMetrics.forGraphics(g));
 	} // end of apply method
 
@@ -34,7 +35,7 @@ public record RotateElement(ElementId id, boolean clockwise)
 	public CircuitOp invert(Circuit before) throws OpRejected {
 
 		Element el = Ops.resolve(before, id);
-		if (!el.canRotate()) {
+		if (!(el instanceof Rotatable rot) || !rot.canRotate()) {
 			throw new OpRejected("element '" + id + "' cannot rotate");
 		}
 		return new RotateElement(id, !clockwise);

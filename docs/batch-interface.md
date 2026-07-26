@@ -214,6 +214,8 @@ and standard VCD parsers. Emitter: `BatchSimulator.toVcd` /
 `BatchSimulator.writeVcd` (`src/jls/sim/BatchSimulator.java`). The
 output is deterministic: two identical runs produce identical bytes,
 and the golden tests compare byte-for-byte.
+(A step-by-step viewer/autograder recipe — informative, not part of
+this contract — is in [`vcd-interop.md`](vcd-interop.md).)
 
 ### 4.1 Signal set
 

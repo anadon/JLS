@@ -1,7 +1,6 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
-import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import jls.Circuit;
+import jls.edit.SwingTextMetrics;
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.JumpEnd;

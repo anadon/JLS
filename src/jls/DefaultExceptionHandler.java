@@ -1,8 +1,7 @@
 package jls;
 
-import java.nio.charset.StandardCharsets;
-
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -12,11 +11,11 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Handle unexpected errors and exceptions.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHandler {
-	
+
 	// properties
 	/** True once an exception is being handled, so a second one just exits. */
 	private boolean recovering = false;
@@ -65,17 +64,17 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 
 	/**
 	 * Save reference to JLS in case circuit(s) can be saved.
-	 * 
+	 *
 	 * @param jls A reference to the main class.
 	 */
 	public void setJLS(JLSStart jls) {
-		
+
 		this.jls = jls;
 	} // end of setJLS method
-	
+
 	/**
 	 * Save reference to circuit for trace.
-	 * 
+	 *
 	 * @param circ The circuit.
 	 */
 	public void setCircuit(@Nullable Circuit circ) {
@@ -86,7 +85,7 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 	/**
 	 * Show a dialog and print a stack trace to a file.
 	 * While debugging print a stack trace to the console.
-	 * 
+	 *
 	 * @param t Unused.
 	 * @param th A throwable containing the exception/error information.
 	 */
@@ -201,14 +200,14 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 		watchdog.setDaemon(true);
 		watchdog.start();
 	} // end of armWatchdog method
-	
+
 	/**
 	 * Save stack trace in a file.
-	 * 
+	 *
 	 * @param th The throwable (exception/error).
 	 */
 	protected void saveTrace(Throwable th) {
-		
+
 		//th.printStackTrace(); // remove this when not debugging
 		try {
 			PrintWriter out = new PrintWriter("JLSerror", StandardCharsets.UTF_8);
@@ -237,5 +236,5 @@ public final class DefaultExceptionHandler implements Thread.UncaughtExceptionHa
 			System.out.println("Can't create JLSerror file");
 		}
 	} // end of saveTrace method
-	
+
 } // end of DefaultExceptionHander class

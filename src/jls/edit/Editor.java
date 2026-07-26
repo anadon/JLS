@@ -22,7 +22,7 @@ import jls.elem.SubCircuit;
 /**
  * Adds naming and file save/saveas/close capability to an edited circuit.
  * Used by application version.
- * 
+ *
  * @author David A. Poplawski
  */
 @SuppressWarnings("serial")
@@ -30,7 +30,7 @@ public final class Editor extends SimpleEditor {
 
 	/**
 	 * Create new editor.
-	 * 
+	 *
 	 * @param pane The tabbed pane this editor is a part of.
 	 * @param circuit The circuit it will edit.
 	 * @param name The name of the circuit.
@@ -46,7 +46,7 @@ public final class Editor extends SimpleEditor {
 
 	/**
 	 * Save circuit.
-	 * 
+	 *
 	 * @return true if the save is successful, false if not
 	 */
 	public boolean save() {
@@ -190,7 +190,7 @@ public final class Editor extends SimpleEditor {
 				continue;
 
 			// don't try to change in this editor
-			if (otherEditor == this) 
+			if (otherEditor == this)
 				continue;
 
 			otherEditor.changeInImportMenu(circuit.getName(),name);
@@ -251,7 +251,7 @@ public final class Editor extends SimpleEditor {
 	 */
 	@Override
 	public void close() {
-		
+
 		// close any subcircuits of this one that are open
 		for (Component edit : tabbedParent.getComponents()) {
 
@@ -259,7 +259,7 @@ public final class Editor extends SimpleEditor {
 			if (!(edit instanceof Editor otherEditor))
 				continue;
 
-			
+
 			// skip this editor
 			if (otherEditor == this)
 				continue;
@@ -285,7 +285,7 @@ public final class Editor extends SimpleEditor {
 				tabbedParent.remove(edit);
 			}
 		}
-		
+
 		// if this circuit is a subcircuit...
 		if (circuit.isImported()) {
 
@@ -316,7 +316,7 @@ public final class Editor extends SimpleEditor {
 				return;
 			}
 		}
-		
+
 		// if this circuit is not imported, remove this circuit from
 		// import menus of all other open circuits
 		if (!circuit.isImported()) {
@@ -337,7 +337,7 @@ public final class Editor extends SimpleEditor {
 
 	/**
 	 * Force closure of circuit, save if needed.
-	 * 
+	 *
 	 * @return true if shutdown succeeded, false if canceled
 	 */
 	public boolean shutdown() {

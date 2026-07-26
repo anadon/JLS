@@ -1,14 +1,12 @@
 package jls.ui;
 
 import static jls.ui.CircuitAssert.assertElementPresent;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.GraphicsEnvironment;
-import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -22,10 +20,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import jls.core.Geometry;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
+import jls.core.Geometry;
 import jls.edit.EditOp;
 import jls.elem.AndGate;
 import jls.elem.Element;

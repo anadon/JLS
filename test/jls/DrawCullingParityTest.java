@@ -15,8 +15,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import jls.edit.CircuitRenderer;
 import jls.core.Geometry;
+import jls.edit.CircuitRenderer;
 import jls.elem.Element;
 
 /**

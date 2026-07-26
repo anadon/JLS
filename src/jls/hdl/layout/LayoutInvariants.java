@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jls.core.Geometry;
-import jls.JLSInfo;
-
 /**
  * The hard drawing invariants every layout must satisfy before the
  * importer realizes it as elements and WireEnds (issue #62 §2): every

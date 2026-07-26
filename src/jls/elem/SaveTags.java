@@ -1,8 +1,9 @@
 package jls.elem;
 
-import org.jspecify.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The save-format element tag namespace (issue #79).

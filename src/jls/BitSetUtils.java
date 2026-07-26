@@ -1,29 +1,29 @@
 package jls;
 
-import java.util.*;
 import java.math.*;
+import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
 /**
  * Common (static) utility methods dealing with BitSets.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class BitSetUtils {
-	
+
 	/**
 	 * Private constructor to keep this class from being instantiated.
 	 */
 	private BitSetUtils() {}
-	
+
 	/**
 	 * Create a bitset from a positive long.
-	 * 
+	 *
 	 * @param value The long value.
-	 * 
+	 *
 	 * @return The corresponding BitSet.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if value is negative
 	 *
 	 * @jls.testedby jls.BitSetUtilsCreateTest#assertRoundTrip()
@@ -33,7 +33,7 @@ public final class BitSetUtils {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public static BitSet Create(long value) {
-		
+
 		if (value < 0)
 			throw new
 			IllegalArgumentException("value must be greater than zero (" + value + ")");
@@ -47,18 +47,18 @@ public final class BitSetUtils {
 		}
 		return newBS;
 	} // end of Create method
-	
+
 	/**
 	 * Create a bitset from a positive BigInteger.
-	 * 
+	 *
 	 * @param value The BigInteger value.
-	 * 
+	 *
 	 * @return The corresponding BitSet.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if value is negative
 	 */
 	public static BitSet Create(BigInteger value) {
-		
+
 		if (value.compareTo(BigInteger.ZERO) < 0)
 			throw new
 			IllegalArgumentException("value must be greater than zero (" + value + ")");
@@ -71,33 +71,33 @@ public final class BitSetUtils {
 		}
 		return newBS;
 	} // end of Create method
-	
+
 	 /**
      * Convert a BitSet to a string representation in the specified radix.
-     * 
+     *
      * @param bs The BitSet to convert.
      * @param radix The radix to convert the BitSet to.
-     * 
+     *
      * @return A string representation of the BitSet in the specified radix.
      */
     public static String ToString(BitSet bs, int radix) {
 
         BigInteger bi = BigInteger.ZERO;
-        
+
         for (int index = bs.nextSetBit(0); index >= 0;
 		index = bs.nextSetBit(index + 1)) {
             bi = bi.setBit(index);
         }
-        
+
         return bi.toString(radix).toUpperCase();
     } // end of ToString method
 
 	/**
     * Convert a BitSet to a string representation in base 10 assuming two's complement.
-    * 
+    *
     * @param bs The BitSet to convert.
     * @param bits The number of bits.
-    * 
+    *
     * @return A string representation of the BitSet.
     */
    public static String ToStringSigned(BitSet bs, int bits) {
@@ -105,27 +105,27 @@ public final class BitSetUtils {
 	   // if bits = 0, can't do signed converstion
 	   if (bits == 0)
 		   return "unknown";
-	   
+
 	   // if positive do normal conversion
 	   if (!bs.get(bits-1))
 		   return ToString(bs,10);
-	   
+
 	   // flip the bits
 	   BitSet temp = (BitSet)bs.clone();
 	   temp.flip(0,bits);
 	   long val = ToLong(temp)+1;
 	   return "-" + Long.toString(val);
    } // end of ToStringSigned method
-    
+
     /**
      * Convert a bitset to an int.
-     * 
+     *
      * @param bs The bitset.
-     * 
+     *
      * @return the corresponding int.
      */
     public static int ToInt(BitSet bs) {
-    	
+
     	int pow = 1;
     	int value = 0;
     	for (int i=0; i<bs.length(); i+=1) {
@@ -138,9 +138,9 @@ public final class BitSetUtils {
 
     /**
      * Convert a bitset to a long.
-     * 
+     *
      * @param bs The bitset.
-     * 
+     *
      * @return the corresponding long.
      *
      * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
@@ -156,7 +156,7 @@ public final class BitSetUtils {
      * @jls.testedby jls.elem.MemoryInitEncodingTest#rleMemorySimulatesLikeRawMemory()
      */
     public static long ToLong(BitSet bs) {
-    	
+
     	long pow = 1;
     	long value = 0;
     	for (int i=0; i<bs.length(); i+=1) {
@@ -166,16 +166,16 @@ public final class BitSetUtils {
     	}
     	return value;
     } // end of ToLong method
-    
+
     /**
      * Convert a bitset to a BigInteger.
-     * 
+     *
      * @param bs The bitset.
-     * 
+     *
      * @return the corresponding BigInteger.
      */
     public static BigInteger ToBigInteger(BitSet bs) {
-    	
+
     	BigInteger value = BigInteger.ZERO;
     	for (int i=0; i<bs.length(); i+=1) {
     		if (bs.get(i))
@@ -183,10 +183,10 @@ public final class BitSetUtils {
     	}
     	return value;
     } // end of ToBigInteger method
-    
+
     /**
      * Compute the sum of the two input bitsets.
-     * 
+     *
      * @param carryIn The carry in to the lower order bit position.
      * @param bs1 One operand.
      * @param bs2 Another operand.
@@ -228,14 +228,14 @@ public final class BitSetUtils {
 	/**
 	 * Convert a bitset into displayable values (hex,unsigned,signed).
 	 * A null bitset is converted to "HiZ".
-	 * 
+	 *
 	 * @param value The BitSet.
 	 * @param bits The number of bits in the value.
-	 * 
+	 *
 	 * @return A string in the form "0xn (n unsigned, n signed)" or "HiZ".
 	 */
 	public static String toDisplay(@Nullable BitSet value, int bits) {
-		
+
 		if (value == null)
 			return "HiZ";
 		String str = "0x" + BitSetUtils.ToString(value,16);
@@ -243,5 +243,5 @@ public final class BitSetUtils {
 		str += BitSetUtils.ToStringSigned(value,bits) + " signed)";
 		return str;
 	} // end of toDisplay method
-    
+
 } // end of BitSetUtils class

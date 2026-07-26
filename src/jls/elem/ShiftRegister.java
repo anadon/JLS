@@ -1,12 +1,14 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.BitSet;
+
 import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * Combinational barrel shifter (issue #122). The bsiever fork lineage

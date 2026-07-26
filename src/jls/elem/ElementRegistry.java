@@ -1,10 +1,11 @@
 package jls.elem;
 
-import org.jspecify.annotations.Nullable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The table of every loadable element type (issue #78): one

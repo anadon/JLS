@@ -1,14 +1,13 @@
 package jls;
 
 import java.awt.*;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import java.awt.event.*;
-
 /**
  * Display dialog showing version and copywrite information about JLS.
- * 
+ *
  * @author David A. Poplawski
  */
 @SuppressWarnings("serial")
@@ -18,9 +17,9 @@ public final class About extends JDialog implements ActionListener {
 	 * Show information about JLS.
 	 */
 	public About() {
-		
+
 		super((Frame)null,"About JLS");
-		
+
 		// set up labels
 		Container window = getContentPane();
 		window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
@@ -36,7 +35,7 @@ public final class About extends JDialog implements ActionListener {
 		JLabel info = new JLabel(html);
 		info.setAlignmentX(Component.CENTER_ALIGNMENT);
 		window.add(info);
-		
+
 		// set up close button
 		JLabel s1 = new JLabel(" ");
 		s1.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -48,24 +47,23 @@ public final class About extends JDialog implements ActionListener {
 		JLabel s2 = new JLabel(" ");
 		s2.setAlignmentX(Component.CENTER_ALIGNMENT);
 		window.add(s2);
-		
+
 		// make visible, centered on the main frame (owner-relative; #104)
 		pack();
 		setLocationRelativeTo(JLSInfo.frame);
 		setVisible(true);
-		
+
 	} // end of constructor
-	
+
 	/**
 	 * Close dialog.
-	 * 
+	 *
 	 * @param event Unused.
 	 */
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		
+
 		dispose();
 	} // end of actionPerformed method
-	
+
 } // end of About class
- 

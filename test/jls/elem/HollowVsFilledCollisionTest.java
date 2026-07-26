@@ -10,10 +10,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Geometry;
 import jls.Circuit;
-import jls.JLSInfo;
-
+import jls.core.Geometry;
 /**
  * Collision semantics of a hollow square drawn with four wires versus a
  * filled square container element (a SubCircuit block), through the

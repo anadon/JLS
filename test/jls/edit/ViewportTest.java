@@ -1,5 +1,4 @@
 package jls.edit;
-import jls.core.Geometry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

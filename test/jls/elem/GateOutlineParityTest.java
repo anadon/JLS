@@ -13,10 +13,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Geometry;
 import jls.Circuit;
-import jls.JLSInfo;
-
+import jls.core.Geometry;
 /**
  * Pins the renderer/model split of the six pure gate leaves (issue #77):
  * the {@link GateOutline} each gate now returns must reproduce the exact

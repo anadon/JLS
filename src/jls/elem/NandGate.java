@@ -1,8 +1,9 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
 import java.util.BitSet;
+
+import jls.*;
+import jls.core.Geometry;
 
 /**
  * n-input NAND gate(s).

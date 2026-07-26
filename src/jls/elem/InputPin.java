@@ -1,28 +1,27 @@
 package jls.elem;
 
+import java.io.*;
+import java.util.*;
+
+import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
-import jls.*;
 import jls.sim.*;
-
-import java.io.*;
-
-import java.util.*;
 
 /**
  * Input pin of a subcircuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class InputPin extends Pin implements TriProp {
-	
+
 	/**
 	 * Create a new input pin.
-	 * 
+	 *
 	 * @param circ The circuit this pin will be in.
 	 */
 	public InputPin(Circuit circ) {
-		
+
 		super(circ);
 	} // end of constructor
 
@@ -77,17 +76,17 @@ public final class InputPin extends Pin implements TriProp {
 				out.loadSetTriState();
 			}
 		}
-		
+
 	} // end of init method
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT InputPin");
 		if (outputs.get(0).isTriState()) {
 			output.println(" int tristate 1");
@@ -100,16 +99,16 @@ public final class InputPin extends Pin implements TriProp {
 	 */
 	@Override
 	public Element copy() {
-		
+
 		InputPin it = new InputPin(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -124,23 +123,23 @@ public final class InputPin extends Pin implements TriProp {
 
 	/**
 	 * Set this element to tri-state or not and propagate to output(s).
-	 * 
+	 *
 	 * @param which True to set to tri-state, false otherwise.
 	 */
 	@Override
 	public void setTriState(boolean which) {
-		
+
 		for (Output output : outputs) {
 			output.setTriState(which);
 		}
 	} // end of setTriState method
-	
+
 	/**
 	 * Return a string representation of this InputPin.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return "[InputPin " + name + "(" + bits + " bits)]";
 	} // end of toString method
 
@@ -150,12 +149,12 @@ public final class InputPin extends Pin implements TriProp {
 
 	/**
 	 * Initialize output to 0 or null.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
-	public void initSim(Simulator sim) { 
-		
+	public void initSim(Simulator sim) {
+
 		currentValue = new BitSet();
 		if (getCircuit().isImported()) {
 			SubCircuit sub = getCircuit().getSubElement();
@@ -179,11 +178,11 @@ public final class InputPin extends Pin implements TriProp {
 			out.setValue((BitSet)currentValue.clone());
 		}
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event by sending the value it got to everything it is
 	 * connected to.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send.
@@ -202,18 +201,18 @@ public final class InputPin extends Pin implements TriProp {
 			currentValue = (BitSet)value.clone();
 			out.propagate((BitSet)value.clone(),now,sim);
 		}
-		
+
 	} // end of react method
 
 	/**
 	 * Display current value.
-	 * 
+	 *
 	 * @param whereX the x-coordinate on screen (unused here).
 	 * @param whereY the y-coordinate on screen (unused here).
 	 */
 	@Override
 	public void showCurrentValue(int whereX, int whereY) {
-		
+
 		String value = "off";
 		if (currentValue != null) {
 			String hex = BitSetUtils.ToString(currentValue,16);

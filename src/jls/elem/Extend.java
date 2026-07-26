@@ -1,39 +1,40 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.util.*;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
+
 /**
  * 1-input, n-outputs, where all outputs are equal to the input.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Extend extends Gate implements TriProp {
-	
+
 	// identity (#22); previous-settings unused: Extend has no repeat button
 	/** The kind descriptor shared by all Extend gates. */
 	private static final Kind KIND =
 			new Kind("Extend","Extend",1,0);
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
-	
+
 	// properties
 	/** Saved tri-state flag from the circuit file, applied when loading finishes. */
 	private boolean loadTriState = false;
 
 	/**
 	 * Create extend.
-	 * 
+	 *
 	 * @param circuit The circuit this extend is in.
 	 */
 	public Extend(Circuit circuit) {
@@ -73,10 +74,10 @@ public final class Extend extends Gate implements TriProp {
 				.line(false, s+s2, s, 2*s, s)
 				.build();
 	} // end of outline method
-	
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
@@ -103,37 +104,37 @@ public final class Extend extends Gate implements TriProp {
 			outputs.get(0).loadSetTriState();
 		}
 	} // end of init method
-	
+
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		super.save(output,"Extend",outputs.get(0).isTriState());
 	} // end of save method
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, int value) {
-		
+
 		if (name.equals("tristate")) {
 			loadTriState = true;
 		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Display info about this extend.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -144,23 +145,23 @@ public final class Extend extends Gate implements TriProp {
 
 	/**
 	 * An expand is just wire so has no propagation delay.
-	 * 
+	 *
 	 * @return false.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return false;
 	} // end of hasTiming method
-	
+
 	/**
 	 * Propagate tri-state to output.
-	 * 
+	 *
 	 * @param which True if tristate, false if not.
 	 */
 	@Override
 	public void setTriState(boolean which) {
-		
+
 		for (Output out : outputs) {
 			out.setTriState(which);
 		}
@@ -194,7 +195,7 @@ public final class Extend extends Gate implements TriProp {
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		Output out = outputs.get(0);
 		if (out.isTriState()) {
 			out.setValue(null);
@@ -204,20 +205,20 @@ public final class Extend extends Gate implements TriProp {
 		}
 
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// get the input value
 		BitSet value = inputs.get(0).getValue();
-		
+
 		// create new output value
 		BitSet newValue = null;
 		if (value != null) {
@@ -226,11 +227,11 @@ public final class Extend extends Gate implements TriProp {
 				newValue.flip(0,bits);	// all ones
 			}
 		}
-		
+
 		// propagate new value to output
 		Output out = outputs.get(0);
 		out.propagate(newValue,now,sim);
-		
+
 	} // end of react method
-	
+
 } // end of Extend element

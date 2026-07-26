@@ -24,9 +24,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
-
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * The JavaHelp replacement (issue #11) is driven by two pieces of

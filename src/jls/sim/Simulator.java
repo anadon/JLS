@@ -1,11 +1,11 @@
 package jls.sim;
 
-import jls.*;
-import jls.elem.*;
-
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.elem.*;
 
 /**
  * Event driven circuit simulator.
@@ -55,7 +55,7 @@ public abstract class Simulator {
 
 	/**
 	 * Set the circuit that will be simulated.
-	 * 
+	 *
 	 * @param circ The circuit.
 	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
@@ -82,7 +82,7 @@ public abstract class Simulator {
 
 	/**
 	 * Set the time limit for the simulation.
-	 * 
+	 *
 	 * @param limit The time limit.
 	 * @jls.testedby jls.BatchSimulationGoldenTest#ramWriteStoresTheWord()
 	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
@@ -108,7 +108,7 @@ public abstract class Simulator {
 
 	/**
 	 * Set the simulation test input file name.
-	 * 
+	 *
 	 * @param name The test file name, or null if none.
 	 * @jls.testedby jls.SequentialGoldenTest#simulateWithVectors()
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#stateMachineWithNoMatchingTransitionStaysAliveAndWarnsOnce()
@@ -142,7 +142,7 @@ public abstract class Simulator {
 
 	/**
 	 * Initialize all inputs in the circuit.
-	 * 
+	 *
 	 * @param circuit The circuit to initialize.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */

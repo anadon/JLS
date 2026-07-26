@@ -3,15 +3,15 @@ package jls.sim;
 /**
  * Implemented by all elements that react to simulator events
  * (input/output signal changes).
- * 
+ *
  * @author David A. Poplawski
  */
 public interface Reacts {
-	
+
 	/**
 	 * Initializes the element.
 	 * Typically output pins are given values and internal state is initialized.
-	 * 
+	 *
 	 * @param sim A reference to the simulator in case the element needs to post an event.
 	 */
 	public abstract void initSim(Simulator sim);

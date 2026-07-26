@@ -2,25 +2,25 @@ package jls;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.net.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
-import java.net.*;
 
 /**
  * Implements keypad for inputing numbers.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class KeyPad extends JButton implements ActionListener {
-	
+
 	// properties
 	/** The digit buttons, 0-9 (and a-f when the base is 16). */
 	private JButton [] digits = new JButton[16];
 	/** The button that resets the text field to the default value. */
 	private JButton reset = new JButton("C");
 	/** The button that hides the keypad window. */
-	private JButton hide = new JButton(); 
+	private JButton hide = new JButton();
 	/** The text field the keypad fills. */
 	private JTextField target;
 	/** The number base (10 or 16), hence how many digit buttons work. */
@@ -37,30 +37,30 @@ public final class KeyPad extends JButton implements ActionListener {
 	private long autoHidden = 0;
 	/** The document filter restricting the text field to digits in the base. */
 	TextFilter filter;
-	
+
 	/**
 	 * Create a new KeyPad object.
-	 * 
+	 *
 	 * @param target The text field the keypad will fill.
 	 * @param digitKeys The number of digits in the keypad (10 or 16 only);
 	 * @param defaultValue The default value for this field.
 	 * @param f The window this is in.
 	 */
 	public KeyPad(JTextField target, int digitKeys, long defaultValue, final Window f) {
-		
+
 		// initialize
 		URL down = KeyPad.class.getResource("images/down.gif");
 		setIcon(new ImageIcon(down));
 		setBackground(Color.WHITE);
 		URL up = KeyPad.class.getResource("images/up.gif");
 		hide.setIcon(new ImageIcon(up));
-		
-		
+
+
 		// save parameters
 		this.target = target;
 		this.base = digitKeys;
 		this.defaultValue = defaultValue;
-		
+
 		// create buttons
 		for (int i=0; i<=9; i+=1) {
 			digits[i] = new JButton(i+"");
@@ -71,7 +71,7 @@ public final class KeyPad extends JButton implements ActionListener {
 		digits[13] = new JButton("d");
 		digits[14] = new JButton("e");
 		digits[15] = new JButton("f");
-		
+
 		// set up GUI: an owned window, so it stays attached to the
 		// dialog it belongs to on every platform (#104)
 		win = new JDialog(f);
@@ -103,19 +103,19 @@ public final class KeyPad extends JButton implements ActionListener {
 		window.add(reset);
 		window.add(digits[0]);
 		window.add(hide);
-		
+
 		// set up listeners
 		for (int i=0; i<base; i+=1) {
 			digits[i].addActionListener(this);
 		}
 		reset.addActionListener(this);
 		hide.addActionListener(this);
-		
+
 		// set up filter
 		AbstractDocument doc = (AbstractDocument)(target.getDocument());
 		filter = new TextFilter(target);
 		doc.setDocumentFilter(filter);
-		
+
 		// finish keypad window
 		win.pack();
 		addActionListener(this);
@@ -163,15 +163,15 @@ public final class KeyPad extends JButton implements ActionListener {
 		win.setVisible(false);
 		winVisible = false;
 	} // end of hideKeyPad method
-	
+
 	/**
 	 * React to button pushed.
-	 * 
+	 *
 	 * @param event The event object for actions.
 	 */
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		
+
 		if (event.getSource() == this) {
 			if (winVisible) {
 				hideKeyPad();
@@ -193,18 +193,18 @@ public final class KeyPad extends JButton implements ActionListener {
 		if (event.getSource() == hide) {
 			hideKeyPad();
 		}
-		
+
 		// handle reset
 		if (event.getSource() == reset) {
 			target.setText(Long.toString(defaultValue,base));
 			firstChange = true;
 			return;
 		}
-		
+
 		// find out which button caused the event
 		for (int i=0; i<base; i+=1) {
 			if (event.getSource() == digits[i]) {
-				
+
 				// append digit to string
 				if (firstChange) {
 					target.setText(Integer.toString(i,base));
@@ -216,37 +216,37 @@ public final class KeyPad extends JButton implements ActionListener {
 				return;
 			}
 		}
-		
+
 	} // end of actionPerformed method
-	
+
 	/**
 	 * Change the base.
 	 * Will not change the appearance of the keypad, but will change what
 	 * digits are allowed.
-	 * 
+	 *
 	 * @param base The new base.
 	 */
 	public void setBase(int base) {
-		
+
 		this.base = base;
 		filter.setBase(base);
 	} // end of setBase method
-	
+
 	/**
 	 * Value has been reset, so remember that any change will be the first change.
 	 */
 	public void reset() {
-		
+
 		firstChange = true;
 	} // end of reset method
-	
+
 	/**
 	 * Get rid of this keypad.
 	 */
 	public void close() {
-		
+
 		win.setVisible(false);
 		win.dispose();
 	} // end of close method
-	
+
 } // end of KeyPad class

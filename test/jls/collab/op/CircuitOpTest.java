@@ -20,9 +20,9 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.core.Orientation;
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.JumpEnd;

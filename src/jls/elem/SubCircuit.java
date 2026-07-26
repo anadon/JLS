@@ -1,21 +1,22 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
+
 /**
  * Circuit element connecting this circuit to an imported subcircuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class SubCircuit extends LogicElement implements TriProp {
-	
+
 	// properties
 	/**
 	 * The imported subcircuit this element represents, or null until set by
@@ -36,12 +37,12 @@ public final class SubCircuit extends LogicElement implements TriProp {
 
 	/**
 	 * Create printable view of this element.
-	 * 
+	 *
 	 * @return the name, orientation and input/output pin names.
 	 */
 	@Override
 	public String toString() {
-		
+
 		String result = "SubCircuit[" + name + ",";
 		switch (orientation) {
 		case RIGHT: result += "right"; break;
@@ -68,32 +69,32 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		result += "}]";
 		return result;
 	} // end of toString method
-	
+
 	/**
 	 * Create a new subcircuit element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 * @jls.testedby jls.edit.SaveAsNameCheckTest#importedCircuitsAreSkipped()
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#probe()
 	 */
 	public SubCircuit(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * Save the subcircuit that this element represents.
-	 * 
+	 *
 	 * @param subCirc The subcircuit.
 	 */
 	public void setSubCircuit(Circuit subCirc) {
-		
+
 		subCircuit = subCirc;
 	} // end of setSubCircuit method
-	
+
 	/**
 	 * Get the subcircuit this element represents.
-	 * 
+	 *
 	 * @return the subcircuit.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
 	 */
@@ -103,10 +104,10 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			throw new IllegalStateException("subcircuit not set yet");
 		return subCircuit;
 	} // end of getSubCircuit method
-	
+
 	/**
 	 * Get the (local) name of this subcircuit element (not the circuit it represents).
-	 * 
+	 *
 	 * @return the name.
 	 */
 	@Override
@@ -116,17 +117,17 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			throw new IllegalStateException("subcircuit name not set yet");
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Set the (local) name of this subcircuit element.
-	 * 
+	 *
 	 * @param name The name.
 	 */
 	public void setName(String name) {
-		
+
 		this.name = name;
 	} // end of setName method
-	
+
 	/**
 	 * The direction this subcircuit faces (issue #77: read by the GUI-side
 	 * renderer and dialog).
@@ -172,9 +173,9 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				}
 				width = (width+s-1)/s*s+s;
 			}
-			
+
 		}
-		
+
 		// create sorted lists of input pins and output pins
 		Comparator<Pin> cmp = new Comparator<Pin>() {
 			/**
@@ -201,7 +202,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				outputList.add(pin);
 			}
 		}
-		
+
 		// create new list alternating elements from the two lists
 		Vector<Pin> pins = new Vector<Pin>(inputList.size()+outputList.size());
 		boolean fromInput = true;
@@ -223,7 +224,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				}
 			}
 		}
-		
+
 		// create inputs and outputs and determine height
 		height = s;
 		for (Pin el : pins) {
@@ -268,17 +269,17 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			}
 		}
 		height += 2*s;
-		
+
 	} // end of init method
-	
+
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The PrintWriter to write to.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT SubCircuit");
 		output.println(" String orient \"" + orientation.toString() + "\"");
 		super.save(output);
@@ -298,16 +299,16 @@ public final class SubCircuit extends LogicElement implements TriProp {
 
 		return getSubCircuit().formatVersionNeeded();
 	} // end of saveFormatVersion method
-	
+
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, String value) {
-		
+
 		if (name.equals("orient")) {
 			if(value.equals("LEFT"))
 			{
@@ -317,18 +318,18 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			{
 				orientation = Orientation.RIGHT;
 			}
-			
+
 		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	@Override
 	public Element copy() {
-		
+
 		// create infrastructure
 		SubCircuit it = new SubCircuit(getCircuit());
 		it.name = name;
@@ -375,7 +376,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				}
 			}
 		}
-		
+
 		// finish up
 		super.copy(it);
 		return it;
@@ -385,72 +386,72 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	 * Remove this element from the circuit.
 	 * Unattaches from all wire nets.
 	 * Forces wire nets it disconnects from to recheck their information.
-	 * 
+	 *
 	 * @param circ The circuit it is being removed from.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		if (name != null)
 			circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return getSubCircuit().getName() + " (a subcircuit)";
 	} // end of showInfo method
-	
+
 	/**
 	 * Set whether elements in the subcircuit are watched.
-	 * 
+	 *
 	 * @param which True to set all watchable elements to watched, false to make them
 	 *        not watched.
 	 */
 	@Override
 	public void setWatched(boolean which) {
-		
+
 		for (Element element : getSubCircuit().getElements()) {
 			if (element instanceof LogicElement le) {
 				le.setWatched(which);
 			}
 		}
 	} // end of setWatched method
-	
+
 	/**
 	 * Reset propagation delays of all elements in the subcircuit.
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		getSubCircuit().resetAllDelays();
 	} // end of resetPropDelay method
 
 	/**
 	 * Subcircuits can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * Remap all input and output pins to inputs and outputs.
 	 * Used by undo/redo (finishDo).
-	 * 
+	 *
 	 * @param circ The new circuit containing new versions of the input and output pins.
 	 */
 	public void remapPins(Circuit circ) {
-		
+
 		inmap.clear();
 		outmap.clear();
 		for (Element el : circ.getElements()) {
@@ -470,20 +471,20 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			}
 		}
 	} // end of remapPins method
-	
+
 	// used by setTriState to avoid infinite recursion when an
 	// input of this elements is connected to a tri-state propagating output
 	/** Input pins already visited by setTriState, to avoid infinite recursion. */
 	private Set<InputPin> pinsChecked = new HashSet<InputPin>();
-	
+
 	/**
 	 * Set all subcircuit input pins to tri-state or not.
-	 * 
+	 *
 	 * @param which True to set to tri-state, false otherwise.
 	 */
 	@Override
 	public void setTriState(boolean which) {
-		
+
 		for (Input input : inputs) {
 			InputPin p = inmap.get(input);
 			if (p == null)
@@ -492,16 +493,16 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			// if already checked, don't do it again
 			if (pinsChecked.contains(p))
 				continue;
-			
+
 			if (!input.isAttached()) {
-				
+
 				// unattached are not tri-state, so propagate false
 				pinsChecked.add(p);
 				p.setTriState(false);
 				pinsChecked.remove(p);
 			}
 			else {
-				
+
 				// attached can be either, so find out which and propagate
 				WireEnd w = input.getWireEnd();
 				if (w == null)
@@ -513,11 +514,11 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			}
 		}
 	} // end of setTriState method
-	
+
 	/**
 	 * See if this element can be flipped.
 	 * It can be if none of its inputs or outputs are attached yet.
-	 * 
+	 *
 	 * @return true if it can be, false if not.
 	 */
 	@Override
@@ -541,10 +542,10 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		}
 		return success;
 	} // end of canFlip method
-	
+
 	/**
 	 * Flip this element in the display.
-	 * 
+	 *
 	 * @param g The Graphics object used to draw this element.
 	 */
 	@Override
@@ -567,17 +568,17 @@ public final class SubCircuit extends LogicElement implements TriProp {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize inputs of this element, and of all elements in the subcircuit,
 	 * to 0.
 	 */
 	@Override
 	public void initInputs() {
-		
+
 		// initialize this element's inputs
 		super.initInputs();
-		
+
 		// initialize subcircuit's elements
 		for (Element element : getSubCircuit().getElementsInStableOrder()) {
 			if (element instanceof LogicElement el) {
@@ -586,16 +587,16 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		}
 
 	} // end of initInputs method
-	
+
 	/**
 	 * Initialize this element by setting all output pins of this element to 0 or null
 	 * and initializing all elements in the subcircuit.
-	 * 
+	 *
 	 * @param sim The simulator for this circuit.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set all output pins
 		for (Output out : outputs) {
 			if (out.isTriState())
@@ -603,7 +604,7 @@ public final class SubCircuit extends LogicElement implements TriProp {
 			else
 				out.setValue(new BitSet());
 		}
-		
+
 		// canonical seed order at every nesting depth (#181): the inner
 		// circuit's time-0 events must be posted in stable-id order for
 		// the same reason as Simulator.initSimulation's top-level walk
@@ -614,10 +615,10 @@ public final class SubCircuit extends LogicElement implements TriProp {
 		}
 
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
@@ -635,23 +636,23 @@ public final class SubCircuit extends LogicElement implements TriProp {
 				copy = (BitSet)in.getValue().clone();
 			sim.post(new SimEvent(now,pin,copy));
 		}
-		
+
 	} // end of react method
-	
+
 	/**
 	 * Send value to the output corresponding to given OutputPin.
-	 * 
+	 *
 	 * @param pin The output pin.
 	 * @param value The value.
 	 * @param now The current time.
 	 * @param sim The simulator.
 	 */
 	public void send(OutputPin pin, @Nullable BitSet value, long now, Simulator sim) {
-		
+
 		Output out = outmap.get(pin);
 		if (out == null)
 			throw new IllegalStateException("no output mapped for the given output pin");
 		out.propagate(value,now,sim);
 	} // end of send method
-	
+
 } // end of SubCircuit class

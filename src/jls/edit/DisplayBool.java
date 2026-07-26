@@ -12,6 +12,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.elem.Cross;
 import jls.elem.Entry;
 import jls.elem.HLine;
@@ -23,8 +25,6 @@ import jls.elem.SigEntry;
 import jls.elem.TruthTable;
 import jls.elem.VLine;
 import jls.elem.ValEntry;
-
-import org.jspecify.annotations.Nullable;
 
 /**
  * Displays the truth table, GUI-side (issue #77). Moved from the former

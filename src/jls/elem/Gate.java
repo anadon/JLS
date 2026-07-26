@@ -1,27 +1,26 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.core.Orientation;
-import jls.sim.*;
-
+import java.io.*;
+import java.util.BitSet;
 import java.util.Locale;
 
-import java.util.BitSet;
 import org.jspecify.annotations.Nullable;
 
-import java.io.*;
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * Superclass of all simple gates (AND, OR, etc).
  * Contains common info and method.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class Gate extends LogicElement
 		permits AndGate, DelayGate, Extend, NandGate, NorGate, NotGate,
 		OrGate, XorGate {
-	
+
 	// named constants
 	// gates share the one Orientation enum (issue #78 H3); only
 	// their persistence differs - lowercase names, kept byte-identical
@@ -46,14 +45,14 @@ public abstract sealed class Gate extends LogicElement
 	/**
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Gate(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * Identity and shared "remember previous settings" state for one gate
 	 * kind (#22). Each subclass holds a single static Kind, replacing the
@@ -62,7 +61,7 @@ public abstract sealed class Gate extends LogicElement
 	 * genuine content: the outline shape and computeOutput().
 	 */
 	protected static final class Kind {
-		
+
 		/** The human-readable name of this gate kind. */
 		private final String displayName;	// e.g. "AND"
 		/** The save-file tag of this gate kind. */
@@ -79,7 +78,7 @@ public abstract sealed class Gate extends LogicElement
 		private int previousBits = defaultBits;
 		/** Orientation of the previously created gate of this kind. */
 		private Orientation previousOrientation = defaultOrientation;
-		
+
 		/**
 		 * Create a kind descriptor for one gate class.
 		 *
@@ -91,22 +90,22 @@ public abstract sealed class Gate extends LogicElement
 		 */
 		protected Kind(String displayName, String saveName, int fixedInputs,
 				int defaultDelay) {
-			
+
 			this.displayName = displayName;
 			this.saveName = saveName;
 			this.fixedInputs = fixedInputs;
 			this.defaultDelay = defaultDelay;
 		} // end of constructor
-		
+
 	} // end of Kind class
-	
+
 	/**
 	 * The kind descriptor for this gate.
-	 * 
+	 *
 	 * @return the (static, per-class) kind.
 	 */
 	protected abstract Kind kind();
-	
+
 	/**
 	 * Remember the accepted settings for the next gate of the same kind.
 	 * Called by the GUI-side creation dialog ({@code jls.edit.GateDialog})
@@ -126,18 +125,18 @@ public abstract sealed class Gate extends LogicElement
 
 	/**
 	 * Save this element in a file, under its kind's save name.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		save(output,kind().saveName,false);
 	} // end of save method
-	
+
 	/**
 	 * Display info about this gate.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -149,7 +148,7 @@ public abstract sealed class Gate extends LogicElement
 		else
 			return bits + " " + numInputs + "-input " + type + " gate";
 	} // end of showInfo method
-	
+
 	/**
 	 * Initialize internal info for this element.
 	 * Sets up size, inputs and outputs.
@@ -158,7 +157,7 @@ public abstract sealed class Gate extends LogicElement
 	 */
 	@Override
 	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
-		
+
 		// set up size
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
 			width = Geometry.SPACING*4;
@@ -168,23 +167,23 @@ public abstract sealed class Gate extends LogicElement
 			width = Geometry.SPACING*(Math.max(numInputs,3)-1);
 			height = Geometry.SPACING*4;
 		}
-		
+
 		Output out;
-		
+
 		if (orientation == Orientation.LEFT || orientation == Orientation.RIGHT) {
-			
+
 			int inx = 0;
 			int outx = Geometry.SPACING*4;
 			if (orientation == Orientation.LEFT) {
 				inx = Geometry.SPACING*4;
 				outx = 0;
 			}
-			
+
 			// set up output
 			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
 			out = new Output("output",this,outx,dist+Geometry.SPACING,bits);
 			outputs.add(out);
-			
+
 			// set up inputs
 			if (numInputs == 1) { // not or delay gate
 				inputs.add(new Input("input0",this,inx,Geometry.SPACING,bits));
@@ -199,7 +198,7 @@ public abstract sealed class Gate extends LogicElement
 						yc += Geometry.SPACING;
 				}
 			}
-			
+
 		}
 		else { // up or down
 			int iny = 0;
@@ -208,12 +207,12 @@ public abstract sealed class Gate extends LogicElement
 				iny = Geometry.SPACING*4;
 				outy = 0;
 			}
-			
+
 			// set up output
 			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
 			out = new Output("output",this,dist+Geometry.SPACING,outy,bits);
 			outputs.add(out);
-			
+
 			// set up inputs
 			if (numInputs == 1) { // not or delay gate
 				inputs.add(new Input("input0",this,Geometry.SPACING,iny,bits));
@@ -230,7 +229,7 @@ public abstract sealed class Gate extends LogicElement
 			}
 		}
 	} // end of init method
-	
+
 	/**
 	 * The headless outline geometry of this gate's body symbol (issue #77
 	 * model/render split). Each gate leaf describes its symbol as data by
@@ -324,15 +323,15 @@ public abstract sealed class Gate extends LogicElement
 
 		return ALL_ATTRIBUTES;
 	} // end of savedAttributes method
-	
+
 	/**
 	 * Copy this gate.
-	 * 
+	 *
 	 * @return A copy of this gate.
 	 */
 	@Override
 	public Element copy() {
-		
+
 		try {
 			Gate it = getClass().getConstructor(Circuit.class).newInstance(circuit);
 			copy(it);
@@ -341,10 +340,10 @@ public abstract sealed class Gate extends LogicElement
 			throw new IllegalStateException("gate copy failed", ex);
 		}
 	} // end of copy method
-	
+
 	/**
 	 * Copy info in this element to another element.
-	 * 
+	 *
 	 * @param el The element to copy to.
 	 */
 	@Override
@@ -358,7 +357,7 @@ public abstract sealed class Gate extends LogicElement
 		super.copy(el);
 		return;
 	} // end of copy method
-	
+
 	/**
 	 * Gate sizes are a pure function of input count and orientation,
 	 * recomputed by init() on every load, so they are not saved (#21).
@@ -385,7 +384,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * The display name of this gate's kind (e.g. "AND"). Used by the
 	 * GUI-side creation dialog ({@code jls.edit.GateDialog}) to lay out
@@ -480,14 +479,14 @@ public abstract sealed class Gate extends LogicElement
 			return new jls.core.Bounds(x-Geometry.SPACING/2,y,width+Geometry.SPACING,height);
 		}
 	} // end of getRect method
-	
+
 	/**
 	 * Set characteristics to the values of the previously created gate of
 	 * this kind. Gates with a fixed input count keep their current count,
 	 * matching the historical per-gate behavior.
 	 */
 	public void setToPrevious() {
-		
+
 		Kind k = kind();
 		if (k.fixedInputs < 0) {
 			numInputs = k.previousInputs;
@@ -495,59 +494,59 @@ public abstract sealed class Gate extends LogicElement
 		bits = k.previousBits;
 		orientation = k.previousOrientation;
 	} // end of setToPrevious method
-	
+
 	/**
 	 * Get default propagation delay for this gate kind.
 	 *
 	 * @return the default propagation delay.
 	 */
 	public int getDefaultDelay() {
-		
+
 		return kind().defaultDelay;
 	} // end of getDefaultDelay method
-	
+
 	/**
 	 * Reset propagation delay to default value.
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = getDefaultDelay();
 	} // end of resetPropDelay method
-	
+
 	/**
 	 * Gates have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 *  This method will rotate the gate if it is rotate-able.
 	 * @param direction The direction to rotate
@@ -570,7 +569,7 @@ public abstract sealed class Gate extends LogicElement
 		outputs.clear();
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a gate is capable of rotating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -597,7 +596,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 		return success;
 	}
-	
+
 	/**
 	 * Tells if a gate is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -624,7 +623,7 @@ public abstract sealed class Gate extends LogicElement
 		}
 		return success;
 	}
-	
+
 	/**
 	 * This method will flip a gate
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
@@ -639,7 +638,7 @@ public abstract sealed class Gate extends LogicElement
 		height = 0;
 		init(g);
 	}
-	
+
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------

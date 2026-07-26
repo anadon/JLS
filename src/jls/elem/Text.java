@@ -1,14 +1,14 @@
 package jls.elem;
 
-import jls.*;
-
-import java.util.*;
 import java.io.*;
+import java.util.*;
+
+import jls.*;
 
 /**
  * Put text into the circuit.
  * Has nothing to do with simulation, used simply to annotate the circuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Text extends DisplayElement {
@@ -34,7 +34,7 @@ public final class Text extends DisplayElement {
 
 	/**
 	 * Create a new Text element.
-	 * 
+	 *
 	 * @param circuit The circuit this element will be part of, or null
 	 *            for a detached header/sentinel element.
 	 */
@@ -427,7 +427,7 @@ public final class Text extends DisplayElement {
 
 	/**
 	 * Text areas can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override

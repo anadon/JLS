@@ -1,18 +1,19 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.PrintWriter;
+import java.math.*;
 import java.util.BitSet;
+
 import org.jspecify.annotations.Nullable;
 
-import java.math.*;
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * n-bit register (level or edge triggered).
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Register extends LogicElement
@@ -211,17 +212,17 @@ public final class Register extends LogicElement
 					height = 6*s;
 				}
 			}
-			
+
 		}
-		
-		
+
+
 		int s = Geometry.SPACING;
 		if(orientation == Orientation.RIGHT)
 		{
 			// create inputs
 			inputs.add(new Input("D",this,0,s,bits));
 			inputs.add(new Input("C",this,0,4*s,1));
-		
+
 			// create outputs
 			outputs.add(new Output("Q",this,width,s,bits));
 			outputs.add(new Output("notQ",this,width,4*s,bits));
@@ -231,7 +232,7 @@ public final class Register extends LogicElement
 			// create inputs
 			inputs.add(new Input("D",this,width,s,bits));
 			inputs.add(new Input("C",this,width,4*s,1));
-		
+
 			// create outputs
 			outputs.add(new Output("Q",this,0,s,bits));
 			outputs.add(new Output("notQ",this,0,4*s,bits));
@@ -241,7 +242,7 @@ public final class Register extends LogicElement
 			// create inputs
 			inputs.add(new Input("D",this,s,height,bits));
 			inputs.add(new Input("C",this,width-s,height,1));
-			
+
 			// create outputs
 			outputs.add(new Output("Q",this,s,0,bits));
 			outputs.add(new Output("notQ",this,width-s,0,bits));
@@ -251,7 +252,7 @@ public final class Register extends LogicElement
 			// create inputs
 			inputs.add(new Input("D",this,s,0,bits));
 			inputs.add(new Input("C",this,width-s,0,1));
-			
+
 			// create outputs
 			outputs.add(new Output("Q",this,s,height,bits));
 			outputs.add(new Output("notQ",this,width-s,height,bits));
@@ -440,15 +441,15 @@ public final class Register extends LogicElement
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		String ty = "";
 		switch (type) {
 		case Latch: ty = "latch"; break;
@@ -458,49 +459,49 @@ public final class Register extends LogicElement
 		return bits + " bit " + ty + ", value = " +
 				BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
-	
+
 	/**
 	 * Get the name of this register.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	@Override
 	public String getName() {
-		
+
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Get the number of bits in this register.
-	 * 
+	 *
 	 * @return the number of bits.
-	 */ 
+	 */
 	@Override
 	public int getBits() {
-		
+
 		return bits;
 	} // end of getBits method
 
 	/**
 	 * Remove name from list of element names in this circuit.
-	 * 
+	 *
 	 * @param circ A reference back to the circuit the element is in.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
 
 	/**
 	 * Registers have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -509,32 +510,32 @@ public final class Register extends LogicElement
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 * Set the initial value of this register.
 	 *
@@ -572,14 +573,14 @@ public final class Register extends LogicElement
 		default: return "latch";
 		}
 	} // end of getTypeName method
-	
+
 	/**
 	 * Tells if a register is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
 	@Override
 	public boolean canRotate() {
-		
+
 		for(Input i : inputs) {
 			if(i.isAttached()) {
 				return false;
@@ -592,16 +593,16 @@ public final class Register extends LogicElement
 		}
 		return true;
 	} // end of canRotate method
-	
+
 	/**
 	 * This method will rotate the register if it is rotateable.
-	 * 
+	 *
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
 	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
-		
+
 		if(direction == Orientation.LEFT) {
 			orientation = orientation.ccw();
 		}
@@ -614,14 +615,14 @@ public final class Register extends LogicElement
 		height = 0;
 		init(g);
 	} // end of rotate method
-	
+
 	/**
 	 * Tells if a register is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
 	 */
 	@Override
 	public boolean canFlip() {
-		
+
 		for(Input i : inputs) {
 			if(i.isAttached()) {
 				return false;
@@ -634,15 +635,15 @@ public final class Register extends LogicElement
 		}
 		return true;
 	} // end of canFlip method
-	
+
 	/**
 	 * This method will flip a register
-	 * 
+	 *
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
 	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
-		
+
 		orientation = orientation.flipped();
 		inputs.clear();
 		outputs.clear();
@@ -653,78 +654,78 @@ public final class Register extends LogicElement
 
 	/**
 	 * Registers can be modified.
-	 * 
+	 *
 	 * @return true.
-	 */ 
+	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * A register can be watched.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canWatch() {
-		
+
 		return true;
 	} // end of canWatch method
-	
+
 	/**
 	 * See if this register is watched.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 */
 	@Override
 	public boolean isWatched() {
-		
+
 		return watched;
 	} // end of isWatched method
-	
+
 	/**
 	 * Set whether this register is watched or not.
-	 * 
+	 *
 	 * @param state True to make it watched, false to make it not watched.
 	 */
 	@Override
 	public void setWatched(boolean state) {
-		
+
 		watched = state;
 	} // end of setWatched method
-	
+
 	/**
 	 * Print current value to stdout.
-	 * 
+	 *
 	 * @param prefix qualified name.
 	 */
 	public void printValue(String prefix) {
-		
+
 		if (prefix.isEmpty()) {
 			System.out.printf("Register %s: %s\n", name, BitSetUtils.toDisplay(currentValue,bits));
 		}
 		else {
 			System.out.printf("Register %s.%s: %s\n", prefix, name, BitSetUtils.toDisplay(currentValue,bits));
 		}
-		
+
 	} // end of printValue method
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/** The value scheduled to appear on the outputs after the propagation delay. */
 	private @Nullable BitSet toBeValue;
 	/** The value currently stored in this register. */
 	private BitSet currentValue = new BitSet();
 	/** The most recent value seen on the clock (C) input. */
 	private int currentC;
-	
+
 	/**
 	 * Get the current value stored in this register.
-	 * 
+	 *
 	 * @return the current value.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
@@ -733,10 +734,10 @@ public final class Register extends LogicElement
 
 		return (BitSet)currentValue.clone();
 	} // end of getCurrentValue method
-	
+
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#registerInitSimResetsTheWatchedCurrentValue()
 	 */
@@ -759,20 +760,20 @@ public final class Register extends LogicElement
 		sim.post(new SimEvent(0,this,currentValue.clone()));
 
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// if an input has changed ...
 		if (todo == null) {
-			
+
 			BitSet inVal = inputs.get(1).getValue();
 			if (inVal == null)
 				inVal = new BitSet();
@@ -813,41 +814,41 @@ public final class Register extends LogicElement
 			currentC = c;
 		}
 		else {
-			
+
 			// get the new output value
 			BitSet newQ = (BitSet)todo;
-			
+
 			// save for watch
 			currentValue = (BitSet)newQ.clone();
-			
+
 			// make copy and complement
 			BitSet qOut = (BitSet)newQ.clone();
 			BitSet notQOut = (BitSet)newQ.clone();
 			notQOut.flip(0,bits);
-			
+
 			// send to outputs
 			Output q = outputs.get(0);
 			q.propagate(qOut,now,sim);
 			Output notq = outputs.get(1);
 			notq.propagate(notQOut,now,sim);
 		}
-		
+
 	} // end of react method
-	
+
 	/**
 	 * Display current value.
-	 * 
+	 *
 	 * @param whereX the x-coordinate on screen (unused here).
 	 * @param whereY the y-coordinate on screen (unused here).
 	 */
 	@Override
 	public void showCurrentValue(int whereX, int whereY) {
-		
+
 		String hex = BitSetUtils.ToString(currentValue,16);
 		String unsigned = BitSetUtils.ToString(currentValue,10);
 		String signed = BitSetUtils.ToStringSigned(currentValue,bits);
 		String value = "0x" +hex + " (" + unsigned + " unsigned, " + signed + " signed)";
 		TellUser.info(null, value, "Information");
 	} // end of showCurrentValue method
-	
+
 } // end of Register class

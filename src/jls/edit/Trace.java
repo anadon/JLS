@@ -1,22 +1,24 @@
 package jls.edit;
 
-import jls.*;
-import jls.elem.*;
-import jls.sim.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 import java.util.*;
+
+import javax.swing.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.elem.*;
+import jls.sim.*;
+
 /**
  * Draw the trace of a signal over time.
- * 
+ *
  * @author David A. Poplawski
  */
 public class Trace extends JPanel implements MouseListener, MouseMotionListener {
-	
+
 	// named constants
 	/** The pixel height of one trace row. */
 	protected final int HEIGHT = 40;
@@ -90,7 +92,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	private BitSet off;
 	/** An all-ones sentinel; initialized but currently unread. */
 	private BitSet begin;
-	
+
 	/**
 	 * Construct a new Trace object.
 	 *
@@ -110,7 +112,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	public Trace(String name, Element el, int bits, int width,
 			InteractiveSimulator.Traces parent) {
-		
+
 		this.name = name;
 		element = el;
 		this.bits = bits;
@@ -127,7 +129,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		begin = new BitSet(bits+1);
 		begin.set(0,bits+1);
 	} // end of constructor
-	
+
 	/**
 	 * Get the name of the element traced.
 	 *
@@ -135,20 +137,20 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	@Override
 	public String getName() {
-		
+
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Get the  element traced.
 	 *
 	 * @return The name.
 	 */
 	public Element getElement() {
-		
+
 		return element;
 	} // end of getName method
-	
+
 	/**
 	 * Set the time scale factor.  The trace is compressed by this amount.
 	 *
@@ -158,10 +160,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 * @jls.testedby jls.sim.TraceWindowingTest#windowedRepaintMatchesFullRepaintForTheHeaderLabels()
 	 */
 	public void setScaleFactor(int factor) {
-		
+
 		scaleFactor = factor;
 	} // end of setScaleFactor method
-	
+
 	/**
 	 * Add a value/time to the front of the pending changes list.
 	 *
@@ -183,11 +185,11 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		}
 		if (value.equals(previousValue))
 			return;
-			
+
 		Change ch = new Change((BitSet)value.clone(),when);
 		previousValue = (BitSet)value.clone();
 		pendingChanges.add(0,ch);
-		
+
 		// retain a bounded scrollback history (issue #121): the cap
 		// used to be the panel width, which discarded everything a
 		// finished run could no longer display; the panel now grows
@@ -195,7 +197,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		if (pendingChanges.size() > MAX_RETAINED_CHANGES)
 			pendingChanges.removeLast();
 	} // end of addValue method
-	
+
 	/**
 	 * Commit values to be displayed and set the current simulation time.
 	 *
@@ -214,10 +216,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		now = time;
 		changes = new java.util.ArrayList<Change>(pendingChanges);
 	} // end of commit method
-	
+
 	/**
 	 * Draw the trace.
-	 * 
+	 *
 	 * @param g The Graphics object to draw with.
 	 *
 	 * @jls.testedby jls.sim.TraceRetentionTest#paint()
@@ -225,12 +227,12 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	@Override
 	public void paintComponent(Graphics g) {
-		
+
 		super.paintComponent(g);
-		
+
 		// get window size
 		width = getWidth()-parent.getNameSpace()-10;
-		
+
 		// draw element name
 		FontMetrics fm = g.getFontMetrics();
 		int ascent = fm.getAscent();
@@ -239,7 +241,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		int baseline = HEIGHT/2 - height/2 + ascent;
 		g.setColor(Color.black);
 		g.drawString(name,width+5,baseline);
-		
+
 		// take one snapshot of the committed changes so every phase
 		// below sees the same list even if a commit lands mid-paint
 		java.util.ArrayList<Change> snapshot = changes;
@@ -321,10 +323,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			double len = ((double)(when-change.when())/scaleFactor);
 			int rpos = (int)Math.round(pos);
 			int rlen = (int)Math.round(len);
-			
+
 			// draw line(s) from the last point to this change
 			if (bits > 1) {
-				
+
 				// handle multi-bit value
 				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
@@ -343,9 +345,9 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					}
 				}
 			}
-			
+
 			else {
-				
+
 				// handle single-bit value
 				if (change.value().equals(off)) {
 					g.drawLine(rpos,middle,rpos-rlen,middle);
@@ -357,7 +359,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 					g.drawLine(rpos,bottom,rpos-rlen,bottom);
 				}
 			}
-			
+
 			// if value changed, draw vertical line
 			if (!change.value().equals(previousVal) && previousVal != null) {
 				if (bits > 1) {
@@ -469,20 +471,20 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 
 		return firstChangeAtOrBefore(changes,time);
 	} // end of firstChangeAtOrBefore method
-	
+
 	/**
 	 * Called to tell this object that the trace window has been resized.
 	 *
 	 * @param width The new width of the trace window.
 	 */
 	public void resize(int width) {
-		
+
 		setMaximumSize(new Dimension(width,HEIGHT));
 		setPreferredSize(new Dimension(width,HEIGHT));
 		setMinimumSize(new Dimension(width,HEIGHT));
 		repaint();
 	} // end of resize method
-	
+
 	/**
 	 * Draw the slider.
 	 *
@@ -492,7 +494,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 
 		// long math: the panel can now span the whole run (issue #121)
 		long time = now-(long)(width-x)*scaleFactor;
-		
+
 		// set slider pos
 		if (time > now)
 			sliderPos = width;
@@ -502,7 +504,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			sliderPos = x;
 		repaint();
 	} // endof mouseMoved method
-	
+
 	/**
 	 * If press in the name area, display popup memu to reposition trace.
 	 *
@@ -510,15 +512,15 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	@Override
 	public void mousePressed(MouseEvent event) {
-		
+
 		// get the coordinates of the mouse
 		int x = event.getX();
 		int y = event.getY();
-		
+
 		// ignore if not in name area
 		if (x <= width)
 			return;
-		
+
 		// create popup menu
 		JPopupMenu ask = new JPopupMenu();
 		final JMenuItem top = new JMenuItem("Move Trace To Top");
@@ -531,10 +533,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 		ask.add(bottom);
 		ask.pack();
 		ask.show(this,x,y);
-		
+
 		// add listeners
 		ActionListener list = new ActionListener() {
-			
+
 			/**
 			 * Move this trace according to which popup menu item fired.
 			 *
@@ -542,7 +544,7 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 			 */
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				
+
 				// tell parent object to move this JPanel
 				if (event.getSource() == top)
 					parent.move(me,-2);
@@ -553,15 +555,15 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 				else if (event.getSource() == bottom)
 					parent.move(me,2);
 			} // end of actionPerformed method
-			
+
 		}; // end of ActionListener class
-		
+
 		top.addActionListener(list);
 		up.addActionListener(list);
 		down.addActionListener(list);
 		bottom.addActionListener(list);
 	} // end of mousePressed method
-	
+
 	/**
 	 * Tell parent that the mouse moved within this component.
 	 *
@@ -569,10 +571,10 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	@Override
 	public void mouseMoved(MouseEvent event) {
-		
+
 		parent.mouseMoved(event);
 	} // end of mouseMoved method
-	
+
 	// unused
 	/**
 	 * Unused mouse listener method.
@@ -609,16 +611,16 @@ public class Trace extends JPanel implements MouseListener, MouseMotionListener 
 	 */
 	@Override
 	public void mouseDragged(MouseEvent event) {}
-	
+
 	/**
 	 * Set the base to display numbers with.
-	 * 
+	 *
 	 * @param base The new base.
 	 */
 	public void setBase(int base) {
-		
+
 		this.base = base;
 		repaint();
 	} // end of setBase method
-	
+
 } // end of Trace class

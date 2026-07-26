@@ -1,25 +1,24 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
-
-import java.io.PrintWriter;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
+
 /**
  * Superclass for active elements.
  * Contains common data and methods.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class LogicElement extends Element implements Reacts
 		permits Adder, Clock, Constant, Decoder, Display, Gate, Group, JumpEnd,
 		JumpStart, Memory, Mux, Pause, Pin, Register, ShiftRegister, SigSim,
 		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd {
-	
+
 	// run time properties
 	/** The x-coordinate before snapping to a grid line. */
 	private int lx;					// position if not snapped to grid line
@@ -40,13 +39,13 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * @param circuit The circuit this element is part of.
 	 */
 	public LogicElement(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * Set initial position with snap-to grid lines.
-	 * 
+	 *
 	 * @param x Initial x-coordinate.
 	 * @param y Initial y-coordinate.
 	 *
@@ -58,30 +57,30 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 */
 	@Override
 	public void setXY(int x, int y) {
-		
+
 		// save non snap-to position
 		lx = x;
 		ly = y;
-		
+
 		// compute snap-to position
 		int s = Geometry.SPACING;
 		int nx = (x+s/2)/s*s;
 		int ny = (y+s/2)/s*s;
-		
+
 		// save snap-to position
 		super.setXY(nx,ny);
 	} // end of setXY method
-	
+
 	/**
 	 * Set value (in load context).
 	 * Need to grab x and y in order to snap correctly.
-	 * 
+	 *
 	 * @param name The name of the value.
 	 * @param value The initial value.
 	 */
 	@Override
 	public void setValue(String name, int value) {
-		
+
 		if (name.equals("x")) {
 			lx = value;
 		}
@@ -90,7 +89,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		}
 		super.setValue(name,value);
 	} // end of setValue method
-	
+
 	/**
 	 * Copy values to new object.
 	 *
@@ -106,26 +105,26 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		it.savey = savey;
 		super.copy(el);
 	} // end of copy method
-	
+
 	/**
 	 * Move with snap to grid lines.
-	 * 
+	 *
 	 * @param dx Distance to move horizontally.
 	 * @param dy Distance to move vertically.
 	 */
 	@Override
 	public void move(int dx, int dy) {
-		
+
 		// modify non snap-to position
 		lx += dx;
 		ly += dy;
-		
+
 		// compute and set snap-to position
 		int s = Geometry.SPACING;
 		int nx = (lx+s/2)/s*s;
 		int ny = (ly+s/2)/s*s;
 		super.setXY(nx,ny);
-		
+
 		// move all attached wire ends
 		for (Input input : inputs) {
 			WireEnd end = input.getWireEnd();
@@ -137,23 +136,23 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			if (end != null)
 				end.move(dx,dy);
 		}
-		
+
 	} // end of move method
-	
+
 	/**
 	 * Save current coordinates of this element and all attached wire ends
 	 * in case move doesn't work.
 	 */
 	@Override
 	public void savePosition() {
-		
+
 		// save non snap-to position
 		savex = lx;
 		savey = ly;
-		
+
 		// save snap-to position
 		super.savePosition();
-		
+
 		// save position of inputs and attached wire ends
 		for (Input input : inputs) {
 			input.savePosition();
@@ -174,21 +173,21 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			}
 		}
 	} // end of savePosition method
-	
+
 	/**
 	 * Restore saved coordinates of this element and all attached wire ends
 	 * when move doesn't work.
 	 */
 	@Override
 	public void restorePosition() {
-		
+
 		// restore non snap-to position
 		lx = savex;
 		ly = savey;
-		
+
 		// restore snap-to position
 		super.restorePosition();
-		
+
 		// restore position of puts and attached wire ends
 		for (Input input : inputs) {
 			input.restorePosition();
@@ -208,19 +207,19 @@ public abstract sealed class LogicElement extends Element implements Reacts
 				end.restorePosition();
 			}
 		}
-		
+
 	} // end of restorePosition method
-	
+
 	/**
 	 * Fix the position of this element, and all attached wire ends.
 	 */
 	@Override
 	public void fixPosition() {
-		
+
 		// make non snap-to position the same as the snap-to position
 		lx = x;
 		ly = y;
-		
+
 		// fix position of attached wire ends
 		for (Input input : inputs) {
 			if (input.isAttached()) {
@@ -239,17 +238,17 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			}
 		}
 	} // end of fixPosition method
-	
+
 	/**
 	 * Remove this element from the circuit.
 	 * Unattaches from all wire nets.
 	 * Forces wire nets it disconnects from to recheck their information.
-	 * 
+	 *
 	 * @param circ The circuit it is being removed from.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		for (Put p : inputs) {
 			if (p.isAttached()) {
 				WireEnd end = p.getWireEnd();
@@ -270,21 +269,21 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		}
 		super.remove(circ);
 	} // end of remove method
-	
+
 	/**
 	 * Find input or output in this element that a given x,y is close to (if any).
 	 * Clears all touching flags.
 	 * Close is less than Geometry.SPACING/2 in any direction.
-	 * 
+	 *
 	 * @param x The given x-coordinate.
 	 * @param y The given y-coordinate.
-	 * 
+	 *
 	 * @return the input or output that the given coordinates are close to,
 	 * or null if not close to any in this element.
 	 */
 	@Override
 	public @Nullable Put getPut(int x, int y) {
-		
+
 		for (Input input : inputs) {
 			//input.setTouching(false);
 			if (Math.abs(x-input.getX()) < Geometry.SPACING/2 &&
@@ -301,13 +300,13 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		}
 		return null;
 	} // end of getPut method
-	
+
 	/**
 	 * Set/reset touching flag for all inputs and outputs.
 	 */
 	@Override
 	public void setTouching(boolean setting) {
-		
+
 		for (Put p : inputs) {
 			p.setTouching(setting);
 		}
@@ -315,7 +314,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 			p.setTouching(setting);
 		}
 	} // end of setTouching method
-	
+
 	/**
 	 * Get all inputs and outputs.
 	 * Generally overridden.
@@ -359,12 +358,12 @@ public abstract sealed class LogicElement extends Element implements Reacts
 
 		return Collections.unmodifiableList(outputs);
 	} // end of getOutputList method
-	
+
 	/**
 	 * Get put by name.
-	 * 
+	 *
 	 * @param name The name of the put.
-	 * 
+	 *
 	 * @return the put, or null if no such put.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshWireMayAttachToTriStateBundle()
@@ -372,7 +371,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 */
 	@Override
 	public @Nullable Put getPut(String name) {
-		
+
 		for (Put p : inputs) {
 			if (name.equals(p.getName())) {
 				return p;
@@ -385,7 +384,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		}
 		return null;
 	} // end of getPut method
-	
+
 	/**
 	 * Get input by name.
 	 *
@@ -431,7 +430,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * Delete all inputs and outputs, getting ready to init all over again.
 	 */
 	protected void detach() {
-		
+
 		for (Input input : inputs) {
 			if (input.isAttached()) {
 				WireEnd end = input.getWireEnd();
@@ -457,45 +456,45 @@ public abstract sealed class LogicElement extends Element implements Reacts
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize for simulation.
-	 * 
+	 *
 	 * @param sim The simulator object.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		System.out.println("initSim not implemented: " + getClass().getName());
 	} // end of initSim method
-				
+
 	/**
 	 * Initialize all inputs to 0.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public void initInputs() {
-		
+
 		for (Input in : inputs) {
 			in.setValue(BitSetUtils.Create((long)0));
 		}
 	} // end of initInputs method
-	
+
 	/**
 	 * Reset propagation delay (overridden by most elements).
 	 */
 	public void resetPropDelay() {
-		
+
 	} // end of resetPropDelay method
-	
+
 	/**
 	 * Set propagation delay (overridden by most elements).
-	 * 
+	 *
 	 * @param newDelay The new delay value.
 	 */
 	@Override
 	public void setDelay(int newDelay) {
-		
+
 	} // end of setDelay method
 
 	/**
@@ -510,16 +509,16 @@ public abstract sealed class LogicElement extends Element implements Reacts
 
 		return "";
 	} // end of getName method
-	
+
 	/**
 	 * Get the fully qualified name of this element, in the form
 	 * sub1.sub2.elem, where sub1, sub2, etc. are subcircuit names
 	 * and elem is the element name.
-	 * 
+	 *
 	 * @return the fully qualified name.
 	 */
 	public String getFullName() {
-		
+
 		Circuit circ = getCircuit();
 		String name = getName();
 		if (name == null) {
@@ -535,20 +534,20 @@ public abstract sealed class LogicElement extends Element implements Reacts
 		}
 		return name;
 	} // end of getFullName method
-	
+
 	/**
 	 * For elements that don't react.
 	 * Overridden by most elements.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		throw new UnsupportedOperationException("no react");
 	} // end of react method
-	
+
 	//-----------------------------------------------------------------------
 	// these shouldn't be called
-	
+
 	/**
 	 * Get this element's bit width.
 	 * Overridden by elements that have a single bit width; the base
@@ -561,10 +560,10 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * @jls.testedby jls.ui.CircuitAssert#assertBits()
 	 */
 	public int getBits() {
-		
+
 		throw new UnsupportedOperationException("no getBits");
 	} // end of getBits method
-	
+
 	/**
 	 * Get this element's current output value.
 	 * Overridden by elements that hold a value; the base version has
@@ -578,5 +577,5 @@ public abstract sealed class LogicElement extends Element implements Reacts
 
 		throw new UnsupportedOperationException("no getCurrentValue");
 	} // end of getCurrentValue method
-	
+
 } // end of LogicElement class

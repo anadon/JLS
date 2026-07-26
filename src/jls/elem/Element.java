@@ -1,19 +1,18 @@
 package jls.elem;
 
+import java.io.*;
+import java.math.*;
+import java.util.*;
+
 import org.jspecify.annotations.Nullable;
 
-import jls.core.Orientation;
 import jls.*;
-
-import java.io.*;
-
-import java.util.*;
-import java.math.*;
+import jls.core.Orientation;
 
 /**
  * Super class for all logic elements (including non-active ones).
  * Contains common display info and methods.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class Element
@@ -53,7 +52,7 @@ public abstract sealed class Element
 
 	/**
 	 * Create a new Element object.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 *
 	 * @jls.testedby jls.ui.UiHarnessPilotTest.EveryAssertionCanFail#onGridFails()
@@ -65,7 +64,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set coordinates of this element.
-	 * 
+	 *
 	 * @param x The x-coordinate of the upper left corner of this element.
 	 * @param y The y-coordinate of the upper left corner of this element.
 	 *
@@ -79,7 +78,7 @@ public abstract sealed class Element
 
 	/**
 	 * Change the circuit this element is in.
-	 * 
+	 *
 	 * @param circuit The new circuit.
 	 */
 	public void setCircuit(Circuit circuit) {
@@ -89,7 +88,7 @@ public abstract sealed class Element
 
 	/**
 	 * Get the circuit this element is part of.
-	 * 
+	 *
 	 * @return the circuit.
 	 */
 	public Circuit getCircuit() {
@@ -103,7 +102,7 @@ public abstract sealed class Element
 
 	/**
 	 * Get the element's id.
-	 * 
+	 *
 	 * @return the id.
 	 */
 	public int getID() {
@@ -113,7 +112,7 @@ public abstract sealed class Element
 
 	/**
 	 * Get x-coordinate of this element.
-	 * 
+	 *
 	 * @return the x-coordinate.
 	 *
 	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
@@ -135,7 +134,7 @@ public abstract sealed class Element
 
 	/**
 	 * Get y-coordinate of this element.
-	 * 
+	 *
 	 * @return the y-coordinate.
 	 *
 	 * @jls.testedby jls.StableElementIdTest#sidsByLogicalElement()
@@ -178,21 +177,21 @@ public abstract sealed class Element
 
 	/**
 	 * Get the trace position of this element.
-	 * 
+	 *
 	 * @return the trace position (-1 if not traced)
 	 */
 	public int getTracePosition() {
-		
+
 		return tracePosition;
 	} // end of getTracePosition method
-	
+
 	/**
 	 * Set the trace position of this element.
-	 * 
+	 *
 	 * @param position The position.
 	 */
 	public void setTracePosition(int position) {
-		
+
 		tracePosition = position;
 	} // end of setTracePosition method
 
@@ -339,7 +338,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -354,7 +353,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set a long instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -369,7 +368,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set a BigInteger instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -384,7 +383,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The name of the variable.
 	 * @param value The value of the variable.
 	 */
@@ -399,7 +398,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
@@ -438,7 +437,7 @@ public abstract sealed class Element
 
 	/**
 	 * Make a copy of this element in the parameter object.
-	 * 
+	 *
 	 * @param it The element to copy info to.
 	 */
 	public void copy(Element it) {
@@ -468,7 +467,7 @@ public abstract sealed class Element
 
 	/**
 	 * Move element.
-	 * 
+	 *
 	 * @param dx Distance to move in the x-direction.
 	 * @param dy Distance to move in the y-direction.
 	 *
@@ -493,10 +492,10 @@ public abstract sealed class Element
 
 	/**
 	 * See if the given point is inside the element's display area.
-	 * 
+	 *
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return true if the point is in the display area, false if not.
 	 *
 	 * @jls.testedby jls.SpatialIndexTest#everyContainingElementIsACandidate()
@@ -550,9 +549,9 @@ public abstract sealed class Element
 
 	/**
 	 * See if this element is completely inside a given rectangle.
-	 * 
+	 *
 	 * @param rect The given rectangle.
-	 * 
+	 *
 	 * @return true if the element is inside, false if not.
 	 *
 	 * @jls.testedby jls.SpatialIndexTest#everyInsideElementIsACandidate()
@@ -565,7 +564,7 @@ public abstract sealed class Element
 
 	/**
 	 * Set/reset highlight.
-	 * 
+	 *
 	 * @param light True if item should be highlighted, false otherwise.
 	 *
 	 * @jls.testedby jls.edit.CtrlWGestureTest#hoverSelect()
@@ -650,7 +649,7 @@ public abstract sealed class Element
 
 	/**
 	 * Save all information about this element in a file.
-	 * 
+	 *
 	 * @param output The print writer to use.
 	 *
 	 * @jls.testedby jls.AllElementsRoundTripTest#saveElement()
@@ -681,7 +680,7 @@ public abstract sealed class Element
 
 	/**
 	 * This element will be removed, so do whatever is needed.
-	 * 
+	 *
 	 * @param circ A reference back to the circuit the element is in.
 	 */
 	public void remove(Circuit circ) {
@@ -707,7 +706,7 @@ public abstract sealed class Element
 
 	/**
 	 * Display infomation about element (overridden).
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	public String infoText() {
@@ -734,7 +733,7 @@ public abstract sealed class Element
 	/**
 	 * Get all inputs and outputs.
 	 * Generally overridden.
-	 * 
+	 *
 	 * @return a set of all inputs and outputs.
 	 *
 	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
@@ -746,7 +745,7 @@ public abstract sealed class Element
 
 	/**
 	 * Get the rectangle bounding this element.
-	 *  
+	 *
 	 * @return the bounding rectangle.
 	 *
 	 * @jls.testedby jls.elem.GroupOrientationTest#horizontalGeometryIsUnchanged()
@@ -789,16 +788,16 @@ public abstract sealed class Element
 	/**
 	 * Set/reset touching flag(s) for this element.
 	 * Overridden by wire ends and logic elements.
-	 * 
+	 *
 	 * @param setting True to set, false to reset.
 	 */
 	public void setTouching(boolean setting) {}
 
 	/**
 	 * Get put by name.
-	 * 
+	 *
 	 * @param name Name of the put.
-	 * 
+	 *
 	 * @return The put.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freeInput()
@@ -813,7 +812,7 @@ public abstract sealed class Element
 	 * Check whether the element can be changed after it is created and placed.
 	 * Default is not.
 	 * Overriden by elements that can.
-	 * 
+	 *
 	 * @return true if element can be change, false otherwise.
 	 */
 	public boolean canChange() {
@@ -824,7 +823,7 @@ public abstract sealed class Element
 	/**
 	 * Check whether element has a quick change (shortcut) option.
 	 * Overridden by elements than can.
-	 * 
+	 *
 	 * @return true if is does, false if not.
 	 */
 	public boolean quickChange() {
@@ -836,7 +835,7 @@ public abstract sealed class Element
 	 * Check whether the element has timing info, i.e., propagation delay or access time.
 	 * Default is do not.
 	 * Overridden by elements tht do.
-	 * 
+	 *
 	 * @return true if the element has timing info, false if not.
 	 */
 	public boolean hasTiming() {
@@ -901,7 +900,7 @@ public abstract sealed class Element
 	/**
 	 * Get the propagation delay or access time in this element.
 	 * Overridden by elements with timing info.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	public int getDelay() {
@@ -912,7 +911,7 @@ public abstract sealed class Element
 	/**
 	 * Set the propagation delay or access time in this element.
 	 * Overridden by elements with timing info.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 *        Must be Integer, don't change to int!
 	 */
@@ -925,7 +924,7 @@ public abstract sealed class Element
 	 * Check wether the element can be watched.
 	 * Default is not.
 	 * Overridden by elements that can be.
-	 * 
+	 *
 	 * @return false;
 	 */
 	public boolean canWatch() {
@@ -937,7 +936,7 @@ public abstract sealed class Element
 	 * See if element is currently watched.
 	 * Default is not.
 	 * Overridden by elements that can be watched.
-	 * 
+	 *
 	 * @return false.
 	 *
 	 * @jls.testedby jls.ui.CircuitAssert#assertWatched()
@@ -950,7 +949,7 @@ public abstract sealed class Element
 	/**
 	 * Set whether this element is watched or not.
 	 * Overridden by elements that can be watched.
-	 * 
+	 *
 	 * @param state Unused.
 	 */
 	public void setWatched(boolean state) {
@@ -960,7 +959,7 @@ public abstract sealed class Element
 	/**
 	 * Display the current value of this element.
 	 * Only works for watchable elements, and is overridden there.
-	 * 
+	 *
 	 * @param whereX the x-coordinate on screen to display at.
 	 * @param whereY the y-coordinate on screen to display at.
 	 */
@@ -971,7 +970,7 @@ public abstract sealed class Element
 	/**
 	 * Get the name of this element.
 	 * Overridden by elements that actually have names.
-	 * 
+	 *
 	 * @return null;
 	 */
 	public @Nullable String getName() {
@@ -981,7 +980,7 @@ public abstract sealed class Element
 
 	/**
 	 * See if this element is uneditable.
-	 * 
+	 *
 	 * @return true if it is uneditable, false if not.
 	 */
 	public boolean isUneditable() {

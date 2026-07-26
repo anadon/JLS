@@ -12,7 +12,6 @@ import javax.swing.KeyStroke;
 import org.junit.jupiter.api.Test;
 
 import jls.core.Geometry;
-import jls.JLSInfo;
 import jls.edit.KeyboardConstructionPolicy.Nudge;
 
 /**

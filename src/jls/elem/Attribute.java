@@ -1,8 +1,8 @@
 package jls.elem;
-import jls.core.Orientation;
-
 import java.io.PrintWriter;
 import java.math.BigInteger;
+
+import jls.core.Orientation;
 
 /**
  * One saved attribute of an element (issue #23): its name, its on-disk

@@ -1,6 +1,5 @@
 package jls.collab.session;
 
-import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,6 +9,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * One replica of a shared session's roster and floor-control state

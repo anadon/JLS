@@ -1,6 +1,5 @@
 package jls.collab.net;
 
-import org.jspecify.annotations.Nullable;
 import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.DataOutputStream;
@@ -11,6 +10,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * One live, mutually authenticated, encrypted TCP session between two

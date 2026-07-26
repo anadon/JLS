@@ -9,8 +9,9 @@ import java.nio.file.Path;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
-import jls.edit.CircuitRenderer;
 import org.junit.jupiter.api.io.TempDir;
+
+import jls.edit.CircuitRenderer;
 
 /**
  * Direct tests of the SVG branch of Circuit.exportImage (issue #154).

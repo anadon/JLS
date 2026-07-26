@@ -1,20 +1,21 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
+
 /**
  * The end of a wire segment (displayed as a circle until connected).
- * 
+ *
  * @author David A. Poplawski
  */
 public final class WireEnd extends LogicElement {
-	
+
 	// properties
 	/**
 	 * The wire net this end is a part of, or null until it is placed in one
@@ -45,21 +46,21 @@ public final class WireEnd extends LogicElement {
 	/** Saved probe names, keyed by the other wire end's id, while loading. */
 	private Map<Integer,String> probeMap =			// for loading circuit
 		new HashMap<Integer,String>();
-	
+
 	/**
 	 * Get string version of properties (for debugging).
-	 * 
+	 *
 	 * @return the string.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return "WireEnd[" + (net == null ? "no net" : net.getBits() + " bit net") + "]";
 	} // end of toString method
-	
+
 	/**
 	 * Create a new wire end.
-	 * 
+	 *
 	 * @param circuit The circuit the wire end is in.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
@@ -68,13 +69,13 @@ public final class WireEnd extends LogicElement {
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#corner()
 	 */
 	public WireEnd(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * This form of init not used.
-	 * 
+	 *
 	 * @param g The Graphics object needed by overridden methods.
 	 */
 	@Override
@@ -82,21 +83,21 @@ public final class WireEnd extends LogicElement {
 
 		// do nothing
 	} // end of init method
-	
+
 	/**
 	 * Initialize the wire end.
-	 * 
+	 *
 	 * @param circ The circuit this wire end is in.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void init(Circuit circ) {
-		
+
 		width = Geometry.POINT_DIAMETER;
 		height = Geometry.POINT_DIAMETER;
-		
+
 		fixPosition();
-		
+
 		// hook up wires
 		next:for (int elid : loadWires) {
 	   		// attach to put if needed
@@ -127,7 +128,7 @@ public final class WireEnd extends LogicElement {
 				p.setAttached(this);
 				setPut(p);
 			}
-			
+
 			// see if already hooked up
 			WireEnd end = (WireEnd)(circ.getElementByID(elid));
 			if (end == null)
@@ -140,93 +141,93 @@ public final class WireEnd extends LogicElement {
 					continue next;
 				}
 			}
-			
+
 			// create a new wire between this and end
 			Wire wire = new Wire(this,end);
 			addWire(wire);
 			end.addWire(wire);
 			circ.addElement(wire);
-			
+
 			// put probe on wire if there is a probe
 			String probeName = probeMap.get(elid);
 			if (probeName == null)
 				continue;
 			wire.attachProbe(probeName);
 		}
-		
+
 	} // end of init method
-	
+
 	/**
 	 * Make a copy of this wire end.
 	 */
 	@Override
 	public WireEnd copy() {
-		
+
 		WireEnd it = new WireEnd(getCircuit());
 		super.copy(it);
 		myCopy = it;
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Get x-coordinate of this wire end.
-	 * 
+	 *
 	 * @return The x-coordinate.
 	 *
 	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getX() {
-		
+
 		return x;
 	} // end of getX method
-	
+
 	/**
 	 * Get y-coordinate of this wire end.
-	 * 
+	 *
 	 * @return The y-coordinate.
 	 *
 	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 */
 	@Override
 	public int getY() {
-		
+
 		return y;
 	} // end of getY method
-	
+
 	/**
 	 * Add a wire to this end.
-	 * 
+	 *
 	 * @param wire The wire to add.
 	 *
 	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wire()
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public void addWire(Wire wire) {
-		
+
 		wires.add(wire);
 	} // end of addWire method
-	
+
 	/**
 	 * See if the given point is inside the element's display area.
-	 * 
+	 *
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return true if the point is in the display area, false if not.
 	 */
 	@Override
 	public boolean contains(int x, int y) {
-		
+
 		return getRect().contains(x,y);
 	} // end of contains method
-	
+
 	/**
 	 * See if the element is completely inside a given rectangle.
 	 * In this case only the center point needs to be inside the given rectangle.
-	 * 
+	 *
 	 * @param rect The given rectangle.
-	 * 
+	 *
 	 * @return true if the element is inside, false if not.
 	 */
 	@Override
@@ -234,48 +235,48 @@ public final class WireEnd extends LogicElement {
 
 		return rect.contains(x,y);
 	} // end of isInside method
-	
+
 	/**
 	 * This wire end will be removed, so remove wires it connects to.
-	 * 
+	 *
 	 * @param circ The circuit this wire end is in.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		circ.remove(this);
 		for (Wire wire : wires) {
 			circ.remove(wire);
 			wire.getOtherEnd(this).remove(wire,circ);
 		}
 	} // end of remove method
-	
+
 	/**
 	 * Remove wire from this wire end, and do nothing else.
 	 *
 	 * @param wire The wire to remove.
 	 */
 	public void remove(Wire wire) {
-		
+
 		wires.remove(wire);
 	} // end of remove method
-	
+
 	/**
 	 * Remove a wire from this wire end.
 	 * If last wire removed, remove this wire end too.
-	 * 
+	 *
 	 * @param wire The wire to remove.
 	 * @param circ The circuit the wire is in.
 	 */
 	public void remove(Wire wire, Circuit circ) {
-		
+
 		// remove the wire
 		wires.remove(wire);
 		circ.remove(wire);
-		
+
 		// if no other wires...
 		if (wires.isEmpty()) {
-			
+
 			// disconnect from put
 			if (isAttached()) {
 				Put p = getPut();
@@ -305,20 +306,20 @@ public final class WireEnd extends LogicElement {
 			net = getNet().makeNet(this);
 		}
 	} // end of remove method
-	
+
 	/**
 	 * Set the put this wire end is attached to.
 	 *
 	 * @param put The put this wire end attaches to, or null to detach it.
 	 */
 	public void setPut(@Nullable Put put) {
-		
+
 		this.put = put;
 	} // end of setPut method
-	
+
 	/**
 	 * Get the put this wire end is attached to, or null of not attached.
-	 * 
+	 *
 	 * @return the put attached to.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
@@ -328,44 +329,44 @@ public final class WireEnd extends LogicElement {
 
 		return put;
 	} // end of getPut method
-	
+
 	/**
 	 * See if this wire end is attached to a put.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 *
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
-		
+
 		return put != null;
 	} // end of isAttached method
-	
+
 	/**
 	 * See if this wire end is touching a put.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	@Override
 	public boolean isTouching() {
-		
+
 		return touching;
 	} // end of isTouching method
-	
+
 	/**
 	 * Set whether this wire end is touching something.
-	 * 
+	 *
 	 * @param setting True if it is, false if not.
 	 */
 	@Override
 	public void setTouching(boolean setting) {
-		
+
 		touching = setting;
 	} // end of setTouching method
-	
+
 	/**
 	 * Get the number of bits in the wire net this wire end is part of.
-	 * 
+	 *
 	 * @return the number of bits.
 	 */
 	@Override
@@ -373,30 +374,30 @@ public final class WireEnd extends LogicElement {
 
 		return getNet().getBits();
 	} // end of getBits method
-	
+
 	/**
 	 * Set number of bits in the wire net this wire end is part of.
-	 * 
+	 *
 	 * @param bits The number of bits.
 	 */
 	public void setBits(int bits) {
 
 		getNet().setBits(bits);
 	} // end of setBits method
-	
+
 	/**
 	 * Make this wire end tri-state.
-	 * 
+	 *
 	 * @param which True to make it tri-state, false otherwise.
 	 */
 	public void setTriState(boolean which) {
-		
+
 		loadTriState = which;
 	} // end of setTriState method
 
 	/**
 	 * Find out if this wire end is tri-state.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#danglingEnd()
@@ -406,10 +407,10 @@ public final class WireEnd extends LogicElement {
 
 		return getNet().isTriState();
 	} // end of isTriState method
-	
+
 	/**
 	 * Display information about this wire end.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -426,37 +427,37 @@ public final class WireEnd extends LogicElement {
 		}
 		else if (bits == 1) {
 			return "1 bit" + inp;
-		} 
+		}
 		else {
 			return bits + " bits" + inp;
 		}
 	} // end of showInfo method
-	
+
 	/**
 	 * Set/reset marked flag (used to partition wire nets).
-	 * 
+	 *
 	 * @param which True to mark, false to unmark.
 	 */
 	public void mark(boolean which) {
-		
+
 		marked = which;
 	} // end of mark method
-	
+
 	/**
 	 * See if this wire is marked.
-	 * 
+	 *
 	 * @return true if marked, false if not.
 	 */
 	public boolean isMarked() {
-		
+
 		return marked;
 	} // end of isMarked method
-	
+
 	/**
 	 * Mark this wire end and all wires and wire ends connected to it.
 	 */
 	public void traverse() {
-		
+
 		if (marked)
 			return;
 		marked = true;
@@ -464,22 +465,22 @@ public final class WireEnd extends LogicElement {
 			w.traverse();
 		}
 	} // end of traverse method
-	
+
 	/**
 	 * Put this wire end in a new wire net.
-	 * 
+	 *
 	 * @param net The new wire net.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void setNet(WireNet net) {
-		
+
 		this.net = net;
 	} // end of setNet method
-	
+
 	/**
 	 * Get the wire net this wire end is in.
-	 * 
+	 *
 	 * @return This wire end's wire net.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
@@ -493,33 +494,33 @@ public final class WireEnd extends LogicElement {
 			throw new IllegalStateException("wire end is not in a wire net yet");
 		return net;
 	} // end of getNet method
-	
+
 	/**
 	 * See if this wire end is dangling (i.e., has at most one wire and is not attached).
-	 * 
+	 *
 	 * @return true if dangling, false if not.
 	 *
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#danglingEnd()
 	 */
 	public boolean isDangling() {
-		
+
 		return wires.size() <= 1 && !isAttached();
 	} // end of isDangling method
-	
+
 	/**
 	 * Get all wires from this wire end.
-	 * 
+	 *
 	 * @return the wires.
 	 */
 	public Set<Wire> getWires() {
-		
+
 		return wires;
 	} // end of getWires method
-	
+
 	/**
 	 * Get wire this wire end is connected to, or null if no connection.
 	 * Assumes that there is only one (i.e., that this is a dangling end).
-	 * 
+	 *
 	 * @return the wire, or null if there is none.
 	 */
 	public @Nullable Wire getOnlyWire() {
@@ -529,10 +530,10 @@ public final class WireEnd extends LogicElement {
 		}
 		return (Wire)(wires.toArray()[0]);
 	} // end of getOnlyWire method
-	
+
 	/**
 	 * Get the rectangle bounding this element.
-	 * 
+	 *
 	 * @return the bounding rectangle.
 	 */
 	@Override
@@ -542,20 +543,20 @@ public final class WireEnd extends LogicElement {
 		int r = d/2;
 		return new jls.core.Bounds(x-r,y-r,d,d);
 	} // end of getRect method
-	
+
 	/**
 	 * Get the number of wires coming out of this wire end.
-	 * 
+	 *
 	 * @return the number of wires.
 	 */
 	public int degree() {
-		
+
 		return wires.size();
 	} // end of degree method
-	
+
 	/**
 	 * Get the copy of this wire end.
-	 * 
+	 *
 	 * @return the copy.
 	 */
 	public WireEnd getCopy() {
@@ -564,7 +565,7 @@ public final class WireEnd extends LogicElement {
 			throw new IllegalStateException("wire end has not been copied");
 		return myCopy;
 	} // end of getCopy method
-	
+
 	/**
 	 * Wire ends are always Geometry.POINT_DIAMETER squares, set by init()
 	 * on every load, so their size is not saved (#21). They dominate
@@ -583,7 +584,7 @@ public final class WireEnd extends LogicElement {
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT WireEnd");
 		super.save(output);
 		if (getNet().isTriState()) {
@@ -614,16 +615,16 @@ public final class WireEnd extends LogicElement {
 		}
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Set an instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, int value) {
-		
+
 		if (name.equals("attach")) {
 			loadAttach = value;
 		} else if (name.equals("wire")) {
@@ -637,55 +638,55 @@ public final class WireEnd extends LogicElement {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * See if this wire end is part of a tri-state net during a load.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	public boolean isLoadTriState() {
-		
+
 		return loadTriState;
 	} // end of isLoadTriState method
-	
+
 	/**
 	 * Set an instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, String value) {
-		
+
 		if (name.equals("put")) {
 			loadPut = value;
 		} else {
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Set probe on a wire.
-	 * 
+	 *
 	 * @param id The id of the other end of the wire.
 	 * @param name The probe name.
 	 */
 	public void setProbe(int id, String name) {
-		
+
 		probeMap.put(id,name);
 	} // end of setProbe method
 
 // -------------------------------------------------------------------------------
 // Simulation
 // -------------------------------------------------------------------------------
-				
+
 	/**
 	 * Wire ends do nothing during simulation.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// do nothing
 	} // end of initSim method
-	
+
 } // end of WireEnd class

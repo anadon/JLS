@@ -21,9 +21,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import jls.core.Geometry;
 import jls.Circuit;
-import jls.JLSInfo;
+import jls.core.Geometry;
 import jls.elem.Element;
 import jls.elem.OrGate;
 

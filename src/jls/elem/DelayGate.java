@@ -1,33 +1,33 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.core.Orientation;
-
 import java.util.*;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
 
 /**
  * Delay gate.
  * Logically neutral, simply delays a signal change by a given amount.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class DelayGate extends Gate implements Timed {
-	
+
 	// identity (#22); previous-settings unused: DELAY has its own dialog
 	/** The kind descriptor (names and pin counts) for DELAY gates. */
 	private static final Kind KIND =
 			new Kind("DELAY","DelayGate",1,0);
-	
+
 	/**
 	 * The kind descriptor for this gate.
 	 */
 	@Override
 	protected Kind kind() {
-		
+
 		return KIND;
 	} // end of kind method
-	
+
 	/**
 	 * Create DELAY gate.
 	 *
@@ -56,7 +56,7 @@ public final class DelayGate extends Gate implements Timed {
 				.close()
 				.build();
 	} // end of outline method
-	
+
 	/**
 	 * Set the number of gates (bits). Used by the GUI-side creation dialog
 	 * ({@code jls.edit.DelayGateDialog}) after the model went headless.
@@ -98,20 +98,20 @@ public final class DelayGate extends Gate implements Timed {
 	 */
 	@Override
 	public String infoText() {
-		
+
 		String pd = ", delay = " + propDelay;
 		if (bits == 1)
 			return "DELAY gate" + pd;
 		else
 			return bits + " DELAY gates" + pd;
 	} // end of showInfo method
-	
+
 	/**
 	 * Cannot reset propagation delay.
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		// do nothing
 	} // end of resetPropDelay method
 

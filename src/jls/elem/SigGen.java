@@ -2,39 +2,40 @@ package jls.elem;
 
 import java.io.*;
 import java.util.*;
-import jls.core.Geometry;
+
 import jls.*;
+import jls.core.Geometry;
 import jls.sim.*;
 
 /**
  * Signal generator.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class SigGen extends SigSim {
-	
+
 	// named constants
 	/** Title drawn inside the element's box. */
 	private final String title = " Signal Generator ";
 	/** Width and height of the edit dialog's text pane, in pixels. */
-	
+
 	// saved properties
 	/** The signal specification text entered by the user. */
 	private String signals = "";
-	
+
 	/**
 	 * Create new element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is in.
 	 */
 	public SigGen(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
 
 	/**
 	 * Initialize this element.
-	 * 
+	 *
 	 * @param g Unused.
 	 */
 	@Override
@@ -90,7 +91,7 @@ public final class SigGen extends SigSim {
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
@@ -156,45 +157,45 @@ public final class SigGen extends SigSim {
 
 	/**
 	 * Signal generators can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
 
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Parse signal specification and post all events.
 	 * If signal generator is in an imported circuit, do nothing.
-	 * 
+	 *
 	 * @param sim The simulator.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// do nothing if in an imported circuit
 		if (getCircuit().isImported())
 			return;
-		
+
 		Scanner input = new Scanner(signals);
-		
+
 		super.initSim(sim,input);
 	} // end of initSim method
-	
+
 	/**
 	 * Print or display an error about the signal specification.
-	 * 
+	 *
 	 * @param msg An error message.
 	 */
 	@Override
 	protected void specError(String msg) {
-		
+
 		if (JLSInfo.noWindow()) {
 			System.out.println("error in test file");
 			System.out.println(msg);
@@ -205,5 +206,5 @@ public final class SigGen extends SigSim {
 			return;
 		}
 	} // end of specError method
-	
+
 } // end of SigGen class

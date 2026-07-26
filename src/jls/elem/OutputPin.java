@@ -1,22 +1,23 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.util.BitSet;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
+
 /**
  * Output pin of a subcircuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Create a new output pin.
-	 * 
+	 *
 	 * @param circ
 	 *            The circuit this pin will be in.
 	 */
@@ -25,15 +26,15 @@ public final class OutputPin extends Pin implements TriProp {
 		super(circ);
 		orientation = Orientation.RIGHT;
 	} // end of constructor
-	
+
 	/**
 	 * Return a string version of this element.
-	 * 
+	 *
 	 * @return the string.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return "OutputPin[" + super.toString() + "]";
 	} // end of toString method
 
@@ -49,7 +50,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Initialize internal info for this element. Most work done in superclass,
 	 * but input point added here.
-	 * 
+	 *
 	 * @param g
 	 *            The Graphics object used to compute the size of the name.
 	 */
@@ -70,7 +71,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output
 	 *            The output writer.
 	 */
@@ -104,7 +105,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -125,7 +126,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Set this pin as tristate or not. If part of a subcircuit, propagate
 	 * tristate status to output.
-	 * 
+	 *
 	 * @param which
 	 *            True to make this pin tristate, false to make it not.
 	 */
@@ -145,7 +146,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * See if this element is tristate at load time.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	public boolean isLoadTriState() {
@@ -159,7 +160,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Initialize current value to 0 or null.
-	 * 
+	 *
 	 * @param sim
 	 *            Unused.
 	 */
@@ -182,7 +183,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * React to an event by sending the input value to the output pin in the
 	 * containing subcircuit element, unless this circuit is not a subcircuit.
-	 * 
+	 *
 	 * @param now
 	 *            The current simulation time.
 	 * @param sim
@@ -213,7 +214,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Display current value.
-	 * 
+	 *
 	 * @param whereX the x-coordinate on screen (unused here).
 	 * @param whereY the y-coordinate on screen (unused here).
 	 */

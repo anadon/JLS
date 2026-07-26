@@ -11,6 +11,7 @@ import java.awt.print.Printable;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
+
 import jls.edit.CircuitRenderer;
 
 /**

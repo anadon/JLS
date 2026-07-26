@@ -1,6 +1,5 @@
 package jls.collab.net;
 
-import org.jspecify.annotations.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -16,8 +15,11 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Objects;
+
 import javax.crypto.AEADBadTagException;
 import javax.crypto.KeyAgreement;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The mutually authenticated key exchange between two JLS installs

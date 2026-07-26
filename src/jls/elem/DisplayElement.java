@@ -1,8 +1,8 @@
 package jls.elem;
 
-import jls.*;
-
 import org.jspecify.annotations.Nullable;
+
+import jls.*;
 
 /**
  * Superclass for "elements" that are just for display (not active).
@@ -21,7 +21,7 @@ public abstract sealed class DisplayElement extends Element
 	 *            detached header/sentinel element.
 	 */
 	public DisplayElement(@Nullable Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
 

@@ -1,15 +1,15 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+
 /**
  * Superclass for input and output points.
  * Contains common data and methods.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class Put
@@ -38,10 +38,10 @@ public abstract sealed class Put
 	private @Nullable WireEnd wireEnd = null;	// the WireEnd this put attached to
 	/** The copy of this put, to help cut/paste (null until copied). */
 	protected @Nullable Put myCopy;				// to help cut/paste
-	
+
 	/**
 	 * Create a new put.
-	 * 
+	 *
 	 * @param name The name of this put (e.g., "input0").
 	 * @param element The element this put is part of.
 	 * @param xr The x-coordinate of the center of the put relative to the upper left
@@ -52,28 +52,28 @@ public abstract sealed class Put
 	 */
 	public Put(@Nullable String name, @Nullable LogicElement element,
 			int xr, int yr, int bits) {
-		
+
 		this.name = name;
 		this.element = element;
 		this.xr = xr;
 		this.yr = yr;
 		this.bits = bits;
 	} // end of constructor
-	
+
 	/**
 	 * Return a string version of the properties of this element.
-	 * 
+	 *
 	 * @return the string.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return name + ",bits=" + bits + ",x=" + xr + ",y=" + yr;
 	} // end of toString method
-	
+
 	/**
 	 * Get the put's name;
-	 * 
+	 *
 	 * @return the put's name.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#initInputsReachesInsideSubcircuits()
@@ -100,10 +100,10 @@ public abstract sealed class Put
 		}
 		return element;
 	} // end of requireElement method
-	
+
 	/**
 	 * Get put's x-coordinate.
-	 * 
+	 *
 	 * @return The x-coordinate.
 	 *
 	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
@@ -115,10 +115,10 @@ public abstract sealed class Put
 
 		return requireElement().getX()+xr;
 	} // end of getX method
-	
+
 	/**
 	 * Get put's y-coordinate.
-	 * 
+	 *
 	 * @return The y-coordinate.
 	 *
 	 * @jls.testedby jls.edit.DragCandidateBoundTest#indexCandidatesFindExactlyTheSamePutsAsAFullScan()
@@ -130,22 +130,22 @@ public abstract sealed class Put
 
 		return requireElement().getY()+yr;
 	} // end of getY method
-	
+
 	/**
 	 * Get number of bits in this put.
-	 * 
+	 *
 	 * @return the number of bits.
 	 *
 	 * @jls.testedby jls.ui.CircuitAssert#assertPutBits()
 	 */
 	public int getBits() {
-		
+
 		return bits;
 	} // end of getBits method
-	
+
 	/**
 	 * Get the element this put is part of.
-	 * 
+	 *
 	 * @return the element.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
@@ -190,10 +190,10 @@ public abstract sealed class Put
 
 		return wireEnd;
 	} // end of getWireEnd method
-	
+
 	/**
 	 * See if this put is attached to a WireEnd.
-	 * 
+	 *
 	 * @return true if it is attached, false if not.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
@@ -202,10 +202,10 @@ public abstract sealed class Put
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public boolean isAttached() {
-		
+
 		return wireEnd != null;
 	} // end of isAttached method
-	
+
 	/**
 	 * Record that this put is attached to a WireEnd.
 	 * Wire end can be null, indicating that the put is to become unattached.
@@ -228,66 +228,66 @@ public abstract sealed class Put
 
 		return wireEnd;
 	} // end of getAttached method
-	
+
 	/**
 	 * Record that this put is touching or not touching a WireEnd.
-	 * 
+	 *
 	 * @param is True if touching, false if not.
 	 */
 	public void setTouching(boolean is) {
-		
+
 		touching = is;
 	} // end of setTouching method
-	
-	/** 
+
+	/**
 	 * See if this put is touching something.
-	 * 
+	 *
 	 * @return True if touching, false if not.
 	 */
 	public boolean isTouching() {
-		
+
 		return touching;
 	} // end of isTouching method
-	
+
 	/**
 	 * Set new position.
-	 * 
+	 *
 	 * @param x New x-coordinate.
 	 * @param y New y-coordinate.
 	 */
 	public void setPosition(int x, int y) {
-		
+
 		this.xr = x;
 		this.yr = y;
 	} // end of setPosition method
-	
+
 	/**
 	 * Save the position of this put.
 	 */
 	public void savePosition() {
-		
+
 		savex = xr;
 		savey = yr;
 	} // end of savePosition method
-	
+
 	/**
 	 * Restore the position of this put.
 	 */
 	public void restorePosition() {
-		
+
 		xr = savex;
 		yr = savey;
 	} // end of restorePosition method
-	
+
 	/**
 	 * See if this put is at the same place as another put.
-	 * 
+	 *
 	 * @param other The other put.
-	 * 
+	 *
 	 * @return true if at the same place, false if not.
 	 */
 	public boolean intersects(Put other) {
-		
+
 		int thisx = requireElement().getX() + xr;
 		int thisy = requireElement().getY() + yr;
 		int otherx = other.requireElement().getX() + other.xr;
@@ -297,10 +297,10 @@ public abstract sealed class Put
 		}
 		return false;
 	} // end of intersects method
-	
+
 	/**
 	 * Get the copy of this put.
-	 * 
+	 *
 	 * @return the copy.
 	 */
 	public Put getCopy() {
@@ -309,12 +309,12 @@ public abstract sealed class Put
 			throw new IllegalStateException("put has not been copied");
 		return myCopy;
 	} // end of getCopy method
-	
+
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-		
+
 	/** The current simulated value of this put, or null for high-impedance (tri-state). */
 	protected @Nullable BitSet currentValue;
-	
+
 } // end of Put class

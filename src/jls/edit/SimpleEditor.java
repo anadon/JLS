@@ -85,6 +85,7 @@ import jls.elem.Clock;
 import jls.elem.Constant;
 import jls.elem.Decoder;
 import jls.elem.DelayGate;
+import jls.elem.Editable;
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.Extend;
@@ -103,7 +104,9 @@ import jls.elem.Output;
 import jls.elem.OutputPin;
 import jls.elem.Pause;
 import jls.elem.Put;
+import jls.elem.QuickEditable;
 import jls.elem.Register;
+import jls.elem.Rotatable;
 import jls.elem.ShiftRegister;
 import jls.elem.SigGen;
 import jls.elem.Splitter;
@@ -111,9 +114,11 @@ import jls.elem.StateMachine;
 import jls.elem.Stop;
 import jls.elem.SubCircuit;
 import jls.elem.Text;
+import jls.elem.Timed;
 import jls.elem.TriProp;
 import jls.elem.TriState;
 import jls.elem.TruthTable;
+import jls.elem.Watchable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
@@ -1412,7 +1417,7 @@ public abstract class SimpleEditor extends JPanel {
 							Element el = (Element)selected.toArray()[0];
 							if (el.isUneditable())
 								return;
-							if (!el.canWatch())
+							if (!(el instanceof Watchable))
 								return;
 							submitOp(new ToggleWatched(el.getStableId()));
 							clearSelected();
@@ -1454,7 +1459,7 @@ public abstract class SimpleEditor extends JPanel {
 							if (selected.size() != 1)
 								return;
 							Element el = (Element)selected.toArray()[0];
-							if (!el.hasTiming())
+							if (!(el instanceof Timed))
 								return;
 							doTiming();
 						}
@@ -1984,7 +1989,8 @@ public abstract class SimpleEditor extends JPanel {
 				if (selected.size() != 1)
 					return;
 				Element el = (Element)(selected.toArray()[0]);
-				if (!el.canRotate() || el.isUneditable())
+				if (!(el instanceof Rotatable rot) || !rot.canRotate()
+						|| el.isUneditable())
 					return;
 
 				// #167: through the op entry point
@@ -2006,7 +2012,8 @@ public abstract class SimpleEditor extends JPanel {
 				if (selected.size() != 1)
 					return;
 				Element el = (Element)(selected.toArray()[0]);
-				if (!el.canFlip() || el.isUneditable())
+				if (!(el instanceof Rotatable rot) || !rot.canFlip()
+						|| el.isUneditable())
 					return;
 
 				// #167: through the op entry point
@@ -3419,18 +3426,18 @@ public abstract class SimpleEditor extends JPanel {
 			private void makeOptionMenu(Element el) {
 
 				optionMenu.removeAll();
-				if (el.quickChange() && !el.isUneditable()) {
-					optionMenu.add(ElementQuickMenus.build(el, me));
+				if (el instanceof QuickEditable quick && !el.isUneditable()) {
+					optionMenu.add(ElementQuickMenus.build(quick, me));
 				}
-				if (el.canChange() && !el.isUneditable()) {
+				if (el instanceof Editable && !el.isUneditable()) {
 					optionMenu.add(modify);
 				}
-				if (el.hasTiming() && !el.isUneditable()) {
+				if (el instanceof Timed && !el.isUneditable()) {
 					optionMenu.add(timing);
 				}
-				if (el.canWatch()) {
+				if (el instanceof Watchable watchable) {
 					if (!el.isUneditable()) {
-						if (el.isWatched()) {
+						if (watchable.isWatched()) {
 							watch.setText("Un-watch Element");
 						}
 						else {
@@ -3440,7 +3447,7 @@ public abstract class SimpleEditor extends JPanel {
 					}
 					optionMenu.add(view);
 				}
-				if(el.canRotate())
+				if(el instanceof Rotatable rot && rot.canRotate())
 				{
 					if(!el.isUneditable())
 					{
@@ -3448,7 +3455,7 @@ public abstract class SimpleEditor extends JPanel {
 						optionMenu.add(CCrotate);
 					}
 				}
-				if(el.canFlip())
+				if(el instanceof Rotatable rot && rot.canFlip())
 				{
 					if(!el.isUneditable())
 					{

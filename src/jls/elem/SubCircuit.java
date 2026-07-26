@@ -15,7 +15,8 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class SubCircuit extends LogicElement implements TriProp {
+public final class SubCircuit extends LogicElement
+		implements TriProp, Rotatable, Editable {
 
 	// properties
 	/**
@@ -409,17 +410,21 @@ public final class SubCircuit extends LogicElement implements TriProp {
 	} // end of showInfo method
 
 	/**
-	 * Set whether elements in the subcircuit are watched.
+	 * Set whether elements in the subcircuit are watched. The subcircuit
+	 * itself is not {@link Watchable}; this propagates the setting to the
+	 * watchable elements (and nested subcircuits) it contains.
 	 *
 	 * @param which True to set all watchable elements to watched, false to make them
 	 *        not watched.
 	 */
-	@Override
 	public void setWatched(boolean which) {
 
 		for (Element element : getSubCircuit().getElements()) {
-			if (element instanceof LogicElement le) {
-				le.setWatched(which);
+			if (element instanceof Watchable watchable) {
+				watchable.setWatched(which);
+			}
+			else if (element instanceof SubCircuit sub) {
+				sub.setWatched(which);
 			}
 		}
 	} // end of setWatched method
@@ -432,17 +437,6 @@ public final class SubCircuit extends LogicElement implements TriProp {
 
 		getSubCircuit().resetAllDelays();
 	} // end of resetPropDelay method
-
-	/**
-	 * Subcircuits can be changed.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 	/**
 	 * Remap all input and output pins to inputs and outputs.

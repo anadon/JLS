@@ -66,6 +66,8 @@ import jls.elem.Memory;
 import jls.elem.OutputPin;
 import jls.elem.Register;
 import jls.elem.SubCircuit;
+import jls.elem.Timed;
+import jls.elem.Watchable;
 import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
 import jls.hdl.HdlExporter;
@@ -578,7 +580,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 		ordered.sort(Comparator.comparing(
 				(Element el) -> el.getName() == null ? "" : el.getName()));
 		for (Element el : ordered) {
-			if (el.isWatched()) {
+			if (el instanceof Watchable watchable && watchable.isWatched()) {
 				switch (el) {
 					case Register reg -> reg.printValue(qual);
 					case Memory mem -> mem.printChangedValues(qual);
@@ -2582,11 +2584,14 @@ public class JLSStart extends JFrame implements ChangeListener {
 							System.exit(1);
 						}
 						String tf = scan.next();
-						if (tf.equals("true")) {
-							element.setWatched(true);
-						}
-						else if (tf.equals("false")) {
-							element.setWatched(false);
+						if (tf.equals("true") || tf.equals("false")) {
+							boolean watched = tf.equals("true");
+							if (element instanceof Watchable watchable) {
+								watchable.setWatched(watched);
+							}
+							else if (element instanceof SubCircuit sub) {
+								sub.setWatched(watched);
+							}
 						}
 						else {
 							System.out.print(paramFile + ": expected true or false,");
@@ -2614,7 +2619,9 @@ public class JLSStart extends JFrame implements ChangeListener {
 							System.out.println(" got \"" + delay + "\"");
 							System.exit(1);
 						}
-						element.setDelay(delay);
+						if (element instanceof Timed timed) {
+							timed.setDelay(delay);
+						}
 					}
 
 					// register info
@@ -2740,8 +2747,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				Circuit c = sub.getSubCircuit();
 				setPropDelays(c,cl,delay);
 			}
-			else if (el.getClass() == cl && el instanceof LogicElement lel) {
-				lel.setDelay(delay);
+			else if (el.getClass() == cl && el instanceof Timed timed) {
+				timed.setDelay(delay);
 			}
 		}
 	} // end of setPropDelays method

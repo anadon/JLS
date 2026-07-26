@@ -488,16 +488,6 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	} // end of resetPropDelay method
 
 	/**
-	 * Set propagation delay (overridden by most elements).
-	 *
-	 * @param newDelay The new delay value.
-	 */
-	@Override
-	public void setDelay(int newDelay) {
-
-	} // end of setDelay method
-
-	/**
 	 * Get the name of this element.
 	 * Overridden in elements that have names.
 	 *

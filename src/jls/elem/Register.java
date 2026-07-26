@@ -24,7 +24,7 @@ import jls.sim.SimEvent.TriStateOff;
  * @author David A. Poplawski
  */
 public final class Register extends LogicElement
-		implements Timed, Watchable {
+		implements Timed, Watchable, Rotatable, Editable {
 
 	// register types
 	/**
@@ -502,17 +502,6 @@ public final class Register extends LogicElement
 	} // end of remove method
 
 	/**
-	 * Registers have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
-
-	/**
 	 * Reset propagation delay to default value.
 	 */
 	@Override
@@ -658,28 +647,6 @@ public final class Register extends LogicElement
 		height = 0;
 		init(g);
 	} // end of flip method
-
-	/**
-	 * Registers can be modified.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
-
-	/**
-	 * A register can be watched.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canWatch() {
-
-		return true;
-	} // end of canWatch method
 
 	/**
 	 * See if this register is watched.

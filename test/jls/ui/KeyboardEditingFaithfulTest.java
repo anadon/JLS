@@ -76,7 +76,7 @@ class KeyboardEditingFaithfulTest {
 		return circuit;
 	}
 
-	/** A circuit with a single input pin - a watchable element (canWatch). */
+	/** A circuit with a single input pin - a {@link jls.elem.Watchable} element. */
 	private static Circuit onePin() throws Exception {
 		CircuitTextBuilder cb = new CircuitTextBuilder();
 		cb.inputPin("A", 1);
@@ -289,7 +289,11 @@ class KeyboardEditingFaithfulTest {
 		String os = System.getProperty("os.name");
 		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
 			jls.elem.Pin pin = solePin(ui);
-			assertTrue(pin.canWatch(), "the input pin is watchable");
+			// widened to Element so the capability pin stays a runtime
+			// regression check rather than a compile-time tautology
+			jls.elem.Element pinElement = pin;
+			assertTrue(pinElement instanceof jls.elem.Watchable,
+					"the input pin is watchable");
 			boolean before = pin.isWatched();
 			selectGateAndFocusCanvas(ui, pin);
 

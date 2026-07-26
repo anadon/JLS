@@ -24,7 +24,7 @@ import jls.sim.SimEvent.TriStateOff;
  *
  * @author David A. Poplawski
  */
-public final class Adder extends LogicElement implements Timed {
+public final class Adder extends LogicElement implements Timed, Rotatable {
 
 	// default values
 	/** The default number of bits. */
@@ -251,17 +251,6 @@ public final class Adder extends LogicElement implements Timed {
 
 		return bits + " bit adder";
 	} // end of showInfo method
-
-	/**
-	 * Adders have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset propagation delay to default value.

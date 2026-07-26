@@ -33,7 +33,7 @@ import jls.sim.Simulator;
  * @author David A. Poplawski
  */
 public final class TruthTable extends LogicElement
-		implements Timed {
+		implements Timed, Editable {
 
 	// default values
 	/** Default propagation delay (simulation time units). */
@@ -389,17 +389,6 @@ public final class TruthTable extends LogicElement
 
 		return name;
 	} // end of getName method
-
-	/**
-	 * Truth tables can be modified.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 	/**
 	 * Truth tables cannot be copied.
@@ -1334,17 +1323,6 @@ public final class TruthTable extends LogicElement
 
 		propDelay = getDefaultDelay();
 	} // end of resetPropDelay method
-
-	/**
-	 * Combinational logic has timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Get the propagation delay in this element.

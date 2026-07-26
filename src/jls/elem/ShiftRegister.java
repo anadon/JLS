@@ -39,7 +39,8 @@ import jls.sim.SimEvent.TriStateOff;
  *
  * @author David A. Poplawski
  */
-public final class ShiftRegister extends LogicElement implements Timed {
+public final class ShiftRegister extends LogicElement
+		implements Timed, Rotatable {
 
 	/** The shift-kind rule, shared by the dialog and the loader
 	 *  (issue #52 pattern: one string, two surfaces). */
@@ -462,17 +463,6 @@ public final class ShiftRegister extends LogicElement implements Timed {
 		}
 		return bits + " bit " + kind + " shift register";
 	} // end of showInfo method
-
-	/**
-	 * Shift registers have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset propagation delay to default value.

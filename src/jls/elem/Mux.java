@@ -24,7 +24,7 @@ import jls.sim.SimEvent.TriStateOff;
  *
  * @author David A. Poplawski
  */
-public final class Mux extends LogicElement implements Timed {
+public final class Mux extends LogicElement implements Timed, Rotatable {
 
 	// default values
 	/** Default number of data inputs. */
@@ -355,17 +355,6 @@ public final class Mux extends LogicElement implements Timed {
 
 		return numInputs + " input, " + bits + " bit multiplexor";
 	} // end of showInfo method
-
-	/**
-	 * Multiplexors have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
 
 	/**
 	 * Reset propagation delay to default value.

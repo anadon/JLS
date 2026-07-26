@@ -11,7 +11,7 @@ import jls.*;
  *
  * @author David A. Poplawski
  */
-public final class Text extends DisplayElement {
+public final class Text extends DisplayElement implements Editable {
 
 	// saved properties
 	/** The text to display, lines separated by newlines. */
@@ -424,16 +424,5 @@ public final class Text extends DisplayElement {
 		super.save(output);
 		output.println("END");
 	} // end of save method
-
-	/**
-	 * Text areas can be changed.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 } // end of Text method

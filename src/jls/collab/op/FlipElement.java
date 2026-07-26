@@ -7,6 +7,7 @@ import jls.Circuit;
 import jls.edit.SwingTextMetrics;
 import jls.elem.Element;
 import jls.elem.ElementId;
+import jls.elem.Rotatable;
 
 /**
  * Flip (mirror) an element (issue #167). Self-inverse.
@@ -19,17 +20,17 @@ public record FlipElement(ElementId id) implements CircuitOp {
 	public void apply(Circuit circuit, Graphics g) throws OpRejected {
 
 		Element el = Ops.resolve(circuit, id);
-		if (!el.canFlip()) {
+		if (!(el instanceof Rotatable rot) || !rot.canFlip()) {
 			throw new OpRejected("element '" + id + "' cannot flip");
 		}
-		el.flip(SwingTextMetrics.forGraphics(g));
+		rot.flip(SwingTextMetrics.forGraphics(g));
 	} // end of apply method
 
 	@Override
 	public CircuitOp invert(Circuit before) throws OpRejected {
 
 		Element el = Ops.resolve(before, id);
-		if (!el.canFlip()) {
+		if (!(el instanceof Rotatable rot) || !rot.canFlip()) {
 			throw new OpRejected("element '" + id + "' cannot flip");
 		}
 		return this;

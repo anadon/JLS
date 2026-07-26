@@ -28,7 +28,9 @@ import jls.elem.ElementId;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
 import jls.elem.Pin;
+import jls.elem.Rotatable;
 import jls.elem.ShiftRegister;
+import jls.elem.Watchable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 
@@ -127,7 +129,7 @@ class CircuitOpTest {
 				+ " String orient \"LEFT\"\n int delay 10\nEND\n"
 				+ "ENDCIRCUIT\n");
 		return ElementBlocks.saveBlock(
-				find(donor, el -> el.canRotate()));
+				find(donor, CircuitOpTest::canRotate));
 	}
 
 	private static String save(Circuit circuit) {
@@ -159,6 +161,16 @@ class CircuitOpTest {
 		return matches.get(0);
 	}
 
+	/** Whether the element can rotate right now (issue #78 capability). */
+	private static boolean canRotate(Element el) {
+		return el instanceof Rotatable rot && rot.canRotate();
+	}
+
+	/** Whether the element can flip right now (issue #78 capability). */
+	private static boolean canFlip(Element el) {
+		return el instanceof Rotatable rot && rot.canFlip();
+	}
+
 	private static String serialize(CircuitOp op) {
 		StringWriter out = new StringWriter();
 		try (PrintWriter writer = new PrintWriter(out)) {
@@ -175,10 +187,10 @@ class CircuitOpTest {
 	void toggleWatchedMatchesInlineMutation() throws Exception {
 		Circuit viaOp = load();
 		Circuit inline = load();
-		Element pin = find(viaOp, el -> el instanceof Pin && el.canWatch());
+		Element pin = find(viaOp, el -> el instanceof Pin && el instanceof Watchable);
 		new ToggleWatched(pin.getStableId()).apply(viaOp, graphics());
-		Element inlinePin = find(inline,
-				el -> el instanceof Pin && el.canWatch());
+		Watchable inlinePin = (Watchable) find(inline,
+				el -> el instanceof Pin && el instanceof Watchable);
 		inlinePin.setWatched(!inlinePin.isWatched());
 		assertEquals(save(inline), save(viaOp),
 				"op and inline watch toggle must produce identical bytes");
@@ -188,10 +200,10 @@ class CircuitOpTest {
 	void rotateMatchesInlineMutation() throws Exception {
 		Circuit viaOp = loadAdder();
 		Circuit inline = loadAdder();
-		Element adder = find(viaOp, Element::canRotate);
+		Element adder = find(viaOp, CircuitOpTest::canRotate);
 		new RotateElement(adder.getStableId(), true)
 				.apply(viaOp, graphics());
-		find(inline, Element::canRotate)
+		((Rotatable) find(inline, CircuitOpTest::canRotate))
 				.rotate(Orientation.RIGHT, jls.edit.SwingTextMetrics.of(graphics()));
 		assertEquals(save(inline), save(viaOp),
 				"op and inline rotation must produce identical bytes");
@@ -201,10 +213,10 @@ class CircuitOpTest {
 	void removeMatchesInlineMutation() throws Exception {
 		Circuit viaOp = loadAdder();
 		Circuit inline = loadAdder();
-		Element adder = find(viaOp, Element::canRotate);
+		Element adder = find(viaOp, CircuitOpTest::canRotate);
 		new RemoveElements(List.of(adder.getStableId()))
 				.apply(viaOp, graphics());
-		Element inlineAdder = find(inline, Element::canRotate);
+		Element inlineAdder = find(inline, CircuitOpTest::canRotate);
 		inlineAdder.remove(inline);
 		assertEquals(save(inline), save(viaOp),
 				"op and inline removal must produce identical bytes");
@@ -220,7 +232,7 @@ class CircuitOpTest {
 	void configReplaceInstallsExactlyTheReconfiguredBlock()
 			throws Exception {
 		Circuit circuit = loadAdder();
-		Element adder = find(circuit, Element::canRotate);
+		Element adder = find(circuit, CircuitOpTest::canRotate);
 		ElementId id = adder.getStableId();
 		String reconfigured = ElementBlocks.saveBlock(adder)
 				.replace("int bits 4", "int bits 8");
@@ -276,7 +288,7 @@ class CircuitOpTest {
 	void toggleWatchedInverseRestoresBytes() throws Exception {
 		Circuit circuit = load();
 		Element pin = find(circuit,
-				el -> el instanceof Pin && el.canWatch());
+				el -> el instanceof Pin && el instanceof Watchable);
 		assertInverseRestores(circuit,
 				new ToggleWatched(pin.getStableId()));
 	}
@@ -284,7 +296,7 @@ class CircuitOpTest {
 	@Test
 	void rotateInverseRestoresBytes() throws Exception {
 		Circuit circuit = loadAdder();
-		Element adder = find(circuit, Element::canRotate);
+		Element adder = find(circuit, CircuitOpTest::canRotate);
 		assertInverseRestores(circuit,
 				new RotateElement(adder.getStableId(), true));
 		assertInverseRestores(circuit,
@@ -294,7 +306,7 @@ class CircuitOpTest {
 	@Test
 	void flipInverseRestoresBytes() throws Exception {
 		Circuit circuit = loadAdder();
-		Element adder = find(circuit, Element::canFlip);
+		Element adder = find(circuit, CircuitOpTest::canFlip);
 		assertInverseRestores(circuit,
 				new FlipElement(adder.getStableId()));
 	}
@@ -323,7 +335,7 @@ class CircuitOpTest {
 	@Test
 	void removeInverseRestoresBytes() throws Exception {
 		Circuit circuit = loadAdder();
-		Element adder = find(circuit, Element::canRotate);
+		Element adder = find(circuit, CircuitOpTest::canRotate);
 		assertInverseRestores(circuit,
 				new RemoveElements(List.of(adder.getStableId())));
 	}
@@ -338,7 +350,7 @@ class CircuitOpTest {
 	@Test
 	void configReplaceInverseRestoresBytes() throws Exception {
 		Circuit circuit = loadAdder();
-		Element adder = find(circuit, Element::canRotate);
+		Element adder = find(circuit, CircuitOpTest::canRotate);
 		String reconfigured = ElementBlocks.saveBlock(adder)
 				.replace("int bits 4", "int bits 8");
 		assertInverseRestores(circuit,
@@ -369,18 +381,18 @@ class CircuitOpTest {
 		// differently on a restored object graph
 		Circuit circuit = restored(load());
 		Element pin = find(circuit,
-				el -> el instanceof Pin && el.canWatch());
+				el -> el instanceof Pin && el instanceof Watchable);
 		assertInverseRestores(circuit,
 				new ToggleWatched(pin.getStableId()));
 		Circuit adders = restored(loadAdder());
-		Element adder = find(adders, Element::canRotate);
+		Element adder = find(adders, CircuitOpTest::canRotate);
 		assertInverseRestores(adders,
 				new RotateElement(adder.getStableId(), true));
 		assertInverseRestores(adders,
 				new RemoveElements(List.of(adder.getStableId())));
 		assertInverseRestores(adders,
 				new AddElements(List.of(donorAdderBlock())));
-		Element restoredAdder = find(adders, Element::canRotate);
+		Element restoredAdder = find(adders, CircuitOpTest::canRotate);
 		assertInverseRestores(adders, new SetElementConfig(
 				restoredAdder.getStableId(),
 				ElementBlocks.saveBlock(restoredAdder)
@@ -521,11 +533,14 @@ class CircuitOpTest {
 		String before = save(circuit);
 		ElementId unknown = ElementId.parse("nosuch:1");
 		Element pin = find(circuit,
-				el -> el instanceof Pin && el.canWatch());
+				el -> el instanceof Pin && el instanceof Watchable);
 		Element wire = find(circuit, el -> el instanceof Wire);
 		Element constant = find(circuit,
-				el -> !el.canWatch() && !(el instanceof Wire)
-						&& !el.canRotate());
+				el -> !(el instanceof Watchable) && !(el instanceof Wire)
+						&& !canRotate(el));
+		// an element with no Rotatable capability at all (issue #78):
+		// rejected by the instanceof gate, not the attachment gate
+		Element wireEnd = find(circuit, el -> el instanceof WireEnd);
 
 		CircuitOp[] invalid = {
 				new ToggleWatched(unknown),
@@ -534,7 +549,9 @@ class CircuitOpTest {
 				new AttachProbe(wire.getStableId(), ""),
 				new RemoveProbe(wire.getStableId()),
 				new RotateElement(constant.getStableId(), true),
+				new RotateElement(wireEnd.getStableId(), true),
 				new FlipElement(constant.getStableId()),
+				new FlipElement(wireEnd.getStableId()),
 				new MoveElements(List.of(), 8, 8),
 				new MoveElements(List.of(pin.getStableId(),
 						pin.getStableId()), 8, 8),
@@ -549,13 +566,27 @@ class CircuitOpTest {
 			assertEquals(before, save(circuit),
 					"a rejected op must not change the circuit");
 		}
+
+		// inversion validates the same capability gates (issue #78)
+		CircuitOp[] invalidInverts = {
+				new ToggleWatched(constant.getStableId()),
+				new RotateElement(constant.getStableId(), true),
+				new RotateElement(wireEnd.getStableId(), true),
+				new FlipElement(constant.getStableId()),
+				new FlipElement(wireEnd.getStableId()),
+		};
+		for (CircuitOp op : invalidInverts) {
+			assertThrows(OpRejected.class, () -> op.invert(circuit),
+					"inverting an op its target cannot satisfy must be "
+							+ "rejected");
+		}
 	}
 
 	@Test
 	void addRejectionsLeaveTheCircuitUnchanged() throws Exception {
 		Circuit circuit = loadAdder();
 		String before = save(circuit);
-		Element adder = find(circuit, Element::canRotate);
+		Element adder = find(circuit, CircuitOpTest::canRotate);
 		String donor = donorAdderBlock();
 
 		CircuitOp[] invalid = {
@@ -699,7 +730,7 @@ class CircuitOpTest {
 		// unknown id: resolution fails before the block is examined
 		Circuit adders = loadAdder();
 		String addersBefore = save(adders);
-		Element adder = find(adders, Element::canRotate);
+		Element adder = find(adders, CircuitOpTest::canRotate);
 		ElementId adderId = adder.getStableId();
 		String adderBlock = ElementBlocks.saveBlock(adder);
 		assertThrows(OpRejected.class,

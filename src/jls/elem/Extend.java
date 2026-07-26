@@ -144,17 +144,6 @@ public final class Extend extends Gate implements TriProp {
 	} // end of showInfo method
 
 	/**
-	 * An expand is just wire so has no propagation delay.
-	 *
-	 * @return false.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return false;
-	} // end of hasTiming method
-
-	/**
 	 * Propagate tri-state to output.
 	 *
 	 * @param which True if tristate, false if not.

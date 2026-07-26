@@ -24,7 +24,7 @@ import jls.sim.SimEvent.TriStateOff;
  *
  * @author David A. Poplawski
  */
-public abstract sealed class Gate extends LogicElement
+public abstract sealed class Gate extends LogicElement implements Rotatable
 		permits AndGate, DelayGate, Extend, NandGate, NorGate, NotGate,
 		OrGate, XorGate {
 
@@ -522,22 +522,12 @@ public abstract sealed class Gate extends LogicElement
 	} // end of resetPropDelay method
 
 	/**
-	 * Gates have timing info (propagation delay).
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean hasTiming() {
-
-		return true;
-	} // end of hasTiming method
-
-	/**
-	 * Get the propagation delay in this element.
+	 * Get the propagation delay in this element. Implements {@link Timed}
+	 * for the gate subclasses that declare it ({@link Extend} does not -
+	 * an extend is just wire, so it has no propagation delay).
 	 *
 	 * @return the current delay.
 	 */
-	@Override
 	public int getDelay() {
 
 		return propDelay;
@@ -548,7 +538,6 @@ public abstract sealed class Gate extends LogicElement
 	 *
 	 * @param temp The new delay amount.
 	 */
-	@Override
 	public void setDelay(int temp) {
 
 		propDelay = temp;

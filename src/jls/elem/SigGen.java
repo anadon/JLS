@@ -12,7 +12,7 @@ import jls.sim.*;
  *
  * @author David A. Poplawski
  */
-public final class SigGen extends SigSim {
+public final class SigGen extends SigSim implements Editable {
 
 	// named constants
 	/** Title drawn inside the element's box. */
@@ -154,17 +154,6 @@ public final class SigGen extends SigSim {
 		super.copy(it);
 		return it;
 	} // end of copy method
-
-	/**
-	 * Signal generators can be changed.
-	 *
-	 * @return true.
-	 */
-	@Override
-	public boolean canChange() {
-
-		return true;
-	} // end of canChange method
 
 //	-------------------------------------------------------------------------------
 //	Simulation

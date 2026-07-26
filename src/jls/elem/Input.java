@@ -2,19 +2,19 @@ package jls.elem;
 
 import java.util.*;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Input point on an element.
  * WireEnds connect to these.
- * 
+ *
  * @author David A. Poplawski
  */
-import org.jspecify.annotations.Nullable;
-
 public final class Input extends Put {
 
 	/**
 	 * Construct a new input point.
-	 * 
+	 *
 	 * @param name The name of the point.
 	 * @param element The element it is part of.
 	 * @param xr The x-coordinate of the center of the input relative to the upper left
@@ -25,19 +25,19 @@ public final class Input extends Put {
 	 */
 	public Input(@Nullable String name, @Nullable LogicElement element,
 			int xr, int yr, int bits) {
-		
+
 		super(name, element, xr, yr, bits);
 	} // end of constructor
-	
+
 	/**
 	 * Make a copy of this input.
-	 * 
+	 *
 	 * @param element The element this input will be part of.
-	 * 
+	 *
 	 * @return A copy.
 	 */
 	public Input copy(LogicElement element) {
-		
+
 		Input p = new Input(name,element,xr,yr,bits);
 		myCopy = p;
 		return p;
@@ -46,10 +46,10 @@ public final class Input extends Put {
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-			
+
 	/**
 	 * Set the value of this input.
-	 * 
+	 *
 	 * @param value The new value, or null for a high-impedance
 	 *            (tri-state) signal.
 	 *
@@ -60,10 +60,10 @@ public final class Input extends Put {
 
 		currentValue = value;
 	} // end of setValue method
-	
+
 	/**
 	 * Get the current value of this input.
-	 * 
+	 *
 	 * @return the current value, or null for a high-impedance
 	 *         (tri-state) signal.
 	 *

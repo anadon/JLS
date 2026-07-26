@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+
 import javax.crypto.AEADBadTagException;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The encrypted point-to-point channel a completed {@link Handshake}
@@ -174,7 +177,7 @@ public final class SecureLink {
 	 *             over-cap, the stream ends mid-frame, or the
 	 *             ciphertext fails authentication.
 	 */
-	public byte[] open(InputStream wire) throws FrameRejected {
+	public byte @Nullable [] open(InputStream wire) throws FrameRejected {
 
 		requireHealthy();
 		byte[] prefix = new byte[4];

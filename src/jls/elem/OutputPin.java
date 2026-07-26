@@ -1,22 +1,23 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.util.BitSet;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
+
 /**
  * Output pin of a subcircuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Create a new output pin.
-	 * 
+	 *
 	 * @param circ
 	 *            The circuit this pin will be in.
 	 */
@@ -25,15 +26,15 @@ public final class OutputPin extends Pin implements TriProp {
 		super(circ);
 		orientation = Orientation.RIGHT;
 	} // end of constructor
-	
+
 	/**
 	 * Return a string version of this element.
-	 * 
+	 *
 	 * @return the string.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return "OutputPin[" + super.toString() + "]";
 	} // end of toString method
 
@@ -49,12 +50,12 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Initialize internal info for this element. Most work done in superclass,
 	 * but input point added here.
-	 * 
+	 *
 	 * @param g
 	 *            The Graphics object used to compute the size of the name.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		super.init(g);
 		if (orientation == Orientation.RIGHT) {
@@ -70,7 +71,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output
 	 *            The output writer.
 	 */
@@ -80,7 +81,10 @@ public final class OutputPin extends Pin implements TriProp {
 		output.println("ELEMENT OutputPin");
 		if (getCircuit().isImported()) {
 			SubCircuit sub = getCircuit().getSubElement();
-			if (sub.getOutput(name).isTriState()) {
+			if (sub == null)
+				throw new IllegalStateException(
+						"imported output pin has no subcircuit element");
+			if (sub.getOutput(getName()).isTriState()) {
 				output.println(" int tristate 1");
 			}
 		}
@@ -93,7 +97,7 @@ public final class OutputPin extends Pin implements TriProp {
 	@Override
 	public Element copy() {
 
-		OutputPin it = new OutputPin(circuit);
+		OutputPin it = new OutputPin(getCircuit());
 		it.inputs.add(inputs.get(0).copy(it));
 		super.copy(it);
 		return it;
@@ -101,7 +105,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -110,7 +114,10 @@ public final class OutputPin extends Pin implements TriProp {
 		String value = ", value = " + BitSetUtils.toDisplay(currentValue, bits);
 		String tri = "";
 		if (inputs.get(0).isAttached()) {
-			if (inputs.get(0).getWireEnd().getNet().isTriState())
+			WireEnd end = inputs.get(0).getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached input has no wire end");
+			if (end.getNet().isTriState())
 				tri = " (tri-state) ";
 		}
 		return bits + " bit output pin" + tri + value;
@@ -119,7 +126,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * Set this pin as tristate or not. If part of a subcircuit, propagate
 	 * tristate status to output.
-	 * 
+	 *
 	 * @param which
 	 *            True to make this pin tristate, false to make it not.
 	 */
@@ -129,14 +136,17 @@ public final class OutputPin extends Pin implements TriProp {
 		if (!getCircuit().isImported())
 			return;
 		SubCircuit sub = getCircuit().getSubElement();
-		Output put = (Output) sub.getPut(name);
+		if (sub == null)
+			throw new IllegalStateException(
+					"imported output pin has no subcircuit element");
+		Output put = (Output) sub.getPut(getName());
 		if (put != null)
 			put.setTriState(which);
 	} // end of setTriState
 
 	/**
 	 * See if this element is tristate at load time.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	public boolean isLoadTriState() {
@@ -150,7 +160,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Initialize current value to 0 or null.
-	 * 
+	 *
 	 * @param sim
 	 *            Unused.
 	 */
@@ -160,6 +170,8 @@ public final class OutputPin extends Pin implements TriProp {
 		Input in = inputs.get(0);
 		if (in.isAttached()) {
 			WireEnd end = in.getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached input has no wire end");
 			if (end.isTriState()) {
 				currentValue = null;
 				return;
@@ -171,7 +183,7 @@ public final class OutputPin extends Pin implements TriProp {
 	/**
 	 * React to an event by sending the input value to the output pin in the
 	 * containing subcircuit element, unless this circuit is not a subcircuit.
-	 * 
+	 *
 	 * @param now
 	 *            The current simulation time.
 	 * @param sim
@@ -180,7 +192,7 @@ public final class OutputPin extends Pin implements TriProp {
 	 *            Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// send to output
 		Input in = inputs.get(0);
@@ -189,9 +201,12 @@ public final class OutputPin extends Pin implements TriProp {
 			currentValue = null;
 		else
 			currentValue = (BitSet) value.clone();
-		if (circuit.isImported()) {
-			SubCircuit sub = circuit.getSubElement(); // the subcircuit
+		if (getCircuit().isImported()) {
+			SubCircuit sub = getCircuit().getSubElement(); // the subcircuit
 														// element
+			if (sub == null)
+				throw new IllegalStateException(
+						"imported output pin has no subcircuit element");
 			sub.send(this, value, now, sim);
 		}
 
@@ -199,7 +214,7 @@ public final class OutputPin extends Pin implements TriProp {
 
 	/**
 	 * Display current value.
-	 * 
+	 *
 	 * @param whereX the x-coordinate on screen (unused here).
 	 * @param whereY the y-coordinate on screen (unused here).
 	 */

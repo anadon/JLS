@@ -7,8 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.core.Geometry;
-import jls.JLSInfo;
 import jls.hdl.layout.HeuristicLayeredLayouter;
 import jls.hdl.layout.LayoutException;
 import jls.hdl.layout.LayoutGraph;
@@ -121,8 +122,8 @@ public final class NetlistImporter {
 	 * @return the module to import, or null when there is not exactly
 	 * one importable top.
 	 */
-	private static YosysNetlist.Module selectModule(YosysNetlist netlist,
-			List<String> problems) {
+	private static YosysNetlist.@Nullable Module selectModule(
+			YosysNetlist netlist, List<String> problems) {
 
 		List<YosysNetlist.Module> all =
 				new ArrayList<YosysNetlist.Module>(
@@ -807,6 +808,10 @@ public final class NetlistImporter {
 			for (Elem elem : elems) {
 				idOf.put(elem.id, id);
 				LayoutResult.Point p = layout.position(elem.id);
+				if (p == null) {
+					throw new IllegalStateException(
+							"layout left element unplaced: " + elem.id);
+				}
 				out.append("ELEMENT ").append(elem.saveType).append('\n')
 						.append(" int id ").append(id).append('\n')
 						.append(" int x ").append(p.x).append('\n')
@@ -842,6 +847,11 @@ public final class NetlistImporter {
 			int[] nextId = {firstWireId};
 			for (LayoutGraph.Edge edge : edgeOrder) {
 				List<LayoutResult.Point> route = layout.route(edge);
+				if (route == null) {
+					throw new IllegalStateException(
+							"layout left edge unrouted: " + edge.sourceNode.id
+									+ " -> " + edge.targetNode.id);
+				}
 				WireEnd source = portEnd(ends, portEnds, edge.sourceNode.id,
 						edge.sourcePort.name, idOf, route.get(0), nextId);
 				WireEnd target = portEnd(ends, portEnds, edge.targetNode.id,
@@ -885,7 +895,13 @@ public final class NetlistImporter {
 				return existing;
 			}
 			WireEnd end = new WireEnd(nextId[0]++, at);
-			end.attachTo = idOf.get(nodeId);
+			Integer saveId = idOf.get(nodeId);
+			if (saveId == null) {
+				throw new IllegalStateException(
+						"routed wire end references element id '" + nodeId
+								+ "' that was not emitted");
+			}
+			end.attachTo = saveId;
 			end.putName = portName;
 			ends.add(end);
 			portEnds.put(key, end);
@@ -917,7 +933,7 @@ public final class NetlistImporter {
 			/** Element save id this end attaches to, or -1. */
 			private int attachTo = -1;
 			/** Attached put name, or null. */
-			private String putName;
+			private @Nullable String putName;
 			/** Neighbour ends (one wire each). */
 			private final List<WireEnd> wires = new ArrayList<WireEnd>();
 

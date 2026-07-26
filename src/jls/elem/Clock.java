@@ -1,21 +1,23 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.GridPoint;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
-
 import java.io.*;
 import java.util.BitSet;
 
+import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.core.GridPoint;
+import jls.core.Orientation;
+import jls.sim.*;
+
 /**
  * Clock element.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Clock extends LogicElement {
-	
+
 	// default values
 	/** The cycle time offered by the creation dialog's keypad. */
 	private static int defaultCycleTime = 2;
@@ -40,7 +42,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockCycleTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkCycleTime(int cycleTime) {
+	public static @Nullable String checkCycleTime(int cycleTime) {
 
 		return cycleTime < 1 ? CYCLE_CONSTRAINT : null;
 	} // end of checkCycleTime method
@@ -57,7 +59,7 @@ public final class Clock extends LogicElement {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#clockOneTimeRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkOneTime(int cycleTime, int oneTime) {
+	public static @Nullable String checkOneTime(int cycleTime, int oneTime) {
 
 		return (oneTime < 1 || oneTime >= cycleTime) ? ONE_CONSTRAINT : null;
 	} // end of checkOneTime method
@@ -127,7 +129,7 @@ public final class Clock extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (RIGHT), transformed to the current
 		// orientation (#24)
@@ -155,7 +157,7 @@ public final class Clock extends LogicElement {
 
 	/**
 	 * Save thiselement.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
@@ -290,35 +292,35 @@ public final class Clock extends LogicElement {
 	@Override
 	public Element copy() {
 
-		Clock it = new Clock(circuit);
+		Clock it = new Clock(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return "clock, cycle time = " + cycleTime +
 				" (zero for " + (cycleTime-oneTime) + ", one for " + oneTime + ")";
 	} // end of showInfo method
 
 	/**
 	 * Clock values can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * Tells if a clock is capable of rotatating, can only rotate when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
@@ -328,14 +330,14 @@ public final class Clock extends LogicElement {
 	{
 		return !outputs.get(0).isAttached();
 	}
-	
+
 	/**
 	 *  This method will rotate the clock if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -348,7 +350,7 @@ public final class Clock extends LogicElement {
 		outputs.remove(0);
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a clock is capable of flipping, can only flip when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
@@ -358,13 +360,13 @@ public final class Clock extends LogicElement {
 	{
 		return !outputs.get(0).isAttached();
 	}
-	
+
 	/**
 	 * This method will flip a clock
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -376,15 +378,15 @@ public final class Clock extends LogicElement {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set output pin
 		Output out = outputs.get(0);
 		BitSet zero = new BitSet(1);
@@ -392,24 +394,29 @@ public final class Clock extends LogicElement {
 		BitSet one = new BitSet();
 		one.flip(0);
 		sim.post(new SimEvent(cycleTime-oneTime,this,one));
-		
+
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
-		// send new value
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
+		// send new value; a Clock has no inputs, so it only ever
+		// reacts to its own posted value events (todo is never null)
 		BitSet send = (BitSet)todo;
+		if (send == null) {
+			throw new IllegalStateException(
+					"clock reacted without a value to output");
+		}
 		Output out = outputs.get(0);
 		out.propagate(send,now,sim);
-		
+
 		// post next event
 		BitSet next = (BitSet)send.clone();
 		next.flip(0);
@@ -418,7 +425,7 @@ public final class Clock extends LogicElement {
 			when = cycleTime - oneTime;
 		}
 		sim.post(new SimEvent(now+when,this,next));
-		
+
 	} // end of react method
-	
+
 } // end of Clock class

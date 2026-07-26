@@ -3,26 +3,26 @@ package jls.elem;
 import java.io.PrintWriter;
 import java.util.BitSet;
 
+import jls.Circuit;
 import jls.core.Geometry;
 import jls.core.Orientation;
-import jls.Circuit;
 import jls.sim.Simulator;
 
 /**
  * Bind multiple input wires (or bundles) into a single bundle.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Binder extends Group implements TriProp {
-	
-	
+
+
 	/**
 	 * Create a new binder element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Binder(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
 
@@ -32,11 +32,11 @@ public final class Binder extends Group implements TriProp {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
-		
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
+
 		// set up height and width
 		super.init(g);
-		
+
 		// set up inputs
 		int s = Geometry.SPACING;
 		if(orientation == Orientation.RIGHT)
@@ -46,7 +46,7 @@ public final class Binder extends Group implements TriProp {
 				inputs.add(new Input(e.toCircuitString(), this, 0, ypos, e.getSize()));
 				ypos += s;
 			}
-		
+
 			// set up output
 			outputs.add(new Output("output",this,width,((ranges.size()-1)/2+1)*s,bits));
 			if (loadTriState) {
@@ -60,7 +60,7 @@ public final class Binder extends Group implements TriProp {
 				inputs.add(new Input(e.toCircuitString(), this, width, ypos, e.getSize()));
 				ypos += s;
 			}
-			
+
 			// set up output
 			outputs.add(new Output("output",this,0,((ranges.size()-1)/2+1)*s,bits));
 			if (loadTriState) {
@@ -96,33 +96,33 @@ public final class Binder extends Group implements TriProp {
 			}
 		}
 	} // end of init method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	@Override
 	public Element copy() {
-		
-		Binder it = new Binder(circuit);
+
+		Binder it = new Binder(getCircuit());
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Binder");
 		super.save(output);
 	} // end of save method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -130,28 +130,33 @@ public final class Binder extends Group implements TriProp {
 
 		return "bundle " + bits + " bits";
 	} // end of showInfo method
-	
+
 	/**
 	 * Set this element to tri-state or not.
 	 * Output will be tri-state if and only if all attached inputs are.
 	 * Don't propagate if no change.
-	 * 
+	 *
 	 * @param which True to set to tri-state, false otherwise.
 	 */
 	@Override
 	public void setTriState(boolean which) {
-		
+
 		// save current state
 		boolean saveState = this.triState;
-		
+
 		// see if all attached inputs are tri-state
 		int tri = 0;
 		for (Input input : inputs) {
-			if (input.isAttached() && input.getWireEnd().isTriState()) {
-				tri += 1;
+			if (input.isAttached()) {
+				WireEnd end = input.getWireEnd();
+				if (end == null)
+					throw new IllegalStateException("attached input has no wire end");
+				if (end.isTriState()) {
+					tri += 1;
+				}
 			}
 		}
-		
+
 		// set tri-state if all inputs are tri-state
 		int numInputs = inputs.size();
 		if (numInputs > 0 && numInputs == tri) {
@@ -160,53 +165,53 @@ public final class Binder extends Group implements TriProp {
 		else {
 			triState = false;
 		}
-		
+
 		// don't propagate if no change
 		if (triState == saveState)
 			return;
-		
+
 		// propagate to outputs
 		for (Output out : outputs) {
 			out.setTriState(triState);
 		}
 	} // end of setTriState method
-	
-	
+
+
 	/**
 	 *  This method will rotate the binder if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.rotate(direction, g);
 		init(g);
 	}
-	
+
 	/**
 	 * This method will flip a binder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		super.flip(g);
 		init(g);
 	}
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize this element by setting its output to 0 or null.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		Output out = outputs.get(0);
 		BitSet value = null;
 		if (!out.isTriState()) {
@@ -215,26 +220,26 @@ public final class Binder extends Group implements TriProp {
 		outputs.get(0).setValue(value);
 
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
 		// create output value
 		BitSet newValue = new BitSet(bits);
-		
+
 		// get the input values and set bits in the output value
 		int inNum = 0;
 		boolean allOff = true;
 		for (Entry e : ranges) {
 			BitSet value = inputs.get(inNum).getValue();
-			
+
 			// make a tristate off be a 0
 			if (value == null) {
 				value = new BitSet();
@@ -250,7 +255,7 @@ public final class Binder extends Group implements TriProp {
 			}
 			inNum += 1;
 		}
-		
+
 		// send value to output
 		if (allOff) {
 			outputs.get(0).propagate(null,now,sim);
@@ -258,7 +263,7 @@ public final class Binder extends Group implements TriProp {
 		else {
 			outputs.get(0).propagate(newValue,now,sim);
 		}
-		
+
 	} // end of react method
-	
+
 } // end of Binder class

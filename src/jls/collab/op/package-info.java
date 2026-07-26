@@ -18,5 +18,12 @@
  * (issue #170). No class here may depend on Swing; the architecture
  * rules enforce that layering. The migration inventory and status live
  * in {@code docs/operation-layer.md}.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.collab.op;
+
+import org.jspecify.annotations.NullMarked;

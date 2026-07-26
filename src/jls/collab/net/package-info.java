@@ -47,5 +47,12 @@
  * and handshake parsing both follow the #38 hostile-input discipline:
  * length caps checked before allocation, typed rejections, never
  * repair.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.collab.net;
+
+import org.jspecify.annotations.NullMarked;

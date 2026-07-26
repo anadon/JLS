@@ -1,14 +1,13 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
-
 import java.io.*;
-
 import java.math.*;
 import java.util.*;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * Constant output value.
@@ -16,13 +15,13 @@ import java.util.*;
  * @author David A. Poplawski
  */
 public final class Constant extends LogicElement {
-	
+
 	// named constants
 	/** Default constant value. */
 	private static final BigInteger defaultValue = BigInteger.ZERO;
 	/** Default display radix. */
 	private static final int defaultBase = 10;
-	
+
 	// saved properties
 	/** The value this constant outputs. */
 	private BigInteger value = defaultValue;
@@ -30,7 +29,7 @@ public final class Constant extends LogicElement {
 	private int base = defaultBase;
 	/** Which way this constant faces. */
 	private Orientation orientation = Orientation.RIGHT;
-	
+
 	// running properties
 	/** Value of the previously created constant. */
 	private static BigInteger previousValue = defaultValue;
@@ -56,7 +55,7 @@ public final class Constant extends LogicElement {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		int s = Geometry.SPACING;
 		// set up size if there is a graphics object
@@ -76,7 +75,7 @@ public final class Constant extends LogicElement {
 					height = 2*s;
 				}
 			}
-			
+
 		}
 		// create output
 		if(orientation == Orientation.LEFT)
@@ -187,21 +186,21 @@ public final class Constant extends LogicElement {
 	 */
 	@Override
 	public Element copy() {
-		
-		Constant it = new Constant(circuit);
+
+		Constant it = new Constant(getCircuit());
 		it.outputs.add(outputs.get(0).copy(it));
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Constant");
 		super.save(output);
 		output.println("END");
@@ -321,7 +320,7 @@ public final class Constant extends LogicElement {
 		previousBase = base;
 		previousOrientation = orientation;
 	} // end of saveAsPrevious method
-	
+
 	/**
 	 * Tells if a constant is capable of rotatating, can only rotate when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
@@ -331,19 +330,19 @@ public final class Constant extends LogicElement {
 	{
 		return !outputs.get(0).isAttached();
 	}
-	
+
 	/**
 	 *  This method will rotate the constant if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
-			
+
 		}
 		else if(direction == Orientation.RIGHT)
 		{
@@ -354,7 +353,7 @@ public final class Constant extends LogicElement {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a constant is capable of flipping, can only flip when output has no attachment.
 	 * @return False if output has a wire attached, True otherwise
@@ -364,13 +363,13 @@ public final class Constant extends LogicElement {
 	{
 		return !outputs.get(0).isAttached();
 	}
-	
+
 	/**
 	 * This method will flip a constant
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		outputs.clear();
@@ -414,23 +413,23 @@ public final class Constant extends LogicElement {
 
 	/**
 	 * Constants can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * This element has a quick change ability.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean quickChange() {
-		
+
 		return true;
 	} // end of quickChange method
 	/**
@@ -451,55 +450,63 @@ public final class Constant extends LogicElement {
 		value = value.subtract(BigInteger.ONE);
 		value = value.max(BigInteger.ZERO);
 	} // end of decrementValue method
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize this element by generating an output and sending it.
-	 * 
+	 *
 	 * @param sim The simulator to post events to.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// create value
 		BitSet bitval = BitSetUtils.Create(value);
-		
+
 		// set output so propagate will work
 		BitSet opposite = (BitSet)bitval.clone();
 		opposite.flip(0);	// at least one bit different
 		Output out = outputs.get(0);
 		out.setValue(opposite);
-		
+
 		// post output event
 		sim.post(new SimEvent(0,this,bitval));
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
-		// get the new output value
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
+		// get the new output value; a Constant has no inputs, so it only
+		// ever reacts to its own posted value events (todo is never null)
 		BitSet newValue = (BitSet)todo;
-		
+		if (newValue == null) {
+			throw new IllegalStateException(
+					"constant reacted without a value to output");
+		}
+
 		// send correct number of bits to output
 		Output out = (Output)(outputs.toArray()[0]);
 		if (!out.isAttached())
 			return;
-		int bits = out.getWireEnd().getBits();
+		WireEnd end = out.getWireEnd();
+		if (end == null)
+			throw new IllegalStateException("attached output has no wire end");
+		int bits = end.getBits();
 		BitSet mask = new BitSet(bits);
 		mask.set(0,bits);
 		newValue.and(mask);
 		out.propagate(newValue,now,sim);
-		
+
 	} // end of react method
-	
+
 } // end of Constant class

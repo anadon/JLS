@@ -4,14 +4,16 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import jls.core.GridPoint;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.JLSInfo;
 import jls.core.Geometry;
+import jls.core.GridPoint;
 import jls.elem.SMUtil;
 import jls.elem.State;
 import jls.elem.State.Transition;
@@ -63,16 +65,21 @@ public final class StateRenderer {
 			if (tr.points.isEmpty()) {
 
 				// draw line from start state edge to end state edge
-				int w = tr.nextState.getX() - x;
-				int h = y - tr.nextState.getY();
+				State ns = tr.nextState;
+				if (ns == null) {
+					throw new IllegalStateException(
+							"drawing a transition whose next state is not linked");
+				}
+				int w = ns.getX() - x;
+				int h = y - ns.getY();
 				double dist = Math.sqrt(w*w+h*h);
 				int dxf = (int)Math.rint(w*r/dist); // start edge
 				int dyf = (int)Math.rint(h*r/dist);
-				int or = tr.nextState.getDiameter()/2;
+				int or = ns.getDiameter()/2;
 				int dxt = (int)Math.rint(w*or/dist);
 				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.getX()-dxt;	// end edge
-				int endy = tr.nextState.getY()+dyt;
+				int endx = ns.getX()-dxt;	// end edge
+				int endy = ns.getY()+dyt;
 				g.setColor(color);
 				g.drawLine(x+dxf,y-dyf,endx,endy);
 
@@ -117,14 +124,19 @@ public final class StateRenderer {
 				}
 
 				// draw last segment
-				w = tr.nextState.getX() - px;
-				h = py - tr.nextState.getY();
+				State ns = tr.nextState;
+				if (ns == null) {
+					throw new IllegalStateException(
+							"drawing a transition whose next state is not linked");
+				}
+				w = ns.getX() - px;
+				h = py - ns.getY();
 				dist = Math.sqrt(w*w+h*h);
-				int or = tr.nextState.getDiameter()/2;
+				int or = ns.getDiameter()/2;
 				int dxt = (int)Math.rint(w*or/dist);
 				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.getX()-dxt;	// end edge
-				int endy = tr.nextState.getY()+dyt;
+				int endx = ns.getX()-dxt;	// end edge
+				int endy = ns.getY()+dyt;
 				g.drawLine(px,py,endx,endy);
 
 				// draw arrow
@@ -238,7 +250,7 @@ public final class StateRenderer {
 	 *
 	 * @return The bounds.
 	 */
-	public static Rectangle getBounds(Graphics g, State state) {
+	public static Rectangle getBounds(@Nullable Graphics g, State state) {
 
 		// add circle to bounds
 		int x = state.getX();
@@ -259,16 +271,21 @@ public final class StateRenderer {
 			if (tr.points.isEmpty()) {
 
 				// direct
-				int w = tr.nextState.getX() - x;
-				int h = y - tr.nextState.getY();
+				State ns = tr.nextState;
+				if (ns == null) {
+					throw new IllegalStateException(
+							"bounding a transition whose next state is not linked");
+				}
+				int w = ns.getX() - x;
+				int h = y - ns.getY();
 				double dist = Math.sqrt(w*w+h*h);
 				int dxf = (int)Math.rint(w*r/dist); // start edge
 				int dyf = (int)Math.rint(h*r/dist);
-				int or = tr.nextState.getDiameter()/2;
+				int or = ns.getDiameter()/2;
 				int dxt = (int)Math.rint(w*or/dist);
 				int dyt = (int)Math.rint(h*or/dist);
-				int endx = tr.nextState.getX()-dxt;	// end edge
-				int endy = tr.nextState.getY()+dyt;
+				int endx = ns.getX()-dxt;	// end edge
+				int endy = ns.getY()+dyt;
 				double angle = SMUtil.getAngle(w,h);
 				int midx = (x+dxf+endx)/2;
 				int midy = (y-dyf+endy)/2;
@@ -307,7 +324,7 @@ public final class StateRenderer {
 	 * @return The bounds of the condition on this transition.
 	 */
 	public static Rectangle boundCond(Transition trans, int x, int y,
-			double angle, Graphics g) {
+			double angle, @Nullable Graphics g) {
 
 		if (g == null) {
 			return new Rectangle(x,y,0,0);

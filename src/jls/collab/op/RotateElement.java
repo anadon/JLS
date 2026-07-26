@@ -1,12 +1,11 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
-import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 
-import jls.core.Orientation;
 import jls.Circuit;
-import jls.JLSInfo;
+import jls.core.Orientation;
+import jls.edit.SwingTextMetrics;
 import jls.elem.Element;
 import jls.elem.ElementId;
 

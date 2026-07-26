@@ -1,17 +1,20 @@
 package jls.elem;
 
+import java.io.PrintWriter;
+import java.util.BitSet;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.*;
 import jls.core.Geometry;
 import jls.core.GridPoint;
 import jls.core.GridSize;
 import jls.core.Orientation;
-import jls.*;
 import jls.sim.*;
-import java.io.PrintWriter;
-import java.util.BitSet;
 
 /**
  * Multiplexor.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Mux extends LogicElement implements Timed {
@@ -116,7 +119,7 @@ public final class Mux extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
 		// output orientation (#24); the selector side is independent of
@@ -324,7 +327,7 @@ public final class Mux extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		Mux it = new Mux(circuit);
+		Mux it = new Mux(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -337,23 +340,23 @@ public final class Mux extends LogicElement implements Timed {
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return numInputs + " input, " + bits + " bit multiplexor";
 	} // end of showInfo method
 
 	/**
 	 * Multiplexors have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -362,32 +365,32 @@ public final class Mux extends LogicElement implements Timed {
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 * Tells if a mux is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -414,13 +417,13 @@ public final class Mux extends LogicElement implements Timed {
 		}
 		return success;
 	}
-	
+
 	/**
 	 * This method will flip a mux's selector
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		selectorOrientation = selectorOrientation.flipped();
 		inputs.clear();
@@ -429,14 +432,14 @@ public final class Mux extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 *  This method will rotate the mux if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -454,7 +457,7 @@ public final class Mux extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a mux is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -486,45 +489,48 @@ public final class Mux extends LogicElement implements Timed {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
-	/** The value scheduled to reach the output, to suppress redundant events. */
-	private BitSet toBeValue;
-	
+
+	/**
+	 * The value scheduled to reach the output, to suppress redundant events.
+	 * Null before {@link #initSim(Simulator)} seeds it at simulation start.
+	 */
+	private @Nullable BitSet toBeValue;
+
 	/**
 	 * Initialize this element by setting its output and to-be value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set outputs to 0
 		BitSet zero = new BitSet(1);
 		outputs.get(0).setValue(zero);
-		
+
 		// set to-be value
 		toBeValue = (BitSet)zero.clone();
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Null if an input change, the new output value otherwise.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
 		// if an input has changed ...
 		if (todo == null) {
-			
+
 			// get the selector input
 			BitSet bw = inputs.get(0).getValue();
 			if (bw == null)
 				bw = new BitSet();
 			int which = BitSetUtils.ToInt(bw);
-			
+
 			// get the selected input
 			BitSet newValue;
 			if (which >= numInputs) {
@@ -535,7 +541,7 @@ public final class Mux extends LogicElement implements Timed {
 				if (newValue == null)
 					newValue = new BitSet();
 			}
-	
+
 			// if new value is different from the value propagating through
 			// the mux, then post an event
 			if (!newValue.equals(toBeValue)) {
@@ -544,15 +550,15 @@ public final class Mux extends LogicElement implements Timed {
 			}
 		}
 		else {
-			
+
 			// get the new output value
 			BitSet value = (BitSet)todo;
-			
+
 			// send to output
 			Output sumOut = outputs.get(0);
 			sumOut.propagate(value,now,sim);
 		}
-		
+
 	} // end of react method
 
 } // end of Mux class

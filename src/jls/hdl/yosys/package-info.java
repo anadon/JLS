@@ -20,5 +20,12 @@
  * library, the cell-to-element mapper with its Splitter/Binder mesh,
  * layout (issue #62), and the {@code File → Import} wiring. Like the
  * rest of {@code jls.hdl}, everything here is headless.
+ *
+ * <p>Null-marked (issue #93): every reference in this package is
+ * non-null unless annotated { }, and NullAway enforces
+ * the contract at compile time on the default build.</p>
  */
+@NullMarked
 package jls.hdl.yosys;
+
+import org.jspecify.annotations.NullMarked;

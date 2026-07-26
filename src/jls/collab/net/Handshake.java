@@ -14,8 +14,12 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Objects;
+
 import javax.crypto.AEADBadTagException;
 import javax.crypto.KeyAgreement;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The mutually authenticated key exchange between two JLS installs
@@ -138,31 +142,31 @@ public final class Handshake {
 	private State state;
 
 	/** The session id (minted by the responder, learned in m2). */
-	private byte[] sessionId;
+	private byte @Nullable [] sessionId;
 
 	/** The X25519 shared secret, once both ephemerals are known. */
-	private byte[] sharedSecret;
+	private byte @Nullable [] sharedSecret;
 
 	/** The responder-direction handshake encryption key. */
-	private byte[] responderHandshakeKey;
+	private byte @Nullable [] responderHandshakeKey;
 
 	/** The initiator-direction handshake encryption key. */
-	private byte[] initiatorHandshakeKey;
+	private byte @Nullable [] initiatorHandshakeKey;
 
 	/** The responder's finished-MAC key. */
-	private byte[] responderFinishedKey;
+	private byte @Nullable [] responderFinishedKey;
 
 	/** The initiator's finished-MAC key. */
-	private byte[] initiatorFinishedKey;
+	private byte @Nullable [] initiatorFinishedKey;
 
 	/** The peer's long-term public key, once authenticated. */
-	private PublicKey peerIdentity;
+	private @Nullable PublicKey peerIdentity;
 
 	/** The peer's display name, once authenticated. */
-	private String peerName;
+	private @Nullable String peerName;
 
 	/** The completed link, once the exchange finishes. */
-	private SecureLink link;
+	private @Nullable SecureLink link;
 
 	/**
 	 * Create a handshake in its starting state.
@@ -288,7 +292,11 @@ public final class Handshake {
 			deriveHandshakeKeys();
 
 			byte[] auth = buildAuth(false);
-			byte[] ciphertext = Crypto.aeadSeal(responderHandshakeKey,
+			byte[] handshakeKey = Objects.requireNonNull(
+					responderHandshakeKey,
+					"responder handshake key unset after"
+					+ " deriveHandshakeKeys in acceptFirst");
+			byte[] ciphertext = Crypto.aeadSeal(handshakeKey,
 					0, aad("m2"), auth);
 			ByteBuffer m2 = ByteBuffer.allocate(clearPart.length + 2
 					+ ciphertext.length);
@@ -344,13 +352,20 @@ public final class Handshake {
 			computeShared(peerEphemeralDer);
 			deriveHandshakeKeys();
 
-			byte[] auth = openAuth(responderHandshakeKey, "m2",
-					ciphertext);
+			byte[] responderKey = Objects.requireNonNull(
+					responderHandshakeKey,
+					"responder handshake key unset after"
+					+ " deriveHandshakeKeys in acceptReply");
+			byte[] auth = openAuth(responderKey, "m2", ciphertext);
 			verifyAuth(auth, false);
 
 			byte[] finish = buildAuth(true);
+			byte[] initiatorKey = Objects.requireNonNull(
+					initiatorHandshakeKey,
+					"initiator handshake key unset after"
+					+ " deriveHandshakeKeys in acceptReply");
 			byte[] finishCiphertext = Crypto.aeadSeal(
-					initiatorHandshakeKey, 0, aad("m3"), finish);
+					initiatorKey, 0, aad("m3"), finish);
 			ByteBuffer m3 = ByteBuffer.allocate(2
 					+ finishCiphertext.length);
 			m3.putShort((short) finishCiphertext.length);
@@ -382,8 +397,11 @@ public final class Handshake {
 			byte[] ciphertext = lengthPrefixed(finish,
 					maxAuthCiphertext(), "m3", "encrypted part");
 			requireEmpty(finish, "m3");
-			byte[] auth = openAuth(initiatorHandshakeKey, "m3",
-					ciphertext);
+			byte[] initiatorKey = Objects.requireNonNull(
+					initiatorHandshakeKey,
+					"initiator handshake key unset in state"
+					+ " RESPONDER_SENT_REPLY in acceptFinish");
+			byte[] auth = openAuth(initiatorKey, "m3", ciphertext);
 			verifyAuth(auth, true);
 			completeLink();
 		} catch (HandshakeRejected rejected) {
@@ -403,7 +421,8 @@ public final class Handshake {
 	public SecureLink link() {
 
 		requireState(State.COMPLETE);
-		return link;
+		return Objects.requireNonNull(link,
+				"link unset in state COMPLETE");
 	} // end of link method
 
 	/**
@@ -426,9 +445,11 @@ public final class Handshake {
 		byte[] signature = identity.sign(
 				signaturePayload(asInitiator, transcriptHash()));
 		transcript.writeBytes(signature);
-		byte[] finished = Crypto.hmac(asInitiator
-				? initiatorFinishedKey : responderFinishedKey,
-				transcriptHash());
+		byte[] finishedKey = Objects.requireNonNull(
+				asInitiator ? initiatorFinishedKey : responderFinishedKey,
+				"finished-MAC key unset after deriveHandshakeKeys"
+				+ " in buildAuth");
+		byte[] finished = Crypto.hmac(finishedKey, transcriptHash());
 		transcript.writeBytes(finished);
 		ByteBuffer auth = ByteBuffer.allocate(2 + identityDer.length
 				+ 2 + name.length + SIGNATURE_BYTES + FINISHED_BYTES);
@@ -508,9 +529,11 @@ public final class Handshake {
 					+ " claimed key is wrong");
 		}
 		transcript.writeBytes(signature);
-		byte[] expected = Crypto.hmac(fromInitiator
-				? initiatorFinishedKey : responderFinishedKey,
-				transcriptHash());
+		byte[] finishedKey = Objects.requireNonNull(
+				fromInitiator ? initiatorFinishedKey : responderFinishedKey,
+				"finished-MAC key unset after deriveHandshakeKeys"
+				+ " in verifyAuth");
+		byte[] expected = Crypto.hmac(finishedKey, transcriptHash());
 		if (!MessageDigest.isEqual(expected, finished)) {
 			throw new HandshakeRejected("the finished MAC in " + which
 					+ " does not match - key confirmation failed");
@@ -527,19 +550,36 @@ public final class Handshake {
 	private void completeLink() {
 
 		byte[] finalHash = transcriptHash();
-		byte[] initiatorToResponder = Crypto.hkdf(sharedSecret,
+		byte[] secret = sharedSecret;
+		if (secret == null) {
+			throw new IllegalStateException(
+					"shared secret unset before completeLink");
+		}
+		byte[] sid = sessionId;
+		if (sid == null) {
+			throw new IllegalStateException(
+					"session id unset before completeLink");
+		}
+		PublicKey peerKey = peerIdentity;
+		String peer = peerName;
+		if (peerKey == null || peer == null) {
+			throw new IllegalStateException(
+					"peer identity unset before completeLink"
+					+ " - verifyAuth must run first");
+		}
+		byte[] initiatorToResponder = Crypto.hkdf(secret,
 				"app i2r", SALT, finalHash, Crypto.KEY_BYTES);
-		byte[] responderToInitiator = Crypto.hkdf(sharedSecret,
+		byte[] responderToInitiator = Crypto.hkdf(secret,
 				"app r2i", SALT, finalHash, Crypto.KEY_BYTES);
-		byte[] sasSecret = Crypto.hkdf(sharedSecret, "sas", SALT,
+		byte[] sasSecret = Crypto.hkdf(secret, "sas", SALT,
 				finalHash, 8);
 		link = new SecureLink(
 				initiator ? initiatorToResponder : responderToInitiator,
 				initiator ? responderToInitiator : initiatorToResponder,
 				Sas.fromSecret(sasSecret),
-				Crypto.hex(sessionId),
-				IdentityKey.fingerprintOf(peerIdentity.getEncoded()),
-				peerName);
+				Crypto.hex(sid),
+				IdentityKey.fingerprintOf(peerKey.getEncoded()),
+				peer);
 		state = State.COMPLETE;
 	} // end of completeLink method
 
@@ -580,13 +620,19 @@ public final class Handshake {
 	private void deriveHandshakeKeys() {
 
 		byte[] helloHash = transcriptHash();
-		responderHandshakeKey = Crypto.hkdf(sharedSecret, "hs resp",
+		byte[] secret = sharedSecret;
+		if (secret == null) {
+			throw new IllegalStateException(
+					"shared secret unset before deriveHandshakeKeys"
+					+ " - computeShared must run first");
+		}
+		responderHandshakeKey = Crypto.hkdf(secret, "hs resp",
 				SALT, helloHash, Crypto.KEY_BYTES);
-		initiatorHandshakeKey = Crypto.hkdf(sharedSecret, "hs init",
+		initiatorHandshakeKey = Crypto.hkdf(secret, "hs init",
 				SALT, helloHash, Crypto.KEY_BYTES);
-		responderFinishedKey = Crypto.hkdf(sharedSecret, "fin resp",
+		responderFinishedKey = Crypto.hkdf(secret, "fin resp",
 				SALT, helloHash, Crypto.KEY_BYTES);
-		initiatorFinishedKey = Crypto.hkdf(sharedSecret, "fin init",
+		initiatorFinishedKey = Crypto.hkdf(secret, "fin init",
 				SALT, helloHash, Crypto.KEY_BYTES);
 	} // end of deriveHandshakeKeys method
 

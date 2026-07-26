@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Renders an {@link HdlModel} as VHDL (issue #60), accepted by both
  * VHDL-93 and VHDL-2002 analyzers: one entity plus one structural/
@@ -386,7 +388,11 @@ public final class VhdlEmitter implements HdlEmitter {
 				.append(type(s.bits)).append(" := ")
 				.append(literal(s.initial, s.bits)).append(";\n");
 		if (s.clock.isNet()) {
-			String clock = names.of(s.clock.netName());
+			var clockNet = s.clock.netName();
+			if (clockNet == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			String clock = names.of(clockNet);
 			switch (s.kind) {
 			case POS_EDGE:
 				process(body, clock, null,
@@ -399,8 +405,16 @@ public final class VhdlEmitter implements HdlEmitter {
 						reg + " <= " + operand(s.d, names) + ";");
 				break;
 			default: // LATCH: transparent while the clock is 1
-				process(body, clock,
-						s.d.isNet() ? names.of(s.d.netName()) : null,
+				@Nullable String latchData = null;
+				if (s.d.isNet()) {
+					var dNet = s.d.netName();
+					if (dNet == null) {
+						throw new IllegalStateException(
+								"net operand has null name");
+					}
+					latchData = names.of(dNet);
+				}
+				process(body, clock, latchData,
 						"if " + clock + " = '1' then",
 						reg + " <= " + operand(s.d, names) + ";");
 				break;
@@ -426,8 +440,8 @@ public final class VhdlEmitter implements HdlEmitter {
 	 * @param condition the {@code if ... then} guard line
 	 * @param assignment the guarded state assignment
 	 */
-	private static void process(StringBuilder out, String clock, String data,
-			String condition, String assignment) {
+	private static void process(StringBuilder out, String clock,
+			@Nullable String data, String condition, String assignment) {
 
 		out.append("  process (").append(clock);
 		if (data != null) {
@@ -513,10 +527,17 @@ public final class VhdlEmitter implements HdlEmitter {
 			int hi, Names names) {
 
 		if (s.source.isNet()) {
-			return select(names.of(s.source.netName()), s.source.bits(), lo,
-					hi);
+			var name = s.source.netName();
+			if (name == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			return select(names.of(name), s.source.bits(), lo, hi);
 		}
-		BigInteger slice = s.source.literalValue().shiftRight(lo);
+		var value = s.source.literalValue();
+		if (value == null) {
+			throw new IllegalStateException("literal operand has null value");
+		}
+		BigInteger slice = value.shiftRight(lo);
 		return literal(slice, hi - lo + 1);
 	} // end of sourceSelect method
 
@@ -553,8 +574,18 @@ public final class VhdlEmitter implements HdlEmitter {
 	 */
 	private static String operand(HdlModel.Operand o, Names names) {
 
-		return o.isNet() ? names.of(o.netName())
-				: literal(o.literalValue(), o.bits());
+		if (o.isNet()) {
+			var name = o.netName();
+			if (name == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			return names.of(name);
+		}
+		var value = o.literalValue();
+		if (value == null) {
+			throw new IllegalStateException("literal operand has null value");
+		}
+		return literal(value, o.bits());
 	} // end of operand method
 
 	/**
@@ -566,14 +597,22 @@ public final class VhdlEmitter implements HdlEmitter {
 	private static String unsigned(HdlModel.Operand o, Names names) {
 
 		if (!o.isNet()) {
-			return "unsigned'(\"" + bitString(o.literalValue(), o.bits())
-					+ "\")";
+			var value = o.literalValue();
+			if (value == null) {
+				throw new IllegalStateException(
+						"literal operand has null value");
+			}
+			return "unsigned'(\"" + bitString(value, o.bits()) + "\")";
+		}
+		var name = o.netName();
+		if (name == null) {
+			throw new IllegalStateException("net operand has null name");
 		}
 		if (o.bits() > 1) {
-			return "unsigned(" + names.of(o.netName()) + ")";
+			return "unsigned(" + names.of(name) + ")";
 		}
 		// a qualified single-element aggregate lifts the scalar
-		return "unsigned'(0 => " + names.of(o.netName()) + ")";
+		return "unsigned'(0 => " + names.of(name) + ")";
 	} // end of unsigned method
 
 	/**

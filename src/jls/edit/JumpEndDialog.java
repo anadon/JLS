@@ -22,6 +22,7 @@ import jls.elem.Element;
 import jls.elem.Input;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
+import jls.elem.WireEnd;
 import jls.util.Placement;
 
 /**
@@ -63,9 +64,13 @@ public final class JumpEndDialog implements ElementDialog {
 			cancelled = form.cancelled;
 		}
 		else {
-			end.setBits(circuit.getJumpStart(end.getName()).getBits());
-			if(circuit.getJumpStart(end.getName()).getOrientation()
-					== Orientation.LEFT)
+			JumpStart preset = circuit.getJumpStart(end.getName());
+			if (preset == null) {
+				throw new IllegalStateException(
+						"no jump start named " + end.getName());
+			}
+			end.setBits(preset.getBits());
+			if (preset.getOrientation() == Orientation.LEFT)
 				end.setOrientation(Orientation.RIGHT);
 			else
 				end.setOrientation(Orientation.LEFT);
@@ -80,9 +85,19 @@ public final class JumpEndDialog implements ElementDialog {
 
 		// set tri-state status
 		JumpStart start = circuit.getJumpStart(end.getName());
+		if (start == null) {
+			throw new IllegalStateException(
+					"no jump start named " + end.getName());
+		}
 		Input in = start.getInput("input");
 		if (in.isAttached()) {
-			if (in.getWireEnd().getNet().isTriState()) {
+			// isAttached() guarantees a non-null wire end
+			WireEnd wireEnd = in.getWireEnd();
+			if (wireEnd == null) {
+				throw new IllegalStateException(
+						"attached input has no wire end");
+			}
+			if (wireEnd.getNet().isTriState()) {
 				end.setTriState(true);
 			}
 		}
@@ -179,7 +194,12 @@ public final class JumpEndDialog implements ElementDialog {
 			}
 			String name = (String)starts.getSelectedValue();
 			end.setName(name);
-			end.setBits(circuit.getJumpStart(name).getBits());
+			JumpStart jumpStart = circuit.getJumpStart(name);
+			if (jumpStart == null) {
+				throw new IllegalStateException(
+						"no jump start named " + name);
+			}
+			end.setBits(jumpStart.getBits());
 			if (right.isSelected()) {
 				end.setOrientation(Orientation.RIGHT);
 			}

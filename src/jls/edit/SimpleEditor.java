@@ -12,9 +12,9 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -42,8 +42,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -60,7 +60,8 @@ import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 
-import jls.core.Geometry;
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.FileAbstractor;
 import jls.JLSInfo;
@@ -76,6 +77,7 @@ import jls.collab.op.OpSink;
 import jls.collab.op.RemoveProbe;
 import jls.collab.op.RotateElement;
 import jls.collab.op.ToggleWatched;
+import jls.core.Geometry;
 import jls.elem.Adder;
 import jls.elem.AndGate;
 import jls.elem.Binder;
@@ -116,11 +118,12 @@ import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
 import jls.elem.XorGate;
+import jls.sim.Simulator;
 
 /**
  * Main circuit editing class.
  * Sets up and manages GUI.
- * 
+ *
  * @author David A. Poplawski
  */
 @SuppressWarnings("serial")
@@ -304,7 +307,10 @@ public abstract class SimpleEditor extends JPanel {
 		boolean norm = false;
 		for (Put p : put.getElement().getAllPuts()) {
 			if (p.isAttached()) {
-				if (p.getWireEnd().isTriState())
+				WireEnd pe = p.getWireEnd();
+				if (pe == null)
+					throw new IllegalStateException("attached put has no wire end");
+				if (pe.isTriState())
 					tri = true;
 				else
 					norm = true;
@@ -393,7 +399,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Create new editor.
-	 * 
+	 *
 	 * @param parent The tabbed pane this editor is in.
 	 * @param circuit The circuit it will edit.
 	 * @param name The name of the circuit.
@@ -470,7 +476,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Get the circuit being editted by this editor.
-	 * 
+	 *
 	 * @return the circuit.
 	 * @jls.testedby jls.ui.EditorGestureSupport#currentCircuit()
 	 */
@@ -481,7 +487,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Add a circuit to the import menu.
-	 * 
+	 *
 	 * @param subCirc The circuit to add.
 	 */
 	public void addToImportMenu(Circuit subCirc) {
@@ -545,6 +551,9 @@ public abstract class SimpleEditor extends JPanel {
 	public void changeInImportMenu(String oldname, String newname) {
 
 		JMenuItem item = menuMap.get(oldname);
+		Circuit newCircuit = circMap.get(oldname);
+		if (item == null || newCircuit == null)
+			return;
 		item.setText(newname);
 		menuMap.remove(oldname);
 		menuMap.put(newname,item);
@@ -562,14 +571,13 @@ public abstract class SimpleEditor extends JPanel {
 		};
 		item.setAction(act);
 
-		Circuit newCircuit = circMap.get(oldname);
 		circMap.remove(oldname);
 		circMap.put(newname,newCircuit);
 	} // end of changeInImportMenu method
 
 	/**
 	 * Set the size of the circuit drawing area.
-	 * 
+	 *
 	 * @param size The size.
 	 */
 	public void setCircuitSize(Dimension size) {
@@ -625,7 +633,7 @@ public abstract class SimpleEditor extends JPanel {
 	 *
 	 * @return a copy of the caret point, or null when the caret is unset.
 	 */
-	public Point keyboardCaret() {
+	public @Nullable Point keyboardCaret() {
 
 		return ew.keyboardCaret();
 	} // end of keyboardCaret method
@@ -681,7 +689,7 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * Finish up import of a circuit.
-	 * 
+	 *
 	 * @param impCirc The imported circuit.
 	 */
 	public void finishImport(Circuit impCirc) {
@@ -707,7 +715,7 @@ public abstract class SimpleEditor extends JPanel {
 	/**
 	 * Make the editor able to make changes.
 	 * Usually turned off during simulation.
-	 * 
+	 *
 	 * @param which True to enable editing, false to disable it.
 	 */
 	public void enableEditor(boolean which) {
@@ -878,8 +886,8 @@ public abstract class SimpleEditor extends JPanel {
 			private int panAnchorX;
 			/** Absolute screen y where the current pan started. */
 			private int panAnchorY;
-			/** Scroll view position when the current pan started. */
-			private Point panStartView;
+			/** Scroll view position when the current pan started, or null when no pan is active. */
+			private @Nullable Point panStartView;
 
 			// popup menus
 			/** Right-click menu over an existing element or wire. */
@@ -937,10 +945,10 @@ public abstract class SimpleEditor extends JPanel {
 			private final EnumMap<EditOp,Action> editActions =
 					new EnumMap<EditOp,Action>(EditOp.class);
 
-			/** The element toolbar shown above the edit window. */
-			private JPanel toolbar;
-			/** The element menu backing the toolbar. */
-			private JMenu elements;
+			/** The element toolbar shown above the edit window; null until {@link #makeElements} builds it. */
+			private @Nullable JPanel toolbar;
+			/** The element menu backing the toolbar; null until {@link #makeElements} builds it. */
+			private @Nullable JMenu elements;
 
 			// properties
 			/** The editor's interaction mode. */
@@ -961,18 +969,18 @@ public abstract class SimpleEditor extends JPanel {
 			/** Latest cursor y coordinate, in component units (issue #74). */
 			private int sy;
 			/** Selection rectangle, or null when none is being dragged. */
-			private Rectangle selRect = null;
+			private @Nullable Rectangle selRect = null;
 			/** Currently selected elements. */
 			private Set<Element>selected =
 					new HashSet<Element>();
-			/** The end of the wire being drawn. */
-			private WireEnd wireEnd;
-			/** The wire being drawn. */
-			private Wire wire;
-			/** The net the wire being drawn belongs to. */
-			private WireNet net;
-			/** The previous wire end while drawing a multi-segment wire. */
-			private WireEnd prev = null;
+			/** The end of the wire being drawn, or null when no wire gesture is in progress. */
+			private @Nullable WireEnd wireEnd;
+			/** The wire being drawn, or null before its first segment (or when no wire gesture is in progress). */
+			private @Nullable Wire wire;
+			/** The net the wire being drawn belongs to, or null when no wire gesture is in progress. */
+			private @Nullable WireNet net;
+			/** The previous wire end while drawing a multi-segment wire, or null. */
+			private @Nullable WireEnd prev = null;
 			/** Elements to add during a connect. */
 			private Set<Element>adds =
 					new HashSet<Element>();
@@ -997,7 +1005,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * tracks the following element or wire end while placing or
 			 * drawing so it always shows where the next commit lands.
 			 */
-			private Point caret = null;
+			private @Nullable Point caret = null;
 
 			/**
 			 * Create a new edit window.
@@ -1071,7 +1079,10 @@ public abstract class SimpleEditor extends JPanel {
 				newMenu.add(redo);
 
 				makeElements();
-				newMenu.add(elements);
+				JMenu elementsMenu = elements;
+				if (elementsMenu == null)
+					throw new IllegalStateException("makeElements did not build the elements menu");
+				newMenu.add(elementsMenu);
 
 				// canvas key bindings: menu-mask+W now toggles Watch only
 				// and wire-start is the dedicated plain-W binding, so the
@@ -1102,15 +1113,23 @@ public abstract class SimpleEditor extends JPanel {
 						// if drawing a wire...
 						if (currentState == State.startwire || currentState == State.drawire) {
 
+							WireEnd we = wireEnd;
+							if (we == null)
+								throw new IllegalStateException("wire gesture with no wire end");
+							WireNet nt = net;
+							if (nt == null)
+								throw new IllegalStateException("wire gesture with no net");
+
 							// remove wire end and wire from circuit and wire net
-							circuit.remove(wireEnd);
-							if (wire != null) {
-								circuit.remove(wire);
-								wire.getOtherEnd(wireEnd).remove(wire,circuit);
+							circuit.remove(we);
+							Wire w = wire;
+							if (w != null) {
+								circuit.remove(w);
+								w.getOtherEnd(we).remove(w,circuit);
 								markChanged();
+								nt.remove(w);
 							}
-							net.remove(wireEnd);
-							net.remove(wire);
+							nt.remove(we);
 
 							// remove any colinear wire ends
 							removeCoLinear();
@@ -1301,7 +1320,11 @@ public abstract class SimpleEditor extends JPanel {
 			 */
 			Action editAction(EditOp op) {
 
-				return editActions.get(op);
+				Action action = editActions.get(op);
+				if (action == null)
+					throw new IllegalStateException(
+							"no shared action registered for " + op);
+				return action;
 			} // end of editAction method
 
 			/**
@@ -1310,7 +1333,7 @@ public abstract class SimpleEditor extends JPanel {
 			 *
 			 * @return a copy of the caret point, or null.
 			 */
-			Point keyboardCaret() {
+			@Nullable Point keyboardCaret() {
 
 				return caret == null ? null : new Point(caret);
 			} // end of keyboardCaret method
@@ -1802,7 +1825,7 @@ public abstract class SimpleEditor extends JPanel {
 			 *
 			 * @param modelRect The changed region in model units, or null.
 			 */
-			private void repaintModel(Rectangle modelRect) {
+			private void repaintModel(@Nullable Rectangle modelRect) {
 
 				if (modelRect == null) {
 					repaint();
@@ -2523,11 +2546,11 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Get image.
-			 * 
+			 *
 			 * @param name Base name of image.
 			 * @return the icon, or null if the image resource is missing.
 			 */
-			public ImageIcon getImage(String name) {
+			public @Nullable ImageIcon getImage(String name) {
 				URL image = getClass().getResource("images/" + name + ".gif");
 				// a missing icon falls back to the button's text label
 				// instead of an NPE at startup (issue #78 observation)
@@ -2536,7 +2559,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Make a single element for the toolbar and menu.
-			 * 
+			 *
 			 * @param action The action for this element.
 			 * @param tip The tool tip for this element.
 			 * @return the toolbar button for the element.
@@ -2558,23 +2581,29 @@ public abstract class SimpleEditor extends JPanel {
 				// both the tool-bar button and its mirror "elements" menu item.
 				button.getAccessibleContext().setAccessibleName(tip);
 				item.getAccessibleContext().setAccessibleName(tip);
-				elements.add(item);
+				JMenu els = elements;
+				if (els == null)
+					throw new IllegalStateException("makeElement called before makeElements built the menu");
+				els.add(item);
 				return button;
 			} // end of makeElement method
 
 			/**
 			 * Get the tool bar.
-			 * 
+			 *
 			 * @return the tool bar.
 			 */
 			public JPanel getToolBar() {
 
-				return toolbar;
+				JPanel tb = toolbar;
+				if (tb == null)
+					throw new IllegalStateException("getToolBar called before makeElements built the toolbar");
+				return tb;
 			} // end of getToolBar method
 
 			/**
 			 * Draw the window.
-			 * 
+			 *
 			 * @param g The Graphics object to draw with.
 			 */
 			@Override
@@ -2611,7 +2640,7 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// draw selection rectangle if elements selected
-				if (currentState == State.selected) {
+				if (currentState == State.selected && selRect != null) {
 					gg.setColor(JLSInfo.Palette.selectionColor);
 					gg.fill(selRect);
 				}
@@ -2676,8 +2705,11 @@ public abstract class SimpleEditor extends JPanel {
 						return;
 
 					JumpStart el = (JumpStart)(selected.toArray()[0]);
+					String jumpName = el.getName();
+					if (jumpName == null)
+						return;
 					JumpEnd nel = new JumpEnd(circuit);
-					nel.setName(el.getName());
+					nel.setName(jumpName);
 					// place at the last tracked mouse position (event-local; #103)
 					ElementDialogs.setup(nel, this.getGraphics(), this, x, y);
 
@@ -2695,7 +2727,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mousePressed events
-			 * 
+			 *
 			 * @param event The event object for presses.
 			 */
 			@Override
@@ -2838,8 +2870,12 @@ public abstract class SimpleEditor extends JPanel {
 				// if elements are selected...
 				if (currentState == State.selected) {
 
+					Rectangle sr = selRect;
+					if (sr == null)
+						throw new IllegalStateException("selected state with no selection rectangle");
+
 					// if cursor is inside selection rectangle
-					if (selRect.contains(x,y)) {
+					if (sr.contains(x,y)) {
 
 						// if left button, start moving
 						if (leftButton) {
@@ -2923,15 +2959,23 @@ public abstract class SimpleEditor extends JPanel {
 					// right button -> cancel
 					if (rightButton) {
 
+						WireEnd we = wireEnd;
+						if (we == null)
+							throw new IllegalStateException("wire gesture with no wire end");
+						WireNet nt = net;
+						if (nt == null)
+							throw new IllegalStateException("wire gesture with no net");
+
 						// remove wire end and wire from circuit and wire net
-						circuit.remove(wireEnd);
-						if (wire != null) {
-							circuit.remove(wire);
-							wire.getOtherEnd(wireEnd).remove(wire,circuit);
+						circuit.remove(we);
+						Wire w = wire;
+						if (w != null) {
+							circuit.remove(w);
+							w.getOtherEnd(we).remove(w,circuit);
 							markChanged();
+							nt.remove(w);
 						}
-						net.remove(wireEnd);
-						net.remove(wire);
+						nt.remove(we);
 
 						// remove any colinear wire ends
 						removeCoLinear();
@@ -3009,17 +3053,30 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// set end of wire
-				wireEnd.fixPosition();
+				WireEnd we = wireEnd;
+				if (we == null)
+					throw new IllegalStateException("wire vertex commit with no wire end");
+				we.fixPosition();
 
-				// connect if possible
+				// connect if possible; this may merge the drawing end and its
+				// net into an existing one (startwire case), so re-read them
 				connect();
+				we = wireEnd;
+				if (we == null)
+					throw new IllegalStateException("wire vertex commit with no wire end");
+				WireNet nt = net;
+				if (nt == null)
+					throw new IllegalStateException("wire vertex commit with no net");
 
 				// finish up if wire becomes attached to another wire or put
-				if (currentState == State.drawire && wireEnd.isAttached()) {
+				if (currentState == State.drawire && we.isAttached()) {
 
 					// if attached to imaginary put, unattach it
-					if (wireEnd.getPut().getElement() == null)
-						wireEnd.setPut(null);
+					Put ep = we.getPut();
+					if (ep == null)
+						throw new IllegalStateException("attached wire end has no put");
+					if (ep.getElement() == null)
+						we.setPut(null);
 					wireEnd = null;
 					wire = null;
 					prev = null;
@@ -3031,37 +3088,42 @@ public abstract class SimpleEditor extends JPanel {
 				}
 
 				// if attached to imaginary put, unattach it
-				if (currentState == State.startwire && wireEnd.isAttached()) {
-					if (wireEnd.getPut().getElement() == null)
-						wireEnd.setPut(null);
+				if (currentState == State.startwire && we.isAttached()) {
+					Put ep = we.getPut();
+					if (ep == null)
+						throw new IllegalStateException("attached wire end has no put");
+					if (ep.getElement() == null)
+						we.setPut(null);
 				}
 
 				// save current wire end
-				prev = wireEnd;
-				WireEnd save = wireEnd;
+				prev = we;
+				WireEnd save = we;
 
 				// create new wire end
-				wireEnd = new WireEnd(circuit);
-				wireEnd.setXY(x,y);
-				wireEnd.init(circuit);
-				circuit.addElement(wireEnd);
+				WireEnd newEnd = new WireEnd(circuit);
+				newEnd.setXY(x,y);
+				newEnd.init(circuit);
+				circuit.addElement(newEnd);
+				wireEnd = newEnd;
 
 				// create new wire
-				wire = new Wire(save,wireEnd);
-				save.addWire(wire);
-				wireEnd.addWire(wire);
-				circuit.addElement(wire);
+				Wire newWire = new Wire(save,newEnd);
+				save.addWire(newWire);
+				newEnd.addWire(newWire);
+				circuit.addElement(newWire);
+				wire = newWire;
 
 				// add wire end and wire to net
-				net.add(wireEnd);
-				wireEnd.setNet(net);
-				net.add(wire);
-				wire.setNet(net);
+				nt.add(newEnd);
+				newEnd.setNet(nt);
+				nt.add(newWire);
+				newWire.setNet(nt);
 
 				// set up new selected set
 				clearSelected();
-				selected.add(wireEnd);
-				selected.add(wire);
+				selected.add(newEnd);
+				selected.add(newWire);
 
 				// keep the caret on the moving end so arrows extend it
 				caret = new Point(x,y);
@@ -3171,7 +3233,7 @@ public abstract class SimpleEditor extends JPanel {
 			 *
 			 * @return the representative element, or null if none.
 			 */
-			private Element followRepresentative() {
+			private @Nullable Element followRepresentative() {
 
 				if (wireEnd != null && selected.contains(wireEnd)) {
 					return wireEnd;
@@ -3351,7 +3413,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Set up the options popup menu.
-			 * 
+			 *
 			 * @param el The element the menu is being shown for.
 			 */
 			private void makeOptionMenu(Element el) {
@@ -3412,7 +3474,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mouse release events.
-			 * 
+			 *
 			 * @param event The event object for releases.
 			 */
 			@Override
@@ -3477,7 +3539,7 @@ public abstract class SimpleEditor extends JPanel {
 						}
 					}
 
-					// otherwise 
+					// otherwise
 					else {
 
 						// fix elements at their new positions
@@ -3491,8 +3553,13 @@ public abstract class SimpleEditor extends JPanel {
 						// fix up wire end attached to imaginary puts
 						for (Element el : selected) {
 							if (el instanceof WireEnd end) {
-								if (end.isAttached() && end.getPut().getElement() == null) {
-									end.setPut(null);
+								if (end.isAttached()) {
+									Put ep = end.getPut();
+									if (ep == null)
+										throw new IllegalStateException("attached wire end has no put");
+									if (ep.getElement() == null) {
+										end.setPut(null);
+									}
 								}
 							}
 						}
@@ -3557,7 +3624,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * React to mouse dragged events.
-			 * 
+			 *
 			 * @param event The event object for drags.
 			 */
 			@Override
@@ -3573,8 +3640,11 @@ public abstract class SimpleEditor extends JPanel {
 					Dimension viewSz = vp.getViewSize();
 					int maxX = Math.max(0, viewSz.width - ext.width);
 					int maxY = Math.max(0, viewSz.height - ext.height);
-					int nvx = Math.min(Math.max(0,panStartView.x - dx),maxX);
-					int nvy = Math.min(Math.max(0,panStartView.y - dy),maxY);
+					Point start = panStartView;
+					if (start == null)
+						throw new IllegalStateException("pan drag with no start view position");
+					int nvx = Math.min(Math.max(0,start.x - dx),maxX);
+					int nvy = Math.min(Math.max(0,start.y - dy),maxY);
 					vp.setViewPosition(new Point(nvx,nvy));
 					return;
 				}
@@ -3679,7 +3749,9 @@ public abstract class SimpleEditor extends JPanel {
 						el.setHighlight(true);
 						selected.add(el);
 					}
-					dirty.grow(Geometry.SPACING, Geometry.SPACING);
+					if (dirty != null) {
+						dirty.grow(Geometry.SPACING, Geometry.SPACING);
+					}
 					repaintModel(dirty);
 					return;
 				}
@@ -3689,12 +3761,12 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * Accumulate a dirty-region rectangle (#17): the union of the
 			 * given rectangles, either of which may be null.
-			 * 
+			 *
 			 * @param acc The accumulator rectangle, grown in place; may be null.
 			 * @param add The rectangle to add; may be null.
 			 * @return the union, or null when both inputs are null.
 			 */
-			private Rectangle union(Rectangle acc, Rectangle add) {
+			private @Nullable Rectangle union(@Nullable Rectangle acc, @Nullable Rectangle add) {
 
 				if (acc == null) {
 					return add == null ? null : new Rectangle(add);
@@ -3716,7 +3788,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * @return the union of those bounds, or null if nothing is
 			 * selected.
 			 */
-			private Rectangle selectionBounds() {
+			private @Nullable Rectangle selectionBounds() {
 
 				Rectangle acc = null;
 				for (Element el : selected) {
@@ -3749,7 +3821,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * @return the union of those bounds, or null if nothing is
 			 * touched.
 			 */
-			private Rectangle touchedBounds() {
+			private @Nullable Rectangle touchedBounds() {
 
 				Rectangle acc = null;
 				for (Element el : touchedElements) {
@@ -3773,7 +3845,7 @@ public abstract class SimpleEditor extends JPanel {
 			 *
 			 * @param dirty The region that changed, or null.
 			 */
-			private void repaintDirty(Rectangle dirty) {
+			private void repaintDirty(@Nullable Rectangle dirty) {
 
 				if (dirty == null) {
 					repaint();
@@ -3898,7 +3970,7 @@ public abstract class SimpleEditor extends JPanel {
 						// don't show overlap while new wire end is still
 						// close to the previously placed wire end
 						if (!(currentState == State.drawire &&
-								prev != null && prev.getX() == wireEnd.getX() &&
+								prev != null && wireEnd != null && prev.getX() == wireEnd.getX() &&
 								prev.getY() == wireEnd.getY())) {
 							info.setText(overlapMessage);
 							info.setForeground(Color.red);
@@ -3918,7 +3990,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Unused.
-			 * 
+			 *
 			 * @param event Unused.
 			 */
 			@Override
@@ -3937,7 +4009,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * If in the idle state, unhighlight everything.
-			 * 
+			 *
 			 * @param event Unused.
 			 */
 			@Override
@@ -3986,7 +4058,7 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Update current state and show corresponding message.
-			 * 
+			 *
 			 * @param newState The new state.
 			 */
 			private void setState(State newState) {
@@ -4039,10 +4111,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Not possible if part of the same wire net.
 			 * Not possible if bits don't match.
 			 * Not possible if both have inputs already.
-			 * 
+			 *
 			 * @param end1 The wire being connected.
 			 * @param end2 The other wire being connected.
-			 * 
+			 *
 			 * @return false if bits don' match or both have inputs, true otherwise.
 			 */
 			private boolean canConnect(WireEnd end1, WireEnd end2) {
@@ -4088,10 +4160,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Assumes ends can be connected (overlap, one end dangling, one input, bits match,
 			 * not same net).
 			 * One wire end will be deleted, and the remaining one is returned.
-			 * 
+			 *
 			 * @param end1 The wire end being connected.
 			 * @param end2 The other wire end being connected.
-			 * 
+			 *
 			 * @return the remaining wire end.
 			 */
 			private WireEnd connect(WireEnd end1, WireEnd end2) {
@@ -4156,10 +4228,10 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * See if a wire end can attach to a wire.
-			 * 
+			 *
 			 * @param end1 The wire end.
 			 * @param wire The wire.
-			 * 
+			 *
 			 * @return true if can connect, false if not.
 			 */
 			public boolean canConnect(WireEnd end1, Wire wire) {
@@ -4213,10 +4285,10 @@ public abstract class SimpleEditor extends JPanel {
 			/**
 			 * Connect a wire end to a wire.
 			 * Return the end that was connected.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param wire The wire.
-			 * 
+			 *
 			 * @return the end that was connected.
 			 */
 			public WireEnd connect(WireEnd end, Wire wire) {
@@ -4276,10 +4348,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * See if a wire end can attach to a put.
 			 * Not possible if put is already attached, or bits don't match, or
 			 * put is an output and wire end is already connected to an input.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param put The put.
-			 * 
+			 *
 			 * @return false if put is already attached or bits do not match, true otherwise.
 			 */
 			private boolean canConnect(WireEnd end, Put put) {
@@ -4361,7 +4433,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * Bits will be set in the net.
 			 * Has-input will be set in the net if necessary.
 			 * Tri-state will be set in the net if necessary.
-			 * 
+			 *
 			 * @param end The wire end.
 			 * @param put The put.
 			 */
@@ -4393,10 +4465,10 @@ public abstract class SimpleEditor extends JPanel {
 			 * Not possible if bits don't match.
 			 * Not possible if both are outputs or both are inputs,
 			 * unless both are tristate outputs.
-			 * 
+			 *
 			 * @param p1 The put.
 			 * @param p2 The other put.
-			 * 
+			 *
 			 * @return true if puts can be attached, false if not.
 			 */
 			private boolean canConnect(Put p1, Put p2) {
@@ -4431,7 +4503,7 @@ public abstract class SimpleEditor extends JPanel {
 			 * The puts must overlap.
 			 * The puts must not be attached.
 			 * Bits must match
-			 * 
+			 *
 			 * @param p1 The put.
 			 * @param p2 The other put.
 			 */
@@ -4479,8 +4551,15 @@ public abstract class SimpleEditor extends JPanel {
 				p2.setAttached(end2);
 
 				// fix positions of wire ends through their elements
-				p1.getElement().fixPosition();
-				p2.getElement().fixPosition();
+				// (the invisible-input sentinel has no element to fix)
+				var e1 = p1.getElement();
+				if (e1 != null) {
+					e1.fixPosition();
+				}
+				var e2 = p2.getElement();
+				if (e2 != null) {
+					e2.fixPosition();
+				}
 
 				// make net tristate if either put is a tristate output
 				if (p1 instanceof Output o1 && o1.isTriState()) {
@@ -4535,8 +4614,11 @@ public abstract class SimpleEditor extends JPanel {
 							}
 							for (Put p : sel.getAllPuts()) {
 								if (p.isAttached()) {
-									Wire wire = p.getWireEnd().getOnlyWire();
-									if (wireCollidesAlongSpan(circuit,selected,sel,wire)) {
+									WireEnd pe = p.getWireEnd();
+									if (pe == null)
+										throw new IllegalStateException("attached put has no wire end");
+									Wire wire = pe.getOnlyWire();
+									if (wire != null && wireCollidesAlongSpan(circuit,selected,sel,wire)) {
 										overlapMessage = "overlap";
 										untouchAll();
 										return true;
@@ -4609,7 +4691,7 @@ public abstract class SimpleEditor extends JPanel {
 											// if attached through a single wire, ignore
 											if (putEnd != null) {
 												Wire onlyWire = putEnd.getOnlyWire();
-												if (onlyWire.getOtherEnd(putEnd) == end) {
+												if (onlyWire != null && onlyWire.getOtherEnd(putEnd) == end) {
 													ok = true;
 													continue;
 												}
@@ -4651,7 +4733,7 @@ public abstract class SimpleEditor extends JPanel {
 
 											// if attached through a single wire, ignore
 											WireEnd putEnd = put.getWireEnd();
-											if (putEnd != null &&
+											if (putEnd != null && putEnd.getOnlyWire() != null &&
 													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
 												ok = true;
 												continue;
@@ -4690,7 +4772,7 @@ public abstract class SimpleEditor extends JPanel {
 											// ignore overlaps on already connected puts
 											WireEnd end1 = p1.getWireEnd();
 											WireEnd end2 = p2.getWireEnd();
-											if (end1 != null && end2 != null && 
+											if (end1 != null && end2 != null && end1.getOnlyWire() != null &&
 													end1.getOnlyWire().getOtherEnd(end1) == end2) {
 												continue;
 											}
@@ -4783,6 +4865,8 @@ public abstract class SimpleEditor extends JPanel {
 
 											// wire end to put
 											Put put = el.getPut(end.getX(),end.getY());
+											if (put == null)
+												throw new IllegalStateException("connect: element has no put after overlap check");
 
 											// if already attached, ignore
 											if (end == put.getWireEnd()) {
@@ -4792,7 +4876,7 @@ public abstract class SimpleEditor extends JPanel {
 
 											// if attached through a single wire, ignore
 											WireEnd putEnd = put.getWireEnd();
-											if (putEnd != null &&
+											if (putEnd != null && putEnd.getOnlyWire() != null &&
 													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
 												ok = true;
 												continue;
@@ -4826,7 +4910,7 @@ public abstract class SimpleEditor extends JPanel {
 
 											// if attached through a single wire, ignore
 											WireEnd putEnd = put.getWireEnd();
-											if (putEnd != null &&
+											if (putEnd != null && putEnd.getOnlyWire() != null &&
 													putEnd.getOnlyWire().getOtherEnd(putEnd) == end) {
 												ok = true;
 												continue;
@@ -4857,7 +4941,7 @@ public abstract class SimpleEditor extends JPanel {
 											// ignore overlaps on already connected puts
 											WireEnd end1 = p1.getWireEnd();
 											WireEnd end2 = p2.getWireEnd();
-											if (end1 != null && end2 != null && 
+											if (end1 != null && end2 != null && end1.getOnlyWire() != null &&
 													end1.getOnlyWire().getOtherEnd(end1) == end2) {
 												continue;
 											}
@@ -4993,9 +5077,9 @@ public abstract class SimpleEditor extends JPanel {
 					 * Paste all elements from a given circuit into the current circuit.
 					 * Can't be done if there are elements in the "from" circuit that
 					 * have the same names as elements in the current circuit.
-					 * 
+					 *
 					 * @param from The circuit to copy from.
-					 * 
+					 *
 					 * @return false if can't be done, true if done.
 					 */
 					private boolean paste(Circuit from) {
@@ -5061,9 +5145,11 @@ public abstract class SimpleEditor extends JPanel {
 
 						// first copy all but wires and wire ends
 						for (Element el : from.getElements()) {
-							if (el instanceof Wire || el instanceof WireEnd) 
+							if (el instanceof Wire || el instanceof WireEnd)
 								continue;
 							Element cel = el.copy();
+							if (cel == null)
+								throw new IllegalStateException("copy of a pasted element returned null");
 							cel.fixPosition();
 							cel.move(x,y);
 							circuit.addElement(cel);
@@ -5072,7 +5158,9 @@ public abstract class SimpleEditor extends JPanel {
 
 							// if a jump start, add name to start list
 							if (cel instanceof JumpStart j) {
-								circuit.addJumpStart(j.getName(),j);
+								String jn = j.getName();
+								if (jn != null)
+									circuit.addJumpStart(jn,j);
 							}
 						}
 
@@ -5080,12 +5168,15 @@ public abstract class SimpleEditor extends JPanel {
 						for (Element el : from.getElements()) {
 							if (!(el instanceof WireEnd oldEnd))
 								continue;
-							WireEnd newEnd = (WireEnd)(el.copy());
+							WireEnd newEnd = oldEnd.copy();
 							newEnd.fixPosition();
 							newEnd.move(x,y);
 							circuit.addElement(newEnd);
 							if (oldEnd.isAttached()) {
-								Put newPut = oldEnd.getPut().getCopy();
+								Put oldPut = oldEnd.getPut();
+								if (oldPut == null)
+									throw new IllegalStateException("attached wire end has no put");
+								Put newPut = oldPut.getCopy();
 								newEnd.setPut(newPut);
 								newPut.setAttached(newEnd);
 							}
@@ -5369,7 +5460,7 @@ public abstract class SimpleEditor extends JPanel {
 					 * Usually pops up dialog to enter characteristics.
 					 * If not cancelled, then adds it to the circuit and gets ready
 					 * to place it.
-					 * 
+					 *
 					 * @param item The element to set up.
 					 * @param fromToolBar True if toolbar button selected, false if from menu.
 					 */
@@ -5469,13 +5560,15 @@ public abstract class SimpleEditor extends JPanel {
 
 					/**
 					 * Import a copy of a subcircuit.
-					 * 
+					 *
 					 * @param name The name of the subcircuit.
 					 */
 					public void doImport(String name) {
 
 						// make a set of all elements except attached wire ends from subcircuit
 						Circuit source = circMap.get(name);
+						if (source == null)
+							return;
 						Set<Element> elements = new HashSet<Element>();
 						for (Element el : source.getElements()) {
 							if (el instanceof WireEnd end) {
@@ -5523,7 +5616,10 @@ public abstract class SimpleEditor extends JPanel {
 							// get top level circuit
 							Circuit circ = circuit;
 							while (circ.isImported()) {
-								circ = circ.getSubElement().getCircuit();
+								SubCircuit se = circ.getSubElement();
+								if (se == null)
+									throw new IllegalStateException("imported circuit has no sub-element");
+								circ = se.getCircuit();
 							}
 
 							// Serialize in memory here (cheap relative to disk
@@ -5577,7 +5673,8 @@ public abstract class SimpleEditor extends JPanel {
 							opSink.submit(op);
 							return true;
 						} catch (OpRejected ex) {
-							TellUser.error(JLSInfo.frame, ex.getMessage(),
+							String msg = ex.getMessage();
+							TellUser.error(JLSInfo.frame, msg != null ? msg : ex.toString(),
 									"Error");
 							return false;
 						}
@@ -5637,13 +5734,20 @@ public abstract class SimpleEditor extends JPanel {
 						// discard a partially drawn wire
 						if (currentState == State.startwire
 								|| currentState == State.drawire) {
-							circuit.remove(wireEnd);
-							if (wire != null) {
-								circuit.remove(wire);
-								wire.getOtherEnd(wireEnd).remove(wire,circuit);
+							WireEnd we = wireEnd;
+							if (we == null)
+								throw new IllegalStateException("wire gesture with no wire end");
+							WireNet nt = net;
+							if (nt == null)
+								throw new IllegalStateException("wire gesture with no net");
+							circuit.remove(we);
+							Wire w = wire;
+							if (w != null) {
+								circuit.remove(w);
+								w.getOtherEnd(we).remove(w,circuit);
+								nt.remove(w);
 							}
-							net.remove(wireEnd);
-							net.remove(wire);
+							nt.remove(we);
 							removeCoLinear();
 							wireEnd = null;
 							wire = null;
@@ -5693,10 +5797,12 @@ public abstract class SimpleEditor extends JPanel {
 						Editors.unregister(circuit);
 						newCopy.setDirectory(circuit.getDirectory());
 
-						// link into subcircuit if it is imported
+						// link into subcircuit if it is imported (a freshly
+						// restored circuit is non-imported until linked, so
+						// nothing to clear when there is no sub-element)
 						SubCircuit sub = circuit.getSubElement();
-						newCopy.setImported(sub);
 						if (sub != null) {
+							newCopy.setImported(sub);
 							sub.setSubCircuit(newCopy);
 							sub.remapPins(newCopy);
 						}
@@ -5729,7 +5835,9 @@ public abstract class SimpleEditor extends JPanel {
 
 						// if not imported, point simulator at it
 						if (!circuit.isImported()) {
-							JLSInfo.sim.setCircuit(circuit);
+							Simulator sim = JLSInfo.sim;
+							if (sim != null)
+								sim.setCircuit(circuit);
 						}
 
 						else {
@@ -5739,13 +5847,20 @@ public abstract class SimpleEditor extends JPanel {
 								if (!(el instanceof OutputPin pin))
 									continue;
 								SubCircuit subc = pin.getCircuit().getSubElement();
+								if (subc == null)
+									throw new IllegalStateException("imported circuit's pin has no sub-element");
 								Output put = (Output)subc.getPut(pin.getName());
+								if (put == null)
+									continue;
 								Input input = pin.getInput("input");
 								if (!input.isAttached()) {
 									put.setTriState(false);
 								}
 								else {
-									put.setTriState(input.getWireEnd().isTriState());
+									WireEnd iwe = input.getWireEnd();
+									if (iwe == null)
+										throw new IllegalStateException("attached input has no wire end");
+									put.setTriState(iwe.isTriState());
 								}
 							}
 						}
@@ -5755,14 +5870,16 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Find all jump start elements and add names to the jumpstart list in this circuit.
 					 * Do the same for all subcircuits.
-					 * 
+					 *
 					 * @param circ The circuit to process.
 					 */
 					private void updateJumpStarts(Circuit circ) {
 
 						for (Element el : circ.getElements()) {
 							if (el instanceof JumpStart j) {
-								circ.addJumpStart(j.getName(),j);
+								String jn = j.getName();
+								if (jn != null)
+									circ.addJumpStart(jn,j);
 							}
 							else if (el instanceof SubCircuit sc) {
 								updateJumpStarts(sc.getSubCircuit());
@@ -5773,7 +5890,7 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Find all named elements and add names to the namesUsed list in this circuit.
 					 * Do the same for all subcircuits.
-					 * 
+					 *
 					 * @param circ The circuit to process.
 					 */
 					private void updateNamesUsed(Circuit circ) {

@@ -1,11 +1,11 @@
 package jls.sim;
 
-import jls.*;
-import jls.elem.*;
-
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.elem.*;
 
 /**
  * Event driven circuit simulator.
@@ -178,7 +178,7 @@ public class BatchSimulator extends Simulator {
 			}
 		}
 	} // end of afterEvent method
-	
+
 	/**
 	 * Create and add TestGen element to circuit.
 	 * Remove any SigGen's in the circuit.
@@ -214,7 +214,7 @@ public class BatchSimulator extends Simulator {
 	/**
 	 * Find all watched elements and add entries to batch trace map.
 	 * Recursively checks all subcircuits.
-	 * 
+	 *
 	 * @param circ The circuit (or subcircuit) to look in.
 	 */
 	private void findWatched(Circuit circ) {
@@ -572,4 +572,3 @@ public class BatchSimulator extends Simulator {
 	} // end of displayOutcome method
 
 } // end of BatchSimulator class
-

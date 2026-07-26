@@ -11,6 +11,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * One live, mutually authenticated, encrypted TCP session between two
  * JLS installs (issue #168, collab Stage 1a): the socket the crypto
@@ -247,7 +249,7 @@ public final class SocketSession implements Closeable {
 	 *             fails authentication (tampered, replayed, or
 	 *             reordered), which poisons the link for good.
 	 */
-	public byte[] receive() throws IOException, FrameRejected {
+	public byte @Nullable [] receive() throws IOException, FrameRejected {
 
 		return link.open(in);
 	} // end of receive method

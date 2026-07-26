@@ -12,6 +12,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.elem.Cross;
 import jls.elem.Entry;
 import jls.elem.HLine;
@@ -40,7 +42,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	/** The truth table element this display is a part of. */
 	private TruthTable ttelem;
 	/** The displayed entries, indexed by row and column. */
-	private Entry [][] dtable;
+	private Entry @Nullable [][] dtable;
 	/** Number of rows in the displayed table. */
 	private int rows;
 	/** Number of columns in the displayed table. */
@@ -79,13 +81,14 @@ public final class DisplayBool extends JPanel implements MouseListener {
 		super.paintComponent(g);
 
 		// don't draw anything until there is something to draw
-		if (dtable == null)
+		Entry [][] table = dtable;
+		if (table == null)
 			return;
 
 		// draw the truth table
 		for (int r = 0; r<rows; r+=1) {
 			for (int c = 0; c<cols; c+=1) {
-					drawEntry(g,dtable[r][c]);
+					drawEntry(g,table[r][c]);
 			}
 		}
 	} // end of paintComponent method
@@ -99,13 +102,14 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	public void print(Graphics g) {
 
 		// don't draw anything until there is something to draw
-		if (dtable == null)
+		Entry [][] table = dtable;
+		if (table == null)
 			return;
 
 		// draw the truth table
 		for (int r = 0; r<rows; r+=1) {
 			for (int c = 0; c<cols; c+=1) {
-					drawEntry(g,dtable[r][c]);
+					drawEntry(g,table[r][c]);
 			}
 		}
 	} // end of print method
@@ -171,14 +175,15 @@ public final class DisplayBool extends JPanel implements MouseListener {
 	 * @param table The input and output values.
 	 * @param g A Graphics object to use.  If null, get this object's Graphics object.
 	 */
-	public void doLayout(Vector<String>ins, Vector<String>outs, int[][] table, Graphics g) {
+	public void doLayout(Vector<String>ins, Vector<String>outs, int[][] table, @Nullable Graphics g) {
 
 		// set up to create displayable table
 		int in = ins.size();
 		int out = outs.size();
 		cols = in+out+1;
 		rows = table.length+2;
-		dtable = new Entry[rows][cols];
+		Entry [][] dt = new Entry[rows][cols];
+		dtable = dt;
 		if (g == null) {
 			g = getGraphics();
 		}
@@ -187,31 +192,31 @@ public final class DisplayBool extends JPanel implements MouseListener {
 		for (int c=0; c<in; c+=1) {
 			InputSig sig = new InputSig(ttelem,ins.get(c));
 			sizeSignal(sig,ins.get(c),g);
-			dtable[0][c] = sig;
-			dtable[1][c] = new HLine(ttelem);
+			dt[0][c] = sig;
+			dt[1][c] = new HLine(ttelem);
 			for (int r=2; r<rows; r+=1) {
 				InputVal val = new InputVal(ttelem,table[r-2][c]);
 				sizeValue(val,table[r-2][c],g);
-				dtable[r][c] = val;
+				dt[r][c] = val;
 			}
 		}
 
 		// set up vertical separator
-		dtable[0][in] = new VLine(ttelem);
-		dtable[1][in] = new Cross(ttelem);
+		dt[0][in] = new VLine(ttelem);
+		dt[1][in] = new Cross(ttelem);
 		for (int r=2; r<rows; r+=1)
-			dtable[r][in] = new VLine(ttelem);
+			dt[r][in] = new VLine(ttelem);
 
 		// set up outputs
 		for (int c=in+1; c<cols; c+=1) {
 			OutputSig sig = new OutputSig(ttelem,outs.get(c-in-1));
 			sizeSignal(sig,outs.get(c-in-1),g);
-			dtable[0][c] = sig;
-			dtable[1][c] = new HLine(ttelem);
+			dt[0][c] = sig;
+			dt[1][c] = new HLine(ttelem);
 			for (int r=2; r<rows; r+=1) {
 				OutputVal val = new OutputVal(ttelem,table[r-2][c-1]);
 				sizeValue(val,table[r-2][c-1],g);
-				dtable[r][c] = val;
+				dt[r][c] = val;
 			}
 		}
 
@@ -221,7 +226,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 		for (int r = 0; r<rows; r+=1) {
 			int maxHeight = 0;
 			for (int c = 0; c<cols; c+=1) {
-				maxHeight = Math.max(maxHeight,dtable[r][c].getMinHeight());
+				maxHeight = Math.max(maxHeight,dt[r][c].getMinHeight());
 			}
 			heights[r] = maxHeight;
 			totalHeight += maxHeight;
@@ -233,7 +238,7 @@ public final class DisplayBool extends JPanel implements MouseListener {
 		for (int c = 0; c<cols; c+=1) {
 			int maxWidth = 0;
 			for (int r = 0; r<rows; r+=1) {
-				maxWidth = Math.max(maxWidth,dtable[r][c].getMinWidth());
+				maxWidth = Math.max(maxWidth,dt[r][c].getMinWidth());
 			}
 			widths[c] = maxWidth;
 			totalWidth += maxWidth;
@@ -244,8 +249,8 @@ public final class DisplayBool extends JPanel implements MouseListener {
 		for (int r = 0; r<rows; r+=1) {
 			int x = 0;
 			for (int c = 0; c<cols; c+=1) {
-				dtable[r][c].setPosition(x,y);
-				dtable[r][c].setSize(widths[c],heights[r]);
+				dt[r][c].setPosition(x,y);
+				dt[r][c].setSize(widths[c],heights[r]);
 				x += widths[c];
 			}
 			y += heights[r];
@@ -299,10 +304,13 @@ public final class DisplayBool extends JPanel implements MouseListener {
 
 		int x = event.getX();
 		int y = event.getY();
+		Entry [][] table = dtable;
+		if (table == null)
+			return;
 		for (int r=0; r<rows; r+=1) {
 			for (int c=0; c<cols; c+=1) {
-				if (dtable[r][c].contains(x,y)) {
-					Entry e = dtable[r][c];
+				if (table[r][c].contains(x,y)) {
+					Entry e = table[r][c];
 					if (e instanceof SigEntry) {
 						showSignalMenu((SigEntry) e);
 					}

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
-
 import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.XZOutputStream;
 

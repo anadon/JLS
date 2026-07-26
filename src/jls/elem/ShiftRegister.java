@@ -1,11 +1,14 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
 import java.io.PrintWriter;
 import java.util.BitSet;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * Combinational barrel shifter (issue #122). The bsiever fork lineage
@@ -48,7 +51,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#shiftRegisterBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkBits(int bits) {
+	public static @Nullable String checkBits(int bits) {
 
 		return bits < 2 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -177,7 +180,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (output RIGHT), transformed to the current
 		// output orientation (#24); the amount side is independent of
@@ -425,7 +428,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		ShiftRegister it = new ShiftRegister(circuit);
+		ShiftRegister it = new ShiftRegister(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -524,7 +527,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 *          of size when flipping.
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g) {
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		amountOrientation = amountOrientation.flipped();
 		inputs.clear();
@@ -541,7 +544,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param g The current graphics context for use in recalculating size.
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g) {
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		if (direction == Orientation.LEFT) {
 			amountOrientation = amountOrientation.ccw();
@@ -585,7 +588,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 //	-------------------------------------------------------------------------------
 
 	/** The value currently propagating toward the output. */
-	private BitSet toBeValue;
+	private @Nullable BitSet toBeValue;
 
 	/**
 	 * Initialize this element by setting its output and to-be value to 0.
@@ -611,7 +614,7 @@ public final class ShiftRegister extends LogicElement implements Timed {
 	 * @param todo Null if an input change, the new output value otherwise.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// if an input has changed ...
 		if (todo == null) {

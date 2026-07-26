@@ -15,7 +15,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.jspecify.annotations.Nullable;
-
 import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.SeekableFileInputStream;
 import org.tukaani.xz.SeekableXZInputStream;

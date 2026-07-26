@@ -1,14 +1,17 @@
 package jls.collab.op;
 
 import java.awt.Graphics;
-import jls.edit.SwingTextMetrics;
 import java.io.PrintWriter;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
+import jls.edit.SwingTextMetrics;
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
+import jls.elem.Put;
 import jls.elem.SubCircuit;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
@@ -92,7 +95,7 @@ public record SetElementConfig(ElementId id, String block)
 	 * @throws OpRejected if any check fails; the circuit is untouched
 	 *             either way.
 	 */
-	private Element validate(Circuit circuit, Graphics g)
+	private Element validate(Circuit circuit, @Nullable Graphics g)
 			throws OpRejected {
 
 		Element old = Ops.resolve(circuit, id);
@@ -176,8 +179,8 @@ public record SetElementConfig(ElementId id, String block)
 				continue;
 			}
 			WireEnd end = (WireEnd) el;
-			if (end.isAttached()
-					&& end.getPut().getElement() == target) {
+			Put p = end.getPut();
+			if (p != null && p.getElement() == target) {
 				throw new OpRejected("element '" + target.getStableId()
 						+ "' has a wire attached and cannot be "
 						+ "reconfigured by this op");

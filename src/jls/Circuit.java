@@ -1,6 +1,5 @@
 package jls;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
@@ -13,10 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
+import org.jspecify.annotations.Nullable;
 
 import jls.core.Geometry;
 import jls.elem.Element;
@@ -25,19 +25,15 @@ import jls.elem.ElementType;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
 import jls.elem.Output;
-import jls.elem.SaveTags;
-import jls.elem.StateMachine;
+import jls.elem.Put;
 import jls.elem.SubCircuit;
-import jls.elem.TruthTable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * The main (container) class for each circuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public class Circuit {
@@ -106,7 +102,7 @@ public class Circuit {
 
 	/**
 	 * Create a new, empty circuit.
-	 * 
+	 *
 	 * @param name
 	 *            The name of this circuit.
 	 *
@@ -199,7 +195,7 @@ public class Circuit {
 
 	/**
 	 * Get the directory the circuit file is stored in.
-	 * 
+	 *
 	 * @return the full path name of the directory.
 	 */
 	public String getDirectory() {
@@ -209,7 +205,7 @@ public class Circuit {
 
 	/**
 	 * Set the directory the circuit file is store in.
-	 * 
+	 *
 	 * @param dir
 	 *            The full path name of the directory.
 	 */
@@ -220,7 +216,7 @@ public class Circuit {
 
 	/**
 	 * Get the name of this circuit.
-	 * 
+	 *
 	 * @return the name of this circuit.
 	 *
 	 * @jls.testedby jls.FormatHeaderTest#headerlessLegacyTextStillLoads()
@@ -234,7 +230,7 @@ public class Circuit {
 
 	/**
 	 * Change name of this circuit.
-	 * 
+	 *
 	 * @param name
 	 *            New name.
 	 */
@@ -272,7 +268,7 @@ public class Circuit {
 
 	/**
 	 * Check if circuit has changed.
-	 * 
+	 *
 	 * @return true if the circuit has changed, false if not.
 	 *
 	 * @jls.testedby jls.CircuitChangedFlagTest#clearChangedClearsTheFlag()
@@ -331,7 +327,7 @@ public class Circuit {
 
 	/**
 	 * Add an element to this circuit.
-	 * 
+	 *
 	 * @param el
 	 *            The element to add.
 	 *
@@ -352,7 +348,7 @@ public class Circuit {
 	/**
 	 * Delete element from circuit. Do nothing if the element is not in the
 	 * circuit.
-	 * 
+	 *
 	 * @param el
 	 *            The element to remove.
 	 */
@@ -625,10 +621,10 @@ public class Circuit {
 
 	/**
 	 * Load circuit from file.
-	 * 
+	 *
 	 * @param input
 	 *            A scanner to read with.
-	 * 
+	 *
 	 * @return false if there were problems, true if load was successful.
 	 *
 	 * @jls.testedby jls.AllElementsRoundTripTest#load()
@@ -974,7 +970,7 @@ public class Circuit {
 
 	/**
 	 * Load an element by reading all of its instance variable values.
-	 * 
+	 *
 	 * @param el
 	 *            An empty object to load.
 	 * @param input
@@ -1242,10 +1238,10 @@ public class Circuit {
 
 	/**
 	 * Finish load of circuit.
-	 * 
+	 *
 	 * @param g
 	 *            The Graphics object to use.
-	 * 
+	 *
 	 * @return false if any exceptions occur
 	 * @throws Exception
 	 *             declared for callers; assembly problems are in fact
@@ -1376,9 +1372,10 @@ public class Circuit {
 					if (vend.isLoadTriState()) {
 						net.loadTriState();
 					}
-					if (vend.isAttached()) {
-						net.setBits(vend.getPut().getBits());
-						if (vend.getPut() instanceof Output) {
+					Put vendPut = vend.getPut();
+					if (vendPut != null) {
+						net.setBits(vendPut.getBits());
+						if (vendPut instanceof Output) {
 							net.setInput();
 						}
 					}
@@ -1425,7 +1422,7 @@ public class Circuit {
 
 	/**
 	 * Get the smallest rectangle containing all the elements in the circuit.
-	 * 
+	 *
 	 * @return the smallest rectangle.
 	 */
 	public jls.core.Bounds getBounds() {
@@ -1447,7 +1444,7 @@ public class Circuit {
 
 	/**
 	 * Save circuit in file.
-	 * 
+	 *
 	 * @param output
 	 *            The file to write to.
 	 *
@@ -1600,10 +1597,10 @@ public class Circuit {
 
 	/**
 	 * Get an element from the load map.
-	 * 
+	 *
 	 * @param id
 	 *            The id of the element.
-	 * 
+	 *
 	 * @return the element with the given id, or null if not in the map.
 	 */
 	public @Nullable Element getElementByID(int id) {
@@ -1614,10 +1611,10 @@ public class Circuit {
 	/**
 	 * Add a name to the list of names used. If already used in the list, don't
 	 * add it.
-	 * 
+	 *
 	 * @param name
 	 *            The new name.
-	 * 
+	 *
 	 * @return false if the name is already in the list, true if not.
 	 */
 	public boolean addName(String name) {
@@ -1630,10 +1627,10 @@ public class Circuit {
 
 	/**
 	 * See if this circuit already has an element with a given name.
-	 * 
+	 *
 	 * @param name
 	 *            The name to check for.
-	 * 
+	 *
 	 * @return true if the name is already used, false if not.
 	 */
 	public boolean hasName(String name) {
@@ -1644,7 +1641,7 @@ public class Circuit {
 	/**
 	 * Remove a name from the list of names used. Do nothing if not there to
 	 * start with.
-	 * 
+	 *
 	 * @param name
 	 *            The name to remove.
 	 */
@@ -1656,7 +1653,7 @@ public class Circuit {
 	/**
 	 * Set that this circuit is an imported circuit. This means it cannot be
 	 * saved in a file and that pins cannot be added or removed.
-	 * 
+	 *
 	 * @param sub
 	 *            The SubCircuit element in the main circuit that refers to this
 	 *            subcircuit.
@@ -1670,7 +1667,7 @@ public class Circuit {
 
 	/**
 	 * See if this is an imported circuit.
-	 * 
+	 *
 	 * @return true if it is imported, false otherwise.
 	 */
 	public boolean isImported() {
@@ -1680,7 +1677,7 @@ public class Circuit {
 
 	/**
 	 * Get the SubCircuit element referring to this circuit.
-	 * 
+	 *
 	 * @return the element.
 	 */
 	public @Nullable SubCircuit getSubElement() {
@@ -1734,12 +1731,12 @@ public class Circuit {
 	/**
 	 * Add a jumpstart to the list of jumpstarts in this circuit. If there is
 	 * already one with the given name, do not add it.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the jumpstart.
 	 * @param start
 	 *            The jumpstart object.
-	 * 
+	 *
 	 * @return false if there already is a jumpstart with the given name, true
 	 *         otherwise.
 	 */
@@ -1753,21 +1750,27 @@ public class Circuit {
 
 	/**
 	 * Get the jumpstart with the given name.
-	 * 
+	 *
 	 * @param name
-	 *            The name of the desired jumpstart.
-	 * 
+	 *            The name of the desired jumpstart, or null (which never
+	 *            matches).
+	 *
 	 * @return the jumpstart, or null if it no jumpstart with the given name
 	 *         exists.
 	 */
-	public @Nullable JumpStart getJumpStart(String name) {
+	public @Nullable JumpStart getJumpStart(@Nullable String name) {
 
+		// a null name matches nothing (and starts is a TreeMap, whose
+		// get(null) would throw rather than miss)
+		if (name == null) {
+			return null;
+		}
 		return starts.get(name);
 	} // end of getJumpStart method
 
 	/**
 	 * Get all jump start names in alphabetical order.
-	 * 
+	 *
 	 * @return the starts.
 	 */
 	public Set<String> getJumpStartNames() {
@@ -1779,7 +1782,7 @@ public class Circuit {
 
 	/**
 	 * Remove a jump start from the list.
-	 * 
+	 *
 	 * @param name
 	 *            The name of this jump start.
 	 */
@@ -1801,7 +1804,7 @@ public class Circuit {
 
 	/**
 	 * For debugging, return name and super.toString
-	 * 
+	 *
 	 * @return string version of this circuit.
 	 */
 	@Override

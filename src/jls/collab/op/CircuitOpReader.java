@@ -2,7 +2,10 @@ package jls.collab.op;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
+
+import org.jspecify.annotations.Nullable;
 
 import jls.elem.ElementId;
 
@@ -123,7 +126,7 @@ public final class CircuitOpReader {
 			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
 					&& name != null && !name.isEmpty() && dx == null
 					&& dy == null && cw == null);
-			return new AttachProbe(ids.get(0), name);
+			return new AttachProbe(ids.get(0), Objects.requireNonNull(name));
 		case "RemoveProbe":
 			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
 					&& name == null && dx == null && dy == null
@@ -133,7 +136,7 @@ public final class CircuitOpReader {
 			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
 					&& name == null && dx == null && dy == null
 					&& cw != null && (cw == 0 || cw == 1));
-			return new RotateElement(ids.get(0), cw == 1);
+			return new RotateElement(ids.get(0), Objects.requireNonNull(cw) == 1);
 		case "FlipElement":
 			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
 					&& name == null && dx == null && dy == null
@@ -143,7 +146,8 @@ public final class CircuitOpReader {
 			requireFields(kind, !ids.isEmpty() && blocks.isEmpty()
 					&& name == null && dx != null && dy != null
 					&& cw == null);
-			return new MoveElements(ids, dx, dy);
+			return new MoveElements(ids,
+					Objects.requireNonNull(dx), Objects.requireNonNull(dy));
 		case "AddElements":
 			requireFields(kind, !blocks.isEmpty() && ids.isEmpty()
 					&& name == null && dx == null && dy == null
@@ -196,7 +200,8 @@ public final class CircuitOpReader {
 		try {
 			return ElementId.parse(text);
 		} catch (IllegalArgumentException ex) {
-			throw new OpRejected(ex.getMessage());
+			throw new OpRejected(
+					Objects.requireNonNullElse(ex.getMessage(), ex.toString()));
 		}
 	} // end of parseId method
 
@@ -211,7 +216,7 @@ public final class CircuitOpReader {
 	 *
 	 * @throws OpRejected on a duplicate or malformed value.
 	 */
-	private static Integer parseInt(Integer existing, String text,
+	private static Integer parseInt(@Nullable Integer existing, String text,
 			String key) throws OpRejected {
 
 		if (existing != null) {

@@ -1,14 +1,14 @@
 package jls.elem;
 
-import jls.*;
-
-import java.util.*;
 import java.io.*;
+import java.util.*;
+
+import jls.*;
 
 /**
  * Put text into the circuit.
  * Has nothing to do with simulation, used simply to annotate the circuit.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Text extends DisplayElement {
@@ -34,10 +34,11 @@ public final class Text extends DisplayElement {
 
 	/**
 	 * Create a new Text element.
-	 * 
-	 * @param circuit The circuit this element will be part of.
+	 *
+	 * @param circuit The circuit this element will be part of, or null
+	 *            for a detached header/sentinel element.
 	 */
-	public Text(Circuit circuit) {
+	public Text(@org.jspecify.annotations.Nullable Circuit circuit) {
 
 		super(circuit);
 	} // end of constructor
@@ -55,7 +56,7 @@ public final class Text extends DisplayElement {
 	 * @param g The text metrics to size with (also a font Provider).
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// first split lines
 		lines.clear();
@@ -403,7 +404,7 @@ public final class Text extends DisplayElement {
 	@Override
 	public Text copy() {
 
-		Text it = new Text(circuit);
+		Text it = new Text(getCircuit());
 		super.copy(it);
 		for (String line : lines) {
 			it.lines.add(line);
@@ -426,7 +427,7 @@ public final class Text extends DisplayElement {
 
 	/**
 	 * Text areas can be changed.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override

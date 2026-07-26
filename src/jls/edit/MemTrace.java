@@ -1,16 +1,18 @@
 package jls.edit;
 
-import jls.elem.*;
 import java.awt.*;
+
 import javax.swing.*;
+
+import jls.elem.*;
 
 /**
  * Display memory read/write info in a popup window.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class MemTrace extends JFrame {
-	
+
 	// named constants
 	/** The trace window's initial width in pixels. */
 	private int WIDTH = 300;
@@ -22,21 +24,21 @@ public final class MemTrace extends JFrame {
 	private Memory mem;
 	/** The text area the read/write lines are appended to. */
 	private JTextArea info = new JTextArea();
-	
+
 	/**
 	 * Set up memory trace window.
 	 *
 	 * @param mem A reference to the memory element this will display.
 	 */
 	public MemTrace(Memory mem) {
-		
+
 		super(mem.getName() + " write trace");
 		this.mem = mem;
 		setSize(WIDTH,HEIGHT);
 		setLayout(new BorderLayout());
 		add(new JScrollPane(info),BorderLayout.CENTER);
 	} // end of constructor
-	
+
 	/**
 	 * Make the window visible, placed relative to its owner (#104).
 	 *
@@ -47,13 +49,13 @@ public final class MemTrace extends JFrame {
 		setLocationRelativeTo(owner);
 		setVisible(true);
 	} // end of showit method
-	
+
 	/**
 	 * Refresh the displayed text from the memory's activity trace.
 	 */
 	public void update() {
-		
+
 		info.setText(mem.getActivityTrace());
 	} // end of update method
-	
+
 } // end of MemTrace class

@@ -3,10 +3,7 @@ package jls.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.awt.Rectangle;
-
 import jls.core.Geometry;
-import jls.JLSInfo;
 import jls.elem.Element;
 
 /**

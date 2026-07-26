@@ -21,6 +21,8 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Help;
 import jls.JLSInfo;
 
@@ -63,7 +65,7 @@ public abstract class ElementFormDialog extends JDialog {
 	private final JLabel errorLabel = new JLabel();
 
 	/** The help topic id for the Help button, or null for no Help button. */
-	private final String helpTopic;
+	private final @Nullable String helpTopic;
 
 	/** True once finishDialog packed the window (so error messages repack). */
 	private boolean packedToFit = false;
@@ -79,7 +81,7 @@ public abstract class ElementFormDialog extends JDialog {
 		/** The constraint message, stated in domain terms. */
 		private final String message;
 		/** The offending form field, or null for a structural violation. */
-		private final JComponent field;
+		private final @Nullable JComponent field;
 
 		/**
 		 * Create a violation.
@@ -87,7 +89,7 @@ public abstract class ElementFormDialog extends JDialog {
 		 * @param message The constraint, stated in domain terms.
 		 * @param field The offending form field, or null.
 		 */
-		public Violation(String message, JComponent field) {
+		public Violation(String message, @Nullable JComponent field) {
 
 			this.message = message;
 			this.field = field;
@@ -108,7 +110,7 @@ public abstract class ElementFormDialog extends JDialog {
 		 *
 		 * @return the offending form field, or null.
 		 */
-		public JComponent getField() {
+		public @Nullable JComponent getField() {
 
 			return field;
 		} // end of getField method
@@ -122,7 +124,7 @@ public abstract class ElementFormDialog extends JDialog {
 	 * @param helpTopic The help topic id for the Help button, or null for
 	 *            no Help button.
 	 */
-	protected ElementFormDialog(String title, String helpTopic) {
+	protected ElementFormDialog(String title, @Nullable String helpTopic) {
 
 		super(JLSInfo.frame, title, true);
 		this.helpTopic = helpTopic;

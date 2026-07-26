@@ -10,9 +10,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import jls.core.Geometry;
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.TellUser;
+import jls.core.Geometry;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
@@ -80,7 +82,7 @@ public final class TruthTable extends LogicElement
 	/** GUI hook: re-lays out and repaints the edit-dialog display after a
 	 *  model change. Null when no display exists (headless), so the table
 	 *  mutators run identically with or without a dialog. */
-	private Runnable displayRefresher;
+	private @Nullable Runnable displayRefresher;
 	/** Number of rows in the table. */
 	private int rows;
 	/** Number of columns in the table (inputs plus outputs). */
@@ -98,7 +100,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Create a new truth table element.
-	 * 
+	 *
 	 * @param circ The circuit this element is in.
 	 */
 	public TruthTable(Circuit circ) {
@@ -112,7 +114,7 @@ public final class TruthTable extends LogicElement
 	 * @param g The graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// determine width if needed
 		int s = Geometry.SPACING;
@@ -120,7 +122,7 @@ public final class TruthTable extends LogicElement
 			if (width == 0 && height == 0) {
 				jls.core.TextMetrics fm = g;
 				String dname = name;
-				if (name.isEmpty()) 
+				if (name.isEmpty())
 					dname = "Logic";
 				width = fm.stringWidth(" " + dname + " ");
 				for (String input : inputNames) {
@@ -178,7 +180,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The PrintWriter to write to.
 	 */
 	@Override
@@ -293,7 +295,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
@@ -322,7 +324,7 @@ public final class TruthTable extends LogicElement
 
 		// create new element; the attribute registry copies name, delay,
 		// rows and cols (allocating the copy's table)
-		TruthTable it = new TruthTable(circuit);
+		TruthTable it = new TruthTable(getCircuit());
 		super.copy(it);
 
 		// copy input and output names
@@ -348,7 +350,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -360,7 +362,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Remove name from list of element names in this circuit.
-	 * 
+	 *
 	 * @param circ A reference back to the circuit the element is in.
 	 */
 	@Override
@@ -372,33 +374,33 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Get the name of this truth table.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	@Override
 	public String getName() {
-		
+
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Truth tables can be modified.
-	 * 
+	 *
 	 * @return true.
-	 */ 
+	 */
 	@Override
 	public boolean canChange() {
 
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * Truth tables cannot be copied.
-	 * 
+	 *
 	 * @return false.
 	 */
 	public boolean canCopy() {
-		
+
 		return false;
 	} // end of canCopy method
 
@@ -438,7 +440,7 @@ public final class TruthTable extends LogicElement
 
 		// mark circuit changed if there were any changes in truth table
 		if (anyChanges) {
-			circuit.markChanged();
+			getCircuit().markChanged();
 		}
 
 		// if name has changed, detach
@@ -503,7 +505,7 @@ public final class TruthTable extends LogicElement
 		if (tname.equals(name))
 			nameChanged = false;
 		else {
-			circuit.addName(tname);
+			getCircuit().addName(tname);
 			nameChanged = true;
 			anyChanges = true;
 		}
@@ -585,7 +587,7 @@ public final class TruthTable extends LogicElement
 	 *
 	 * @param displayRefresher The refresh hook, or null.
 	 */
-	public void setDisplayRefresher(Runnable displayRefresher) {
+	public void setDisplayRefresher(@Nullable Runnable displayRefresher) {
 
 		this.displayRefresher = displayRefresher;
 	} // end of setDisplayRefresher method
@@ -612,7 +614,7 @@ public final class TruthTable extends LogicElement
 	public void addInput(String signal) {
 
 		// ignore empty input
-		if (signal.isEmpty()) 
+		if (signal.isEmpty())
 			return;
 
 		// don't allow duplicate names
@@ -697,13 +699,13 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Add a new output signal to the truth table.
-	 * 
+	 *
 	 * @param signal The new output signal name.
 	 */
 	public void addOutput(String signal) {
 
 		// ignore empty input
-		if (signal.isEmpty()) 
+		if (signal.isEmpty())
 			return;
 
 		// don't allow duplicate names
@@ -752,7 +754,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Remove the given input from the truth table.
 	 * Can only be done if all outputs match.
-	 * For example, 
+	 * For example,
 	 *   a b | f
 	 *   0 0 | 0
 	 *   0 1 | 1
@@ -760,7 +762,7 @@ public final class TruthTable extends LogicElement
 	 *   1 1 | 1
 	 * b cannot be removed because for a=0, f=0 when b=0, f=1 when b=0, so
 	 * what should f be when b is removed?  On the other hand, a can be removed.
-	 * 
+	 *
 	 * @param signal The name of the input signal to remove.
 	 */
 	public void removeInput(String signal) {
@@ -813,7 +815,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Remove the given output from the truth table.
-	 * 
+	 *
 	 * @param which The position of the name to remove.
 	 */
 	public void removeOutput(String which) {
@@ -849,7 +851,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Change the output value in a given place from 0->1, 1->x, x->0.
-	 * 
+	 *
 	 * @param row The display row.
 	 * @param col The display column.
 	 */
@@ -864,7 +866,7 @@ public final class TruthTable extends LogicElement
 	 * Make a don't care at a given position, if possible.
 	 * Two rows are collapsed into one, with the lowest index row remaining
 	 * and the other one removed.
-	 * 
+	 *
 	 * @param row The row getting the don't care.
 	 * @param col The column getting the don't care.
 	 */
@@ -901,11 +903,11 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Find row that matches a given row.
-	 * 
+	 *
 	 * @param row The row number to try to match.
 	 * @param ignore A column to ignore when looking for a match, or -1
 	 *        if no column should be ignored.
-	 * 
+	 *
 	 * @return the matching row number, if one.
 	 *         Otherwise return -1.
 	 */
@@ -952,7 +954,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Remove a row of the table.
-	 * 
+	 *
 	 * @param row The row to remove.
 	 */
 	public void removeRow(int row) {
@@ -979,7 +981,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Remove a don't care by changing the x in this row to a 0 and
 	 * adding (in the correct place) a new row that has a 1 where the x is.
-	 * 
+	 *
 	 * @param row The row with the don't care being undone.
 	 * @param col The column with the don't care being undone.
 	 */
@@ -1058,9 +1060,9 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Create an integer that is equal to the binary value in a given row.
 	 * Don't care's are assumed to be 0.
-	 * 
+	 *
 	 * @param row The row.
-	 * 
+	 *
 	 * @return the corresponding integer.
 	 */
 	public int makeRowCode(int row) {
@@ -1077,7 +1079,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Rename input signal.
-	 * 
+	 *
 	 * @param signal Current input signal name.
 	 */
 	public void renameInput(String signal) {
@@ -1094,7 +1096,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Rename output signal.
-	 * 
+	 *
 	 * @param signal Current output signal name.
 	 */
 	public void renameOutput(String signal) {
@@ -1115,7 +1117,7 @@ public final class TruthTable extends LogicElement
 	 *
 	 * @return new signal name, or null if invalid or duplicate or canceled.
 	 */
-	private String getNewName() {
+	private @Nullable String getNewName() {
 
 		// get name
 		String newSignal =
@@ -1154,7 +1156,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Move output signal column left one position.
 	 * If already the farthest left, do nothing.
-	 * 
+	 *
 	 * @param signal The signal name of the column to move.
 	 */
 	public void moveOutputLeft(String signal) {
@@ -1184,7 +1186,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Move output signal column right one position.
 	 * If already the farthest left, do nothing.
-	 * 
+	 *
 	 * @param signal The signal name of the column to move.
 	 */
 	public void moveOutputRight(String signal) {
@@ -1214,7 +1216,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Move input signal column left one position, if not already farthest left.
 	 * Reorder bit assignments accordingly.
-	 * 
+	 *
 	 * @param signal The signal name of the column to move.
 	 */
 	public void moveInputLeft(String signal) {
@@ -1246,7 +1248,7 @@ public final class TruthTable extends LogicElement
 	/**
 	 * Move input signal column right one position, if not already farthest right.
 	 * Reorder bit assignments accordingly.
-	 * 
+	 *
 	 * @param signal The signal name of the column to move.
 	 */
 	public void moveInputRight(String signal) {
@@ -1292,7 +1294,10 @@ public final class TruthTable extends LogicElement
 		int[][] newTable = new int[rows][cols];
 		int row = 0;
 		for (int i : map.keySet()) {
-			int oldRow = map.get(i);
+			Integer oldRowVal = map.get(i);
+			if (oldRowVal == null)
+				continue;
+			int oldRow = oldRowVal;
 			for (int c=0; c<cols; c+=1) {
 				newTable[row][c] = table[oldRow][c];
 			}
@@ -1325,7 +1330,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Combinational logic has timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
@@ -1336,7 +1341,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
@@ -1347,7 +1352,7 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
@@ -1360,8 +1365,9 @@ public final class TruthTable extends LogicElement
 	// Simulation
 	//-------------------------------------------------------------------------------
 
-	/** The value (0 or 1) each output will have once its pending event fires, indexed by output position. */
-	private int[] toBeValue;
+	/** The value (0 or 1) each output will have once its pending event fires,
+	 *  indexed by output position. Null until {@link #initSim} allocates it. */
+	private int @Nullable [] toBeValue;
 	/**
 	 * A pending output change carried through the simulator: an output pin's
 	 * position (index into the outputs list) paired with the BitSet value it
@@ -1370,8 +1376,9 @@ public final class TruthTable extends LogicElement
 	static class Out {
 		/** Index of the output pin in the outputs list. */
 		int position;
-		/** The value the output pin should take on. */
-		BitSet value;
+		/** The value the output pin should take on. Set before the pending
+		 *  event is posted, so non-null by the time the event fires. */
+		@Nullable BitSet value;
 
 		/**
 		 * Create a pending output change.
@@ -1382,14 +1389,15 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * Initialize this element by setting its output pins and to-be values to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
 
 		// create toBeValue array
-		toBeValue = new int[outputNames.size()];
+		int[] toBe = new int[outputNames.size()];
+		toBeValue = toBe;
 
 		// set output pins and to be values
 		int pos = 0;
@@ -1402,7 +1410,7 @@ public final class TruthTable extends LogicElement
 			// if it should become nonzero then post an event
 			int outValue = table[0][pos+offset];
 			if (outValue == 1) {
-				toBeValue[pos] = 1;
+				toBe[pos] = 1;
 				BitSet val = new BitSet(1);
 				val.set(0);
 				Out out = new Out();
@@ -1417,13 +1425,13 @@ public final class TruthTable extends LogicElement
 
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
 
 		// if an input has changed ...
 		if (todo == null) {
@@ -1458,6 +1466,9 @@ public final class TruthTable extends LogicElement
 			}
 
 			// for each output value...
+			int[] toBe = toBeValue;
+			if (toBe == null)
+				throw new IllegalStateException("initSim must run before react");
 			int offset = inputNames.size();
 			int pos = 0;
 			for (int i = 0; i < outputs.size(); i++) {
@@ -1469,8 +1480,8 @@ public final class TruthTable extends LogicElement
 				if (outValue == 2)
 					outValue = 0;
 
-				if (outValue != toBeValue[pos]) {
-					toBeValue[pos] = outValue;
+				if (outValue != toBe[pos]) {
+					toBe[pos] = outValue;
 					BitSet val = new BitSet(1);
 					if (outValue == 1)
 						val.set(0);
@@ -1490,6 +1501,8 @@ public final class TruthTable extends LogicElement
 			// send to output
 			Output out = outputs.get(newOut.position);
 			BitSet val = newOut.value;
+			if (val == null)
+				throw new IllegalStateException("pending output event has no value");
 			BitSet newVal = (BitSet)val.clone();
 			out.propagate(newVal,now,sim);
 		}

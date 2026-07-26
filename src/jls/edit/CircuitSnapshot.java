@@ -11,6 +11,8 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.Circuit;
 import jls.JLSInfo;
 
@@ -80,7 +82,7 @@ public final class CircuitSnapshot {
 	 * @jls.testedby jls.edit.CircuitSnapshotTest#restoreDoesNotPerturbSnapshotIdentity()
 	 * @jls.testedby jls.edit.CircuitSnapshotTest#snapshotIsCompact()
 	 */
-	public Circuit restore(String name, Graphics g) {
+	public @Nullable Circuit restore(String name, Graphics g) {
 
 		String text = new String(inflate(deflated), StandardCharsets.UTF_8);
 		Circuit restored = new Circuit(name);

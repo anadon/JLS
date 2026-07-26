@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The persisted trust decisions of this install (issue #168, research
  * doc section 5.2 step 4): which peer keys the user has SAS-verified,
@@ -195,7 +197,7 @@ public final class KnownPeers {
 	 *
 	 * @return the name, or null if the fingerprint is not verified.
 	 */
-	public String nameOf(String fingerprint) {
+	public @Nullable String nameOf(String fingerprint) {
 
 		Record record = peers.get(fingerprint);
 		return record == null ? null : record.name;

@@ -81,7 +81,7 @@ public final class RegisterDialog implements ElementDialog {
 
 		// if element got bigger, detach and make user re-position
 		if (form.nameChanged) {
-			reg.resizeForNewName(SwingTextMetrics.forGraphics(g));
+			reg.resizeForNewName(SwingTextMetrics.of(g));
 			return true;
 		}
 		return false;

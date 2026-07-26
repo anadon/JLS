@@ -20,9 +20,9 @@ import java.util.Scanner;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import jls.core.Geometry;
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.core.Geometry;
 import jls.elem.AndGate;
 import jls.elem.Constant;
 import jls.elem.OutputPin;

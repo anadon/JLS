@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A solved layout for one {@link LayoutGraph}: a grid position for
  * every element and an orthogonal waypoint chain for every connection
@@ -161,7 +163,7 @@ public final class LayoutResult {
 	 *
 	 * @throws IllegalArgumentException if the graph has no such node
 	 */
-	public Point position(String nodeId) {
+	public @Nullable Point position(String nodeId) {
 		graph.node(nodeId);
 		return positions.get(nodeId);
 	}
@@ -176,7 +178,7 @@ public final class LayoutResult {
 	 * @throws IllegalArgumentException if the edge is not from this
 	 *		result's graph
 	 */
-	public List<Point> route(LayoutGraph.Edge edge) {
+	public @Nullable List<Point> route(LayoutGraph.Edge edge) {
 		if (!graph.edges().contains(edge)) {
 			throw new IllegalArgumentException(
 					"edge is not from this result's graph");

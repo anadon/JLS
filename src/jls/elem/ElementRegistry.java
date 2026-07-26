@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * The table of every loadable element type (issue #78): one
  * {@link ElementType} descriptor per save-file tag, looked up by
@@ -112,7 +114,7 @@ public final class ElementRegistry {
 	 *
 	 * @return the descriptor, or null if no element type has that tag.
 	 */
-	public static ElementType forTag(String tag) {
+	public static @Nullable ElementType forTag(String tag) {
 
 		return BY_TAG.get(tag);
 	} // end of forTag method

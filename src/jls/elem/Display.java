@@ -5,40 +5,42 @@ import java.math.BigInteger;
 import java.util.BitSet;
 import java.util.Vector;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
+import org.jspecify.annotations.Nullable;
+
 import jls.BitSetUtils;
 import jls.Circuit;
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.sim.Simulator;
 
 /**
  * Display an input value on the circuit editor screen.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Display extends LogicElement {
-	
+
 	// constants
 	/** The input width a new display starts with. */
 	private final int defaultBits = 1;
-	
+
 	// properties
 	/** The width of the displayed input, in bits. */
 	private int bits = defaultBits;
 	/** The radix (2, 10 or 16) the value is displayed in. */
 	private int base = 10;
-	
+
 	// legacy
 	/** Legacy single-input orientation marker; -1 means "new save format". */
 	int orient = -1;
-	
+
 	/**
 	 * Create new element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is in.
 	 */
 	public Display(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
 
@@ -89,7 +91,7 @@ public final class Display extends LogicElement {
 	 * @param g Unused.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// set up size
 		int s = Geometry.SPACING;
@@ -100,7 +102,7 @@ public final class Display extends LogicElement {
 				height = 2*s;
 				jls.core.TextMetrics fm = g;
 				BigInteger maxVal = new BigInteger("1").shiftLeft(bits).subtract(new BigInteger("1"));
-				
+
 				String longest = maxVal.toString(base).replaceAll(".","0");
 				switch (base) {
 				case 2:
@@ -113,7 +115,7 @@ public final class Display extends LogicElement {
 				width = (strLen+2*s-1)/(2*s)*(2*s);
 			}
 		}
-		
+
 		// create input
 		if(orient < 0) { // New save format
 			inputs.add(new Input("input0",this,0,s,bits)); // Left
@@ -136,7 +138,7 @@ public final class Display extends LogicElement {
 				break;
 			}
 		}
-		
+
 	} // end of init method
 
 	/**
@@ -179,7 +181,7 @@ public final class Display extends LogicElement {
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
@@ -273,7 +275,7 @@ public final class Display extends LogicElement {
 	@Override
 	public Element copy() {
 
-		Display it = new Display(circuit);
+		Display it = new Display(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -283,26 +285,26 @@ public final class Display extends LogicElement {
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return bits + " bit display, value = " + BitSetUtils.toDisplay(currentValue,bits);
 	} // end of showInfo method
-	
+
 	/**
 	 *  This method will rotate the display if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		// No-op
 	}
-	
+
 	/**
 	 * Tells if a display is capable of rotatating, can only rotate when input has no attachment.
 	 * @return False if input has a wire attached, True otherwise
@@ -313,7 +315,7 @@ public final class Display extends LogicElement {
 		// Displays cannot be rotated ever since they implement the Stop behavior for inputs.
 		return false;
 	}
-	
+
 	/**
 	 * Tells if a display is capable of flippinging, can only flip when input has no attachment.
 	 * @return False if input has a wire attached, True otherwise
@@ -324,13 +326,13 @@ public final class Display extends LogicElement {
 		// Displays cannot be flipped ever since they implement the Stop behavior for inputs.
 		return false;
 	}
-	
+
 	/**
 	 * This method will flip a display
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		// No-op
 	}
@@ -338,9 +340,9 @@ public final class Display extends LogicElement {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/** The value being displayed; null shows as HiZ. */
-	private BitSet currentValue = new BitSet();
+	private @Nullable BitSet currentValue = new BitSet();
 
 	/**
 	 * The value currently being displayed (issue #77: read by the GUI-side
@@ -349,38 +351,40 @@ public final class Display extends LogicElement {
 	 * @return the current value, or null for HiZ.
 	 */
 	@Override
-	public BitSet getCurrentValue() {
+	public @Nullable BitSet getCurrentValue() {
 
 		return currentValue;
 	} // end of getCurrentValue method
 
 	/**
 	 * Set the current display value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		Input in = inputs.get(0);
-		if (in.isAttached() && in.getWireEnd().getNet().isTriState()) {
-			currentValue = null;
-		}
-		else {
-			currentValue = new BitSet();
+		currentValue = new BitSet();
+		if (in.isAttached()) {
+			WireEnd end = in.getWireEnd();
+			if (end == null)
+				throw new IllegalStateException("attached input has no wire end");
+			if (end.getNet().isTriState())
+				currentValue = null;
 		}
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
 		currentValue = inputs.get(0).getValue();
 	} // end of react method
 

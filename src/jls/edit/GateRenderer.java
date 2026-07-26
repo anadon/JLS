@@ -164,6 +164,10 @@ public final class GateRenderer implements ElementRenderer {
 				path.closePath();
 			}
 		}
+		if (path == null) {
+			throw new IllegalStateException(
+					"gate outline produced no segments");
+		}
 		return path;
 	} // end of gatePathFrom method
 

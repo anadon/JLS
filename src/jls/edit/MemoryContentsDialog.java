@@ -61,10 +61,8 @@ public final class MemoryContentsDialog {
 			display.add(addrLabel);
 
 			// data info
-			BitSet temp = new BitSet(1);
-			if (mem.getCurrentValue(addr) != null) {
-				temp = mem.getCurrentValue(addr);
-			}
+			BitSet stored = mem.getCurrentValue(addr);
+			BitSet temp = stored != null ? stored : new BitSet(1);
 			String hex = BitSetUtils.ToString(temp, 16);
 			String unsigned = BitSetUtils.ToString(temp, 10);
 			String signed = BitSetUtils.ToStringSigned(temp, bits);

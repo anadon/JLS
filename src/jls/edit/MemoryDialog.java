@@ -85,7 +85,7 @@ public final class MemoryDialog implements ElementDialog {
 
 		// if name too big, resize and detach
 		if (form.changed) {
-			mem.reinit(SwingTextMetrics.forGraphics(g));
+			mem.reinit(SwingTextMetrics.of(g));
 			return true;
 		}
 		return false;

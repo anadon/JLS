@@ -1,12 +1,14 @@
 package jls.sim;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A simulation event (typically a signal value change).
- * 
+ *
  * @author David A. Poplawski
  */
 public final class SimEvent implements Comparable<SimEvent> {
-	
+
 	/** The next sequence number, assigned at construction (post order). */
 	private static long sequence = 0;
 
@@ -22,8 +24,8 @@ public final class SimEvent implements Comparable<SimEvent> {
 	/** The element whose react runs when this event fires. */
 	private final Reacts callBack;
 	/** The event payload; null means "inputs changed, re-read them". */
-	private final Object todo;
-	
+	private final @Nullable Object todo;
+
 	/**
 	 * Create a new event object with the given time and callback.
 	 *
@@ -33,15 +35,15 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 *             reacting object should do about this event.
 	 *             Null typically means an input pin has changed value.
 	 */
-	public SimEvent(long time, Reacts callBack, Object todo) {
-		
+	public SimEvent(long time, Reacts callBack, @Nullable Object todo) {
+
 		this.time = time;
 		seq = sequence;
 		this.callBack = callBack;
 		this.todo = todo;
 		sequence += 1;
 	} // end of constructor
-	
+
 	/**
 	 * Compares this SimEvent with another.
 	 * Only the time and seq is used since compareTo is only used by the event
@@ -55,23 +57,23 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 */
 	@Override
 	public int compareTo(SimEvent other) {
-		
+
 		// compare times first
 		if (this.time < other.time)
 			return -1;
 		if (this.time > other.time)
 			return 1;
-		
+
 		// times are the same, so compare sequence numbers
 		if (this.seq < other.seq)
 			return -1;
 		if (this.seq > other.seq)
 			return 1;
-		
+
 		// this shouldn't happen since sequence numbers are unique
 		return 0;
 	} // end of compareTo method
-	
+
 	/**
 	 * Decide whether this JLSEvent object and another are equal.
 	 * They will be equal if the have the same time, the same callback
@@ -94,7 +96,7 @@ public final class SimEvent implements Comparable<SimEvent> {
 		return this.todo == null ? oth.todo == null :
 			this.todo.equals(oth.todo);
 	} // end of equals method
-	
+
 	/**
 	 * Return a hash code for this object.
 	 * This must be consistent with the equals method, hence objects
@@ -105,38 +107,39 @@ public final class SimEvent implements Comparable<SimEvent> {
 	 */
 	@Override
 	public int hashCode() {
-		
+
 		return (int)time;
 	} // end of hashCode method
-	
+
 	/**
 	 * Get the time of the event.
 	 *
 	 * @return the time.
 	 */
 	public long getTime() {
-		
+
 		return time;
 	} // end of getTime method
-	
+
 	/**
 	 * Get the object that reacts to this event.
 	 *
 	 * @return a reference to the object that reacts to this event.
 	 */
 	public Reacts getCallBack() {
-		
+
 		return callBack;
 	} // end of getCallBack method
-	
+
 	/**
 	 * Get the todo object
 	 *
-	 * @return the todo object.
+	 * @return the todo object, or null meaning "inputs changed,
+	 *         re-read them".
 	 */
-	public Object getTodo() {
-		
+	public @Nullable Object getTodo() {
+
 		return todo;
 	} // end of getTodo method
-	
+
 } // end of Event class

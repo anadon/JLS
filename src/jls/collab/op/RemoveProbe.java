@@ -29,10 +29,11 @@ public record RemoveProbe(ElementId id) implements CircuitOp {
 	public CircuitOp invert(Circuit before) throws OpRejected {
 
 		Wire wire = AttachProbe.resolveWire(before, id);
-		if (!wire.hasProbe()) {
+		String probe = wire.getProbe();
+		if (probe == null) {
 			throw new OpRejected("wire '" + id + "' has no probe");
 		}
-		return new AttachProbe(id, wire.getProbe());
+		return new AttachProbe(id, probe);
 	} // end of invert method
 
 	@Override

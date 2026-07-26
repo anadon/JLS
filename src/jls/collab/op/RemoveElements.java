@@ -13,6 +13,7 @@ import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
+import jls.elem.Put;
 import jls.elem.SubCircuit;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
@@ -126,23 +127,25 @@ public record RemoveElements(List<ElementId> ids) implements CircuitOp {
 			if (!(el instanceof WireEnd end)) {
 				continue;
 			}
-			if (end.isAttached()
-					&& group.contains(end.getPut().getElement())) {
+			Put p = end.getPut();
+			Element attached = p == null ? null : p.getElement();
+			if (attached != null && group.contains(attached)) {
 				throw new OpRejected("element '"
-						+ end.getPut().getElement().getStableId()
+						+ attached.getStableId()
 						+ "' has a wire attached and cannot be removed "
 						+ "by this op");
 			}
 		}
 		for (Element el : targets) {
-			if (!(el instanceof JumpStart)) {
+			if (!(el instanceof JumpStart js)) {
 				continue;
 			}
+			String jsName = js.getName();
 			for (Element other : circuit.getElements()) {
-				if (other instanceof JumpEnd
-						&& el.getName().equals(other.getName())
+				if (other instanceof JumpEnd je
+						&& java.util.Objects.equals(jsName, je.getName())
 						&& !group.contains(other)) {
-					throw new OpRejected("jump start '" + el.getName()
+					throw new OpRejected("jump start '" + jsName
 							+ "' still has a jump end not included in "
 							+ "the removal");
 				}

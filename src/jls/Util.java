@@ -1,31 +1,35 @@
 package jls;
 
-import jls.elem.*;
 import java.awt.Point;
-import java.math.BigInteger;
-import org.jspecify.annotations.Nullable;
-import java.util.*;
 import java.awt.event.*;
+import java.math.BigInteger;
+import java.util.*;
+
 import javax.swing.*;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.elem.*;
+import jls.elem.Put;
 
 /**
  * General utility methods used from all over the place.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Util {
-	
+
 	/**
 	 * Private constructor to keep this class from being instantiated.
 	 */
 	private Util() {}
-	
+
 	/**
 	 * Copy elements from one set to another circuit.
-	 * 
+	 *
 	 * @param from A set of elements.
 	 * @param to A circuit.
-	 * 
+	 *
 	 * @return the point of minimum x,y coordinates of all elements.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#copyOfAPartialSelectionDropsDanglingWires()
@@ -37,7 +41,7 @@ public final class Util {
 		// create set of copied ends (includes attached
 		// wire ends that won't be in the selected set)
 		Set<WireEnd>ends = new HashSet<WireEnd>();
-		
+
 		// first copy everything except wires and wire ends
 		int minx = 0;
 		int miny = 0;
@@ -56,15 +60,17 @@ public final class Util {
 				minx = x;
 			if (y < miny)
 				miny = y;
-			Element copy = el.copy();
-			to.addElement(copy);
-			
+			// every non-wire element (wires/ends are skipped above and
+			// copied separately) produces a non-null copy
+			to.addElement(Objects.requireNonNull(el.copy()));
+
 			// copy all attached wire ends (since they don't show up in
 			// the selected set)
 			for (Put p : el.getAllPuts()) {
 				if (!p.isAttached())
 					continue;
-				WireEnd oldEnd = p.getWireEnd();
+				WireEnd oldEnd = Objects.requireNonNull(p.getWireEnd(),
+						"attached put has no wire end");
 				WireEnd newEnd = oldEnd.copy();
 				to.addElement(newEnd);
 				newEnd.setPut(p.getCopy());
@@ -72,7 +78,7 @@ public final class Util {
 				ends.add(oldEnd); // for wire check later
 			}
 		}
-		
+
 		// now copy all remaining wire ends
 		for (Element el : from) {
 			if (!(el instanceof WireEnd end))
@@ -91,19 +97,19 @@ public final class Util {
 			to.addElement(end.copy());
 			ends.add(end);
 		}
-		
+
 		// copy wires
 		for (Element el : from) {
 			if (!(el instanceof Wire wire))
 				continue;
 			WireEnd end1 = wire.getEnd();
 			WireEnd end2 = wire.getOtherEnd(end1);
-			
+
 			// don't copy wires if both ends aren't being copied
 			if (!ends.contains(end1) || !ends.contains(end2)) {
 				continue;
 			}
-			
+
 			// create new wire and add to new ends
 			Wire newWire = new Wire(end1.getCopy(),end2.getCopy());
 			String probe = wire.getProbe();
@@ -113,7 +119,7 @@ public final class Util {
 			end2.getCopy().addWire(newWire);
 			to.addElement(newWire);
 		}
-		
+
 		// get rid of all wire ends with no wires
 		Set<Element>temp = new HashSet<Element>();
 		temp.addAll(to.getElements());
@@ -124,20 +130,20 @@ public final class Util {
 				}
 			}
 		}
-		
+
 		// return min point
 		return new Point(minx,miny);
 	} // end of copy method
 
 	/**
 	 * Partition all wires and wire ends into wire nets.
-	 * 
+	 *
 	 * @param circ The circuit to partition.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#partitionRebuildsWireNets()
 	 */
 	public static void partition(Circuit circ) {
-		
+
 		LinkedList<WireEnd>ends = new LinkedList<WireEnd>();
 		for (Element el : circ.getElements()) {
 			if (el instanceof WireEnd end) {
@@ -148,31 +154,32 @@ public final class Util {
 		// partition ends into wire nets
 		Set<WireNet>nets = new HashSet<WireNet>();
 		while (!ends.isEmpty()) {
-			
+
 			// start visit list and new wire net
 			LinkedList<WireEnd>visit = new LinkedList<WireEnd>();
 			WireEnd end = ends.remove();
 			visit.add(end);
 			WireNet net = new WireNet();
 			nets.add(net);
-			
+
 			// visit ends in visit list until empty
 			Set<WireEnd>visited = new HashSet<WireEnd>();
 			while (!visit.isEmpty()) {
-				
+
 				// get wire end, add to wire net
 				WireEnd vend = visit.remove();
 				ends.remove(vend);
 				visited.add(vend);
 				net.add(vend);
 				vend.setNet(net);
-				if (vend.isAttached()) {
-					net.setBits(vend.getPut().getBits());
-					if (vend.getPut() instanceof Output) {
+				Put vendPut = vend.getPut();
+				if (vendPut != null) {
+					net.setBits(vendPut.getBits());
+					if (vendPut instanceof Output) {
 						net.setInput();
 					}
 				}
-				
+
 				// add wires to wire net and add opposite wire ends to visit list
 				for (Wire wire : vend.getWires()) {
 					WireEnd otherEnd = wire.getOtherEnd(vend);
@@ -184,7 +191,7 @@ public final class Util {
 				}
 			}
 		}
-		
+
 		// propagate tri-state
 		for (WireNet net : nets) {
 			for (WireEnd end : net.getAllEnds()) {
@@ -198,19 +205,19 @@ public final class Util {
 			}
 		}
 	} // end of partition method
-	
+
 	/**
 	 * Check to make sure a name (string) consists only of letters, digits and underscore,
 	 * is at least one character long, and starts with a letter.
-	 * 
+	 *
 	 * @param str The string to check.
-	 * 
+	 *
 	 * @return true if the name is valid, false if not.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#nameValidationAcceptsIdentifiersOnly()
 	 */
 	public static boolean isValidName(String str) {
-		
+
 		if (str.length() == 0)
 			return false;
 		for (int i=0; i<str.length(); i+=1) {
@@ -225,15 +232,15 @@ public final class Util {
 		}
 		return true;
 	} // end of isValidName method
-	
+
 	/**
 	 * Check for a valid circuit file name.
 	 * A valid name can be a path name (with slashes or backslashes), but the actual
 	 * file name must be a valid name as defined by isValidName.
 	 * Any character in the string before the last slash/backslash is valid.
-	 * 
+	 *
 	 * @param str The string to check.
-	 * 
+	 *
 	 * @return the base name (minus directory prefix) if valid, or null if not valid.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#fileNameValidationStripsDirectoriesOnBothSeparators()
@@ -253,7 +260,7 @@ public final class Util {
 		else {
 			return null;
 		}
-		
+
 	} // end of isValidFileName method
 
 	/**
@@ -301,17 +308,17 @@ public final class Util {
 
 	/**
 	 * Convert value to a string in the given base.
-	 * 
+	 *
 	 * @param value The value to convert.
 	 * @param base The base.
 	 * @param extra True if prefix or suffix needed, false if not.
-	 * 
+	 *
 	 * @return the string.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#baseConversionMatchesItsDisplayContract()
 	 */
 	public static String convert(BigInteger value, int base, boolean extra) {
-		
+
 		if (base == 2) {
 			if (extra)
 				return value.toString(2)+"B";

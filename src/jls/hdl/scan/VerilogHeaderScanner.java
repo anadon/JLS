@@ -574,6 +574,11 @@ public final class VerilogHeaderScanner {
 		}
 		parseBody(name, ansi, params, unevaluable, declared);
 		if (ansi) {
+			if (ansiPorts == null) {
+				throw new IllegalStateException("ANSI header parsed but"
+						+ " produced no port list for module '" + name
+						+ "'");
+			}
 			return new ScannedModule(name, ansiPorts, params);
 		}
 		List<ScannedPort> ports = new ArrayList<ScannedPort>();

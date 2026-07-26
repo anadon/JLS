@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import jls.core.Geometry;
 import jls.BitSetUtils;
 import jls.TellUser;
+import jls.core.Geometry;
 import jls.sim.Simulator;
 
 /**
@@ -66,20 +66,35 @@ public class State {
 	private int savey;
 	/** true if this state is drawn highlighted. */
 	private boolean highlight;
-	/** the most recently highlighted transition, so it can be deleted. */
-	private Transition lastHighlighted;
-	/** the output currently being constructed during a load. */
-	private Out buildOut;
-	/** the transition currently being constructed during a load. */
-	private Transition buildTrans;
+	/**
+	 * the most recently highlighted transition, so it can be deleted;
+	 * null until {@link #highlightTrans} highlights one (genuinely
+	 * optional).
+	 */
+	private @org.jspecify.annotations.Nullable Transition lastHighlighted;
+	/**
+	 * the output currently being constructed during a load; null until a
+	 * load begins an output block ({@link #setOutputValue}).
+	 */
+	private @org.jspecify.annotations.Nullable Out buildOut;
+	/**
+	 * the transition currently being constructed during a load; null until
+	 * a load begins a transition block ({@link #setTransValue}).
+	 */
+	private @org.jspecify.annotations.Nullable Transition buildTrans;
 
 	/**
 	 * Outputs from this state.
 	 */
 	public static class Out {
 
-		/** the output signal name. */
-		public String signal;
+		/**
+		 * the output signal name; null on a freshly constructed output
+		 * until it is populated (two-phase build: {@link
+		 * State#setOutputValue}/{@link State#addOutput}/{@link State#copy}
+		 * set it before the output is used).
+		 */
+		public @org.jspecify.annotations.Nullable String signal;
 		/** the number of bits in the output signal. */
 		public int bits;
 		/** the value the signal is set to in this state. */
@@ -117,10 +132,17 @@ public class State {
 		public boolean unconditional = true;
 		/** true if this transition is taken when no other condition holds. */
 		public boolean other = false;
-		/** the state this transition goes to. */
-		public State nextState;
-		/** the name of the state this transition goes to. */
-		public String nextStateName = null; // temporarily used during load
+		/**
+		 * the state this transition goes to; null until linked (two-phase
+		 * load: {@link State#linkTrans}/{@link State#fixTrans} resolve
+		 * {@link #nextStateName} to a real reference).
+		 */
+		public @org.jspecify.annotations.Nullable State nextState;
+		/**
+		 * the name of the state this transition goes to, or null once
+		 * {@link #nextState} has been linked; temporarily used during load.
+		 */
+		public @org.jspecify.annotations.Nullable String nextStateName = null;
 		/** the intermediate points the transition line is drawn through. */
 		public Vector<jls.core.GridPoint>points = new Vector<jls.core.GridPoint>();
 		/** the corner point currently highlighted, or null if none. */
@@ -161,9 +183,10 @@ public class State {
 	 *
 	 * @param machine The state machine element this state is part of.
 	 * @param name The name of the state.
-	 * @param g The Graphics object to use.
+	 * @param g The Graphics object to use, or null when building headless
+	 *          (e.g. during a file load, before layout).
 	 */
-	public State(StateMachine machine, String name, jls.core.TextMetrics g) {
+	public State(StateMachine machine, String name, jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		this.machine = machine;
 		this.name = name;
@@ -175,9 +198,9 @@ public class State {
 
 	/**
 	 * Make a copy of this state.
-	 * * 
+	 * *
 	 * @param it The new state machine.
-	 * 
+	 *
 	 * @return A copy of this state.
 	 */
 	public State copy(StateMachine it) {
@@ -210,7 +233,12 @@ public class State {
 			newTrans.equal = tran.equal;
 			newTrans.value = tran.value;
 			newTrans.bits = tran.bits;
-			newTrans.nextStateName = tran.nextState.getName();
+			State tranNext = tran.nextState;
+			if (tranNext == null) {
+				throw new IllegalStateException(
+						"copying a transition whose next state is not linked");
+			}
+			newTrans.nextStateName = tranNext.getName();
 			for (jls.core.GridPoint p : tran.points) {
 				newTrans.points.add(new jls.core.GridPoint(p.x(),p.y()));
 			}
@@ -283,7 +311,14 @@ public class State {
 				.thenComparingInt(tr -> tr.equal ? 0 : 1)
 				.thenComparingInt(tr -> tr.value)
 				.thenComparingInt(tr -> tr.bits)
-				.thenComparing(tr -> tr.nextState.getName());
+				.thenComparing(tr -> {
+					State ns = tr.nextState;
+					if (ns == null) {
+						throw new IllegalStateException(
+								"saving a transition whose next state is not linked");
+					}
+					return ns.getName();
+				});
 	} // end of transitionSaveOrder method
 
 	/**
@@ -324,7 +359,12 @@ public class State {
 				output.println("   int value " + tr.value);
 				output.println("   int bits " + tr.bits);
 			}
-			output.println("   String next \"" + tr.nextState.getName() + "\"");
+			State trNext = tr.nextState;
+			if (trNext == null) {
+				throw new IllegalStateException(
+						"saving a transition whose next state is not linked");
+			}
+			output.println("   String next \"" + trNext.getName() + "\"");
 			for (jls.core.GridPoint p : tr.points) {
 				output.println("    pair " + p.x() + " " + p.y());
 			}
@@ -333,7 +373,7 @@ public class State {
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -367,21 +407,26 @@ public class State {
 
 	/**
 	 * Set an output int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setOutputValue(String name, int value) {
 
 		if (name.equals("bits")) {
-			buildOut.bits = value;
-			Check ch = bitmap.get(buildOut.signal);
+			Out out = buildOut;
+			if (out == null) {
+				throw new IllegalStateException(
+						"output bits set before the output signal was read");
+			}
+			out.bits = value;
+			Check ch = bitmap.get(out.signal);
 			if (ch == null) {
 				ch = new Check();
-				ch.bits = buildOut.bits;
+				ch.bits = out.bits;
 				ch.isInput = false;
 				ch.refs = 1;
-				bitmap.put(buildOut.signal,ch);
+				bitmap.put(out.signal,ch);
 			}
 			else {
 				ch.refs += 1;
@@ -391,20 +436,25 @@ public class State {
 
 	/**
 	 * Set an output long instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setOutputValue(String name, long value) {
 
 		if (name.equals("value")) {
-			buildOut.value = value;
+			Out out = buildOut;
+			if (out == null) {
+				throw new IllegalStateException(
+						"output value set before the output signal was read");
+			}
+			out.value = value;
 		}
 	} // end of setOutputValue method
 
 	/**
 	 * Set an transition String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -418,52 +468,63 @@ public class State {
 				buildTrans.unconditional = true;
 			else if (value.equals("else"))
 				buildTrans.other = true;
-			else 
+			else
 				buildTrans.signal = value;
 			trans.add(buildTrans);
 		}
 		else if (name.equals("next")) {
 
+			Transition tr = buildTrans;
+			if (tr == null) {
+				throw new IllegalStateException(
+						"transition next set before the transition was started");
+			}
+
 			// link to state if possible
 			for (State state : machine.getStates()) {
 				if (state.getName().equals(value)) {
-					buildTrans.nextState = state;
+					tr.nextState = state;
 					return;
 				}
 			}
 
 			// else save name for link to be set when state is read in
-			buildTrans.nextStateName = value;
+			tr.nextStateName = value;
 		}
 	} // end of setTransValue method
 
 	/**
 	 * Set a transition int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	public void setTransValue(String name, int value) {
 
+		Transition tr = buildTrans;
+		if (tr == null) {
+			throw new IllegalStateException(
+					"transition property set before the transition was started");
+		}
 		if (name.equals("eq")) {
 			if (value == 0)
-				buildTrans.equal = true;
+				tr.equal = true;
 			else
-				buildTrans.equal = false;
+				tr.equal = false;
 		}
 		else if (name.equals("value")) {
-			buildTrans.value = value;
+			tr.value = value;
 		}
 		else if (name.equals("bits")) {
-			buildTrans.bits = value;
-			Check ch = bitmap.get(buildTrans.signal);
+			tr.bits = value;
+			Check ch = bitmap.get(tr.signal);
 			if (ch == null) {
-				if (!buildTrans.unconditional && !buildTrans.other) {
+				if (!tr.unconditional && !tr.other) {
 					ch = new Check();
-					ch.bits = buildTrans.bits;
+					ch.bits = tr.bits;
 					ch.isInput = true;
 					ch.refs = 1;
-					bitmap.put(buildTrans.signal,ch);
+					bitmap.put(tr.signal,ch);
 				}
 			}
 			else {
@@ -474,13 +535,18 @@ public class State {
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
 	public void setTransPair(int v1, int v2) {
 
-		buildTrans.points.add(new jls.core.GridPoint(v1,v2));
+		Transition tr = buildTrans;
+		if (tr == null) {
+			throw new IllegalStateException(
+					"transition pair set before the transition was started");
+		}
+		tr.points.add(new jls.core.GridPoint(v1,v2));
 
 	} // end of setPair method
 
@@ -506,9 +572,9 @@ public class State {
 	 * Get the number of bits in a given input signal.
 	 * If this state doesn't have a transition using that signal,
 	 * return 0.
-	 * 
+	 *
 	 * @param signal The input signal name.
-	 * 
+	 *
 	 * @return the number of bits, or 0 if signal not used.
 	 */
 	public int inputBits(String signal) {
@@ -524,15 +590,15 @@ public class State {
 	 * Get the number of bits in a given output signal.
 	 * If this state doesn't have an output using that signal,
 	 * return 0.
-	 * 
+	 *
 	 * @param signal The output signal name.
-	 * 
+	 *
 	 * @return the number of bits, or 0 if signal not used.
 	 */
 	public int outputBits(String signal) {
 
 		for (Out out : outs) {
-			if (out.signal.equals(signal))
+			if (signal.equals(out.signal))
 				return out.bits;
 		}
 		return 0;
@@ -540,10 +606,10 @@ public class State {
 
 	/**
 	 * See if a given point is inside this state.
-	 * 
+	 *
 	 * @param x The x-coordinate of the point.
 	 * @param y The y-coordinate of the point.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	public boolean contains(int x, int y) {
@@ -579,9 +645,9 @@ public class State {
 
 	/**
 	 * See if this state is completely inside the given rectangle.
-	 * 
+	 *
 	 * @param rect The rectangle.
-	 * 
+	 *
 	 * @return true if it is inside, false if not.
 	 */
 	public boolean isInside(jls.core.Bounds rect) {
@@ -591,7 +657,7 @@ public class State {
 
 	/**
 	 * Set/reset highlight property of this state.
-	 * 
+	 *
 	 * @param which True to highlight, false not to.
 	 */
 	public void setHighlight(boolean which) {
@@ -601,9 +667,9 @@ public class State {
 
 	/**
 	 * Move state by a given amount.
-	 * Also move every point in this state's transitions if the 
+	 * Also move every point in this state's transitions if the
 	 * end state of those transitions is also selected.
-	 * 
+	 *
 	 * @param dx The distance to move in the x direction.
 	 * @param dy The distance to move in the y direction.
 	 * @param selected The selected states.
@@ -624,7 +690,7 @@ public class State {
 
 	/**
 	 * Move state to new position.
-	 * 
+	 *
 	 * @param x The new x-coordinate.
 	 * @param y The new y-coordinate.
 	 */
@@ -654,7 +720,7 @@ public class State {
 
 	/**
 	 * Get bounding rectangle for this state.
-	 * 
+	 *
 	 * @return the bounding rectangle.
 	 */
 	public jls.core.Bounds getRect() {
@@ -666,7 +732,7 @@ public class State {
 
 	/**
 	 * Get the name of this state.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	public String getName() {
@@ -676,7 +742,7 @@ public class State {
 
 	/**
 	 * See if this state has any transitions.
-	 * 
+	 *
 	 * @return true if it does, false if it does not.
 	 */
 	public boolean hasTransitions() {
@@ -730,7 +796,7 @@ public class State {
 	 *
 	 * @return the candidate transition, or null if it should not be made.
 	 */
-	public Transition buildTransition(State to, Vector<jls.core.GridPoint> points) {
+	public @org.jspecify.annotations.Nullable Transition buildTransition(State to, Vector<jls.core.GridPoint> points) {
 
 		// if transition is to the same state, then make sure
 		// there are at least three points in the transition else
@@ -914,7 +980,7 @@ public class State {
 	/**
 	 * Turn on/off initial state status.
 	 * Not responsible for turning off initial state status in another state.
-	 * 
+	 *
 	 * @param which True to make this state the initial state, false to make it
 	 * 				not be initial.
 	 */
@@ -925,7 +991,7 @@ public class State {
 
 	/**
 	 * Get the location of the center of this state.
-	 * 
+	 *
 	 * @return The x,y coordinates of the center.
 	 */
 	public jls.core.GridPoint getLocation() {
@@ -936,7 +1002,7 @@ public class State {
 	/**
 	 * Remove all transitions from this state to the given state
 	 * (because the given state is being removed).
-	 * 
+	 *
 	 * @param other The state being removed.
 	 */
 	public void removeTrans(State other) {
@@ -961,10 +1027,10 @@ public class State {
 
 	/**
 	 * Highlight any transition corner that is close to a given point.
-	 * 
+	 *
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return the transition whose corner is highlighted, else null. Its
 	 *         highlighted corner can then be dragged via {@link
 	 *         Transition#moveHighlight(int,int)} (issue #77).
@@ -991,10 +1057,10 @@ public class State {
 	 * Highlight any transition that has a line segment close to a given point.
 	 * Also save reference to the highlighted transition so it can be deleted
 	 * if the user wants to.
-	 * 
+	 *
 	 * @param xp The x-coordinate of the given point.
 	 * @param yp The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return true if some transition is highlighted, false if none
 	 */
 	public boolean highlightTrans(int xp, int yp) {
@@ -1006,11 +1072,18 @@ public class State {
 			// un-highlight it
 			tran.highlighted = false;
 
+			// the next state is linked by the time the machine is drawn
+			State next = tran.nextState;
+			if (next == null) {
+				throw new IllegalStateException(
+						"highlighting a transition whose next state is not linked");
+			}
+
 			// if a single segment line...
 			if (tran.points.isEmpty()) {
 				double maind =
-					jls.core.SegmentGeometry.ptSegDist(x,y,tran.nextState.x,tran.nextState.y,xp,yp);
-				if (maind < d && !contains(xp,yp) && !tran.nextState.contains(xp,yp)) {
+					jls.core.SegmentGeometry.ptSegDist(x,y,next.x,next.y,xp,yp);
+				if (maind < d && !contains(xp,yp) && !next.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
 					return true;
@@ -1041,8 +1114,8 @@ public class State {
 
 				// check out last segment
 				p = tran.points.get(tran.points.size()-1);
-				maind = jls.core.SegmentGeometry.ptSegDist(p.x(),p.y(),tran.nextState.x,tran.nextState.y,xp,yp);
-				if (maind < d && !tran.nextState.contains(xp,yp)) {
+				maind = jls.core.SegmentGeometry.ptSegDist(p.x(),p.y(),next.x,next.y,xp,yp);
+				if (maind < d && !next.contains(xp,yp)) {
 					tran.highlighted = true;
 					lastHighlighted = tran;
 					return true;
@@ -1057,17 +1130,23 @@ public class State {
 	 */
 	public void deleteLastHighlighted() {
 
+		// nothing to delete unless a transition was highlighted
+		Transition last = lastHighlighted;
+		if (last == null) {
+			return;
+		}
+
 		// clean up signal use info
-		Check ch = bitmap.get(lastHighlighted.signal);
+		Check ch = bitmap.get(last.signal);
 		if (ch != null) {
 			ch.refs -= 1;
 			if (ch.refs == 0) {
-				bitmap.remove(lastHighlighted.signal);
+				bitmap.remove(last.signal);
 			}
 		}
 
 		// remove transition
-		trans.remove(lastHighlighted);
+		trans.remove(last);
 
 		// if all that's left is an else transition, make it be unconditional
 		if (trans.size() == 1) {
@@ -1102,16 +1181,21 @@ public class State {
 	/**
 	 * Get the maximum width (in pixels) of all input and output names in
 	 * this state.
-	 * 
+	 *
 	 * @param fm A FontMetrics object to use.
-	 * 
+	 *
 	 * @return the maximum width.
 	 */
 	public int getWidthInfo(jls.core.TextMetrics fm) {
 
 		int width = 0;
 		for (Out out : outs) {
-			width = Math.max(width,fm.stringWidth(out.signal));
+			String sig = out.signal;
+			if (sig == null) {
+				throw new IllegalStateException(
+						"output signal name not set");
+			}
+			width = Math.max(width,fm.stringWidth(sig));
 		}
 		for (Transition tr : trans) {
 			width = Math.max(width,fm.stringWidth(tr.signal));
@@ -1121,7 +1205,7 @@ public class State {
 
 	/**
 	 * Get set of all input signals used by transitions from this state.
-	 * 
+	 *
 	 * @return the set of input signal names.
 	 */
 	public Set<String> getInputs() {
@@ -1136,14 +1220,19 @@ public class State {
 
 	/**
 	 * Get set of all output signals asserted by this state.
-	 * 
+	 *
 	 * @return the set of output signal names.
 	 */
 	public Set<String> getOutputs() {
 
 		Set<String> outputs = new HashSet<String>();
 		for (Out out : outs) {
-			outputs.add(out.signal);
+			String sig = out.signal;
+			if (sig == null) {
+				throw new IllegalStateException(
+						"output signal name not set");
+			}
+			outputs.add(sig);
 		}
 		return outputs;
 	} // end of getInputs method
@@ -1154,10 +1243,10 @@ public class State {
 
 	/**
 	 * Get the next state from a given one given the current input values.
-	 * 
+	 *
 	 * @return The next state according, or null of no next state.
 	 */
-	public State getNextState() {
+	public @org.jspecify.annotations.Nullable State getNextState() {
 
 		// set up default return value
 		State newState = null;
@@ -1196,7 +1285,7 @@ public class State {
 	/**
 	 * Send all out values of this state to the state machine outputs.
 	 * Unspecified outputs will be made 0.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator.
 	 */
@@ -1206,7 +1295,12 @@ public class State {
 
 		// send out explicitly specified values
 		for (Out out : outs) {
-			Output output = machine.getOutput(out.signal);
+			String sig = out.signal;
+			if (sig == null) {
+				throw new IllegalStateException(
+						"output signal name not set");
+			}
+			Output output = machine.getOutput(sig);
 			BitSet value = BitSetUtils.Create(out.value);
 			output.propagate(value,now,sim);
 			sent.add(output);
@@ -1222,7 +1316,7 @@ public class State {
 
 	/**
 	 * Get the x-coordinate of this state.
-	 * 
+	 *
 	 * @return the x-coordinate.
 	 */
 	public int getX() {
@@ -1287,7 +1381,7 @@ public class State {
 	 *
 	 * @return the added output, or null if the input was rejected.
 	 */
-	public Out addOutput(String signal, long value, int bits) {
+	public @org.jspecify.annotations.Nullable Out addOutput(String signal, long value, int bits) {
 
 		if (signal.isEmpty()) {
 			TellUser.error(null, "Missing signal name", "Error");
@@ -1302,7 +1396,7 @@ public class State {
 		// make sure this output doesn't conflict with existing outputs
 		// in this state
 		for (Out out : outs) {
-			if (out.signal.equals(signal)) {
+			if (signal.equals(out.signal)) {
 				TellUser.error(null,
 						"Already an output with this name", "Error");
 				return null;
@@ -1351,16 +1445,18 @@ public class State {
 
 		Out out = outs.get(pos);
 		Check ch = bitmap.get(out.signal);
-		ch.refs -= 1;
-		if (ch.refs == 0) {
-			bitmap.remove(out.signal);
+		if (ch != null) {
+			ch.refs -= 1;
+			if (ch.refs == 0) {
+				bitmap.remove(out.signal);
+			}
 		}
 		outs.remove(pos);
 	} // end of deleteOutput method
 
 	/**
 	 * Get the y-coordinate of this state.
-	 * 
+	 *
 	 * @return the y-coordinate.
 	 */
 	public int getY() {
@@ -1370,7 +1466,7 @@ public class State {
 
 	/**
 	 * Set the x-coordinate of this state
-	 * 
+	 *
 	 * @param newx The new x-coordinate.
 	 */
 	public void setX(int newx) {
@@ -1381,7 +1477,7 @@ public class State {
 
 	/**
 	 * Set the y-coordinate of this state
-	 * 
+	 *
 	 * @param newy The new y-coordinate.
 	 */
 	public void setY(int newy) {
@@ -1391,7 +1487,7 @@ public class State {
 
 	/**
 	 * See if this state is the initial state.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 */
 	public boolean isInitial() {
@@ -1412,7 +1508,7 @@ public class State {
 
 	/**
 	 * Get total number of output signals from this state.
-	 * 
+	 *
 	 * @return the total number of output signals.
 	 */
 	public int numOuts() {

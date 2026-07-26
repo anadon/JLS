@@ -1,22 +1,23 @@
 package jls.elem;
 
+import java.io.*;
+import java.util.*;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
-import jls.*;
-
-import java.io.*;
-
-import java.util.*;
 
 /**
  * Superclass of binder/splitter.
  * Contains common info and method.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class Group extends LogicElement
 		permits Binder, Splitter {
-	
+
 	// default values
 	/** The bundled-side width a new binder/splitter starts with. */
 	private static final int defaultBits = 2;
@@ -37,7 +38,7 @@ public abstract sealed class Group extends LogicElement
 	 *
 	 * @jls.testedby jls.elem.DialogValidationTest#groupBitsRuleIsOneStringOnTwoSurfaces()
 	 */
-	public static String checkBits(int bits) {
+	public static @Nullable String checkBits(int bits) {
 
 		return bits < 2 ? BITS_CONSTRAINT : null;
 	} // end of checkBits method
@@ -58,24 +59,24 @@ public abstract sealed class Group extends LogicElement
 	protected boolean loadTriState = false;
 	/** True if loaded from the newer save format that allows non-contiguous bit groups. */
 	protected boolean noncontig = false; // False only for legacy saves
-	
+
 	/**
 	 * Create a new splitter/binder element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Group(Circuit circuit) {
 		super(circuit);
 		ranges = new ArrayList<Entry>();
 	} // end of constructor
-	
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// no need to do anything if no graphics object
 		if (g == null)
@@ -113,7 +114,7 @@ public abstract sealed class Group extends LogicElement
 		}
 
 	} // end of init method
-	
+
 	/**
 	 * The direction this group faces (issue #77: read by the GUI-side
 	 * renderer and dialog).
@@ -170,13 +171,13 @@ public abstract sealed class Group extends LogicElement
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, int value) {
-		
+
 		if (name.equals("bits")) {
 			String violated = checkBits(value);
 			if (violated != null) {
@@ -190,16 +191,16 @@ public abstract sealed class Group extends LogicElement
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, String value) {
-		
+
 		if (name.equals("orient")) {
 			// unknown strings leave the orientation unchanged, matching
 			// the historical loaders (issue #124: all four orientations)
@@ -211,14 +212,14 @@ public abstract sealed class Group extends LogicElement
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * This method will flip a group
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 * @jls.testedby jls.elem.GroupOrientationTest#flipTogglesVerticalOrientations()
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		orientation = orientation.flipped();
 		inputs.clear();
@@ -235,7 +236,7 @@ public abstract sealed class Group extends LogicElement
 	 * @jls.testedby jls.elem.GroupOrientationTest#rotateCyclesAllFourOrientations()
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -292,10 +293,10 @@ public abstract sealed class Group extends LogicElement
 		}
 		return success;
 	}
-	
+
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
@@ -392,7 +393,7 @@ public abstract sealed class Group extends LogicElement
 				+ "the flag JLS writes for every group - or be re-saved "
 				+ "from JLS";
 	} // end of noncontigHint method
-	
+
 	/**
 	 * The bit routing of this binder/splitter, one entry per bundled
 	 * put, in put order: entry k holds the bundle-side bit indices the
@@ -434,7 +435,7 @@ public abstract sealed class Group extends LogicElement
 		else {
 			output.println(" int tristate 0");
 		}
-		
+
 		int r = 0;
 		for(Entry e : ranges) {
 			for(int i : e.getValues()) {
@@ -463,10 +464,10 @@ public abstract sealed class Group extends LogicElement
 		}
 		return 1;
 	} // end of saveFormatVersion method
-	
+
 	/**
 	 * Copy values to new object.
-	 * 
+	 *
 	 * @param el The new object.
 	 */
 	@Override
@@ -486,12 +487,12 @@ public abstract sealed class Group extends LogicElement
 		super.copy(el);
 		return;
 	} // end of copy method
-	
+
 	/**
 	 * A bit range entry.
 	 */
 	public static class Entry {
-		
+
 		// properties
 		//private int from;
 		//private int to;
@@ -499,7 +500,7 @@ public abstract sealed class Group extends LogicElement
 		private int[] values;
 		/** True once these bits have been bundled (so they can't be picked again). */
 		private boolean picked;
-		
+
 		/**
 		 * Create an entry storing the given values
 		 * @param values what values to save
@@ -507,7 +508,7 @@ public abstract sealed class Group extends LogicElement
 		public Entry(int[] values) {
 			this.values = values.clone();
 		}
-		
+
 		/**
 		 * Create an entry storing every value between min and max (inclusive)
 		 * @param min lowest value to store
@@ -519,10 +520,10 @@ public abstract sealed class Group extends LogicElement
 				values[i - min] = i;
 			}
 		}
-		
+
 		/**
 		 * Find minimum value.
-		 * 
+		 *
 		 * @return lowest index in values, or -1 if values is empty
 		 */
 		public int getMin() {
@@ -531,10 +532,10 @@ public abstract sealed class Group extends LogicElement
 			else
 				return -1;
 		}
-		
+
 		/**
 		 * Find maximum value.
-		 * 
+		 *
 		 * @return highest index in values, or -1 if values is empty
 		 */
 		public int getMax() {
@@ -543,25 +544,25 @@ public abstract sealed class Group extends LogicElement
 			else
 				return -1;
 		}
-		
+
 		/**
 		 * Return a copy of the saved set of indices
-		 * 
+		 *
 		 * @return int[] of indices
 		 */
 		public int[] getValues() {
 			return values.clone();
 		}
-		
+
 		/**
 		 * Save a new set of values
-		 * 
+		 *
 		 * @param values New set of values to use
 		 */
 		public void setValues(int[] values) {
 			this.values = values.clone();
 		}
-		
+
 		/**
 		 * Return number of stored elements
 		 *
@@ -570,43 +571,43 @@ public abstract sealed class Group extends LogicElement
 		public int getSize() {
 			return values.length;
 		}
-		
+
 		/**
 		 * Set/reset picked flag.
-		 * 
+		 *
 		 * @param which True to set, false to reset.
 		 */
 		public void setPicked(boolean which) {
-			
+
 			picked = which;
 		} // end of setPicked method
-		
+
 		/**
 		 * See if picked.
-		 * 
+		 *
 		 * @return true if picked, false if not.
 		 */
 		public boolean isPicked() {
-			
+
 			return picked;
 		} // end of isPicked method
-		
+
 		/**
 		 * Convert to a string, either a single number if from and to are equal,
 		 * or a range if not (e.g., "9 - 5"). Note if range is non-continuous
-		 * 
+		 *
 		 * @return The string.
 		 */
 		@Override
 		public String toString() {
-			
+
 			String p = "";
 			if (picked) {
 				p = " (bundled)";
 			}
 			return toCircuitString() + p;
 		} // end of toString method
-		
+
 		/**
 		 * Render this entry's indices as a circuit-facing label: a single
 		 * number when it holds one bit, a "max-min" range when the indices
@@ -616,7 +617,7 @@ public abstract sealed class Group extends LogicElement
 		 */
 		public String toCircuitString() {
 			if(getMin() == getMax()) {
-				return String.valueOf(getMin());	
+				return String.valueOf(getMin());
 			}
 			else if (getMax() - getMin() + 1 == values.length) {
 				return getMax() + "-" + getMin();
@@ -625,13 +626,13 @@ public abstract sealed class Group extends LogicElement
 				String s = "";
 				ArrayList<Integer> l = new ArrayList<Integer>();
 				int i;
-				
+
 				// Create a reversed version for consistency with dialog
 				int[] v = new int[values.length];
 				for(i = 0; i < values.length; i += 1) {
 					v[values.length - i - 1] = values[i];
 				}
-				
+
 				i = 0;
 				while(i < v.length) {
 					if(l.isEmpty())
@@ -662,7 +663,7 @@ public abstract sealed class Group extends LogicElement
 				return s;
 			}
 		} // end of toCircuitString method
-		
+
 	} // end of Entry class
-	
+
 } // end of Group class

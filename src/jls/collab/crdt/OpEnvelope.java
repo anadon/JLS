@@ -283,7 +283,8 @@ public record OpEnvelope(OpId id, VectorClock clock, CircuitOp op) {
 		try {
 			VectorClock.checkPeer(peer);
 		} catch (IllegalArgumentException e) {
-			throw new OpRejected(e.getMessage());
+			String reason = e.getMessage();
+			throw new OpRejected(reason != null ? reason : e.toString());
 		}
 	} // end of checkPeer method
 

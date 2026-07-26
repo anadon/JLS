@@ -1,21 +1,24 @@
 package jls.elem;
 
+import java.io.PrintWriter;
+import java.util.BitSet;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.*;
 import jls.core.Geometry;
 import jls.core.GridPoint;
 import jls.core.GridSize;
 import jls.core.Orientation;
-import jls.*;
 import jls.sim.*;
-import java.io.PrintWriter;
-import java.util.BitSet;
 
 /**
  * Tri-state buffer(s).
- * 
+ *
  * @author David A. Poplawski
  */
 public final class TriState extends LogicElement implements Timed {
-	
+
 	// defaults
 	/** Default number of bits (gates). */
 	private static final int defaultBits = 1;
@@ -34,15 +37,15 @@ public final class TriState extends LogicElement implements Timed {
 	/**
 	 * Create a new Gate object.
 	 * Subclass constructors do most of the work.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	public TriState(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
 	 *
@@ -82,7 +85,7 @@ public final class TriState extends LogicElement implements Timed {
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void init(jls.core.TextMetrics g) {
+	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
 
 		// canonical geometry (gate RIGHT, control DOWN), transformed to
 		// the current orientation pair (#24)
@@ -155,7 +158,7 @@ public final class TriState extends LogicElement implements Timed {
 		}
 		return t;
 	} // end of placement method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** This element's own saved attributes (bits, delay, orientations). */
@@ -277,7 +280,7 @@ public final class TriState extends LogicElement implements Timed {
 	@Override
 	public Element copy() {
 
-		TriState it = new TriState(circuit);
+		TriState it = new TriState(getCircuit());
 		it.inputs.add(inputs.get(0).copy(it));
 		it.inputs.add(inputs.get(1).copy(it));
 		it.outputs.add(outputs.get(0).copy(it));
@@ -285,15 +288,15 @@ public final class TriState extends LogicElement implements Timed {
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this and gate.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		if (bits == 1)
 			return "tri-state gate";
 		else
@@ -302,12 +305,12 @@ public final class TriState extends LogicElement implements Timed {
 
 	/**
 	 * Tri-states have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -316,32 +319,32 @@ public final class TriState extends LogicElement implements Timed {
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 * Tells if a tristate is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -368,13 +371,13 @@ public final class TriState extends LogicElement implements Timed {
 		}
 		return success;
 	}
-	
+
 	/**
 	 * This method will flip a tristate's control input
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
 	 */
 	@Override
-	public void flip(jls.core.TextMetrics g)
+	public void flip(jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		controlOrientation = controlOrientation.flipped();
 		inputs.clear();
@@ -383,7 +386,7 @@ public final class TriState extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a tristate is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -410,14 +413,14 @@ public final class TriState extends LogicElement implements Timed {
 		}
 		return success;
 	}
-	
+
 	/**
 	 *  This method will rotate the tristate if it is rotateable.
 	 * @param direction The direction to rotate
 	 * @param g The current graphics context for use in recalculating size
 	 */
 	@Override
-	public void rotate(Orientation direction, jls.core.TextMetrics g)
+	public void rotate(Orientation direction, jls.core.@org.jspecify.annotations.Nullable TextMetrics g)
 	{
 		if(direction == Orientation.LEFT)
 		{
@@ -443,7 +446,7 @@ public final class TriState extends LogicElement implements Timed {
 	// the value scheduled to reach the output, null meaning off (HiZ);
 	// used to suppress redundant output events (issue #98, S6)
 	/** The value scheduled to reach the output, null meaning off (HiZ). */
-	private BitSet toBeValue;
+	private @Nullable BitSet toBeValue;
 
 	/**
 	 * Initialize this element by setting its output pin to off (null).
@@ -460,21 +463,21 @@ public final class TriState extends LogicElement implements Timed {
 		toBeValue = null;
 
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#triStateDoesNotRepostUnchangedOutputEvents()
 	 */
 	@Override
-	public void react(long now, Simulator sim, Object todo) {
-		
+	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+
 		// if the input has changed ...
 		if (todo == null) {
-			
+
 			// get control input
 			BitSet control = inputs.get(1).getValue();
 			if (control ==  null)
@@ -504,23 +507,23 @@ public final class TriState extends LogicElement implements Timed {
 			}
 
 		}
-		
+
 		// if gate is turning off, propagate null
 		else if (todo instanceof String) {
-			
+
 			Output out = outputs.get(0);
 			out.propagate(null,now,sim);
 		}
 		else {
-			
+
 			// get the new output value
 			BitSet newValue = (BitSet)todo;
-		
+
 			// propagate value
 			Output out = outputs.get(0);
 			out.propagate(newValue,now,sim);
 		}
-		
+
 	} // end of react method
-	
+
 } // end of TriState method

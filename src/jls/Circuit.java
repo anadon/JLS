@@ -1760,6 +1760,11 @@ public class Circuit {
 	 */
 	public @Nullable JumpStart getJumpStart(@Nullable String name) {
 
+		// a null name matches nothing (and starts is a TreeMap, whose
+		// get(null) would throw rather than miss)
+		if (name == null) {
+			return null;
+		}
 		return starts.get(name);
 	} // end of getJumpStart method
 

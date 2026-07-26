@@ -504,7 +504,8 @@ public class WireNet {
 			// notify, so there is nothing to react
 			LogicElement element = p.getElement();
 			if (element != null) {
-				sim.post(new SimEvent(now, (Reacts) element, null));
+				sim.post(new SimEvent(now, (Reacts) element,
+						new SimEvent.PinChanged()));
 			}
 		}
 

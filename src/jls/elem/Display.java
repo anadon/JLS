@@ -11,6 +11,7 @@ import jls.BitSetUtils;
 import jls.Circuit;
 import jls.core.Geometry;
 import jls.core.Orientation;
+import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
 /**
@@ -383,7 +384,7 @@ public final class Display extends LogicElement {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		currentValue = inputs.get(0).getValue();
 	} // end of react method

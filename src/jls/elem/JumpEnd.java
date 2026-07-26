@@ -9,6 +9,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Receiving end of a named wire.
@@ -393,23 +400,30 @@ public final class JumpEnd extends LogicElement {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo The value to send along.
+	 * @param todo The value to send along (TriStateOff for the undriven
+	 *             value).
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
-		// get the input value
-		BitSet value = (BitSet)todo;
-		currentValue = null;
-		if (value != null)
-			currentValue = (BitSet)value.clone();
-
-		// send to output
+		// get the input value and send it to the output
 		Output out = outputs.get(0);
-		if (value == null)
+		switch (todo) {
+
+		case TriStateOff _ -> {
+			currentValue = null;
 			out.propagate(null,now,sim);
-		else
+		}
+
+		case NewValue(BitSet value) -> {
+			currentValue = (BitSet)value.clone();
 			out.propagate((BitSet)value.clone(),now,sim);
+		}
+
+		case PinChanged _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
+		}
 
 	} // end of react method
 

@@ -10,6 +10,13 @@ import org.jspecify.annotations.Nullable;
 import jls.*;
 import jls.core.Geometry;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Memory element, initialized internally or from a file.
@@ -1292,40 +1299,21 @@ public final class Memory extends LogicElement
 	} // end of initSim method
 
 	/**
-	 * The memory operation implied by the current input signals: WRITE a
-	 * word, READ a word, or OFF when the chip is not selected.
-	 */
-	private static enum MemoryAction {
-		/** Write a word to memory. */
-		WRITE,
-		/** Read a word from memory. */
-		READ,
-		/** The chip is not selected; drive no value. */
-		OFF};
-
-	/**
 	 * React to an event.
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the pending
+	 *             memory operation completing (MemoryWrite, MemoryRead, or
+	 *             TriStateOff when the chip is not selected).
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
-		// todo
-		/**
-		 * A pending memory operation scheduled as a future event: the
-		 * action to perform, the target address, and the data involved.
-		 */
-		class MemAction {
-			@Nullable MemoryAction action;
-			int addr;
-			@Nullable BitSet data;
-		};
+		switch (todo) {
 
 		// if an input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get inputs
 			BitSet csb = getInput("CS").getValue();
@@ -1352,37 +1340,31 @@ public final class Memory extends LogicElement
 			if (type == Type.RAM && !cs && !we) {
 
 				// do a write
-				MemAction act = new MemAction();
-				act.action = MemoryAction.WRITE;
-				act.addr = BitSetUtils.ToInt(addr);
 				BitSet data = (BitSet)(getInput("input").getValue());
 				if (data == null)
 					data = new BitSet();
-				act.data = (BitSet)(data.clone());
-				sim.post(new SimEvent(now+accessTime,this,act));
+				sim.post(new SimEvent(now+accessTime,this,
+						new MemoryWrite(BitSetUtils.ToInt(addr),
+								(BitSet)(data.clone()))));
 			}
 
 			// if chip select and output enable ...
 			if (!cs && !oe) {
 
 				// do a read
-				MemAction act = new MemAction();
-				act.action = MemoryAction.READ;
-				act.addr = BitSetUtils.ToInt(addr);
-				sim.post(new SimEvent(now+accessTime,this,act));
+				sim.post(new SimEvent(now+accessTime,this,
+						new MemoryRead(BitSetUtils.ToInt(addr))));
 			}
 			else {
 
 				// turn off tristate output
-				MemAction act = new MemAction();
-				act.action = MemoryAction.OFF;
-				sim.post(new SimEvent(now+accessTime,this,act));
+				sim.post(new SimEvent(now+accessTime,this,
+						new TriStateOff()));
 			}
 		}
-		else {
 
-			// finish read or write
-			MemAction act = (MemAction)todo;
+		// a write completing...
+		case MemoryWrite(int addr, BitSet data) -> {
 
 			// the stores exist once the simulation has started
 			WordStore mem = this.mem;
@@ -1390,67 +1372,67 @@ public final class Memory extends LogicElement
 				throw new IllegalStateException("react before initSim");
 			}
 
-			// if a write...
-			if (act.action == MemoryAction.WRITE) {
+			// get the value to write
+			BitSet value = (BitSet)data.clone();
 
-				// a WRITE action always carries the data to write
-				BitSet actData = act.data;
-				if (actData == null) {
-					throw new IllegalStateException("WRITE action without data");
-				}
+			// if address is not legal, don't write anything
+			if (addr >= capacity)
+				return;
 
-				// get the value to write
-				BitSet value = (BitSet)actData.clone();
+			// save in activity history (newest first, bounded)
+			WriteRecord rec = new WriteRecord();
+			rec.what = (BitSet)(data.clone());
+			rec.where = addr;
+			rec.when = now;
+			activity.addFirst(rec);
+			if (activity.size() > ACTIVITY_LIMIT)
+				activity.removeLast();
 
-				// if address is not legal, don't write anything
-				if (act.addr >= capacity)
-					return;
+			// store in memory
+			mem.put(addr, value);
+		}
 
-				// save in activity history (newest first, bounded)
-				WriteRecord rec = new WriteRecord();
-				rec.what = (BitSet)(actData.clone());
-				rec.where = act.addr;
-				rec.when = now;
-				activity.addFirst(rec);
-				if (activity.size() > ACTIVITY_LIMIT)
-					activity.removeLast();
+		// a read completing...
+		case MemoryRead(int addr) -> {
 
-				// store in memory
-				mem.put(act.addr, value);
+			// the stores exist once the simulation has started
+			WordStore mem = this.mem;
+			if (mem == null) {
+				throw new IllegalStateException("react before initSim");
 			}
 
-			// else if its a read...
-			else if (act.action == MemoryAction.READ){
-
-				// if invalid address, turn off tristate output
-				if (act.addr >= capacity) {
-					currentValue = null;
-					getOutput("output").propagate(null,now,sim);
-					return;
-				}
-
-				// get value from memory
-				BitSet stored = mem.get(act.addr);
-				BitSet value;
-				if (stored == null) {
-					value =  new BitSet();
-				}
-				else {
-					value = (BitSet)stored.clone();
-				}
-
-				// send to output
-				getOutput("output").propagate(value,now,sim);
-
-				// set current value
-				currentValue = (BitSet)value.clone();
-			}
-
-			// else it is to turn off the tristate output
-			else {
+			// if invalid address, turn off tristate output
+			if (addr >= capacity) {
 				currentValue = null;
 				getOutput("output").propagate(null,now,sim);
+				return;
 			}
+
+			// get value from memory
+			BitSet stored = mem.get(addr);
+			BitSet value;
+			if (stored == null) {
+				value =  new BitSet();
+			}
+			else {
+				value = (BitSet)stored.clone();
+			}
+
+			// send to output
+			getOutput("output").propagate(value,now,sim);
+
+			// set current value
+			currentValue = (BitSet)value.clone();
+		}
+
+		// the chip is not selected: turn off the tristate output
+		case TriStateOff _ -> {
+			currentValue = null;
+			getOutput("output").propagate(null,now,sim);
+		}
+
+		case NewValue _, StateChanged _, TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

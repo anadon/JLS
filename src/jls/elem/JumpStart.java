@@ -487,7 +487,7 @@ public final class JumpStart extends LogicElement
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 
 		// get the input value
@@ -497,9 +497,11 @@ public final class JumpStart extends LogicElement
 
 		// send to all matching jump ends
 		for (JumpEnd jend : jumpEnds) {
-			BitSet newValue = null;
+			SimEvent.Payload newValue;
 			if (currentValue != null)
-				newValue = (BitSet)currentValue.clone();
+				newValue = new SimEvent.NewValue((BitSet)currentValue.clone());
+			else
+				newValue = new SimEvent.TriStateOff();
 			sim.post(new SimEvent(now,jend,newValue));
 		}
 	} // end of react method

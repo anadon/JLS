@@ -10,6 +10,13 @@ import jls.core.Geometry;
 import jls.core.GridPoint;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Clock element.
@@ -393,7 +400,7 @@ public final class Clock extends LogicElement {
 		out.setValue(zero);
 		BitSet one = new BitSet();
 		one.flip(0);
-		sim.post(new SimEvent(cycleTime-oneTime,this,one));
+		sim.post(new SimEvent(cycleTime-oneTime,this,new NewValue(one)));
 
 	} // end of initSim method
 
@@ -402,29 +409,34 @@ public final class Clock extends LogicElement {
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo The value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// send new value; a Clock has no inputs, so it only ever
-		// reacts to its own posted value events (todo is never null)
-		BitSet send = (BitSet)todo;
-		if (send == null) {
+		// reacts to its own posted value events
+		switch (todo) {
+
+		case NewValue(BitSet send) -> {
+			Output out = outputs.get(0);
+			out.propagate(send,now,sim);
+
+			// post next event
+			BitSet next = (BitSet)send.clone();
+			next.flip(0);
+			int when = oneTime;
+			if (send.cardinality() == 0) {
+				when = cycleTime - oneTime;
+			}
+			sim.post(new SimEvent(now+when,this,new NewValue(next)));
+		}
+
+		case PinChanged _, TriStateOff _, StateChanged _, MemoryRead _,
+				MemoryWrite _, TableOutput _ ->
 			throw new IllegalStateException(
 					"clock reacted without a value to output");
 		}
-		Output out = outputs.get(0);
-		out.propagate(send,now,sim);
-
-		// post next event
-		BitSet next = (BitSet)send.clone();
-		next.flip(0);
-		int when = oneTime;
-		if (send.cardinality() == 0) {
-			when = cycleTime - oneTime;
-		}
-		sim.post(new SimEvent(now+when,this,next));
 
 	} // end of react method
 

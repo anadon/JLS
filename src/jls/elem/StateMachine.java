@@ -17,6 +17,13 @@ import jls.Circuit;
 import jls.TellUser;
 import jls.core.Geometry;
 import jls.sim.SimEvent;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 import jls.sim.Simulator;
 
 /**
@@ -730,13 +737,16 @@ public final class StateMachine extends LogicElement
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the state
+	 *             being entered.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if an input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// get clock input value
 			BitSet cval = getInput("clock").getValue();
@@ -798,18 +808,26 @@ public final class StateMachine extends LogicElement
 			busy = true;
 
 			// post event
-			sim.post(new SimEvent(now+propDelay,this,newState));
+			sim.post(new SimEvent(now+propDelay,this,
+					new StateChanged(newState)));
 		}
-		else {
 
-			// get the new state
-			currentState = (State)todo;
+		// the transition completing: enter the new state
+		case StateChanged(State next) -> {
+
+			// set the new state
+			currentState = next;
 
 			// send values to outputs
-			currentState.sendOutputs(now,sim);
+			next.sendOutputs(now,sim);
 
 			// no longer busy
 			busy = false;
+		}
+
+		case NewValue _, TriStateOff _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

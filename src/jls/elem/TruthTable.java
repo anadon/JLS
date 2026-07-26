@@ -16,6 +16,13 @@ import jls.Circuit;
 import jls.TellUser;
 import jls.core.Geometry;
 import jls.sim.SimEvent;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 import jls.sim.Simulator;
 
 /**
@@ -1368,24 +1375,6 @@ public final class TruthTable extends LogicElement
 	/** The value (0 or 1) each output will have once its pending event fires,
 	 *  indexed by output position. Null until {@link #initSim} allocates it. */
 	private int @Nullable [] toBeValue;
-	/**
-	 * A pending output change carried through the simulator: an output pin's
-	 * position (index into the outputs list) paired with the BitSet value it
-	 * should take on when the scheduled event fires.
-	 */
-	static class Out {
-		/** Index of the output pin in the outputs list. */
-		int position;
-		/** The value the output pin should take on. Set before the pending
-		 *  event is posted, so non-null by the time the event fires. */
-		@Nullable BitSet value;
-
-		/**
-		 * Create a pending output change.
-		 */
-		Out() {
-		}
-	}
 
 	/**
 	 * Initialize this element by setting its output pins and to-be values to 0.
@@ -1413,10 +1402,8 @@ public final class TruthTable extends LogicElement
 				toBe[pos] = 1;
 				BitSet val = new BitSet(1);
 				val.set(0);
-				Out out = new Out();
-				out.position = pos;
-				out.value = val;
-				sim.post(new SimEvent(propDelay,this,out));
+				sim.post(new SimEvent(propDelay,this,
+						new TableOutput(pos,val)));
 			}
 			pos += 1;
 		}
@@ -1428,13 +1415,16 @@ public final class TruthTable extends LogicElement
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the pending
+	 *             output change to drive.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if an input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			// find a matching row of the truth table
 			int matchingRow = -1;
@@ -1485,26 +1475,24 @@ public final class TruthTable extends LogicElement
 					BitSet val = new BitSet(1);
 					if (outValue == 1)
 						val.set(0);
-					Out out = new Out();
-					out.position = pos;
-					out.value = val;
-					sim.post(new SimEvent(now+propDelay,this,out));
+					sim.post(new SimEvent(now+propDelay,this,
+							new TableOutput(pos,val)));
 				}
 				pos += 1;
 			}
 		}
-		else {
 
-			// get the new output
-			Out newOut = (Out)todo;
+		// a pending output change arriving: send to the output
+		case TableOutput(int position, BitSet val) -> {
 
-			// send to output
-			Output out = outputs.get(newOut.position);
-			BitSet val = newOut.value;
-			if (val == null)
-				throw new IllegalStateException("pending output event has no value");
+			Output out = outputs.get(position);
 			BitSet newVal = (BitSet)val.clone();
 			out.propagate(newVal,now,sim);
+		}
+
+		case NewValue _, TriStateOff _, StateChanged _, MemoryRead _,
+				MemoryWrite _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 
 	} // end of react method

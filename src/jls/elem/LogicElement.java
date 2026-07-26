@@ -540,7 +540,7 @@ public abstract sealed class LogicElement extends Element implements Reacts
 	 * Overridden by most elements.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		throw new UnsupportedOperationException("no react");
 	} // end of react method

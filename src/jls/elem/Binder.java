@@ -6,6 +6,7 @@ import java.util.BitSet;
 import jls.Circuit;
 import jls.core.Geometry;
 import jls.core.Orientation;
+import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
 /**
@@ -229,7 +230,7 @@ public final class Binder extends Group implements TriProp {
 	 * @param todo Unused.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
 
 		// create output value
 		BitSet newValue = new BitSet(bits);

@@ -10,6 +10,13 @@ import jls.*;
 import jls.core.Geometry;
 import jls.core.Orientation;
 import jls.sim.*;
+import jls.sim.SimEvent.MemoryRead;
+import jls.sim.SimEvent.MemoryWrite;
+import jls.sim.SimEvent.NewValue;
+import jls.sim.SimEvent.PinChanged;
+import jls.sim.SimEvent.StateChanged;
+import jls.sim.SimEvent.TableOutput;
+import jls.sim.SimEvent.TriStateOff;
 
 /**
  * Superclass of all simple gates (AND, OR, etc).
@@ -673,7 +680,7 @@ public abstract sealed class Gate extends LogicElement
 		// drive the all-zero-inputs output value
 		BitSet initial = computeOutput();
 		if (!initial.isEmpty()) {
-			sim.post(new SimEvent(0,this,initial));
+			sim.post(new SimEvent(0,this,new NewValue(initial)));
 		}
 		toBeValue = (BitSet)initial.clone();
 	} // end of initSim method
@@ -683,13 +690,15 @@ public abstract sealed class Gate extends LogicElement
 	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
-	 * @param todo If null, an input has changed, otherwise it is the value to output.
+	 * @param todo PinChanged if an input has changed, otherwise the value to output.
 	 */
 	@Override
-	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
+	public void react(long now, Simulator sim, SimEvent.Payload todo) {
+
+		switch (todo) {
 
 		// if the input has changed ...
-		if (todo == null) {
+		case PinChanged _ -> {
 
 			BitSet value = computeOutput();
 
@@ -697,14 +706,17 @@ public abstract sealed class Gate extends LogicElement
 			// this gate, then post an event
 			if (!value.equals(toBeValue)) {
 				toBeValue = (BitSet)value.clone();
-				sim.post(new SimEvent(now+propDelay,this,value));
+				sim.post(new SimEvent(now+propDelay,this,new NewValue(value)));
 			}
 		}
-		else {
 
-			// send the new output value to the output
-			BitSet newValue = (BitSet)todo;
+		// send the new output value to the output
+		case NewValue(BitSet newValue) ->
 			outputs.get(0).propagate(newValue,now,sim);
+
+		case TriStateOff _, StateChanged _, MemoryRead _, MemoryWrite _,
+				TableOutput _ ->
+			throw new IllegalStateException("unexpected payload: " + todo);
 		}
 	} // end of react method
 

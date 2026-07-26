@@ -1,19 +1,20 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
 import java.io.*;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+
 /**
  * A wire segment (between two WireEnds), part of a WireNet.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Wire extends Element {
-	
+
 	// properties
 	/** The wire net this wire is a part of, or null until it is placed in one
 	 * (set by {@link #setNet} after construction). */
@@ -28,10 +29,10 @@ public final class Wire extends Element {
 	private boolean touching;	// touching a wire end?
 	/** The name of the probe on this wire, or null if it has no probe. */
 	private @Nullable String probeName = null;
-	
+
 	/**
 	 * Create a new wire with the given ends.
-	 * 
+	 *
 	 * @param e1 One end of the wire.
 	 * @param e2 The other end of the wire.
 	 *
@@ -39,12 +40,12 @@ public final class Wire extends Element {
 	 * @jls.testedby jls.elem.HollowVsFilledCollisionTest#edge()
 	 */
 	public Wire(WireEnd e1, WireEnd e2) {
-		
+
 		super(null);
 		end1 = e1;
 		end2 = e2;
 	} // end of constructor
-	
+
 	/**
 	 * This form of init not used.
 	 */
@@ -53,22 +54,22 @@ public final class Wire extends Element {
 
 		// do nothing
 	} // end of init method
-	
+
 	/**
 	 * A wire doesn't move on its own.
 	 * It is drawn using the position of its ends.
-	 * 
+	 *
 	 * @param dx Distance to move in the x direction.
 	 * @param dy Distance to move in the y direction.
 	 */
 	@Override
 	public void move(int dx, int dy) {
-		
+
 	} // end of move method
-	
+
 	/**
 	 * Get one end of this wire.
-	 * 
+	 *
 	 * @return one end.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
@@ -81,49 +82,49 @@ public final class Wire extends Element {
 	 * @jls.testedby jls.edit.WireSweepSymmetryTest#wireSweepingAcrossElementCollidesLikeTheReverseDrag()
 	 */
 	public WireEnd getEnd() {
-		
+
 		return end1;
 	} // end of getEnd method
-	
+
 	/**
 	 * Get other end of wire from given end.
-	 * 
+	 *
 	 * @param end One end of the wire.
-	 * 
+	 *
 	 * @return the other end of the wire.
 	 *
 	 * @jls.testedby jls.UtilFunctionsTest#copyReproducesElementsWiresAndAttachment()
 	 * @jls.testedby jls.edit.WireSweepSymmetryTest#endsOf()
 	 */
 	public WireEnd getOtherEnd(WireEnd end) {
-		
+
 		if (end == end1)
 			return end2;
 		else
 			return end1;
 	} // end of getOtherEnd method
-	
+
 	/**
 	 * Set wire ends.
-	 * 
+	 *
 	 * @param e1 One new end.
 	 * @param e2 The other new end.
 	 */
 	public void setEnds(WireEnd e1, WireEnd e2) {
-		
+
 		end1 = e1;
 		end2 = e2;
 	} // end of setEnds method
-	
+
 	/**
 	 * Wires don't get saved.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		// do nothing
 	} // end of save method
-	
+
 	/**
 	 * Get the other end of this wire (the second endpoint). Used by the
 	 * GUI-side renderer, which reads both endpoints' coordinates.
@@ -174,7 +175,7 @@ public final class Wire extends Element {
 
 	/**
 	 * Set bits in the wire net this wire is in.
-	 * 
+	 *
 	 * @param bits The number of bits.
 	 */
 	public void setBits(int bits) {
@@ -184,14 +185,14 @@ public final class Wire extends Element {
 
 	/**
 	 * Get the number of bits in this wire.
-	 * 
+	 *
 	 * @return the number of bits.
 	 */
 	public int getBits() {
 
 		return requireNet().getBits();
 	} // end of getBits method
-	
+
 	/**
 	 * The bounds this wire occupies in the spatial index (#3, #17): the
 	 * bounding box of its two ends, grown by the snap spacing so the
@@ -241,7 +242,7 @@ public final class Wire extends Element {
 	 */
 	@Override
 	public boolean contains(int x, int y) {
-		
+
 		int x1 = end1.getX();
 		int y1 = end1.getY();
 		int x2 = end2.getX();
@@ -255,12 +256,12 @@ public final class Wire extends Element {
 			return false;
 		}
 	} // end of contains method
-	
+
 	/**
 	 * See if the wire (not counting end points) intersects a given rectangle.
-	 * 
+	 *
 	 * @param rect The rectangle.
-	 * 
+	 *
 	 * @return true if it it does, false if it does not.
 	 */
 	public boolean intersects(jls.core.Bounds rect) {
@@ -285,18 +286,18 @@ public final class Wire extends Element {
 		}
 		return false;
 	} // end of intersects method
-	
+
 	/**
 	 * See if a given wire end touches the wire.
 	 * The wire end must be within half a point diameter of the wire
 	 * but not within a half point diameter of either end.
-	 * 
+	 *
 	 * @param end The wire end.
-	 * 
+	 *
 	 * @return true if the wire end touches the wire, false if not.
 	 */
 	public boolean touches(WireEnd end) {
-		
+
 		if (end == end1 || end == end2)
 			return false;
 		int x = end.getX();
@@ -319,10 +320,10 @@ public final class Wire extends Element {
 			return false;
 		}
 	} // end of touches method
-	
+
 	/**
 	 * Display information about this wire.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -349,75 +350,75 @@ public final class Wire extends Element {
 		}
 		else if (bits == 1) {
 			return tri + "1 bit" + inp + probe + value;
-		} 
+		}
 		else {
 			return tri + bits + " bits" + inp + probe + value;
 		}
 	} // end of showInfo method
-	
+
 	/**
 	 * Remove this wire and both of its ends from the circuit.
 	 * Ends are removed only if possible.
-	 * 
+	 *
 	 * @param circ The circuit it is in.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		// remove from circuit
 		circ.remove(this);
-		
+
 		// remove from both ends
 		end1.remove(this,circ);
 		end2.remove(this,circ);
-		
+
 	} // end of remove method
-	
+
 	/**
 	 * Set/reset marked flag (used to create new wire nets).
-	 * 
+	 *
 	 * @param which True to mark, false to unmark.
 	 */
 	public void mark(boolean which) {
-		
+
 		marked = which;
 	} // end of mark method
-	
+
 	/**
 	 * See if this wire is marked.
-	 * 
+	 *
 	 * @return true if marked, false if not.
 	 */
 	public boolean isMarked() {
-		
+
 		return marked;
 	} // end of isMarked method
-	
+
 	/**
 	 * Mark this wire and all wire ends and wires connected to it.
 	 */
 	public void traverse() {
-		
+
 		if (marked)
 			return;
 		marked = true;
 		end1.traverse();
 		end2.traverse();
 	} // end of traverse method
-	
+
 	/**
 	 * Put this wire in a new wire net.
-	 * 
+	 *
 	 * @param net The new wire net.
 	 */
 	public void setNet(WireNet net) {
-		
+
 		this.net = net;
 	} // end of setNet method
-	
+
 	/**
 	 * See if this wire is completely inside the given rectangle.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	@Override
@@ -430,42 +431,42 @@ public final class Wire extends Element {
 			return false;
 		}
 	} // end of isInside method
-	
+
 	/**
 	 * Set touching.
-	 * 
+	 *
 	 * @param which True to say it is, false if not.
 	 */
 	@Override
 	public void setTouching(boolean which) {
-		
+
 		touching = which;
 	} // end of setTouching method
-	
+
 	/**
 	 * Get the length (in pixels) of this wire.
-	 * 
+	 *
 	 * @return the length.
 	 */
 	public int length() {
-		
+
 		return (int)(jls.core.SegmentGeometry.distance(end1.getX(),end1.getY(),end2.getX(),end2.getY()));
 	} // end of length method
 
 	/**
 	 * Attach a probe to this wire.
-	 * 
+	 *
 	 * @param name The name of the probe.
 	 *         If null, then prompt user for a name.
 	 */
 	public void attachProbe(String name) {
-		
+
 		// see if a name is provided
 		if (name != null) {
 			probeName = name;
 			return;
 		}
-		
+
 		// get a name for this probe
 		name = TellUser.prompt(null, "Name?");
 		if (name == null)
@@ -476,19 +477,19 @@ public final class Wire extends Element {
 				return;
 		}
 		probeName = name;
-		
+
 	} // end of attachProbe method
-	
+
 	/**
 	 * See if this wire has a probe attached.
-	 * 
+	 *
 	 * @return true if it does, false if it does not.
 	 */
 	public boolean hasProbe() {
-		
+
 		return probeName != null;
 	} // end of hasProbe method
-	
+
 	/**
 	 * Get the probe name.
 	 *
@@ -498,18 +499,18 @@ public final class Wire extends Element {
 
 		return probeName;
 	} // end of getProbe method
-	
+
 	/**
 	 * Remove probe from this wire.
 	 */
 	public void removeProbe() {
-		
+
 		probeName = null;
 	} // end of removeProbe
-	
+
 	/**
 	 * Get the value on this wire (from the wire net).
-	 * 
+	 *
 	 * @return the value, or null for a high-impedance (tri-state) value.
 	 */
 	public @Nullable BitSet getValue() {

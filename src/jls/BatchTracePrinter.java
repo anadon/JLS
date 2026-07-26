@@ -1,10 +1,5 @@
 package jls;
 
-import jls.elem.LogicElement;
-
-import org.jspecify.annotations.Nullable;
-import jls.sim.TraceSample;
-
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -21,6 +16,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import javax.print.PrintService;
+
+import org.jspecify.annotations.Nullable;
+
+import jls.elem.LogicElement;
+import jls.sim.TraceSample;
 
 /**
  * Print the waveform traces recorded by a batch simulation run (the

@@ -1,29 +1,30 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.util.*;
+
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
 
 /**
  * Stop element.
  * Causes simulator to terminate when input is asserted.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Stop extends LogicElement {
 
 	/**
 	 * Create a new stop element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Stop(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 
 	/**
 	 * Initialize internal info for this element.
@@ -32,12 +33,12 @@ public final class Stop extends LogicElement {
 	 */
 	@Override
 	public void init(jls.core.@org.jspecify.annotations.Nullable TextMetrics g) {
-		
+
 		// set up size
 		int s = Geometry.SPACING;
 		width = s * 2;
 		height = width;
-		
+
 		// create inputs
 		inputs.add(new Input("input0",this,0,s,1));
 		inputs.add(new Input("input1",this,s,0,1));
@@ -86,7 +87,7 @@ public final class Stop extends LogicElement {
 	 */
 	@Override
 	public Element copy() {
-		
+
 		Stop it = new Stop(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
@@ -94,62 +95,62 @@ public final class Stop extends LogicElement {
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Stop");
 		super.save(output);
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return "stop simulation";
 	} // end of showInfo method
-	
+
 
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * Initialize simulation.
-	 * 
+	 *
 	 * @param sim The simulator.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// do nothing
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Should be null.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// find the attached input
 		for (Input input : inputs) {
 			if (!input.isAttached())
 				continue;
-			
+
 			// if value is a 1, stop
 			BitSet in = input.getValue();
 			if (in != null && in.cardinality() != 0) {
@@ -158,5 +159,5 @@ public final class Stop extends LogicElement {
 			}
 		}
 	} // end of react method
-	
+
 } // end of Stop class

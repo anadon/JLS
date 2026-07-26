@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import jls.core.Geometry;
-import jls.JLSInfo;
-
 /**
  * The dependency-free heuristic layered placer and orthogonal router
  * for imported Yosys netlists (issue #62) - the "seed" engine the

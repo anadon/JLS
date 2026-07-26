@@ -3,28 +3,28 @@ package jls.elem;
 import java.io.PrintWriter;
 import java.util.BitSet;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
+import org.jspecify.annotations.Nullable;
+
 import jls.BitSetUtils;
 import jls.Circuit;
+import jls.core.Geometry;
+import jls.core.Orientation;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * n-input, 2^n-output decoder.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Decoder extends LogicElement implements Timed {
-	
+
 	// default values
 	/** Default number of input bits. */
 	private static final int defaultBits = 1;
 	/** Default propagation delay. */
-	private static final int defaultPropDelay = 15; 
-	
+	private static final int defaultPropDelay = 15;
+
 	// saved properties
 	/** Number of input bits (the decoder has 2^bits outputs). */
 	private int bits = defaultBits;
@@ -33,7 +33,7 @@ public final class Decoder extends LogicElement implements Timed {
 	//Orientation is based off of where the inputs are
 	/** Which side the input is on. */
 	private Orientation orientation = Orientation.LEFT;
-	
+
 	// running properties
 	/** The "decoder" label drawn on the element, abbreviated to "dec" if it doesn't fit; null until {@link #init(jls.core.TextMetrics)} builds it. */
 	private @Nullable String dec;
@@ -114,7 +114,7 @@ public final class Decoder extends LogicElement implements Timed {
 
 		int s = Geometry.SPACING;
 		int outs = 1 << bits;
-	
+
 		if(orientation == Orientation.LEFT)
 		{
 			inout = bits + "-" + outs;
@@ -132,13 +132,13 @@ public final class Decoder extends LogicElement implements Timed {
 			inout = outs + "-" + bits;
 		}
 		dec = " decoder ";
-		
+
 		// set up size if there is a graphics object
 		if (g != null) {
-			
+
 			// if element already has a size, use it
 			if (width == 0 && height == 0) {
-				
+
 				if(orientation == Orientation.LEFT || orientation == Orientation.RIGHT)
 				{
 					width = 5*s;
@@ -166,12 +166,12 @@ public final class Decoder extends LogicElement implements Timed {
 					dec = "dec";
 				}
 			}
-			
+
 		}
-		
-		
+
+
 		if(orientation == Orientation.LEFT)
-		{	
+		{
 			// create input
 			inputs.add(new Input("input",this,0,s,bits));
 			// create output
@@ -199,7 +199,7 @@ public final class Decoder extends LogicElement implements Timed {
 			outputs.add(new Output("output",this,s,height,1<<bits));
 		}
 	} // end of init method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** This element's own saved attributes: bits, delay and orientation. */
@@ -305,27 +305,27 @@ public final class Decoder extends LogicElement implements Timed {
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return bits + " to " + (1<<bits) + " decoder";
 
 	} // end of showInfo method
 
 	/**
 	 * Decoders have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -334,32 +334,32 @@ public final class Decoder extends LogicElement implements Timed {
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 * Tells if a decoder is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -369,7 +369,7 @@ public final class Decoder extends LogicElement implements Timed {
 	{
 		return !(inputs.get(0).isAttached() || outputs.get(0).isAttached());
 	}
-	
+
 	/**
 	 *  This method will rotate the decoder if it is rotateable.
 	 * @param direction The direction to rotate
@@ -381,7 +381,7 @@ public final class Decoder extends LogicElement implements Timed {
 		if(direction == Orientation.LEFT)
 		{
 			orientation = orientation.ccw();
-			
+
 		}
 		else if(direction == Orientation.RIGHT)
 		{
@@ -393,7 +393,7 @@ public final class Decoder extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 * This method will flip a decoder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
@@ -408,7 +408,7 @@ public final class Decoder extends LogicElement implements Timed {
 		height = 0;
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if a decoder is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -422,54 +422,54 @@ public final class Decoder extends LogicElement implements Timed {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * The output value this decoder will take on once its propagation delay
 	 * elapses. Null before {@link #initSim(Simulator)} seeds it at simulation
 	 * start.
 	 */
 	private @Nullable BitSet toBeValue;
-	
+
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set output pin to 0
 		Output out = outputs.get(0);
 		BitSet zero = new BitSet(1);
 		out.setValue(zero);
-		
+
 		// set post output change to 1
 		BitSet one = new BitSet(1);
 		one.flip(0);
 		sim.post(new SimEvent(0,this,one));
-		
+
 		// set to-be value
 		toBeValue = (BitSet)one.clone();
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// if the input has changed ...
 		if (todo == null) {
-			
+
 			// get the input value
 			BitSet value = inputs.get(0).getValue();
 			if (value == null)
 				value = new BitSet();
-			
+
 			// create new output value
 			int inval = BitSetUtils.ToInt(value);
 			BitSet newValue = new BitSet(inval+1);
@@ -483,14 +483,14 @@ public final class Decoder extends LogicElement implements Timed {
 			}
 		}
 		else {
-			
+
 			// get the new output value
 			BitSet newValue = (BitSet)todo;
-			
+
 			// send to output
 			Output out = outputs.get(0);
 			out.propagate(newValue,now,sim);
 		}
 	} // end of react method
-	
+
 } // end of Decoder class

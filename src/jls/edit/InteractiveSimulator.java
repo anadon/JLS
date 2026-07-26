@@ -1,17 +1,19 @@
 package jls.edit;
 
-import jls.*;
-import jls.elem.*;
-import jls.sim.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
+import java.util.*;
+import java.util.concurrent.*;
+
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
-import java.util.concurrent.*;
-import java.util.*;
 
 import org.jspecify.annotations.Nullable;
+
+import jls.*;
+import jls.elem.*;
+import jls.sim.*;
 
 /**
  * Event driven circuit simulator.
@@ -528,7 +530,7 @@ public final class InteractiveSimulator extends Simulator {
 
 	/**
 	 * Get the simulator JPanel.
-	 * 
+	 *
 	 * @return the JPanel that displays the simulator
 	 *
 	 * @jls.testedby jls.sim.InteractiveSimulatorFieldTest#button()
@@ -965,7 +967,7 @@ public final class InteractiveSimulator extends Simulator {
 	 * Find all probes and watched elements, add them to Traces window.
 	 * If an element is not watched, reset its trace position.
 	 * Descends into subcircuits recursively.
-	 * 
+	 *
 	 * @param circ The circuit to find the traces in.
 	 */
 	private void findTraces(Circuit circ) {
@@ -1018,7 +1020,7 @@ public final class InteractiveSimulator extends Simulator {
 
 	/**
 	 * Get the status bar (containing message and clock).
-	 * 
+	 *
 	 * @return the status bar.
 	 */
 	public JPanel getStatusBar() {
@@ -1302,7 +1304,7 @@ public final class InteractiveSimulator extends Simulator {
 
 		/**
 		 * Set base in all trace object.
-		 * 
+		 *
 		 * @param base The new base.
 		 */
 		private void setBase(int base) {
@@ -1433,4 +1435,3 @@ public final class InteractiveSimulator extends Simulator {
 	} // end of Header class
 
 } // end of InteractiveSimulator class
-

@@ -11,7 +11,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.util.function.Supplier;
@@ -27,9 +26,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import jls.core.Geometry;
 import jls.Circuit;
-import jls.JLSInfo;
+import jls.core.Geometry;
 import jls.elem.Element;
 import jls.elem.Input;
 import jls.elem.NotGate;

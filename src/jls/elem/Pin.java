@@ -1,24 +1,24 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-
 import java.io.*;
 import java.util.BitSet;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+
 /**
  * Superclass of input and output pins.
  * Contains common data and methods.
- * 
+ *
  * @author David A. Poplawski
  */
 public abstract sealed class Pin extends LogicElement
 		implements Watchable
 		permits InputPin, OutputPin {
-	
+
 	// saved properties
 	/**
 	 * The name of this pin, or null until it is named by {@link #setName}
@@ -34,28 +34,28 @@ public abstract sealed class Pin extends LogicElement
 
 	/**
 	 * Create a new input pin.
-	 * 
+	 *
 	 * @param circ The circuit this pin will be in.
 	 */
 	public Pin(Circuit circ) {
-		
+
 		super(circ);
 	} // end of constructor
-	
+
 	/**
 	 * Return a string version of this element.
-	 * 
+	 *
 	 * @return the string.
 	 */
 	@Override
 	public String toString() {
-		
+
 		return name + ",bits=" + bits + ",watched=" + watched + ",hashCode=" + hashCode();
 	} // end of toString method
-	
+
 	/**
 	 * Get the name of this pin.
-	 * 
+	 *
 	 * @return the name.
 	 * @jls.testedby jls.BatchSimulationGoldenTest#simulate()
 	 * @jls.testedby jls.ElementSimulationGoldenTest#pinValue()
@@ -69,18 +69,18 @@ public abstract sealed class Pin extends LogicElement
 
 		return name == null ? "" : name;
 	} // end of getName method
-	
+
 	/**
 	 * Get the number of bits in this pin.
-	 * 
+	 *
 	 * @return the number of bits.
 	 */
 	@Override
 	public int getBits() {
-		
+
 		return bits;
 	} // end of getBits method
-	
+
 	/**
 	 * Get the orientation this pin faces (for the relocated renderer and
 	 * creation dialog, issue #77).
@@ -158,7 +158,7 @@ public abstract sealed class Pin extends LogicElement
 			}
 		}
 	} // end of init method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for the attributes shared by both pins.
 	/** The saved attributes shared by both pin types, in save order. */
@@ -226,17 +226,17 @@ public abstract sealed class Pin extends LogicElement
 
 		return ALL_ATTRIBUTES;
 	} // end of savedAttributes method
-	
+
 	/**
 	 * Pins cannot be copied (copy/paste).
-	 * 
+	 *
 	 * @return false.
 	 */
 	public boolean canCopy() {
-		
+
 		return false;
 	} // end of canCopy method
-	
+
 	/**
 	 * Save this element in a file.
 	 *
@@ -413,10 +413,10 @@ public abstract sealed class Pin extends LogicElement
 		else
 			return (BitSet) currentValue.clone();
 	} // end of getCurrentValue method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -426,35 +426,35 @@ public abstract sealed class Pin extends LogicElement
 	} // end of showInfo method
 	/**
 	 * A pin be watched.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canWatch() {
-		
+
 		return true;
 	} // end of canWatch method
-	
+
 	/**
 	 * See if this pin is watched.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 */
 	@Override
 	public boolean isWatched() {
-		
+
 		return watched;
 	} // end of isWatched method
-	
+
 	/**
 	 * Set whether this pin is watched or not.
-	 * 
+	 *
 	 * @param state True to make it watched, false to make it not watched.
 	 */
 	@Override
 	public void setWatched(boolean state) {
-		
+
 		watched = state;
 	} // end of setWatched method
-	
+
 } // end of Pin class

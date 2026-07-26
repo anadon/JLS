@@ -16,10 +16,10 @@ public class SMUtil {
 
 	/**
 	 * Compute angle given a height and width of a rectangle.
-	 * 
+	 *
 	 * @param w The width.
 	 * @param h The height.
-	 * 
+	 *
 	 * @return the angle, in degrees.
 	 */
 	public static double getAngle(int w, int h) {

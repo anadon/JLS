@@ -1,7 +1,8 @@
 package jls;
 
-import javax.swing.*;
 import java.math.*;
+
+import javax.swing.*;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
@@ -10,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Make sure everything in a text field is numeric.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class TextFilter extends DocumentFilter {
@@ -25,7 +26,7 @@ public final class TextFilter extends DocumentFilter {
 
 	/**
 	 * Construct filter.
-	 * 
+	 *
 	 * @param target The text field being checked.
 	 */
 	public TextFilter(JTextField target) {
@@ -48,7 +49,7 @@ public final class TextFilter extends DocumentFilter {
 
 	/**
 	 * Set the base of numbers allowed in this text field.
-	 * 
+	 *
 	 * @param base The new base.
 	 */
 	public void setBase(int base) {

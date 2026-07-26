@@ -1,6 +1,5 @@
 package jls.collab.net;
 
-import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -8,6 +7,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The persisted trust decisions of this install (issue #168, research

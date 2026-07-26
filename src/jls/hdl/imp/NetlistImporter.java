@@ -7,8 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.core.Geometry;
-import jls.JLSInfo;
 import jls.hdl.layout.HeuristicLayeredLayouter;
 import jls.hdl.layout.LayoutException;
 import jls.hdl.layout.LayoutGraph;
@@ -17,8 +18,6 @@ import jls.hdl.yosys.CellValidator;
 import jls.hdl.yosys.CellViolation;
 import jls.hdl.yosys.NetlistFormatException;
 import jls.hdl.yosys.YosysNetlist;
-
-import org.jspecify.annotations.Nullable;
 
 /**
  * The Stage 2 cell-to-element mapper and save-format emitter (issue

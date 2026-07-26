@@ -3,7 +3,6 @@ package jls;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Frame;
-import org.jspecify.annotations.Nullable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -15,6 +14,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Displays the built-in tutorial in a non-modal, resizable dialog.

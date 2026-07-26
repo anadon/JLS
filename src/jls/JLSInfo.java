@@ -1,13 +1,14 @@
 package jls;
 
-import jls.sim.*;
 import java.awt.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.sim.*;
+
 /**
  * Constants for JLS.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class JLSInfo {
@@ -46,7 +47,7 @@ public final class JLSInfo {
 		}
 		return "dev";
 	} // end of loadVersion method
-	
+
 	// miscellaneous parameters
 	/** Initial width and height of the main window, in pixels. */
 	public static final int windowsize = 600;

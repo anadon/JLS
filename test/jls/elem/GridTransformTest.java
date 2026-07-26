@@ -2,10 +2,10 @@ package jls.elem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.Test;
+
 import jls.core.GridPoint;
 import jls.core.GridSize;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * GridTransform (#24) validated against real relationships from the

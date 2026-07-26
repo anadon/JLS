@@ -14,10 +14,10 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.core.Geometry;
+import jls.core.Orientation;
 
 /**
  * Vertical (UP/DOWN) orientation for wire groups - Binder and Splitter

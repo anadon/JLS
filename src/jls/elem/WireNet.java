@@ -1,19 +1,20 @@
 package jls.elem;
 
-import jls.*;
-import jls.sim.*;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.sim.*;
+
 /**
  * Keeps track of all wires and wire ends in a "net", which is a multi-segment wire,
  * possibly with branches (a DAG).
- * 
+ *
  * @author David A. Poplawski
  */
 public class WireNet {
-	
+
 	// properties
 	// insertion order (file order for a loaded circuit) makes the
 	// multi-driver resolution in propagate deterministic (issue #98, S1)
@@ -38,63 +39,63 @@ public class WireNet {
 	/**
 	 * Make a copy of this element.
 	 * Wirenets are not copied.
-	 * 
+	 *
 	 * @return a reference to a complete copy of this element.
 	 */
 	public @Nullable Element copy() {
 		return null;
 	} // end of copy method
-	
+
 	/**
 	 * Add a new wire end.
-	 * 
+	 *
 	 * @param end The new wire end.
 	 * @jls.testedby jls.edit.TriStateBundleConnectTest#freshEnd()
 	 */
 	public void add(WireEnd end) {
-		
+
 		ends.add(end);
 	} // end of add method
-	
+
 	/**
 	 * Remove wire end.
-	 * 
+	 *
 	 * @param end The wire end to remove.
 	 */
 	public void remove(WireEnd end) {
-		
+
 		ends.remove(end);
 	} // end of remove method
-	
+
 	/**
 	 * Add a new wire.
-	 * 
+	 *
 	 * @param wire The new wire.
 	 */
 	public void add(Wire wire) {
-		
+
 		wires.add(wire);
 	} // end of add method
-	
+
 	/**
 	 * Remove wire.
-	 * 
+	 *
 	 * @param wire The wire to remove.
 	 */
 	public void remove(Wire wire) {
-		
+
 		wires.remove(wire);
 	} // end of remove method
-	
+
 	/**
 	 * Create a new wire net containing a given wire end (that must be in this net).
-	 * 
+	 *
 	 * @param end The wire end that is part of the new net.
-	 * 
+	 *
 	 * @return The new wire net.
 	 */
 	public WireNet makeNet(WireEnd end) {
-		
+
 		// unmark all wires and wire ends
 		for (Wire w : wires) {
 			w.mark(false);
@@ -102,13 +103,13 @@ public class WireNet {
 		for (WireEnd e : ends) {
 			e.mark(false);
 		}
-		
+
 		// mark all wires and wire ends connected to the given wire end
 		end.traverse();
-		
+
 		// create new empty wire net
 		WireNet net = new WireNet();
-		
+
 		// add marked wires and wire ends to the new wire net
 		for (Wire w : wires) {
 			if (w.isMarked()) {
@@ -122,15 +123,15 @@ public class WireNet {
 				e.setNet(net);
 			}
 		}
-		
+
 		//  assume this wire net is not attached to any puts
 		bits = 0;
 		hasinput = false;
-		
+
 		// if any wire end is attached
 		for (WireEnd e : net.ends) {
 			if (e.isAttached()) {
-				
+
 				// set bits and, if an output set hasinput and possibly tristate
 				Put put = e.getPut();
 				if (put == null)
@@ -144,7 +145,7 @@ public class WireNet {
 				}
 			}
 		}
-		
+
 		// un-tristate any elements if needed
 		if (!net.isTriState()) {
 			for (WireEnd e : net.ends) {
@@ -159,38 +160,38 @@ public class WireNet {
 				}
 			}
 		}
-		
+
 		return net;
 	} // end of makeNet method
-	
+
 	/**
 	 * See if there is anything in this wire net.
-	 * 
+	 *
 	 * @return true if there is at least one wire end, false if not.
 	 */
 	public boolean isEmpty() {
-		
+
 		return ends.isEmpty();
 	} // end of esEmpty method
-	
+
 	/**
 	 * See if this net is already connected to an output.
-	 * 
+	 *
 	 * @return true if already connected to an output, false if not.
 	 */
 	public boolean hasInput() {
-		
+
 		return hasinput;
 	} // end of hasInput method
-	
+
 	/**
 	 * Tell this wire net that it is now connected to an output.
 	 */
 	public void setInput() {
-		
+
 		hasinput = true;
 	} // end of setInput method
-	
+
 	/**
 	 * Not visible, so always return false.
 	 *
@@ -220,35 +221,35 @@ public class WireNet {
 
 		return false;
 	} // end of isInside method
-	
+
 	/**
 	 * Set the number of bits in this wire net.
-	 * 
+	 *
 	 * @param bits the number of bits.
 	 */
 	public void setBits(int bits) {
-		
+
 		this.bits = Math.max(this.bits,bits);
 	} // end of setBits method
-	
+
 	/**
 	 * Get the number of bits in this wire net.
 	 * (0 implies the net is not connected to any elements yet)
-	 * 
+	 *
 	 * @return the number of bits, or 0 if not connected.
 	 */
 	public int getBits() {
-		
+
 		return bits;
 	} // end of getBits method
-	
+
 	/**
 	 * Add all wires and wire nets from given net into this one.
-	 * 
+	 *
 	 * @param other The net to absorb.
 	 */
 	public void absorb(WireNet other) {
-		
+
 		for (WireEnd end : other.ends) {
 			ends.add(end);
 			end.setNet(this);
@@ -258,7 +259,7 @@ public class WireNet {
 			wire.setNet(this);
 		}
 	} // end of absorb method
-	
+
 	/**
 	 * Check for this wire net being disconnected from any elements after some
 	 * attached element is deleted.
@@ -269,7 +270,7 @@ public class WireNet {
 	 * If no longer tristate, fix any attached elements.
 	 */
 	public void recheck() {
-		
+
 		hasinput = false;
 		bits = 0;
 		triState = false;
@@ -299,17 +300,17 @@ public class WireNet {
 			}
 		}
 	} // end of recheck method
-	
+
 	/**
 	 * See if more than one wire or wire end from this net overlaps with wire ends
 	 * from another net.
-	 * 
+	 *
 	 * @param other The other wire net.
-	 * 
+	 *
 	 * @return true if more than one overlap, false if not.
 	 */
 	public boolean netOverlap(WireNet other) {
-		
+
 		int overlaps = 0;
 		for (WireEnd end1 : ends) {
 			for (WireEnd end2 : other.ends) {
@@ -327,17 +328,17 @@ public class WireNet {
 		}
 		return overlaps > 1;
 	} // end of netOverlap method
-	
+
 	/**
 	 * Get all wire ends in this net.
-	 * 
+	 *
 	 * @return all wire ends.
 	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireClearsSelectionAndSelectsNewEnd()
 	 * @jls.testedby jls.edit.CtrlWGestureTest#startWireFromEmptySelectionMatchesOldBehavior()
 	 * @jls.testedby jls.ui.CircuitAssert#reaches()
 	 */
 	public Set<WireEnd> getAllEnds() {
-		
+
 		return ends;
 	} // end of getAllEnds method
 
@@ -345,32 +346,32 @@ public class WireNet {
 	 * Make this wire net tri-state when loading circuit.
 	 */
 	public void loadTriState() {
-		
+
 		triState = true;
 	} // end of setTriState method
-	
+
 	/**
 	 * Make this wire net tri-state or not.
 	 * Also change any attached elements.
-	 * 
+	 *
 	 * @param which True to make it tri-state, false to make it not.
 	 */
 	public void setTriState(boolean which) {
-		
+
 		// set initial value
 		if (which)
 			value = null;
-		
+
 		// set this net
 		triState = which;
-		
+
 		// for each wire end...
 		for (WireEnd end : ends) {
-			
+
 			// skip unattached ends
 			if (!end.isAttached())
 				continue;
-			
+
 			// skip ends attached to outputs
 			Put p = end.getPut();
 			if (p == null || p instanceof Output)
@@ -379,27 +380,27 @@ public class WireNet {
 			// if attached to a tri-state propagating element...
 			Element el = p.getElement();
 			if (el instanceof TriProp tel) {
-				
+
 				// propagate tri-state
 				tel.setTriState(which);
 			}
 		}
 	} // end of setTriState method
-	
+
 	/**
 	 * Find out if this wire net is tri-state.
-	 * 
+	 *
 	 * @return true if tri-state, false if not.
 	 */
 	public boolean isTriState() {
-		
+
 		return triState;
 	} // end of isTriState method
 
 //-------------------------------------------------------------------------------
 // Simulation
 //-------------------------------------------------------------------------------
-		
+
 	/** The current value on this net (null when tri-stated off / high-impedance). */
 	private @Nullable BitSet value = new BitSet(1);
 	/** True once a bus conflict has been reported, until it clears. */
@@ -408,7 +409,7 @@ public class WireNet {
 	/**
 	 * Set the value on this net.
 	 * Should only be used by initSim.
-	 * 
+	 *
 	 * @param value The value, or null for a high-impedance (tri-state) value.
 	 */
 	public void setValue(@Nullable BitSet value) {
@@ -421,7 +422,7 @@ public class WireNet {
 
 	/**
 	 * Get the current value on this net.
-	 * 
+	 *
 	 * @return the current value, or null for a high-impedance (tri-state) value.
 	 */
 	public @Nullable BitSet getValue() {
@@ -431,16 +432,16 @@ public class WireNet {
 		else
 			return (BitSet)value.clone();
 	} // end of getValue method
-	
+
 	/**
 	 * Send a copy of the value to all inputs this net is connected to.
-	 * 
+	 *
 	 * @param value The value to send, or null for a high-impedance (tri-state) value.
 	 * @param now The current time.
 	 * @param sim The simulator object to post events to.
 	 */
 	public void propagate(@Nullable BitSet value, long now, Simulator sim) {
-		
+
 		// if tristate, resolve the value actually driven: null (HiZ) if
 		// every driver is off, otherwise the first active driver in net
 		// order (the order the wire ends were added to the net - file
@@ -482,7 +483,7 @@ public class WireNet {
 			}
 			value = actual;
 		}
-		
+
 		// for each wire end attached to an input...
 		for (WireEnd end : ends) {
 			if (!end.isAttached())
@@ -490,12 +491,12 @@ public class WireNet {
 			Put p = end.getPut();
 			if (!(p instanceof Input))
 				continue;
-			
+
 			// make a copy of the value
 			BitSet newValue = null;
 			if (value != null)
 				newValue = (BitSet)value.clone();
-			
+
 			// send it to the input
 			Input inp = (Input)p;
 			inp.setValue(newValue);
@@ -506,7 +507,7 @@ public class WireNet {
 				sim.post(new SimEvent(now, (Reacts) element, null));
 			}
 		}
-		
+
 		// keep a copy for probes
 		if (value == null)
 			this.value = null;

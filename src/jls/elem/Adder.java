@@ -1,24 +1,24 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.GridPoint;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
+import java.io.*;
+import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
-import java.io.*;
-import java.util.*;
+import jls.*;
+import jls.core.Geometry;
+import jls.core.GridPoint;
+import jls.core.Orientation;
+import jls.sim.*;
 
 /**
  * An n-bit adder with carry in and carry out (n chosen by user).
  * Propagation delay is proportional to the number of bits.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Adder extends LogicElement implements Timed {
-	
+
 	// default values
 	/** The default number of bits. */
 	private static final int defaultBits = 1;
@@ -35,14 +35,14 @@ public final class Adder extends LogicElement implements Timed {
 
 	/**
 	 * Create a new adder element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Adder(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * The direction this adder faces (issue #77: read by the GUI-side
 	 * renderer and dialog).
@@ -125,7 +125,7 @@ public final class Adder extends LogicElement implements Timed {
 		}
 		return t;
 	} // end of placement method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes.
 	/** This element's own saved attributes: bits, delay, orient (#23). */
@@ -211,18 +211,18 @@ public final class Adder extends LogicElement implements Timed {
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Adder");
 		super.save(output);
 		output.println("END");
 	} // end of save method
-	
+
 	/**
 	 * Copy this element.
 	 */
 	@Override
 	public Element copy() {
-		
+
 		Adder it = new Adder(getCircuit());
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
@@ -233,26 +233,26 @@ public final class Adder extends LogicElement implements Timed {
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		return bits + " bit adder";
 	} // end of showInfo method
 
 	/**
 	 * Adders have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -261,32 +261,32 @@ public final class Adder extends LogicElement implements Timed {
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = bits * defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
-	
+
 	/**
 	 * Tells if an adder is capable of rotatating, can only rotate when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -294,11 +294,11 @@ public final class Adder extends LogicElement implements Timed {
 	@Override
 	public boolean canRotate()
 	{
-		return !(inputs.get(0).isAttached() || inputs.get(1).isAttached() 
-				|| inputs.get(2).isAttached() || outputs.get(0).isAttached() 
+		return !(inputs.get(0).isAttached() || inputs.get(1).isAttached()
+				|| inputs.get(2).isAttached() || outputs.get(0).isAttached()
 				|| outputs.get(1).isAttached());
 	}
-	
+
 	/**
 	 *  This method will rotate the adder if it is rotateable.
 	 * @param direction The direction to rotate
@@ -319,7 +319,7 @@ public final class Adder extends LogicElement implements Timed {
 		outputs.clear();
 		init(g);
 	}
-	
+
 	/**
 	 * Tells if an adder is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -327,11 +327,11 @@ public final class Adder extends LogicElement implements Timed {
 	@Override
 	public boolean canFlip()
 	{
-		return !(inputs.get(0).isAttached() || inputs.get(1).isAttached() 
-				|| inputs.get(2).isAttached() || outputs.get(0).isAttached() 
+		return !(inputs.get(0).isAttached() || inputs.get(1).isAttached()
+				|| inputs.get(2).isAttached() || outputs.get(0).isAttached()
 				|| outputs.get(1).isAttached());
 	}
-	
+
 	/**
 	 * This method will flip an adder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
@@ -349,44 +349,44 @@ public final class Adder extends LogicElement implements Timed {
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/**
 	 * The sum-and-carry value currently propagating through the adder. Null
 	 * before {@link #initSim(Simulator)} seeds it at simulation start.
 	 */
 	private @Nullable BitSet toBeValue;
-	
+
 	/**
 	 * Initialize this element by setting its output pin and to-be value to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set output pins to 0
 		BitSet zero = new BitSet(1);
 		for (Output output : outputs) {
 			output.setValue((BitSet)zero.clone());
 		}
-		
+
 		// set to-be values
 		toBeValue = (BitSet)zero.clone();
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Unused.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// if the input has changed ...
 		if (todo == null) {
-			
+
 			// get the input values
 			BitSet a = inputs.get(0).getValue();
 			if (a == null)
@@ -401,10 +401,10 @@ public final class Adder extends LogicElement implements Timed {
 			if (cin.cardinality() == 0) {
 				c = false;
 			}
-			
+
 			// create new output values
 			BitSet allsum = BitSetUtils.SumCarry(c,a,b);
-		
+
 			// if new value is different from the value propagating through
 			// the adder, then post an event
 			if (!allsum.equals(toBeValue)) {
@@ -413,16 +413,16 @@ public final class Adder extends LogicElement implements Timed {
 			}
 		}
 		else {
-			
+
 			// get the new output value
 			BitSet allsum = (BitSet)todo;
-			
+
 			// break into sum and carry
 			BitSet sum = (BitSet)allsum.clone();
 			BitSet carry = new BitSet(1);
 			carry.set(0,sum.get(bits));
 			sum.clear(bits);
-			
+
 			// send to outputs
 			Output sumOut = outputs.get(0);
 			sumOut.propagate(sum,now,sim);

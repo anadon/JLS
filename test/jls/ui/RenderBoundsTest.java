@@ -11,10 +11,10 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Geometry;
 import jls.Circuit;
 import jls.CircuitTextBuilder;
 import jls.JLSInfo;
+import jls.core.Geometry;
 import jls.elem.Element;
 import jls.elem.WireEnd;
 

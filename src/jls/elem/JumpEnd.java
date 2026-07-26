@@ -1,22 +1,22 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.core.Orientation;
-import jls.*;
-import jls.sim.*;
-
 import java.io.*;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.core.Orientation;
+import jls.sim.*;
+
 /**
  * Receiving end of a named wire.
- *  
+ *
  * @author David A. Poplawski
  */
 public final class JumpEnd extends LogicElement {
-	
+
 	// default value
 	/** Default number of bits in the named wire. */
 	private static final int defaultBits = 1;
@@ -27,7 +27,7 @@ public final class JumpEnd extends LogicElement {
 	 */
 	public static final String NO_NAMED_WIRES =
 			"No named wires exist. Name a wire with START first.";
-	
+
 	// saved properties
 	/** Number of bits in the named wire. */
 	private int bits = defaultBits;
@@ -43,10 +43,10 @@ public final class JumpEnd extends LogicElement {
 
 	/** Which way the element points. */
 	private Orientation orientation = Orientation.RIGHT;
-	
+
 	/**
 	 * Create a new wire jump end.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 *
 	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#endGestureFailsFastWhenNoNamedWiresExist()
@@ -54,10 +54,10 @@ public final class JumpEnd extends LogicElement {
 	 * @jls.testedby jls.elem.JumpEndNoNamedWiresTest#matchGesturePresetNameBypassesGuardAndDialog()
 	 */
 	public JumpEnd(Circuit circuit) {
-		
+
 		super(circuit);
 	} // end of constructor
-	
+
 	/**
 	 * Set the number of bits (issue #77: applied by the GUI-side dialog).
 	 *
@@ -108,9 +108,9 @@ public final class JumpEnd extends LogicElement {
 				width = Math.max((w+s/2)/s*s,2*s);	// ceiling in spacings
 				height = 0;	// not really, but bounding rectangle will be large enough
 			}
-			
+
 		}
-		
+
 		// create output
 		Output out;
 		if(orientation == Orientation.RIGHT)
@@ -121,9 +121,9 @@ public final class JumpEnd extends LogicElement {
 		if (loadTriState) {
 			out.loadSetTriState();
 		}
-		
+
 	} // end of init method
-	
+
 	/**
 	 * Get the rectangle bounding this element.
 	 *
@@ -134,7 +134,7 @@ public final class JumpEnd extends LogicElement {
 
 		return new jls.core.Bounds(x,y-Geometry.SPACING/2,width,height+Geometry.SPACING);
 	} // end of getRect method
-	
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes. The
 	// " int tristate 1" line reflects derived output state, not a plain
@@ -281,10 +281,10 @@ public final class JumpEnd extends LogicElement {
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Get the name of this jump end.
-	 * 
+	 *
 	 * @return the name.
 	 *
 	 * @jls.testedby jls.ui.CircuitAssert#jumpAlias()
@@ -294,10 +294,10 @@ public final class JumpEnd extends LogicElement {
 
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -309,16 +309,16 @@ public final class JumpEnd extends LogicElement {
 
 	/**
 	 * Set this element to tri-state or not.
-	 * 
+	 *
 	 * @param which True to set to tri-state, false otherwise.
 	 */
 	public void setTriState(boolean which) {
-		
+
 		for (Output out : outputs) {
 			out.setTriState(which);
 		}
 	} // end of setTriState method
-	
+
 	/**
 	 * Tells if an adder is capable of flipping, can only flip when inputs or outputs have no attachments.
 	 * @return False if any input or output has a wire attached, True otherwise
@@ -328,7 +328,7 @@ public final class JumpEnd extends LogicElement {
 	{
 		return !(outputs.get(0).isAttached());
 	}
-	
+
 	/**
 	 * This method will flip an adder
 	 * @param g The current graphics context to facilitate recalculation of size when flipping
@@ -346,7 +346,7 @@ public final class JumpEnd extends LogicElement {
 		}
 
 		outputs.clear();
-		
+
 		// create output
 		Output out;
 		if(orientation == Orientation.RIGHT)
@@ -358,22 +358,22 @@ public final class JumpEnd extends LogicElement {
 			out.loadSetTriState();
 		}
 	}
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/** The value currently on the output, or null when tri-stated off. */
 	private @Nullable BitSet currentValue = new BitSet();
-	
+
 	/**
 	 * Initialize this element by setting its output to 0.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set output to 0 or off
 		Output out = outputs.get(0);
 		if (out.isTriState()) {
@@ -385,32 +385,32 @@ public final class JumpEnd extends LogicElement {
 			BitSet bitval = new BitSet(1);
 			out.setValue(bitval);
 		}
-		
+
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send along.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// get the input value
 		BitSet value = (BitSet)todo;
 		currentValue = null;
 		if (value != null)
 			currentValue = (BitSet)value.clone();
-		
+
 		// send to output
 		Output out = outputs.get(0);
 		if (value == null)
 			out.propagate(null,now,sim);
 		else
 			out.propagate((BitSet)value.clone(),now,sim);
-	
+
 	} // end of react method
 
 	/**

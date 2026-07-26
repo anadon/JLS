@@ -1,26 +1,25 @@
 package jls.elem;
 
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
+import java.io.*;
+import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
-import java.io.*;
-
-import java.util.*;
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
 
 /**
  * Pause element.
  * Causes simulator to pause when input is asserted.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Pause extends LogicElement {
 
 	/**
 	 * Create a new pause element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is part of.
 	 */
 	public Pause(Circuit circuit) {
@@ -100,7 +99,7 @@ public final class Pause extends LogicElement {
 
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
@@ -113,7 +112,7 @@ public final class Pause extends LogicElement {
 
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
@@ -132,7 +131,7 @@ public final class Pause extends LogicElement {
 
 	/**
 	 * Initialize simulation.
-	 * 
+	 *
 	 * @param sim The simulator.
 	 *
 	 * @jls.testedby jls.SimulationSemanticsRegressionTest#pausePausesOnlyOnNonZeroInput()
@@ -157,7 +156,7 @@ public final class Pause extends LogicElement {
 
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo Should be null.

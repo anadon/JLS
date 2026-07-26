@@ -10,19 +10,18 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import jls.core.Geometry;
+import org.jspecify.annotations.Nullable;
+
 import jls.BitSetUtils;
 import jls.Circuit;
-import jls.JLSInfo;
 import jls.TellUser;
+import jls.core.Geometry;
 import jls.sim.SimEvent;
 import jls.sim.Simulator;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * The state machine editor and simulation code.
- * 
+ *
  * @author David A. Poplawski
  */
 public final class StateMachine extends LogicElement
@@ -50,7 +49,7 @@ public final class StateMachine extends LogicElement
 	private int trigger = defaultTrigger;
 	/** The name of this state machine. */
 	private String name = "";
-	
+
 	// for loading from file
 	/**
 	 * Parser state while reading a state machine from a file, naming which
@@ -71,7 +70,7 @@ public final class StateMachine extends LogicElement
 	/** The state currently being built by the file loader. Null until the
 	 *  first "state" attribute is read. */
 	private @Nullable State buildState;
-	
+
 
 	/**
 	 * Create a new adder element.
@@ -116,10 +115,10 @@ public final class StateMachine extends LogicElement
 		return findInitialState() == null ? INITIAL_STATE_CONSTRAINT : null;
 	} // end of checkInitialState method
 
-	
+
 	/**
 	 * Initialize internal info for this element.
-	 * 
+	 *
 	 * @param g The Graphics object to use.
 	 */
 	@Override
@@ -131,7 +130,7 @@ public final class StateMachine extends LogicElement
 			if (width == 0 && height == 0) {
 				jls.core.TextMetrics fm = g;
 				String dname = name;
-				if (name.isEmpty()) 
+				if (name.isEmpty())
 					dname = "State Machine";
 				width = fm.stringWidth(" " + dname + " ");
 				for (State state : states) {
@@ -149,7 +148,7 @@ public final class StateMachine extends LogicElement
 			inputList.addAll(state.getInputs());
 			outputList.addAll(state.getOutputs());
 		}
-		
+
 		// create new list alternating elements from the two lists
 		Set<String>	saveInputs = new HashSet<String>(inputList);
 		Vector<String> pins = new Vector<String>(inputList.size()+outputList.size());
@@ -172,7 +171,7 @@ public final class StateMachine extends LogicElement
 				}
 			}
 		}
-		
+
 		// create input and output signals and determine height
 		height = s;
 		for (String signal : pins) {
@@ -188,20 +187,20 @@ public final class StateMachine extends LogicElement
 			}
 		}
 		height += 4*s;
-		
+
 		inputs.add(new Input("clock",this,0,height-s,1));
-		
+
 	} // end of init method
-	
+
 	/**
 	 * Determine number of bits in a given input.
-	 * 
+	 *
 	 * @param signal The input signal name.
-	 * 
+	 *
 	 * @return The number of bits in that signal.
 	 */
 	private int inputBits(String signal) {
-		
+
 		for (State state : states) {
 			int bits = state.inputBits(signal);
 			if (bits > 0)
@@ -212,13 +211,13 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * Determine number of bits in a given output.
-	 * 
+	 *
 	 * @param signal The output signal name.
-	 * 
+	 *
 	 * @return The number of bits in that signal.
 	 */
 	private int outputBits(String signal) {
-		
+
 		for (State state : states) {
 			int bits = state.outputBits(signal);
 			if (bits > 0)
@@ -226,11 +225,11 @@ public final class StateMachine extends LogicElement
 		}
 		return 0; // should never do this
 	} // end of inputBits method
-	
+
 
 	/**
 	 * Save this element in a file.
-	 * 
+	 *
 	 * @param output The PrintWriter to write to.
 	 */
 	@Override
@@ -312,7 +311,7 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 *
@@ -320,7 +319,7 @@ public final class StateMachine extends LogicElement
 	 */
 	@Override
 	public void setValue(String name, String value) {
-		
+
 		switch (loadState) {
 		case machine:
 			if (name.equals("state")) {
@@ -386,7 +385,7 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 *
@@ -394,7 +393,7 @@ public final class StateMachine extends LogicElement
 	 */
 	@Override
 	public void setValue(String name, int value) {
-		
+
 		switch (loadState) {
 		case machine:
 			// the attribute registry handles "trig" and "delay"
@@ -415,7 +414,7 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * Set a long instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -436,23 +435,23 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
 	@Override
 	public void setPair(int v1, int v2) {
-		
+
 		if (buildState != null) buildState.setTransPair(v1,v2);
 	} // end of setPair method
 
 	/**
 	 * Can't copy state machines.
-	 * 
+	 *
 	 * @return false;
 	 */
 	public boolean canCopy() {
-		
+
 		return false;
 	} // end of canCopy method
 
@@ -461,7 +460,7 @@ public final class StateMachine extends LogicElement
 	 */
 	@Override
 	public Element copy() {
-		
+
 		// create new element; the attribute registry copies name, delay
 		// and trigger in super.copy below
 		StateMachine it = new StateMachine(getCircuit());
@@ -473,12 +472,12 @@ public final class StateMachine extends LogicElement
 			it.states.add(st);
 			stateMap.put(state.getName(),st);
 		}
-		
+
 		// link transitions to states
 		for (State istate : it.states) {
 			istate.linkTrans(stateMap);
 		}
-		
+
 		// copy inputs and outputs
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
@@ -486,20 +485,20 @@ public final class StateMachine extends LogicElement
 		for (Output output : outputs) {
 			it.outputs.add(output.copy(it));
 		}
-		
+
 		// finish up
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		String trig = "falling";
 		if (trigger == 1) {
 			trig = "rising";
@@ -512,41 +511,41 @@ public final class StateMachine extends LogicElement
 			return msg + "current state = " + currentState.getName();
 		}
 	} // end of showInfo method
-	
+
 	/**
 	 * Get the name of this state machine.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	@Override
 	public String getName() {
-		
+
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Get the set of states in this state machine.
-	 * 
+	 *
 	 * @return the set of states.
 	 */
 	public Set<State> getStates() {
-		
+
 		return states;
 	} // end of getStates method
 
 	/**
 	 * Get all inputs from this state machine.
-	 * 
+	 *
 	 * @return all outputs.
 	 */
 	public Vector<Input> getInputs() {
-		
+
 		return inputs;
 	} // end of getInputs method
-	
+
 	/**
 	 * Get all outputs from this state machine.
-	 * 
+	 *
 	 * @return all outputs.
 	 */
 	public Vector<Output> getOutputs() {
@@ -614,12 +613,12 @@ public final class StateMachine extends LogicElement
 
 	/**
 	 * State machines have timing info (propagation delay).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -628,47 +627,47 @@ public final class StateMachine extends LogicElement
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		propDelay = defaultPropDelay;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the propagation delay in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return propDelay;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the propagation delay in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
 	public void setDelay(int temp) {
-		
+
 		propDelay = temp;
 	} // end of setDelay method
 
 	/**
 	 * State machines can be modified.
-	 * 
+	 *
 	 * @return true.
-	 */ 
+	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/** The most recently seen clock input value. */
 	private int oldClock;
 	/** True between a triggering clock edge and the new output values. */
@@ -678,7 +677,7 @@ public final class StateMachine extends LogicElement
 	private @Nullable State currentState;
 	/** True once the no-matching-transition warning has been shown. */
 	private boolean noMatchReported = false;	// no-matching-transition warned already? (#98, S5)
-	
+
 	/**
 	 * Initialize this element by setting its outputs to 0,
 	 * busy to false, and currentState to the initial state.
@@ -689,18 +688,18 @@ public final class StateMachine extends LogicElement
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// set all outputs to 0
 		for (Output output : outputs) {
 			output.setValue(new BitSet());
 		}
-		
+
 		// set latest clock input value to 0
 		oldClock = 0;
 
 		// re-arm the no-matching-transition diagnostic (#98, S5)
 		noMatchReported = false;
-		
+
 		// find the initial state (the same rule the editor dialog
 		// enforces at OK, issue #52 M13)
 		currentState = findInitialState();
@@ -723,34 +722,34 @@ public final class StateMachine extends LogicElement
 
 		// make not busy
 		busy = false;
-		
+
 	} // end of initSim method
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// if an input has changed ...
 		if (todo == null) {
-			
+
 			// get clock input value
 			BitSet cval = getInput("clock").getValue();
 			if (cval == null)
 				cval = new BitSet();
 			int newClock = (int)(BitSetUtils.ToLong(cval));
-			
+
 			// if still doing a transition, don't start another
 			if (busy) {
 				oldClock = newClock;
 				return;
 			}
-			
+
 			// check for proper clock change
 			if (trigger == 1) {	// rising edge
 				if (!(oldClock == 0 && newClock == 1)) {
@@ -764,7 +763,7 @@ public final class StateMachine extends LogicElement
 					return;
 				}
 			}
-			
+
 			// do a transition, so figure out next state.
 			// currentState is null only for a zero-state machine, which
 			// initSim leaves permanently busy, so react returns above
@@ -793,26 +792,26 @@ public final class StateMachine extends LogicElement
 				}
 				return;
 			}
-			
+
 			// save clock value and make state machine busy
 			oldClock = newClock;
 			busy = true;
-			
+
 			// post event
 			sim.post(new SimEvent(now+propDelay,this,newState));
 		}
 		else {
-			
+
 			// get the new state
 			currentState = (State)todo;
-			
+
 			// send values to outputs
 			currentState.sendOutputs(now,sim);
-			
+
 			// no longer busy
 			busy = false;
 		}
-		
+
 	} // end of react method
-	
+
 } // end of StateMachine class

@@ -12,9 +12,9 @@ import java.util.Scanner;
 
 import org.junit.jupiter.api.Test;
 
-import jls.core.Orientation;
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.core.Orientation;
 
 /**
  * Pins gate orientation behavior across the issue #78 H3 unification:

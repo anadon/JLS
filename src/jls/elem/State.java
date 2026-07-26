@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import jls.core.Geometry;
 import jls.BitSetUtils;
 import jls.TellUser;
+import jls.core.Geometry;
 import jls.sim.Simulator;
 
 /**
@@ -198,9 +198,9 @@ public class State {
 
 	/**
 	 * Make a copy of this state.
-	 * * 
+	 * *
 	 * @param it The new state machine.
-	 * 
+	 *
 	 * @return A copy of this state.
 	 */
 	public State copy(StateMachine it) {
@@ -373,7 +373,7 @@ public class State {
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -407,7 +407,7 @@ public class State {
 
 	/**
 	 * Set an output int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -436,7 +436,7 @@ public class State {
 
 	/**
 	 * Set an output long instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -454,7 +454,7 @@ public class State {
 
 	/**
 	 * Set an transition String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -468,7 +468,7 @@ public class State {
 				buildTrans.unconditional = true;
 			else if (value.equals("else"))
 				buildTrans.other = true;
-			else 
+			else
 				buildTrans.signal = value;
 			trans.add(buildTrans);
 		}
@@ -495,7 +495,7 @@ public class State {
 
 	/**
 	 * Set a transition int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -535,7 +535,7 @@ public class State {
 
 	/**
 	 * Set a pair of int instance variable values (during a load).
-	 * 
+	 *
 	 * @param v1 The first value.
 	 * @param v2 The second value.
 	 */
@@ -572,9 +572,9 @@ public class State {
 	 * Get the number of bits in a given input signal.
 	 * If this state doesn't have a transition using that signal,
 	 * return 0.
-	 * 
+	 *
 	 * @param signal The input signal name.
-	 * 
+	 *
 	 * @return the number of bits, or 0 if signal not used.
 	 */
 	public int inputBits(String signal) {
@@ -590,9 +590,9 @@ public class State {
 	 * Get the number of bits in a given output signal.
 	 * If this state doesn't have an output using that signal,
 	 * return 0.
-	 * 
+	 *
 	 * @param signal The output signal name.
-	 * 
+	 *
 	 * @return the number of bits, or 0 if signal not used.
 	 */
 	public int outputBits(String signal) {
@@ -606,10 +606,10 @@ public class State {
 
 	/**
 	 * See if a given point is inside this state.
-	 * 
+	 *
 	 * @param x The x-coordinate of the point.
 	 * @param y The y-coordinate of the point.
-	 * 
+	 *
 	 * @return true if it is, false if not.
 	 */
 	public boolean contains(int x, int y) {
@@ -645,9 +645,9 @@ public class State {
 
 	/**
 	 * See if this state is completely inside the given rectangle.
-	 * 
+	 *
 	 * @param rect The rectangle.
-	 * 
+	 *
 	 * @return true if it is inside, false if not.
 	 */
 	public boolean isInside(jls.core.Bounds rect) {
@@ -657,7 +657,7 @@ public class State {
 
 	/**
 	 * Set/reset highlight property of this state.
-	 * 
+	 *
 	 * @param which True to highlight, false not to.
 	 */
 	public void setHighlight(boolean which) {
@@ -667,9 +667,9 @@ public class State {
 
 	/**
 	 * Move state by a given amount.
-	 * Also move every point in this state's transitions if the 
+	 * Also move every point in this state's transitions if the
 	 * end state of those transitions is also selected.
-	 * 
+	 *
 	 * @param dx The distance to move in the x direction.
 	 * @param dy The distance to move in the y direction.
 	 * @param selected The selected states.
@@ -690,7 +690,7 @@ public class State {
 
 	/**
 	 * Move state to new position.
-	 * 
+	 *
 	 * @param x The new x-coordinate.
 	 * @param y The new y-coordinate.
 	 */
@@ -720,7 +720,7 @@ public class State {
 
 	/**
 	 * Get bounding rectangle for this state.
-	 * 
+	 *
 	 * @return the bounding rectangle.
 	 */
 	public jls.core.Bounds getRect() {
@@ -732,7 +732,7 @@ public class State {
 
 	/**
 	 * Get the name of this state.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	public String getName() {
@@ -742,7 +742,7 @@ public class State {
 
 	/**
 	 * See if this state has any transitions.
-	 * 
+	 *
 	 * @return true if it does, false if it does not.
 	 */
 	public boolean hasTransitions() {
@@ -980,7 +980,7 @@ public class State {
 	/**
 	 * Turn on/off initial state status.
 	 * Not responsible for turning off initial state status in another state.
-	 * 
+	 *
 	 * @param which True to make this state the initial state, false to make it
 	 * 				not be initial.
 	 */
@@ -991,7 +991,7 @@ public class State {
 
 	/**
 	 * Get the location of the center of this state.
-	 * 
+	 *
 	 * @return The x,y coordinates of the center.
 	 */
 	public jls.core.GridPoint getLocation() {
@@ -1002,7 +1002,7 @@ public class State {
 	/**
 	 * Remove all transitions from this state to the given state
 	 * (because the given state is being removed).
-	 * 
+	 *
 	 * @param other The state being removed.
 	 */
 	public void removeTrans(State other) {
@@ -1027,10 +1027,10 @@ public class State {
 
 	/**
 	 * Highlight any transition corner that is close to a given point.
-	 * 
+	 *
 	 * @param x The x-coordinate of the given point.
 	 * @param y The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return the transition whose corner is highlighted, else null. Its
 	 *         highlighted corner can then be dragged via {@link
 	 *         Transition#moveHighlight(int,int)} (issue #77).
@@ -1057,10 +1057,10 @@ public class State {
 	 * Highlight any transition that has a line segment close to a given point.
 	 * Also save reference to the highlighted transition so it can be deleted
 	 * if the user wants to.
-	 * 
+	 *
 	 * @param xp The x-coordinate of the given point.
 	 * @param yp The y-coordinate of the given point.
-	 * 
+	 *
 	 * @return true if some transition is highlighted, false if none
 	 */
 	public boolean highlightTrans(int xp, int yp) {
@@ -1181,9 +1181,9 @@ public class State {
 	/**
 	 * Get the maximum width (in pixels) of all input and output names in
 	 * this state.
-	 * 
+	 *
 	 * @param fm A FontMetrics object to use.
-	 * 
+	 *
 	 * @return the maximum width.
 	 */
 	public int getWidthInfo(jls.core.TextMetrics fm) {
@@ -1205,7 +1205,7 @@ public class State {
 
 	/**
 	 * Get set of all input signals used by transitions from this state.
-	 * 
+	 *
 	 * @return the set of input signal names.
 	 */
 	public Set<String> getInputs() {
@@ -1220,7 +1220,7 @@ public class State {
 
 	/**
 	 * Get set of all output signals asserted by this state.
-	 * 
+	 *
 	 * @return the set of output signal names.
 	 */
 	public Set<String> getOutputs() {
@@ -1243,7 +1243,7 @@ public class State {
 
 	/**
 	 * Get the next state from a given one given the current input values.
-	 * 
+	 *
 	 * @return The next state according, or null of no next state.
 	 */
 	public @org.jspecify.annotations.Nullable State getNextState() {
@@ -1285,7 +1285,7 @@ public class State {
 	/**
 	 * Send all out values of this state to the state machine outputs.
 	 * Unspecified outputs will be made 0.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator.
 	 */
@@ -1316,7 +1316,7 @@ public class State {
 
 	/**
 	 * Get the x-coordinate of this state.
-	 * 
+	 *
 	 * @return the x-coordinate.
 	 */
 	public int getX() {
@@ -1456,7 +1456,7 @@ public class State {
 
 	/**
 	 * Get the y-coordinate of this state.
-	 * 
+	 *
 	 * @return the y-coordinate.
 	 */
 	public int getY() {
@@ -1466,7 +1466,7 @@ public class State {
 
 	/**
 	 * Set the x-coordinate of this state
-	 * 
+	 *
 	 * @param newx The new x-coordinate.
 	 */
 	public void setX(int newx) {
@@ -1477,7 +1477,7 @@ public class State {
 
 	/**
 	 * Set the y-coordinate of this state
-	 * 
+	 *
 	 * @param newy The new y-coordinate.
 	 */
 	public void setY(int newy) {
@@ -1487,7 +1487,7 @@ public class State {
 
 	/**
 	 * See if this state is the initial state.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 */
 	public boolean isInitial() {
@@ -1508,7 +1508,7 @@ public class State {
 
 	/**
 	 * Get total number of output signals from this state.
-	 * 
+	 *
 	 * @return the total number of output signals.
 	 */
 	public int numOuts() {

@@ -1,25 +1,25 @@
 package jls.elem;
 
-import java.nio.charset.StandardCharsets;
-
-import jls.core.Geometry;
-import jls.*;
-import jls.sim.*;
 import java.io.*;
 import java.math.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 
+import jls.*;
+import jls.core.Geometry;
+import jls.sim.*;
+
 /**
  * Memory element, initialized internally or from a file.
  * Implements either ROM or SRAM (no DRAM).
- * 
+ *
  * @author David A. Poplawski
  */
 public final class Memory extends LogicElement
 		implements Timed, Watchable {
-	
+
 	// types
 	/**
 	 * The two kinds of memory this element can be configured as: RAM
@@ -30,7 +30,7 @@ public final class Memory extends LogicElement
 		RAM,
 		/** Read-only memory. */
 		ROM};
-	
+
 	// default values
 	/** The default element name (empty until the user supplies one). */
 	private static final String defaultName = "";
@@ -43,10 +43,10 @@ public final class Memory extends LogicElement
 	/** The default initialization file name (empty means no file). */
 	private static final String defaultFileName = "";
 	/** The default access time, in simulation time units. */
-	private static final int defaultAccessTime = 100; 
+	private static final int defaultAccessTime = 100;
 	/** The default built-in initial value text (empty means all zeros). */
 	private static final String defaultInitialValue = "";
-	
+
 	// one constraint string, two surfaces: dialog and loader (issue #52)
 	/** Message reported when a proposed capacity is less than 1 word. */
 	static final String CAPACITY_CONSTRAINT = "Capacity must be at least 1";
@@ -110,17 +110,17 @@ public final class Memory extends LogicElement
 	 * null before {@link #init} has computed it.
 	 */
 	private @Nullable String specs;
-	
+
 	/**
 	 * Create a new memory element.
-	 * 
+	 *
 	 * @param circ The circuit this element is part of.
 	 */
 	public Memory(Circuit circ) {
-		
+
 		super(circ);
 	} // end of constructor
-	
+
 	/**
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
@@ -164,7 +164,7 @@ public final class Memory extends LogicElement
 				width = Math.max(w,minW);
 			}
 		}
-		
+
 		// create inputs
 		int abits = 32 - Integer.numberOfLeadingZeros(capacity-1);
 		inputs.add(new Input("address",this,0,4*s,abits));
@@ -176,13 +176,13 @@ public final class Memory extends LogicElement
 		}
 		inputs.add(new Input("OE",this,over,height,1));
 		inputs.add(new Input("CS",this,over+2*s,height,1));
-		
+
 		// create output
 		Output out = new Output("output",this,width,4*s,bits);
 		outputs.add(out);
 		out.setTriState(true);
 	} // end of init method
-	
+
 	/**
 	 * The "capacity x bits" type description drawn inside the box (issue
 	 * #77: read by the GUI-side renderer).
@@ -313,7 +313,7 @@ public final class Memory extends LogicElement
 
 	/**
 	 * Set an int instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
@@ -345,16 +345,16 @@ public final class Memory extends LogicElement
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Set a String instance variable value (during a load).
-	 * 
+	 *
 	 * @param name The instance variable name.
 	 * @param value The instance variable value.
 	 */
 	@Override
 	public void setValue(String name, String value) {
-		
+
 		if (name.equals("name")) {
 			this.name = value;
 			getCircuit().addName(value);
@@ -378,15 +378,15 @@ public final class Memory extends LogicElement
 			super.setValue(name,value);
 		}
 	} // end of setValue method
-	
+
 	/**
 	 * Save this element.
-	 * 
+	 *
 	 * @param output The output writer.
 	 */
 	@Override
 	public void save(PrintWriter output) {
-		
+
 		output.println("ELEMENT Memory");
 		super.save(output);
 		output.println(" String name \"" + name + "\"");
@@ -604,7 +604,7 @@ public final class Memory extends LogicElement
 	 */
 	@Override
 	public Element copy() {
-		
+
 		Memory it = new Memory(getCircuit());
 		it.name = name;
 		it.type = type;
@@ -622,15 +622,15 @@ public final class Memory extends LogicElement
 		super.copy(it);
 		return it;
 	} // end of copy method
-	
+
 	/**
 	 * Display info about this element.
-	 * 
+	 *
 	 * @return the text describing this element, or an empty string.
 	 */
 	@Override
 	public String infoText() {
-		
+
 		if (fileName.isEmpty()) {
 			return specs + ", built-in initializaion";
 		}
@@ -638,70 +638,70 @@ public final class Memory extends LogicElement
 			return specs + ", initialization file = \"" + fileName + "\"";
 		}
 	} // end of showInfo method
-	
+
 	/**
 	 * Get the name of this memory.
-	 * 
+	 *
 	 * @return the name.
 	 */
 	@Override
 	public String getName() {
-		
+
 		return name;
 	} // end of getName method
-	
+
 	/**
 	 * Get the number of bits in this memory.
-	 * 
+	 *
 	 * @return the number of bits.
-	 */ 
+	 */
 	@Override
 	public int getBits() {
-		
+
 		return bits;
 	} // end of getBits method
-	
+
 	/**
 	 * A memory can be watched.
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean canWatch() {
-		
+
 		return true;
 	} // end of canWatch method
-	
+
 	/**
 	 * See if this memory is watched.
-	 * 
+	 *
 	 * @return true if it is, false if it is not.
 	 */
 	@Override
 	public boolean isWatched() {
-		
+
 		return watched;
 	} // end of isWatched method
-	
+
 	/**
 	 * Set whether this memory is watched or not.
-	 * 
+	 *
 	 * @param state True to make it watched, false to make it not watched.
 	 */
 	@Override
 	public void setWatched(boolean state) {
-		
+
 		watched = state;
 	} // end of setWatched method
 
 	/**
 	 * Memories have timing info (access time).
-	 * 
+	 *
 	 * @return true.
 	 */
 	@Override
 	public boolean hasTiming() {
-		
+
 		return true;
 	} // end of hasTiming method
 
@@ -710,24 +710,24 @@ public final class Memory extends LogicElement
 	 */
 	@Override
 	public void resetPropDelay() {
-		
+
 		accessTime = defaultAccessTime;
 	} // end of resetPropDelay method
 
 	/**
 	 * Get the access time in this element.
-	 * 
+	 *
 	 * @return the current delay.
 	 */
 	@Override
 	public int getDelay() {
-		
+
 		return accessTime;
 	} // end of getDelay method
-	
+
 	/**
 	 * Set the access time in this element.
-	 * 
+	 *
 	 * @param temp The new delay amount.
 	 */
 	@Override
@@ -751,56 +751,56 @@ public final class Memory extends LogicElement
 
 	/**
 	 * Set the name of the memory file.
-	 * 
+	 *
 	 * @param memFile The memory file name.
 	 */
 	public void setMemFile(String memFile) {
-		
+
 		fileName = memFile;
 		initialValue = "";
 	} // end of setMemFile method
 
 	/**
 	 * Remove name from list of element names in this circuit.
-	 * 
+	 *
 	 * @param circ A reference back to the circuit the element is in.
 	 */
 	@Override
 	public void remove(Circuit circ) {
-		
+
 		circ.removeName(name);
 		super.remove(circ);
 	} // end of remove method
-	
+
 	/**
 	 * Memories can be modified.
-	 * 
+	 *
 	 * @return true.
-	 */ 
+	 */
 	@Override
 	public boolean canChange() {
-		
+
 		return true;
 	} // end of canChange method
-	
+
 	/**
 	 * Parse initial value text.
-	 * 
+	 *
 	 * @param str The initial value text.
 	 * @param maxAddr The maximum memory address.
 	 * @param bitsPerWord The number of bits per word.
 	 * @param storing True if values are to be stored, false if just checking.
-	 * 
+	 *
 	 * @return null if syntax is ok, an error message if not.
 	 */
 	public @Nullable String initOK(String str, int maxAddr, int bitsPerWord, boolean storing) {
-		
+
 		// set up scanner
 		Scanner scan = new Scanner(str);
 		boolean scanning = true;
 		int lineNumber = 0;
 		String nextLine = "";
-		
+
 		// read a line
 		try {
 			nextLine = scan.nextLine();
@@ -809,10 +809,10 @@ public final class Memory extends LogicElement
 		catch (NoSuchElementException ex) {
 			scanning = false;
 		}
-		
+
 		// as long as there are lines...
 		while (scanning) {
-			
+
 			// iognore blank  or comment lines
 			String temp = nextLine.trim();
 			if (!temp.isEmpty() && temp.charAt(0) != '#') {
@@ -820,7 +820,7 @@ public final class Memory extends LogicElement
 				// check this line
 				Scanner lscan = new Scanner (nextLine);
 				lscan.useRadix(16);
-				
+
 				// get address
 				int addr = 0;
 				if (lscan.hasNextInt()) {
@@ -834,7 +834,7 @@ public final class Memory extends LogicElement
 				if (addr < 0 || addr >= maxAddr) {
 					return "line " + lineNumber + ": invalid address";
 				}
-				
+
 				// get data value
 				BigInteger data = BigInteger.ZERO;
 				if (lscan.hasNextBigInteger()) {
@@ -843,13 +843,13 @@ public final class Memory extends LogicElement
 				else {
 					return "line " + lineNumber + ": missing or invalid value";
 				}
-				
+
 				// check value
 				BitSet bval = BitSetUtils.Create(data);
 				if (bval.length() > bitsPerWord) {
 					return "line " + lineNumber + ": value has more bits than word size";
 				}
-				
+
 				// put data in memory if storing
 				if (storing) {
 					WordStore initMem = this.initMem;
@@ -860,7 +860,7 @@ public final class Memory extends LogicElement
 					initMem.put(addr,bval);
 				}
 			}
-			
+
 			// read next line
 			try {
 				nextLine = scan.nextLine();
@@ -872,14 +872,14 @@ public final class Memory extends LogicElement
 		}
 		return null;
 	} // end of initOK method
-	
+
 	/**
 	 * Print all memory locations that changed during simulation.
-	 * 
+	 *
 	 * @param qual Qualified subcircuit name.
 	 */
 	public void printChangedValues(String qual) {
-		
+
 		// nothing changes in ROM's
 		if (type == Type.ROM)
 			return;
@@ -921,16 +921,16 @@ public final class Memory extends LogicElement
 				else {
 					System.out.println("Changed locations in memory " + qual + "." + name);
 				}
-				
+
 			}
-			
+
 			// print address, old value and new value
 			System.out.printf(" 0x%x: ", addr);
 			String oldValue = BitSetUtils.toDisplay(initial,bits);
 			String newValue = BitSetUtils.toDisplay(current,bits);
 			System.out.println(oldValue + " -> " + newValue);
 		}
-		
+
 		// if nothing changed, print message to that effect
 		if (firstTime) {
 			if (qual.isEmpty()) {
@@ -939,24 +939,24 @@ public final class Memory extends LogicElement
 			else {
 				System.out.println("No changes in memory " + qual + "." + name);
 			}
-			
+
 		}
 	} // end of printChangedValues method
-	
+
 	/**
 	 * Get the capacity of this memory element.
-	 * 
+	 *
 	 * @return the capacity, in words.
 	 */
 	public int getCapacity() {
-		
+
 		return capacity;
 	} // end of getCapacity method
-	
+
 //	-------------------------------------------------------------------------------
 //	Simulation
 //	-------------------------------------------------------------------------------
-	
+
 	/** The running memory contents during simulation, or null before initSim. */
 	private @Nullable WordStore mem;
 	/**
@@ -1207,22 +1207,22 @@ public final class Memory extends LogicElement
 			return new DenseWordStore(capacity);
 		return new SparseWordStore();
 	}
-	
+
 	/**
 	 * Initialize this element.
-	 * 
+	 *
 	 * @param sim Unused.
 	 */
 	@Override
 	public void initSim(Simulator sim) {
-		
+
 		// create initial memory array
 		WordStore initMem = newWordStore();
 		this.initMem = initMem;
 
 		// if there is an initialization file specified
 		if (!fileName.isEmpty()) {
-			
+
 			// read and parse file
 			try {
 				File file = new File(fileName);
@@ -1244,10 +1244,10 @@ public final class Memory extends LogicElement
 								name + ", all zeros assumed", "Error");
 					}
 				}
-				
+
 			}
 			catch (IOException ex) {
-				
+
 				if (JLSInfo.noWindow()) {
 					System.out.println("Initialization file for memory " +
 							name + " cannot be read, all zeros assumed");
@@ -1258,10 +1258,10 @@ public final class Memory extends LogicElement
 							name + " cannot be read, all zeros assumed", "Error");
 				}
 			}
-			
+
 		}
 		else {
-			
+
 			// parse built-in values
 			String msg = initOK(initialValue,capacity,bits,true);
 			if (msg != null) {
@@ -1276,21 +1276,21 @@ public final class Memory extends LogicElement
 				}
 			}
 		}
-		
+
 		// copy initial memory values to running memory
 		mem = initMem.copy();
-		
+
 		// set output value to null
 		getOutput("output").setValue(null);
-		
+
 		// set current value to null
 		currentValue = null;
-		
+
 		// clear activity history
 		activity.clear();
-		
+
 	} // end of initSim method
-	
+
 	/**
 	 * The memory operation implied by the current input signals: WRITE a
 	 * word, READ a word, or OFF when the chip is not selected.
@@ -1302,17 +1302,17 @@ public final class Memory extends LogicElement
 		READ,
 		/** The chip is not selected; drive no value. */
 		OFF};
-	
+
 	/**
 	 * React to an event.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo If null, an input has changed, otherwise it is the value to output.
 	 */
 	@Override
 	public void react(long now, Simulator sim, @org.jspecify.annotations.Nullable Object todo) {
-		
+
 		// todo
 		/**
 		 * A pending memory operation scheduled as a future event: the
@@ -1323,10 +1323,10 @@ public final class Memory extends LogicElement
 			int addr;
 			@Nullable BitSet data;
 		};
-		
+
 		// if an input has changed ...
 		if (todo == null) {
-			
+
 			// get inputs
 			BitSet csb = getInput("CS").getValue();
 			if (csb == null)
@@ -1342,15 +1342,15 @@ public final class Memory extends LogicElement
 				if (web == null)
 					web = new BitSet();
 				we = web.get(0);
-				
+
 			}
 			BitSet addr = getInput("address").getValue();
 			if (addr == null)
 				addr = new BitSet();
-			
+
 			// if RAM, chip select and write enable...
 			if (type == Type.RAM && !cs && !we) {
-				
+
 				// do a write
 				MemAction act = new MemAction();
 				act.action = MemoryAction.WRITE;
@@ -1361,10 +1361,10 @@ public final class Memory extends LogicElement
 				act.data = (BitSet)(data.clone());
 				sim.post(new SimEvent(now+accessTime,this,act));
 			}
-			
+
 			// if chip select and output enable ...
 			if (!cs && !oe) {
-				
+
 				// do a read
 				MemAction act = new MemAction();
 				act.action = MemoryAction.READ;
@@ -1372,7 +1372,7 @@ public final class Memory extends LogicElement
 				sim.post(new SimEvent(now+accessTime,this,act));
 			}
 			else {
-				
+
 				// turn off tristate output
 				MemAction act = new MemAction();
 				act.action = MemoryAction.OFF;
@@ -1380,7 +1380,7 @@ public final class Memory extends LogicElement
 			}
 		}
 		else {
-			
+
 			// finish read or write
 			MemAction act = (MemAction)todo;
 
@@ -1418,17 +1418,17 @@ public final class Memory extends LogicElement
 				// store in memory
 				mem.put(act.addr, value);
 			}
-			
+
 			// else if its a read...
 			else if (act.action == MemoryAction.READ){
-				
+
 				// if invalid address, turn off tristate output
 				if (act.addr >= capacity) {
 					currentValue = null;
 					getOutput("output").propagate(null,now,sim);
 					return;
 				}
-				
+
 				// get value from memory
 				BitSet stored = mem.get(act.addr);
 				BitSet value;
@@ -1438,30 +1438,30 @@ public final class Memory extends LogicElement
 				else {
 					value = (BitSet)stored.clone();
 				}
-				
+
 				// send to output
 				getOutput("output").propagate(value,now,sim);
-				
+
 				// set current value
 				currentValue = (BitSet)value.clone();
 			}
-			
+
 			// else it is to turn off the tristate output
 			else {
 				currentValue = null;
 				getOutput("output").propagate(null,now,sim);
 			}
 		}
-		
+
 	} // end of react method
-	
+
 	/**
 	 * Get a string representing the activity history of this element.
-	 * 
+	 *
 	 * @return the history.
 	 */
 	public String getActivityTrace() {
-		
+
 		String result = "";
 		for (WriteRecord rec : activity) {
 			BitSet what = rec.what;
@@ -1474,7 +1474,7 @@ public final class Memory extends LogicElement
 		}
 		return result;
 	} // end of getActivityTrace method
-	
+
 	/**
 	 * The current value is the last value output.
 	 *
@@ -1486,10 +1486,10 @@ public final class Memory extends LogicElement
 
 		return currentValue;
 	} // end of getCurrentValue method
-	
+
 	/**
 	 * Get the current value of a given memory location.
-	 * 
+	 *
 	 * @param loc The location.
 	 *
 	 * @return the value at that location, or null if that location has

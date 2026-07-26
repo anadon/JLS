@@ -1,11 +1,13 @@
 package jls.collab.net;
 
-import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+
 import javax.crypto.AEADBadTagException;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * The encrypted point-to-point channel a completed {@link Handshake}

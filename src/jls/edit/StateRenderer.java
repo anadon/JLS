@@ -1,18 +1,19 @@
 package jls.edit;
 
-import org.jspecify.annotations.Nullable;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import jls.core.GridPoint;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 
+import org.jspecify.annotations.Nullable;
+
 import jls.JLSInfo;
 import jls.core.Geometry;
+import jls.core.GridPoint;
 import jls.elem.SMUtil;
 import jls.elem.State;
 import jls.elem.State.Transition;

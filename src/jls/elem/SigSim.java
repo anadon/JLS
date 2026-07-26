@@ -4,7 +4,6 @@ import java.math.*;
 import java.util.BitSet;
 import java.util.Scanner;
 
-
 import jls.*;
 import jls.sim.*;
 
@@ -19,7 +18,7 @@ public abstract sealed class SigSim extends LogicElement
 
 	/**
 	 * Create new element.
-	 * 
+	 *
 	 * @param circuit The circuit this element is in.
 	 */
 	public SigSim(Circuit circuit) {
@@ -34,7 +33,7 @@ public abstract sealed class SigSim extends LogicElement
 	/**
 	 * Parse signal specification and post all events.
 	 * If signal generator is in an imported circuit, do nothing.
-	 * 
+	 *
 	 * @param sim The simulator.
 	 * @param input A scanner for reading the specification.
 	 */
@@ -61,7 +60,7 @@ public abstract sealed class SigSim extends LogicElement
 						suffix = token.substring(2);
 						value = new BigInteger(suffix,16);
 					}
-					
+
 					newLine += " " + value;
 				}
 				else {
@@ -84,7 +83,7 @@ public abstract sealed class SigSim extends LogicElement
 			String signal = input.next();
 			InputPin pin = null;
 			for (Element el : getCircuit().getElements()) {
-				if (!(el instanceof InputPin ip)) 
+				if (!(el instanceof InputPin ip))
 					continue;
 				if (signal.equals(el.getName())) {
 					pin = ip;
@@ -205,7 +204,7 @@ public abstract sealed class SigSim extends LogicElement
 
 	/**
 	 * Shouldn't be called.
-	 * 
+	 *
 	 * @param now The current simulation time.
 	 * @param sim The simulator to post events to.
 	 * @param todo The value to send.

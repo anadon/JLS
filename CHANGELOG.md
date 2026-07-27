@@ -8,6 +8,22 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- Module activation runtime (#220): the `jls.module.JlsModule`
+  lifecycle SPI (`manifest()` / `register()` / `start()`) and
+  `jls.module.ModuleRuntime`, a two-phase runner that resolves
+  manifests once through `ModuleResolver`, registers every module in
+  topological order, then starts them per their declared trigger —
+  `Eager` at boot; `OnCommand` / `OnEvent` / `OnDemand` on first
+  `dispatchCommand` / `fireEvent` / `demand` (by concrete id or
+  `provides` token). Activation transitively starts the sole provider
+  of each `requires` token in topological order; `optional` / `after` /
+  `before` never trigger activation. Each module runs a start-once
+  state machine: a throwing `start()` becomes a permanent
+  `ModuleActivationException` naming the module and phase, rethrown on
+  every later touch and never silently retried; unknown commands,
+  events, and tokens are graceful no-ops. Pure JVM, deterministic
+  across discovery order; pinned by the new headless
+  `ModuleRuntimeTest`.
 - The editor palette is now generated from a declarative table (#78):
   `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
   group, help topic per element — the GUI half of the two-layer

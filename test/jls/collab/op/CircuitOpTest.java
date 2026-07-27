@@ -18,6 +18,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
@@ -1122,6 +1123,81 @@ class CircuitOpTest {
 										.apply(unwired, graphics()));
 		assertEquals(unwiredBefore, save(unwired),
 				"a rejected wire add must not change the circuit");
+	}
+
+	/** The wire end with the given stable id. */
+	private static WireEnd endBySid(Circuit circuit, String sid) {
+		return (WireEnd) find(circuit, el -> el instanceof WireEnd
+				&& el.getStableId().toString().equals(sid));
+	}
+
+	/** The wire between the two ends with the given stable ids. */
+	private static Wire wireBetween(Circuit circuit, String sidA,
+			String sidB) {
+		WireEnd a = endBySid(circuit, sidA);
+		WireEnd b = endBySid(circuit, sidB);
+		for (Wire wire : a.getWires()) {
+			if (wire.getOtherEnd(a) == b) {
+				return wire;
+			}
+		}
+		throw new AssertionError(
+				"fixture lacks a wire " + sidA + "-" + sidB);
+	}
+
+	/**
+	 * The survivor factory (issue #167, the delete gesture's clipped-net
+	 * composition) rejects arguments that do not describe one nonempty
+	 * surviving component - planner bugs, hence unchecked, unlike the
+	 * OpRejected validation the produced op still runs at apply time.
+	 */
+	@Test
+	void survivorFactoryRejectsMalformedComponents() throws Exception {
+		Circuit circuit = loadText(fanOutText());
+		WireEnd we1 = endBySid(circuit, "we:1");
+		WireEnd we2 = endBySid(circuit, "we:2");
+		WireEnd we3 = endBySid(circuit, "we:3");
+		Wire probed = wireBetween(circuit, "we:1", "we:2");
+		assertThrows(IllegalArgumentException.class,
+				() -> AddWire.survivors(List.of(), Set.of(probed),
+						Set.of()),
+				"an empty end set must be rejected");
+		assertThrows(IllegalArgumentException.class,
+				() -> AddWire.survivors(List.of(we1, we2), Set.of(),
+						Set.of()),
+				"an empty kept set must be rejected");
+		assertThrows(IllegalArgumentException.class,
+				() -> AddWire.survivors(List.of(we1), Set.of(probed),
+						Set.of()),
+				"a kept wire leading outside the component must be "
+						+ "rejected");
+		assertThrows(IllegalArgumentException.class,
+				() -> AddWire.survivors(List.of(we1, we2, we3),
+						Set.of(probed), Set.of()),
+				"an end keeping no wire must be rejected");
+	}
+
+	/**
+	 * A survivors-produced op is ordinary op vocabulary: it serializes
+	 * through the save-format idiom and round-trips byte-identically
+	 * through the strict reader (P3 for the factory's output).
+	 */
+	@Test
+	void survivorsOpSerializationRoundTrips() throws Exception {
+		Circuit circuit = loadText(fanOutText());
+		WireEnd we1 = endBySid(circuit, "we:1");
+		WireEnd we2 = endBySid(circuit, "we:2");
+		Wire probed = wireBetween(circuit, "we:1", "we:2");
+		AddWire op = AddWire.survivors(List.of(we1, we2),
+				Set.of(probed), Set.of());
+		assertEquals(2, op.attach().size(),
+				"both surviving anchors must travel");
+		String text = serialize(op);
+		CircuitOp parsed = CircuitOpReader.read(new Scanner(text));
+		assertEquals(op, parsed,
+				"parsed op must equal the one that was saved");
+		assertEquals(text, serialize(parsed),
+				"save -> read -> save must be byte-identical");
 	}
 
 	@Test

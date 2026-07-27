@@ -55,6 +55,21 @@ public final class KeyPad extends JButton implements ActionListener {
 		URL up = KeyPad.class.getResource("images/up.gif");
 		hide.setIcon(new ImageIcon(up));
 
+		// accessible names and tooltips for the icon-only buttons, so a
+		// screen reader announces them instead of nothing (#75), plus
+		// stable component names for the UI harness (#91,
+		// docs/component-naming.md)
+		setToolTipText("Show keypad");
+		getAccessibleContext().setAccessibleName("Show keypad");
+		setName("keypad.toggle");
+		hide.setToolTipText("Hide keypad");
+		hide.getAccessibleContext().setAccessibleName("Hide keypad");
+		hide.setName("keypad.hide");
+		reset.setToolTipText("Clear to default value");
+		reset.getAccessibleContext().setAccessibleName(
+				"Clear to default value");
+		reset.setName("keypad.reset");
+
 
 		// save parameters
 		this.target = target;

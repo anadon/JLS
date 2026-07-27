@@ -186,6 +186,11 @@ public final class HdlModel {
 		 * @param statement the statement to emit
 		 */
 		void visit(PriorityCaseStatement statement);
+		/**
+		 * Emit a state-machine (StateMachine) statement.
+		 * @param statement the statement to emit
+		 */
+		void visit(StateMachineStatement statement);
 	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
@@ -685,6 +690,136 @@ public final class HdlModel {
 			visitor.visit(this);
 		}
 	} // end of PriorityCaseStatement class
+
+	/**
+	 * A finite state machine (StateMachine, issue #59): a
+	 * binary-encoded state register plus a clocked case over it. The
+	 * exporter assigns binary codes in canonical (#180) state order,
+	 * except the initial state always takes code 0 - the code the
+	 * register starts in, matching {@code StateMachine.initSim} - and
+	 * each state carries its transitions already split into the shape
+	 * emitters render: an optional unconditional target, ordered
+	 * conditional arms, and an optional "else" target. A clock edge
+	 * matching no arm leaves the register unassigned, so the machine
+	 * holds its state (the issue-#98 S5 rule). Moore outputs are a
+	 * combinational case over the register: every state lists a value
+	 * for every machine output, with unspecified outputs already
+	 * lowered to 0 (matching {@code State.sendOutputs}).
+	 *
+	 * <p>Two documented divergences, carried in the emitted comment.
+	 * Busy window: JLS ignores clock edges arriving during the
+	 * machine's propagation delay after a taken transition
+	 * ({@code busy} in {@code StateMachine.react}); the export
+	 * transitions on every eligible edge. Overlapping conditions: JLS
+	 * evaluates a state's transitions in nondeterministic HashSet
+	 * order, so hand-edited machines whose conditions overlap pick a
+	 * winner arbitrarily; the export tests conditions in the canonical
+	 * (#180) save order, deterministically. Editor-built machines
+	 * have non-overlapping conditions, where all orders agree.</p>
+	 */
+	public static final class StateMachineStatement extends Statement {
+
+		/**
+		 * One conditional transition arm (a record, issue #94): taken
+		 * when the input compares to the value.
+		 *
+		 * @param input The machine input the condition reads.
+		 * @param equal True to test equality, false inequality.
+		 * @param value The value the input is compared with.
+		 * @param nextCode Binary code of the state the arm enters.
+		 */
+		public record Condition(Operand input, boolean equal,
+				BigInteger value, int nextCode) {
+		} // end of Condition record
+
+		/**
+		 * One Moore output of the machine (a record, issue #94).
+		 *
+		 * @param target Net driven by the output.
+		 * @param helper Pre-claimed state-variable name for emitters
+		 * whose combinational case needs one (the Verilog {@code reg});
+		 * emitters that assign the target directly (VHDL) ignore it.
+		 * @param bits Width of the output in bits.
+		 */
+		public record MooreOutput(String target, String helper, int bits) {
+		} // end of MooreOutput record
+
+		/**
+		 * One state's case arm (a record, issue #94). At most one of
+		 * the transition shapes is live: when {@code unconditionalNext}
+		 * is set the conditions and else are empty/absent (JLS takes an
+		 * unconditional transition regardless of anything else).
+		 *
+		 * @param name The JLS state name (for comments).
+		 * @param code The state's binary code.
+		 * @param conditions Conditional arms in canonical (#180) order.
+		 * @param unconditionalNext Code entered unconditionally, or -1.
+		 * @param elseNext Code entered when no condition matches, or -1
+		 * (-1 means the state holds, issue #98 S5).
+		 * @param outputValues Value of every machine output in this
+		 * state, in {@code outputs} order; unspecified outputs are 0.
+		 */
+		public record StateCase(String name, int code,
+				List<Condition> conditions, int unconditionalNext,
+				int elseNext, List<BigInteger> outputValues) {
+
+			/** Pins the lists to immutable copies (issue #94). */
+			public StateCase {
+				conditions = List.copyOf(conditions);
+				outputValues = List.copyOf(outputValues);
+			}
+		} // end of StateCase record
+
+		/** The state-register name (pre-claimed, never a net). */
+		public final String regName;
+		/** True to trigger on the rising clock edge, false falling. */
+		public final boolean risingEdge;
+		/** 1-bit clock; a literal clock never ticks. */
+		public final Operand clock;
+		/** Width of the state register in bits. */
+		public final int stateBits;
+		/** The code the register starts in (the initial state's 0). */
+		public final int initialCode;
+		/** The state arms, in ascending code order, unmodifiable. */
+		public final List<StateCase> states;
+		/** The machine's Moore outputs, unmodifiable. */
+		public final List<MooreOutput> outputs;
+
+		/**
+		 * Builds an immutable state-machine statement.
+		 * @param comment identifies the source element
+		 * @param regName the state-register name
+		 * @param risingEdge true for rising-edge trigger, false falling
+		 * @param clock 1-bit clock; a literal clock never ticks
+		 * @param stateBits width of the state register in bits
+		 * @param initialCode the code the register starts in
+		 * @param states the state arms in ascending code order
+		 * (defensively copied)
+		 * @param outputs the machine's Moore outputs (defensively
+		 * copied)
+		 */
+		StateMachineStatement(String comment, String regName,
+				boolean risingEdge, Operand clock, int stateBits,
+				int initialCode, List<StateCase> states,
+				List<MooreOutput> outputs) {
+			super(comment);
+			this.regName = regName;
+			this.risingEdge = risingEdge;
+			this.clock = clock;
+			this.stateBits = stateBits;
+			this.initialCode = initialCode;
+			this.states = Collections.unmodifiableList(
+					new ArrayList<StateCase>(states));
+			this.outputs = Collections.unmodifiableList(
+					new ArrayList<MooreOutput>(outputs));
+		}
+
+		/** Double-dispatch to the emitter's matching visit method. */
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
+	} // end of StateMachineStatement class
 
 	// the model proper
 	/** Legalized HDL module name. */

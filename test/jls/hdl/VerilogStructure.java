@@ -35,7 +35,8 @@ final class VerilogStructure {
 	private static final Set<String> KEYWORDS = Set.of(
 			"module", "endmodule", "input", "output", "wire", "reg",
 			"assign", "always", "posedge", "negedge", "or", "if",
-			"case", "casez", "endcase", "default", "begin", "end");
+			"else", "case", "casez", "endcase", "default", "begin",
+			"end");
 
 	static void assertSane(String verilog) {
 

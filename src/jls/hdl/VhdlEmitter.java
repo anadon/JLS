@@ -245,6 +245,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			public void visit(HdlModel.PriorityCaseStatement s) {
 				priorityCase(declarations, body, s, names);
 			}
+			/** Renders a state-machine statement into declarations and body. */
+			@Override
+			public void visit(HdlModel.StateMachineStatement s) {
+				stateMachine(declarations, body, s, names);
+			}
 		});
 	} // end of statement method
 
@@ -558,6 +563,141 @@ public final class VhdlEmitter implements HdlEmitter {
 	} // end of priorityCase method
 
 	/**
+	 * Emits a state machine (StateMachine, the #59 clocked-case
+	 * template), the construct-for-construct mirror of the Verilog
+	 * emitter's: a binary-encoded state signal initialized to the
+	 * initial state's code 0, a rising_edge/falling_edge process with
+	 * a {@code case} over it - one arm per state, transitions as an
+	 * if/elsif chain in the model's canonical order, and deliberately
+	 * no {@code else} when the state has no else transition: a clocked
+	 * signal that is not assigned holds, mirroring JLS's
+	 * no-matching-transition-holds rule (issue #98 S5); the mandatory
+	 * {@code when others} (std_logic's non-binary values) also holds.
+	 * Moore outputs are a combinational process assigning the target
+	 * signals directly - {@code MooreOutput.helper} is unused here -
+	 * with a {@code when others} arm zeroing them (unreachable codes;
+	 * unspecified outputs were already lowered to 0 by the exporter).
+	 * VHDL-93 throughout.
+	 * @param declarations sink for the state-signal declaration
+	 * @param body sink for the architecture-body text
+	 * @param s the state-machine statement (states, clock, outputs)
+	 * @param names the legalized-identifier table for this model
+	 */
+	private static void stateMachine(StringBuilder declarations,
+			StringBuilder body, HdlModel.StateMachineStatement s,
+			Names names) {
+
+		String reg = names.of(s.regName);
+		declarations.append("  signal ").append(reg).append(" : ")
+				.append(type(s.stateBits)).append(" := ")
+				.append(literal(BigInteger.valueOf(s.initialCode),
+						s.stateBits))
+				.append(";\n");
+		if (s.clock.isNet()) {
+			var clockNet = s.clock.netName();
+			if (clockNet == null) {
+				throw new IllegalStateException("net operand has null name");
+			}
+			String clock = names.of(clockNet);
+			body.append("  process (").append(clock).append(")\n")
+					.append("  begin\n");
+			body.append("    if ")
+					.append(s.risingEdge ? "rising_edge(" : "falling_edge(")
+					.append(clock).append(") then\n");
+			body.append("      case ").append(reg).append(" is\n");
+			for (HdlModel.StateMachineStatement.StateCase state : s.states) {
+				body.append("        when ")
+						.append(literal(BigInteger.valueOf(state.code()),
+								s.stateBits))
+						.append(" =>  -- \"").append(state.name())
+						.append('"');
+				if (state.unconditionalNext() >= 0) {
+					body.append(": always\n          ").append(reg)
+							.append(" <= ")
+							.append(literal(
+									BigInteger.valueOf(
+											state.unconditionalNext()),
+									s.stateBits))
+							.append(";\n");
+					continue;
+				}
+				if (state.conditions().isEmpty()) {
+					body.append(": no transitions, the state holds\n")
+							.append("          null;\n");
+					continue;
+				}
+				body.append('\n');
+				boolean first = true;
+				for (HdlModel.StateMachineStatement.Condition c
+						: state.conditions()) {
+					body.append("          ").append(first ? "if" : "elsif")
+							.append(' ').append(operand(c.input(), names))
+							.append(c.equal() ? " = " : " /= ")
+							.append(literal(c.value(), c.input().bits()))
+							.append(" then\n            ").append(reg)
+							.append(" <= ")
+							.append(literal(BigInteger.valueOf(c.nextCode()),
+									s.stateBits))
+							.append(";\n");
+					first = false;
+				}
+				if (state.elseNext() >= 0) {
+					body.append("          else\n            ").append(reg)
+							.append(" <= ")
+							.append(literal(
+									BigInteger.valueOf(state.elseNext()),
+									s.stateBits))
+							.append(";\n          end if;\n");
+				}
+				else {
+					body.append("          end if;")
+							.append("  -- no else: an unmatched input holds")
+							.append(" the state\n");
+				}
+			}
+			body.append("        when others =>")
+					.append("  -- non-state codes: the state holds\n")
+					.append("          null;\n");
+			body.append("      end case;\n    end if;\n  end process;\n");
+		}
+		else {
+			// an unconnected clock never ticks: the machine holds its
+			// initial state (matches JLS; the walker warned already)
+			body.append("  -- no clock connected: ").append(reg)
+					.append(" holds its initial state\n");
+		}
+
+		if (s.outputs.isEmpty()) {
+			return;
+		}
+		body.append("  process (").append(reg).append(")\n  begin\n");
+		body.append("    case ").append(reg).append(" is\n");
+		for (HdlModel.StateMachineStatement.StateCase state : s.states) {
+			body.append("      when ")
+					.append(literal(BigInteger.valueOf(state.code()),
+							s.stateBits))
+					.append(" =>  -- \"").append(state.name()).append("\"\n");
+			for (int k = 0; k < s.outputs.size(); k += 1) {
+				HdlModel.StateMachineStatement.MooreOutput o =
+						s.outputs.get(k);
+				body.append("        ").append(names.of(o.target()))
+						.append(" <= ")
+						.append(literal(state.outputValues().get(k),
+								o.bits()))
+						.append(";\n");
+			}
+		}
+		body.append("      when others =>")
+				.append("  -- unreachable codes read 0\n");
+		for (HdlModel.StateMachineStatement.MooreOutput o : s.outputs) {
+			body.append("        ").append(names.of(o.target()))
+					.append(" <= ").append(literal(BigInteger.ZERO, o.bits()))
+					.append(";\n");
+		}
+		body.append("    end case;\n  end process;\n");
+	} // end of stateMachine method
+
+	/**
 	 * Bit routing, with contiguous runs coalesced into slices:
 	 * target(targetIndex[i]) = source(sourceIndex[i]).
 	 * @param out sink for the architecture-body text
@@ -807,6 +947,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			for (HdlModel.Statement statement : model.statements()) {
 				if (statement instanceof HdlModel.RegisterStatement) {
 					claim(((HdlModel.RegisterStatement) statement).regName);
+				}
+				else if (statement
+						instanceof HdlModel.StateMachineStatement) {
+					claim(((HdlModel.StateMachineStatement) statement)
+							.regName);
 				}
 			}
 		} // end of constructor

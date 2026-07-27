@@ -27,6 +27,23 @@ All notable changes to JLS are documented here. The format follows
   `ExtensionPointCatalogTest`. Mechanism and catalog only: wiring
   `ElementRegistry`/`SimpleEditor` consumption through the registry
   is a follow-on slice of the #220 module runtime.
+- StateMachine elements now export to Verilog and VHDL (#59): a
+  binary-encoded state register plus an edge-triggered clocked case,
+  with state codes assigned in canonical (#180) order except the
+  initial state, which always takes code 0 (the register's start
+  value, matching `initSim`). Transitions render as if/else-if chains
+  — unconditional, then conditionals in canonical order, then "else" —
+  and a clock edge matching no transition holds the state (the
+  issue-#98 S5 rule: no trailing else, no default arm). Moore outputs
+  are a combinational case with unspecified outputs lowered to 0, as
+  in `State.sendOutputs`. A zero-state machine warns and skips instead
+  of rejecting the export. Two divergences are documented in the
+  emitted comment: JLS ignores clock edges during its propagation
+  window (busy) while the export never does, and JLS resolves
+  overlapping hand-edited conditions in hash order while the export
+  tests them canonically. Pinned by three golden pairs
+  (`statemachine`, `statemachine_else`, `statemachine_hold`) in both
+  languages plus new `HdlPolicyTest` cases.
 - Module activation runtime (#220): the `jls.module.JlsModule`
   lifecycle SPI (`manifest()` / `register()` / `start()`) and
   `jls.module.ModuleRuntime`, a two-phase runner that resolves

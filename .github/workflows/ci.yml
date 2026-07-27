@@ -44,6 +44,17 @@ jobs:
       # #44/#68); Dependabot keeps the pins fresh via the version comments
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Pure-shell guard for the iCEstick bitstream handoff (issue #264):
+      # stubs the open iCE40 toolchain on PATH and asserts the handoff
+      # script's all-or-nothing preflight and yosys -> nextpnr-ice40 ->
+      # icepack -> programmer control flow, so that logic can't regress
+      # silently. Needs no toolchain, hardware, or network; runs once on
+      # the required LTS leg (same treatment the GUI lanes give their
+      # own *-rig-selftest.sh scripts).
+      - name: Self-test the iCEstick bitstream handoff script
+        if: matrix.java == 25
+        run: scripts/icestick-handoff-selftest.sh
+
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:

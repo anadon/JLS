@@ -33,6 +33,19 @@ All notable changes to JLS are documented here. The format follows
   the classic level-sensitive behavior; the hazard, the WE-gating
   workaround, and the new mode are documented in
   `docs/simulation-semantics.md` §8.4 and the Memory help page.
+- The delete-selection gesture (delete key, Edit menu, popup Delete,
+  and CUT) now commits through the operation layer's `OpSink` seam
+  (#167): a Swing-free plan builder maps the selection to one
+  `RemoveWire` per wholly-selected wire net plus one `RemoveElements`
+  (jump starts expanded with their jump ends), submitted as a single
+  batch via the new `OpSink.submitAll` so a wired delete stays exactly
+  one undo snapshot. Selections the vocabulary cannot express yet
+  (partially selected nets, subcircuits) fall back to the previous
+  inline removal unchanged; user-facing undo mechanics are untouched.
+  Byte parity between the op path and the inline path is pinned
+  headlessly by `DeleteGestureTest`, and the end-to-end delete-key +
+  single-undo behavior by a new display-tagged `EditorGestureTest`
+  case.
 - Board-aware HDL export, first slice (#213): `-export` now accepts
   `-board <name>` plus `-pins <file>` and writes a pin-constraint file
   (`.pcf`) next to the exported HDL, generated from the same model walk

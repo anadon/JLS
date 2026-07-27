@@ -1212,6 +1212,58 @@ class CircuitOpTest {
 				"a rejected reconfigure must not change the circuit");
 	}
 
+	// ------------------------------------------------------------------
+	// OpSink.submitAll: the batch entry point (issue #167 gestures)
+	// ------------------------------------------------------------------
+
+	/**
+	 * The default submitAll submits in list order: the wired-delete
+	 * plan (RemoveWire before RemoveElements) only validates in that
+	 * order - RemoveElements rejects while the wires are still
+	 * attached - so its success proves the ordering, and the result
+	 * byte-matches the inline selection delete.
+	 */
+	@Test
+	void submitAllDefaultSubmitsInOrder() throws Exception {
+		Circuit viaOp = loadText(wiredPairText(false));
+		Circuit inline = loadText(wiredPairText(false));
+		OpSink sink = op -> op.apply(viaOp, graphics());
+		Element end = find(viaOp, el -> el instanceof WireEnd);
+		sink.submitAll(List.of(new RemoveWire(end.getStableId()),
+				new RemoveElements(List.of(ElementId.parse("pin:1"),
+						ElementId.parse("pin:2")))));
+		find(inline, el -> el instanceof Wire).remove(inline);
+		byId(inline, ElementId.parse("pin:1")).remove(inline);
+		byId(inline, ElementId.parse("pin:2")).remove(inline);
+		assertEquals(save(inline), save(viaOp),
+				"the batch must byte-match the inline selection delete");
+	}
+
+	/**
+	 * A mid-list rejection surfaces as OpRejected from submitAll: ops
+	 * before the rejected one have been applied, ops after it have not
+	 * been touched (the editor's plan builder vets everything the ops
+	 * validate, so a gesture never trips this in practice; snapshot
+	 * undo covers it if one ever does).
+	 */
+	@Test
+	void submitAllMidListRejectionSurfacesOpRejected() throws Exception {
+		Circuit circuit = load();
+		OpSink sink = op -> op.apply(circuit, graphics());
+		Element pin = find(circuit,
+				el -> el instanceof Pin && el instanceof Watchable);
+		boolean before = ((Watchable) pin).isWatched();
+		List<CircuitOp> ops = List.of(
+				new ToggleWatched(pin.getStableId()),
+				new RemoveElements(List.of(ElementId.parse("no:999"))),
+				new ToggleWatched(pin.getStableId()));
+		assertThrows(OpRejected.class, () -> sink.submitAll(ops),
+				"the mid-list rejection must surface");
+		assertEquals(!before, ((Watchable) pin).isWatched(),
+				"the op before the rejection applied; the op after it "
+						+ "did not");
+	}
+
 	/**
 	 * The element in the circuit whose stable id matches, in canonical
 	 * order (there is exactly one).

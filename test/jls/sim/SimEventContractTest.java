@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.BitSet;
+import java.util.HashSet;
 
 import org.junit.jupiter.api.Test;
 
@@ -102,15 +103,43 @@ class SimEventContractTest {
 	}
 
 	@Test
-	void hashCodeIsTheEventTime() {
+	void equalEventsHashEqually() {
 
-		// documented contract: the hash code is the event time
-		assertEquals(42,
-				new SimEvent(42, CALLBACK, new PinChanged()).hashCode());
 		SimEvent a = new SimEvent(9, CALLBACK, value(1));
 		SimEvent b = new SimEvent(9, CALLBACK, value(1));
 		assertEquals(a.hashCode(), b.hashCode(),
 				"equal events must hash equally");
+	}
+
+	@Test
+	void differentPayloadsAtTheSameTimeHashDifferently() {
+
+		// the old time-only hash collided every same-time event into
+		// one bucket, making the simulator's dupCheck HashSet O(k^2)
+		// per tick (issue #231); the mixed hash must separate events
+		// that differ only in payload (deterministic here because
+		// NewValue's record hash comes from BitSet.hashCode)
+		SimEvent one = new SimEvent(42, CALLBACK, value(1));
+		SimEvent two = new SimEvent(42, CALLBACK, value(2));
+		assertFalse(one.hashCode() == two.hashCode(),
+				"same-time events with different payloads must not"
+						+ " collide");
+	}
+
+	@Test
+	void sameTimeBurstSpreadsAcrossHashBuckets() {
+
+		// non-timing, headless-safe proxy for bucket distribution: a
+		// burst of same-time events with distinct payloads must not
+		// funnel into a handful of hash codes (issue #231)
+		HashSet<Integer> hashes = new HashSet<Integer>();
+		for (long v = 1; v <= 1000; v += 1) {
+			hashes.add(new SimEvent(7, CALLBACK, value(v)).hashCode());
+		}
+		assertTrue(hashes.size() >= 500,
+				"1000 same-time events with distinct payloads must"
+						+ " yield at least 500 distinct hash codes,"
+						+ " got " + hashes.size());
 	}
 
 } // end of SimEventContractTest class

@@ -65,6 +65,38 @@ public record AddWire(List<ElementId> attach, List<String> blocks)
 	} // end of compact constructor
 
 	/**
+	 * Serialize one surviving connected component of a clipped net
+	 * (issue #167): the delete gesture removes a partially selected net
+	 * with {@link RemoveWire} of the whole net and re-adds each
+	 * surviving connected component through this factory. The blocks
+	 * are {@code WireEnd.save}'s exact format filtered to the surviving
+	 * subgraph: only wires in the kept set (and their probes) are
+	 * referenced, attachments to elements in the removed set are
+	 * dropped (those elements leave in the gesture's
+	 * {@link RemoveElements}), and the tri-state flag is recomputed for
+	 * the component alone, mirroring {@code WireNet.makeNet}.
+	 *
+	 * @param ends The component's wire ends, in any order; each must
+	 *            keep at least one wire.
+	 * @param keptWires The surviving wires; every kept wire of the
+	 *            given ends must connect two of them.
+	 * @param removedAnchors The elements leaving in the same gesture;
+	 *            attachments to them are not serialized.
+	 *
+	 * @return the op that adds the surviving component.
+	 *
+	 * @throws IllegalArgumentException if the arguments do not describe
+	 *             one nonempty surviving component - a planner bug, not
+	 *             hostile input, hence unchecked.
+	 */
+	public static AddWire survivors(List<WireEnd> ends,
+			Set<Wire> keptWires, Set<Element> removedAnchors) {
+
+		return NetBlocks.toSurvivorAddWire(ends, keptWires,
+				removedAnchors);
+	} // end of survivors method
+
+	/**
 	 * The vetted form of the op: the resolved anchors and parsed end
 	 * blocks validation produced.
 	 *

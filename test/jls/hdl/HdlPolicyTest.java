@@ -145,6 +145,75 @@ class HdlPolicyTest {
 	}
 
 	@Test
+	void truthTableIsExportedNotRejected() throws Exception {
+		// issue #59: TruthTable left the reject bucket; it exports as a
+		// priority casez with NO default arm, so an unmatched input
+		// vector holds the prior outputs (TruthTable.react, issue #52)
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("hastt");
+		int a = cb.inputPin("a", 1);
+		int tt = cb.truthTable("t", new String[] { "ti" },
+				new String[] { "to" },
+				new int[][] { { 0, 1 }, { 1, 0 } });
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", tt, "ti");
+		cb.wire(tt, "to", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.warnings().isEmpty(),
+				"a supported element must not warn: " + result.warnings());
+		assertTrue(result.text().contains("casez"), result.text());
+		assertFalse(result.text().contains("default:"),
+				"no default arm - an unmatched vector must hold: "
+						+ result.text());
+	}
+
+	@Test
+	void truthTableWithNoInputsExportsRowZeroConstants() throws Exception {
+		// with no input columns, row 0 always matches first, so the
+		// outputs are constants; the output don't-care lowers to 0 as
+		// in TruthTable.react
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("ttconst");
+		int tt = cb.truthTable("k", new String[0],
+				new String[] { "tp", "tq" },
+				new int[][] { { 1, 2 }, { 0, 0 } });
+		int p = cb.outputPin("p", 1);
+		int q = cb.outputPin("q", 1);
+		cb.wire(tt, "tp", p, "input");
+		cb.wire(tt, "tq", q, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.text().contains("row 0 always matches"),
+				result.text());
+		assertTrue(result.text().contains("assign net_0_0 = 1'h1;"),
+				result.text());
+		assertTrue(result.text().contains("assign net_0_1 = 1'h0;"),
+				result.text());
+		assertFalse(result.text().contains("casez"),
+				"a zero-input table must fold to constants: "
+						+ result.text());
+	}
+
+	@Test
+	void truthTableWithAnEmptyTableWarnsAndExportsNothing()
+			throws Exception {
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("ttempty");
+		cb.truthTable("e", new String[] { "ti" }, new String[] { "to" },
+				new int[0][]);
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		assertEquals(1, result.warnings().size(),
+				"one empty-table warning expected: " + result.warnings());
+		assertTrue(result.warnings().get(0).contains("empty table"),
+				result.warnings().get(0));
+		assertFalse(result.text().contains("casez"), result.text());
+	}
+
+	@Test
 	void twoNetsBridgedByJumpsBecomeOneVerilogNet() throws Exception {
 		// three separate wire nets - source->JumpStart, JumpEnd->sink1,
 		// second JumpEnd->sink2 - all alias "mid" and must fuse into

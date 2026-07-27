@@ -181,6 +181,11 @@ public final class HdlModel {
 		 * @param statement the statement to emit
 		 */
 		void visit(SelectStatement statement);
+		/**
+		 * Emit a priority truth-table (TruthTable) statement.
+		 * @param statement the statement to emit
+		 */
+		void visit(PriorityCaseStatement statement);
 	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
@@ -572,6 +577,114 @@ public final class HdlModel {
 			visitor.visit(this);
 		}
 	} // end of SelectStatement class
+
+	/**
+	 * A priority truth table (TruthTable, issue #59): every row pairs an
+	 * input pattern over the 1-bit inputs (0, 1, or 2 for don't-care)
+	 * with the 0/1 value each target takes when that row is the FIRST
+	 * match in table order. An input vector matching no row leaves every
+	 * target holding its prior value - TruthTable.react's issue-#52 rule
+	 * - so emitters must render a priority match WITHOUT a default
+	 * branch (Verilog {@code casez} with no {@code default} arm, VHDL
+	 * if/elsif {@code std_match} with no {@code else}). Output
+	 * don't-cares were already lowered to 0 by the exporter, matching
+	 * the simulator. Two documented divergences. Startup: JLS drives
+	 * row 0's output values at startup, while HDL outputs stay
+	 * undefined until an input pattern first matches. High-impedance
+	 * inputs (a tri-state-driven or floating net): JLS reads a null
+	 * input as 0 and matches rows accordingly, but in Verilog a z bit
+	 * in the {@code casez} <em>expression</em> is itself a wildcard -
+	 * the first row whose other bits match wins, silently shifting row
+	 * priority - while the VHDL {@code std_match} chain matches no row
+	 * and holds the prior value. Synthesizable HDL cannot branch on z
+	 * (z-comparison needs the simulation-only {@code ===}), so this
+	 * remains a documented simulation-boundary divergence, the same
+	 * treatment as the gate templates' x-degradation; in synthesized
+	 * hardware the input resolves to a real level and all three agree.
+	 */
+	public static final class PriorityCaseStatement extends Statement {
+
+		/** One table row: an input pattern and its output values. */
+		public static final class Row {
+
+			/** Per input column: 0, 1, or 2 (don't care). */
+			private final int[] pattern;
+			/** Per output column: 0 or 1 (don't care already lowered). */
+			private final int[] outputs;
+
+			/**
+			 * Builds an immutable row.
+			 * @param pattern per-input 0/1/2 entries (defensively copied)
+			 * @param outputs per-output 0/1 values (defensively copied)
+			 */
+			Row(int[] pattern, int[] outputs) {
+				this.pattern = pattern.clone();
+				this.outputs = outputs.clone();
+			}
+
+			/**
+			 * Gives the input pattern.
+			 * @return a copy of the per-input 0/1/2 entries
+			 */
+			public int[] pattern() {
+				return pattern.clone();
+			}
+
+			/**
+			 * Gives the output values.
+			 * @return a copy of the per-output 0/1 values
+			 */
+			public int[] outputs() {
+				return outputs.clone();
+			}
+		} // end of Row class
+
+		/** The 1-bit inputs, in table column order, unmodifiable. */
+		public final List<Operand> inputs;
+		/** The rows, in table (priority) order, unmodifiable. */
+		public final List<Row> rows;
+		/** The 1-bit nets driven, one per output column, unmodifiable. */
+		public final List<String> targets;
+		/**
+		 * State-variable names, one per target, for emitters whose
+		 * priority match needs helpers (the Verilog {@code reg}s driven
+		 * by the {@code always}/{@code casez} block); emitters that
+		 * assign the targets directly from a process (VHDL) ignore them.
+		 */
+		public final List<String> helperNames;
+
+		/**
+		 * Builds an immutable priority-case statement.
+		 * @param comment identifies the source element
+		 * @param inputs the 1-bit inputs, in table column order
+		 * (defensively copied)
+		 * @param rows the rows, in table (priority) order (defensively
+		 * copied)
+		 * @param targets the driven 1-bit nets, one per output column
+		 * (defensively copied)
+		 * @param helperNames pre-claimed state-variable names, one per
+		 * target, for emitters that need them (defensively copied)
+		 */
+		PriorityCaseStatement(String comment, List<Operand> inputs,
+				List<Row> rows, List<String> targets,
+				List<String> helperNames) {
+			super(comment);
+			this.inputs = Collections.unmodifiableList(
+					new ArrayList<Operand>(inputs));
+			this.rows = Collections.unmodifiableList(
+					new ArrayList<Row>(rows));
+			this.targets = Collections.unmodifiableList(
+					new ArrayList<String>(targets));
+			this.helperNames = Collections.unmodifiableList(
+					new ArrayList<String>(helperNames));
+		}
+
+		/** Double-dispatch to the emitter's matching visit method. */
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
+	} // end of PriorityCaseStatement class
 
 	// the model proper
 	/** Legalized HDL module name. */

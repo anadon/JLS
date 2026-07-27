@@ -240,6 +240,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			public void visit(HdlModel.SelectStatement s) {
 				select(body, s, names);
 			}
+			/** Renders a priority-case statement into declarations and body. */
+			@Override
+			public void visit(HdlModel.PriorityCaseStatement s) {
+				priorityCase(declarations, body, s, names);
+			}
 		});
 	} // end of statement method
 
@@ -484,6 +489,73 @@ public final class VhdlEmitter implements HdlEmitter {
 		out.append(pad).append(operand(s.defaultValue, names))
 				.append(" when others;\n");
 	} // end of select method
+
+	/**
+	 * Emits a priority truth table (TruthTable, the #59 std_match
+	 * template): a helper signal collects the concatenated inputs, and
+	 * a process runs an if/elsif {@code std_match} chain over it (ieee
+	 * numeric_std, VHDL-93) - one branch per row in table order, so the
+	 * FIRST matching branch wins, with {@code '-'} marking input
+	 * don't-cares - and deliberately NO final {@code else}: an input
+	 * vector matching no row leaves the targets holding their prior
+	 * values, mirroring JLS's unmatched-vector rule (issue #52). The
+	 * process assigns the target signals directly, so
+	 * {@link HdlModel.PriorityCaseStatement#helperNames} is unused
+	 * here.
+	 * @param declarations sink for the helper signal declaration
+	 * @param body sink for the architecture-body text
+	 * @param s the priority-case statement (inputs, rows, targets)
+	 * @param names the legalized-identifier table for this model
+	 */
+	private static void priorityCase(StringBuilder declarations,
+			StringBuilder body, HdlModel.PriorityCaseStatement s,
+			Names names) {
+
+		// the concatenation lands in a helper signal so its type is
+		// unambiguous for std_match (and it doubles as the process's
+		// one-signal sensitivity list)
+		int width = s.inputs.size();
+		String sel = names.synth(names.of(s.targets.get(0)) + "_tt");
+		declarations.append("  signal ").append(sel)
+				.append(" : std_logic_vector(").append(width - 1)
+				.append(" downto 0);\n");
+		if (width == 1) {
+			body.append("  ").append(sel).append("(0) <= ")
+					.append(operand(s.inputs.get(0), names)).append(";\n");
+		}
+		else {
+			body.append("  ").append(sel).append(" <= ");
+			for (int k = 0; k < width; k += 1) {
+				if (k > 0) {
+					body.append(" & ");
+				}
+				body.append(operand(s.inputs.get(k), names));
+			}
+			body.append(";\n");
+		}
+		body.append("  process (").append(sel).append(")\n  begin\n");
+		for (int r = 0; r < s.rows.size(); r += 1) {
+			HdlModel.PriorityCaseStatement.Row row = s.rows.get(r);
+			int[] pattern = row.pattern();
+			int[] outputs = row.outputs();
+			body.append("    ").append(r == 0 ? "if" : "elsif")
+					.append(" std_match(").append(sel).append(", \"");
+			for (int p : pattern) {
+				body.append(p == 2 ? '-' : p == 1 ? '1' : '0');
+			}
+			body.append("\") then\n");
+			for (int k = 0; k < outputs.length; k += 1) {
+				body.append("      ").append(names.of(s.targets.get(k)))
+						.append(" <= ")
+						.append(outputs[k] == 1 ? "'1'" : "'0'")
+						.append(";\n");
+			}
+		}
+		body.append("    end if;")
+				.append("  -- no else: an unmatched input vector holds")
+				.append(" the prior outputs\n");
+		body.append("  end process;\n");
+	} // end of priorityCase method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into slices:

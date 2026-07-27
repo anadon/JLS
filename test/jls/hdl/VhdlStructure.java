@@ -39,7 +39,7 @@ final class VhdlStructure {
 			"std_logic_vector", "unsigned", "downto", "begin", "process",
 			"if", "then", "else", "elsif", "when", "others", "not",
 			"and", "or", "xor", "nand", "nor", "rising_edge",
-			"falling_edge", "with", "select");
+			"falling_edge", "with", "select", "std_match");
 
 	static void assertSane(String vhdl) {
 
@@ -125,8 +125,9 @@ final class VhdlStructure {
 			sb.append(comment >= 0 ? line.substring(0, comment) : line)
 					.append('\n');
 		}
-		// string literals ("0101") then character literals ('Z')
-		String text = sb.toString().replaceAll("\"[01]*\"", " ");
+		// string literals ("0101", std_match patterns like "1-0") then
+		// character literals ('Z')
+		String text = sb.toString().replaceAll("\"[01-]*\"", " ");
 		return text.replaceAll("'.'", " ");
 	} // end of stripCommentsAndLiterals method
 

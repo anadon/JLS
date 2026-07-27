@@ -27,15 +27,15 @@ final class VerilogStructure {
 	private static final Pattern IDENTIFIER =
 			Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
-	/** Sized literals like 4'hb / 1'b0 / 8'd15, so 'h'/'b' don't scan
-	 *  as identifiers. */
+	/** Sized literals like 4'hb / 1'b0 / 8'd15 / 3'b1?0 (casez pattern
+	 *  don't-cares, issue #59), so 'h'/'b' don't scan as identifiers. */
 	private static final Pattern SIZED_LITERAL =
-			Pattern.compile("\\d+'[bdh][0-9a-fA-FxzXZ]+");
+			Pattern.compile("\\d+'[bdh][0-9a-fA-F?xzXZ]+");
 
 	private static final Set<String> KEYWORDS = Set.of(
 			"module", "endmodule", "input", "output", "wire", "reg",
 			"assign", "always", "posedge", "negedge", "or", "if",
-			"case", "endcase", "default");
+			"case", "casez", "endcase", "default", "begin", "end");
 
 	static void assertSane(String verilog) {
 

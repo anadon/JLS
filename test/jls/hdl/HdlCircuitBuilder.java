@@ -130,6 +130,31 @@ final class HdlCircuitBuilder {
 				+ "\n int delay 15\n String orient \"LEFT\"\n");
 	}
 
+	/**
+	 * A truth table (issue #59). Puts are named after the signals; table
+	 * cells are 0, 1 or 2 (don't care), one row per table entry with the
+	 * input columns first, then the output columns.
+	 */
+	int truthTable(String name, String[] inputs, String[] outputs,
+			int[][] table) {
+		StringBuilder attrs = new StringBuilder(" String name \"" + name
+				+ "\"\n int delay 20\n int rows " + table.length
+				+ "\n int cols " + (inputs.length + outputs.length) + "\n");
+		for (String in : inputs) {
+			attrs.append(" String input \"").append(in).append("\"\n");
+		}
+		for (String out : outputs) {
+			attrs.append(" String output \"").append(out).append("\"\n");
+		}
+		for (int r = 0; r < table.length; r += 1) {
+			for (int value : table[r]) {
+				attrs.append(" pair ").append(r).append(' ').append(value)
+						.append('\n');
+			}
+		}
+		return element("TruthTable", attrs.toString());
+	}
+
 	int display(int bits) {
 		return element("Display", " int bits " + bits + "\n int base 10\n");
 	}

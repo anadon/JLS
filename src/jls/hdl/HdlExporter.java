@@ -46,6 +46,7 @@ import jls.elem.Stop;
 import jls.elem.TestGen;
 import jls.elem.Text;
 import jls.elem.TriState;
+import jls.elem.TruthTable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
@@ -66,7 +67,9 @@ import jls.elem.XorGate;
  * TriState; Adder; Register (all three types, with initial value);
  * Clock (an input port to drive from a testbench); Binder and
  * Splitter (bit routing); Mux and Decoder (selected assignments,
- * the #59-adjudicated case/select templates).</li>
+ * the #59-adjudicated case/select templates); TruthTable (a priority
+ * match - Verilog casez / VHDL std_match chain - with hold-on-no-match
+ * semantics, issue #59).</li>
  * <li><b>Net topology, not instances</b>: Wire, WireEnd, JumpStart,
  * JumpEnd. Same-named jumps alias nets, so the net walk folds them
  * into one HDL net.</li>
@@ -74,9 +77,9 @@ import jls.elem.XorGate;
  * meaning): Display, SigGen, Pause, Stop, Text, TestGen. Each skip
  * produces a warning the caller surfaces.</li>
  * <li><b>Reject</b> (inexpressible in this version, §9 escalation):
- * SubCircuit, Memory, StateMachine, TruthTable, and anything
- * unrecognized. Rejection lists <em>every</em> offender in one
- * message and nothing is written.</li>
+ * SubCircuit, Memory, StateMachine, and anything unrecognized.
+ * Rejection lists <em>every</em> offender in one message and nothing
+ * is written.</li>
  * </ul>
  *
  * <h2>Net walk</h2>
@@ -413,7 +416,8 @@ public final class HdlExporter {
 			AndGate.class, OrGate.class, NandGate.class, NorGate.class,
 			XorGate.class, NotGate.class, DelayGate.class, Extend.class,
 			TriState.class, Adder.class, Register.class, Clock.class,
-			Binder.class, Splitter.class, Mux.class, Decoder.class);
+			Binder.class, Splitter.class, Mux.class, Decoder.class,
+			TruthTable.class);
 
 	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
@@ -684,10 +688,97 @@ public final class HdlExporter {
 			return;
 		}
 
+		if (el instanceof TruthTable tt) {
+			buildTruthTable(model, tt, ins, outs, nets, groups, names);
+			return;
+		}
+
 		// unreachable: the policy pass admits only the classes above
 		throw new IllegalStateException(
 				"no template for " + el.getClass().getName());
 	} // end of buildStatement method
+
+	/**
+	 * Append the model statement(s) for a TruthTable (issue #59): a
+	 * priority case mirroring TruthTable.react exactly - the FIRST row
+	 * whose pattern matches the inputs wins, an input don't-care (table
+	 * value 2) matches either value, an output don't-care is lowered to
+	 * 0, and an input vector matching no row leaves the outputs holding
+	 * their prior values (issue #52). One divergence, documented in the
+	 * emitted comment: JLS drives row 0's output values at startup,
+	 * while HDL outputs stay undefined until a row first matches.
+	 *
+	 * @param model The model being built; receives the statement(s).
+	 * @param tt The truth table element.
+	 * @param ins The element's inputs, in table column order.
+	 * @param outs The element's outputs, in table column order.
+	 * @param nets Union-find over the circuit's fused wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @param names Identifier allocator for helper state variables.
+	 */
+	private static void buildTruthTable(HdlModel model, TruthTable tt,
+			List<Input> ins, List<Output> outs, UnionFind nets,
+			Map<WireNet, Group> groups, HdlNames names) {
+
+		List<String> inputNames = tt.getInputNames();
+		List<String> outputNames = tt.getOutputNames();
+		int[][] table = tt.getTable();
+		if (table.length == 0 || outputNames.isEmpty()) {
+			model.addWarning(describe(tt)
+					+ " has an empty table; nothing exported for it");
+			return;
+		}
+		if (inputNames.isEmpty()) {
+			// with no input columns, row 0 always matches first: every
+			// output is a constant (JLS drives these at startup too)
+			for (int k = 0; k < outputNames.size(); k += 1) {
+				String target = target(model, tt, k, outs.get(k), 1, nets,
+						groups, names);
+				// an output don't-care becomes 0, as in TruthTable.react
+				int value = table[0][k] == 1 ? 1 : 0;
+				model.addStatement(new HdlModel.ConstantStatement(
+						"TruthTable \"" + tt.getName() + "\" output \""
+								+ outputNames.get(k) + "\" at " + at(tt)
+								+ ": no inputs, so row 0 always matches",
+						target, 1, BigInteger.valueOf(value)));
+			}
+			return;
+		}
+
+		List<HdlModel.Operand> operands = new ArrayList<HdlModel.Operand>();
+		for (int k = 0; k < inputNames.size(); k += 1) {
+			operands.add(operand(ins.get(k), nets, groups));
+		}
+		List<String> targets = new ArrayList<String>();
+		List<String> helpers = new ArrayList<String>();
+		for (int k = 0; k < outputNames.size(); k += 1) {
+			targets.add(target(model, tt, k, outs.get(k), 1, nets, groups,
+					names));
+			helpers.add(names.synth("tt_" + tt.getID() + "_" + k));
+		}
+		List<HdlModel.PriorityCaseStatement.Row> rows =
+				new ArrayList<HdlModel.PriorityCaseStatement.Row>();
+		for (int[] row : table) {
+			int[] pattern = new int[inputNames.size()];
+			int[] outputs = new int[outputNames.size()];
+			for (int c = 0; c < pattern.length; c += 1) {
+				pattern[c] = row[c];
+			}
+			for (int c = 0; c < outputs.length; c += 1) {
+				// an output don't-care becomes 0, as in TruthTable.react
+				outputs[c] = row[pattern.length + c] == 1 ? 1 : 0;
+			}
+			rows.add(new HdlModel.PriorityCaseStatement.Row(pattern,
+					outputs));
+		}
+		model.addStatement(new HdlModel.PriorityCaseStatement(
+				"TruthTable \"" + tt.getName() + "\" (" + inputNames.size()
+						+ " in, " + outputNames.size() + " out, "
+						+ table.length + " rows) at " + at(tt)
+						+ ": first matching row wins; no match holds the"
+						+ " outputs (JLS also drives row 0 at startup)",
+				operands, rows, targets, helpers));
+	} // end of buildTruthTable method
 
 	/**
 	 * Map a gate-family element to its HDL operation. The switch is

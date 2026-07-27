@@ -88,9 +88,10 @@ public final class SimEvent implements Comparable<SimEvent> {
 
 	// properties (all set once in the constructor: a SimEvent is an
 	// immutable value carrier, kept a plain class rather than a record
-	// because its equals/hashCode are intentionally non-structural --
-	// equals excludes seq so the simulator's dupCheck set can coalesce
-	// duplicate postings; see jls.sim.SimEventDedupTest, issue #94)
+	// because its equals/hashCode intentionally exclude seq (so the
+	// simulator's dupCheck set can coalesce duplicate postings) and
+	// compare the callback by reference identity; see
+	// jls.sim.SimEventDedupTest, issues #94 and #231)
 	/** The simulation time this event fires at. */
 	private final long time;
 	/** The same-time tie-breaker: this event's global sequence number. */
@@ -173,15 +174,21 @@ public final class SimEvent implements Comparable<SimEvent> {
 	/**
 	 * Return a hash code for this object.
 	 * This must be consistent with the equals method, hence objects
-	 * that are equal will have the same hash code.
-	 * All objects with the same time have the same hash code.
+	 * that are equal will have the same hash code.  The hash mixes the
+	 * time, the callback's identity hash (matching equals' reference
+	 * comparison of the callback), and the payload's structural hash,
+	 * so same-time events with different callbacks or payloads spread
+	 * across hash buckets instead of colliding (issue #231).
 	 *
-	 * @return the time of the event.
+	 * @return the mixed hash of time, callback identity, and payload.
 	 */
 	@Override
 	public int hashCode() {
 
-		return (int)time;
+		int h = Long.hashCode(time);
+		h = 31 * h + System.identityHashCode(callBack);
+		h = 31 * h + todo.hashCode();
+		return h;
 	} // end of hashCode method
 
 	/**

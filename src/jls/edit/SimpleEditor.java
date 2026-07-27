@@ -69,6 +69,7 @@ import jls.JLSInfo;
 import jls.MenuAcceleratorPolicy;
 import jls.TellUser;
 import jls.Util;
+import jls.collab.op.AddWire;
 import jls.collab.op.AttachProbe;
 import jls.collab.op.CircuitOp;
 import jls.collab.op.FlipElement;
@@ -837,25 +838,30 @@ public abstract class SimpleEditor extends JPanel {
 
 	/**
 	 * The model half of the delete-selection gesture (issue #167): map a
-	 * selection to the op plan that expresses it - one {@link RemoveWire}
-	 * per attached wire net wholly covered by the selection, in stable-id
-	 * order, then one {@link RemoveElements} over the then-unwired
-	 * elements, with jump starts expanded to their same-name jump ends
-	 * exactly as the editor's removal cascade does. A net is wholly
-	 * covered when every one of its wires is in the (expanded) selection;
-	 * its wire ends then follow by the same cascade the inline deletion
-	 * uses, so attached ends (which are never selectable) and unselected
-	 * dangling ends need no separate coverage. Swing-free so it is
-	 * unit-testable headless (the {@link #startWireGesture} precedent);
-	 * the caller owns submission and repaint.
+	 * selection to the op plan that expresses it. Per affected wire net,
+	 * one {@link RemoveWire} of the whole net followed immediately by
+	 * one {@link AddWire#survivors} per surviving connected component -
+	 * a selection that clips a net travels as remove-whole-net plus
+	 * re-add-survivors, so a wholly covered net contributes just its
+	 * RemoveWire. The per-net groups arrive in stable-id order of their
+	 * RemoveWire address (each addressed by its lowest-id end, each
+	 * component ordered by its lowest end stable id), then one
+	 * {@link RemoveElements} over the then-unwired elements, with jump
+	 * starts expanded to their same-name jump ends exactly as the
+	 * editor's removal cascade does. The removed wires are the selected
+	 * wires plus the wires incident to selected wire ends; an end
+	 * keeping at least one wire survives, an end keeping none follows
+	 * the same cascade the inline deletion uses, so attached ends
+	 * (which are never selectable) and unselected dangling ends need no
+	 * separate coverage. Swing-free so it is unit-testable headless
+	 * (the {@link #startWireGesture} precedent); the caller owns
+	 * submission and repaint.
 	 *
-	 * No plan (null) means the selection cannot yet be expressed in the
-	 * op vocabulary and must take the inline fallback: an affected net
-	 * only partially covered by the selection (the
-	 * RemoveWire-plus-AddWire-survivors composition is a follow-up per
-	 * docs/operation-layer.md), a subcircuit (its op kind is deferred),
-	 * in-progress wiring, or anything uneditable in the cascade (the
-	 * caller's guard already dialogs on uneditable selections).
+	 * No plan (null) means the selection cannot be expressed in the op
+	 * vocabulary and must take the inline fallback: a subcircuit (its
+	 * op kind is deferred), in-progress wiring, or anything uneditable
+	 * in the cascade (the caller's guard already dialogs on uneditable
+	 * selections).
 	 *
 	 * @param circuit The circuit being edited.
 	 * @param selected The current selection; not modified.
@@ -914,11 +920,14 @@ public abstract class SimpleEditor extends JPanel {
 			return null;
 		}
 
-		// every affected net must be wholly covered and removable, and
-		// each becomes one RemoveWire addressed by its lowest-id end
-		List<RemoveWire> wireOps = new ArrayList<RemoveWire>(nets.size());
+		// each affected net travels as RemoveWire of the whole net
+		// (addressed by its lowest-id end) plus, when the selection only
+		// clips it, one AddWire per surviving connected component
+		List<List<CircuitOp>> netGroups =
+				new ArrayList<List<CircuitOp>>(nets.size());
 		for (WireNet net : nets) {
 			WireEnd anchor = null;
+			Set<Wire> survivors = new java.util.LinkedHashSet<Wire>();
 			for (WireEnd end : net.getAllEnds()) {
 				if (end.isUneditable())
 					return null;
@@ -930,8 +939,7 @@ public abstract class SimpleEditor extends JPanel {
 				for (Wire wire : end.getWires()) {
 					if (wire.isUneditable())
 						return null;
-					if (!group.contains(wire))
-						return null;
+					survivors.add(wire);
 				}
 				if (anchor == null ||
 						end.getStableId().compareTo(anchor.getStableId()) < 0)
@@ -939,9 +947,58 @@ public abstract class SimpleEditor extends JPanel {
 			}
 			if (anchor == null)
 				return null;
-			wireOps.add(new RemoveWire(anchor.getStableId()));
+
+			// removed wires: the selected ones plus every wire incident
+			// to a selected wire end
+			for (Element el : group) {
+				if (el instanceof Wire wire)
+					survivors.remove(wire);
+				else if (el instanceof WireEnd end)
+					survivors.removeAll(end.getWires());
+			}
+
+			List<CircuitOp> netOps = new ArrayList<CircuitOp>();
+			netOps.add(new RemoveWire(anchor.getStableId()));
+			if (!survivors.isEmpty()) {
+
+				// partition the survivor graph into its connected
+				// components, seeded in stable-id order so the plan is
+				// deterministic; attachments to group elements are
+				// dropped (they leave in the RemoveElements below)
+				List<WireEnd> survivorEnds = new ArrayList<WireEnd>();
+				for (WireEnd end : net.getAllEnds()) {
+					for (Wire wire : end.getWires()) {
+						if (survivors.contains(wire)) {
+							survivorEnds.add(end);
+							break;
+						}
+					}
+				}
+				survivorEnds.sort(
+						java.util.Comparator.comparing(Element::getStableId));
+				Set<WireEnd> seen = new HashSet<WireEnd>();
+				for (WireEnd start : survivorEnds) {
+					if (!seen.add(start))
+						continue;
+					List<WireEnd> component = new ArrayList<WireEnd>();
+					component.add(start);
+					for (int at = 0; at < component.size(); at += 1) {
+						for (Wire wire : component.get(at).getWires()) {
+							if (!survivors.contains(wire))
+								continue;
+							WireEnd other =
+									wire.getOtherEnd(component.get(at));
+							if (seen.add(other))
+								component.add(other);
+						}
+					}
+					netOps.add(AddWire.survivors(component,survivors,group));
+				}
+			}
+			netGroups.add(netOps);
 		}
-		wireOps.sort(java.util.Comparator.comparing(RemoveWire::id));
+		netGroups.sort(java.util.Comparator.comparing(
+				ops -> ((RemoveWire) ops.get(0)).id()));
 
 		// the then-unwired elements travel as one RemoveElements
 		List<ElementId> ids = new ArrayList<ElementId>();
@@ -951,7 +1008,9 @@ public abstract class SimpleEditor extends JPanel {
 		}
 		java.util.Collections.sort(ids);
 
-		List<CircuitOp> plan = new ArrayList<CircuitOp>(wireOps);
+		List<CircuitOp> plan = new ArrayList<CircuitOp>();
+		for (List<CircuitOp> netOps : netGroups)
+			plan.addAll(netOps);
 		if (!ids.isEmpty())
 			plan.add(new RemoveElements(ids));
 		return plan.isEmpty() ? null : plan;
@@ -4728,11 +4787,13 @@ public abstract class SimpleEditor extends JPanel {
 					 *
 					 * The delete gesture is migrated behind the OpSink
 					 * seam (issue #167): when the selection maps to an
-					 * op plan it is submitted as one batch (one undo
-					 * snapshot); selections the vocabulary cannot yet
-					 * express - partially selected nets, subcircuits -
-					 * fall back to the inline removal below, still under
-					 * snapshot undo.
+					 * op plan - including clipped nets, which travel as
+					 * RemoveWire of the whole net plus AddWire per
+					 * surviving component - it is submitted as one
+					 * batch (one undo snapshot); the few selections the
+					 * vocabulary cannot yet express - subcircuits,
+					 * in-progress wiring - fall back to the inline
+					 * removal below, still under snapshot undo.
 					 */
 					private void remove() {
 
@@ -4753,8 +4814,8 @@ public abstract class SimpleEditor extends JPanel {
 							return;
 						}
 
-						// the inline fallback (partial nets et al.):
-						// remove each element
+						// the inline fallback (subcircuits, in-progress
+						// wiring): remove each element
 						for (Element el : selected) {
 							el.remove(circuit); // elements remove themselves
 						}

@@ -186,7 +186,9 @@ class MemoryModelTest {
 	@Test
 	void timingContractResetsToTheDefaultAccessTime() {
 		Memory mem = newMemory();
-		assertTrue(mem.hasTiming());
+		Element asElement = mem;
+		assertTrue(asElement instanceof Timed,
+				"memory carries a timing contract");
 		assertTrue(mem.usesAccessTime(),
 				"memory is the one element with an access time");
 		assertEquals(100, mem.getDelay(), "documented default access time");
@@ -199,8 +201,11 @@ class MemoryModelTest {
 	@Test
 	void watchAndChangeContract() {
 		Memory mem = newMemory();
-		assertTrue(mem.canWatch());
-		assertTrue(mem.canChange());
+		Element asElement = mem;
+		assertTrue(asElement instanceof Watchable,
+				"memory values can be watched");
+		assertTrue(asElement instanceof Editable,
+				"memory attributes can be edited");
 		assertFalse(mem.isWatched());
 		mem.setWatched(true);
 		assertTrue(mem.isWatched());

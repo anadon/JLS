@@ -150,7 +150,9 @@ class SubCircuitModelTest {
 	@Test
 	void canChangeAndDelayResetAreDelegatedSafely() {
 		SubCircuit sub = loneSub();
-		assertTrue(sub.canChange());
+		Element asElement = sub;
+		assertTrue(asElement instanceof Editable,
+				"subcircuits can be edited");
 		// the passthrough inner circuit has no timed elements; the
 		// delegation must still walk it without faulting
 		sub.resetPropDelay();

@@ -274,6 +274,81 @@ class VhdlExportGoldenTest {
 		assertGolden("decoder", decoderFixture());
 	}
 
+	/**
+	 * Two-input truth table with XOR-ish rows and deliberately NO row
+	 * for input vector 11: the std_match chain must have no branch for
+	 * it (and no final else), so 11 holds the prior output -
+	 * TruthTable.react's issue-#52 rule.
+	 */
+	private static HdlCircuitBuilder truthTableFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("truthtable");
+		int a = cb.inputPin("a", 1);
+		int b = cb.inputPin("b", 1);
+		int tt = cb.truthTable("xorish", new String[] { "ta", "tb" },
+				new String[] { "ty" },
+				new int[][] { { 0, 0, 0 }, { 0, 1, 1 }, { 1, 0, 1 } });
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", tt, "ta");
+		cb.wire(b, "output", tt, "tb");
+		cb.wire(tt, "ty", y, "input");
+		return cb;
+	}
+
+	/**
+	 * Input wildcards, an output don't-care, and overlapping rows: 1-
+	 * gives 1, -1 gives don't-care (which lowers to 0, as in the
+	 * simulator), and the catch-all -- gives 1 - so vector 11, which
+	 * matches all three rows, must take row 0 (priority of the first
+	 * if branch).
+	 */
+	private static HdlCircuitBuilder truthTableDontCareFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("truthtable_dontcare");
+		int a = cb.inputPin("a", 1);
+		int b = cb.inputPin("b", 1);
+		int tt = cb.truthTable("prio", new String[] { "ta", "tb" },
+				new String[] { "ty" },
+				new int[][] { { 1, 2, 1 }, { 2, 1, 2 }, { 2, 2, 1 } });
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", tt, "ta");
+		cb.wire(b, "output", tt, "tb");
+		cb.wire(tt, "ty", y, "input");
+		return cb;
+	}
+
+	/** One input driving two outputs (the value and its complement). */
+	private static HdlCircuitBuilder truthTableMultiOutFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("truthtable_multiout");
+		int s = cb.inputPin("s", 1);
+		int tt = cb.truthTable("split", new String[] { "ts" },
+				new String[] { "tp", "tq" },
+				new int[][] { { 0, 0, 1 }, { 1, 1, 0 } });
+		int p = cb.outputPin("p", 1);
+		int q = cb.outputPin("q", 1);
+		cb.wire(s, "output", tt, "ts");
+		cb.wire(tt, "tp", p, "input");
+		cb.wire(tt, "tq", q, "input");
+		return cb;
+	}
+
+	@Test
+	void truthTableTemplateIsAStdMatchChainWithNoElse() throws Exception {
+		assertGolden("truthtable", truthTableFixture());
+	}
+
+	@Test
+	void truthTableDontCaresAndPriorityLandInTheStdMatchPatterns()
+			throws Exception {
+		assertGolden("truthtable_dontcare", truthTableDontCareFixture());
+	}
+
+	@Test
+	void truthTableMultipleOutputsShareOneProcess() throws Exception {
+		assertGolden("truthtable_multiout", truthTableMultiOutFixture());
+	}
+
 	@Test
 	void binderAndSplitterTemplates() throws Exception {
 		HdlCircuitBuilder cb = new HdlCircuitBuilder("bundles");

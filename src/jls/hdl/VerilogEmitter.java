@@ -207,6 +207,11 @@ public final class VerilogEmitter implements HdlEmitter {
 			public void visit(HdlModel.SelectStatement s) {
 				select(out, s);
 			}
+			/** Routes a priority-case statement to {@link #priorityCase}. */
+			@Override
+			public void visit(HdlModel.PriorityCaseStatement s) {
+				priorityCase(out, s);
+			}
 		});
 	} // end of statement method
 
@@ -376,6 +381,64 @@ public final class VerilogEmitter implements HdlEmitter {
 		out.append("  assign ").append(s.target).append(" = ")
 				.append(s.helperName).append(";\n");
 	} // end of select method
+
+	/**
+	 * Emits a priority truth table (TruthTable, the #59 casez
+	 * template): one helper {@code reg} per output, assigned in an
+	 * {@code always @*} {@code casez} over the concatenated inputs -
+	 * one arm per row in table order, so the FIRST matching arm wins,
+	 * with {@code ?} marking input don't-cares - and deliberately NO
+	 * {@code default} arm: an input vector matching no row leaves the
+	 * regs holding their prior values, mirroring JLS's unmatched-vector
+	 * rule (issue #52). Continuous assigns then drive the helpers onto
+	 * the target nets.
+	 * @param out the buffer the module text is appended to
+	 * @param s the priority-case statement (inputs, rows, targets)
+	 */
+	private static void priorityCase(StringBuilder out,
+			HdlModel.PriorityCaseStatement s) {
+
+		for (String helper : s.helperNames) {
+			out.append("  reg ").append(helper).append(";\n");
+		}
+		List<String> parts = new ArrayList<String>();
+		for (HdlModel.Operand in : s.inputs) {
+			parts.add(operand(in));
+		}
+		out.append("  always @* casez ({").append(String.join(", ", parts))
+				.append("})\n");
+		for (HdlModel.PriorityCaseStatement.Row row : s.rows) {
+			int[] pattern = row.pattern();
+			int[] outputs = row.outputs();
+			out.append("    ").append(pattern.length).append("'b");
+			for (int p : pattern) {
+				out.append(p == 2 ? '?' : p == 1 ? '1' : '0');
+			}
+			out.append(": ");
+			if (outputs.length == 1) {
+				out.append(s.helperNames.get(0)).append(" = ")
+						.append(literal(BigInteger.valueOf(outputs[0]), 1))
+						.append(";\n");
+			}
+			else {
+				out.append("begin ");
+				for (int k = 0; k < outputs.length; k += 1) {
+					out.append(s.helperNames.get(k)).append(" = ")
+							.append(literal(BigInteger.valueOf(outputs[k]),
+									1))
+							.append("; ");
+				}
+				out.append("end\n");
+			}
+		}
+		out.append("    // no default arm: an unmatched input vector holds"
+				+ " the prior outputs\n");
+		out.append("  endcase\n");
+		for (int k = 0; k < s.targets.size(); k += 1) {
+			out.append("  assign ").append(s.targets.get(k)).append(" = ")
+					.append(s.helperNames.get(k)).append(";\n");
+		}
+	} // end of priorityCase method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:

@@ -107,15 +107,21 @@ The climb convention:
   work (#84/#91) makes that code testable headlessly; do not add a
   floor there that would either bind at ~0% or block unrelated PRs.
 - **Mutation-testing status** (#159/#161): the 0.50 headless bundle
-  LINE milestone is crossed and pinned (PR #244), and the PIT
-  evaluation it gated (#161) is closed — PIT is adopted report-only as
-  the opt-in `-Ppitest` profile plus the weekly non-blocking
-  `mutation.yml` workflow (trial record:
+  LINE milestone is crossed and pinned (PR #244), the PIT evaluation
+  it gated (#161) is closed, and the `mutationThreshold` /
+  `testStrengthThreshold` climb-ratchet over the scoped classes
+  (`jls.sim.*`, `jls.BitSetUtils`, `jls.Util`, `jls.SpatialIndex`,
+  `jls.collab.op.*`) is promoted (#159, 2026-07-27): the weekly
+  `mutation.yml` run now fails on a breach. It stays
+  schedule/`workflow_dispatch`-only and is never a required PR check,
+  but a red weekly run is a regression to fix, not noise. The floors
+  live in the `pitest` profile in `pom.xml` (that comment block is the
+  source of truth for the numbers) and follow the same climb
+  convention as the JaCoCo floors above: only ever move up, raised
+  with the PR that raises the score, from headless canonical-JDK-25
+  measurements with >=2 points of headroom under the worst of three
+  clean runs (trial record + promotion addendum:
   [`docs/mutation-testing-trial-2026-07.md`](docs/mutation-testing-trial-2026-07.md)).
-  The remaining step — promoting a `mutationThreshold` climb-ratchet
-  over the scoped classes (`jls.sim.*`, `jls.BitSetUtils`, `jls.Util`,
-  `jls.SpatialIndex`, `jls.collab.op.*`) once a few weekly reports
-  establish a stable baseline — is tracked in #159.
 
 ## Reporting bugs
 

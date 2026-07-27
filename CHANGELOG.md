@@ -8,6 +8,18 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- The PIT mutation-testing gate is promoted from report-only to a
+  blocking climb-ratchet (#159): the `pitest` profile now carries
+  `mutationThreshold` 80 / `testStrengthThreshold` 82, floored 2+
+  points under a worst-of-three headless canonical-JDK-25 baseline
+  (82.98 % / 84.67 %, ~0.1 pt observed jitter, 905 mutants over
+  `jls.sim.*`, `jls.BitSetUtils`, `jls.Util`, `jls.SpatialIndex`,
+  `jls.collab.op.*`), and the weekly `mutation.yml` run fails on a
+  breach instead of swallowing it (`continue-on-error` removed; the
+  PIT report is still uploaded on failure). The workflow stays
+  schedule/`workflow_dispatch`-only and is never a required PR check;
+  the floors follow the JaCoCo climb convention — only ever up,
+  raised with the PR that raises the score.
 - Every element pin now reports a **face** (#78, pin-face stage of the
   descriptor plan): `Put.getFace()` returns the `jls.core.Orientation`
   that is the outward normal of the element edge the pin sits on —

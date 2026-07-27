@@ -210,3 +210,42 @@ The report is now automated: `.github/workflows/mutation.yml` runs the
 `pitest` profile weekly (and on demand via `workflow_dispatch`) and
 uploads `target/pit-reports` as a build artifact, non-blocking per the
 verdict above.
+
+## Addendum — threshold promotion (2026-07-27, issue #159)
+
+The ratchet the §6 verdict deferred is now promoted. Promotion
+measurement, per the climb convention (headless, canonical JDK 25,
+clean builds, worst-of-three), taken on the promotion-cycle tree with
+the last in-scope change of the cycle (#167, which grows
+`jls.collab.op`) merged in:
+
+| Run | Mutants | Killed | Mutation score | Test strength |
+|---|---|---|---|---|
+| 1 | 905 | 752 | 83.09 % | 84.78 % (752/887) |
+| 2 | 905 | 751 | 82.98 % | 84.67 % (751/887) |
+| 3 | 905 | 751 | 82.98 % | 84.67 % |
+
+Observed jitter across the three clean runs was ~0.1 point, well
+inside the standard margin, so the floors keep the 2-point margin
+under the worst run: `mutationThreshold` **80**,
+`testStrengthThreshold` **82** (in the `pitest` profile, `pom.xml`).
+A pre-#167 3x measurement on the bare cycle base (881 mutants,
+82.40 % / 84.12 %, zero jitter) agreed within 0.7 point, so the
+floors are stable against that scope step.
+
+Scope-shift note: the trial's §3 baseline (1173 mutants, 39 %) is not
+comparable to these numbers even though `targetClasses` is unchanged —
+the mutated code itself moved between the trial and promotion (HDL/op
+record conversions, sim refactors, and the survivor-triage suites the
+trial itself added), leaving ~900 mutants at the promotion baseline.
+
+Workflow promotion: `mutation.yml` no longer marks the
+`mutationCoverage` step `continue-on-error`, so a threshold breach
+turns the weekly run red; the PIT report artifact is still uploaded
+(`if: always()`) so a breach is diagnosable. The workflow remains
+schedule + `workflow_dispatch` only and is never a required PR check.
+
+Non-vacuity probe: with `mutationThreshold` temporarily set to 95 the
+run fails as expected —
+`Mutation score of 82 is below threshold of 95` (BUILD FAILURE) —
+so the gate demonstrably binds.

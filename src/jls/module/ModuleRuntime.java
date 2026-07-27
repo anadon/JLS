@@ -19,7 +19,8 @@ import java.util.TreeSet;
  * The two-phase module runner (issue #220, grand-architecture §4.2
  * rules 6-8): {@link #boot(Collection)} resolves the manifests once
  * into one deterministic topological order via {@link ModuleResolver},
- * runs phase 1 — {@link JlsModule#register()} on <em>every</em> module,
+ * runs phase 1 — {@link JlsModule#register(ExtensionRegistry)} on
+ * <em>every</em> module,
  * in that order — and then phase 2, starting only what the declared
  * {@link Activation} triggers demand:
  *
@@ -85,14 +86,26 @@ public final class ModuleRuntime {
 	private final List<String> startedIds;
 
 	/**
-	 * Wire the resolved structures; {@link #boot(Collection)} then
-	 * drives the two phases.
+	 * The typed extension registry the host published; passed to every
+	 * module during phase 1 so modules contribute their implementations
+	 * into the declared points, and readable afterwards by consumers.
+	 */
+	private final ExtensionRegistry extensionRegistry;
+
+	/**
+	 * Wire the resolved structures; {@link #boot(Collection,
+	 * ExtensionRegistry)} then drives the two phases.
 	 *
 	 * @param order The manifests in resolved topological order.
 	 * @param byId The modules keyed by their manifest id.
+	 * @param extensionRegistry The host's extension registry to hand each
+	 *            module during registration.
 	 */
 	private ModuleRuntime(List<ModuleManifest> order,
-			Map<String, JlsModule> byId) {
+			Map<String, JlsModule> byId,
+			ExtensionRegistry extensionRegistry) {
+
+		this.extensionRegistry = extensionRegistry;
 
 		modulesById = new LinkedHashMap<>();
 		manifestsById = new LinkedHashMap<>();
@@ -122,7 +135,8 @@ public final class ModuleRuntime {
 	 * {@link JlsModule#manifest()} is read exactly once; the manifests
 	 * are resolved into one deterministic order (duplicate ids, missing
 	 * or ambiguous requirements, and cycles fail loudly there); phase 1
-	 * then calls {@link JlsModule#register()} on every module in that
+	 * then calls {@link JlsModule#register(ExtensionRegistry)} on every
+	 * module in that
 	 * order; phase 2 starts the {@link Activation.Eager} modules — and,
 	 * transitively, their {@code requires} providers — in that order.
 	 *
@@ -133,10 +147,39 @@ public final class ModuleRuntime {
 	 * @throws ModuleResolutionException if the manifests do not resolve
 	 *             (propagated from {@link ModuleResolver} untouched).
 	 * @throws ModuleActivationException if a module's
-	 *             {@code register()} or an eager {@code start()}
-	 *             throws.
+	 *             {@code register(ExtensionRegistry)} or an eager
+	 *             {@code start()} throws.
 	 */
 	public static ModuleRuntime boot(Collection<JlsModule> modules)
+			throws ModuleResolutionException,
+			ModuleActivationException {
+
+		return boot(modules, new ExtensionRegistry(List.of()));
+	} // end of boot method
+
+	/**
+	 * Resolve, register, and eagerly start a module set over a host's
+	 * declared extension registry. Behaves exactly like
+	 * {@link #boot(Collection)}, except each module's
+	 * {@link JlsModule#register(ExtensionRegistry)} receives
+	 * {@code registrar}, so modules contribute their implementations into
+	 * the host's declared points during phase 1; the same registry is
+	 * then readable through {@link #extensionRegistry()}.
+	 *
+	 * @param modules The modules to run, in any order.
+	 * @param registrar The host's typed extension registry, with its
+	 *            points already declared.
+	 *
+	 * @return the booted runtime, ready to dispatch triggers.
+	 *
+	 * @throws ModuleResolutionException if the manifests do not resolve
+	 *             (propagated from {@link ModuleResolver} untouched).
+	 * @throws ModuleActivationException if a module's
+	 *             {@code register(ExtensionRegistry)} or an eager
+	 *             {@code start()} throws.
+	 */
+	public static ModuleRuntime boot(Collection<JlsModule> modules,
+			ExtensionRegistry registrar)
 			throws ModuleResolutionException,
 			ModuleActivationException {
 
@@ -151,7 +194,7 @@ public final class ModuleRuntime {
 		for (int i = 0; i < snapshot.size(); i++) {
 			byId.put(manifests.get(i).id(), snapshot.get(i));
 		}
-		ModuleRuntime runtime = new ModuleRuntime(order, byId);
+		ModuleRuntime runtime = new ModuleRuntime(order, byId, registrar);
 		runtime.registerAll();
 		runtime.startEager();
 		return runtime;
@@ -249,6 +292,22 @@ public final class ModuleRuntime {
 	} // end of demand method
 
 	/**
+	 * The typed extension registry these modules registered into. The
+	 * host declared its points before boot; every module contributed its
+	 * implementations during phase 1, so consumers read the accumulated
+	 * contributions back here in deterministic contribution (topological
+	 * register) order.
+	 *
+	 * @return the registry passed to {@link #boot(Collection,
+	 *         ExtensionRegistry)}, or the empty registry the
+	 *         {@link #boot(Collection)} overload created.
+	 */
+	public ExtensionRegistry extensionRegistry() {
+
+		return extensionRegistry;
+	} // end of extensionRegistry method
+
+	/**
 	 * The ids of every started module, in the order they started.
 	 *
 	 * @return an immutable snapshot of the start log.
@@ -273,7 +332,8 @@ public final class ModuleRuntime {
 	} // end of isStarted method
 
 	/**
-	 * Phase 1: {@link JlsModule#register()} on every module, in
+	 * Phase 1: {@link JlsModule#register(ExtensionRegistry)} on every
+	 * module, in
 	 * topological order, exactly once.
 	 *
 	 * @throws ModuleActivationException if a registration throws,
@@ -283,7 +343,7 @@ public final class ModuleRuntime {
 
 		for (Map.Entry<String, JlsModule> e : modulesById.entrySet()) {
 			try {
-				e.getValue().register();
+				e.getValue().register(extensionRegistry);
 			} catch (RuntimeException cause) {
 				throw new ModuleActivationException("module '"
 						+ e.getKey() + "' failed during register",

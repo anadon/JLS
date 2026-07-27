@@ -1,5 +1,9 @@
 package jls;
 
+import jls.boot.JlsModules;
+import jls.module.ModuleActivationException;
+import jls.module.ModuleResolutionException;
+
 /**
  * Main JLS class.
  * Sets up the exception handler, then has JLSStart do the rest of the work.
@@ -43,6 +47,21 @@ public final class JLS  {
 		// untouched) but before anything can initialize AWT, because
 		// awt.toolkit.name is read exactly once, at toolkit creation
 		ToolkitPolicy.apply();
+
+		// wire the compiled-in subsystems as modules and boot them
+		// through the resolve → register → start path (issue #220):
+		// this populates the typed extension registry with every
+		// built-in contribution (elements, palette, HDL emitters) but
+		// nothing reads it for dispatch yet, so behavior is unchanged in
+		// every run mode and stays pinned by the golden suite. The
+		// compiled-in set is fixed, so a resolution or activation
+		// failure is an unrecoverable internal error, not a user fault
+		try {
+			JlsModules.boot();
+		} catch (ModuleResolutionException | ModuleActivationException e) {
+			throw new IllegalStateException(
+					"compiled-in module boot failed", e);
+		}
 
 		JLSStart.start(exHandler);
 	} // end of main method

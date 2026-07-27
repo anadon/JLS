@@ -53,22 +53,27 @@ class ArchitectureRulesTest {
 	}
 
 	/**
-	 * The HDL emitters are internal to jls.hdl; the one sanctioned
-	 * consumer outside the package is the CLI wiring point in
-	 * JLSStart, which instantiates the emitter chosen by the output
-	 * file extension (issue #60). Element classes must not grow
-	 * direct emitter knowledge - per-element HDL text lives behind
-	 * the exporter walk.
+	 * The HDL emitters are internal to jls.hdl; the sanctioned
+	 * consumers outside the package are the two wiring points — the
+	 * CLI point in JLSStart, which instantiates the emitter chosen by
+	 * the output file extension (issue #60), and the compiled-in
+	 * module boot assembly in {@code jls.boot}, which contributes the
+	 * built-in emitters to the {@code hdl.exporter} extension point at
+	 * startup (issue #220). Element classes must not grow direct
+	 * emitter knowledge - per-element HDL text lives behind the
+	 * exporter walk.
 	 */
 	@Test
 	void hdlInternalsAreOnlyWiredFromTheCli() {
 		noClasses()
 				.that().resideOutsideOfPackage("jls.hdl..")
+				.and().resideOutsideOfPackage("jls.boot..")
 				.and().doNotHaveFullyQualifiedName("jls.JLSStart")
 				.should().dependOnClassesThat()
 				.resideInAPackage("jls.hdl..")
-				.because("HDL export is reached through the JLSStart"
-						+ " wiring point only (issue #60)")
+				.because("HDL export is reached through the JLSStart CLI"
+						+ " wiring point (issue #60) or the jls.boot"
+						+ " module boot assembly (issue #220) only")
 				.check(classes);
 	}
 

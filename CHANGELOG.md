@@ -8,6 +8,21 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- The editor palette is now generated from a declarative table (#78):
+  `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
+  group, help topic per element — the GUI half of the two-layer
+  descriptor split whose core half is `jls.elem.ElementType`) and
+  `jls.edit.Palette` (all 30 entries in the 8 historical toolbar
+  groups, each group carrying its grid shape).
+  `SimpleEditor.makeElements` builds the toolbar and "elements" menu
+  from the table, so adding an element to the palette is one registry
+  row plus one palette row instead of a hand-rolled button block, and
+  the new headless `PaletteContractTest` makes a registered element
+  type without a palette row — or with a missing icon, duplicate
+  tooltip, blank help topic, or overfull group grid — a build
+  failure. The toolbar the user sees is unchanged (the Import button
+  stays hand-coded; `SubCircuit`, `WireEnd`, and `TestGen` are the
+  documented non-palette types).
 - Board-aware HDL export, first slice (#213): `-export` now accepts
   `-board <name>` plus `-pins <file>` and writes a pin-constraint file
   (`.pcf`) next to the exported HDL, generated from the same model walk

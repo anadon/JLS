@@ -6,12 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -21,6 +19,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 import jls.Circuit;
+import jls.edit.Palette;
+import jls.edit.PaletteEntry;
 import jls.elem.Element;
 
 /**
@@ -31,8 +31,8 @@ import jls.elem.Element;
  * peer-controlled string reaching reflective instantiation). So the
  * list is pinned against both independent sources of truth - the
  * save-format writer literals in {@code jls.elem} (what snapshots can
- * legitimately contain) and the palette contract in
- * {@code HelpTopicsTest} (what users can create) - and the rejection
+ * legitimately contain) and the palette table in
+ * {@code jls.edit.Palette} (what users can create, #78) - and the rejection
  * behavior is pinned as typed, total, and strictly tighter than the
  * file loader's reflective gate.
  */
@@ -107,27 +107,30 @@ class ElementVocabularyTest {
 
 	/**
 	 * The issue #170 registry cross-check: the vocabulary is the
-	 * palette-visible element set (the same list HelpTopicsTest pins
-	 * against the help system, read from there so the two cannot
-	 * drift) plus WireEnd, the one non-palette save token - wires are
-	 * save-file structure, not palette elements. A vocabulary that
-	 * admitted anything else would be admitting a class users cannot
-	 * create, which is exactly the helper-class hole.
+	 * palette-visible element set (read from the palette table itself,
+	 * {@code jls.edit.Palette} - the #78 descriptor table that
+	 * HelpTopicsTest also derives its inventory from, so the two cannot
+	 * drift) plus SubCircuit (user-creatable through the hand-coded
+	 * Import button rather than a palette entry) plus WireEnd, the one
+	 * non-palette save token - wires are save-file structure, not
+	 * palette elements. A vocabulary that admitted anything else would
+	 * be admitting a class users cannot create, which is exactly the
+	 * helper-class hole.
 	 */
 	@Test
-	void vocabularyIsThePaletteSetPlusWireEnd() throws Exception {
+	void vocabularyIsThePaletteSetPlusWireEnd() {
 
-		Field palette = Class.forName("jls.HelpTopicsTest")
-				.getDeclaredField("PALETTE_ELEMENT_TOPICS");
-		palette.setAccessible(true);
-		Set<String> expected = new TreeSet<>(
-				((Map<?, ?>) palette.get(null)).keySet().stream()
-						.map(Object::toString).toList());
+		Set<String> expected = new TreeSet<>();
+		for (PaletteEntry entry : Palette.entries()) {
+			expected.add(entry.type().tag());
+		}
+		expected.add("SubCircuit");
 		expected.add("WireEnd");
 
 		assertEquals(expected,
 				new TreeSet<>(ElementVocabulary.allowedTypes()),
-				"the vocabulary must be the palette set plus WireEnd");
+				"the vocabulary must be the palette set plus SubCircuit "
+						+ "and WireEnd");
 	}
 
 	/**

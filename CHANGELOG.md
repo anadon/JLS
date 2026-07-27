@@ -24,6 +24,16 @@ All notable changes to JLS are documented here. The format follows
   events, and tokens are graceful no-ops. Pure JVM, deterministic
   across discovery order; pinned by the new headless
   `ModuleRuntimeTest`.
+- Modern-Java program closeout gates (#96): a new headless
+  `ModernJavaGatesTest` scans `src/` and `test/` and fails the build
+  on any `Cloneable` in an `implements`/`extends` clause (#94 retired
+  it for explicit copy construction) or any NullAway suppression (a `@SuppressWarnings`
+  naming NullAway, or `castToNonNull` — #93 closed with zero), with
+  an empty in-test allowlist as the recorded escape hatch;
+  CONTRIBUTING gains the #95 sealed-dispatch conventions
+  (three-population `instanceof` rule, no `default` arm on
+  sealed/`Orientation` switches, final leaves pinned by
+  `SealedHierarchyTest`).
 - The editor palette is now generated from a declarative table (#78):
   `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
   group, help topic per element — the GUI half of the two-layer

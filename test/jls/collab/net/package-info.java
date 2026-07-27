@@ -7,5 +7,13 @@
  * model (reconnect skips verification, key change warns - P4's model
  * layer). The socket-confinement ratchet (P3) lives in {@code
  * jls.SocketConfinementRatchetTest} beside the repo's other ratchets.
+ * The transport seam (issue #163) is covered three ways: {@code
+ * LoopbackTransportTest} pins the in-memory pair's own semantics,
+ * {@code TransportContractTest} runs one contract suite against both
+ * the loopback pair and a real handshaken socket pair so the test
+ * double cannot drift from the real transport, and {@code
+ * ChaosTransportTest} pins the seeded drop/duplicate/reorder/partition
+ * decorator ({@code ChaosTransport}, in this tree) that the
+ * replication stack's fault-injection tests will drive.
  */
 package jls.collab.net;

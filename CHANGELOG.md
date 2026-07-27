@@ -21,6 +21,20 @@ All notable changes to JLS are documented here. The format follows
   the edge it lies on, rotation permutes faces by exactly a quarter
   turn, and gate declarations agree with pure geometry at all four
   orientations.
+- The collab transport seam (#163, #168 Stage 1a): a new
+  `jls.collab.net.Transport` interface — opaque in-order frames,
+  blocking receive, null on clean close — extracted verbatim from
+  `SocketSession` (which now implements it, with no behavior change),
+  plus `LoopbackTransport.pair()`, an in-memory two-endpoint
+  implementation over bounded queues that enforces the same
+  1 MiB payload cap and clean-close semantics without constructing a
+  socket. The test tree gains a seeded `ChaosTransport` decorator
+  (drop/duplicate/reorder probabilities plus `partition()`/`heal()`,
+  deterministic per seed, never inventing or corrupting bytes) and a
+  `TransportContractTest` that runs one contract suite against both
+  the loopback pair and a real handshaken socket pair, so the test
+  double the replication stack (#169/#171) will develop against
+  cannot drift from the real transport.
 - StateMachine elements now export to Verilog and VHDL (#59): a
   binary-encoded state register plus an edge-triggered clocked case,
   with state codes assigned in canonical (#180) order except the

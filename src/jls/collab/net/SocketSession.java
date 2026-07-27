@@ -48,7 +48,7 @@ import org.jspecify.annotations.Nullable;
  * construct no listener and therefore no session, so no port is ever
  * opened without an explicit Share/Join gesture (issue #168 P3).</p>
  */
-public final class SocketSession implements Closeable {
+public final class SocketSession implements Transport {
 
 	/**
 	 * Hostile-input cap on a single handshake message's length prefix.

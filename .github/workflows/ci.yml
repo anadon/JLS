@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build (JDK ${{ matrix.java }})
+    name: Build (Linux, JDK ${{ matrix.java }})
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
@@ -105,18 +105,150 @@ jobs:
               print(f"| {c.get('type')} | {cov} | {mis} | {pct:.1f}% |")
           EOF
 
-  # Windows test lane (issue #111): all three Windows-only failures
-  # (CRLF round-trip, held file handles blocking @TempDir cleanup,
-  # golden-file CRLF checkout) shipped because no Windows leg ran the
-  # suite. Runs headless — the display-tagged suite and the HDL
-  # simulator suites skip themselves — and skips the JaCoCo ratchet,
-  # whose floors are calibrated against the fuller Linux run.
-  # Advisory while it stabilizes (same promotion rule as gui-wayland:
-  # required once 20 consecutive runs show at most one failure).
+  # Windows test lane (issue #111): all three original Windows-only
+  # failures (CRLF round-trip, held file handles blocking @TempDir
+  # cleanup, golden-file CRLF checkout) shipped because no Windows leg
+  # ran the suite. The parity gap is now closing in stages. The HDL
+  # simulator suites are armed via the oss-cad-suite bundle (Stage W2,
+  # step below). The @Tag("display") suite — which self-skips under
+  # java.awt.headless via assumeFalse(GraphicsEnvironment.isHeadless()) —
+  # runs FIRST-LIGHT here on the runner's real interactive window station
+  # (Stage W3: the mvn step passes -Djls.test.headless=false; unlike
+  # Linux, Windows needs no xvfb equivalent). This is advisory first
+  # light: some display tests carry Xvfb/WM-less timing and
+  # pointer-exclusivity workarounds (the Robot-driven gesture/keyboard/
+  # popup flows), so substrate-specific failures may surface — that is
+  # the point of an advisory lane, and #265 Stage 2 owns the taxonomy;
+  # they are NOT pre-muted here. The JaCoCo ratchet stays skipped
+  # (Stage W4), its floors being calibrated against the fuller Linux run,
+  # until the suites converge. The JDK matrix mirrors the Linux build
+  # job: JDK 25 is the required-baseline leg — its check name
+  # `Build (Windows, JDK 25)` is byte-stable so the Stage W1 promotion
+  # can register it unchanged — and JDK 26 is the advisory
+  # forward-compatibility leg (Stage W5). Advisory while it stabilizes
+  # (same promotion rule as gui-wayland: required once 20 consecutive
+  # runs show at most one failure); the job-level continue-on-error
+  # covers BOTH matrix legs.
   windows:
-    name: Build (Windows, JDK 25)
+    name: Build (Windows, JDK ${{ matrix.java }})
     if: github.event_name != 'schedule'
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 25 (current LTS) is the required baseline; JDK 26 is the
+        # advisory forward-compatibility leg (issue #111 Stage W5),
+        # mirroring the Linux build matrix. The whole job is
+        # continue-on-error, so both legs stay advisory while the lane
+        # accrues its Stage W1 stability record.
+        java: [25, 26]
+    continue-on-error: true
+    env:
+      # ---- oss-cad-suite pin (issue #111 Stage W2) -------------------
+      # YosysHQ's oss-cad-suite bundle ships icarus-verilog, ghdl, AND
+      # yosys together in one archive; choco/MSYS2 package the three less
+      # consistently, so the bundle is what we standardize on. Pinned to
+      # the dated 2026-07-26 release. The Windows asset is a 7-Zip
+      # self-extracting .exe whose payload is an oss-cad-suite/ tree.
+      OSS_CAD_URL: https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-07-26/oss-cad-suite-windows-x64-20260726.exe
+      # Integrity model mirrors the gui-wayland JBR pin: HTTPS/TLS to
+      # github.com is the trust boundary for the download; the checksum
+      # below is fail-closed hardening on top. Unlike JBR this one is a
+      # REAL pin: GitHub's release-asset `digest` metadata publishes the
+      # SHA-256, read here via `gh api repos/YosysHQ/oss-cad-suite-build/
+      # releases/tags/2026-07-26` (asset digest field) - not invented, not
+      # a placeholder. A mismatch degrades the advisory lane (skip), it
+      # never installs an unexpected binary.
+      OSS_CAD_SHA256: df275642362cd27f1cb90a7408818b6c2ed5292c974a754074d41c9250487ecc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      # Arm the HDL-simulator golden tests (IverilogCompileTest,
+      # GhdlCompileTest, and the yosys-armed netlist legs) on Windows by
+      # fetching the version-pinned oss-cad-suite bundle and prepending
+      # its bin/ to GITHUB_PATH (issue #111 Stage W2). The tool locator's
+      # PATHEXT/.exe fix (this PR's jls.hdl.ToolLocator) is what lets the
+      # suffixed binaries resolve. Best-effort, mirroring the gui-wayland
+      # JBR idiom: a download/checksum/extract failure emits a ::notice
+      # and skips the toolchain (exit 0), so the advisory lane degrades to
+      # today's behaviour (the HDL suites self-skip) instead of failing on
+      # a CDN hiccup.
+      - name: Arm the HDL simulator toolchain (best-effort)
+        id: hdl
+        shell: bash
+        run: |
+          set -uo pipefail
+          dest="$RUNNER_TEMP/oss-cad.exe"
+          extract="$RUNNER_TEMP/oss-cad"
+          if ! curl -fsSL --retry 3 -o "$dest" "$OSS_CAD_URL"; then
+            echo "::notice title=windows HDL toolchain skipped::could not download oss-cad-suite from $OSS_CAD_URL; HDL tests will self-skip"
+            echo "hdl=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          observed="$(sha256sum "$dest" | cut -d' ' -f1)"
+          echo "observed oss-cad-suite sha256: $observed"
+          if [[ "$observed" != "$OSS_CAD_SHA256" ]]; then
+            echo "::notice title=windows HDL toolchain skipped::oss-cad-suite sha256 mismatch (pinned $OSS_CAD_SHA256, got $observed); HDL tests will self-skip"
+            echo "hdl=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "integrity: matches maintainer-pinned OSS_CAD_SHA256"
+          # The asset is a 7-Zip SFX; 7z (present on windows-latest)
+          # unpacks its oss-cad-suite/ payload without running the stub.
+          mkdir -p "$extract"
+          if ! 7z x -y -o"$extract" "$dest" >/dev/null; then
+            echo "::notice title=windows HDL toolchain skipped::could not extract oss-cad-suite; HDL tests will self-skip"
+            echo "hdl=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bindir="$extract/oss-cad-suite/bin"
+          if [[ ! -d "$bindir" ]]; then
+            echo "::notice title=windows HDL toolchain skipped::oss-cad-suite/bin not found after extract; HDL tests will self-skip"
+            echo "hdl=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Prepend to PATH for the later mvn step, in Windows form so the
+          # JVM's PATH search sees it; the locator resolves iverilog.exe /
+          # ghdl.exe / yosys.exe via PATHEXT.
+          winbin="$(cygpath -w "$bindir" 2>/dev/null || echo "$bindir")"
+          echo "$winbin" >> "$GITHUB_PATH"
+          echo "hdl=armed" >> "$GITHUB_OUTPUT"
+
+      # -Djls.test.headless=false arms the display-tagged surefire
+      # execution (pom.xml `display-tests`) on the runner's real window
+      # station — Stage W3 first light. The strict headless main
+      # execution runs regardless; the JaCoCo ratchet stays skipped
+      # (Stage W4). Advisory: a display test whose Xvfb-tuned timing
+      # assumptions don't hold on the Windows window station may fail
+      # here — expected, and continue-on-error keeps it non-blocking.
+      - name: Build, lint, and analyze
+        shell: bash
+        run: mvn -B verify -Djacoco.skip=true -Djls.test.headless=false
+
+  # macOS test lane (issue #265): mirrors the Windows lane above to close
+  # the platform-parity gap — until now the only macos-latest job was the
+  # dmg-packaging reproducibility check, which runs no tests, leaving
+  # macOS-specific behaviour (case-insensitive default volume, window-server
+  # AWT/HeadlessException differences, BSD shasum toolchain, resource-fork
+  # noise) unverified. Runs headless — the display-tagged suite and the HDL
+  # simulator suites skip themselves — and skips the JaCoCo ratchet, whose
+  # floors are calibrated against the fuller Linux run. The JaCoCo ratchet,
+  # SpotBugs, HDL-simulator, and Agda-proof suites stay Linux-only by design.
+  # Advisory while it stabilizes (same #188/#101 promotion rule as
+  # gui-wayland/windows: required once 20 consecutive runs show at most one
+  # failure). Carries a byte-stable name: from day one so Stage 3 can register
+  # it as a required check without churn.
+  macos:
+    name: Build (macOS, JDK 25)
+    if: github.event_name != 'schedule'
+    runs-on: macos-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,6 +260,27 @@ jobs:
           java-version: 25
           cache: maven
 
+      # Arm the HDL-simulator golden tests (IverilogCompileTest,
+      # GhdlCompileTest, and the yosys-armed netlist legs) on macOS via
+      # Homebrew (issue #265 Stage 4). The formulae install unsuffixed
+      # binaries (iverilog, ghdl, yosys), so jls.hdl.ToolLocator finds
+      # them as-is. Best-effort, mirroring the gui-wayland JBR idiom: a
+      # brew failure emits a ::notice and skips (exit 0) so the advisory
+      # lane degrades to today's behaviour (the HDL suites self-skip)
+      # instead of failing on a transient Homebrew/network hiccup. Formula
+      # names are the plausible current ones (icarus-verilog provides
+      # iverilog); first light may adjust if a tap/name has drifted.
+      - name: Arm the HDL simulator toolchain (best-effort)
+        id: hdl
+        shell: bash
+        run: |
+          if brew install icarus-verilog ghdl yosys; then
+            echo "hdl=armed" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=macOS HDL toolchain skipped::brew install icarus-verilog ghdl yosys failed; the HDL-simulator golden tests will self-skip on this run"
+            echo "hdl=skipped" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build, lint, and analyze
         shell: bash
         run: mvn -B verify -Djacoco.skip=true
@@ -138,7 +291,7 @@ jobs:
   # proof no longer checks. ProofBridgeTest (in the build job) pins the
   # proof's modelling assumptions to the Java implementation.
   proofs:
-    name: Verify Agda proofs
+    name: Verify Agda proofs (Linux)
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
@@ -154,7 +307,7 @@ jobs:
           cp -r /usr/share/agda-stdlib "$RUNNER_TEMP/agda-stdlib"
           LC_ALL=C.UTF-8 agda -i "$RUNNER_TEMP/agda-stdlib" -i proofs proofs/SpatialIndexCorrectness.agda
 
-  # First-light Wayland GUI lane (issue #101): boots the JLS GUI on
+  # GUI boot Wayland lane (issue #101): boots the JLS GUI on
   # JetBrains Runtime's experimental WLToolkit (Project Wakefield)
   # against a headless sway compositor - no X11 anywhere - and captures
   # a screenshot, the compositor tree, and JLS's stderr as artifacts.
@@ -163,16 +316,34 @@ jobs:
   # JLS-side (exit 1) or upstream JBR/sway (exit 2) per #101 section 9.
   # Runs on every event including the nightly cron (which runs ONLY this
   # job) so the #101 P3 stability record accrues daily.
-  # continue-on-error while the lane stabilizes (#101 H2/P3: it becomes
-  # a required check once 20 consecutive runs show at most one failure).
+  # HARD GATE since #101 (H2/P3 promotion rule): this lane went 20/20 green
+  # on the last twenty non-cron ci.yml runs, so a red run here now fails CI.
+  # The green record (accrued while the job was named "GUI first light
+  # (Wayland, JBR)", renamed to "GUI boot (Linux, Wayland/JBR)" at this
+  # promotion — the OS family is named so the check list reads uniformly):
+  #   push: 30233449347, 30277051630, 30305223433, 30305876276, 30306600940,
+  #         30307172627, 30307512700, 30307910186
+  #   PR:   30284055608, 30284086894, 30304849319, 30304947992, 30305419961,
+  #         30305915681, 30305947175, 30305994644, 30306632400, 30306659352,
+  #         30307205047, 30307543324
+  # The only intervening non-green events are the nightly cron (7/7 green,
+  # gui-wayland-only) and run 30226493722 (merge of #244), a whole-master
+  # `mvn package` breakage where every build/installer/GUI job failed at the
+  # shared "Build jar" step and BOTH rigs skipped (never ran) — not a lane
+  # flake, and since fixed. Promotion drops continue-on-error (the workflow
+  # half); the maintainer then registers the NEW job name below ("GUI boot
+  # (Linux, Wayland/JBR)") as a required branch-protection check (repo settings).
+  # The lane is renamed here because "first light" stops being true the
+  # moment it gates — and since required-check registration has not happened
+  # yet, the rename is free (no lockstep branch-protection edit needed).
+  # A JBR CDN outage still can't wedge the gate: the
+  # Download-JBR step emits a ::notice and sets skip=true (exit 0 → success,
+  # rig steps skip), so only a genuine GUI regression turns this red.
   gui-wayland:
-    name: GUI first light (Wayland, JBR)
+    name: GUI boot (Linux, Wayland/JBR)
     runs-on: ubuntu-latest
-    # advisory while first-light stabilizes (issue #101): runs on every event
-    # (incl. the nightly cron, which runs ONLY this job) so the P3 stability
-    # record accrues, but a failure — e.g. the unpinned JBR download failing
-    # its TOFU checksum until a maintainer pins JBR_SHA256 — never blocks
-    continue-on-error: true
+    # runs on every event including the nightly cron (which runs ONLY this
+    # job) so the P3 stability record keeps accruing daily
     env:
       # ---- JBR pin (issues #101/#105) --------------------------------
       # JetBrains Runtime 25.0.3b508.16 (tag jbr-release-25.0.3b508.16),
@@ -181,7 +352,7 @@ jobs:
       JBR_URL: https://cache-redirector.jetbrains.com/intellij-jbr/jbr-25.0.3-linux-x64-b508.16.tar.gz
       # Integrity model (see the "Download JetBrains Runtime" step):
       #   - HTTPS/TLS authenticates the JetBrains CDN for the download itself;
-      #     that is the trust boundary the first-light lane relies on.
+      #     that is the trust boundary the GUI boot lane relies on.
       #   - A maintainer-pinned JBR_SHA256 below is an OPTIONAL hardening: when
       #     set to a real hash it is verified fail-closed, additionally
       #     defending against a CDN compromise. To pin it, run this once on any
@@ -189,7 +360,7 @@ jobs:
       #     observed digest, so you can copy it from a green log):
       #        curl -fsSL <JBR_URL> | sha256sum
       #   - While it stays the UNVERIFIED- placeholder the lane does NOT gate on
-      #     a hash: first light (#101) runs against the TLS-fetched JBR so the
+      #     a hash: the GUI boot lane (#101) runs against the TLS-fetched JBR so the
       #     job exercises the GUI rather than blocking on an unpinned toolchain.
       #     (The Wayland work does not depend on a checksum; the checksum only
       #     hardens the toolchain download.)
@@ -236,7 +407,7 @@ jobs:
           set -euo pipefail
           dest="$RUNNER_TEMP/jbr.tar.gz"
           # Fetch over HTTPS; TLS authenticates the JetBrains CDN. A download
-          # failure skips first-light (nothing to run), it does not fail-close.
+          # failure skips the GUI boot lane (nothing to run), it does not fail-close.
           if ! curl -fsSL --retry 3 -o "$dest" "$JBR_URL"; then
             echo "::notice title=gui-wayland skipped::could not download JBR from $JBR_URL"
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -253,9 +424,9 @@ jobs:
             fi
             echo "integrity: matches maintainer-pinned JBR_SHA256"
           else
-            # Unpinned: TLS is the trust boundary; run first-light rather than
-            # gate the GUI work on a hash. Pin JBR_SHA256=$observed to harden.
-            echo "::notice title=JBR unpinned::first-light runs against the TLS-fetched JBR; set JBR_SHA256=$observed (issue #101) to additionally harden against a CDN compromise"
+            # Unpinned: TLS is the trust boundary; run the GUI boot lane rather
+            # than gate the GUI work on a hash. Pin JBR_SHA256=$observed to harden.
+            echo "::notice title=JBR unpinned::the GUI boot lane runs against the TLS-fetched JBR; set JBR_SHA256=$observed (issue #101) to additionally harden against a CDN compromise"
           fi
           mkdir -p "$RUNNER_TEMP/jbr"
           tar -xzf "$dest" -C "$RUNNER_TEMP/jbr" --strip-components=1
@@ -266,7 +437,7 @@ jobs:
         if: steps.jbr.outputs.skip == 'false'
         run: mvn -B -DskipTests package
 
-      - name: Run the Wayland first-light rig
+      - name: Run the Wayland GUI boot rig
         if: steps.jbr.outputs.skip == 'false'
         run: JBR_HOME="$RUNNER_TEMP/jbr" ARTIFACTS_DIR="$RUNNER_TEMP/wayland-artifacts" scripts/wayland-rig.sh
 
@@ -274,11 +445,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: wayland-first-light
+          name: wayland-gui-boot
           path: ${{ runner.temp }}/wayland-artifacts/
           if-no-files-found: ignore
 
-  # First-light X11 GUI lane: boots the REAL JLS application entry point
+  # GUI boot X11 lane: boots the REAL JLS application entry point
   # (main class jls.JLS, via the shaded jar's Main-Class) under a headless
   # Xvfb X server - no GPU, no physical display, no window manager - and
   # proves the actual app window MAPS and can be screenshotted. X11 via
@@ -296,16 +467,32 @@ jobs:
   # (that is Wayland-only) and unsets WAYLAND_DISPLAY, so jls.ToolkitPolicy
   # keeps the X11 default (no app change needed).
   #
-  # continue-on-error while the lane's stability record accrues (same
-  # promotion rule as gui-wayland/windows: required once 20 consecutive
-  # runs show at most one failure).
+  # HARD GATE since #101 (H2/P3 promotion rule): this lane went 20/20 green
+  # on the last twenty non-cron ci.yml runs, so a red run here now fails CI.
+  # The green record (accrued while the job was named "GUI first light
+  # (X11, Xvfb)", renamed to "GUI boot (Linux, X11/Xvfb)" at this promotion —
+  # the OS family is named so the check list reads uniformly):
+  #   push: 30233449347, 30277051630, 30305223433, 30305876276, 30306600940,
+  #         30307172627, 30307512700, 30307910186
+  #   PR:   30284055608, 30284086894, 30304849319, 30304947992, 30305419961,
+  #         30305915681, 30305947175, 30305994644, 30306632400, 30306659352,
+  #         30307205047, 30307543324
+  # This lane skips schedule events by design (the nightly cron runs
+  # gui-wayland alone), so it has no intervening cron gap; run 30226493722
+  # (merge of #244) was a whole-master `mvn package` breakage where every
+  # build/installer/GUI job failed at the shared "Build jar" step and BOTH
+  # rigs skipped (never ran) — not a lane flake, and since fixed. Promotion
+  # drops continue-on-error (the workflow half); the maintainer then registers
+  # the NEW job name below ("GUI boot (Linux, X11/Xvfb)") as a required
+  # branch-protection check (repo settings). Renamed here because "first
+  # light" stops being true once the lane gates, and required-check
+  # registration has not happened yet, so the rename costs nothing.
   gui-x11:
-    name: GUI first light (X11, Xvfb)
+    name: GUI boot (Linux, X11/Xvfb)
     # runs on push/PR like the other jobs; the nightly cron runs ONLY
     # gui-wayland (see the header), so this lane skips schedule events
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    continue-on-error: true
     env:
       # ---- P2 pixel gate --------------------------------------------
       # 0 = record the AE metric without gating. TODO(maintainer): after
@@ -340,15 +527,225 @@ jobs:
       - name: Build jar
         run: mvn -B -DskipTests package
 
-      - name: Run the X11 first-light rig
+      - name: Run the X11 GUI boot rig
         run: ARTIFACTS_DIR="$RUNNER_TEMP/x11-artifacts" scripts/x11-rig.sh
 
       - name: Upload rig artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: x11-first-light
+          name: x11-gui-boot
           path: ${{ runner.temp }}/x11-artifacts/
+          if-no-files-found: ignore
+
+  # GUI boot macOS lane (issue #265 Stage 9): boots the REAL JLS application
+  # entry point (main class jls.JLS, via the shaded jar's Main-Class) on the
+  # runner's REAL Quartz WindowServer - there is NO Xvfb/compositor to stand up
+  # (unlike the Linux lanes), so the jar boots directly - and proves the actual
+  # app window MAPS and can be screenshotted non-blank. It is the macOS analogue
+  # of gui-wayland/gui-x11 and Stage 9 of #265; the Windows analogue is the
+  # windows-gui lane below (Stage W7 of #111).
+  #
+  # DISTINCT from the @Tag("display") JUnit suite (which exercises UI classes
+  # in-process): this lane LAUNCHES THE APP as a user would (java -jar) and
+  # asserts the real window comes up. The rig maps a minimal HelloSwingControl
+  # frame first, so a failure is classified JLS-side (exit 1) or environment
+  # (exit 2). Window presence is read via System Events (osascript) and the
+  # screenshot via the built-in screencapture; a hosted-runner TCC block (Screen
+  # Recording / Accessibility withheld) shows up on the control frame too and is
+  # classified exit 2, never blamed on JLS. Non-blank proof matches the Linux
+  # idiom (unique-color count > 1) using only built-ins (screencapture + sips +
+  # a pure-stdlib python BMP reader), so it needs no ImageMagick/brew/network.
+  # See scripts/macos-rig.sh for the full contract.
+  #
+  # GENUINE FIRST LIGHT: this rig has never run on a real macOS runner - its
+  # first execution is here, and the hosted image's TCC-permission posture is
+  # unknown until then. Advisory continue-on-error while the record accrues;
+  # promotion to a required check follows the #188/#101 rule (required once 20
+  # consecutive runs show at most one failure), then drop continue-on-error and
+  # register the byte-stable name "GUI boot (macOS, WindowServer)" as a required
+  # branch-protection check with recorded run IDs (mirroring
+  # installer-reproducibility-aarch64).
+  #
+  # FIRST-LIGHT TAXONOMY (#265 Stage 2), tcc-permission: the runner's first light
+  # (run 30322375242) mapped the control window via System Events but its window
+  # capture had 0 unique colors - Screen Recording (TCC) is withheld from the
+  # non-interactive CI session. Hosted runners may NEVER grant it, so a blank
+  # control-window capture no longer exits 2 (which would be permanently red for a
+  # runner-policy reason): the rig now enters DEGRADED MODE - it warns, launches
+  # the real jar, and gates on the JLS window MAPPING via System Events (the boot
+  # proof the maintainer relies on), skipping the pixel proofs. The pixel proof
+  # stays contingent on TCC (tracked in #265 Stage 9); the window-map is the
+  # reliable per-run boot guarantee. The fail-open TCC pre-grant step below
+  # attempts the community sqlite3 workaround (SIP usually defeats it - that is
+  # why it is best-effort). exit 2 is still reserved for readiness-capture failure,
+  # a control window that never maps, and osascript denial (all break the map proof).
+  macos-gui:
+    name: GUI boot (macOS, WindowServer)
+    if: github.event_name != 'schedule'
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # Guard the rig's exit 0/1/2 classification on every run by driving the
+      # unmodified rig against a stub toolchain - no real WindowServer or GUI
+      # needed. A regression here is caught fast and for free.
+      - name: Self-test the rig control flow
+        run: bash scripts/macos-rig-selftest.sh
+
+      # Fail-open TCC pre-grant attempt (#265 Stage 9, taxonomy tcc-permission):
+      # try to pre-authorize Screen Recording (kTCCServiceScreenCapture) for the
+      # capturing process by inserting a row into the USER TCC.db via sqlite3 - the
+      # documented community workaround for headless/CI macOS. This FREQUENTLY
+      # fails: the system TCC.db is SIP-protected (even root cannot write it) and
+      # the per-user DB may be locked or schema-shifted between macOS releases -
+      # which is exactly WHY this is fail-open (continue-on-error + a trailing
+      # `exit 0`). We attempt it, re-probe a capture for the log, and proceed
+      # either way; if Screen Recording stays withheld the rig runs in DEGRADED
+      # MODE (window-map is the boot gate). It can never turn the lane red.
+      - name: Pre-grant Screen Recording (TCC, fail-open)
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          db="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+          if [ ! -f "$db" ]; then
+            echo "TCC: no per-user TCC.db at $db yet; nothing to pre-grant (rig will degrade gracefully)"
+            exit 0
+          fi
+          # Only attempt if the expected schema (an `access` table with a
+          # `service`/`client`/`auth_value` shape) is present; otherwise a schema
+          # drift would just error out. auth_value=2 == allowed; client_type 1 ==
+          # absolute path, 0 == bundle id.
+          if ! sqlite3 "$db" "SELECT name FROM sqlite_master WHERE type='table' AND name='access';" 2>/dev/null | grep -q access; then
+            echo "TCC: access table not found (schema drift or DB locked); skipping (rig will degrade gracefully)"
+            exit 0
+          fi
+          ts=$(date +%s)
+          # Try the plausible responsible clients for screencapture on a runner.
+          for client in /usr/sbin/screencapture /bin/bash /bin/zsh com.apple.screencapture; do
+            case "$client" in /*) ctype=1 ;; *) ctype=0 ;; esac
+            if sqlite3 "$db" "INSERT OR REPLACE INTO access \
+                (service,client,client_type,auth_value,auth_reason,auth_version,flags,last_modified) \
+                VALUES ('kTCCServiceScreenCapture','$client',$ctype,2,2,1,0,$ts);" 2>/dev/null; then
+              echo "TCC: inserted kTCCServiceScreenCapture grant for $client (client_type $ctype)"
+            else
+              echo "TCC: could not insert grant for $client (expected under SIP / locked DB); rig will degrade gracefully"
+            fi
+          done
+          # Informational re-probe: capture a frame and report its size. The rig
+          # itself re-tests colors and decides normal vs DEGRADED mode.
+          probe="$RUNNER_TEMP/tcc-probe.png"
+          if screencapture -x -t png "$probe" 2>/dev/null; then
+            echo "TCC probe: screencapture wrote $(wc -c < "$probe") bytes (blank-vs-real is decided in-rig)"
+          else
+            echo "TCC probe: screencapture failed (informational only)"
+          fi
+          exit 0
+
+      - name: Build jar
+        run: mvn -B -DskipTests package
+
+      - name: Run the macOS GUI boot rig
+        run: ARTIFACTS_DIR="$RUNNER_TEMP/macos-artifacts" bash scripts/macos-rig.sh
+
+      - name: Upload rig artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-gui-boot
+          path: ${{ runner.temp }}/macos-artifacts/
+          if-no-files-found: ignore
+
+  # GUI boot Windows lane (issue #111 Stage W7): boots the REAL JLS application
+  # entry point (main class jls.JLS, via the shaded jar's Main-Class) on the
+  # runner's REAL interactive window station - there is NO Xvfb/compositor to
+  # stand up (unlike the Linux lanes) - and proves the actual app window MAPS
+  # and can be screenshotted non-blank. It is the Windows analogue of
+  # gui-wayland/gui-x11 and Stage W7 of #111; the macOS analogue is the macos-gui
+  # lane above (Stage 9 of #265).
+  #
+  # DISTINCT from the @Tag("display") JUnit suite (which exercises UI classes
+  # in-process): this lane LAUNCHES THE APP as a user would (java -jar) and
+  # asserts the real window comes up. The rig (PowerShell, shell: pwsh) maps a
+  # minimal HelloSwingControl frame first, so a failure is classified JLS-side
+  # (exit 1) or environment (exit 2). Window presence is polled from Get-Process
+  # MainWindowHandle (with a MainWindowTitle fallback); the screenshot is a
+  # System.Drawing Graphics.CopyFromScreen; the non-blank gate counts distinct
+  # sampled colors in the same script. A hosted non-interactive session handing
+  # back a blank/desktop-only frame shows up on the control frame too and is
+  # exit 2, never blamed on JLS. See scripts/windows-rig.ps1 for the full
+  # contract.
+  #
+  # GENUINE FIRST LIGHT: this rig has never run on a real Windows runner - its
+  # first execution is here (PowerShell was unavailable in the authoring
+  # sandbox, so only the exit-code classification was self-tested via injected
+  # stubs). A withheld station degrades to exit 2, never a hang: every wait loop
+  # is bounded by a Stopwatch. Advisory continue-on-error while the record
+  # accrues; promotion to a required check follows the #188/#101 rule (required
+  # once 20 consecutive runs show at most one failure), then drop
+  # continue-on-error and register the byte-stable name
+  # "GUI boot (Windows, WindowStation)" as a required branch-protection check
+  # with recorded run IDs (mirroring installer-reproducibility-aarch64).
+  #
+  # FIRST-LIGHT TAXONOMY (#265 Stage 2), ps-scope/error-misclassification: the
+  # runner's first light (run 30322375242) died with "The term 'Start-JavaProcess'
+  # is not recognized" and fell through as exit 1 (the JLS-side code) - a RIG bug
+  # misreported as an app failure. Cause: the production launch delegates were
+  # .GetNewClosure() script blocks, whose dynamic-module scope cannot see the
+  # script-scope Start-JavaProcess; the selftest never caught it because its
+  # injected stubs replaced the launch path. Fixed: the launch delegates are now
+  # top-level functions passed by reference (they resolve Start-JavaProcess like
+  # the other delegates), the entry point wraps every unhandled error as exit 2
+  # (rig/environment) instead of a bare pwsh exit 1, and the selftest now
+  # AST-parses + reachability-probes the production launch path so this bug class
+  # is a red test, not a first-light surprise.
+  windows-gui:
+    name: GUI boot (Windows, WindowStation)
+    if: github.event_name != 'schedule'
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # Guard the rig's exit 0/1/2 classification on every run by dot-sourcing
+      # the unmodified rig with -NoAutoRun and driving Invoke-GuiBootRig against
+      # injected stub delegates - no real window station or GUI needed.
+      - name: Self-test the rig control flow
+        shell: pwsh
+        run: ./scripts/windows-rig-selftest.ps1
+
+      - name: Build jar
+        shell: bash
+        run: mvn -B -DskipTests package
+
+      - name: Run the Windows GUI boot rig
+        shell: pwsh
+        env:
+          ARTIFACTS_DIR: ${{ runner.temp }}/windows-artifacts
+        run: ./scripts/windows-rig.ps1
+
+      - name: Upload rig artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-gui-boot
+          path: ${{ runner.temp }}/windows-artifacts/
           if-no-files-found: ignore
 
   # feed GitHub's dependency graph the resolved transitive tree so
@@ -388,7 +785,7 @@ jobs:
   # A mismatch fails the job and uploads both jars so diffoscope can
   # localize the offending input.
   reproducibility:
-    name: Reproducible build check
+    name: Reproducible build check (Linux)
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
@@ -565,6 +962,78 @@ jobs:
   # residual on demand). Revisit if a future jpackage exposes deterministic
   # GUID/ProductCode generation — the payload already being reproducible, that
   # lever alone would make the whole msi byte-identical.
+
+  # Windows msi build-smoke lane (#111 / #190): builds the jar and runs the SAME
+  # jpackage --type msi invocation the release/probe path uses - bash
+  # scripts/build-installer.sh, exactly as repro-installers.yml drives it on
+  # windows-latest (which preinstalls WiX; the git-bash uname reports MINGW so
+  # build-installer.sh takes its msi branch) - then asserts the .msi exists and
+  # is non-trivially sized and uploads it. No divergent flags: the msi is built
+  # by the unmodified installer script.
+  #
+  # BUILD-SMOKE ONLY - intentionally NOT reproducibility-checked. The msi's
+  # byte-level residual is jpackage's MSI relational-database streams (per-build
+  # component GUIDs / ProductCode / row ordering it exposes no control over,
+  # while the embedded cabinet payload IS byte-identical) - see
+  # docs/windows-msi-determinism.md and #190 (blocked). Byte-level determinism
+  # checking stays with the scheduled "Installer reproducibility probe" workflow
+  # (repro-installers.yml); this lane only proves the msi still BUILDS on
+  # windows-latest, catching a broken WiX/jpackage/packaging regression that the
+  # monthly probe would otherwise not surface until much later.
+  #
+  # Advisory continue-on-error while the record accrues; promotion to a required
+  # check follows the #188/#101 rule (required once 20 consecutive runs show at
+  # most one failure), then drop continue-on-error and register the byte-stable
+  # name "Windows installer build (msi)" as a required branch-protection check
+  # with recorded run IDs (mirroring installer-reproducibility-aarch64).
+  windows-installer-msi:
+    name: Windows installer build (msi)
+    if: github.event_name != 'schedule'
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      # the unmodified installer script: builds the jar (mvn package), jlinks a
+      # trimmed runtime, then the SAME jpackage --type msi invocation the release
+      # and probe paths use. WiX is preinstalled on windows-latest; python3
+      # (present) normalizes the volatile msi timestamp/GUID set as in release.
+      - name: Build the msi (same jpackage invocation as release/probe)
+        shell: bash
+        run: bash scripts/build-installer.sh
+
+      - name: Assert the msi exists and is non-trivial
+        shell: bash
+        run: |
+          set -euo pipefail
+          msi="$(ls target/installer/dist/*.msi 2>/dev/null | head -1 || true)"
+          if [ -z "$msi" ] || [ ! -f "$msi" ]; then
+            echo "::error::no .msi produced by scripts/build-installer.sh"; exit 1
+          fi
+          bytes="$(wc -c < "$msi")"
+          echo "msi: $msi ($bytes bytes)"
+          # a real jpackage msi with a bundled trimmed runtime is tens of MB; a
+          # 1 MiB floor only a broken/empty build (no runtime bundled) would trip
+          min=1048576
+          if [ "$bytes" -lt "$min" ]; then
+            echo "::error::msi is implausibly small ($bytes bytes < $min); the build likely failed to bundle the runtime"; exit 1
+          fi
+          echo "msi build-smoke OK"
+
+      - name: Upload the msi
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-msi
+          path: target/installer/dist/*.msi
+          if-no-files-found: ignore
 
   # macOS dmg reproducibility (#191, parent #188): the dmg's variance is a
   # finite envelope set — a random UDIF SegmentID plus the HFS+ volume

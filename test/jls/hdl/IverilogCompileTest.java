@@ -2,7 +2,6 @@ package jls.hdl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -31,7 +30,7 @@ class IverilogCompileTest {
 
 	@Test
 	void everyGoldenCompilesUnderIverilog() throws Exception {
-		String iverilog = findOnPath("iverilog");
+		String iverilog = ToolLocator.findOnPath("iverilog");
 		Assumptions.assumeTrue(iverilog != null,
 				"iverilog not installed; skipping external compile check");
 
@@ -71,29 +70,6 @@ class IverilogCompileTest {
 			assertEquals(0, p.exitValue(),
 					golden + " does not compile under iverilog:\n" + output);
 		}
-	}
-
-	/** Locate a tool on PATH, or null (never installs anything). */
-	private static String findOnPath(String tool) {
-		String path = System.getenv("PATH");
-		if (path == null) {
-			return null;
-		}
-		for (String dir : path.split(File.pathSeparator)) {
-			if (dir.isEmpty()) {
-				continue;
-			}
-			Path candidate = Path.of(dir, tool);
-			try {
-				if (Files.isExecutable(candidate)
-						&& !Files.isDirectory(candidate)) {
-					return candidate.toString();
-				}
-			} catch (SecurityException ignored) {
-				// unreadable PATH entry: keep looking
-			}
-		}
-		return null;
 	}
 
 } // end of IverilogCompileTest class

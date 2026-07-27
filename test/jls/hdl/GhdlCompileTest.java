@@ -2,7 +2,6 @@ package jls.hdl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -32,7 +31,7 @@ class GhdlCompileTest {
 
 	@Test
 	void everyGoldenAnalyzesUnderGhdl() throws Exception {
-		String ghdl = findOnPath("ghdl");
+		String ghdl = ToolLocator.findOnPath("ghdl");
 		Assumptions.assumeTrue(ghdl != null,
 				"ghdl not installed; skipping external analyze check");
 
@@ -65,29 +64,6 @@ class GhdlCompileTest {
 			assertEquals(0, p.exitValue(),
 					golden + " does not analyze under ghdl:\n" + output);
 		}
-	}
-
-	/** Locate a tool on PATH, or null (never installs anything). */
-	private static String findOnPath(String tool) {
-		String path = System.getenv("PATH");
-		if (path == null) {
-			return null;
-		}
-		for (String dir : path.split(File.pathSeparator)) {
-			if (dir.isEmpty()) {
-				continue;
-			}
-			Path candidate = Path.of(dir, tool);
-			try {
-				if (Files.isExecutable(candidate)
-						&& !Files.isDirectory(candidate)) {
-					return candidate.toString();
-				}
-			} catch (SecurityException ignored) {
-				// unreadable PATH entry: keep looking
-			}
-		}
-		return null;
 	}
 
 } // end of GhdlCompileTest class

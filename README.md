@@ -266,8 +266,7 @@ is guarded independently of the JBR download by
 which drives the unmodified rig against a stub toolchain (no JBR, no real
 compositor, no network) and asserts each scenario is classified with the
 documented exit code. The `gui-wayland` lane runs it on every event, so a
-regression in the classification is caught even while the lane is skipped
-pending the JBR checksum pin.
+regression in the classification is caught independently of the rig itself.
 
 ### Development container
 

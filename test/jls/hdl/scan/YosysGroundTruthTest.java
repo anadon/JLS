@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -19,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import jls.hdl.ToolLocator;
 
 /**
  * Issue #63 P2: ports scanned by {@link VerilogHeaderScanner} from the
@@ -39,7 +40,7 @@ class YosysGroundTruthTest {
 
 	@Test
 	void scannedPortsMatchYosysWriteJson() throws Exception {
-		String yosys = findOnPath("yosys");
+		String yosys = ToolLocator.findOnPath("yosys");
 		Assumptions.assumeTrue(yosys != null,
 				"yosys not installed; skipping ground-truth check");
 
@@ -139,29 +140,6 @@ class YosysGroundTruthTest {
 			return "inout";
 		}
 	} // end of directionWord method
-
-	/** Locate a tool on PATH, or null (never installs anything). */
-	private static String findOnPath(String tool) {
-		String path = System.getenv("PATH");
-		if (path == null) {
-			return null;
-		}
-		for (String dir : path.split(File.pathSeparator)) {
-			if (dir.isEmpty()) {
-				continue;
-			}
-			Path candidate = Path.of(dir, tool);
-			try {
-				if (Files.isExecutable(candidate)
-						&& !Files.isDirectory(candidate)) {
-					return candidate.toString();
-				}
-			} catch (SecurityException ignored) {
-				// unreadable PATH entry: keep looking
-			}
-		}
-		return null;
-	} // end of findOnPath method
 
 	/**
 	 * A minimal recursive-descent JSON reader, just enough for yosys

@@ -213,8 +213,12 @@ public final class LoopbackTransport implements Transport {
 			// this endpoint's own; the queues reserve room for both
 			// sentinels, so these offers cannot fail while the send
 			// cap holds
-			outbound.offer(EOF);
-			inbound.offer(EOF);
+			boolean peerWoken = outbound.offer(EOF);
+			boolean selfWoken = inbound.offer(EOF);
+			if (!peerWoken || !selfWoken) {
+				throw new IllegalStateException(
+						"loopback close failed to enqueue EOF sentinel");
+			}
 		}
 	} // end of close method
 

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import jls.elem.Element;
 import jls.elem.Input;
 import jls.elem.LogicElement;
+import jls.elem.Memory;
 import jls.elem.OutputPin;
 import jls.elem.Pause;
 import jls.elem.Register;
@@ -46,6 +47,10 @@ import jls.sim.Simulator;
  * - S6: TriState suppresses redundant output events like Gate.react;
  * - S7: Constant masks its value to the attached net's width
  *   (documented as intended in the spec, section 6.2).
+ *
+ * Also pins the level-sensitive memory-write default of spec section
+ * 8.4 - the glitch hazard the optional synchronous-write mode of
+ * issue #199 exists to avoid.
  */
 class SimulationSemanticsRegressionTest {
 
@@ -600,5 +605,43 @@ class SimulationSemanticsRegressionTest {
 		sim.runSim();
 		assertEquals(15, pinValue(circuit, "o"),
 				"a constant wider than its net drives value mod 2^bits");
+	}
+
+	// ---------------------------------------------------------------
+	// memory write sensitivity (spec section 8.4, issue #199)
+	// ---------------------------------------------------------------
+
+	/**
+	 * Memory writes are level-sensitive by default: with CS and WE held
+	 * low, every address transient commits a write, so an address bus
+	 * that moves while WE is asserted corrupts memory at addresses the
+	 * design never targeted. This pins the documented hazard the
+	 * optional synchronous-write mode (MemoryModelTest's sync tests)
+	 * exists to avoid.
+	 */
+	@Test
+	void memoryDefaultWriteIsLevelSensitiveOnEveryAddressTransient()
+			throws Exception {
+		CircuitTextBuilder cb = new CircuitTextBuilder();
+		int ram = cb.memory("RAM", 8, 2, "");
+		int addr = cb.clock(20, 10);
+		int data = cb.constant(7);
+		int select = cb.constant(0);
+		int write = cb.constant(0);
+		int enable = cb.constant(1);
+		cb.wire(addr, "output", ram, "address");
+		cb.wire(data, "output", ram, "input");
+		cb.wire(select, "output", ram, "CS");
+		cb.wire(write, "output", ram, "WE");
+		cb.wire(enable, "output", ram, "OE");
+		Circuit circuit = load(cb.build());
+		BatchSimulator sim = new BatchSimulator();
+		sim.setCircuit(circuit);
+		sim.setTimeLimit(100);
+		sim.runSim();
+		Memory mem = find(circuit, Memory.class);
+		assertEquals(java.util.Set.of(0, 1), mem.storedAddresses(),
+				"a level-sensitive RAM writes at every address the bus"
+						+ " visits while CS and WE are low");
 	}
 }

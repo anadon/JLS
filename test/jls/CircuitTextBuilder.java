@@ -243,14 +243,26 @@ public final class CircuitTextBuilder {
 
 	/** Puts: "address", "CS", "OE" (+"WE", "input" for RAM), "output". */
 	public int memory(String type, int bits, int capacity, String init) {
+		return memory(type, bits, capacity, init, false);
+	}
+
+	/**
+	 * Memory with the synchronous-write choice explicit (issue #199);
+	 * sync adds the 1-bit "clock" put (RAM only).
+	 */
+	public int memory(String type, int bits, int capacity, String init,
+			boolean sync) {
 		int id = nextId++;
-		open("Memory", id)
+		StringBuilder block = open("Memory", id)
 				.append(" String name \"mem").append(id).append("\"\n")
 				.append(" String type \"").append(type).append("\"\n")
 				.append(" int bits ").append(bits).append('\n')
 				.append(" int cap ").append(capacity).append('\n')
-				.append(" int time 10\n")
-				.append(" int watch 0\n")
+				.append(" int time 10\n");
+		if (sync) {
+			block.append(" int sync 1\n");
+		}
+		block.append(" int watch 0\n")
 				.append(" String file \"\"\n")
 				.append(" String init \"").append(init).append("\"\n")
 				.append("END\n");

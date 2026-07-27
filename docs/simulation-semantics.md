@@ -369,6 +369,43 @@ at `cycle − one`, and `Clock.react` thereafter alternates: high for
 [cycle−one, cycle), and so on. The first rising edge is at
 `cycle − one`, not at 0 and not at `cycle`.
 
+### 8.4 Memory writes (`src/jls/elem/Memory.java`)
+
+RAM writes are **level-sensitive by default**: `Memory.react` posts a
+write (completing after the access time) on *any* react in which `CS`
+and `WE` are both 0 — when the controls become 0, and again whenever
+the address or data input changes while they stay 0.
+
+- **The glitch hazard**: in a combinational datapath the write-address
+  bus (say, an ALU output) passes through transient values while it
+  settles, and each transient with `WE` asserted commits a write to a
+  *wrong* address — and those spurious writes persist. A store can
+  therefore silently corrupt memory at addresses the program never
+  targeted (issue #199, found building a single-cycle CPU). Pinned by
+  `SimulationSemanticsRegressionTest.memoryDefaultWriteIsLevelSensitiveOnEveryAddressTransient`.
+- **Workaround in the default mode**: gate `WE` with the clock phase
+  so it is asserted only after the datapath has settled (e.g. only
+  while the clock is low in a design whose state registers capture on
+  the rising edge).
+- **Synchronous write** (issue #199): an optional per-element mode
+  (the save-file `int sync 1` attribute, a creation-dialog checkbox,
+  RAM only) adds a dedicated 1-bit `clock` input. A write then
+  commits only on a **rising edge** of that input with `CS` and `WE`
+  both 0, sampling the address and data as of the edge — the same
+  remembered-previous-clock edge detection as the register (§8.1),
+  reset at simulation start. Address/data/control changes between
+  edges never write, which removes the glitch hazard the way real
+  synchronous-write SRAMs do. Falling edges never write; there is no
+  negative-edge or configurable-edge variant. Reads and the tri-state
+  output behavior (§9) are unchanged in both modes, and ROMs have no
+  write path at all. Pinned by `MemoryModelTest`
+  (`syncWriteIgnoresInputChangesWhileTheClockIsSteady`,
+  `syncWriteCommitsExactlyOnceOnTheRisingEdge`,
+  `syncWriteFallingEdgeCommitsNothing`).
+
+The default is unchanged for every pre-#199 circuit: a file without
+the `sync` attribute loads level-sensitive, byte-identically.
+
 ## 9. Tri-state and multi-driver resolution
 
 - A wire net is tri-state iff at least one attached `Output` is

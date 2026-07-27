@@ -62,6 +62,11 @@ class MemoryModelTest {
 
 	/** Load circuit text, run the batch simulator, return the memory. */
 	private static Memory simulate(String circuitText) {
+		return simulate(circuitText, 1_000_000);
+	}
+
+	/** Load circuit text, run the batch simulator to the given time. */
+	private static Memory simulate(String circuitText, long timeLimit) {
 		Circuit circuit = new Circuit("memmodel");
 		assertTrue(circuit.load(new Scanner(circuitText)),
 				() -> "load failed: " + JLSInfo.loadError);
@@ -73,7 +78,7 @@ class MemoryModelTest {
 		}
 		BatchSimulator sim = new BatchSimulator();
 		sim.setCircuit(circuit);
-		sim.setTimeLimit(1_000_000);
+		sim.setTimeLimit(timeLimit);
 		sim.runSim();
 		return findMemory(circuit);
 	}
@@ -336,6 +341,92 @@ class MemoryModelTest {
 		cb.wire(select, "output", rom, "CS");
 		cb.wire(enable, "output", rom, "OE");
 		return cb.build();
+	}
+
+	// ---------------------------------------------------------------
+	// synchronous write (issue #199): writes commit only on a rising
+	// edge of the dedicated clock input
+	// ---------------------------------------------------------------
+
+	/**
+	 * A synchronous-write RAM with address, data and the (active-low)
+	 * controls driven by constants and the dedicated clock driven by a
+	 * Clock element with cycle 1000, one 400: the output is 0 on
+	 * [0,600), 1 on [600,1000), so the only rising edge before 1600 is
+	 * at 600 and the only falling edge is at 1000.
+	 */
+	private static String syncRamCircuit(long addr, long data) {
+		CircuitTextBuilder cb = new CircuitTextBuilder();
+		int ram = cb.memory("RAM", 8, 4, "", true);
+		int a = cb.constant(addr);
+		int d = cb.constant(data);
+		int select = cb.constant(0);
+		int write = cb.constant(0);
+		int enable = cb.constant(1);
+		int clk = cb.clock(1000, 400);
+		cb.wire(a, "output", ram, "address");
+		cb.wire(d, "output", ram, "input");
+		cb.wire(select, "output", ram, "CS");
+		cb.wire(write, "output", ram, "WE");
+		cb.wire(enable, "output", ram, "OE");
+		cb.wire(clk, "output", ram, "clock");
+		return cb.build();
+	}
+
+	@Test
+	void syncWriteIgnoresInputChangesWhileTheClockIsSteady() {
+		// the glitch hazard of issue #199 inverted: the address keeps
+		// toggling (a Clock drives the 1-bit address bus) with CS and
+		// WE held low, but the write clock never rises, so nothing at
+		// all may be written
+		CircuitTextBuilder cb = new CircuitTextBuilder();
+		int ram = cb.memory("RAM", 8, 2, "", true);
+		int a = cb.clock(20, 10);
+		int d = cb.constant(7);
+		int select = cb.constant(0);
+		int write = cb.constant(0);
+		int enable = cb.constant(1);
+		int clk = cb.constant(0);
+		cb.wire(a, "output", ram, "address");
+		cb.wire(d, "output", ram, "input");
+		cb.wire(select, "output", ram, "CS");
+		cb.wire(write, "output", ram, "WE");
+		cb.wire(enable, "output", ram, "OE");
+		cb.wire(clk, "output", ram, "clock");
+		Memory mem = simulate(cb.build(), 500);
+		assertTrue(mem.storedAddresses().isEmpty(),
+				"no rising clock edge means no write, however the"
+						+ " address moves");
+		assertEquals("", mem.getActivityTrace(),
+				"a gated-off write must not enter the activity history");
+	}
+
+	@Test
+	void syncWriteCommitsExactlyOnceOnTheRisingEdge() {
+		// one rising edge (at 600) inside the time limit commits one
+		// write at the settled address
+		Memory mem = simulate(syncRamCircuit(2, 7), 800);
+		BitSet stored = mem.getCurrentValue(2);
+		assertNotNull(stored);
+		assertEquals(7, BitSetUtils.ToLong(stored));
+		assertEquals(java.util.Set.of(2), mem.storedAddresses(),
+				"the rising edge must write exactly the settled address");
+		String trace = mem.getActivityTrace();
+		assertEquals(1, trace.split("\n", -1).length - 1,
+				"exactly one write, got:\n" + trace);
+		assertTrue(trace.contains("0x7 written to location 0x2 at time "),
+				trace);
+	}
+
+	@Test
+	void syncWriteFallingEdgeCommitsNothing() {
+		// widening the window past the falling edge at 1000 (the next
+		// rising edge is at 1600) must not add a second write
+		Memory mem = simulate(syncRamCircuit(2, 7), 1300);
+		assertEquals(java.util.Set.of(2), mem.storedAddresses());
+		String trace = mem.getActivityTrace();
+		assertEquals(1, trace.split("\n", -1).length - 1,
+				"the falling edge must not write, got:\n" + trace);
 	}
 
 	@Test

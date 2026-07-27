@@ -110,6 +110,12 @@ public final class Memory extends LogicElement
 	private String initialValue = defaultInitialValue;
 	/** True if this memory is being watched during simulation. */
 	private boolean watched = false;
+	/**
+	 * True if writes commit only on a rising edge of the dedicated clock
+	 * input (issue #199); false (the default, and the only pre-#199
+	 * behavior) makes writes level-sensitive on CS/WE. RAM only.
+	 */
+	private boolean syncWrite = false;
 
 	// running properties
 	/**
@@ -132,6 +138,7 @@ public final class Memory extends LogicElement
 	 * Initialize internal info for this element.
 	 * Figures out height and width using font info from graphics object.
 	 * Note input positions: RAM-> 0 - addr, 1 - input, 2 - WE, 3 - OE, 4 - CS
+	 *                              (5 - clock when synchronous write is on)
 	 *                       ROM-> 0 - addr, 1 - OE, 2 - CS
 	 *
 	 * @param g The Graphics object to use.
@@ -183,6 +190,11 @@ public final class Memory extends LogicElement
 		}
 		inputs.add(new Input("OE",this,over,height,1));
 		inputs.add(new Input("CS",this,over+2*s,height,1));
+		if (type == Type.RAM && syncWrite) {
+			// synchronous-write clock (issue #199), appended last so
+			// the pre-#199 input indices are unchanged
+			inputs.add(new Input("clock",this,0,6*s,1));
+		}
 
 		// create output
 		Output out = new Output("output",this,width,4*s,bits);
@@ -282,6 +294,31 @@ public final class Memory extends LogicElement
 	} // end of setType method
 
 	/**
+	 * Whether writes are clock-edge synchronous (issue #199: read by the
+	 * GUI-side renderer to lay out the clock pin and by the dialog).
+	 *
+	 * @return true if writes commit only on a rising clock edge, false
+	 *         for the classic level-sensitive behavior.
+	 */
+	public boolean isSyncWrite() {
+
+		return syncWrite;
+	} // end of isSyncWrite method
+
+	/**
+	 * Set the synchronous-write mode (issue #199: applied by the GUI-side
+	 * dialog at creation, before {@link #init} lays out the pins). RAM
+	 * only; meaningless for ROM.
+	 *
+	 * @param syncWrite True for clock-edge synchronous writes, false for
+	 *        level-sensitive writes.
+	 */
+	public void setSyncWrite(boolean syncWrite) {
+
+		this.syncWrite = syncWrite;
+	} // end of setSyncWrite method
+
+	/**
 	 * Set the number of bits per word (issue #77: applied by the GUI-side
 	 * dialog).
 	 *
@@ -343,6 +380,10 @@ public final class Memory extends LogicElement
 			capacity = value;
 		} else if (name.equals("time")) {
 			accessTime = value;
+		} else if (name.equals("sync")) {
+			// clock-edge synchronous write (issue #199); absent in every
+			// pre-#199 file, so those load level-sensitive as before
+			syncWrite = value != 0;
 		} else if (name.equals("watch")) {
 			if (value == 0)
 				watched = false;
@@ -401,6 +442,11 @@ public final class Memory extends LogicElement
 		output.println(" int bits " + bits);
 		output.println(" int cap " + capacity);
 		output.println(" int time " + accessTime);
+		if (syncWrite) {
+			// written only when on, so pre-#199 circuits re-save
+			// byte-identically (issue #199)
+			output.println(" int sync 1");
+		}
 		output.println(" int watch " + (watched ? 1 : 0));
 		output.println(" String file \"" + fileName + "\"");
 
@@ -622,6 +668,7 @@ public final class Memory extends LogicElement
 		it.fileName = fileName;
 		it.specs = specs;
 		it.watched = watched;
+		it.syncWrite = syncWrite;
 		for (Input input : inputs) {
 			it.inputs.add(input.copy(it));
 		}
@@ -940,6 +987,13 @@ public final class Memory extends LogicElement
 	private @Nullable WordStore initMem;
 	/** The value currently driven on the output, or null if none. */
 	private @Nullable BitSet currentValue;
+	/**
+	 * The most recent value seen on the synchronous-write clock input
+	 * (issue #199), mirroring Register's remembered clock: a rising edge
+	 * is a react in which this is 0 and the clock input is 1. Unused
+	 * unless {@link #syncWrite} is on.
+	 */
+	private int lastClock;
 	/**
 	 * One entry in the write history: the value written (what), the address
 	 * written to (where), and the simulation time of the write (when). Used
@@ -1260,6 +1314,9 @@ public final class Memory extends LogicElement
 		// set current value to null
 		currentValue = null;
 
+		// reset the remembered synchronous-write clock (issue #199)
+		lastClock = 0;
+
 		// clear activity history
 		activity.clear();
 
@@ -1303,8 +1360,22 @@ public final class Memory extends LogicElement
 			if (addr == null)
 				addr = new BitSet();
 
+			// in synchronous-write mode a write needs a rising clock
+			// edge, detected with Register's remembered-clock scheme
+			// (issue #199); in the classic level-sensitive mode any
+			// react with CS and WE low writes
+			boolean writeGate = true;
+			int clock = 0;
+			if (type == Type.RAM && syncWrite) {
+				BitSet clockb = getInput("clock").getValue();
+				if (clockb == null)
+					clockb = new BitSet();
+				clock = clockb.get(0) ? 1 : 0;
+				writeGate = lastClock == 0 && clock == 1;
+			}
+
 			// if RAM, chip select and write enable...
-			if (type == Type.RAM && !cs && !we) {
+			if (type == Type.RAM && !cs && !we && writeGate) {
 
 				// do a write
 				BitSet data = (BitSet)(getInput("input").getValue());
@@ -1314,6 +1385,9 @@ public final class Memory extends LogicElement
 						new MemoryWrite(BitSetUtils.ToInt(addr),
 								(BitSet)(data.clone()))));
 			}
+
+			// remember the clock for the next edge check (issue #199)
+			lastClock = clock;
 
 			// if chip select and output enable ...
 			if (!cs && !oe) {

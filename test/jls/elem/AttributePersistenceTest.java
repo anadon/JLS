@@ -1,6 +1,7 @@
 package jls.elem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -118,6 +119,46 @@ class AttributePersistenceTest {
 		assertEquals(withoutSid(saveElement(constant)),
 				withoutSid(saveElement(copy)),
 				"a copy must serialize identically to its original");
+	}
+
+	@Test
+	void memorySyncWriteAttributeRoundTrips() throws Exception {
+		// the synchronous-write mode (issue #199) saves as "int sync 1"
+		Circuit circuit = load("CIRCUIT attrtest\n"
+				+ "ELEMENT Memory\n"
+				+ " int id 0\n int x 60\n int y 60\n int width 48\n int height 64\n"
+				+ " String name \"m1\"\n String type \"RAM\"\n"
+				+ " int bits 8\n int cap 4\n int time 10\n int sync 1\n"
+				+ " int watch 0\n String file \"\"\n String init \"\"\n"
+				+ "END\n"
+				+ "ENDCIRCUIT\n");
+		Memory mem = (Memory) circuit.getElements().iterator().next();
+		assertTrue(mem.isSyncWrite(),
+				"int sync 1 must load the synchronous-write mode");
+		assertTrue(saveElement(mem).contains(" int sync 1"),
+				"the synchronous-write mode must survive a re-save");
+		Memory copy = (Memory) mem.copy();
+		assertTrue(copy.isSyncWrite(),
+				"copy must carry the synchronous-write mode (#23 drift)");
+	}
+
+	@Test
+	void memoryWithoutSyncAttributeStaysAsync() throws Exception {
+		// every pre-#199 file omits sync and must keep today's
+		// level-sensitive writes, byte-identically on re-save
+		Circuit circuit = load("CIRCUIT attrtest\n"
+				+ "ELEMENT Memory\n"
+				+ " int id 0\n int x 60\n int y 60\n int width 48\n int height 64\n"
+				+ " String name \"m1\"\n String type \"RAM\"\n"
+				+ " int bits 8\n int cap 4\n int time 10\n"
+				+ " int watch 0\n String file \"\"\n String init \"\"\n"
+				+ "END\n"
+				+ "ENDCIRCUIT\n");
+		Memory mem = (Memory) circuit.getElements().iterator().next();
+		assertFalse(mem.isSyncWrite(),
+				"an omitted sync attribute must default to async");
+		assertFalse(saveElement(mem).contains("sync"),
+				"the default must stay omitted on re-save");
 	}
 
 	/** Saved text minus the sid line, which copy() deliberately skips. */

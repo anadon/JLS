@@ -36,6 +36,13 @@ Set the capacity (in words) by entering a number in the
 A memory must have at least two words.
 
 <p>
+For a RAM, checking <b>Synchronous write (clock-edge)</b> gives the
+element a dedicated 1-bit clock input and makes writes commit only on a
+rising edge of that clock (see <b>write</b> under Operation below).
+Like the type, bits per word and capacity, this choice is made when the
+element is created.
+
+<p>
 The values of all words of memory will be zero by default.
 Some or all words of this memory element can be given non-zero initial
 values (that are reset every time the circuit is simulated).
@@ -105,7 +112,8 @@ For example, if you have 12 words of memory and the address is between 12 and
 
 <p>
 <b>write</b>
-Any time an input of a RAM changes there is the possibility of a write.
+By default, any time an input of a RAM changes there is the possibility
+of a write.
 If CS and WE become 0, then a write will be initiated using the current
 values of the address and data inputs.
 If CS and WE are already 0 and either the address or data input changes,
@@ -113,6 +121,28 @@ a write will be initiated.
 The write will complete after the memory access time.
 Right click on the memory element and select <b>Change Timing</b> to
 see and/or change the current memory access time).
+
+<p>
+<b>Beware</b>: because default writes are level-sensitive, an address
+(or data) input that passes through transient values while WE is 0 -
+for example an address computed by combinational logic that has not
+settled yet - will write at every transient address, and those spurious
+writes persist.
+In a clocked design you can avoid this by gating WE with the clock
+phase so that WE is 0 only after the inputs have settled (e.g. only
+while the clock is low, if your registers capture on the rising edge),
+or by creating the RAM with <b>Synchronous write (clock-edge)</b>.
+
+<p>
+A synchronous-write RAM has an extra 1-bit clock input.
+A write is initiated only on a rising edge (0 to 1) of that clock while
+CS and WE are both 0, using the address and data values at the time of
+the edge, and completes after the memory access time.
+Changes to the address, data or control inputs between clock edges
+never cause a write, which is how real synchronous-write memories
+behave.
+Falling edges never initiate a write.
+Reads are unaffected by this option.
 
 <p>
 If the address is greater than the number of words of memory then nothing will

@@ -8,6 +8,18 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- Board-aware HDL export, first slice (#213): `-export` now accepts
+  `-board <name>` plus `-pins <file>` and writes a pin-constraint file
+  (`.pcf`) next to the exported HDL, generated from the same model walk
+  as the Verilog/VHDL — one built-in board so far (`icestick`, Lattice
+  iCE40-HX1K, for the open `nextpnr-ice40` flow; table in
+  `jls.hdl.board.Boards`). The bindings file maps each top-level port
+  (bit) to a named board pin; any unbindable port fails the whole
+  export with every problem in one actionable error and writes nothing,
+  so a partial constraint file can never reach disk. Golden-pinned and
+  byte-deterministic; supported boards documented in
+  `docs/hdl-support-research.md` §7.5. XDC/QSF, more boards, and the
+  scripted bitstream handoff (#215) are follow-ups.
 - Batch `-vcd` export now includes **probed wire nets** as VCD signals
   (#200), so a named internal net can be observed headlessly without
   splicing in an `OutputPin` tap. Each probe becomes a `wire` signal

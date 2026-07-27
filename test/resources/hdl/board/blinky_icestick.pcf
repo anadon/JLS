@@ -1,0 +1,14 @@
+# Board: icestick (Lattice iCE40-HX1K, TQ144 package)
+# Module: blinky, exported by JLS @VERSION@
+# Format: PCF, for the open iCE40 flow (yosys + nextpnr-ice40 --pcf)
+
+# input sw[0] <- pin PMOD1
+set_io sw[0] 78
+# input sw[1] <- pin PMOD2
+set_io sw[1] 79
+# input clk <- pin CLK
+set_io clk 21
+# output led[0] <- pin LED1
+set_io led[0] 99
+# output led[1] <- pin LED2
+set_io led[1] 98

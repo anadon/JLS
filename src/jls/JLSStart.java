@@ -71,8 +71,13 @@ import jls.elem.Watchable;
 import jls.hdl.HdlEmitter;
 import jls.hdl.HdlExportException;
 import jls.hdl.HdlExporter;
+import jls.hdl.HdlModel;
 import jls.hdl.VerilogEmitter;
 import jls.hdl.VhdlEmitter;
+import jls.hdl.board.Board;
+import jls.hdl.board.Boards;
+import jls.hdl.board.PcfEmitter;
+import jls.hdl.board.PinBindings;
 import jls.sim.BatchSimulator;
 
 
@@ -103,6 +108,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static @Nullable String vcdFile = null;
 	/** HDL export output file name (-export flag), or null if none given. */
 	private static @Nullable String exportFile = null;
+	/** Target board for -export pin constraints (-board flag, issue #213), lower-case, or null if none given. */
+	private static @Nullable String boardName = null;
+	/** Port-to-pin bindings file for -export pin constraints (-pins flag, issue #213), or null if none given. */
+	private static @Nullable String pinsFile = null;
 	/** Plain-text re-save output file name (-savetext flag), or null if none given. */
 	private static @Nullable String textSaveFile = null;
 	/** True if -p or -v asked for the circuit to be printed. */
@@ -375,11 +384,48 @@ public class JLSStart extends JFrame implements ChangeListener {
 							.endsWith(".v")
 					? new VerilogEmitter() : new VhdlEmitter();
 
+			// board-aware export (issue #213): -board/-pins add a
+			// pin-constraint file next to the HDL. The bindings file is
+			// read up front so a bad file fails before anything else
+			// happens; parseCommandLine guaranteed the pair travels
+			// together and the board name is in the table
+			Board board = boardName == null ? null : Boards.byName(boardName);
+			PinBindings bindings = null;
+			if (board != null && pinsFile != null) {
+				List<String> bindingLines;
+				try {
+					bindingLines = java.nio.file.Files.readAllLines(
+							Path.of(pinsFile), StandardCharsets.UTF_8);
+				} catch (IOException e) {
+					System.err.println("jls: error: can't read pin bindings"
+							+ " file " + pinsFile + ": " + e.getMessage());
+					System.exit(1);
+					return; // unreachable; keeps the flow analyzable
+				}
+				try {
+					bindings = PinBindings.parse(bindingLines);
+				} catch (HdlExportException e) {
+					System.err.println("jls: error: " + e.getMessage());
+					System.exit(1);
+					return; // unreachable; keeps the flow analyzable
+				}
+			}
+
 			// walk and render; a rejection lists every offending
-			// element and writes nothing
+			// element and writes nothing. With a board, the constraint
+			// text comes from the same model walk as the HDL (#213) and
+			// any unbindable port aborts before either file is written
 			HdlExporter.Result result;
+			String constraintText = null;
 			try {
-				result = HdlExporter.export(circ, emitter);
+				if (board == null || bindings == null) {
+					result = HdlExporter.export(circ, emitter);
+				} else {
+					HdlModel model = HdlExporter.buildModel(circ);
+					result = new HdlExporter.Result(emitter.emit(model),
+							model.warnings());
+					constraintText = PcfEmitter.emit(model, board, bindings);
+				}
 			} catch (HdlExportException e) {
 				System.err.println("jls: error: " + e.getMessage());
 				System.exit(1);
@@ -413,6 +459,19 @@ public class JLSStart extends JFrame implements ChangeListener {
 				System.err.println("jls: error: can't write " + exportFile
 						+ ": " + e.getMessage());
 				System.exit(1);
+			}
+
+			// the pin-constraint file lands next to the HDL, named
+			// after it with the board format's extension (issue #213);
+			// its text was fully validated before the HDL was written,
+			// so this write can only fail on I/O — and the same
+			// temp-and-rename pattern keeps a partial constraint file
+			// from ever reaching the target path
+			if (constraintText != null && board != null) {
+				String constraintFile =
+						exportFile.replaceAll("(?i)\\.(v|vhd|vhdl)$", "")
+								+ "." + board.format().extension();
+				writeExportedText(constraintFile, constraintText);
 			}
 		}
 
@@ -558,6 +617,42 @@ public class JLSStart extends JFrame implements ChangeListener {
 	} // end of loadCircuitHeadless method
 
 	/**
+	 * Write one exported text file for a headless one-shot mode via the
+	 * temp-and-rename pattern the HDL export path uses, so a partial
+	 * file can never reach the target path. Any failure prints one
+	 * "jls: error:" line, removes the temp file, and exits 1.
+	 *
+	 * @param fileName The target file path.
+	 * @param text The complete file content.
+	 */
+	private static void writeExportedText(String fileName, String text) {
+
+		Path target = Path.of(fileName);
+		Path temp = Path.of(fileName + ".tmp");
+		try {
+			java.nio.file.Files.writeString(temp, text,
+					StandardCharsets.UTF_8);
+			try {
+				java.nio.file.Files.move(temp, target,
+						java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+						java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+			} catch (java.nio.file.AtomicMoveNotSupportedException ex) {
+				java.nio.file.Files.move(temp, target,
+						java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (IOException e) {
+			try {
+				java.nio.file.Files.deleteIfExists(temp);
+			} catch (IOException ignored) {
+				// the error below already covers it
+			}
+			System.err.println("jls: error: can't write " + fileName
+					+ ": " + e.getMessage());
+			System.exit(1);
+		}
+	} // end of writeExportedText method
+
+	/**
 	 * Display values of watched elements to stdout.
 	 * Descends into subcircuits recursively.
 	 *
@@ -684,6 +779,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"write watched-signal waveforms to the named VCD file (batch mode)"),
 		new FlagSpec("export", Arity.REQUIRED, "file", "an output file",
 				"export the circuit as Verilog-2005 (.v) or VHDL (.vhd/.vhdl), chosen by the file extension"),
+		new FlagSpec("board", Arity.REQUIRED, "name", "a board name",
+				"with -export and -pins: also write a pin-constraint file (.pcf) for the named FPGA board (supported: "
+						+ Boards.names() + ")"),
+		new FlagSpec("pins", Arity.REQUIRED, "file", "a pin-bindings file",
+				"with -export and -board: port-to-pin bindings, one 'port pin' (or 'port[bit] pin') per line; # comments"),
 		new FlagSpec("savetext", Arity.REQUIRED, "file", "an output file",
 				"re-save the circuit to the named .jls file as plain (uncompressed) text"),
 	};
@@ -803,6 +903,17 @@ public class JLSStart extends JFrame implements ChangeListener {
 				}
 			}
 			pos += 1;
+		}
+
+		// -board/-pins are export modifiers and only travel as a pair
+		// (issue #213): the board names the pin table, the bindings file
+		// maps this circuit's ports onto it
+		if ((boardName != null || pinsFile != null)
+				&& !JLSInfo.hdlexport) {
+			usageError("options -board and -pins require -export");
+		}
+		if ((boardName == null) != (pinsFile == null)) {
+			usageError("options -board and -pins must be used together");
 		}
 	} // end of parseCommandLine method
 
@@ -981,6 +1092,22 @@ public class JLSStart extends JFrame implements ChangeListener {
 			}
 			JLSInfo.hdlexport = true;
 			exportFile = opnd;
+			break;
+		case "board":
+			// the operand must name a built-in board (issue #213);
+			// validating here gives the "supported: ..." list at the
+			// moment of the typo (-board is Arity.REQUIRED, so opnd
+			// cannot be null; the guard keeps that locally checkable)
+			String board = opnd == null ? ""
+					: opnd.toLowerCase(java.util.Locale.ROOT);
+			if (Boards.byName(board) == null) {
+				usageError("option -board requires a supported board name"
+						+ " (supported: " + Boards.names() + "): " + opnd);
+			}
+			boardName = board;
+			break;
+		case "pins":
+			pinsFile = opnd;
 			break;
 		case "savetext":
 			// the output must reopen by the same rules as any other

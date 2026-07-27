@@ -8,7 +8,10 @@ exactly this vocabulary; precise undo, per-peer attribution, and
 targeted revert all build on it. During the migration the user-facing
 undo mechanism is unchanged: `SimpleEditor.markChanged()` still
 snapshots the whole circuit (#18), and `OpSink.submit` runs
-validate → apply → `markChanged()`.
+validate → apply → `markChanged()`. A multi-op gesture goes through
+`OpSink.submitAll`, which the editor overrides to apply every op and
+then `markChanged()` exactly once - one gesture, one undo snapshot,
+however many ops express it.
 
 ## Contract
 
@@ -118,8 +121,8 @@ the migration commit.
 | Move-selection commit (mouse release) | `MoveElements` | op implemented + tested, and wired into the keyboard nudge (issue #75, `submitOp(new MoveElements(...))` at `SimpleEditor.java:3254`); the mouse-release drag commit is still inline (live drag must become preview-then-commit) |
 | Placement drop (fixPosition + connect) | `AddElements` (+ implicit wiring) | op implemented + tested for the unwired case; gesture still inline (the drop's `connect()` needs the wiring vocabulary, and placement must become preview-then-commit) |
 | Matching JumpEnd creation, context menu | `AddElements` | op implemented + tested (jump-source validation included); gesture still inline (the created end stays mouse-attached in `chosen` state, so the commit point is the later drop) |
-| Delete selection | `RemoveElements` (+ `RemoveWire` per attached net when wired) | ops implemented + tested with **true inverses**, wired selections included (`wiredDeleteComposesFromRemoveWireAndRemoveElements` pins the composition; #167 §9's snapshot fallback is no longer needed for any delete). Gesture still inline |
-| Delete wire net / detach (popup delete on a wire) | `RemoveWire` | op implemented + tested with a **true inverse** (the net's serialized wire-end blocks, `NetBlocks`); gesture still inline |
+| Delete selection (delete key, Edit menu, popup Delete, and CUT's removal half) | `RemoveWire` per attached net + `RemoveElements` | **migrated with a partial-net fallback**: `SimpleEditor.deleteSelectionPlan` maps the selection to an op plan (jump starts expanded with their jump ends, one `RemoveWire` per wholly-selected net, then `RemoveElements`), submitted as one batch through `OpSink.submitAll` so the gesture stays a single undo snapshot (`DeleteGestureTest`). A selection that clips a net (e.g. a wired element deleted without its wiring) has no plan yet and takes the inline fallback; expressing it as `RemoveWire` plus `AddWire` of the surviving pieces removes the fallback in a follow-up |
+| Delete wire net / detach (popup delete on a wire) | `RemoveWire` | **migrated with a partial-net fallback** via the same plan builder: a wire selection covering its whole net travels as `RemoveWire` (`DeleteGestureTest.wireOnlySelectionPlansToARemoveWire`); a segment delete that clips a larger net falls back inline until the `RemoveWire`+`AddWire`-survivors composition lands |
 | Paste | `AddElements` + `AddWire` | op machinery in place (multi-block add with paste's name/jump validation; pasted nets travel as `AddWire`); gesture still inline |
 | Wire-attach finish (mouse) | `AddWire` | op implemented + tested at net granularity (a commit that extends an existing net travels as `RemoveWire` of the old net plus `AddWire` of the merged one); gesture still inline — wiring gestures become commit-time ops |
 | Wire-draw cancel (right button / end-wire key, two sites) | none — gesture-local cleanup of the in-progress wire; these `markChanged` calls compensate for live mutation and disappear when wiring is commit-time | deferred |
@@ -143,12 +146,16 @@ rule 2; only the future `jls.collab.ui` may touch Swing).
 
 ## What lands next
 
-1. Preview-then-commit for the move, placement, wiring, and delete
-   gestures, anchored by the #91 gesture harness
-   (`EditorGestureTest`) - the step that migrates the gestures whose
-   ops already exist (`MoveElements`, `AddElements`,
-   `RemoveElements`, `AddWire`, `RemoveWire`).
-2. Wiring the dialog-commit gestures onto `SetElementConfig`, whose op
+1. The partial-net delete composition: a selection that clips a net
+   travels as `RemoveWire` of the whole net plus `AddWire` of the
+   surviving pieces, removing `deleteSelectionPlan`'s inline fallback
+   (delete itself migrated without preview-then-commit because its
+   commit point was already a single model-only method).
+2. Preview-then-commit for the move, placement, and wiring gestures,
+   anchored by the #91 gesture harness (`EditorGestureTest`) - the
+   step that migrates the remaining gestures whose ops already exist
+   (`MoveElements`, `AddElements`, `AddWire`).
+3. Wiring the dialog-commit gestures onto `SetElementConfig`, whose op
    already exists; the commit paths mutate in place until then.
-3. Op-inverse (precise) undo activation is explicitly *not* this
+4. Op-inverse (precise) undo activation is explicitly *not* this
    stage: snapshot undo stays user-facing until Stage 2 (#163).

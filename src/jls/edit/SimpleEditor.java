@@ -75,7 +75,9 @@ import jls.collab.op.FlipElement;
 import jls.collab.op.MoveElements;
 import jls.collab.op.OpRejected;
 import jls.collab.op.OpSink;
+import jls.collab.op.RemoveElements;
 import jls.collab.op.RemoveProbe;
+import jls.collab.op.RemoveWire;
 import jls.collab.op.RotateElement;
 import jls.collab.op.ToggleWatched;
 import jls.core.Geometry;
@@ -833,6 +835,128 @@ public abstract class SimpleEditor extends JPanel {
 		end.setNet(net);
 		return new WireStart(end,hadSelection);
 	} // end of startWireGesture method
+
+	/**
+	 * The model half of the delete-selection gesture (issue #167): map a
+	 * selection to the op plan that expresses it - one {@link RemoveWire}
+	 * per attached wire net wholly covered by the selection, in stable-id
+	 * order, then one {@link RemoveElements} over the then-unwired
+	 * elements, with jump starts expanded to their same-name jump ends
+	 * exactly as the editor's removal cascade does. A net is wholly
+	 * covered when every one of its wires is in the (expanded) selection;
+	 * its wire ends then follow by the same cascade the inline deletion
+	 * uses, so attached ends (which are never selectable) and unselected
+	 * dangling ends need no separate coverage. Swing-free so it is
+	 * unit-testable headless (the {@link #startWireGesture} precedent);
+	 * the caller owns submission and repaint.
+	 *
+	 * No plan (null) means the selection cannot yet be expressed in the
+	 * op vocabulary and must take the inline fallback: an affected net
+	 * only partially covered by the selection (the
+	 * RemoveWire-plus-AddWire-survivors composition is a follow-up per
+	 * docs/operation-layer.md), a subcircuit (its op kind is deferred),
+	 * in-progress wiring, or anything uneditable in the cascade (the
+	 * caller's guard already dialogs on uneditable selections).
+	 *
+	 * @param circuit The circuit being edited.
+	 * @param selected The current selection; not modified.
+	 * @return the op plan, or null when the selection has no plan and
+	 *         the caller must delete inline.
+	 * @jls.testedby jls.edit.DeleteGestureTest
+	 */
+	static @Nullable List<CircuitOp> deleteSelectionPlan(Circuit circuit,
+			Set<Element> selected) {
+
+		if (selected.isEmpty())
+			return null;
+
+		// expand jump starts with their same-name jump ends - the
+		// cascade JumpStart.remove performs and RemoveElements requires
+		Set<Element> group = new HashSet<Element>(selected);
+		for (Element el : selected) {
+			if (el instanceof JumpStart js) {
+				for (Element other : circuit.getElements()) {
+					if (other instanceof JumpEnd je &&
+							java.util.Objects.equals(js.getName(),je.getName()))
+						group.add(other);
+				}
+			}
+		}
+
+		// vet the group and collect every net the deletion touches:
+		// nets of selected wires and wire ends, and nets attached to
+		// puts of selected elements
+		Set<WireNet> nets = new HashSet<WireNet>();
+		try {
+			for (Element el : group) {
+				if (el.isUneditable())
+					return null;
+				if (el instanceof SubCircuit)
+					return null;
+				if (el instanceof Wire wire) {
+					nets.add(wire.getEnd().getNet());
+				}
+				else if (el instanceof WireEnd end) {
+					if (end.getWires().isEmpty())
+						return null;
+					nets.add(end.getNet());
+				}
+			}
+			for (Element el : circuit.getElements()) {
+				if (el instanceof WireEnd end && end.isAttached()) {
+					Put p = end.getPut();
+					Element attached = p == null ? null : p.getElement();
+					if (attached != null && group.contains(attached))
+						nets.add(end.getNet());
+				}
+			}
+		} catch (IllegalStateException ex) {
+			// a wire end without a completed net: in-progress wiring
+			return null;
+		}
+
+		// every affected net must be wholly covered and removable, and
+		// each becomes one RemoveWire addressed by its lowest-id end
+		List<RemoveWire> wireOps = new ArrayList<RemoveWire>(nets.size());
+		for (WireNet net : nets) {
+			WireEnd anchor = null;
+			for (WireEnd end : net.getAllEnds()) {
+				if (end.isUneditable())
+					return null;
+				if (end.getWires().isEmpty())
+					return null;
+				Put p = end.getPut();
+				if (p != null && p.getElement() == null)
+					return null;
+				for (Wire wire : end.getWires()) {
+					if (wire.isUneditable())
+						return null;
+					if (!group.contains(wire))
+						return null;
+				}
+				if (anchor == null ||
+						end.getStableId().compareTo(anchor.getStableId()) < 0)
+					anchor = end;
+			}
+			if (anchor == null)
+				return null;
+			wireOps.add(new RemoveWire(anchor.getStableId()));
+		}
+		wireOps.sort(java.util.Comparator.comparing(RemoveWire::id));
+
+		// the then-unwired elements travel as one RemoveElements
+		List<ElementId> ids = new ArrayList<ElementId>();
+		for (Element el : group) {
+			if (!(el instanceof Wire) && !(el instanceof WireEnd))
+				ids.add(el.getStableId());
+		}
+		java.util.Collections.sort(ids);
+
+		List<CircuitOp> plan = new ArrayList<CircuitOp>(wireOps);
+		if (!ids.isEmpty())
+			plan.add(new RemoveElements(ids));
+		return plan.isEmpty() ? null : plan;
+	} // end of deleteSelectionPlan method
 
 		/**
 		 * The window the circuit is displayed and edited in.
@@ -4599,6 +4723,14 @@ public abstract class SimpleEditor extends JPanel {
 					/**
 					 * Remove all elements in the selected set.
 					 * Abort removal if any elements in the set are uneditable.
+					 *
+					 * The delete gesture is migrated behind the OpSink
+					 * seam (issue #167): when the selection maps to an
+					 * op plan it is submitted as one batch (one undo
+					 * snapshot); selections the vocabulary cannot yet
+					 * express - partially selected nets, subcircuits -
+					 * fall back to the inline removal below, still under
+					 * snapshot undo.
 					 */
 					private void remove() {
 
@@ -4611,6 +4743,15 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
+						// the op path: plan, then batch-submit
+						List<CircuitOp> plan =
+								deleteSelectionPlan(circuit,selected);
+						if (plan != null) {
+							submitOps(plan);
+							return;
+						}
+
+						// the inline fallback (partial nets et al.):
 						// remove each element
 						for (Element el : selected) {
 							el.remove(circuit); // elements remove themselves
@@ -5207,6 +5348,23 @@ public abstract class SimpleEditor extends JPanel {
 							op.apply(circuit, getGraphics());
 							markChanged();
 						}
+
+						/**
+						 * A multi-op gesture records exactly once:
+						 * apply every op, then one markChanged(), so a
+						 * wired delete stays a single undo snapshot
+						 * instead of fragmenting into one entry per op
+						 * (issue #167).
+						 */
+						@Override
+						public void submitAll(List<CircuitOp> ops)
+								throws OpRejected {
+
+							for (CircuitOp op : ops) {
+								op.apply(circuit, getGraphics());
+							}
+							markChanged();
+						}
 					};
 
 					/**
@@ -5232,6 +5390,31 @@ public abstract class SimpleEditor extends JPanel {
 							return false;
 						}
 					} // end of submitOp method
+
+					/**
+					 * Submit a gesture's committed op plan as one batch
+					 * (one undo snapshot), reporting a rejection to the
+					 * user. As with {@link #submitOp}, rejections cannot
+					 * happen from correctly guarded gestures - the plan
+					 * builder vets everything the ops validate - so a
+					 * dialog here means a gesture bug, not a user error.
+					 *
+					 * @param ops The operations to perform, in order.
+					 *
+					 * @return true if the plan applied, false if rejected.
+					 */
+					private boolean submitOps(List<CircuitOp> ops) {
+
+						try {
+							opSink.submitAll(ops);
+							return true;
+						} catch (OpRejected ex) {
+							String msg = ex.getMessage();
+							TellUser.error(JLSInfo.frame, msg != null ? msg : ex.toString(),
+									"Error");
+							return false;
+						}
+					} // end of submitOps method
 
 					/**
 					 * Push a copy of the circuit being edited on the undo stack.

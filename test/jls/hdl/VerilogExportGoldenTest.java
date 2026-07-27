@@ -349,6 +349,113 @@ class VerilogExportGoldenTest {
 		assertGolden("truthtable_multiout", truthTableMultiOutFixture());
 	}
 
+	/**
+	 * Two-state machine (issue #59), rising edge, clocked by a Clock
+	 * element: idle (initial, done=0) leaves on go==1; run (done=1)
+	 * returns unconditionally. The clock becomes a module input port,
+	 * as for registers.
+	 */
+	private static HdlCircuitBuilder stateMachineFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("statemachine");
+		int clk = cb.clock(20, 10);
+		int go = cb.inputPin("go", 1);
+		int sm = cb.stateMachine("ctrl", 1,
+				HdlCircuitBuilder.machineState("idle", true,
+						new String[][] { { "done", "0", "1" } },
+						new String[][] { { "go", "0", "1", "1", "run" } }),
+				HdlCircuitBuilder.machineState("run", false,
+						new String[][] { { "done", "1", "1" } },
+						new String[][] { { "always", "idle" } }));
+		int done = cb.outputPin("done", 1);
+		cb.wire(clk, "output", sm, "clock");
+		cb.wire(go, "output", sm, "go");
+		cb.wire(sm, "done", done, "input");
+		return cb;
+	}
+
+	/**
+	 * Falling-edge machine with a not-equal condition, an else
+	 * transition, a multi-bit input and two outputs (one multi-bit):
+	 * start (initial) goes to mid on sel/=2 else to stop; mid goes to
+	 * start on sel==0 else to stop; stop returns unconditionally.
+	 * Three states force a 2-bit (non-one-hot) state code.
+	 */
+	private static HdlCircuitBuilder stateMachineElseFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("statemachine_else");
+		int ck = cb.inputPin("ck", 1);
+		int sel = cb.inputPin("sel", 2);
+		int sm = cb.stateMachine("seq", -1,
+				HdlCircuitBuilder.machineState("start", true,
+						new String[][] { { "phase", "0", "2" },
+								{ "on", "0", "1" } },
+						new String[][] { { "sel", "1", "2", "2", "mid" },
+								{ "else", "stop" } }),
+				HdlCircuitBuilder.machineState("mid", false,
+						new String[][] { { "phase", "1", "2" },
+								{ "on", "1", "1" } },
+						new String[][] { { "sel", "0", "0", "2", "start" },
+								{ "else", "stop" } }),
+				HdlCircuitBuilder.machineState("stop", false,
+						new String[][] { { "phase", "2", "2" } },
+						new String[][] { { "always", "start" } }));
+		int phase = cb.outputPin("phase", 2);
+		int on = cb.outputPin("on", 1);
+		cb.wire(ck, "output", sm, "clock");
+		cb.wire(sel, "output", sm, "sel");
+		cb.wire(sm, "phase", phase, "input");
+		cb.wire(sm, "on", on, "input");
+		return cb;
+	}
+
+	/**
+	 * The hold rule (issue #98 S5) in both flavors: red (initial) and
+	 * green have conditional transitions with no else - an unmatched
+	 * input must hold the state (no trailing else arm) - and yellow
+	 * has no transitions at all (a permanently holding arm). Three
+	 * states again exercise the non-power-of-2 code width.
+	 */
+	private static HdlCircuitBuilder stateMachineHoldFixture() {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("statemachine_hold");
+		int ck = cb.inputPin("ck", 1);
+		int go = cb.inputPin("go", 1);
+		int sm = cb.stateMachine("light", 1,
+				HdlCircuitBuilder.machineState("red", true,
+						new String[][] { { "colour", "0", "2" } },
+						new String[][] { { "go", "0", "1", "1", "green" } }),
+				HdlCircuitBuilder.machineState("green", false,
+						new String[][] { { "colour", "1", "2" } },
+						new String[][] { { "go", "0", "0", "1", "yellow" } }),
+				HdlCircuitBuilder.machineState("yellow", false,
+						new String[][] { { "colour", "2", "2" } },
+						new String[0][]));
+		int colour = cb.outputPin("colour", 2);
+		cb.wire(ck, "output", sm, "clock");
+		cb.wire(go, "output", sm, "go");
+		cb.wire(sm, "colour", colour, "input");
+		return cb;
+	}
+
+	@Test
+	void stateMachineTemplateIsABinaryEncodedClockedCase()
+			throws Exception {
+		assertGolden("statemachine", stateMachineFixture());
+	}
+
+	@Test
+	void stateMachineNotEqualElseAndFallingEdgeLandInTheCase()
+			throws Exception {
+		assertGolden("statemachine_else", stateMachineElseFixture());
+	}
+
+	@Test
+	void stateMachineWithNoMatchingTransitionHoldsTheState()
+			throws Exception {
+		assertGolden("statemachine_hold", stateMachineHoldFixture());
+	}
+
 	@Test
 	void binderAndSplitterTemplates() throws Exception {
 		HdlCircuitBuilder cb = new HdlCircuitBuilder("bundles");

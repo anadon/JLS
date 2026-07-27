@@ -20,6 +20,53 @@ All notable changes to JLS are documented here. The format follows
   schedule/`workflow_dispatch`-only and is never a required PR check;
   the floors follow the JaCoCo climb convention — only ever up,
   raised with the PR that raises the score.
+- The collab transport seam (#163, #168 Stage 1a): a new
+  `jls.collab.net.Transport` interface — opaque in-order frames,
+  blocking receive, null on clean close — extracted verbatim from
+  `SocketSession` (which now implements it, with no behavior change),
+  plus `LoopbackTransport.pair()`, an in-memory two-endpoint
+  implementation over bounded queues that enforces the same
+  1 MiB payload cap and clean-close semantics without constructing a
+  socket. The test tree gains a seeded `ChaosTransport` decorator
+  (drop/duplicate/reorder probabilities plus `partition()`/`heal()`,
+  deterministic per seed, never inventing or corrupting bytes) and a
+  `TransportContractTest` that runs one contract suite against both
+  the loopback pair and a real handshaken socket pair, so the test
+  double the replication stack (#169/#171) will develop against
+  cannot drift from the real transport.
+- StateMachine elements now export to Verilog and VHDL (#59): a
+  binary-encoded state register plus an edge-triggered clocked case,
+  with state codes assigned in canonical (#180) order except the
+  initial state, which always takes code 0 (the register's start
+  value, matching `initSim`). Transitions render as if/else-if chains
+  — unconditional, then conditionals in canonical order, then "else" —
+  and a clock edge matching no transition holds the state (the
+  issue-#98 S5 rule: no trailing else, no default arm). Moore outputs
+  are a combinational case with unspecified outputs lowered to 0, as
+  in `State.sendOutputs`. A zero-state machine warns and skips instead
+  of rejecting the export. Two divergences are documented in the
+  emitted comment: JLS ignores clock edges during its propagation
+  window (busy) while the export never does, and JLS resolves
+  overlapping hand-edited conditions in hash order while the export
+  tests them canonically. Pinned by three golden pairs
+  (`statemachine`, `statemachine_else`, `statemachine_hold`) in both
+  languages plus new `HdlPolicyTest` cases.
+- Module activation runtime (#220): the `jls.module.JlsModule`
+  lifecycle SPI (`manifest()` / `register()` / `start()`) and
+  `jls.module.ModuleRuntime`, a two-phase runner that resolves
+  manifests once through `ModuleResolver`, registers every module in
+  topological order, then starts them per their declared trigger —
+  `Eager` at boot; `OnCommand` / `OnEvent` / `OnDemand` on first
+  `dispatchCommand` / `fireEvent` / `demand` (by concrete id or
+  `provides` token). Activation transitively starts the sole provider
+  of each `requires` token in topological order; `optional` / `after` /
+  `before` never trigger activation. Each module runs a start-once
+  state machine: a throwing `start()` becomes a permanent
+  `ModuleActivationException` naming the module and phase, rethrown on
+  every later touch and never silently retried; unknown commands,
+  events, and tokens are graceful no-ops. Pure JVM, deterministic
+  across discovery order; pinned by the new headless
+  `ModuleRuntimeTest`.
 - Modern-Java program closeout gates (#96): a new headless
   `ModernJavaGatesTest` scans `src/` and `test/` and fails the build
   on any `Cloneable` in an `implements`/`extends` clause (#94 retired

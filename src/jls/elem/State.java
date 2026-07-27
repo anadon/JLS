@@ -322,6 +322,29 @@ public class State {
 	} // end of transitionSaveOrder method
 
 	/**
+	 * This state's transitions in the canonical (#180) save order of
+	 * {@link #transitionSaveOrder()}: unconditional first, then "else",
+	 * then conditionals by (signal, eq flag, value, bits). The HDL
+	 * exporter (issue #59) walks transitions through this accessor so
+	 * the emitted if/else-if chains are deterministic and match the
+	 * order the file format pins, instead of the HashSet's
+	 * identity-hash order.
+	 *
+	 * @return a fresh list of this state's transitions, canonically
+	 *         ordered.
+	 *
+	 * @jls.testedby jls.hdl.HdlPolicyTest#stateMachineInitialStateTakesCodeZero()
+	 * @jls.testedby jls.hdl.VerilogExportGoldenTest#assertGolden()
+	 */
+	public java.util.List<Transition> getTransitionsInSaveOrder() {
+
+		java.util.List<Transition> ordered =
+				new java.util.ArrayList<Transition>(trans);
+		ordered.sort(transitionSaveOrder());
+		return ordered;
+	} // end of getTransitionsInSaveOrder method
+
+	/**
 	 * Save information about this state.
 	 *
 	 * @param output The PrintWriter to write to.

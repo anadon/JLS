@@ -68,11 +68,14 @@ class HeadlessCoreRatchetTest {
 	 *  HDL exporter, issue #60) was born clean and must stay clean -
 	 *  it has no baseline entries and never gets one. jls.core (issue
 	 *  #77) is the new headless home - born clean, policed from birth,
-	 *  never gets a baseline entry. */
+	 *  never gets a baseline entry. jls.module (the module runtime
+	 *  foundation, issue #220) likewise: born clean, no baseline
+	 *  entry ever. */
 	private static final Set<String> CORE_PACKAGE_PREFIXES = Set.of(
 			"src/jls/sim/",
 			"src/jls/elem/",
 			"src/jls/hdl/",
+			"src/jls/module/",
 			"src/jls/core/");
 
 	/**

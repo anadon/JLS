@@ -325,6 +325,19 @@ a marketplace, unvetted course exchanges). At that point the
 out-of-process API boundary (message schema, transport) gets its own
 design issue, and no such provider ships before that boundary exists.
 
+### Extension points: the typed seam catalog (recorded 2026-07-27, #223)
+
+The seams modules contribute through are typed and catalogued in
+[`docs/extension-points.md`](docs/extension-points.md): each seam is a
+`jls.module.ExtensionPoint` constant in its home package (keeping
+`jls.module` a pure, AWT-free mechanism), contributions flow through
+`jls.module.ExtensionRegistry` (undeclared point → loud failure;
+wrong-typed contribution → rejected at the boundary), and
+`ExtensionPointCatalogTest` cross-checks the constants against the
+catalog table in both directions. That document is normative for point
+ids, contracts, cardinality, lifecycle phase, and which seams are
+typed now versus pending with an owning issue.
+
 ### Simulation execution strategy: discrete-event interpreter is the sole strategy (recorded 2026-07-26, #221)
 
 Option 1 of #221, per [`docs/grand-architecture.md`](docs/grand-architecture.md)

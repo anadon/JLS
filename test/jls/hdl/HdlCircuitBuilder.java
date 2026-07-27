@@ -155,6 +155,55 @@ final class HdlCircuitBuilder {
 		return element("TruthTable", attrs.toString());
 	}
 
+	/**
+	 * A state machine (issue #59), in the exact save grammar
+	 * StateMachine.save/State.save emit: machine attributes (name,
+	 * delay, trig with 1=rising and -1=falling), then one block per
+	 * state from {@link #machineState}. Puts are named after the
+	 * signals the states use, plus the trailing "clock" input.
+	 */
+	int stateMachine(String name, int trigger, String... stateBlocks) {
+		StringBuilder attrs = new StringBuilder(" String name \"" + name
+				+ "\"\n int delay 30\n int trig " + trigger + "\n");
+		for (String block : stateBlocks) {
+			attrs.append(block);
+		}
+		return element("StateMachine", attrs.toString());
+	}
+
+	/**
+	 * One state block for {@link #stateMachine}. Outputs are
+	 * {signal, value, bits} triples. Transitions are {"always", next},
+	 * {"else", next}, or {signal, eq, value, bits, next} where eq is
+	 * "0" for an equality test and "1" for inequality (the save
+	 * encoding State.save writes).
+	 */
+	static String machineState(String name, boolean initial,
+			String[][] outputs, String[][] transitions) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(" String state \"").append(name).append("\"\n")
+			.append("  int x 100\n  int y 100\n  int diameter 40\n")
+			.append("  int init ").append(initial ? 1 : 0).append('\n');
+		for (String[] out : outputs) {
+			sb.append("  String output \"").append(out[0]).append("\"\n")
+				.append("   long value ").append(out[1]).append('\n')
+				.append("   int bits ").append(out[2]).append('\n');
+		}
+		for (String[] tr : transitions) {
+			sb.append("  String trans \"").append(tr[0]).append("\"\n");
+			if (tr[0].equals("always") || tr[0].equals("else")) {
+				sb.append("   String next \"").append(tr[1]).append("\"\n");
+			}
+			else {
+				sb.append("   int eq ").append(tr[1]).append('\n')
+					.append("   int value ").append(tr[2]).append('\n')
+					.append("   int bits ").append(tr[3]).append('\n')
+					.append("   String next \"").append(tr[4]).append("\"\n");
+			}
+		}
+		return sb.toString();
+	}
+
 	int display(int bits) {
 		return element("Display", " int bits " + bits + "\n int base 10\n");
 	}

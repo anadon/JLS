@@ -212,6 +212,11 @@ public final class VerilogEmitter implements HdlEmitter {
 			public void visit(HdlModel.PriorityCaseStatement s) {
 				priorityCase(out, s);
 			}
+			/** Routes a state-machine statement to {@link #stateMachine}. */
+			@Override
+			public void visit(HdlModel.StateMachineStatement s) {
+				stateMachine(out, s);
+			}
 		});
 	} // end of statement method
 
@@ -439,6 +444,147 @@ public final class VerilogEmitter implements HdlEmitter {
 					.append(s.helperNames.get(k)).append(";\n");
 		}
 	} // end of priorityCase method
+
+	/**
+	 * Emits a state machine (StateMachine, the #59 clocked-case
+	 * template): a binary-encoded state {@code reg} initialized to the
+	 * initial state's code 0, an edge-triggered {@code always}/
+	 * {@code case} over it - one arm per state, transitions as an
+	 * if/else-if chain in the model's canonical order, and
+	 * deliberately no trailing {@code else} (and no {@code default}
+	 * arm) when the state has no else transition: a clocked reg that
+	 * is not assigned holds, mirroring JLS's
+	 * no-matching-transition-holds rule (issue #98 S5). Moore outputs
+	 * are one helper {@code reg} per output driven by an
+	 * {@code always @*} {@code case} whose {@code default} arm zeroes
+	 * them (unreachable codes; unspecified outputs were already
+	 * lowered to 0 by the exporter), then continuous assigns onto the
+	 * target nets.
+	 * @param out the buffer the module text is appended to
+	 * @param s the state-machine statement (states, clock, outputs)
+	 */
+	private static void stateMachine(StringBuilder out,
+			HdlModel.StateMachineStatement s) {
+
+		out.append("  reg").append(range(s.stateBits)).append(' ')
+				.append(s.regName).append(" = ")
+				.append(literal(BigInteger.valueOf(s.initialCode),
+						s.stateBits))
+				.append(";\n");
+		if (s.clock.isNet()) {
+			out.append("  always @(")
+					.append(s.risingEdge ? "posedge " : "negedge ")
+					.append(s.clock.netName()).append(") case (")
+					.append(s.regName).append(")\n");
+			for (HdlModel.StateMachineStatement.StateCase state : s.states) {
+				String code = literal(BigInteger.valueOf(state.code()),
+						s.stateBits);
+				if (state.unconditionalNext() >= 0) {
+					out.append("    ").append(code).append(": ")
+							.append(s.regName).append(" <= ")
+							.append(literal(
+									BigInteger.valueOf(
+											state.unconditionalNext()),
+									s.stateBits))
+							.append(";  // \"").append(state.name())
+							.append("\": always\n");
+					continue;
+				}
+				if (state.conditions().isEmpty()) {
+					out.append("    ").append(code).append(": ;  // \"")
+							.append(state.name())
+							.append("\": no transitions, the state holds\n");
+					continue;
+				}
+				out.append("    ").append(code).append(": begin  // \"")
+						.append(state.name()).append("\"\n");
+				boolean first = true;
+				for (HdlModel.StateMachineStatement.Condition c
+						: state.conditions()) {
+					out.append("      ").append(first ? "if" : "else if")
+							.append(" (").append(operand(c.input()))
+							.append(c.equal() ? " == " : " != ")
+							.append(literal(c.value(), c.input().bits()))
+							.append(") ").append(s.regName).append(" <= ")
+							.append(literal(BigInteger.valueOf(c.nextCode()),
+									s.stateBits))
+							.append(";\n");
+					first = false;
+				}
+				if (state.elseNext() >= 0) {
+					out.append("      else ").append(s.regName)
+							.append(" <= ")
+							.append(literal(
+									BigInteger.valueOf(state.elseNext()),
+									s.stateBits))
+							.append(";\n");
+				}
+				else {
+					out.append("      // no else: an unmatched input holds"
+							+ " the state\n");
+				}
+				out.append("    end\n");
+			}
+			out.append("  endcase\n");
+		}
+		else {
+			// an unconnected clock never ticks: the machine holds its
+			// initial state (matches JLS; the walker warned already)
+			out.append("  // no clock connected: ").append(s.regName)
+					.append(" holds its initial state\n");
+		}
+
+		if (s.outputs.isEmpty()) {
+			return;
+		}
+		for (HdlModel.StateMachineStatement.MooreOutput o : s.outputs) {
+			out.append("  reg").append(range(o.bits())).append(' ')
+					.append(o.helper()).append(";\n");
+		}
+		out.append("  always @* case (").append(s.regName).append(")\n");
+		for (HdlModel.StateMachineStatement.StateCase state : s.states) {
+			out.append("    ")
+					.append(literal(BigInteger.valueOf(state.code()),
+							s.stateBits))
+					.append(": ");
+			mooreArm(out, s, state.outputValues());
+		}
+		out.append("    default: ");
+		List<BigInteger> zeros = new ArrayList<BigInteger>();
+		for (int k = 0; k < s.outputs.size(); k += 1) {
+			zeros.add(BigInteger.ZERO);
+		}
+		mooreArm(out, s, zeros);
+		out.append("  endcase\n");
+		for (HdlModel.StateMachineStatement.MooreOutput o : s.outputs) {
+			out.append("  assign ").append(o.target()).append(" = ")
+					.append(o.helper()).append(";\n");
+		}
+	} // end of stateMachine method
+
+	/**
+	 * One arm of the Moore-output case: every helper takes its value.
+	 * @param out the buffer the module text is appended to
+	 * @param s the state-machine statement supplying the helpers
+	 * @param values one value per output, in output order
+	 */
+	private static void mooreArm(StringBuilder out,
+			HdlModel.StateMachineStatement s, List<BigInteger> values) {
+
+		if (s.outputs.size() == 1) {
+			out.append(s.outputs.get(0).helper()).append(" = ")
+					.append(literal(values.get(0), s.outputs.get(0).bits()))
+					.append(";\n");
+			return;
+		}
+		out.append("begin ");
+		for (int k = 0; k < s.outputs.size(); k += 1) {
+			out.append(s.outputs.get(k).helper()).append(" = ")
+					.append(literal(values.get(k), s.outputs.get(k).bits()))
+					.append("; ");
+		}
+		out.append("end\n");
+	} // end of mooreArm method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:

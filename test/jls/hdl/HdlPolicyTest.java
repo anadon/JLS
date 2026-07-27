@@ -214,6 +214,58 @@ class HdlPolicyTest {
 	}
 
 	@Test
+	void zeroStateMachineWarnsAndSkips() throws Exception {
+		// a hand-edited machine with no states has no outputs to drive
+		// (initSim parks it permanently busy), so it warns and skips
+		// instead of rejecting the export
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("smempty");
+		int a = cb.inputPin("a", 1);
+		cb.stateMachine("empty", 1);
+		int y = cb.outputPin("y", 1);
+		cb.wire(a, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertEquals(1, result.warnings().size(),
+				"one no-states warning expected: " + result.warnings());
+		assertTrue(result.warnings().get(0).contains("no states"),
+				result.warnings().get(0));
+		assertFalse(result.text().contains("case"), result.text());
+		// the rest of the circuit still exports
+		assertTrue(result.text().contains("assign y = a;"), result.text());
+	}
+
+	@Test
+	void stateMachineInitialStateTakesCodeZero() throws Exception {
+		// canonical (#180) state order is "a", "b", but "b" is marked
+		// initial: it must take code 0 (the register's start value,
+		// matching initSim), with "a" following at 1
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("sminit");
+		int ck = cb.inputPin("ck", 1);
+		int sm = cb.stateMachine("m", 1,
+				HdlCircuitBuilder.machineState("a", false,
+						new String[][] { { "o", "1", "1" } },
+						new String[][] { { "always", "b" } }),
+				HdlCircuitBuilder.machineState("b", true,
+						new String[][] { { "o", "0", "1" } },
+						new String[][] { { "always", "a" } }));
+		int y = cb.outputPin("y", 1);
+		cb.wire(ck, "output", sm, "clock");
+		cb.wire(sm, "o", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.warnings().isEmpty(),
+				"a supported element must not warn: " + result.warnings());
+		assertTrue(result.text().contains("state codes \"b\"=0, \"a\"=1"),
+				result.text());
+		assertTrue(result.text().contains("reg m_state = 1'h0;"),
+				result.text());
+	}
+
+	@Test
 	void twoNetsBridgedByJumpsBecomeOneVerilogNet() throws Exception {
 		// three separate wire nets - source->JumpStart, JumpEnd->sink1,
 		// second JumpEnd->sink2 - all alias "mid" and must fuse into

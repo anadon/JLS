@@ -31,10 +31,14 @@ import org.jspecify.annotations.Nullable;
  * carries a message written for a student — what the construct is,
  * why JLS cannot represent it, and the rewrite that will import.</li>
  * <li><b>Memories, decided by parameters.</b> A {@code $mem}/
- * {@code $mem_v2} with no write ports and one combinational
- * (unclocked) read port is the async-read ROM that maps faithfully
- * onto JLS Memory (per the resolved 2026-07-17 decisions, imported
- * with access time 0); anything else is a teachable reject.</li>
+ * {@code $mem_v2} with one combinational (unclocked) read port
+ * imports onto JLS Memory (per the resolved decisions, with access
+ * time 0) in two shapes: no write ports is the async-read ROM, and
+ * a single rising-edge write port (a dedicated clock, rising edge)
+ * is the common student RAM that maps to Memory with synchronous
+ * write (Memory {@code sync 1}). Clocked reads, multiple read or
+ * write ports, and level-sensitive or falling-edge writes are still
+ * teachable rejects.</li>
  * <li><b>Pipeline leftovers.</b> Internal cells the pass pipeline
  * should have eliminated ({@code $sub}, {@code $eq}, {@code $pmux},
  * ...). Their appearance means a techmap rule is missing — a JLS
@@ -95,11 +99,15 @@ public final class CellValidator {
 
 	/** The teachable-reject message for unsupported memories. */
 	private static final String MEMORY_MESSAGE =
-			"clocked or multi-port memory: JLS Memory is a"
-			+ " single-port memory read asynchronously. Only"
-			+ " ROM-style arrays - initialized, read with a plain"
-			+ " assign from one place, and never written - import"
-			+ " today";
+			"clocked-read or multi-port memory: JLS Memory is a"
+			+ " single-port memory read asynchronously. A memory"
+			+ " imports only as one asynchronous read port paired with"
+			+ " either no write port (a ROM) or a single rising-edge"
+			+ " write port (a RAM). Clocked reads, extra ports, and"
+			+ " level-sensitive or falling-edge writes do not import -"
+			+ " read the array with a plain assign and, if it is"
+			+ " written, write it from one \"always @(posedge clk)\""
+			+ " block";
 
 	/** Memory cell types, decided by their parameters. */
 	private static final Set<String> MEMORY_TYPES =
@@ -218,10 +226,18 @@ public final class CellValidator {
 	} // end of check method
 
 	/**
-	 * Decides a {@code $mem}/{@code $mem_v2} cell: the async-read
-	 * ROM shape (no write ports, exactly one read port, read port
-	 * unclocked) is supported; everything else gets the memory
-	 * teaching message.
+	 * Decides a {@code $mem}/{@code $mem_v2} cell. Both accepted
+	 * shapes have exactly one unclocked ({@code RD_CLK_ENABLE == 0})
+	 * read port; then no write ports ({@code WR_PORTS == 0}) is the
+	 * async-read ROM, and one write port ({@code WR_PORTS == 1}) is
+	 * accepted only when it is a dedicated rising-edge clock
+	 * ({@code WR_CLK_ENABLE == 1} and {@code WR_CLK_POLARITY == 1}) -
+	 * the RAM that maps to Memory with synchronous write. Clocked
+	 * reads, multiple read or write ports, and level-sensitive or
+	 * falling-edge writes get the memory teaching message. The write
+	 * clock parameters are read with a default of 0 so a memory with
+	 * no clock params (an async/level-sensitive write) rejects rather
+	 * than throwing.
 	 *
 	 * @param cell The memory cell.
 	 *
@@ -233,13 +249,26 @@ public final class CellValidator {
 	private static @Nullable String checkMemory(YosysNetlist.Cell cell)
 			throws NetlistFormatException {
 
-		long writePorts = cell.param("WR_PORTS");
 		long readPorts = cell.param("RD_PORTS");
 		// one bit per read port; nonzero means some port is clocked
 		long readClockEnable = cell.param("RD_CLK_ENABLE");
-		if (writePorts == 0 && readPorts == 1
-				&& readClockEnable == 0) {
+		if (readPorts != 1 || readClockEnable != 0) {
+			return MEMORY_MESSAGE;
+		}
+		long writePorts = cell.param("WR_PORTS");
+		if (writePorts == 0) {
+			// async-read ROM: no writes at all
 			return null;
+		}
+		if (writePorts == 1) {
+			// one write port; accept only a dedicated rising-edge
+			// clock (Memory writes are rising-edge only). Absent clock
+			// params default to 0 -> level-sensitive/async -> reject.
+			long writeClockEnable = cell.param("WR_CLK_ENABLE", 0);
+			long writeClockPolarity = cell.param("WR_CLK_POLARITY", 0);
+			if (writeClockEnable == 1 && writeClockPolarity == 1) {
+				return null;
+			}
 		}
 		return MEMORY_MESSAGE;
 	} // end of checkMemory method

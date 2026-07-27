@@ -1,0 +1,41 @@
+{
+  "creator": "hand-written fixture (issue #61 importer test): $mem_v2 single rising-edge write port + one async read port - validator-supported (maps to Memory sync 1) but not yet realized by the mapper",
+  "modules": {
+    "rammod": {
+      "attributes": { "top": 1 },
+      "ports": {
+        "clk": { "direction": "input", "bits": [ 2 ] },
+        "we": { "direction": "input", "bits": [ 3 ] },
+        "addr": { "direction": "input", "bits": [ 4, 5 ] },
+        "wdata": { "direction": "input", "bits": [ 6, 7, 8, 9 ] },
+        "rdata": { "direction": "output", "bits": [ 10, 11, 12, 13 ] }
+      },
+      "cells": {
+        "ram_0": {
+          "hide_name": 1,
+          "type": "$mem_v2",
+          "parameters": {
+            "WIDTH": 4,
+            "SIZE": 4,
+            "ABITS": 2,
+            "RD_PORTS": 1,
+            "RD_CLK_ENABLE": "0",
+            "WR_PORTS": 1,
+            "WR_CLK_ENABLE": "1",
+            "WR_CLK_POLARITY": "1"
+          },
+          "port_directions": {
+            "RD_ADDR": "input", "RD_DATA": "output",
+            "WR_CLK": "input", "WR_ADDR": "input",
+            "WR_DATA": "input", "WR_EN": "input"
+          },
+          "connections": {
+            "RD_ADDR": [ 4, 5 ], "RD_DATA": [ 10, 11, 12, 13 ],
+            "WR_CLK": [ 2 ], "WR_ADDR": [ 4, 5 ],
+            "WR_DATA": [ 6, 7, 8, 9 ], "WR_EN": [ 3, 3, 3, 3 ]
+          }
+        }
+      }
+    }
+  }
+}

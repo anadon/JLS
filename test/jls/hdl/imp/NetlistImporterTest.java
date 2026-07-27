@@ -235,6 +235,18 @@ class NetlistImporterTest {
 	}
 
 	@Test
+	void syncWriteRamValidatesButIsNotYetRealized() {
+		ImportException ex = assertThrows(ImportException.class,
+				() -> imp("reject_ram_sync.json"));
+		assertTrue(ex.getMessage().contains("$mem_v2"),
+				"message must name the cell: " + ex.getMessage());
+		assertTrue(ex.getMessage().contains("not yet realize"),
+				"the validator-accepted sync-write RAM must reject as a"
+						+ " not-yet-built cell, not mis-map: "
+						+ ex.getMessage());
+	}
+
+	@Test
 	void teachableRejectRelaysValidatorMessage() {
 		ImportException ex = assertThrows(ImportException.class,
 				() -> imp("reject_adff.json"));

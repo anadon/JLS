@@ -15,15 +15,14 @@ environment a third party needs, and gives the verification recipes.
 | Application jar | `jls-<version>.jar` | **Yes** — bit-for-bit |
 | CycloneDX SBOM | `bom.json` (also built: `bom.xml`) | **Yes** — bit-for-bit |
 | Maven pom | (GitHub Packages) | **Yes** — it is source |
-| Native installers — `deb`/`rpm`/AppImage (Linux x86_64) | `SHA256SUMS-installers-*` assets | **Yes** — gated by CI, see §5 |
-| Native installers — `msi`, `dmg`, and the Linux aarch64 leg | `SHA256SUMS-installers-*` assets | **No** — see §5 |
+| Native installers — `deb`/`rpm`/AppImage (Linux x86_64 and aarch64) | `SHA256SUMS-installers-*` assets | **Yes** — gated by CI, see §5 |
+| Native installers — `msi`, `dmg` | `SHA256SUMS-installers-*` assets | **No** — see §5 |
 | Container image | `ghcr.io/anadon/jls` | **No** — see §5 |
 
 The reproducibility claim covers the **jar, the BOM, and the Linux
-x86_64 `deb`/`rpm`/AppImage installers**. Nothing in this document
-should be read as claiming the `msi`, the `dmg`, the Linux aarch64
-installers, or the container image reproduce; their integrity story is
-different (§5).
+`deb`/`rpm`/AppImage installers on x86_64 and aarch64**. Nothing in
+this document should be read as claiming the `msi`, the `dmg`, or the
+container image reproduce; their integrity story is different (§5).
 
 ## 2. Build environment record: the `.buildinfo`
 
@@ -160,15 +159,18 @@ pins `%_buildhost`, `%use_source_date_epoch_as_buildtime`, and
 timestamp sources.
 
 With that plumbing in place, the `deb`, `rpm`, and AppImage installers
-built on Linux x86_64 **are** reproducible: the `installer-reproducibility`
-job in `.github/workflows/ci.yml` builds all three twice from the same
-commit and diffs the SHA-256 of every artifact, failing (and running
-`diffoscope`) on any mismatch. This is the CI gate the table in §1
-refers to.
+built on Linux **are** reproducible on both x86_64 and aarch64: the
+`installer-reproducibility` (ubuntu x86_64) and
+`installer-reproducibility-aarch64` (ubuntu-24.04-arm, lane owned by
+issue #189) jobs in `.github/workflows/ci.yml` each build all three
+twice from the same commit and diff the SHA-256 of every artifact,
+failing (and running `diffoscope`) on any mismatch. These are the CI
+gates the table in §1 refers to. The aarch64 job first ran as a
+continue-on-error advisory and was promoted to a hard gate (#188 §7
+item 4) after a sustained all-green run record.
 
-The `msi` and `dmg` installers, and the Linux aarch64 leg, are **not**
-yet reproducible, and this document deliberately does not claim
-otherwise:
+The `msi` and `dmg` installers are **not** yet reproducible, and this
+document deliberately does not claim otherwise:
 
 - **`msi`** (owned by issue #190): `scripts/normalize-msi.py` rewrites
   the known volatile bytes (the WiX package-code GUID, SummaryInformation
@@ -188,11 +190,6 @@ otherwise:
   byte-identical (the full HFS+ normalization stays disabled because
   its round-trip corrupts the image on macOS) — see
   `docs/dmg-reproducibility.md`.
-- **Linux aarch64** (owned by issue #189): the same `SOURCE_DATE_EPOCH`
-  derivation and `clamp_mtimes()` apply on this architecture, but only
-  the report-only probe (`.github/workflows/repro-installers.yml`)
-  exercises it — there is no hard double-build gate for aarch64, so no
-  reproducibility claim is made for it.
 
 Their integrity model, in the meantime, is *attestation-backed*: per-file
 SHA-256 checksums (`SHA256SUMS-installers-*`) and build-provenance
@@ -200,14 +197,14 @@ attestations (`gh attestation verify`). The container image is unchanged
 by #188 and remains out of scope: it installs distribution packages at
 build time and is not reproducible; its integrity model is the same
 checksum/attestation story plus a keyless cosign signature on the
-manifest digest. As `msi`/`dmg`/aarch64 reproducibility and the
-container image land, the table in §1 expands further.
+manifest digest. As `msi`/`dmg` reproducibility and the container
+image land, the table in §1 expands further.
 
 ## 6. Future work
 
 - Submit a rebuild recipe to
   [reproducible-central](https://github.com/jvm-repo-rebuild/reproducible-central)
   once a conforming release has shipped with its `.buildinfo`.
-- Extend the specified-artifact set as #189/#190/#191 make the
-  remaining installers (msi, dmg, Linux aarch64) deterministic, and as
-  #184 makes the container image deterministic.
+- Extend the specified-artifact set as #190/#191 make the remaining
+  installers (msi, dmg) deterministic, and as #184 makes the container
+  image deterministic.

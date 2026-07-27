@@ -36,6 +36,16 @@ follows the current LTS and is revisited each LTS cycle). Sources live in
   make a class a record if its `equals`/`hashCode` are intentionally
   non-structural (see `jls.sim.SimEvent`), and never land a repo-wide
   `final`/formatting sweep — churn hides real diffs.
+- **Sealed dispatch** (#95): the three-population `instanceof` rule —
+  dispatch on an element or payload *kind* is an exhaustive
+  pattern-matching `switch` with no `default` arm, so the compiler
+  flags every dispatch site when the hierarchy grows; a single
+  test-and-cast is an `instanceof` pattern; capability probes stay
+  plain interface checks. Never add a `default:` arm to a `switch`
+  over a sealed type (the `Element`/`Gate` subtrees,
+  `SimEvent.Payload`) or the `Orientation` enum. Sealed leaves stay
+  `final`; the permits tree is pinned by
+  `test/jls/elem/SealedHierarchyTest.java`.
 - `mvn verify` must be green: it runs the test suite and SpotBugs
   (threshold High). Do not add blanket entries to
   `config/spotbugs-exclude.xml`; new entries need a `Class` scope and a

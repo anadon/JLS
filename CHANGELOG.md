@@ -22,6 +22,16 @@ All notable changes to JLS are documented here. The format follows
   the loopback pair and a real handshaken socket pair, so the test
   double the replication stack (#169/#171) will develop against
   cannot drift from the real transport.
+- Modern-Java program closeout gates (#96): a new headless
+  `ModernJavaGatesTest` scans `src/` and `test/` and fails the build
+  on any `Cloneable` in an `implements`/`extends` clause (#94 retired
+  it for explicit copy construction) or any NullAway suppression (a `@SuppressWarnings`
+  naming NullAway, or `castToNonNull` — #93 closed with zero), with
+  an empty in-test allowlist as the recorded escape hatch;
+  CONTRIBUTING gains the #95 sealed-dispatch conventions
+  (three-population `instanceof` rule, no `default` arm on
+  sealed/`Orientation` switches, final leaves pinned by
+  `SealedHierarchyTest`).
 - The editor palette is now generated from a declarative table (#78):
   `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
   group, help topic per element — the GUI half of the two-layer
@@ -53,13 +63,26 @@ All notable changes to JLS are documented here. The format follows
   `RemoveWire` per wholly-selected wire net plus one `RemoveElements`
   (jump starts expanded with their jump ends), submitted as a single
   batch via the new `OpSink.submitAll` so a wired delete stays exactly
-  one undo snapshot. Selections the vocabulary cannot express yet
-  (partially selected nets, subcircuits) fall back to the previous
+  one undo snapshot. Selections the vocabulary cannot express
+  (subcircuits, in-progress wiring) fall back to the previous
   inline removal unchanged; user-facing undo mechanics are untouched.
   Byte parity between the op path and the inline path is pinned
   headlessly by `DeleteGestureTest`, and the end-to-end delete-key +
   single-undo behavior by a new display-tagged `EditorGestureTest`
   case.
+- The delete gesture's partial-net fallback is gone (#167): a
+  selection that clips a wire net — a middle or leaf segment of a
+  larger net, or a wired element deleted without its wiring — now
+  travels through the operation layer as `RemoveWire` of the whole net
+  plus one `AddWire` per surviving connected component, built by the
+  new `AddWire.survivors` factory (`WireEnd.save`-exact blocks
+  filtered to the surviving subgraph: kept wires and probes only,
+  attachments to deleted elements dropped, tri-state recomputed per
+  component the way the inline re-partition does). Only subcircuits,
+  in-progress wiring, and uneditable cascades still take the inline
+  path. Byte parity with the inline delete is pinned by
+  `DeleteGestureTest` on constructed and save/load-restored circuits
+  alike, and a clipped-net delete stays exactly one undo snapshot.
 - Board-aware HDL export, first slice (#213): `-export` now accepts
   `-board <name>` plus `-pins <file>` and writes a pin-constraint file
   (`.pcf`) next to the exported HDL, generated from the same model walk

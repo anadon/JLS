@@ -124,7 +124,9 @@ class RegisterModelTest {
 	@Test
 	void timingContractResetsToTheDefaultDelay() {
 		Register reg = newRegister();
-		assertTrue(reg.hasTiming());
+		Element asElement = reg;
+		assertTrue(asElement instanceof Timed,
+				"registers carry a timing contract");
 		assertEquals(50, reg.getDelay(), "documented default delay");
 		reg.setDelay(75);
 		assertEquals(75, reg.getDelay());
@@ -136,8 +138,11 @@ class RegisterModelTest {
 	void capabilityContract() {
 		Register reg = newRegister();
 		assertFalse(reg.canCopy(), "registers are named, so not copyable");
-		assertTrue(reg.canChange());
-		assertTrue(reg.canWatch());
+		Element asElement = reg;
+		assertTrue(asElement instanceof Editable,
+				"register attributes can be edited");
+		assertTrue(asElement instanceof Watchable,
+				"register values can be watched");
 		assertFalse(reg.isWatched());
 		reg.setWatched(true);
 		assertTrue(reg.isWatched());
@@ -346,11 +351,12 @@ class RegisterModelTest {
 
 		@Override
 		public void post(jls.sim.SimEvent event) {
-			// only the register's own output-driving posts (non-null
-			// todo): input-change notifications also name the register
-			// as callback but carry a null todo
+			// only the register's own output-driving posts (NewValue):
+			// input-change notifications also name the register as
+			// callback but carry a PinChanged payload
 			if (event.getCallBack() instanceof Register
-					&& event.getTodo() != null) {
+					&& event.getTodo()
+							instanceof jls.sim.SimEvent.NewValue) {
 				registerPosts += 1;
 			}
 			super.post(event);

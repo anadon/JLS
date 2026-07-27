@@ -42,6 +42,8 @@ import jls.elem.Put;
 import jls.elem.Register;
 import jls.elem.SigGen;
 import jls.elem.Splitter;
+import jls.elem.State;
+import jls.elem.StateMachine;
 import jls.elem.Stop;
 import jls.elem.TestGen;
 import jls.elem.Text;
@@ -69,7 +71,9 @@ import jls.elem.XorGate;
  * Splitter (bit routing); Mux and Decoder (selected assignments,
  * the #59-adjudicated case/select templates); TruthTable (a priority
  * match - Verilog casez / VHDL std_match chain - with hold-on-no-match
- * semantics, issue #59).</li>
+ * semantics, issue #59); StateMachine (a binary-encoded clocked case
+ * with the initial state at code 0 and hold-on-no-matching-transition
+ * semantics, issue #59; a zero-state machine warns and skips).</li>
  * <li><b>Net topology, not instances</b>: Wire, WireEnd, JumpStart,
  * JumpEnd. Same-named jumps alias nets, so the net walk folds them
  * into one HDL net.</li>
@@ -77,7 +81,7 @@ import jls.elem.XorGate;
  * meaning): Display, SigGen, Pause, Stop, Text, TestGen. Each skip
  * produces a warning the caller surfaces.</li>
  * <li><b>Reject</b> (inexpressible in this version, §9 escalation):
- * SubCircuit, Memory, StateMachine, and anything unrecognized.
+ * SubCircuit, Memory, and anything unrecognized.
  * Rejection lists <em>every</em> offender in one message and nothing
  * is written.</li>
  * </ul>
@@ -417,7 +421,7 @@ public final class HdlExporter {
 			XorGate.class, NotGate.class, DelayGate.class, Extend.class,
 			TriState.class, Adder.class, Register.class, Clock.class,
 			Binder.class, Splitter.class, Mux.class, Decoder.class,
-			TruthTable.class);
+			TruthTable.class, StateMachine.class);
 
 	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
@@ -693,6 +697,11 @@ public final class HdlExporter {
 			return;
 		}
 
+		if (el instanceof StateMachine sm) {
+			buildStateMachine(model, sm, ins, outs, nets, groups, names);
+			return;
+		}
+
 		// unreachable: the policy pass admits only the classes above
 		throw new IllegalStateException(
 				"no template for " + el.getClass().getName());
@@ -779,6 +788,224 @@ public final class HdlExporter {
 						+ " outputs (JLS also drives row 0 at startup)",
 				operands, rows, targets, helpers));
 	} // end of buildTruthTable method
+
+	/**
+	 * Append the model statement for a StateMachine (issue #59): a
+	 * binary-encoded clocked case. Codes follow canonical (#180) state
+	 * order except the initial state, which takes code 0 - the code
+	 * the register starts in, mirroring {@code StateMachine.initSim};
+	 * with no initial state (hand-edited files) the canonical-first
+	 * state is the deterministic stand-in for initSim's arbitrary
+	 * HashSet pick. Per state, transitions are read in canonical save
+	 * order and folded to the emitters' shape: an unconditional
+	 * transition wins outright (JLS returns it regardless of the
+	 * others), conditionals become ordered arms, "else" becomes the
+	 * final arm, and no matching arm holds the state (issue #98 S5).
+	 * A conditional reading an unattached input is decided statically
+	 * against 0 (JLS's absent-inputs rule): a true condition ends the
+	 * chain as its else, a false one disappears - so emitters never
+	 * compare two literals. Moore output values are per state, with
+	 * unspecified outputs lowered to 0 as in
+	 * {@code State.sendOutputs}. A machine with no states has no
+	 * outputs to drive, so it warns and skips.
+	 *
+	 * @param model The model being built; receives the statement.
+	 * @param sm The state machine element.
+	 * @param ins The element's inputs (signals, then "clock").
+	 * @param outs The element's outputs, in pin order.
+	 * @param nets Union-find over the circuit's fused wire nets.
+	 * @param groups Net-root-to-group map holding chosen net names.
+	 * @param names Identifier allocator for helper state variables.
+	 */
+	private static void buildStateMachine(HdlModel model, StateMachine sm,
+			List<Input> ins, List<Output> outs, UnionFind nets,
+			Map<WireNet, Group> groups, HdlNames names) {
+
+		Set<State> stateSet = sm.getStates();
+		if (stateSet.isEmpty()) {
+			model.addWarning(describe(sm)
+					+ " has no states; nothing exported for it");
+			return;
+		}
+
+		// canonical state order (#180): the same (name, x, y) key as
+		// State.saveOrder(), restated over the public getters
+		List<State> ordered = new ArrayList<State>(stateSet);
+		ordered.sort(Comparator.comparing(State::getName)
+				.thenComparingInt(State::getX)
+				.thenComparingInt(State::getY));
+
+		// codes: the initial state takes 0 (initSim starts there; the
+		// canonical-first state is the fallback when none is marked),
+		// the rest follow in canonical order
+		State initial = null;
+		for (State state : ordered) {
+			if (state.isInitial()) {
+				initial = state;
+				break;
+			}
+		}
+		List<State> codeOrder = new ArrayList<State>();
+		if (initial != null) {
+			codeOrder.add(initial);
+		}
+		for (State state : ordered) {
+			if (state != initial) {
+				codeOrder.add(state);
+			}
+		}
+		Map<State, Integer> codes = new IdentityHashMap<State, Integer>();
+		for (int k = 0; k < codeOrder.size(); k += 1) {
+			codes.put(codeOrder.get(k), k);
+		}
+		int stateBits = Math.max(1, 32 - Integer.numberOfLeadingZeros(
+				codeOrder.size() - 1));
+
+		// the trailing "clock" put is the trigger; the rest are the
+		// condition signals
+		Map<String, Input> signalInputs = new TreeMap<String, Input>();
+		HdlModel.Operand clock = null;
+		for (Input in : ins) {
+			String pinName = in.getName();
+			if (pinName == null) {
+				throw new IllegalStateException(
+						"StateMachine.init names every input put");
+			}
+			if (pinName.equals("clock")) {
+				clock = operand(in, nets, groups);
+			}
+			else {
+				signalInputs.put(pinName, in);
+			}
+		}
+		if (clock == null) {
+			throw new IllegalStateException(
+					"StateMachine.init always adds a clock input");
+		}
+		if (!clock.isNet()) {
+			model.addWarning(describe(sm) + " has no clock connected;"
+					+ " it holds its initial state");
+		}
+
+		// the machine's Moore outputs, in pin order
+		List<HdlModel.StateMachineStatement.MooreOutput> outputs =
+				new ArrayList<HdlModel.StateMachineStatement.MooreOutput>();
+		List<String> outputNames = new ArrayList<String>();
+		for (int k = 0; k < outs.size(); k += 1) {
+			Output out = outs.get(k);
+			int bits = Math.max(out.getBits(), 1);
+			outputs.add(new HdlModel.StateMachineStatement.MooreOutput(
+					target(model, sm, k, out, bits, nets, groups, names),
+					names.synth("sm_" + sm.getID() + "_" + k), bits));
+			outputNames.add(out.getName());
+		}
+
+		List<HdlModel.StateMachineStatement.StateCase> cases =
+				new ArrayList<HdlModel.StateMachineStatement.StateCase>();
+		for (State state : codeOrder) {
+			List<HdlModel.StateMachineStatement.Condition> conditions =
+					new ArrayList<HdlModel.StateMachineStatement.Condition>();
+			int unconditionalNext = -1;
+			int elseNext = -1;
+			for (State.Transition tr : state.getTransitionsInSaveOrder()) {
+				State next = tr.nextState;
+				if (next == null) {
+					throw new IllegalStateException("exporting a transition"
+							+ " whose next state is not linked");
+				}
+				Integer nextCode = codes.get(next);
+				if (nextCode == null) {
+					throw new IllegalStateException("transition to a state"
+							+ " outside the machine: " + next.getName());
+				}
+				if (tr.unconditional) {
+					// canonical order puts the unconditional first, and
+					// JLS takes it regardless of any other transition
+					unconditionalNext = nextCode;
+					break;
+				}
+				if (tr.other) {
+					elseNext = nextCode;
+					continue;
+				}
+				Input signal = signalInputs.get(tr.signal);
+				if (signal == null) {
+					throw new IllegalStateException(
+							"StateMachine.init made an input for every"
+									+ " condition signal: " + tr.signal);
+				}
+				HdlModel.Operand in = operand(signal, nets, groups);
+				if (!in.isNet()) {
+					// an unattached input reads 0 (JLS's absent-inputs
+					// rule), deciding the condition statically: true
+					// ends the chain as its else, false disappears
+					if (tr.equal == (tr.value == 0)) {
+						elseNext = nextCode;
+						break;
+					}
+					continue;
+				}
+				conditions.add(new HdlModel.StateMachineStatement.Condition(
+						in, tr.equal, BigInteger.valueOf(tr.value),
+						nextCode));
+			}
+			if (conditions.isEmpty() && unconditionalNext < 0
+					&& elseNext >= 0) {
+				// an else with no live conditions is unconditional
+				unconditionalNext = elseNext;
+				elseNext = -1;
+			}
+			List<BigInteger> values = new ArrayList<BigInteger>();
+			for (String signal : outputNames) {
+				long value = 0;
+				for (State.Out out : state.getOuts()) {
+					if (signal.equals(out.signal)) {
+						value = out.value;
+						break;
+					}
+				}
+				values.add(BigInteger.valueOf(value));
+			}
+			Integer code = codes.get(state);
+			if (code == null) {
+				throw new IllegalStateException(
+						"every state in codeOrder was assigned a code");
+			}
+			cases.add(new HdlModel.StateMachineStatement.StateCase(
+					state.getName(), code, conditions, unconditionalNext,
+					elseNext, values));
+		}
+
+		String regName = names.synth((sm.getName().isEmpty()
+				? "sm_" + sm.getID() : sm.getName()) + "_state");
+		StringBuilder legend = new StringBuilder();
+		for (HdlModel.StateMachineStatement.StateCase arm : cases) {
+			if (legend.length() > 0) {
+				legend.append(", ");
+			}
+			legend.append('"').append(arm.name()).append("\"=")
+					.append(arm.code());
+		}
+		model.addStatement(new HdlModel.StateMachineStatement(
+				"StateMachine \"" + sm.getName() + "\" ("
+						+ (sm.getTrigger() == 1 ? "rising" : "falling")
+						+ " edge, " + cases.size() + " states) at " + at(sm)
+						+ ": state codes " + legend
+						+ (initial == null
+								? " (no initial state: the canonical-first"
+										+ " state stands in for initSim's"
+										+ " arbitrary pick)"
+								: "")
+						+ "; an edge matching no transition holds the state"
+						+ " (issue #98). Divergences: JLS ignores edges"
+						+ " during its " + sm.getDelay()
+						+ "-unit transition window (busy), this export"
+						+ " never does; JLS picks among simultaneously"
+						+ " matching conditions in hash order, this export"
+						+ " tests them in canonical (#180) order",
+				regName, sm.getTrigger() == 1, clock, stateBits, 0, cases,
+				outputs));
+	} // end of buildStateMachine method
 
 	/**
 	 * Map a gate-family element to its HDL operation. The switch is

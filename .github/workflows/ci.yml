@@ -504,19 +504,20 @@ jobs:
   # ubuntu-24.04-arm runner.  The build script is arch-agnostic — only the
   # pinned appimagetool binary differs per arch (build-installer.sh already
   # carries the aarch64 sha256) — so this reuses the identical mechanism.
-  # Kept a separate advisory (continue-on-error) job rather than a matrix
-  # leg of the gate above, so that required check keeps its stable name
-  # while this arm leg accrues its own 20-run stability record (the same
-  # promotion rule the windows and gui-wayland lanes use); the honesty gate
-  # of #188 §10 still holds — a red leg means a byte still varies.
+  # Kept a separate job rather than a matrix leg of the gate above so the
+  # x86_64 required check keeps its stable name.  HARD GATE since #188
+  # (§7 item 4 promotion rule): the leg ran as a continue-on-error advisory
+  # while it accrued a stability record and went 10/10 green on the last ten
+  # non-cron ci.yml runs (runs 30231795586, 30231810697, 30233072799,
+  # 30233081534, 30233449347, 30275748279, 30275761243, 30275782726,
+  # 30276526422, 30277051630), so a red run here now fails CI — the honesty
+  # gate of #188 §10 holds: a red leg means a byte still varies.
   installer-reproducibility-aarch64:
     name: Linux installer reproducibility (aarch64)
     # runs on push/PR like the other jobs (skips only the nightly cron, which
-    # runs gui-wayland alone); advisory via continue-on-error while the
-    # cross-platform double-build stabilizes on real runners (#189/#190/#191)
+    # runs gui-wayland alone)
     if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04-arm
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

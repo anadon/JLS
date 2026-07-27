@@ -8,6 +8,19 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- Every element pin now reports a **face** (#78, pin-face stage of the
+  descriptor plan): `Put.getFace()` returns the `jls.core.Orientation`
+  that is the outward normal of the element edge the pin sits on —
+  what a wire router or rotation-as-transform needs without
+  re-deriving element geometry. Gates declare their pin faces at
+  creation (inputs opposite the gate's orientation, output with it);
+  every other element derives the face geometrically from its bounding
+  rectangle, with a documented left/right-before-up/down corner rule.
+  The new headless, registry-driven `PinFaceContractTest` pins the
+  contract for every registered element type: each pin's face names
+  the edge it lies on, rotation permutes faces by exactly a quarter
+  turn, and gate declarations agree with pure geometry at all four
+  orientations.
 - Typed extension-point mechanism and catalog (#223, first slice of
   the #224 grand-architecture program): `jls.module.ExtensionPoint`
   (a stable kebab-case id plus the contract class token) and

@@ -268,6 +268,52 @@ public final class ShiftRegister extends LogicElement
 		return outputOrientation;
 	} // end of getOutputOrientation method
 
+	/**
+	 * The data (and output) width of this shifter (issue #59: read by the
+	 * HDL exporter, which renders the shift over a {@code bits}-wide
+	 * value).
+	 *
+	 * @return the number of data bits.
+	 */
+	public int getDataBits() {
+
+		return bits;
+	} // end of getDataBits method
+
+	/**
+	 * Whether this instance shifts logically left, filling with zeros
+	 * (issue #59: the HDL exporter picks {@code input << amount}).
+	 *
+	 * @return true for a logical-left shifter.
+	 */
+	public boolean isShiftLeft() {
+
+		return type == Type.LogicalLeft;
+	} // end of isShiftLeft method
+
+	/**
+	 * Whether this instance shifts logically right, filling with zeros
+	 * (issue #59: the HDL exporter picks {@code input >> amount}).
+	 *
+	 * @return true for a logical-right shifter.
+	 */
+	public boolean isLogicalRight() {
+
+		return type == Type.LogicalRight;
+	} // end of isLogicalRight method
+
+	/**
+	 * Whether this instance shifts arithmetically right, filling with
+	 * copies of the sign bit (issue #59: the HDL exporter picks
+	 * {@code $signed(input) >>> amount}).
+	 *
+	 * @return true for an arithmetic-right shifter.
+	 */
+	public boolean isArithmeticRight() {
+
+		return type == Type.ArithmeticRight;
+	} // end of isArithmeticRight method
+
 	// Declarative persistence (#23): one declaration drives save, load
 	// dispatch, and copy for this element's own attributes. The names
 	// and save order are the fork's, so 4.6-era fork files load

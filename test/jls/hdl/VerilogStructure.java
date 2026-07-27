@@ -36,7 +36,10 @@ final class VerilogStructure {
 			"module", "endmodule", "input", "output", "wire", "reg",
 			"assign", "always", "posedge", "negedge", "or", "if",
 			"else", "case", "casez", "endcase", "default", "begin",
-			"end");
+			"end",
+			// $signed cast in the ShiftRegister arithmetic-right template
+			// (issue #59) scans as the bare identifier "signed"
+			"signed");
 
 	static void assertSane(String verilog) {
 

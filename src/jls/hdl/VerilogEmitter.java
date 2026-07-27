@@ -217,6 +217,11 @@ public final class VerilogEmitter implements HdlEmitter {
 			public void visit(HdlModel.StateMachineStatement s) {
 				stateMachine(out, s);
 			}
+			/** Routes a shift statement to {@link #shift}. */
+			@Override
+			public void visit(HdlModel.ShiftStatement s) {
+				shift(out, s);
+			}
 		});
 	} // end of statement method
 
@@ -585,6 +590,36 @@ public final class VerilogEmitter implements HdlEmitter {
 		}
 		out.append("end\n");
 	} // end of mooreArm method
+
+	/**
+	 * Emits a continuous {@code assign} for a barrel shift (ShiftRegister,
+	 * the #59 template): {@code data << amount} for a left shift,
+	 * {@code data >> amount} for a logical right shift, and
+	 * {@code $signed(data) >>> amount} for an arithmetic right shift (the
+	 * {@code $signed} cast makes {@code >>>} sign-extend). The amount is
+	 * ceil(log2(bits)) wide, so it never over-shifts.
+	 * @param out the buffer the module text is appended to
+	 * @param s the shift statement (kind, data, amount, output net)
+	 */
+	private static void shift(StringBuilder out, HdlModel.ShiftStatement s) {
+
+		out.append("  assign ").append(s.output).append(" = ");
+		switch (s.kind) {
+		case LEFT:
+			out.append(operand(s.data)).append(" << ")
+					.append(operand(s.amount));
+			break;
+		case LOGICAL_RIGHT:
+			out.append(operand(s.data)).append(" >> ")
+					.append(operand(s.amount));
+			break;
+		default: // ARITH_RIGHT
+			out.append("$signed(").append(operand(s.data)).append(") >>> ")
+					.append(operand(s.amount));
+			break;
+		}
+		out.append(";\n");
+	} // end of shift method
 
 	/**
 	 * Bit routing, with contiguous runs coalesced into part-selects:

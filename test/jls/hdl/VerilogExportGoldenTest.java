@@ -456,6 +456,42 @@ class VerilogExportGoldenTest {
 		assertGolden("statemachine_hold", stateMachineHoldFixture());
 	}
 
+	/**
+	 * An 8-bit barrel shifter (ShiftRegister, issue #59) with an 8-bit
+	 * data input and a 3-bit amount input, wired between pins. The kind
+	 * (logical left, logical right, arithmetic right) is the only
+	 * variable.
+	 */
+	private static HdlCircuitBuilder shiftFixture(String name, String type) {
+
+		HdlCircuitBuilder cb = new HdlCircuitBuilder(name);
+		int a = cb.inputPin("a", 8);
+		int amt = cb.inputPin("amt", 3);
+		int sh = cb.shiftRegister(type, 8);
+		int y = cb.outputPin("y", 8);
+		cb.wire(a, "output", sh, "input");
+		cb.wire(amt, "output", sh, "amount");
+		cb.wire(sh, "output", y, "input");
+		return cb;
+	}
+
+	@Test
+	void shiftLeftTemplateIsAShiftLeft() throws Exception {
+		assertGolden("shift_left", shiftFixture("shiftleft", "LogicalLeft"));
+	}
+
+	@Test
+	void shiftLogicalRightTemplateIsAShiftRight() throws Exception {
+		assertGolden("shift_right",
+				shiftFixture("shiftright", "LogicalRight"));
+	}
+
+	@Test
+	void shiftArithmeticRightTemplateIsASignedShiftRight() throws Exception {
+		assertGolden("shift_arith",
+				shiftFixture("shiftarith", "ArithmeticRight"));
+	}
+
 	@Test
 	void binderAndSplitterTemplates() throws Exception {
 		HdlCircuitBuilder cb = new HdlCircuitBuilder("bundles");

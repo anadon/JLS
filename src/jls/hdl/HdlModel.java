@@ -191,6 +191,11 @@ public final class HdlModel {
 		 * @param statement the statement to emit
 		 */
 		void visit(StateMachineStatement statement);
+		/**
+		 * Emit a barrel-shift (ShiftRegister) statement.
+		 * @param statement the statement to emit
+		 */
+		void visit(ShiftStatement statement);
 	} // end of StatementVisitor interface
 
 	/** A bitwise gate (or plain buffer) driving one net. */
@@ -820,6 +825,66 @@ public final class HdlModel {
 			visitor.visit(this);
 		}
 	} // end of StateMachineStatement class
+
+	/**
+	 * A combinational barrel shift (ShiftRegister, issue #59): the target
+	 * takes the data operand shifted by the amount operand, in one of
+	 * three fixed directions. JLS's ShiftRegister holds no state despite
+	 * its name - it is a Mux-like combinational element (issue #122) - so
+	 * this renders as a single dataflow assignment, never a clocked
+	 * process. The amount operand is {@code ceil(log2(bits))} wide, so it
+	 * can never over-shift the {@code bits}-wide data. An unattached data
+	 * or amount operand folds to a zero literal (JLS's absent-inputs rule),
+	 * and shifting by a literal is valid HDL, so no special case is needed.
+	 */
+	public static final class ShiftStatement extends Statement {
+
+		/** The fixed shift direction and fill of a shifter instance. */
+		public enum Kind {
+			/** Shift toward the high bit, filling with zeros. */
+			LEFT,
+			/** Shift toward the low bit, filling with zeros. */
+			LOGICAL_RIGHT,
+			/** Shift toward the low bit, filling with copies of the sign bit. */
+			ARITH_RIGHT
+		} // end of Kind enum
+
+		/** Which direction and fill the shift applies. */
+		public final Kind kind;
+		/** The value being shifted. */
+		public final Operand data;
+		/** The shift distance. */
+		public final Operand amount;
+		/** Net driven by the shifted value. */
+		public final String output;
+		/** Width of the data and output in bits. */
+		public final int bits;
+
+		/**
+		 * Builds an immutable shift statement.
+		 * @param comment identifies the source element
+		 * @param kind which direction and fill the shift applies
+		 * @param data the value being shifted
+		 * @param amount the shift distance
+		 * @param output net driven by the shifted value
+		 * @param bits width of the data and output in bits
+		 */
+		ShiftStatement(String comment, Kind kind, Operand data, Operand amount,
+				String output, int bits) {
+			super(comment);
+			this.kind = kind;
+			this.data = data;
+			this.amount = amount;
+			this.output = output;
+			this.bits = bits;
+		}
+
+		/** Double-dispatch to the emitter's matching visit method. */
+		@Override
+		public void accept(StatementVisitor visitor) {
+			visitor.visit(this);
+		}
+	} // end of ShiftStatement class
 
 	// the model proper
 	/** Legalized HDL module name. */

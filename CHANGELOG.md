@@ -8,6 +8,25 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- Typed extension-point mechanism and catalog (#223, first slice of
+  the #224 grand-architecture program): `jls.module.ExtensionPoint`
+  (a stable kebab-case id plus the contract class token) and
+  `jls.module.ExtensionRegistry` (host declares its points up front;
+  contributing to an undeclared point fails loudly naming point and
+  contributor; a wrong-typed raw contribution is rejected at the
+  boundary via the contract token; contributions dispense as
+  immutable snapshots in deterministic contribution order). The four
+  shipped headless seams are catalogued as constants in their home
+  packages — `elem.element-provider` over `ElementType`,
+  `gui.palette-contributor` over `PaletteEntry`, `hdl.exporter` over
+  `HdlEmitter`, `collab.op-observer` over `OpSink` — and the
+  normative seven-seam table (including the pending importer,
+  command, and theme seams with their owning issues #61/#84/#76)
+  lives in `docs/extension-points.md`, cross-checked against the
+  constants in both directions by the new
+  `ExtensionPointCatalogTest`. Mechanism and catalog only: wiring
+  `ElementRegistry`/`SimpleEditor` consumption through the registry
+  is a follow-on slice of the #220 module runtime.
 - The editor palette is now generated from a declarative table (#78):
   `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
   group, help topic per element — the GUI half of the two-layer

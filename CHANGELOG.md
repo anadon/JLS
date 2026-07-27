@@ -25,6 +25,22 @@ All notable changes to JLS are documented here. The format follows
   tests them canonically. Pinned by three golden pairs
   (`statemachine`, `statemachine_else`, `statemachine_hold`) in both
   languages plus new `HdlPolicyTest` cases.
+- Module activation runtime (#220): the `jls.module.JlsModule`
+  lifecycle SPI (`manifest()` / `register()` / `start()`) and
+  `jls.module.ModuleRuntime`, a two-phase runner that resolves
+  manifests once through `ModuleResolver`, registers every module in
+  topological order, then starts them per their declared trigger —
+  `Eager` at boot; `OnCommand` / `OnEvent` / `OnDemand` on first
+  `dispatchCommand` / `fireEvent` / `demand` (by concrete id or
+  `provides` token). Activation transitively starts the sole provider
+  of each `requires` token in topological order; `optional` / `after` /
+  `before` never trigger activation. Each module runs a start-once
+  state machine: a throwing `start()` becomes a permanent
+  `ModuleActivationException` naming the module and phase, rethrown on
+  every later touch and never silently retried; unknown commands,
+  events, and tokens are graceful no-ops. Pure JVM, deterministic
+  across discovery order; pinned by the new headless
+  `ModuleRuntimeTest`.
 - Modern-Java program closeout gates (#96): a new headless
   `ModernJavaGatesTest` scans `src/` and `test/` and fails the build
   on any `Cloneable` in an `implements`/`extends` clause (#94 retired
@@ -66,13 +82,26 @@ All notable changes to JLS are documented here. The format follows
   `RemoveWire` per wholly-selected wire net plus one `RemoveElements`
   (jump starts expanded with their jump ends), submitted as a single
   batch via the new `OpSink.submitAll` so a wired delete stays exactly
-  one undo snapshot. Selections the vocabulary cannot express yet
-  (partially selected nets, subcircuits) fall back to the previous
+  one undo snapshot. Selections the vocabulary cannot express
+  (subcircuits, in-progress wiring) fall back to the previous
   inline removal unchanged; user-facing undo mechanics are untouched.
   Byte parity between the op path and the inline path is pinned
   headlessly by `DeleteGestureTest`, and the end-to-end delete-key +
   single-undo behavior by a new display-tagged `EditorGestureTest`
   case.
+- The delete gesture's partial-net fallback is gone (#167): a
+  selection that clips a wire net — a middle or leaf segment of a
+  larger net, or a wired element deleted without its wiring — now
+  travels through the operation layer as `RemoveWire` of the whole net
+  plus one `AddWire` per surviving connected component, built by the
+  new `AddWire.survivors` factory (`WireEnd.save`-exact blocks
+  filtered to the surviving subgraph: kept wires and probes only,
+  attachments to deleted elements dropped, tri-state recomputed per
+  component the way the inline re-partition does). Only subcircuits,
+  in-progress wiring, and uneditable cascades still take the inline
+  path. Byte parity with the inline delete is pinned by
+  `DeleteGestureTest` on constructed and save/load-restored circuits
+  alike, and a clipped-net delete stays exactly one undo snapshot.
 - Board-aware HDL export, first slice (#213): `-export` now accepts
   `-board <name>` plus `-pins <file>` and writes a pin-constraint file
   (`.pcf`) next to the exported HDL, generated from the same model walk

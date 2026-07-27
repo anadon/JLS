@@ -329,6 +329,11 @@
                Raised 2026-07-19 (issue #159): INSTRUCTION 52.0%,
                LINE 50.0%, BRANCH 47.5% (measured headless 53.13% /
                51.24% / 48.77%).
+               Raised 2026-07-26 (issue #159): INSTRUCTION 54.5%,
+               LINE 53.5%, BRANCH 50.5% (measured headless 56.22% /
+               54.70% / 52.53% after the Register/Memory/SubCircuit
+               model suites in test/jls/elem; LINE wobbles ~0.2pt
+               between clean runs, hence the wider margin there).
                The floors are pinned to the *headless* measurement so a
                plain mvn verify passes anywhere; under the #162 display
                substrate (xvfb-run ... -Djls.test.headless=false, which
@@ -353,17 +358,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.520</minimum>
+                      <minimum>0.545</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.500</minimum>
+                      <minimum>0.535</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.475</minimum>
+                      <minimum>0.505</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -380,6 +385,26 @@
                      53.96/52.14/57.16, jls.sim 51.61/50.22/41.63,
                      jls.elem 46.67/45.33/40.80, jls.collab.op
                      92.69/92.77/78.39 - instruction/line/branch).
+                     Reconciled 2026-07-26 (issues #159/#233) against
+                     a fresh headless measurement (jls
+                     51.32/49.39/55.47, jls.sim 95.14/94.08/86.49,
+                     jls.elem 74.65/71.64/60.62 after the
+                     Register/Memory/SubCircuit model suites,
+                     jls.collab.op 91.69/91.31/77.25): the bundle,
+                     jls.sim, and jls.elem floors were raised (jls.sim
+                     had shrunk to six core classes in an earlier
+                     refactor, so its 2026-07-19 figures were stale by
+                     ~44 points and its floors could no longer catch a
+                     regression), the jls floors were re-set DOWN to
+                     sit under what plain headless mvn clean verify
+                     actually measures (the 2026-07-19 figures were
+                     confirmed against an integrated tree, and
+                     headless master measured below them), and - per
+                     the #233 finding that zero-margin per-package
+                     floors flake across the JDK matrix (jls.collab.op
+                     branch measured 0.768 against its 0.770 floor on
+                     JDK 26) - every floor now keeps at least a point
+                     of headroom under its headless measurement.
                      jls.edit is deliberately unfloored until
                      the #91/#84 work makes editor code testable; the
                      same raise-with-your-PR convention applies here as
@@ -399,17 +424,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.525</minimum>
+                      <minimum>0.495</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.510</minimum>
+                      <minimum>0.480</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.555</minimum>
+                      <minimum>0.530</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -422,17 +447,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.505</minimum>
+                      <minimum>0.930</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.490</minimum>
+                      <minimum>0.920</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.405</minimum>
+                      <minimum>0.845</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -445,17 +470,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.455</minimum>
+                      <minimum>0.730</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.440</minimum>
+                      <minimum>0.700</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.395</minimum>
+                      <minimum>0.585</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -468,17 +493,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.910</minimum>
+                      <minimum>0.905</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.905</minimum>
+                      <minimum>0.895</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.770</minimum>
+                      <minimum>0.750</minimum>
                     </limit>
                   </limits>
                 </rule>

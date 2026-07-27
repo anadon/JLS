@@ -255,4 +255,47 @@ class EditorGestureTest {
 		}
 	}
 
+	/**
+	 * The move-selection drag commit end-to-end through the op path
+	 * (issue #167): a lone gate dragged into empty space is a pure
+	 * relocation, so the plan builder maps it to one MoveElements and
+	 * the drop lands at the drag delta - matching the inline commit,
+	 * whose byte parity is pinned headlessly by
+	 * jls.edit.MoveGestureTest. A single undo then restores the
+	 * pre-drag position, pinning the one-undo-snapshot-per-gesture
+	 * batch submit. Positions rather than full bytes are asserted for
+	 * the reason the delete test notes: undo's restore re-runs display
+	 * init, which sets layout fields the pre-gesture circuit only gains
+	 * once drawn.
+	 */
+	@Test
+	void dragMovesAnElementAndOneUndoRestoresIt() throws Exception {
+		Circuit circuit = oneGate();
+		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
+			AndGate gate = assertElementPresent(circuit, AndGate.class);
+			int beforeX = gate.getX(), beforeY = gate.getY();
+			int fromX = centerX(gate), fromY = centerY(gate);
+
+			ui.leftDrag(fromX, fromY, fromX + 120, fromY + 96);
+			ui.waitFor(() -> gate.getX() != beforeX || gate.getY() != beforeY,
+					"gate moved by the drag");
+			GeometryAssert.assertOnGrid(gate);
+			assertTrue(Math.abs(gate.getX() - (beforeX + 120)) <= 12
+					&& Math.abs(gate.getY() - (beforeY + 96)) <= 12,
+					"the op drop lands at the drag delta, like the inline "
+							+ "commit: " + gate.getX() + "," + gate.getY());
+
+			// one undo restores the pre-drag position; the drag was one
+			// snapshot, so a single undo suffices. Undo swaps in a fresh
+			// circuit, so read the editor's live circuit.
+			ui.rightPress(700, 600);
+			ui.clickPopupItem("Undo");
+			ui.waitFor(() -> {
+				AndGate g = assertElementPresent(
+						ui.currentCircuit(), AndGate.class);
+				return g.getX() == beforeX && g.getY() == beforeY;
+			}, "one undo restored the pre-drag position");
+		}
+	}
+
 }

@@ -1017,6 +1017,105 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of deleteSelectionPlan method
 
 		/**
+		 * Plan a move-selection drag commit as the {@link MoveElements}
+		 * op, or null when the drop must take the inline commit instead
+		 * (issue #167, the move slice of the operation-layer migration).
+		 * The twin of {@link #deleteSelectionPlan}: a static, Swing-free
+		 * builder so the boundary is testable without constructing the
+		 * editor (which needs a display).
+		 *
+		 * <p>The op path is deliberately conservative - it must produce
+		 * exactly what the inline {@code fixPosition} + {@code connect()}
+		 * + {@code removeCoLinear()} commit produces, and {@code
+		 * MoveElements} alone does none of that connection or cleanup
+		 * work. So a plan is returned only for a pure relocation: every
+		 * selected element is a plain, editable element (no wire, wire
+		 * end, or subcircuit) carrying no attached put - so moving it
+		 * drags no wire end and can neither form nor break a connection
+		 * nor induce colinear cleanup - and no selected element's put,
+		 * at its post-move position, coincides with a non-selected wire
+		 * end or put, which is every coincidence {@code connect()} would
+		 * turn into a new connection. Any other drop returns null and the
+		 * caller keeps the inline commit verbatim.
+		 *
+		 * <p>Called with the selection already at its dropped (dragged)
+		 * position, so the coincidence test reads the same post-move
+		 * geometry {@code connect()} would.
+		 *
+		 * @param circuit The circuit being edited.
+		 * @param selected The dropped selection; not modified.
+		 * @param dx The net x delta of the drag, in model units.
+		 * @param dy The net y delta of the drag, in model units.
+		 * @return the one-op plan, or null when the drop has no plan and
+		 *         the caller must commit inline.
+		 * @jls.testedby jls.edit.MoveGestureTest
+		 */
+		static @Nullable List<CircuitOp> moveSelectionPlan(Circuit circuit,
+				Set<Element> selected, int dx, int dy) {
+
+			if (selected.isEmpty())
+				return null;
+
+			// the vocabulary limit: a pure relocation of plain elements.
+			// A wire, wire end, or subcircuit in the selection, an
+			// uneditable, or any element with an attached put (whose move
+			// drags a wire end and can re-form the net) takes the inline
+			// path, which owns the connect()/removeCoLinear() fix-up.
+			List<ElementId> ids = new ArrayList<ElementId>();
+			for (Element el : selected) {
+				if (el instanceof Wire || el instanceof WireEnd)
+					return null;
+				if (el instanceof SubCircuit)
+					return null;
+				if (el.isUneditable())
+					return null;
+				for (Put put : el.getAllPuts()) {
+					if (put.isAttached())
+						return null;
+				}
+				ids.add(el.getStableId());
+			}
+
+			// connect() forms a connection when a selected element's put,
+			// at its post-move position, lands on a non-selected wire end
+			// or a non-selected element's put; any such drop must take the
+			// inline connect() + removeCoLinear() path so the op path never
+			// diverges from it. Mirror connect()'s neighbourhood query: an
+			// element's index bounds is its body, not its puts, so scan
+			// around the selected element (grown by SPACING, as connect()
+			// does) rather than around each isolated put position.
+			for (Element el : selected) {
+				Set<Put> puts = el.getAllPuts();
+				if (puts.isEmpty())
+					continue;
+				Rectangle near = AwtGeom.awt(el.getIndexBounds());
+				near.grow(Geometry.SPACING,Geometry.SPACING);
+				for (Element other :
+						circuit.elementsNear(AwtGeom.bounds(near))) {
+					if (selected.contains(other))
+						continue;
+					for (Put put : puts) {
+						if (other instanceof WireEnd end) {
+							if (end.getX() == put.getX()
+									&& end.getY() == put.getY())
+								return null;
+						}
+						else {
+							for (Put otherPut : other.getAllPuts()) {
+								if (otherPut.getX() == put.getX()
+										&& otherPut.getY() == put.getY())
+									return null;
+							}
+						}
+					}
+				}
+			}
+
+			java.util.Collections.sort(ids);
+			return List.of(new MoveElements(ids,dx,dy));
+		} // end of moveSelectionPlan method
+
+		/**
 		 * The window the circuit is displayed and edited in.
 		 */
 		private class EditWindow extends JPanel implements ActionListener,MouseListener,MouseMotionListener,MouseWheelListener {
@@ -1123,6 +1222,16 @@ public abstract class SimpleEditor extends JPanel {
 			private int x;
 			/** Latest cursor y coordinate, in model units (issue #74). */
 			private int y;
+			/**
+			 * Cursor x at the moment a move gesture began, in model units
+			 * (issue #167). The whole selection translates uniformly with
+			 * the cursor, so the net drag delta at commit is the current
+			 * cursor minus this reference - the {@code MoveElements} op's
+			 * dx without reading the elements' private saved positions.
+			 */
+			private int moveOriginX;
+			/** Cursor y at the move gesture's start, in model units (issue #167). */
+			private int moveOriginY;
 			/**
 			 * Latest cursor position in this component's own coordinates
 			 * (issue #74). Popup menus and value dialogs are positioned in
@@ -2526,6 +2635,8 @@ public abstract class SimpleEditor extends JPanel {
 									end2.setHighlight(true);
 									end1.savePosition();
 									end2.savePosition();
+									moveOriginX = x;
+									moveOriginY = y;
 									setState(State.moving);
 									return;
 								}
@@ -2538,6 +2649,8 @@ public abstract class SimpleEditor extends JPanel {
 								selected.add(el);
 								el.setHighlight(true);
 								el.savePosition();
+								moveOriginX = x;
+								moveOriginY = y;
 								setState(State.moving);
 								return;
 							}
@@ -2616,6 +2729,8 @@ public abstract class SimpleEditor extends JPanel {
 							for (Element sel : selected) {
 								sel.savePosition();
 							}
+							moveOriginX = x;
+							moveOriginY = y;
 							setState(State.moving);
 						}
 						else if (rightButton) {
@@ -3274,30 +3389,55 @@ public abstract class SimpleEditor extends JPanel {
 					// otherwise
 					else {
 
-						// fix elements at their new positions
-						for (Element el : selected) {
-							el.fixPosition();
+						// a pure relocation commits through the MoveElements
+						// op (issue #167): the live drag was the preview, so
+						// restore the pre-drag positions and let the op be the
+						// mutation of record - undo, checkpointing, and (later)
+						// replication all observe the OpSink seam. The op path
+						// is taken only for drops that form no connection and
+						// induce no colinear cleanup, i.e. exactly what the
+						// inline connect() + removeCoLinear() below would do
+						// nothing at; any other drop keeps that inline commit
+						// verbatim. The net delta is the cursor's travel since
+						// the gesture began (the whole selection moved with it).
+						int dx = x - moveOriginX;
+						int dy = y - moveOriginY;
+						List<CircuitOp> plan =
+								moveSelectionPlan(circuit,selected,dx,dy);
+						if (plan != null) {
+							for (Element el : selected) {
+								el.restorePosition();
+							}
+							submitOps(plan);
 						}
+						else {
 
-						// connect everything possible
-						connect();
+							// inline fallback: fix elements at their new
+							// positions
+							for (Element el : selected) {
+								el.fixPosition();
+							}
 
-						// fix up wire end attached to imaginary puts
-						for (Element el : selected) {
-							if (el instanceof WireEnd end) {
-								if (end.isAttached()) {
-									Put ep = end.getPut();
-									if (ep == null)
-										throw new IllegalStateException("attached wire end has no put");
-									if (ep.getElement() == null) {
-										end.setPut(null);
+							// connect everything possible
+							connect();
+
+							// fix up wire end attached to imaginary puts
+							for (Element el : selected) {
+								if (el instanceof WireEnd end) {
+									if (end.isAttached()) {
+										Put ep = end.getPut();
+										if (ep == null)
+											throw new IllegalStateException("attached wire end has no put");
+										if (ep.getElement() == null) {
+											end.setPut(null);
+										}
 									}
 								}
 							}
-						}
 
-						// record that changes have been made
-						markChanged();
+							// record that changes have been made
+							markChanged();
+						}
 					}
 
 					// clean up

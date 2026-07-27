@@ -160,6 +160,7 @@ public final class GateDialog implements ElementDialog {
 			else {
 				info = new JPanel(new GridLayout(2,2));
 				JLabel inputs = new JLabel("Inputs: ",SwingConstants.RIGHT);
+				labelled(inputs, inputsField, "dialog.gate.inputs");
 				info.add(inputs);
 				JPanel in = new JPanel(new FlowLayout());
 				in.add(inputsField);
@@ -175,6 +176,7 @@ public final class GateDialog implements ElementDialog {
 				gates = new JLabel("Gates (bits): ",SwingConstants.RIGHT);
 			}
 
+			labelled(gates, gatesField, "dialog.gate.bits");
 			info.add(gates);
 			JPanel ga = new JPanel(new FlowLayout());
 			ga.add(gatesField);

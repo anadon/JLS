@@ -123,6 +123,7 @@ public final class ShiftRegisterDialog implements ElementDialog {
 			// set up input panel
 			JPanel info = new JPanel(new GridLayout(1, 2));
 			JLabel gates = new JLabel("Bits: ", SwingConstants.RIGHT);
+			labelled(gates, bitsField, "dialog.shiftregister.bits");
 			info.add(gates);
 			JPanel ga = new JPanel(new FlowLayout());
 			ga.add(bitsField);

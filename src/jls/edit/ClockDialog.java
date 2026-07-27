@@ -134,8 +134,10 @@ public final class ClockDialog implements ElementDialog {
 
 			JPanel labels = new JPanel(new GridLayout(3, 1, 1, 5));
 			JLabel ctime = new JLabel("Cycle Time: ", SwingConstants.RIGHT);
+			labelled(ctime, cycleTimeField, "dialog.clock.cycleTime");
 			labels.add(ctime);
 			JLabel otime = new JLabel("One Time: ", SwingConstants.RIGHT);
+			labelled(otime, oneTimeField, "dialog.clock.oneTime");
 			labels.add(otime);
 			info.add(labels, BorderLayout.WEST);
 

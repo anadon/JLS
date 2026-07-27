@@ -131,6 +131,7 @@ public final class MuxDialog implements ElementDialog {
 			JPanel info = null;
 			info = new JPanel(new GridLayout(2, 2));
 			JLabel inputs = new JLabel("Inputs: ", SwingConstants.RIGHT);
+			labelled(inputs, inputsField, "dialog.mux.inputs");
 			info.add(inputs);
 			JPanel in = new JPanel(new FlowLayout());
 			in.add(inputsField);
@@ -139,6 +140,7 @@ public final class MuxDialog implements ElementDialog {
 
 			JLabel gates;
 			gates = new JLabel("Bits: ", SwingConstants.RIGHT);
+			labelled(gates, bitsField, "dialog.mux.bits");
 			info.add(gates);
 			JPanel ga = new JPanel(new FlowLayout());
 			ga.add(bitsField);

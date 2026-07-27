@@ -186,10 +186,13 @@ public final class MemoryDialog implements ElementDialog {
 				JPanel info = new JPanel(new BorderLayout());
 				JPanel labels = new JPanel(new GridLayout(3,1,1,5));
 				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
+				labelled(name, nameField, "dialog.memory.name");
 				labels.add(name);
 				JLabel bits = new JLabel("Bits/Word: ",SwingConstants.RIGHT);
+				labelled(bits, bitsField, "dialog.memory.bits");
 				labels.add(bits);
 				JLabel words = new JLabel("Capacity (words): ",SwingConstants.RIGHT);
+				labelled(words, capacityField, "dialog.memory.capacity");
 				labels.add(words);
 				info.add(labels,BorderLayout.WEST);
 
@@ -211,6 +214,7 @@ public final class MemoryDialog implements ElementDialog {
 			else {
 				JPanel info = new JPanel(new BorderLayout());
 				JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
+				labelled(name, nameField, "dialog.memory.name");
 				info.add(name,BorderLayout.WEST);
 				info.add(nameField,BorderLayout.CENTER);
 				window.add(info);
@@ -382,6 +386,12 @@ public final class MemoryDialog implements ElementDialog {
 				Container window = init.getContentPane();
 				window.setLayout(new BoxLayout(window,BoxLayout.Y_AXIS));
 				final JTextArea area = new JTextArea(tempInit,10,12);
+				// #210 stable identity: the built-in initial-contents area
+				// has no visible label, so it gets its name and accessible
+				// name directly
+				area.setName("dialog.memory.contents");
+				area.getAccessibleContext()
+						.setAccessibleName("Initial memory contents");
 				JScrollPane pane = new JScrollPane(area);
 				window.add(pane);
 

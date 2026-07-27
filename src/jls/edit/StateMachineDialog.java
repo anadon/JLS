@@ -381,7 +381,9 @@ public final class StateMachineDialog implements ElementDialog {
 			enlarge.setToolTipText("expand drawing area");
 
 			JPanel namePanel = new JPanel(new FlowLayout());
-			namePanel.add(new JLabel("Name: "));
+			JLabel machineName = new JLabel("Name: ");
+			labelled(machineName, nameField, "dialog.statemachine.name");
+			namePanel.add(machineName);
 			namePanel.add(nameField);
 			nameField.setText(machine.getName());
 			bottom.add(namePanel);
@@ -1314,7 +1316,9 @@ public final class StateMachineDialog implements ElementDialog {
 
 			// set up name field
 			JPanel name = new JPanel(new BorderLayout());
-			name.add(new JLabel("Name: ",SwingConstants.RIGHT),BorderLayout.WEST);
+			JLabel stateName = new JLabel("Name: ",SwingConstants.RIGHT);
+			labelled(stateName, nameField, "dialog.statemachine.state.name");
+			name.add(stateName,BorderLayout.WEST);
 			name.add(nameField,BorderLayout.CENTER);
 			nameField.setText(currentName);
 			window.add(name);
@@ -1441,7 +1445,10 @@ public final class StateMachineDialog implements ElementDialog {
 			// set up signal/value
 			JPanel sigval = new JPanel(new BorderLayout());
 			JPanel sig = new JPanel(new GridLayout(3,1));
-			sig.add(new JLabel("signal",SwingConstants.CENTER));
+			JLabel signalLabel = new JLabel("signal",SwingConstants.CENTER);
+			labelled(signalLabel, signalField,
+					"dialog.statemachine.transition.signal");
+			sig.add(signalLabel);
 			sig.add(signalField);
 			sig.add(new JLabel(" "));
 			sigval.add(sig,BorderLayout.WEST);
@@ -1449,10 +1456,16 @@ public final class StateMachineDialog implements ElementDialog {
 			JPanel misc = new JPanel(new GridLayout(3,1));
 			misc.add(new JLabel(" "));
 			misc.add(equalOrNot);
-			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
+			JLabel bitsLabel = new JLabel("bits: ", SwingConstants.RIGHT);
+			labelled(bitsLabel, bitsField,
+					"dialog.statemachine.transition.bits");
+			misc.add(bitsLabel);
 			other.add(misc,BorderLayout.WEST);
 			JPanel values = new JPanel(new GridLayout(3,1));
-			values.add(new JLabel("value",SwingConstants.CENTER));
+			JLabel valueLabel = new JLabel("value",SwingConstants.CENTER);
+			labelled(valueLabel, valueField,
+					"dialog.statemachine.transition.value");
+			values.add(valueLabel);
 			JPanel val = new JPanel(new BorderLayout());
 			val.add(valueField,BorderLayout.CENTER);
 			val.add(valuePad,BorderLayout.EAST);
@@ -1810,7 +1823,10 @@ public final class StateMachineDialog implements ElementDialog {
 			// set up signal/value
 			JPanel sigval = new JPanel(new BorderLayout());
 			JPanel sig = new JPanel(new GridLayout(3,1));
-			sig.add(new JLabel("signal",SwingConstants.CENTER));
+			JLabel signalLabel = new JLabel("signal",SwingConstants.CENTER);
+			labelled(signalLabel, signalField,
+					"dialog.statemachine.output.signal");
+			sig.add(signalLabel);
 			sig.add(signalField);
 			sig.add(new JLabel(" "));
 			sigval.add(sig,BorderLayout.WEST);
@@ -1818,10 +1834,16 @@ public final class StateMachineDialog implements ElementDialog {
 			JPanel misc = new JPanel(new GridLayout(3,1));
 			misc.add(new JLabel(" "));
 			misc.add(new JLabel("="));
-			misc.add(new JLabel("bits: ", SwingConstants.RIGHT));
+			JLabel bitsLabel = new JLabel("bits: ", SwingConstants.RIGHT);
+			labelled(bitsLabel, bitsField,
+					"dialog.statemachine.output.bits");
+			misc.add(bitsLabel);
 			other.add(misc,BorderLayout.WEST);
 			JPanel values = new JPanel(new GridLayout(3,1));
-			values.add(new JLabel("value",SwingConstants.CENTER));
+			JLabel valueLabel = new JLabel("value",SwingConstants.CENTER);
+			labelled(valueLabel, valueField,
+					"dialog.statemachine.output.value");
+			values.add(valueLabel);
 			JPanel val = new JPanel(new BorderLayout());
 			val.add(valueField,BorderLayout.CENTER);
 			val.add(valuePad,BorderLayout.EAST);

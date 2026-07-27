@@ -103,6 +103,7 @@ public final class DisplayDialog implements ElementDialog {
 			// set up bits panel
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Bits: ", SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.display.bits");
 			info.add(bits, BorderLayout.WEST);
 			info.add(bitsField, BorderLayout.CENTER);
 			info.add(bitsPad, BorderLayout.EAST);

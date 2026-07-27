@@ -114,8 +114,10 @@ public final class PinDialog implements ElementDialog {
 			JPanel info = new JPanel(new BorderLayout());
 			JPanel labels = new JPanel(new GridLayout(2, 1, 1, 5));
 			JLabel name = new JLabel("Name: ", SwingConstants.RIGHT);
+			labelled(name, nameField, "dialog.pin.name");
 			labels.add(name);
 			JLabel bits = new JLabel("Bits: ", SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.pin.bits");
 			labels.add(bits);
 			info.add(labels, BorderLayout.WEST);
 

@@ -119,12 +119,14 @@ public final class DelayGateDialog implements ElementDialog {
 			JPanel info = new JPanel(new GridLayout(2, 2));
 			JLabel inputs = new JLabel("Propagation Delay: ",
 					SwingConstants.RIGHT);
+			labelled(inputs, delayField, "dialog.delaygate.delay");
 			info.add(inputs);
 			JPanel in = new JPanel(new FlowLayout());
 			in.add(delayField);
 			in.add(delayPad);
 			info.add(in);
 			JLabel gates = new JLabel("Gates (bits): ", SwingConstants.RIGHT);
+			labelled(gates, gatesField, "dialog.delaygate.bits");
 			info.add(gates);
 			JPanel ga = new JPanel(new FlowLayout());
 			ga.add(gatesField);

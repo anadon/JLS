@@ -208,12 +208,15 @@ public final class RegisterDialog implements ElementDialog {
 			JPanel info = new JPanel(new BorderLayout());
 			JPanel labels = new JPanel(new GridLayout(rows,1,1,5));
 			JLabel name = new JLabel("Name: ",SwingConstants.RIGHT);
+			labelled(name, nameField, "dialog.register.name");
 			labels.add(name);
 			if (creating) {
 				JLabel bits = new JLabel("Bits: ",SwingConstants.RIGHT);
+				labelled(bits, bitsField, "dialog.register.bits");
 				labels.add(bits);
 			}
 			JLabel init = new JLabel("Initial value: ",SwingConstants.RIGHT);
+			labelled(init, valueField, "dialog.register.initialValue");
 			labels.add(init);
 			info.add(labels,BorderLayout.WEST);
 

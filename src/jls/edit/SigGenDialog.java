@@ -99,6 +99,11 @@ public final class SigGenDialog implements ElementDialog {
 			this.sg = sg;
 
 			Container window = getContentPane();
+			// #210 stable identity: the specification area has no visible
+			// label, so it gets its name and accessible name directly
+			textArea.setName("dialog.siggen.signals");
+			textArea.getAccessibleContext()
+					.setAccessibleName("Signal specification");
 			if (!creating) {
 				textArea.setText(sg.getSignals());
 			}

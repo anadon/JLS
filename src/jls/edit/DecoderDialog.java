@@ -108,6 +108,7 @@ public final class DecoderDialog implements ElementDialog {
 			// set up inputs
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Input Bits: ", SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.decoder.bits");
 			info.add(bits, BorderLayout.WEST);
 			info.add(bitsField, BorderLayout.CENTER);
 			info.add(bitsPad, BorderLayout.EAST);

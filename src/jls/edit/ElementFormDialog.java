@@ -133,7 +133,41 @@ public abstract class ElementFormDialog extends JDialog {
 		errorLabel.setForeground(Color.red);
 		errorLabel.setAlignmentX(CENTER_ALIGNMENT);
 		errorLabel.setVisible(false);
+		// #210 stable identity: every element dialog's confirm/cancel
+		// buttons are resolvable by the same names (the buttons are shared
+		// base-class state, so the scheme is documented once in
+		// docs/component-naming.md).
+		ok.setName("dialog.ok");
+		cancel.setName("dialog.cancel");
 	} // end of constructor
+
+	/**
+	 * Associate a form label with its input and give the input a stable
+	 * identity (issue #210): {@code setLabelFor} makes assistive
+	 * technology announce the label when the field gains focus, the
+	 * component name enables name-based lookup by automation (the #91
+	 * harness) instead of positional heuristics, and the label text (sans
+	 * any trailing colon) becomes the field's accessible name. The naming
+	 * scheme is documented in docs/component-naming.md.
+	 *
+	 * @param label The label describing the input.
+	 * @param field The input the label describes.
+	 * @param name The stable component name (e.g. "dialog.adder.bits").
+	 */
+	protected final void labelled(JLabel label, JComponent field,
+			String name) {
+
+		label.setLabelFor(field);
+		field.setName(name);
+		String text = label.getText();
+		String accessible = text == null ? "" : text.strip();
+		if (accessible.endsWith(":")) {
+			accessible =
+					accessible.substring(0, accessible.length() - 1).strip();
+		}
+		field.getAccessibleContext().setAccessibleName(
+				accessible.isEmpty() ? name : accessible);
+	} // end of labelled method
 
 	/**
 	 * Append the error label and button row, install uniform key

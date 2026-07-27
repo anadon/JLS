@@ -103,6 +103,7 @@ public final class AdderDialog implements ElementDialog {
 
 			JPanel info = new JPanel(new BorderLayout());
 			JLabel bits = new JLabel("Input Bits: ", SwingConstants.RIGHT);
+			labelled(bits, bitsField, "dialog.adder.bits");
 			info.add(bits, BorderLayout.WEST);
 			info.add(bitsField, BorderLayout.CENTER);
 			info.add(bitsPad, BorderLayout.EAST);

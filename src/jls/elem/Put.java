@@ -5,6 +5,7 @@ import java.util.*;
 import org.jspecify.annotations.Nullable;
 
 import jls.*;
+import jls.core.Orientation;
 
 /**
  * Superclass for input and output points.
@@ -38,6 +39,9 @@ public abstract sealed class Put
 	private @Nullable WireEnd wireEnd = null;	// the WireEnd this put attached to
 	/** The copy of this put, to help cut/paste (null until copied). */
 	protected @Nullable Put myCopy;				// to help cut/paste
+	/** The declared face of this put (issue #78), or null to derive it
+	 * geometrically from the owning element's bounding rectangle. */
+	private @Nullable Orientation face;
 
 	/**
 	 * Create a new put.
@@ -177,6 +181,69 @@ public abstract sealed class Put
 
 		return yr;
 	} // end of getYr method
+
+	/**
+	 * Declare which element edge this put sits on (issue #78, pin-face
+	 * stage of the descriptor plan). The face is the outward normal of
+	 * the edge: a put on the left edge of its element faces
+	 * {@code LEFT}. Elements that know their put layout (today the
+	 * gates, in {@link Gate#init}) declare faces at put-creation time;
+	 * every other element rides the geometric derivation in
+	 * {@link #getFace()} until its migration lands.
+	 *
+	 * @param face The outward normal of the element edge this put is on.
+	 */
+	void setFace(Orientation face) {
+
+		this.face = face;
+	} // end of setFace method
+
+	/**
+	 * The face of this put (issue #78): the outward normal of the edge
+	 * of the owning element's bounding rectangle the put's center sits
+	 * on - the direction a wire leaves the element from this put.
+	 *
+	 * <p>When a face was declared at put creation ({@link #setFace}),
+	 * that declaration is returned. Otherwise the face is derived from
+	 * the put's absolute center against the element's
+	 * {@link Element#getRect()}, testing edges in the documented
+	 * deterministic priority order left, right, top, bottom - so a
+	 * corner put resolves LEFT/RIGHT before UP/DOWN.
+	 *
+	 * @return the face of this put, never null.
+	 *
+	 * @throws IllegalStateException if the put's center lies on no edge
+	 *         of the owning element's bounding rectangle (a put layout
+	 *         bug: wires would visually enter the element body).
+	 *
+	 * @jls.testedby jls.elem.PinFaceContractTest#everyPutHasAFaceOnItsElementEdge()
+	 * @jls.testedby jls.elem.PinFaceContractTest#gateDeclaredFacesMatchDerivationAtAllOrientations()
+	 * @jls.testedby jls.elem.PinFaceContractTest#rotationPermutesFacesByAQuarterTurn()
+	 */
+	public Orientation getFace() {
+
+		if (face != null) {
+			return face;
+		}
+		jls.core.Bounds r = requireElement().getRect();
+		int cx = getX();
+		int cy = getY();
+		if (cx == r.x()) {
+			return Orientation.LEFT;
+		}
+		if (cx == r.x() + r.width()) {
+			return Orientation.RIGHT;
+		}
+		if (cy == r.y()) {
+			return Orientation.UP;
+		}
+		if (cy == r.y() + r.height()) {
+			return Orientation.DOWN;
+		}
+		throw new IllegalStateException("put " + name + " of "
+				+ requireElement().getClass().getSimpleName()
+				+ " at (" + cx + "," + cy + ") is on no edge of " + r);
+	} // end of getFace method
 
 	/**
 	 * Get wire end this put is attached to, or null if not attached.

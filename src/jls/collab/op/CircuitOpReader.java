@@ -163,6 +163,17 @@ public final class CircuitOpReader {
 					&& name == null && dx == null && dy == null
 					&& cw == null);
 			return new SetElementConfig(ids.get(0), blocks.get(0));
+		case "AddWire":
+			// the ids are the net's attachment anchors; a dangling net
+			// legitimately carries none
+			requireFields(kind, !blocks.isEmpty() && name == null
+					&& dx == null && dy == null && cw == null);
+			return new AddWire(ids, blocks);
+		case "RemoveWire":
+			requireFields(kind, ids.size() == 1 && blocks.isEmpty()
+					&& name == null && dx == null && dy == null
+					&& cw == null);
+			return new RemoveWire(ids.get(0));
 		default:
 			throw new OpRejected("unknown op kind '" + clip(kind) + "'");
 		}

@@ -14,7 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Predicate;
 
@@ -121,6 +123,72 @@ class CircuitOpTest {
 				+ "ENDCIRCUIT\n");
 	}
 
+	/**
+	 * A one-segment wire net between an input pin and an output pin,
+	 * every element with a declared stable id. With {@code triState},
+	 * the driving pin and the net are tri-state.
+	 */
+	private static String wiredPairText(boolean triState) {
+		String tri = triState ? " int tristate 1\n" : "";
+		return "CIRCUIT wired\n"
+				+ "ELEMENT InputPin\n" + tri
+				+ " int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n"
+				+ "ELEMENT OutputPin\n int id 1\n int x 360\n int y 120\n"
+				+ " String sid \"pin:2\"\n String name \"B\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"LEFT\"\nEND\n"
+				+ "ELEMENT WireEnd\n int id 2\n int x 180\n int y 120\n"
+				+ " String sid \"we:1\"\n" + tri
+				+ " String put \"output\"\n ref attach 0\n ref wire 3\n"
+				+ "END\n"
+				+ "ELEMENT WireEnd\n int id 3\n int x 300\n int y 120\n"
+				+ " String sid \"we:2\"\n" + tri
+				+ " String put \"input\"\n ref attach 1\n ref wire 2\n"
+				+ "END\nENDCIRCUIT\n";
+	}
+
+	/** The two pins of {@link #wiredPairText} without the net. */
+	private static String unwiredPairText() {
+		return "CIRCUIT wired\n"
+				+ "ELEMENT InputPin\n int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n"
+				+ "ELEMENT OutputPin\n int id 1\n int x 360\n int y 120\n"
+				+ " String sid \"pin:2\"\n String name \"B\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"LEFT\"\nEND\nENDCIRCUIT\n";
+	}
+
+	/**
+	 * A three-end net: an attached driving end that fans out to an
+	 * attached end (over a probed wire) and to a dangling end.
+	 */
+	private static String fanOutText() {
+		return "CIRCUIT fan\n"
+				+ "ELEMENT InputPin\n int id 0\n int x 120\n int y 120\n"
+				+ " String sid \"pin:1\"\n String name \"A\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n"
+				+ "ELEMENT OutputPin\n int id 1\n int x 360\n int y 120\n"
+				+ " String sid \"pin:2\"\n String name \"B\"\n"
+				+ " int bits 1\n int watch 0\n"
+				+ " String orient \"LEFT\"\nEND\n"
+				+ "ELEMENT WireEnd\n int id 2\n int x 180\n int y 120\n"
+				+ " String sid \"we:1\"\n String put \"output\"\n"
+				+ " ref attach 0\n ref wire 3\n probe 3 \"tap\"\n"
+				+ " ref wire 4\nEND\n"
+				+ "ELEMENT WireEnd\n int id 3\n int x 300\n int y 120\n"
+				+ " String sid \"we:2\"\n String put \"input\"\n"
+				+ " ref attach 1\n ref wire 2\n probe 2 \"tap\"\nEND\n"
+				+ "ELEMENT WireEnd\n int id 4\n int x 180\n int y 240\n"
+				+ " String sid \"we:3\"\n ref wire 2\nEND\n"
+				+ "ENDCIRCUIT\n";
+	}
+
 	/** A donor element block: an unwired adder with a declared sid. */
 	private static String donorAdderBlock() throws Exception {
 		Circuit donor = loadText("CIRCUIT donor\nELEMENT Adder\n"
@@ -220,6 +288,64 @@ class CircuitOpTest {
 		inlineAdder.remove(inline);
 		assertEquals(save(inline), save(viaOp),
 				"op and inline removal must produce identical bytes");
+	}
+
+	/**
+	 * P1 for the wiring vocabulary's removal side: the op reaches the
+	 * exact end state of the editor's inline wire deletion (the popup
+	 * delete on a wire, which cascades to the ends and detaches the
+	 * puts).
+	 */
+	@Test
+	void removeWireMatchesInlineWireDelete() throws Exception {
+		Circuit viaOp = loadText(wiredPairText(false));
+		Circuit inline = loadText(wiredPairText(false));
+		Element end = find(viaOp, el -> el instanceof WireEnd);
+		new RemoveWire(end.getStableId()).apply(viaOp, graphics());
+		find(inline, el -> el instanceof Wire).remove(inline);
+		assertEquals(save(inline), save(viaOp),
+				"op and inline wire deletion must produce identical bytes");
+	}
+
+	/**
+	 * P1 for the wiring vocabulary's add side: applying an AddWire to
+	 * the unwired circuit produces the same bytes as loading the file
+	 * that already contains the net - an added net is indistinguishable
+	 * from a loaded one.
+	 */
+	@Test
+	void addWireMatchesTheLoadedForm() throws Exception {
+		Circuit wired = loadText(wiredPairText(false));
+		Element end = find(wired, el -> el instanceof WireEnd);
+		CircuitOp add = new RemoveWire(end.getStableId()).invert(wired);
+		Circuit unwired = loadText(unwiredPairText());
+		add.apply(unwired, graphics());
+		assertEquals(save(wired), save(unwired),
+				"an added net must byte-match the loaded net");
+	}
+
+	/**
+	 * The wired-selection restriction is lifted at the vocabulary
+	 * level: a wired delete travels as one RemoveWire per attached net
+	 * followed by RemoveElements over the then-unwired elements, and
+	 * the composition byte-matches the editor's inline selection
+	 * delete.
+	 */
+	@Test
+	void wiredDeleteComposesFromRemoveWireAndRemoveElements()
+			throws Exception {
+		Circuit viaOp = loadText(wiredPairText(false));
+		Circuit inline = loadText(wiredPairText(false));
+		Element end = find(viaOp, el -> el instanceof WireEnd);
+		new RemoveWire(end.getStableId()).apply(viaOp, graphics());
+		new RemoveElements(List.of(ElementId.parse("pin:1"),
+				ElementId.parse("pin:2"))).apply(viaOp, graphics());
+		find(inline, el -> el instanceof Wire).remove(inline);
+		byId(inline, ElementId.parse("pin:1")).remove(inline);
+		byId(inline, ElementId.parse("pin:2")).remove(inline);
+		assertEquals(save(inline), save(viaOp),
+				"the op composition must byte-match the inline "
+						+ "selection delete");
 	}
 
 	/**
@@ -347,6 +473,86 @@ class CircuitOpTest {
 				new AddElements(List.of(donorAdderBlock())));
 	}
 
+	/**
+	 * P2 for RemoveWire across net shapes: a plain attached segment, a
+	 * fan-out net with a probe and a dangling end, a tri-state net, and
+	 * a net from the wire-heavy file fixture.
+	 */
+	@Test
+	void removeWireInverseRestoresBytes() throws Exception {
+		for (String text : List.of(wiredPairText(false), fanOutText(),
+				wiredPairText(true))) {
+			Circuit circuit = loadText(text);
+			Element end = find(circuit, el -> el instanceof WireEnd);
+			assertInverseRestores(circuit,
+					new RemoveWire(end.getStableId()));
+		}
+		Circuit fork = load();
+		Element end = find(fork, el -> el instanceof WireEnd);
+		assertInverseRestores(fork, new RemoveWire(end.getStableId()));
+	}
+
+	/**
+	 * Computing a RemoveWire inverse must not disturb the live circuit:
+	 * the save-time {@code int} ids the net serializer renumbers while
+	 * writing its blocks are restored afterward. Those ids are not
+	 * purely transient - HDL export consumes them directly for element
+	 * ordering and synthesized net names - so an invert that leaks the
+	 * renumbering would change the HDL of an unchanged circuit. The
+	 * fork fixture is the fixture whose file ids do not coincide with
+	 * the serializer's local numbering.
+	 */
+	@Test
+	void removeWireInvertLeavesSaveTimeIdsUntouched() throws Exception {
+		Circuit fork = load();
+		Map<Element, Integer> before =
+				new IdentityHashMap<Element, Integer>();
+		for (Element el : fork.getElements()) {
+			before.put(el, el.getID());
+		}
+		Element end = find(fork, el -> el instanceof WireEnd);
+		new RemoveWire(end.getStableId()).invert(fork);
+		for (Element el : fork.getElements()) {
+			assertEquals(before.get(el), el.getID(),
+					"invert must leave every save-time id untouched");
+		}
+	}
+
+	@Test
+	void addWireInverseRestoresBytes() throws Exception {
+		Circuit circuit = loadText(fanOutText());
+		Element end = find(circuit, el -> el instanceof WireEnd);
+		CircuitOp remove = new RemoveWire(end.getStableId());
+		CircuitOp add = remove.invert(circuit);
+		remove.apply(circuit, graphics());
+		assertInverseRestores(circuit, add);
+	}
+
+	/** A net attached to nothing travels and inverts like any other. */
+	@Test
+	void danglingNetAddAndRemoveAreExactInverses() throws Exception {
+		Circuit circuit = loadAdder();
+		String b0 = "ELEMENT WireEnd\n int id 0\n int x 60\n int y 60\n"
+				+ " String sid \"wx:1\"\n ref wire 1\nEND\n";
+		String b1 = "ELEMENT WireEnd\n int id 1\n int x 120\n int y 60\n"
+				+ " String sid \"wx:2\"\n ref wire 0\nEND\n";
+		assertInverseRestores(circuit,
+				new AddWire(List.of(), List.of(b0, b1)));
+	}
+
+	@Test
+	void wiringInversesHoldOnARestoredCircuit() throws Exception {
+		// section 10 threat, wiring edition: the restored object graph
+		// rebuilds nets, puts, and probe maps from bytes
+		Circuit circuit = restored(loadText(fanOutText()));
+		Element end = find(circuit, el -> el instanceof WireEnd);
+		assertInverseRestores(circuit,
+				new RemoveWire(end.getStableId()));
+		Circuit tri = restored(loadText(wiredPairText(true)));
+		Element triEnd = find(tri, el -> el instanceof WireEnd);
+		assertInverseRestores(tri, new RemoveWire(triEnd.getStableId()));
+	}
+
 	@Test
 	void configReplaceInverseRestoresBytes() throws Exception {
 		Circuit circuit = loadAdder();
@@ -422,7 +628,18 @@ class CircuitOpTest {
 				new SetElementConfig(id, "ELEMENT Adder\n int id 0\n"
 						+ " int x 60\n int y 60\n String sid \"legacy:7\"\n"
 						+ " int bits 4\n String orient \"LEFT\"\n"
-						+ " int delay 10\nEND\n"));
+						+ " int delay 10\nEND\n"),
+				new AddWire(List.of(id, other), List.of(
+						"ELEMENT WireEnd\n int id 2\n int x 60\n"
+								+ " int y 60\n String sid \"wx:1\"\n"
+								+ " String put \"output\"\n ref attach 0\n"
+								+ " ref wire 3\n probe 3 \"tap\"\nEND\n",
+						"ELEMENT WireEnd\n int id 3\n int x 120\n"
+								+ " int y 60\n String sid \"wx:2\"\n"
+								+ " ref wire 2\n probe 2 \"tap\"\nEND\n")),
+				new AddWire(List.of(), List.of(
+						"ELEMENT WireEnd\nEND\n")),
+				new RemoveWire(id));
 		for (CircuitOp op : ops) {
 			String text = serialize(op);
 			CircuitOp parsed = CircuitOpReader.read(new Scanner(text));
@@ -491,6 +708,18 @@ class CircuitOpTest {
 				// reconfigure with a stray name field
 				"OP SetElementConfig\n String id \"legacy:1\"\n"
 						+ " String block \"a\"\n String name \"x\"\nEND\n",
+				// wire add without any blocks
+				"OP AddWire\nEND\n",
+				// wire add with a stray int field
+				"OP AddWire\n String block \"x\"\n int dx 1\nEND\n",
+				// wire removal without an id
+				"OP RemoveWire\nEND\n",
+				// wire removal with two ids
+				"OP RemoveWire\n String id \"legacy:1\"\n"
+						+ " String id \"legacy:2\"\nEND\n",
+				// wire removal with a stray block
+				"OP RemoveWire\n String id \"legacy:1\"\n"
+						+ " String block \"x\"\nEND\n",
 		};
 		for (String text : hostile) {
 			assertThrows(OpRejected.class,
@@ -722,6 +951,177 @@ class CircuitOpTest {
 						.apply(circuit, graphics()));
 		assertEquals(before, save(circuit),
 				"a rejected removal must not change the circuit");
+	}
+
+	@Test
+	void removeWireRejectionsLeaveTheCircuitUnchanged() throws Exception {
+		Circuit circuit = loadText(wiredPairText(false));
+		String before = save(circuit);
+
+		// unknown id, and an id that addresses a non-wire element
+		CircuitOp[] invalid = {
+				new RemoveWire(ElementId.parse("nosuch:1")),
+				new RemoveWire(ElementId.parse("pin:1")),
+		};
+		for (CircuitOp op : invalid) {
+			assertThrows(OpRejected.class,
+					() -> op.apply(circuit, graphics()),
+					() -> "accepted: " + op);
+			assertEquals(before, save(circuit),
+					"a rejected wire removal must not change the circuit");
+		}
+
+		// an uneditable net cannot be removed
+		Circuit locked = loadText("CIRCUIT locked\n"
+				+ "ELEMENT WireEnd\n int id 0\n int x 60\n int y 60\n"
+				+ " int fixed 1\n String sid \"we:1\"\n ref wire 1\nEND\n"
+				+ "ELEMENT WireEnd\n int id 1\n int x 120\n int y 60\n"
+				+ " int fixed 1\n String sid \"we:2\"\n ref wire 0\nEND\n"
+				+ "ENDCIRCUIT\n");
+		String lockedBefore = save(locked);
+		assertThrows(OpRejected.class,
+				() -> new RemoveWire(ElementId.parse("we:1"))
+						.apply(locked, graphics()));
+		assertEquals(lockedBefore, save(locked));
+	}
+
+	@Test
+	void addWireRejectionsLeaveTheCircuitUnchanged() throws Exception {
+		Circuit circuit = loadText(wiredPairText(false));
+		String before = save(circuit);
+		ElementId pin1 = ElementId.parse("pin:1");
+		ElementId pin2 = ElementId.parse("pin:2");
+		// a well-formed dangling pair, mutated below case by case
+		String b0 = "ELEMENT WireEnd\n int id 0\n int x 60\n int y 60\n"
+				+ " String sid \"wx:1\"\n ref wire 1\nEND\n";
+		String b1 = "ELEMENT WireEnd\n int id 1\n int x 120\n int y 60\n"
+				+ " String sid \"wx:2\"\n ref wire 0\nEND\n";
+		// a well-formed attached pair for the anchor and put cases
+		String a0 = "ELEMENT WireEnd\n int id 1\n int x 60\n int y 60\n"
+				+ " String sid \"wx:1\"\n String put \"output\"\n"
+				+ " ref attach 0\n ref wire 2\nEND\n";
+		String a1 = "ELEMENT WireEnd\n int id 2\n int x 120\n int y 60\n"
+				+ " String sid \"wx:2\"\n ref wire 1\nEND\n";
+
+		CircuitOp[] invalid = {
+				// no blocks at all
+				new AddWire(List.of(), List.of()),
+				// not a wire-end block
+				new AddWire(List.of(), List.of("garbage")),
+				new AddWire(List.of(), List.of(b0.replace(
+						"ELEMENT WireEnd", "ELEMENT Adder"), b1)),
+				// no declared stable id
+				new AddWire(List.of(), List.of(b0.replace(
+						" String sid \"wx:1\"\n", ""), b1)),
+				// a stable id the circuit already uses
+				new AddWire(List.of(), List.of(b0.replace(
+						"wx:1", "we:1"), b1)),
+				// duplicated end stable id (order check catches it)
+				new AddWire(List.of(),
+						List.of(b0, b1.replace("wx:2", "wx:1"))),
+				// blocks out of stable-id order
+				new AddWire(List.of(), List.of(b0.replace("wx:1", "wx:2"),
+						b1.replace("wx:2", "wx:1"))),
+				// an end wired to itself
+				new AddWire(List.of(), List.of(b0.replace(" ref wire 1",
+						" ref wire 0"), b1)),
+				// a wire reference outside the op
+				new AddWire(List.of(), List.of(b0.replace(" ref wire 1",
+						" ref wire 5"), b1)),
+				// an end with no wires at all
+				new AddWire(List.of(), List.of(b0.replace(
+						" ref wire 1\n", ""), b1)),
+				// a wire listed from only one of its ends
+				new AddWire(List.of(), List.of(
+						"ELEMENT WireEnd\n int id 0\n int x 60\n"
+								+ " int y 60\n String sid \"wx:1\"\n"
+								+ " ref wire 1\n ref wire 2\nEND\n",
+						"ELEMENT WireEnd\n int id 1\n int x 120\n"
+								+ " int y 60\n String sid \"wx:2\"\n"
+								+ " ref wire 0\nEND\n",
+						"ELEMENT WireEnd\n int id 2\n int x 180\n"
+								+ " int y 60\n String sid \"wx:3\"\n"
+								+ " ref wire 1\nEND\n")),
+				// two disconnected nets in one op
+				new AddWire(List.of(), List.of(
+						b0,
+						b1,
+						"ELEMENT WireEnd\n int id 2\n int x 180\n"
+								+ " int y 60\n String sid \"wx:3\"\n"
+								+ " ref wire 3\nEND\n",
+						"ELEMENT WireEnd\n int id 3\n int x 240\n"
+								+ " int y 60\n String sid \"wx:4\"\n"
+								+ " ref wire 2\nEND\n")),
+				// tri-state flags that disagree within the net
+				new AddWire(List.of(), List.of(b0.replace(
+						" String sid \"wx:1\"\n",
+						" String sid \"wx:1\"\n int tristate 1\n"), b1)),
+				// an end off the canvas
+				new AddWire(List.of(), List.of(b0.replace(" int x 60",
+						" int x -60"), b1)),
+				// an uneditable end (a save the ops never produce)
+				new AddWire(List.of(), List.of(b0.replace(
+						" String sid \"wx:1\"\n",
+						" String sid \"wx:1\"\n int fixed 1\n"), b1)),
+				// a local id that is not the block's position
+				new AddWire(List.of(),
+						List.of(b0.replace(" int id 0", " int id 7"), b1)),
+				// a probe listed from only one end of its wire
+				new AddWire(List.of(), List.of(b0.replace(" ref wire 1\n",
+						" ref wire 1\n probe 1 \"p\"\n"), b1)),
+				// a probe on a wire the end does not have
+				new AddWire(List.of(), List.of(b0.replace(" ref wire 1\n",
+						" ref wire 1\n probe 5 \"p\"\n"), b1)),
+				// an unknown attachment anchor
+				new AddWire(List.of(ElementId.parse("nosuch:1")),
+						List.of(a0, a1)),
+				// an anchor that is itself a wire end
+				new AddWire(List.of(ElementId.parse("we:1")),
+						List.of(a0, a1)),
+				// a put the anchor does not have
+				new AddWire(List.of(pin1), List.of(a0.replace(
+						"\"output\"", "\"nosuch\""), a1)),
+				// a put that already has a wire attached
+				new AddWire(List.of(pin1), List.of(a0, a1)),
+				// a put line without its ref attach line
+				new AddWire(List.of(pin1), List.of(
+						a0.replace(" ref attach 0\n", ""), a1)),
+		};
+		for (CircuitOp op : invalid) {
+			assertThrows(OpRejected.class,
+					() -> op.apply(circuit, graphics()),
+					() -> "accepted: " + op);
+			assertEquals(before, save(circuit),
+					"a rejected wire add must not change the circuit");
+		}
+
+		// two arriving ends claiming the same put (needs free puts)
+		Circuit unwired = loadText(unwiredPairText());
+		String unwiredBefore = save(unwired);
+		assertThrows(OpRejected.class, () -> new AddWire(List.of(pin1),
+				List.of(a0,
+						a1.replace(" String sid \"wx:2\"\n",
+								" String sid \"wx:2\"\n"
+										+ " String put \"output\"\n"
+										+ " ref attach 0\n")))
+												.apply(unwired, graphics()));
+		assertEquals(unwiredBefore, save(unwired),
+				"a rejected wire add must not change the circuit");
+
+		// an anchor carried but never attached to (needs a free put, so
+		// the attachment checks pass and the unused-anchor check fires)
+		assertThrows(OpRejected.class,
+				() -> new AddWire(List.of(pin1, pin2), List.of(
+						"ELEMENT WireEnd\n int id 2\n int x 60\n"
+								+ " int y 60\n String sid \"wx:1\"\n"
+								+ " String put \"output\"\n ref attach 0\n"
+								+ " ref wire 3\nEND\n",
+						"ELEMENT WireEnd\n int id 3\n int x 120\n"
+								+ " int y 60\n String sid \"wx:2\"\n"
+								+ " ref wire 2\nEND\n"))
+										.apply(unwired, graphics()));
+		assertEquals(unwiredBefore, save(unwired),
+				"a rejected wire add must not change the circuit");
 	}
 
 	@Test

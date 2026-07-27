@@ -1,10 +1,13 @@
 name: Mutation testing (PIT)
 
-# Non-blocking mutation-coverage report (issue #161): the opt-in
-# `pitest` Maven profile runs on a weekly cadence and on demand, never
-# on push/pull_request, so it can never gate a required check. The
-# mutationCoverage step is additionally marked continue-on-error for
-# resilience - a PIT hiccup should not turn this workflow red.
+# Blocking mutation-coverage ratchet (issue #159, promoted 2026-07-27
+# from the #161 report-only trial): the opt-in `pitest` Maven profile
+# runs on a weekly cadence and on demand, never on push/pull_request,
+# so it is never a required PR check. The profile now carries
+# mutationThreshold/testStrengthThreshold floors (see the pitest
+# profile in pom.xml), so a mutation-score breach turns this weekly
+# run red instead of silently degrading. The PIT report is uploaded
+# even on a breach so the failing run is diagnosable.
 on:
   schedule:
     - cron: "0 5 * * 0"
@@ -28,13 +31,13 @@ jobs:
           java-version: 25
           cache: maven
 
-      # the trial's scope is headless-only (docs/mutation-testing-trial-2026-07.md
+      # the ratchet's scope is headless-only (docs/mutation-testing-trial-2026-07.md
       # §2/§6); no xvfb needed here.
       - name: Run PIT mutation coverage
-        continue-on-error: true
         run: mvn -B -Ppitest test-compile org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload PIT report
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pit-reports

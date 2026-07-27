@@ -749,15 +749,18 @@
         </plugins>
       </build>
     </profile>
-    <!-- PIT mutation-testing trial gate (issue #161): opt-in, scoped
-         mutation coverage on the covered, non-Swing core. Run with
+    <!-- PIT mutation-testing climb-ratchet (issues #161/#159): opt-in,
+         scoped mutation coverage on the covered, non-Swing core. Run with
            mvn -Ppitest test-compile org.pitest:pitest-maven:mutationCoverage
          Deliberately a profile, mirroring the errorprone trial-gate
-         convention above: a non-blocking report first, with a
-         mutationThreshold ratchet only after a few scheduled runs
-         establish the noise floor (docs/mutation-testing-trial-2026-07.md
-         §6). excludedGroups=display: the #162 display-tagged suites
-         need a real/virtual display, and this profile runs headless. -->
+         convention above. Promoted from report-only to a threshold
+         ratchet on 2026-07-27 (#159): the weekly mutation.yml run now
+         fails on a breach; it stays schedule/dispatch-only and is never
+         a required PR check. excludedGroups=display: the #162
+         display-tagged suites need a real/virtual display, and this
+         profile runs headless — thresholds are headless-only numbers,
+         measured on the canonical JDK 25 (same convention as the JaCoCo
+         ratchet above). -->
     <profile>
       <id>pitest</id>
       <build>
@@ -789,6 +792,25 @@
               </jvmArgs>
               <threads>4</threads>
               <timestampedReports>false</timestampedReports>
+              <!-- Mutation ratchet (#159). Baseline 2026-07-27 on
+                   591aca5 with the #167 jls.collab.op growth merged
+                   in (this cycle's last-merged scope change): three
+                   clean runs measured mutation 752/905 = 83.09%, then
+                   751/905 = 82.98% twice, and test strength 84.78% /
+                   84.67% / 84.67% (jitter ~0.1pt), so the floors sit
+                   2+ points under the worst run. A pre-#167 3x
+                   measurement (881 mutants, 82.40% / 84.12%, zero
+                   jitter) agreed within 0.7pt. Scope note: the same
+                   targetClasses yielded 1173 mutants in the trial
+                   (docs/mutation-testing-trial-2026-07.md §3) — the
+                   mutated code has moved since, so trial percentages
+                   are not comparable. Like the JaCoCo floors: these
+                   only ever move UP — a PR that raises the mutation
+                   score should raise the floor with it, from a fresh
+                   headless canonical-JDK-25 measurement, keeping
+                   >=2pt headroom under the worst of 3 clean runs. -->
+              <mutationThreshold>80</mutationThreshold>
+              <testStrengthThreshold>82</testStrengthThreshold>
             </configuration>
           </plugin>
         </plugins>

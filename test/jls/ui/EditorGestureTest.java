@@ -179,4 +179,80 @@ class EditorGestureTest {
 					constX + "," + constY, "the gate did move");
 		}
 	}
+
+	/**
+	 * The delete-selection gesture end-to-end through the op path
+	 * (issue #167): rubber-band select a wired pair - the selection the
+	 * plan builder maps to RemoveWire + RemoveElements - press the
+	 * delete key, and everything goes; ONE undo restores the whole
+	 * selection, pinning the one-undo-snapshot-per-gesture batch
+	 * submit (a fragmented submit would need one undo per op). Byte
+	 * parity of the op path against the inline path is pinned
+	 * headlessly by jls.edit.DeleteGestureTest; bytes are not compared
+	 * here because undo's restore re-runs display init, which sets
+	 * layout fields (element width/height) the pre-gesture circuit
+	 * only gains once it has been drawn.
+	 */
+	@Test
+	void deleteKeyRemovesAWiredSelectionAndOneUndoRestoresIt()
+			throws Exception {
+		String text = "CIRCUIT golden\n"
+				+ "ELEMENT InputPin\n int id 0\n int x 120\n int y 120\n"
+				+ " String name \"A\"\n int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\nEND\n"
+				+ "ELEMENT OutputPin\n int id 1\n int x 360\n int y 120\n"
+				+ " String name \"B\"\n int bits 1\n int watch 0\n"
+				+ " String orient \"LEFT\"\nEND\n"
+				+ "ELEMENT WireEnd\n int id 2\n int x 180\n int y 120\n"
+				+ " String put \"output\"\n ref attach 0\n ref wire 3\n"
+				+ "END\n"
+				+ "ELEMENT WireEnd\n int id 3\n int x 300\n int y 120\n"
+				+ " String put \"input\"\n ref attach 1\n ref wire 2\n"
+				+ "END\nENDCIRCUIT\n";
+		Circuit circuit = new Circuit("golden");
+		assertTrue(circuit.load(new Scanner(text)),
+				() -> "load: " + JLSInfo.loadError);
+		assertTrue(circuit.finishLoad(null),
+				() -> "finishLoad: " + JLSInfo.loadError);
+
+		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
+			assertTrue(circuit.getElements().stream()
+					.anyMatch(el -> el instanceof jls.elem.Wire),
+					"the fixture must start wired");
+
+			// Select All (canvas popup), then delete. A rubber band is
+			// deliberately not used: what it catches depends on
+			// screen-to-circuit offsets, and a partial catch (say, just
+			// the wire) still plans and applies cleanly - it just is
+			// not the pins-plus-net composition this test pins.
+			ui.rightPress(700, 600);
+			ui.clickPopupItem("Select All");
+			ui.waitFor(() -> circuit.getElements().stream()
+					.filter(Element::isHighlighted).count() >= 3,
+					"select-all highlighted the pins and the wire");
+
+			int beforeCount = circuit.getElements().size();
+			ui.pressKey(java.awt.event.KeyEvent.VK_DELETE);
+			ui.waitFor(() -> ui.currentCircuit().getElements().isEmpty(),
+					"the wired selection deleted in one gesture");
+
+			// ONE undo restores everything: the whole plan was one
+			// snapshot, not one per op
+			ui.rightPress(700, 600);
+			ui.clickPopupItem("Undo");
+			ui.waitFor(() -> ui.currentCircuit().getElements().size()
+					== beforeCount, "one undo restored every element");
+			Circuit restored = ui.currentCircuit();
+			assertTrue(restored.getElements().stream()
+					.anyMatch(el -> el instanceof jls.elem.Wire),
+					"the wire net came back with the same undo");
+			assertTrue(restored.getElements().stream()
+					.anyMatch(el -> el instanceof jls.elem.InputPin),
+					"the input pin came back with the same undo");
+			assertTrue(restored.getElements().stream()
+					.anyMatch(el -> el instanceof jls.elem.OutputPin),
+					"the output pin came back with the same undo");
+		}
+	}
+
 }

@@ -126,7 +126,9 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
 - **Command-line options:** `java -jar jls-<version>.jar -h` prints the full
   list, including batch mode (`-b`), test-input files (`-t`), simulation time
   limits (`-d`), VCD waveform export (`-vcd`, for GTKWave/Surfer and
-  autograders), image export (`-i`, PNG named after the circuit file by
+  autograders — worked recipe and example bridge in
+  [`docs/vcd-interop.md`](docs/vcd-interop.md)),
+  image export (`-i`, PNG named after the circuit file by
   default, or pass an output path such as `-i out.jpg` for JPEG or
   `-i out.svg` for resolution-independent SVG — the right format for
   slides, lab reports and hosted docs),
@@ -331,6 +333,9 @@ extension.
   triggering, tri-state/HiZ.
 - [docs/batch-interface.md](docs/batch-interface.md) — normative spec
   of the batch/grading interface: `-t` grammar, output format, VCD.
+- [docs/vcd-interop.md](docs/vcd-interop.md) — informative recipe for
+  consuming batch outputs: VCD → GTKWave/Surfer, and the autograde
+  bridge pattern with a runnable example.
 - [docs/file-format.md](docs/file-format.md) — normative spec of the
   `.jls` save format: containers, grammar, element tags, versioning.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit

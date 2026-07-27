@@ -291,3 +291,65 @@ artifact of this fork ever shipped under — so it was unreachable in
 every build, and no plugin or manifest is known to exist. A
 `ServiceLoader`-based extension registry is the recorded design
 direction if demand appears (see the CHANGELOG entry and #78/#80).
+
+### Plugin trust boundary: in-process for first-party, staged trusted opt-in for external, IPC reserved for untrusted (recorded 2026-07-26, #222)
+
+Ratifies [`docs/grand-architecture.md`](docs/grand-architecture.md)
+§4.3. **First-party / compiled-in modules run in-process with one
+shared type namespace and one classloader**: `instanceof` and casts
+stay sound, there is exactly one version of every type — deliberately
+the Maven/JPMS single-version model over npm/OSGi coexistence, whose
+per-plugin classloaders are the documented #1 pain source in Jenkins,
+IntelliJ, and OSGi (rejected in §4.4). **External element providers
+(#212) are staged**: when that issue's demand gate opens, they ship
+in-process via classpath `ServiceLoader` behind an explicit,
+documented **"trusted extension" opt-in** — the trust statement is
+"you chose to add this jar", and such a jar has full JVM authority;
+that must be stated plainly wherever the opt-in is offered.
+**Out-of-process isolation** (the KiCad model: a stable serialized
+API over a socket, provider in its own process — crash isolation, a
+real trust boundary, language independence, license-linking
+avoidance) is **reserved for a future untrusted-provider case**, e.g.
+a shared element marketplace; it is not built speculatively. The
+external tool integrations (#61 Yosys, #63 GHDL/Icarus, #62 ELK)
+already sit on that subprocess boundary and stay there, which also
+sidesteps GPLv3 in-process-linking hazards (e.g. ELK's EPL-2.0).
+**Threat model:** shared with #170 (collaboration security
+hardening) — both surfaces are untrusted input crossing a boundary;
+the closed, typed provider API is the plugin analogue of collab's
+closed data-only op vocabulary, and the two should share threat
+vocabulary and, where practical, ratchet-test infrastructure.
+**Revisit trigger:** an untrusted-provider use case materializes
+(providers from parties the installing user has no reason to trust —
+a marketplace, unvetted course exchanges). At that point the
+out-of-process API boundary (message schema, transport) gets its own
+design issue, and no such provider ships before that boundary exists.
+
+### Simulation execution strategy: discrete-event interpreter is the sole strategy (recorded 2026-07-26, #221)
+
+Option 1 of #221, per [`docs/grand-architecture.md`](docs/grand-architecture.md)
+§6: the `jls.sim.Simulator` event-queue interpreter remains JLS's
+**only** simulation execution strategy; no levelized/compiled
+evaluation pass (the Verilator/CXXRTL elaborate-to-flat approach) is
+built now. Rationale: classroom-scale gate circuits are the present
+workload and the interpreter serves them correctly and responsively;
+a second strategy is premature optimization until CPU-scale designs
+are actually common. The §6 hot-plane rule stands regardless of
+strategy: the inner loop lives entirely inside `core` with zero
+plugin indirection, so a second strategy — if ever added — is a
+core-internal change invisible to every other module.
+**Revisit trigger:** a concrete CPU-scale design on the `riscv/`
+trajectory (#200/#201/#202) that is unusably slow interactively.
+If triggered, file a follow-up implementation issue for a levelized
+compiled pass as a second strategy behind the same core boundary
+(options 2/3 of #221); that issue deliberately does not exist yet.
+**Equivalence criterion (binding on any future pass):** it must be
+observably identical to the event model as specified in
+[`docs/simulation-semantics.md`](docs/simulation-semantics.md) — the
+two-states-plus-HiZ value domain and multi-driver/tri-state
+resolution (§2, §9), edge-triggering semantics (§8), and per-element
+propagation delays (§6, §7) — and it must agree bit-for-bit with the
+#202 RV32I integration golden run as a differential oracle. Any
+divergence is a specified, documented change to
+`docs/simulation-semantics.md` first, never a silent behavioral
+difference between strategies.

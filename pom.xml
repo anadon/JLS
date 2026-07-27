@@ -414,7 +414,15 @@
                      any floor experiment needs `mvn clean verify` -
                      the agent appends to target/jacoco.exec, so an
                      unclean rerun unions with prior coverage and
-                     floors can never trip. -->
+                     floors can never trip.
+                     Raised 2026-07-26 (issue #159): the jls floors
+                     sit under a fresh headless canonical-JDK (25)
+                     measurement of jls 52.08/50.77/56.28 after the
+                     TextFilter suite covered the package's last
+                     untested headless-tractable class, with the
+                     documented 0.5-1.0pt epsilon headroom (the
+                     bundle moved well under half a point and its
+                     floors are unchanged). -->
                 <rule>
                   <element>PACKAGE</element>
                   <includes>
@@ -424,17 +432,17 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.495</minimum>
+                      <minimum>0.515</minimum>
                     </limit>
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.480</minimum>
+                      <minimum>0.500</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.530</minimum>
+                      <minimum>0.555</minimum>
                     </limit>
                   </limits>
                 </rule>

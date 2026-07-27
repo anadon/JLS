@@ -69,8 +69,19 @@ The climb convention:
 
 - **Floors only ever move up.** A PR that raises coverage should also
   raise the nearest floor (bundle and/or package) to just below the new
-  measurement, so the gain cannot silently erode later. "Just below"
-  means a small margin (a few tenths of a point) to absorb JDK jitter.
+  measurement, so the gain cannot silently erode later.
+- **Leave epsilon headroom under every per-package floor.** Zero-margin
+  floors flake across the JDK matrix — the #233 incident: a
+  `jls.collab.op` BRANCH floor of 0.770, set from a JDK 25 run,
+  measured 0.768 on JDK 26 and failed an unrelated PR. "Just below the
+  measurement" therefore means at least 0.5–1.0 point of headroom;
+  BRANCH counters jitter the most across JDKs and deserve the larger
+  margin.
+- **Raise floors from the canonical JDK only** — currently JDK 25, the
+  matrix entry whose failure blocks CI (the newer-JDK entries are
+  advisory, `continue-on-error` in `ci.yml`). Coverage measured on
+  other matrix JDKs shifts with JDK internals and must not be copied
+  into the floors.
 - **Raise floors from headless numbers only.** The floors are pinned to
   a plain `mvn verify` with no display so the build passes anywhere.
   CI's display-substrate run (`xvfb-run` with `-Djls.test.headless=false`)
@@ -85,8 +96,16 @@ The climb convention:
 - `jls.edit` is deliberately unfloored until the editor decomposition
   work (#84/#91) makes that code testable headlessly; do not add a
   floor there that would either bind at ~0% or block unrelated PRs.
-- Milestone: when the headless bundle LINE ratio crosses 0.50, the PIT
-  mutation-testing evaluation (#161) is unblocked.
+- **Mutation-testing status** (#159/#161): the 0.50 headless bundle
+  LINE milestone is crossed and pinned (PR #244), and the PIT
+  evaluation it gated (#161) is closed — PIT is adopted report-only as
+  the opt-in `-Ppitest` profile plus the weekly non-blocking
+  `mutation.yml` workflow (trial record:
+  [`docs/mutation-testing-trial-2026-07.md`](docs/mutation-testing-trial-2026-07.md)).
+  The remaining step — promoting a `mutationThreshold` climb-ratchet
+  over the scoped classes (`jls.sim.*`, `jls.BitSetUtils`, `jls.Util`,
+  `jls.SpatialIndex`, `jls.collab.op.*`) once a few weekly reports
+  establish a stable baseline — is tracked in #159.
 
 ## Reporting bugs
 

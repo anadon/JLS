@@ -186,19 +186,24 @@ public abstract sealed class Gate extends LogicElement implements Rotatable
 				outx = 0;
 			}
 
-			// set up output
+			// set up output (facing the way the gate does, #78)
 			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
 			out = new Output("output",this,outx,dist+Geometry.SPACING,bits);
+			out.setFace(orientation);
 			outputs.add(out);
 
-			// set up inputs
+			// set up inputs (facing opposite the gate, #78)
 			if (numInputs == 1) { // not or delay gate
-				inputs.add(new Input("input0",this,inx,Geometry.SPACING,bits));
+				Input in = new Input("input0",this,inx,Geometry.SPACING,bits);
+				in.setFace(orientation.flipped());
+				inputs.add(in);
 			}
 			else {
 				int yc = 0;
 				for (int i=0; i<numInputs; i+=1) {
-					inputs.add(new Input("input"+i,this,inx,yc,bits));
+					Input in = new Input("input"+i,this,inx,yc,bits);
+					in.setFace(orientation.flipped());
+					inputs.add(in);
 					if (numInputs == 2)
 						yc += 2*Geometry.SPACING;
 					else
@@ -215,19 +220,24 @@ public abstract sealed class Gate extends LogicElement implements Rotatable
 				outy = 0;
 			}
 
-			// set up output
+			// set up output (facing the way the gate does, #78)
 			int dist = (Math.max(numInputs,4)-3)/2*Geometry.SPACING;
 			out = new Output("output",this,dist+Geometry.SPACING,outy,bits);
+			out.setFace(orientation);
 			outputs.add(out);
 
-			// set up inputs
+			// set up inputs (facing opposite the gate, #78)
 			if (numInputs == 1) { // not or delay gate
-				inputs.add(new Input("input0",this,Geometry.SPACING,iny,bits));
+				Input in = new Input("input0",this,Geometry.SPACING,iny,bits);
+				in.setFace(orientation.flipped());
+				inputs.add(in);
 			}
 			else {
 				int xc = 0;
 				for (int i=0; i<numInputs; i+=1) {
-					inputs.add(new Input("input"+i,this,xc,iny,bits));
+					Input in = new Input("input"+i,this,xc,iny,bits);
+					in.setFace(orientation.flipped());
+					inputs.add(in);
 					if (numInputs == 2)
 						xc += 2*Geometry.SPACING;
 					else

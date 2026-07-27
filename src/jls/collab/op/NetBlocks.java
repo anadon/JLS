@@ -2,16 +2,20 @@ package jls.collab.op;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.LogicElement;
+import jls.elem.Output;
 import jls.elem.Put;
+import jls.elem.Wire;
 import jls.elem.WireEnd;
 
 /**
@@ -122,6 +126,143 @@ final class NetBlocks {
 			}
 		}
 	} // end of toAddWire method
+
+	/**
+	 * Serialize one surviving connected component of a clipped net as
+	 * an {@link AddWire} op: the second half of the
+	 * RemoveWire-plus-AddWire-survivors composition the delete gesture
+	 * uses when a selection removes only part of a net. The blocks are
+	 * written in {@code WireEnd.save}'s exact format, filtered to the
+	 * surviving subgraph: only wires in the kept set (and their probes)
+	 * are referenced, attach lines are dropped for ends whose put's
+	 * element is among the removed anchors (those elements leave in the
+	 * gesture's {@link RemoveElements}), and the tri-state flag is
+	 * recomputed for the component alone - tri-state iff a surviving
+	 * attachment drives it from a tri-state output, mirroring
+	 * {@code WireNet.makeNet}.
+	 *
+	 * Unlike {@link #toAddWire} this writes the blocks directly from
+	 * the live ends without ever touching their save-time {@code int}
+	 * ids (which HDL export consumes for element ordering and
+	 * synthesized net names), so there is nothing to restore and
+	 * serializing a component leaves no observable trace.
+	 *
+	 * @param survivorEnds The component's wire ends, in any order; each
+	 *            must keep at least one wire.
+	 * @param keptWires The surviving wires; every kept wire of the
+	 *            given ends must connect two of them.
+	 * @param removedAnchors The elements leaving in the same gesture;
+	 *            attachments to them are not serialized.
+	 *
+	 * @return the op that adds the surviving component.
+	 *
+	 * @throws IllegalArgumentException if the arguments do not describe
+	 *             one nonempty surviving component - a planner bug, not
+	 *             hostile input, hence unchecked.
+	 */
+	static AddWire toSurvivorAddWire(List<WireEnd> survivorEnds,
+			Set<Wire> keptWires, Set<Element> removedAnchors) {
+
+		if (survivorEnds.isEmpty()) {
+			throw new IllegalArgumentException(
+					"a survivor component needs at least one wire end");
+		}
+		if (keptWires.isEmpty()) {
+			throw new IllegalArgumentException(
+					"a survivor component needs at least one kept wire");
+		}
+		List<WireEnd> ends = new ArrayList<WireEnd>(survivorEnds);
+		ends.sort(Comparator.comparing(Element::getStableId));
+
+		// the surviving attachment anchors, in stable-id order, and the
+		// component's recomputed tri-state flag (WireNet.makeNet:
+		// tri-state iff a tri-state output still drives it)
+		List<Element> anchors = new ArrayList<Element>();
+		boolean triState = false;
+		for (WireEnd end : ends) {
+			Put p = end.getPut();
+			if (p == null) {
+				continue;
+			}
+			LogicElement owner = p.getElement();
+			if (owner == null) {
+				throw new IllegalArgumentException("a survivor end is "
+						+ "attached to an in-progress connection");
+			}
+			if (removedAnchors.contains(owner)) {
+				continue;
+			}
+			if (!anchors.contains(owner)) {
+				anchors.add(owner);
+			}
+			if (p instanceof Output out && out.isTriState()) {
+				triState = true;
+			}
+		}
+		anchors.sort(Comparator.comparing(Element::getStableId));
+
+		// the op's local numbering: anchors 0..k-1, ends k..k+n-1, both
+		// in stable-id order - computed in side maps, never written
+		// into the elements
+		Map<WireEnd, Integer> localId =
+				new HashMap<WireEnd, Integer>();
+		int base = anchors.size();
+		for (int i = 0; i < ends.size(); i += 1) {
+			localId.put(ends.get(i), base + i);
+		}
+		List<ElementId> attach = new ArrayList<ElementId>(anchors.size());
+		for (Element anchor : anchors) {
+			attach.add(anchor.getStableId());
+		}
+
+		List<String> blocks = new ArrayList<String>(ends.size());
+		for (WireEnd end : ends) {
+			StringBuilder block = new StringBuilder();
+			block.append("ELEMENT WireEnd\n");
+			block.append(" int id ").append(localId.get(end))
+					.append('\n');
+			block.append(" int x ").append(end.getX()).append('\n');
+			block.append(" int y ").append(end.getY()).append('\n');
+			block.append(" String sid \"").append(end.getStableId())
+					.append("\"\n");
+			if (triState) {
+				block.append(" int tristate 1\n");
+			}
+			Put p = end.getPut();
+			LogicElement owner = p == null ? null : p.getElement();
+			if (p != null && owner != null
+					&& !removedAnchors.contains(owner)) {
+				block.append(" String put \"").append(p.getName())
+						.append("\"\n");
+				block.append(" ref attach ")
+						.append(anchors.indexOf(owner)).append('\n');
+			}
+			boolean keptOne = false;
+			for (Wire wire : end.getWires()) {
+				if (!keptWires.contains(wire)) {
+					continue;
+				}
+				Integer other = localId.get(wire.getOtherEnd(end));
+				if (other == null) {
+					throw new IllegalArgumentException("a kept wire "
+							+ "leads outside the survivor component");
+				}
+				block.append(" ref wire ").append(other).append('\n');
+				if (wire.hasProbe()) {
+					block.append(" probe ").append(other).append(" \"")
+							.append(wire.getProbe()).append("\"\n");
+				}
+				keptOne = true;
+			}
+			if (!keptOne) {
+				throw new IllegalArgumentException("a survivor wire "
+						+ "end needs at least one kept wire");
+			}
+			block.append("END\n");
+			blocks.add(block.toString());
+		}
+		return new AddWire(attach, blocks);
+	} // end of toSurvivorAddWire method
 
 	/**
 	 * Parse one wire-end block strictly: exactly the line sequence

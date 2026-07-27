@@ -8,6 +8,20 @@ All notable changes to JLS are documented here. The format follows
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
 ### Added
+- The collab transport seam (#163, #168 Stage 1a): a new
+  `jls.collab.net.Transport` interface — opaque in-order frames,
+  blocking receive, null on clean close — extracted verbatim from
+  `SocketSession` (which now implements it, with no behavior change),
+  plus `LoopbackTransport.pair()`, an in-memory two-endpoint
+  implementation over bounded queues that enforces the same
+  1 MiB payload cap and clean-close semantics without constructing a
+  socket. The test tree gains a seeded `ChaosTransport` decorator
+  (drop/duplicate/reorder probabilities plus `partition()`/`heal()`,
+  deterministic per seed, never inventing or corrupting bytes) and a
+  `TransportContractTest` that runs one contract suite against both
+  the loopback pair and a real handshaken socket pair, so the test
+  double the replication stack (#169/#171) will develop against
+  cannot drift from the real transport.
 - The editor palette is now generated from a declarative table (#78):
   `jls.edit.PaletteEntry` (icon, fallback text, tooltip, toolbar
   group, help topic per element — the GUI half of the two-layer

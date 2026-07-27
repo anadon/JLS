@@ -33,6 +33,17 @@
  * {@link jls.collab.net.SecureLink} frames in both directions with one
  * blocking I/O call per receive (the caller owns the session thread).
  * </li>
+ * <li>{@link jls.collab.net.Transport} - the frame-channel seam the
+ * replication stack (#169/#171) talks through: opaque in-order frames,
+ * blocking receive, null on clean close. {@code SocketSession} is the
+ * production implementation; extracting the interface added no
+ * behavior.</li>
+ * <li>{@link jls.collab.net.LoopbackTransport} - an in-memory
+ * {@code Transport} pair over bounded queues, so everything above the
+ * wire tests against the real contract - same payload cap, same
+ * clean-close-is-null shape - without a socket, a handshake, or a
+ * wall clock. The seeded chaos decorator (drop/duplicate/reorder,
+ * partition/heal) lives in the test tree beside its tests.</li>
  * </ul>
  *
  * The crypto core is transport-agnostic; the socket layer is the thin

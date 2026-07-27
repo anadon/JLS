@@ -304,7 +304,7 @@ Version-1 and version-2 writers emit exactly these 32 tags:
 | `InputPin` | circuit input | |
 | `JumpEnd` | named-net receiver | |
 | `JumpStart` | named-net source | |
-| `Memory` | RAM/ROM | initial contents: `String init` (raw dump) **or** `String initrle` (run-length encoded); §9 caveat |
+| `Memory` | RAM/ROM | initial contents: `String init` (raw dump) **or** `String initrle` (run-length encoded); optional `int sync 1` = clock-edge synchronous write, RAM only, written only when on (issue #199); §9 caveat applies to both optional attributes |
 | `Mux` | multiplexer | |
 | `NandGate` | NAND gate | |
 | `NorGate` | NOR gate | |
@@ -467,6 +467,15 @@ version refuses it outright instead of loading a subtly wrong
 circuit. Writers SHOULD therefore prefer a version bump over an
 "ignorable" attribute whenever dropping the attribute would change
 simulation behavior.
+
+`Memory`'s `sync` attribute (issue #199) is a known instance of this
+class: readers older than #199 — including post-versioning ones —
+ignore the unknown name and load a synchronous-write RAM as
+level-sensitive, which changes write timing (§8.4 of
+`simulation-semantics.md`). The attribute is written only when the
+mode is on, so only circuits that opt in are exposed; whether files
+containing it should declare a bumped `FORMAT` version is an open
+question tracked with issue #199's follow-ups.
 
 **Tag stability** (issue #79): tags are frozen identifiers decoupled
 from implementation class names (§7). The reference implementation

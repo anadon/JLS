@@ -91,6 +91,18 @@ public final class MemoryRenderer implements ElementRenderer {
 			ElementRenderSupport.drawPut(g, in);
 		}
 
+		// draw synchronous-write clock input and label (issue #199);
+		// the clock pin is appended last so the indices above hold
+		if (m.isRAM() && m.isSyncWrite()) {
+			Input clk = m.getInputList().get(5);
+			lx = clk.getX();
+			ly = clk.getY();
+			h = fm.getAscent()+fm.getDescent();
+			g.setColor(Color.black);
+			g.drawString("clk",lx+d2,ly-h/2+ascent);
+			ElementRenderSupport.drawPut(g, clk);
+		}
+
 		// draw data output and label
 		Output out = m.getOutputList().get(0);
 		lx = out.getX();

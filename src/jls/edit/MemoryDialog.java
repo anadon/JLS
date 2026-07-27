@@ -15,6 +15,7 @@ import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -124,6 +125,12 @@ public final class MemoryDialog implements ElementDialog {
 		private final JRadioButton ram = new JRadioButton("RAM");
 		/** Radio button selecting ROM as the memory type. */
 		private final JRadioButton rom = new JRadioButton("ROM");
+		/**
+		 * Checkbox selecting clock-edge synchronous writes (issue #199).
+		 * RAM only: it is disabled while ROM is selected.
+		 */
+		private final JCheckBox sync =
+				new JCheckBox("Synchronous write (clock-edge)");
 		/** Button that loads the initial contents from a file. */
 		private final JButton fromFile = new JButton("from File");
 		/** Button that opens the built-in initial-value editor. */
@@ -178,6 +185,22 @@ public final class MemoryDialog implements ElementDialog {
 				group.add(ram);
 				group.add(rom);
 				window.add(types);
+
+				// synchronous write is a RAM-only creation choice
+				// (issue #199), structural like bits/capacity/type
+				sync.setToolTipText("writes commit only on a rising edge"
+						+ " of a dedicated clock input");
+				sync.setName("dialog.memory.sync");
+				sync.getAccessibleContext()
+						.setAccessibleName("Synchronous write");
+				sync.setAlignmentX(Component.CENTER_ALIGNMENT);
+				sync.setEnabled(false);
+				ram.addActionListener(e -> sync.setEnabled(true));
+				rom.addActionListener(e -> {
+					sync.setEnabled(false);
+					sync.setSelected(false);
+				});
+				window.add(sync);
 			}
 
 			// set up inputs
@@ -338,6 +361,7 @@ public final class MemoryDialog implements ElementDialog {
 				mem.setType(tram);
 				mem.setBits(tbits);
 				mem.setCapacity(tcapacity);
+				mem.setSyncWrite(tram && sync.isSelected());
 				bitsPad.close();
 				capacityPad.close();
 			}

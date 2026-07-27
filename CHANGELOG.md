@@ -23,6 +23,16 @@ All notable changes to JLS are documented here. The format follows
   failure. The toolbar the user sees is unchanged (the Import button
   stays hand-coded; `SubCircuit`, `WireEnd`, and `TestGen` are the
   documented non-palette types).
+- Optional **synchronous write** mode on RAM `Memory` elements (#199):
+  a creation-dialog checkbox (RAM only) adds a dedicated 1-bit clock
+  input, and writes then commit only on a rising clock edge with CS
+  and WE low — removing the level-sensitive glitch hazard where a
+  settling address bus with WE asserted corrupts memory at addresses
+  the design never targeted. Saved as `int sync 1` (written only when
+  on), so every existing file loads and re-saves byte-identically with
+  the classic level-sensitive behavior; the hazard, the WE-gating
+  workaround, and the new mode are documented in
+  `docs/simulation-semantics.md` §8.4 and the Memory help page.
 - Board-aware HDL export, first slice (#213): `-export` now accepts
   `-board <name>` plus `-pins <file>` and writes a pin-constraint file
   (`.pcf`) next to the exported HDL, generated from the same model walk

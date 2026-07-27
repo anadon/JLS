@@ -81,7 +81,6 @@ import jls.collab.op.RemoveWire;
 import jls.collab.op.RotateElement;
 import jls.collab.op.ToggleWatched;
 import jls.core.Geometry;
-import jls.elem.Editable;
 import jls.elem.Element;
 import jls.elem.ElementId;
 import jls.elem.Group;
@@ -3083,65 +3082,68 @@ public abstract class SimpleEditor extends JPanel {
 
 
 			/**
-			 * Set up the options popup menu.
+			 * Set up the options popup menu. Which items the element
+			 * gets is decided by the headless
+			 * {@link OptionMenuPolicy} (issue #86); this method only
+			 * maps its entries onto the existing shared menu items, in
+			 * the order the policy returned them.
 			 *
 			 * @param el The element the menu is being shown for.
 			 */
 			private void makeOptionMenu(Element el) {
 
 				optionMenu.removeAll();
-				if (el instanceof QuickEditable quick && !el.isUneditable()) {
-					optionMenu.add(ElementQuickMenus.build(quick, me));
-				}
-				if (el instanceof Editable && !el.isUneditable()) {
-					optionMenu.add(modify);
-				}
-				if (el instanceof Timed && !el.isUneditable()) {
-					optionMenu.add(timing);
-				}
-				if (el instanceof Watchable watchable) {
-					if (!el.isUneditable()) {
-						if (watchable.isWatched()) {
-							watch.setText("Un-watch Element");
-						}
-						else {
-							watch.setText("Watch Element");
-						}
-						optionMenu.add(watch);
-					}
-					optionMenu.add(view);
-				}
-				if(el instanceof Rotatable rot && rot.canRotate())
-				{
-					if(!el.isUneditable())
-					{
-						optionMenu.add(Crotate);
-						optionMenu.add(CCrotate);
+				for (OptionMenuPolicy.Entry entry
+						: OptionMenuPolicy.entries(el)) {
+					switch (entry.kind()) {
+						case QUICK:
+							optionMenu.add(ElementQuickMenus.build(
+									(QuickEditable)el, me));
+							break;
+						case MATCH_JUMP:
+							optionMenu.add(matchJump);
+							break;
+						case OP:
+							JMenuItem item = popupItem(entry.requireOp());
+							item.setText(entry.label());
+							optionMenu.add(item);
+							break;
 					}
 				}
-				if(el instanceof Rotatable rot && rot.canFlip())
-				{
-					if(!el.isUneditable())
-					{
-						optionMenu.add(flip);
-					}
+			} // end of makeOptionMenu method
+
+			/**
+			 * The popup menu item backed by an operation's shared
+			 * {@link Action} (issue #75). Only the operations
+			 * {@link OptionMenuPolicy} emits have popup items.
+			 *
+			 * @param op The backing operation of a policy entry.
+			 * @return the popup menu item for that operation.
+			 */
+			private JMenuItem popupItem(EditOp op) {
+
+				switch (op) {
+					case PROBE:
+						return probe;
+					case WATCH:
+						return watch;
+					case MODIFY:
+						return modify;
+					case TIMING:
+						return timing;
+					case VIEW_VALUE:
+						return view;
+					case ROTATE_CW:
+						return Crotate;
+					case ROTATE_CCW:
+						return CCrotate;
+					case FLIP:
+						return flip;
+					default:
+						throw new IllegalArgumentException(
+								"no popup item for " + op);
 				}
-				if (el instanceof JumpStart) {
-					if(!el.isUneditable())
-					{
-						optionMenu.add(matchJump);
-					}
-				}
-				if (el instanceof Wire wire) {
-					if (wire.hasProbe()) {
-						probe.setText("Remove Probe");
-					}
-					else {
-						probe.setText("Attach Probe");
-					}
-					optionMenu.add(probe);
-				}
-			} // end of makeOptions method
+			} // end of popupItem method
 
 			/**
 			 * React to mouse release events.

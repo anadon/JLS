@@ -168,6 +168,38 @@ class ElementSimulationGoldenTest {
 	}
 
 	// ------------------------------------------------------------------
+	// FieldExtend
+	// ------------------------------------------------------------------
+
+	@Test
+	void fieldExtendSignAndZeroFill() {
+		// a 4-bit field widened to 8 bits: sign extension replicates bit 3
+		// into the high nibble, zero extension leaves it clear - expected
+		// values by definition, not by running the simulator
+		for (long v = 0; v < 16; v++) {
+			long signExpected = (v & 0x8) != 0 ? (v | 0xF0) : v;
+
+			CircuitTextBuilder cs = new CircuitTextBuilder();
+			int feSign = cs.fieldExtend(4, 8, true);
+			int cSign = cs.constant(v);
+			int outSign = cs.outputPin("out", 8);
+			cs.wire(cSign, "output", feSign, "input");
+			cs.wire(feSign, "output", outSign, "input");
+			assertEquals(signExpected, simulate(cs.build(), "out"),
+					"sign-extend(" + v + ")");
+
+			CircuitTextBuilder cz = new CircuitTextBuilder();
+			int feZero = cz.fieldExtend(4, 8, false);
+			int cZero = cz.constant(v);
+			int outZero = cz.outputPin("out", 8);
+			cz.wire(cZero, "output", feZero, "input");
+			cz.wire(feZero, "output", outZero, "input");
+			assertEquals(v, simulate(cz.build(), "out"),
+					"zero-extend(" + v + ")");
+		}
+	}
+
+	// ------------------------------------------------------------------
 	// Mux
 	// ------------------------------------------------------------------
 
@@ -489,9 +521,9 @@ class ElementSimulationGoldenTest {
 			"Clock", "Register", "StateMachine", "SubCircuit", "TriState",
 			"Pause", "InputPin", "WireEnd",
 			// this suite
-			"Adder", "Decoder", "Extend", "Mux", "ShiftRegister",
-			"TruthTable", "Binder", "Splitter", "JumpStart", "JumpEnd",
-			"SigGen", "Stop");
+			"Adder", "Decoder", "Extend", "FieldExtend", "Mux",
+			"ShiftRegister", "TruthTable", "Binder", "Splitter",
+			"JumpStart", "JumpEnd", "SigGen", "Stop");
 
 	/**
 	 * Elements deliberately without a simulation golden. Every entry
@@ -505,7 +537,13 @@ class ElementSimulationGoldenTest {
 			"Text",
 			// the -t test-vector driver; exercised end to end by the
 			// batch CLI suites and VcdExportGoldenTest
-			"TestGen");
+			"TestGen",
+			// multi-port register file (issue #201): its clock-synchronous
+			// write / asynchronous read path needs a rising-edge write
+			// sequence to exercise; a behavioral golden with a driven clock
+			// is a follow-up. Save/load, capability and pin-face contracts
+			// cover the element here.
+			"RegisterFile");
 
 	@Test
 	void everySimulatingElementHasAGoldenOrARecordedExemption()

@@ -102,6 +102,45 @@ public final class CircuitTextBuilder {
 		return id;
 	}
 
+	/**
+	 * Sign/zero extend-from-field element (issue #201). Puts: input
+	 * "input" (inBits wide), output "output" (outBits wide). sign true
+	 * sign-extends, false zero-extends.
+	 */
+	public int fieldExtend(int inBits, int outBits, boolean sign) {
+		int id = nextId++;
+		open("FieldExtend", id)
+				.append(" int inbits ").append(inBits).append('\n')
+				.append(" int outbits ").append(outBits).append('\n')
+				.append(" String mode \"").append(sign ? "sign" : "zero")
+				.append("\"\n")
+				.append(" int delay 10\n")
+				.append(" String orient \"LEFT\"\n")
+				.append("END\n");
+		return id;
+	}
+
+	/**
+	 * Multi-port register file (issue #201). Left-edge input puts
+	 * "RAn"/"WAn"/"WDn"/"WEn", the shared clock "C", and right-edge
+	 * output puts "RDn".
+	 */
+	public int registerFile(int bits, int count, int readPorts,
+			int writePorts, boolean reg0Zero) {
+		int id = nextId++;
+		open("RegisterFile", id)
+				.append(" String name \"rf").append(id).append("\"\n")
+				.append(" int bits ").append(bits).append('\n')
+				.append(" int count ").append(count).append('\n')
+				.append(" int read ").append(readPorts).append('\n')
+				.append(" int write ").append(writePorts).append('\n')
+				.append(" int reg0zero ").append(reg0Zero ? 1 : 0).append('\n')
+				.append(" int delay 50\n")
+				.append(" int watch 0\n")
+				.append("END\n");
+		return id;
+	}
+
 	/** Puts: "input0".."inputN-1", "select", "output". */
 	public int mux(int inputs, int bits) {
 		int id = nextId++;

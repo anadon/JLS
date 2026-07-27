@@ -90,6 +90,12 @@ class AllElementsRoundTripTest {
 		t.append(el("ShiftRegister", id++, x += 120, 120,
 				" String type \"ArithmeticRight\"\n int bits 8\n int delay 25\n"
 				+ " String iOrient \"DOWN\"\n String sOrient \"LEFT\"\n"));
+		t.append(el("FieldExtend", id++, x += 120, 120,
+				" int inbits 4\n int outbits 8\n String mode \"sign\"\n"
+				+ " int delay 10\n String orient \"LEFT\"\n"));
+		t.append(el("RegisterFile", id++, x += 120, 360,
+				" String name \"rf0\"\n int bits 8\n int count 32\n int read 2\n"
+				+ " int write 1\n int reg0zero 1\n int delay 50\n int watch 0\n"));
 		t.append(el("SigGen", id++, x += 120, 120,
 				" int width 48\n int height 24\n String signals \"in1 0 1 0 1\\n\"\n"));
 		t.append(el("Stop", id++, x += 120, 120, ""));

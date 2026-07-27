@@ -48,9 +48,10 @@ class SealedHierarchyTest {
 				"Gate", "Group", "Pin", "SigSim",
 				// concrete leaves
 				"Adder", "Clock", "Constant", "Decoder", "Display",
-				"JumpEnd", "JumpStart", "Memory", "Mux", "Pause",
-				"Register", "ShiftRegister", "StateMachine", "Stop",
-				"SubCircuit", "TriState", "TruthTable", "WireEnd"),
+				"FieldExtend", "JumpEnd", "JumpStart", "Memory", "Mux",
+				"Pause", "Register", "RegisterFile", "ShiftRegister",
+				"StateMachine", "Stop", "SubCircuit", "TriState",
+				"TruthTable", "WireEnd"),
 				permitted(LogicElement.class));
 	}
 

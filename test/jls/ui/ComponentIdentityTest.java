@@ -103,9 +103,14 @@ class ComponentIdentityTest {
 									+ "') lacks a palette.<slug> name");
 				}
 			}
-			// issue #210 P1/P2: 0 of 30 named before the fix, 30 after
-			assertEquals(30, names.size(),
-					"all 30 element palette buttons resolve by palette.<slug>"
+			// issue #210 P1/P2: 0 of 30 named before the fix, 30 after;
+			// issue #201 added RegisterFile and FieldExtend, so the census
+			// is now 32. This literal is a deliberate independent tripwire:
+			// deriving it from Palette.entries() would make the check
+			// tautological, and deriving it from ElementRegistry would be
+			// wrong (the registry carries non-palette types like WireEnd).
+			assertEquals(32, names.size(),
+					"all 32 element palette buttons resolve by palette.<slug>"
 							+ " name (P1 was 0 of 30)");
 
 			// the #91-style lookup: resolve by name alone
@@ -143,8 +148,8 @@ class ComponentIdentityTest {
 					}
 				}
 			});
-			assertEquals(30, names.size(),
-					"the elements menu mirrors the 30 palette entries");
+			assertEquals(32, names.size(),
+					"the elements menu mirrors the 32 palette entries");
 			Set<String> distinct = new HashSet<>();
 			for (String name : names) {
 				assertNotNull(name, "every mirror menu item has a name");

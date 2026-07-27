@@ -48,21 +48,22 @@ class CapabilityInterfaceTest {
 
 	/** The registered tags whose elements are {@link Timed}. */
 	private static final Set<String> TIMED = Set.of(
-			"Adder", "AndGate", "Decoder", "DelayGate", "Memory", "Mux",
-			"NandGate", "NorGate", "NotGate", "OrGate", "Register",
-			"ShiftRegister", "StateMachine", "TriState", "TruthTable",
-			"XorGate");
+			"Adder", "AndGate", "Decoder", "DelayGate", "FieldExtend",
+			"Memory", "Mux", "NandGate", "NorGate", "NotGate", "OrGate",
+			"Register", "RegisterFile", "ShiftRegister", "StateMachine",
+			"TriState", "TruthTable", "XorGate");
 
 	/** The registered tags whose elements are {@link Watchable}. */
 	private static final Set<String> WATCHABLE = Set.of(
-			"InputPin", "JumpStart", "Memory", "OutputPin", "Register");
+			"InputPin", "JumpStart", "Memory", "OutputPin", "Register",
+			"RegisterFile");
 
 	/** The registered tags whose elements are {@link Rotatable}. */
 	private static final Set<String> ROTATABLE = Set.of(
 			"Adder", "AndGate", "Binder", "Clock", "Constant", "Decoder",
-			"DelayGate", "Display", "Extend", "InputPin", "JumpEnd",
-			"JumpStart", "Mux", "NandGate", "NorGate", "NotGate", "OrGate",
-			"OutputPin", "Register", "ShiftRegister", "Splitter",
+			"DelayGate", "Display", "Extend", "FieldExtend", "InputPin",
+			"JumpEnd", "JumpStart", "Mux", "NandGate", "NorGate", "NotGate",
+			"OrGate", "OutputPin", "Register", "ShiftRegister", "Splitter",
 			"SubCircuit", "TriState", "XorGate");
 
 	/**
@@ -83,8 +84,9 @@ class CapabilityInterfaceTest {
 
 	/** The registered tags whose elements are {@link Editable}. */
 	private static final Set<String> EDITABLE = Set.of(
-			"Clock", "Constant", "Memory", "Register", "SigGen",
-			"StateMachine", "SubCircuit", "Text", "TruthTable");
+			"Clock", "Constant", "FieldExtend", "Memory", "Register",
+			"RegisterFile", "SigGen", "StateMachine", "SubCircuit", "Text",
+			"TruthTable");
 
 	/** The registered tags whose elements are {@link QuickEditable}. */
 	private static final Set<String> QUICK_EDITABLE = Set.of("Constant");
@@ -149,6 +151,7 @@ class CapabilityInterfaceTest {
 		cb.gate("DelayGate", 1, 1);
 		cb.constant(0xAB);
 		cb.extend(4);
+		cb.fieldExtend(4, 8, true);
 		cb.adder(4);
 		cb.clock(20, 10);
 		cb.decoder(2);

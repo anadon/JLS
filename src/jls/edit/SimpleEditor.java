@@ -79,53 +79,27 @@ import jls.collab.op.RemoveProbe;
 import jls.collab.op.RotateElement;
 import jls.collab.op.ToggleWatched;
 import jls.core.Geometry;
-import jls.elem.Adder;
-import jls.elem.AndGate;
-import jls.elem.Binder;
-import jls.elem.Clock;
-import jls.elem.Constant;
-import jls.elem.Decoder;
-import jls.elem.DelayGate;
 import jls.elem.Editable;
 import jls.elem.Element;
 import jls.elem.ElementId;
-import jls.elem.ElementRegistry;
-import jls.elem.ElementType;
-import jls.elem.Extend;
 import jls.elem.Group;
 import jls.elem.Input;
 import jls.elem.InputPin;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
-import jls.elem.Memory;
-import jls.elem.Mux;
-import jls.elem.NandGate;
-import jls.elem.NorGate;
-import jls.elem.NotGate;
-import jls.elem.OrGate;
 import jls.elem.Output;
 import jls.elem.OutputPin;
-import jls.elem.Pause;
 import jls.elem.Put;
 import jls.elem.QuickEditable;
-import jls.elem.Register;
 import jls.elem.Rotatable;
-import jls.elem.ShiftRegister;
 import jls.elem.SigGen;
-import jls.elem.Splitter;
-import jls.elem.StateMachine;
-import jls.elem.Stop;
 import jls.elem.SubCircuit;
-import jls.elem.Text;
 import jls.elem.Timed;
 import jls.elem.TriProp;
-import jls.elem.TriState;
-import jls.elem.TruthTable;
 import jls.elem.Watchable;
 import jls.elem.Wire;
 import jls.elem.WireEnd;
 import jls.elem.WireNet;
-import jls.elem.XorGate;
 import jls.sim.Simulator;
 
 /**
@@ -2028,6 +2002,15 @@ public abstract class SimpleEditor extends JPanel {
 
 			/**
 			 * Create element tool bar and menu.
+			 *
+			 * Both are generated from the {@link Palette} table (issue
+			 * #78): one button and one mirror menu item per
+			 * {@link PaletteEntry}, grouped into GridLayout panels of
+			 * each group's declared shape, reproducing the historical
+			 * hand-coded toolbar exactly. Only the Import button remains
+			 * hand-coded: it shows the menu of open subcircuits instead
+			 * of placing a registered element type, so it is not a
+			 * palette entry.
 			 */
 			public void makeElements() {
 
@@ -2035,501 +2018,26 @@ public abstract class SimpleEditor extends JPanel {
 				toolbar.setLayout(new BoxLayout(toolbar,BoxLayout.X_AXIS));
 				elements = new JMenu("elements");
 
-				JPanel gates = new JPanel(new GridLayout(2,4));
-
-				ImageIcon image = getImage("and");
-				String text = image == null ? "AND" : "";
-				Action act = new AbstractAction(text,image) {
-					/**
-					 * Create a new AND gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new AndGate(circuit),event.getSource() instanceof JButton);
+				for (Palette.Group group : Palette.groups()) {
+					if (group.standalone()) {
+						for (PaletteEntry entry : Palette.entries(group)) {
+							toolbar.add(makeElement(entry));
+						}
 					}
-				};
-				gates.add(makeElement(act,"AND gate"));
-
-				image = getImage("or");
-				text = image == null ? "OR" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new OR gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new OrGate(circuit),event.getSource() instanceof JButton);
+					else {
+						JPanel panel = new JPanel(
+								new GridLayout(group.rows(),group.cols()));
+						for (PaletteEntry entry : Palette.entries(group)) {
+							panel.add(makeElement(entry));
+						}
+						toolbar.add(panel);
 					}
-				};
-				gates.add(makeElement(act,"OR gate"));
+					toolbar.add(Box.createRigidArea(new Dimension(5,0)));
+				}
 
-				image = getImage("not");
-				text = image == null ? "NOT" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new NOT gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new NotGate(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"NOT gate"));
-
-				image = getImage("xor");
-				text = image == null ? "XOR" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new exclusive-OR gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new XorGate(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"exclusive OR gate"));
-
-				image = getImage("nand");
-				text = image == null ? "NAND" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new NAND gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new NandGate(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"NAND gate"));
-
-				image = getImage("nor");
-				text = image == null ? "NOR" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new NOR gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new NorGate(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"NOR gate"));
-
-				image = getImage("delay");
-				text = image == null ? "DELAY" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new delay gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new DelayGate(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"user defined signal delay"));
-
-				image = getImage("tristate");
-				text = image == null ? "TriState" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new tri-state gate and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new TriState(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				gates.add(makeElement(act,"tri-state gate"));
-
-				toolbar.add(gates);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				JPanel wireWorks = new JPanel(new GridLayout(2,4));
-
-				image = getImage("jumpstart");
-				text = image == null ? "START" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new named-wire (jump start) and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new JumpStart(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"name a wire"));
-
-				image = getImage("jumpend");
-				text = image == null ? "END" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new jump end and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new JumpEnd(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"connect to a named wire"));
-
-				image = getImage("ipin");
-				text = image == null ? "I-PIN" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new input pin and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new InputPin(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"input pin"));
-
-				image = getImage("opin");
-				text = image == null ? "O-PIN" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new output pin and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new OutputPin(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"output pin"));
-
-				image = getImage("split");
-				text = image == null ? "SPLIT" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new splitter and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Splitter(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"unbundle wires"));
-
-				image = getImage("bind");
-				text = image == null ? "BIND" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new binder and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Binder(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"bundle wires"));
-
-				image = getImage("const");
-				text = image == null ? "CONST" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new constant and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Constant(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"constant value"));
-
-				image = getImage("extend");
-				text = image == null ? "1-to-N" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new extend element and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Extend(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				wireWorks.add(makeElement(act,"make N copies of the input"));
-
-				toolbar.add(wireWorks);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				JPanel mem = new JPanel(new GridLayout(2,1));
-
-				image = getImage("register");
-				text = image == null ? "REG" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new register and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Register(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				mem.add(makeElement(act,"register (various triggering)"));
-
-				image = getImage("memory");
-				text = image == null ? "MEMORY" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new memory and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Memory(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				mem.add(makeElement(act,"memory, various types"));
-
-				toolbar.add(mem);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				JPanel comb = new JPanel(new GridLayout(2,3));
-
-				image = getImage("mux");
-				text = image == null ? "MUX" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new multiplexor and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Mux(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				comb.add(makeElement(act,"multiplexor"));
-
-				image = getImage("decoder");
-				text = image == null ? "DEC" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new decoder and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Decoder(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				comb.add(makeElement(act,"decoder"));
-
-				image = getImage("shiftregister");
-				text = image == null ? "SHIFT" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new shift register and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new ShiftRegister(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				comb.add(makeElement(act,"shift register (combinational shifter)"));
-
-				image = getImage("adder");
-				text = image == null ? "ADDER" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new adder and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Adder(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				comb.add(makeElement(act,"adder"));
-
-				image = getImage("clock");
-				text = image == null ? "CLOCK" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new clock and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Clock(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				comb.add(makeElement(act,"clock"));
-
-				toolbar.add(comb);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-				JPanel time = new JPanel(new GridLayout(2,1));
-
-				image = getImage("pause");
-				text = image == null ? "PAUSE" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new pause and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Pause(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				time.add(makeElement(act,"pause simulator when asserted"));
-
-				image = getImage("stop");
-				text = image == null ? "STOP" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new stop and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Stop(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				time.add(makeElement(act,"stop simulator when asserted"));
-
-				toolbar.add(time);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				JPanel test = new JPanel(new GridLayout(2,1));
-
-				image = getImage("siggen");
-				text = image == null ? "SIGGEN" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new signal generator and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new SigGen(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				test.add(makeElement(act,"generate test signals"));
-
-				image = getImage("display");
-				text = image == null ? "DISPLAY" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new display and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new jls.elem.Display(circuit),
-								event.getSource() instanceof JButton);
-					}
-				};
-				test.add(makeElement(act,"display circuit value"));
-
-				toolbar.add(test);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				JPanel complex = new JPanel(new GridLayout(2,1));
-
-				image = getImage("statemachine");
-				text = image == null ? "ST. MAC." : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new state machine and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new StateMachine(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				complex.add(makeElement(act,"state machine"));
-
-				image = getImage("truth");
-				text = image == null ? "Truth Table" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new truth table and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new TruthTable(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				complex.add(makeElement(act,"truth table"));
-
-				toolbar.add(complex);
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				image = getImage("text");
-				text = image == null ? "TEXT" : "";
-				act = new AbstractAction(text,image) {
-					/**
-					 * Create a new text element and begin placing it.
-					 *
-					 * @param event The triggering action event.
-					 */
-					@Override
-					public void actionPerformed(ActionEvent event) {
-						setup(new Text(circuit),event.getSource() instanceof JButton);
-					}
-				};
-				toolbar.add(makeElement(act,"text (for annotations)"));
-
-				toolbar.add(Box.createRigidArea(new Dimension(5,0)));
-
-				// import menu
+				// import menu (a bespoke button, not a palette entry: it
+				// imports an open subcircuit instead of placing a
+				// registered element type)
 				final JButton imp = new JButton("Import",getImage("down"));
 				imp.setToolTipText("import an open subcircuit");
 				imp.setBackground(Color.WHITE);
@@ -2552,7 +2060,7 @@ public abstract class SimpleEditor extends JPanel {
 					}
 				});
 
-			} // end of makeToolBar method
+			} // end of makeElements method
 
 			/**
 			 * Get image.
@@ -2568,14 +2076,35 @@ public abstract class SimpleEditor extends JPanel {
 			} // end of geImage method
 
 			/**
-			 * Make a single element for the toolbar and menu.
+			 * Make a single palette element for the toolbar and menu.
 			 *
-			 * @param action The action for this element.
-			 * @param tip The tool tip for this element.
+			 * The button and its mirror menu item share one action that
+			 * creates a blank element through the entry's registry
+			 * factory and begins placing it. The icon comes from the
+			 * entry's icon resource, with the entry's fallback text as
+			 * the button label when the resource is missing.
+			 *
+			 * @param entry The palette entry describing the element.
 			 * @return the toolbar button for the element.
 			 */
-			public JButton makeElement(Action action, String tip) {
+			public JButton makeElement(PaletteEntry entry) {
 
+				ImageIcon image = getImage(entry.iconName());
+				String text = image == null ? entry.fallbackText() : "";
+				Action action = new AbstractAction(text,image) {
+					/**
+					 * Create a new element of this entry's type and
+					 * begin placing it.
+					 *
+					 * @param event The triggering action event.
+					 */
+					@Override
+					public void actionPerformed(ActionEvent event) {
+						setup(entry.type().create(circuit),
+								event.getSource() instanceof JButton);
+					}
+				};
+				String tip = entry.tooltip();
 				JButton button = new JButton(action);
 				button.setMinimumSize(new Dimension(32,232));
 				button.setPreferredSize(new Dimension(32,32));
@@ -2596,7 +2125,7 @@ public abstract class SimpleEditor extends JPanel {
 				// automation (the #91 harness) and assistive technology can
 				// resolve them without tooltip/positional heuristics. The
 				// naming scheme is documented in docs/component-naming.md.
-				String slug = paletteSlug(tip);
+				String slug = entry.type().tag().toLowerCase(Locale.ROOT);
 				button.setName("palette." + slug);
 				item.setName("menu.elements." + slug);
 				JMenu els = elements;
@@ -2605,63 +2134,6 @@ public abstract class SimpleEditor extends JPanel {
 				els.add(item);
 				return button;
 			} // end of makeElement method
-
-			/**
-			 * The stable component-name slug for a palette tool tip
-			 * (issue #210): the {@link ElementRegistry} tag of the element
-			 * the palette entry creates, lower-cased. Sourcing the slug
-			 * from the registry keeps the names in sync with the element
-			 * table (#78); an unknown tip is a programming error caught at
-			 * tool-bar construction time.
-			 *
-			 * @param tip The palette entry's tool tip.
-			 * @return the lower-cased registry tag for the element.
-			 */
-			private static String paletteSlug(String tip) {
-
-				String tag = switch (tip) {
-					case "AND gate" -> "AndGate";
-					case "OR gate" -> "OrGate";
-					case "NOT gate" -> "NotGate";
-					case "exclusive OR gate" -> "XorGate";
-					case "NAND gate" -> "NandGate";
-					case "NOR gate" -> "NorGate";
-					case "user defined signal delay" -> "DelayGate";
-					case "tri-state gate" -> "TriState";
-					case "name a wire" -> "JumpStart";
-					case "connect to a named wire" -> "JumpEnd";
-					case "input pin" -> "InputPin";
-					case "output pin" -> "OutputPin";
-					case "unbundle wires" -> "Splitter";
-					case "bundle wires" -> "Binder";
-					case "constant value" -> "Constant";
-					case "make N copies of the input" -> "Extend";
-					case "register (various triggering)" -> "Register";
-					case "memory, various types" -> "Memory";
-					case "multiplexor" -> "Mux";
-					case "decoder" -> "Decoder";
-					case "shift register (combinational shifter)" ->
-							"ShiftRegister";
-					case "adder" -> "Adder";
-					case "clock" -> "Clock";
-					case "pause simulator when asserted" -> "Pause";
-					case "stop simulator when asserted" -> "Stop";
-					case "generate test signals" -> "SigGen";
-					case "display circuit value" -> "Display";
-					case "state machine" -> "StateMachine";
-					case "truth table" -> "TruthTable";
-					case "text (for annotations)" -> "Text";
-					default -> throw new IllegalArgumentException(
-							"no element registry tag for palette tip '"
-									+ tip + "'");
-				};
-				ElementType type = ElementRegistry.forTag(tag);
-				if (type == null) {
-					throw new IllegalStateException("palette tip '" + tip
-							+ "' names unregistered element tag " + tag);
-				}
-				return type.tag().toLowerCase(Locale.ROOT);
-			} // end of paletteSlug method
 
 			/**
 			 * Get the tool bar.

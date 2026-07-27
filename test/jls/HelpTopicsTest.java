@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,9 @@ import java.util.stream.Stream;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.junit.jupiter.api.Test;
+
+import jls.edit.Palette;
+import jls.edit.PaletteEntry;
 
 /**
  * The JavaHelp replacement (issue #11) is driven by two pieces of
@@ -138,15 +142,20 @@ class HelpTopicsTest {
 	}
 
 	/**
-	 * Every element type a user can create from the editor palette
-	 * (SimpleEditor.makeElements builds the toolbar and the "elements"
-	 * menu from exactly these, plus the Import button for SubCircuit),
+	 * Every element type a user can create from the editor palette,
 	 * mapped to the Map.jhm topic that documents it. This is the
 	 * completeness contract of issue #85: every palette element has a
-	 * help topic that resolves to a bundled page. A static list because
-	 * the element registry (#78) does not exist yet; when adding a
-	 * palette element, add its row here (the test fails until the topic
-	 * and page exist).
+	 * help topic that resolves to a bundled page. The inventory is
+	 * derived from the palette table itself (jls.edit.Palette, issue
+	 * #78 - the static list this method replaces predated the registry
+	 * and had to be maintained by hand), so a newly added palette entry
+	 * is covered automatically: the entry's declared help topic must
+	 * name a bundled page or this test fails.
+	 *
+	 * The one documented special case is SubCircuit: it is created
+	 * through the hand-coded Import button rather than a palette entry
+	 * (it imports an open circuit instead of placing a registered
+	 * element type), so its "import" topic row is added explicitly.
 	 *
 	 * Inventory note (issue #85): at the time this test was added the
 	 * audit's "21 element classes without help pages" was re-counted
@@ -155,38 +164,15 @@ class HelpTopicsTest {
 	 * puts/wires/dialog plumbing/truth-table display internals), so
 	 * this test pins completeness rather than repairing it.
 	 */
-	private static final Map<String,String> PALETTE_ELEMENT_TOPICS = Map.ofEntries(
-			Map.entry("AndGate", "AND"),
-			Map.entry("OrGate", "OR"),
-			Map.entry("NotGate", "NOT"),
-			Map.entry("XorGate", "XOR"),
-			Map.entry("NandGate", "NAND"),
-			Map.entry("NorGate", "NOR"),
-			Map.entry("DelayGate", "DELAY"),
-			Map.entry("TriState", "TRISTATE"),
-			Map.entry("JumpStart", "start"),
-			Map.entry("JumpEnd", "end"),
-			Map.entry("InputPin", "Input"),
-			Map.entry("OutputPin", "Output"),
-			Map.entry("Splitter", "unbundle"),
-			Map.entry("Binder", "bundle"),
-			Map.entry("Constant", "const"),
-			Map.entry("Extend", "extend"),
-			Map.entry("Register", "register"),
-			Map.entry("Memory", "memory"),
-			Map.entry("Mux", "mux"),
-			Map.entry("ShiftRegister", "shiftregister"),
-			Map.entry("Decoder", "decoder"),
-			Map.entry("Adder", "adder"),
-			Map.entry("Clock", "clock"),
-			Map.entry("Pause", "pause"),
-			Map.entry("Stop", "stop"),
-			Map.entry("SigGen", "siggen"),
-			Map.entry("Display", "display"),
-			Map.entry("StateMachine", "stmach"),
-			Map.entry("TruthTable", "truth"),
-			Map.entry("Text", "text"),
-			Map.entry("SubCircuit", "import"));
+	private static Map<String,String> paletteElementTopics() {
+		Map<String,String> topics = new TreeMap<String,String>();
+		for (PaletteEntry entry : Palette.entries())
+			topics.put(entry.type().tag(), entry.helpTopic());
+		// the Import button's special case: SubCircuit is user-creatable
+		// but not a palette entry
+		topics.put("SubCircuit", "import");
+		return topics;
+	}
 
 	/** Every palette element type must have a help topic that resolves
 	 *  to a bundled page (issue #85). Also sanity-checks the static
@@ -194,11 +180,12 @@ class HelpTopicsTest {
 	 *  renamed element cannot leave a stale row behind. */
 	@Test
 	void everyPaletteElementTypeHasAMappedHelpTopic() throws Exception {
+		Map<String,String> topics = paletteElementTopics();
 		Map<String,String> map = topicMap();
 		Set<String> resources = helpResources();
 		List<String> broken = new ArrayList<String>();
-		for (String type : new TreeSet<String>(PALETTE_ELEMENT_TOPICS.keySet())) {
-			String topic = PALETTE_ELEMENT_TOPICS.get(type);
+		for (String type : topics.keySet()) {
+			String topic = topics.get(type);
 			try {
 				Class.forName("jls.elem." + type);
 			}

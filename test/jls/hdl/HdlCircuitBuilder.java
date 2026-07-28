@@ -124,6 +124,18 @@ final class HdlCircuitBuilder {
 				+ " String sOrient \"DOWN\"\n");
 	}
 
+	/**
+	 * A combinational barrel shifter (ShiftRegister, issue #59). Puts are
+	 * "input" (bits wide), "amount" (ceil(log2(bits)) wide) and "output"
+	 * (bits wide). {@code type} is one of the save-file kind names
+	 * "LogicalLeft", "LogicalRight" or "ArithmeticRight".
+	 */
+	int shiftRegister(String type, int bits) {
+		return element("ShiftRegister", " String type \"" + type
+				+ "\"\n int bits " + bits + "\n int delay 25\n"
+				+ " String iOrient \"RIGHT\"\n String sOrient \"DOWN\"\n");
+	}
+
 	/** Puts: "input" (bits wide), "output" (2^bits wide). */
 	int decoder(int bits) {
 		return element("Decoder", " int bits " + bits

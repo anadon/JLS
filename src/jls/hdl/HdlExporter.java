@@ -40,6 +40,7 @@ import jls.elem.OutputPin;
 import jls.elem.Pause;
 import jls.elem.Put;
 import jls.elem.Register;
+import jls.elem.ShiftRegister;
 import jls.elem.SigGen;
 import jls.elem.Splitter;
 import jls.elem.State;
@@ -73,7 +74,10 @@ import jls.elem.XorGate;
  * match - Verilog casez / VHDL std_match chain - with hold-on-no-match
  * semantics, issue #59); StateMachine (a binary-encoded clocked case
  * with the initial state at code 0 and hold-on-no-matching-transition
- * semantics, issue #59; a zero-state machine warns and skips).</li>
+ * semantics, issue #59; a zero-state machine warns and skips);
+ * ShiftRegister (a combinational barrel shift - despite its name it
+ * holds no state, issue #122 - rendered as one dataflow shift by the
+ * amount input, issue #59).</li>
  * <li><b>Net topology, not instances</b>: Wire, WireEnd, JumpStart,
  * JumpEnd. Same-named jumps alias nets, so the net walk folds them
  * into one HDL net.</li>
@@ -421,7 +425,7 @@ public final class HdlExporter {
 			XorGate.class, NotGate.class, DelayGate.class, Extend.class,
 			TriState.class, Adder.class, Register.class, Clock.class,
 			Binder.class, Splitter.class, Mux.class, Decoder.class,
-			TruthTable.class, StateMachine.class);
+			TruthTable.class, StateMachine.class, ShiftRegister.class);
 
 	/** Element classes with no HDL meaning, warn-and-skipped. */
 	private static final Set<Class<?>> SKIPPED = Set.of(
@@ -699,6 +703,48 @@ public final class HdlExporter {
 
 		if (el instanceof StateMachine sm) {
 			buildStateMachine(model, sm, ins, outs, nets, groups, names);
+			return;
+		}
+
+		if (el instanceof ShiftRegister shift) {
+			int bits = Math.max(shift.getDataBits(), 1);
+			String target = target(model, el, 0, outs.get(0), bits, nets,
+					groups, names);
+			// ShiftRegister.init names its puts "amount" and "input"; read
+			// them by name so a future geometry change cannot swap them
+			Input amountIn = null;
+			Input dataIn = null;
+			for (Input in : ins) {
+				if ("amount".equals(in.getName())) {
+					amountIn = in;
+				}
+				else if ("input".equals(in.getName())) {
+					dataIn = in;
+				}
+			}
+			if (amountIn == null || dataIn == null) {
+				throw new IllegalStateException("ShiftRegister.init always"
+						+ " makes an \"amount\" and an \"input\" put");
+			}
+			HdlModel.ShiftStatement.Kind kind;
+			String kindText;
+			if (shift.isShiftLeft()) {
+				kind = HdlModel.ShiftStatement.Kind.LEFT;
+				kindText = "logical left";
+			}
+			else if (shift.isLogicalRight()) {
+				kind = HdlModel.ShiftStatement.Kind.LOGICAL_RIGHT;
+				kindText = "logical right";
+			}
+			else {
+				kind = HdlModel.ShiftStatement.Kind.ARITH_RIGHT;
+				kindText = "arithmetic right";
+			}
+			model.addStatement(new HdlModel.ShiftStatement(
+					"ShiftRegister (" + bits + "-bit " + kindText
+							+ ") at " + at(el),
+					kind, operand(dataIn, nets, groups),
+					operand(amountIn, nets, groups), target, bits));
 			return;
 		}
 

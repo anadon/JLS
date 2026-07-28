@@ -40,7 +40,9 @@ final class VhdlStructure {
 			"if", "then", "else", "elsif", "when", "others", "not",
 			"and", "or", "xor", "nand", "nor", "rising_edge",
 			"falling_edge", "with", "select", "std_match", "case",
-			"null");
+			"null",
+			// numeric_std names the ShiftRegister template uses (issue #59)
+			"signed", "shift_left", "shift_right", "to_integer");
 
 	static void assertSane(String vhdl) {
 

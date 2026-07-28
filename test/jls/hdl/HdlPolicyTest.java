@@ -266,6 +266,64 @@ class HdlPolicyTest {
 	}
 
 	@Test
+	void shiftRegisterIsExportedNotRejected() throws Exception {
+		// issue #59: ShiftRegister (a combinational barrel shifter, issue
+		// #122) left the reject bucket; it exports as one dataflow shift
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("hasshift");
+		int a = cb.inputPin("a", 4);
+		int amt = cb.inputPin("amt", 2);
+		int sh = cb.shiftRegister("LogicalLeft", 4);
+		int y = cb.outputPin("y", 4);
+		cb.wire(a, "output", sh, "input");
+		cb.wire(amt, "output", sh, "amount");
+		cb.wire(sh, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.warnings().isEmpty(),
+				"a supported element must not warn: " + result.warnings());
+		assertTrue(result.text().contains("a << amt"), result.text());
+		assertFalse(result.text().contains("reg "),
+				"a barrel shifter holds no state: " + result.text());
+	}
+
+	@Test
+	void shiftArithmeticRightUsesASignedShift() throws Exception {
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("shiftar");
+		int a = cb.inputPin("a", 4);
+		int amt = cb.inputPin("amt", 2);
+		int sh = cb.shiftRegister("ArithmeticRight", 4);
+		int y = cb.outputPin("y", 4);
+		cb.wire(a, "output", sh, "input");
+		cb.wire(amt, "output", sh, "amount");
+		cb.wire(sh, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.text().contains("$signed(a) >>> amt"),
+				result.text());
+	}
+
+	@Test
+	void shiftWithUnattachedAmountFoldsToZero() throws Exception {
+		// JLS reads an unattached amount input as 0, so the shift folds to
+		// a shift by a zero literal (valid HDL, no special case)
+		HdlCircuitBuilder cb = new HdlCircuitBuilder("shiftnoamt");
+		int a = cb.inputPin("a", 4);
+		int sh = cb.shiftRegister("LogicalLeft", 4);
+		int y = cb.outputPin("y", 4);
+		cb.wire(a, "output", sh, "input");
+		cb.wire(sh, "output", y, "input");
+
+		HdlExporter.Result result =
+				HdlExporter.export(cb.load(), new VerilogEmitter());
+		VerilogStructure.assertSane(result.text());
+		assertTrue(result.text().contains("a << 2'h0"), result.text());
+	}
+
+	@Test
 	void twoNetsBridgedByJumpsBecomeOneVerilogNet() throws Exception {
 		// three separate wire nets - source->JumpStart, JumpEnd->sink1,
 		// second JumpEnd->sink2 - all alias "mid" and must fuse into

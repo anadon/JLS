@@ -250,6 +250,11 @@ public final class VhdlEmitter implements HdlEmitter {
 			public void visit(HdlModel.StateMachineStatement s) {
 				stateMachine(declarations, body, s, names);
 			}
+			/** Renders a shift statement into the body. */
+			@Override
+			public void visit(HdlModel.ShiftStatement s) {
+				shift(body, s, names);
+			}
 		});
 	} // end of statement method
 
@@ -698,6 +703,39 @@ public final class VhdlEmitter implements HdlEmitter {
 	} // end of stateMachine method
 
 	/**
+	 * Emits a concurrent assignment for a barrel shift (ShiftRegister,
+	 * the #59 template), the mirror of the Verilog emitter's: a
+	 * numeric_std {@code shift_left}/{@code shift_right} over the data
+	 * cast to {@code unsigned} (logical) or {@code signed} (arithmetic
+	 * right, so the vacated high bits take the sign), by
+	 * {@code to_integer(unsigned(amount))}, cast back to
+	 * {@code std_logic_vector}. ShiftRegister is always at least 2 bits
+	 * wide (issue #122), so the data is a vector.
+	 * @param out sink for the architecture-body text
+	 * @param s the shift statement (kind, data, amount, output net)
+	 * @param names the legalized-identifier table for this model
+	 */
+	private static void shift(StringBuilder out, HdlModel.ShiftStatement s,
+			Names names) {
+
+		String count = "to_integer(" + unsigned(s.amount, names) + ")";
+		out.append("  ").append(names.of(s.output))
+				.append(" <= std_logic_vector(");
+		switch (s.kind) {
+		case LEFT:
+			out.append("shift_left(").append(unsigned(s.data, names));
+			break;
+		case LOGICAL_RIGHT:
+			out.append("shift_right(").append(unsigned(s.data, names));
+			break;
+		default: // ARITH_RIGHT
+			out.append("shift_right(").append(signed(s.data, names));
+			break;
+		}
+		out.append(", ").append(count).append("));\n");
+	} // end of shift method
+
+	/**
 	 * Bit routing, with contiguous runs coalesced into slices:
 	 * target(targetIndex[i]) = source(sourceIndex[i]).
 	 * @param out sink for the architecture-body text
@@ -826,6 +864,34 @@ public final class VhdlEmitter implements HdlEmitter {
 		// a qualified single-element aggregate lifts the scalar
 		return "unsigned'(0 => " + names.of(name) + ")";
 	} // end of unsigned method
+
+	/**
+	 * The operand as a numeric_std signed expression of its width, for the
+	 * arithmetic-right shift's sign-extending {@code shift_right}.
+	 * @param o the operand to render
+	 * @param names the legalized-identifier table for this model
+	 * @return the VHDL signed expression for the operand
+	 */
+	private static String signed(HdlModel.Operand o, Names names) {
+
+		if (!o.isNet()) {
+			var value = o.literalValue();
+			if (value == null) {
+				throw new IllegalStateException(
+						"literal operand has null value");
+			}
+			return "signed'(\"" + bitString(value, o.bits()) + "\")";
+		}
+		var name = o.netName();
+		if (name == null) {
+			throw new IllegalStateException("net operand has null name");
+		}
+		if (o.bits() > 1) {
+			return "signed(" + names.of(name) + ")";
+		}
+		// a qualified single-element aggregate lifts the scalar
+		return "signed'(0 => " + names.of(name) + ")";
+	} // end of signed method
 
 	/**
 	 * Renders a VHDL literal of a known width.

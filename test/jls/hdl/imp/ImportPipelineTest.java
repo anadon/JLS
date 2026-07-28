@@ -3,7 +3,6 @@ package jls.hdl.imp;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import jls.Circuit;
 import jls.JLSInfo;
+import jls.hdl.ToolLocator;
 import jls.hdl.yosys.CellValidator;
 import jls.hdl.yosys.CellViolation;
 import jls.hdl.yosys.YosysNetlist;
@@ -85,7 +85,7 @@ class ImportPipelineTest {
 	 * @return the yosys executable path.
 	 */
 	private static String requireYosys() {
-		String yosys = findOnPath("yosys");
+		String yosys = ToolLocator.findOnPath("yosys");
 		Assumptions.assumeTrue(yosys != null,
 				"yosys not installed; skipping the end-to-end import leg");
 		return yosys;
@@ -124,28 +124,5 @@ class ImportPipelineTest {
 				verilog + " pipeline failed:\n" + log);
 		return YosysNetlist.parse(Files.readString(out));
 	} // end of runPipeline method
-
-	/** Locate a tool on PATH, or null (never installs anything). */
-	private static String findOnPath(String tool) {
-		String path = System.getenv("PATH");
-		if (path == null) {
-			return null;
-		}
-		for (String dir : path.split(File.pathSeparator)) {
-			if (dir.isEmpty()) {
-				continue;
-			}
-			Path candidate = Path.of(dir, tool);
-			try {
-				if (Files.isExecutable(candidate)
-						&& !Files.isDirectory(candidate)) {
-					return candidate.toString();
-				}
-			} catch (SecurityException ignored) {
-				// unreadable PATH entry: keep looking
-			}
-		}
-		return null;
-	} // end of findOnPath method
 
 } // end of ImportPipelineTest class

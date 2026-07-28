@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
+import jls.hdl.ToolLocator;
+
 /**
  * CI wiring for the example autograde bridge (issue #216):
  * {@code examples/autograde/autograde.py} must grade the committed
@@ -32,7 +34,7 @@ class AutogradeBridgeExampleTest {
 
 	@Test
 	void bridgeExampleGradesTheFixtureGreen() throws Exception {
-		String python = findOnPath("python3");
+		String python = ToolLocator.findOnPath("python3");
 		Assumptions.assumeTrue(python != null,
 				"python3 not installed; skipping autograde bridge example");
 
@@ -71,29 +73,6 @@ class AutogradeBridgeExampleTest {
 				"autograde bridge failed:\n" + output);
 		assertTrue(output.contains("PASS"),
 				"bridge exited 0 without reporting PASS:\n" + output);
-	}
-
-	/** Locate a tool on PATH, or null (never installs anything). */
-	private static String findOnPath(String tool) {
-		String path = System.getenv("PATH");
-		if (path == null) {
-			return null;
-		}
-		for (String dir : path.split(File.pathSeparator)) {
-			if (dir.isEmpty()) {
-				continue;
-			}
-			Path candidate = Path.of(dir, tool);
-			try {
-				if (Files.isExecutable(candidate)
-						&& !Files.isDirectory(candidate)) {
-					return candidate.toString();
-				}
-			} catch (SecurityException ignored) {
-				// unreadable PATH entry: keep looking
-			}
-		}
-		return null;
 	}
 
 } // end of AutogradeBridgeExampleTest class

@@ -150,6 +150,55 @@ class CellValidatorTest {
 	}
 
 	@Test
+	void syncWriteSinglePortRamIsSupported() throws Exception {
+		YosysNetlist netlist = netlistWith("'ram': "
+				+ cell("$mem_v2", "ram.v:5.3-8.6",
+						"'WR_PORTS': 1, 'RD_PORTS': 1,"
+						+ " 'RD_CLK_ENABLE': '0',"
+						+ " 'WR_CLK_ENABLE': '1',"
+						+ " 'WR_CLK_POLARITY': '1'"));
+		assertEquals(List.of(), CellValidator.validate(netlist));
+	}
+
+	@Test
+	void fallingEdgeWriteRejected() throws Exception {
+		YosysNetlist netlist = netlistWith("'ram': "
+				+ cell("$mem_v2", "ram.v:5.3-8.6",
+						"'WR_PORTS': 1, 'RD_PORTS': 1,"
+						+ " 'RD_CLK_ENABLE': '0',"
+						+ " 'WR_CLK_ENABLE': '1',"
+						+ " 'WR_CLK_POLARITY': '0'"));
+		List<CellViolation> violations =
+				CellValidator.validate(netlist);
+		assertEquals(1, violations.size());
+		assertTrue(violations.get(0).message()
+				.contains("single-port"),
+				violations.get(0).message());
+	}
+
+	@Test
+	void levelSensitiveWriteRejected() throws Exception {
+		YosysNetlist netlist = netlistWith("'ram': "
+				+ cell("$mem_v2", "ram.v:5.3-8.6",
+						"'WR_PORTS': 1, 'RD_PORTS': 1,"
+						+ " 'RD_CLK_ENABLE': '0',"
+						+ " 'WR_CLK_ENABLE': '0',"
+						+ " 'WR_CLK_POLARITY': '1'"));
+		assertEquals(1, CellValidator.validate(netlist).size());
+	}
+
+	@Test
+	void multiWritePortRejected() throws Exception {
+		YosysNetlist netlist = netlistWith("'ram': "
+				+ cell("$mem_v2", "ram.v:5.3-8.6",
+						"'WR_PORTS': 2, 'RD_PORTS': 1,"
+						+ " 'RD_CLK_ENABLE': '0',"
+						+ " 'WR_CLK_ENABLE': '11',"
+						+ " 'WR_CLK_POLARITY': '11'"));
+		assertEquals(1, CellValidator.validate(netlist).size());
+	}
+
+	@Test
 	void writtenMemoryIsRejected() throws Exception {
 		YosysNetlist netlist = netlistWith("'ram': "
 				+ cell("$mem_v2", "",

@@ -253,7 +253,7 @@ public final class NetlistImporter {
 					+ " increment does not yet realize; the mapper so far"
 					+ " covers module ports, $not/$and/$or/$xor, $mux, and"
 					+ " constants (issue #61 - later increments add the"
-					+ " Adder, Register, TriState, reductions and"
+					+ " Adder, Register, TriState, Memory, reductions and"
 					+ " hierarchy)");
 			break;
 		}

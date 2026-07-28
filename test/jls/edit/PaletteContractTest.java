@@ -74,7 +74,7 @@ class PaletteContractTest {
 	 * drawn, this set must shrink or the exactness check below fails.
 	 */
 	private static final Set<String> KNOWN_MISSING_ICONS =
-			Set.of("ShiftRegister");
+			Set.of("ShiftRegister", "RegisterFile", "FieldExtend");
 
 	@Test
 	void everyIconResourceExistsOnTheClasspath() {

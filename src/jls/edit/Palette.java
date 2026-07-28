@@ -39,10 +39,10 @@ public final class Palette {
 		GATES(2, 4, false),
 
 		/** Wiring aids: named wires, pins, bundling, constants. */
-		WIRE_WORKS(2, 4, false),
+		WIRE_WORKS(2, 5, false),
 
-		/** Storage elements: register and memory. */
-		MEMORY(2, 1, false),
+		/** Storage elements: register, register file and memory. */
+		MEMORY(2, 2, false),
 
 		/** Combinational building blocks and the clock. */
 		COMBINATIONAL(2, 3, false),
@@ -153,8 +153,12 @@ public final class Palette {
 					"constant value", "const"),
 			entry(Group.WIRE_WORKS, "Extend", "extend", "1-to-N",
 					"make N copies of the input", "extend"),
+			entry(Group.WIRE_WORKS, "FieldExtend", "fieldextend", "FIELD",
+					"sign- or zero-extend a field to a wider bus", "extend"),
 			entry(Group.MEMORY, "Register", "register", "REG",
 					"register (various triggering)", "register"),
+			entry(Group.MEMORY, "RegisterFile", "registerfile", "REGFILE",
+					"multi-port register file", "register"),
 			entry(Group.MEMORY, "Memory", "memory", "MEMORY",
 					"memory, various types", "memory"),
 			entry(Group.COMBINATIONAL, "Mux", "mux", "MUX",

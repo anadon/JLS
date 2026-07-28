@@ -56,6 +56,8 @@ class ElementDrawSmokeTest {
 		cb.gate("DelayGate", 1, 1);
 		cb.constant(0xAB);
 		cb.extend(4);
+		cb.fieldExtend(4, 8, true);
+		cb.registerFile(8, 32, 2, 1, true);
 		cb.adder(4);
 		cb.clock(20, 10);
 		cb.decoder(2);

@@ -38,10 +38,10 @@ public final class ElementVocabulary {
 	 */
 	private static final Set<String> ALLOWED = Set.of(
 			"Adder", "AndGate", "Binder", "Clock", "Constant",
-			"Decoder", "DelayGate", "Display", "Extend", "InputPin",
-			"JumpEnd", "JumpStart", "Memory", "Mux", "NandGate",
+			"Decoder", "DelayGate", "Display", "Extend", "FieldExtend",
+			"InputPin", "JumpEnd", "JumpStart", "Memory", "Mux", "NandGate",
 			"NorGate", "NotGate", "OrGate", "OutputPin", "Pause",
-			"Register", "ShiftRegister", "SigGen", "Splitter",
+			"Register", "RegisterFile", "ShiftRegister", "SigGen", "Splitter",
 			"StateMachine", "Stop", "SubCircuit", "Text", "TriState",
 			"TruthTable", "WireEnd", "XorGate");
 

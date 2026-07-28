@@ -17,7 +17,8 @@ import jls.sim.*;
 public abstract sealed class LogicElement extends Element implements Reacts
 		permits Adder, Clock, Constant, Decoder, Display, Gate, Group, JumpEnd,
 		JumpStart, Memory, Mux, Pause, Pin, Register, ShiftRegister, SigSim,
-		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd {
+		StateMachine, Stop, SubCircuit, TriState, TruthTable, WireEnd,
+		RegisterFile, FieldExtend {
 
 	// run time properties
 	/** The x-coordinate before snapping to a grid line. */

@@ -55,6 +55,28 @@ All notable changes to JLS are documented here. The format follows
   `ExtensionPointCatalogTest`. Mechanism and catalog only: wiring
   `ElementRegistry`/`SimpleEditor` consumption through the registry
   is a follow-on slice of the #220 module runtime.
+- The compiled-in subsystems now boot through the module runtime
+  (#220, final DoD item of the #224 program): a new born-`@NullMarked`
+  `jls.boot` assembly layer wires JLS's built-in subsystems as
+  `JlsModule` manifests — `CoreModule` (eager; contributes every
+  `ElementRegistry.all()` descriptor to `elem.element-provider`),
+  `GuiModule` (requires core; contributes `Palette.entries()` to
+  `gui.palette-contributor`), `HdlModule` (requires core; contributes
+  the Verilog and VHDL emitters to `hdl.exporter`), and `CollabModule`
+  (requires core; the manifest for the `collab.op-observer` seam,
+  empty until a first-party sink ships) — and `JlsModules.boot()`
+  declares the four host extension points and drives them through
+  `ModuleRuntime`'s resolve → register → start path. `JLS.main` boots
+  this set once at startup, after the toolkit policy and before
+  `JLSStart`, for every run mode; the registry is populated but
+  nothing reads it for dispatch yet, so batch, HDL, and GUI behavior
+  is unchanged and stays pinned by the existing golden suite. The
+  now-unblocked registrar parameter lands on `JlsModule.register`,
+  which takes the host's `ExtensionRegistry` (issue #259); the new
+  `JlsModulesBootTest` pins deterministic topological start order
+  across shuffled inputs and asserts each seam's contributions equal
+  the live built-in tables (element registry, palette, emitters) with
+  no hardcoded counts, so new elements (#201) never break it.
 - The collab transport seam (#163, #168 Stage 1a): a new
   `jls.collab.net.Transport` interface — opaque in-order frames,
   blocking receive, null on clean close — extracted verbatim from

@@ -41,7 +41,8 @@ class NullMarkedRatchetTest {
 			"src/jls/collab/session",
 			"src/jls/elem",
 			"src/jls/edit",
-			"src/jls/module");
+			"src/jls/module",
+			"src/jls/boot");
 
 	/**
 	 * Every package on the marked list still declares

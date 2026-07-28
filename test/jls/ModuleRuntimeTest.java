@@ -15,6 +15,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import jls.module.Activation;
+import jls.module.ExtensionPoint;
+import jls.module.ExtensionRegistry;
 import jls.module.JlsModule;
 import jls.module.ModuleActivationException;
 import jls.module.ModuleManifest;
@@ -71,7 +73,7 @@ class ModuleRuntimeTest {
 		}
 
 		@Override
-		public void register() {
+		public void register(ExtensionRegistry registrar) {
 			registerCalls++;
 			log.add("register:" + manifest.id());
 		}
@@ -321,7 +323,7 @@ class ModuleRuntimeTest {
 			}
 
 			@Override
-			public void register() {
+			public void register(ExtensionRegistry registrar) {
 				throw new IllegalStateException("register boom");
 			}
 
@@ -386,6 +388,92 @@ class ModuleRuntimeTest {
 				assertEquals(expectedStarted, runtime.startedIds());
 			}
 		}
+	}
+
+	/** A test-only extension point contributions read back through. */
+	private static final ExtensionPoint<String> POINT =
+			new ExtensionPoint<String>("test.point", String.class);
+
+	/**
+	 * A module that records the registrar it was handed and contributes
+	 * one string to {@link #POINT} during phase 1.
+	 */
+	private static final class ContribModule implements JlsModule {
+
+		/** The static descriptor this module reports. */
+		private final ModuleManifest manifest;
+
+		/** The string this module contributes to the test point. */
+		private final String contribution;
+
+		/** The registrar phase 1 handed this module, or null. */
+		private ExtensionRegistry seenRegistrar;
+
+		ContribModule(ModuleManifest manifest, String contribution) {
+			this.manifest = manifest;
+			this.contribution = contribution;
+		}
+
+		@Override
+		public ModuleManifest manifest() {
+			return manifest;
+		}
+
+		@Override
+		public void register(ExtensionRegistry registrar) {
+			seenRegistrar = registrar;
+			registrar.contribute(POINT, manifest.id(), contribution);
+		}
+
+		@Override
+		public void start() {
+			// no cross-module references to bind
+		}
+
+	} // end of ContribModule class
+
+	@Test
+	void bootHandsRegistrarToRegisterAndReadsContributionsInTopoOrder()
+			throws ModuleResolutionException, ModuleActivationException {
+		ContribModule core = new ContribModule(
+				manifest("core", Set.of(), Set.of(), Set.of(), Set.of(),
+						Set.of(), new Activation.Eager()),
+				"a");
+		ContribModule dependent = new ContribModule(
+				manifest("dependent", Set.of(), Set.of("core"), Set.of(),
+						Set.of(), Set.of(), new Activation.Eager()),
+				"b");
+		ExtensionRegistry registry =
+				new ExtensionRegistry(List.of(POINT));
+		ModuleRuntime runtime = ModuleRuntime
+				.boot(List.of(dependent, core), registry);
+		assertSame(registry, runtime.extensionRegistry(),
+				"the runtime must expose the host's registry");
+		assertSame(registry, core.seenRegistrar,
+				"register() must receive the non-null host registry");
+		assertSame(registry, dependent.seenRegistrar);
+		assertEquals(List.of("a", "b"),
+				registry.contributions(POINT),
+				"contributions read back in deterministic topological"
+						+ " register order, independent of input order");
+	}
+
+	@Test
+	void bootCollectionOverloadStartsWithAnEmptyRegistry() throws
+			ModuleResolutionException, ModuleActivationException {
+		List<String> log = new ArrayList<>();
+		FakeModule core = bare("core", new Activation.Eager(), log);
+		FakeModule gui = requiring("gui", Set.of("core"),
+				new Activation.Eager(), log);
+		ModuleRuntime runtime = ModuleRuntime.boot(List.of(gui, core));
+		assertEquals(List.of("register:core", "register:gui",
+				"start:core", "start:gui"), log,
+				"the single-argument overload keeps the pre-existing"
+						+ " register/start behavior");
+		assertEquals(List.of("core", "gui"), runtime.startedIds());
+		assertTrue(runtime.extensionRegistry().points().isEmpty(),
+				"the single-argument overload boots over an empty,"
+						+ " point-less registry");
 	}
 
 	@Test

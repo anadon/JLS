@@ -45,6 +45,17 @@ inflate it arbitrarily.
 | **ADJACENT** | JLS could interoperate with it but should never implement it |
 | **OTHER** | belongs to other software; named so the boundary is explicit |
 
+**Superseded in part (revision 3).** §13's ranking filter — "does it fit the
+single-jar / single-maintainer constraint" — is a *preservation* filter, and
+the maintainer's objective is capability expansion. Under that objective the
+filter's sign is wrong: an item requiring deep model change is a reason to
+look closer, not to decline. **[`docs/capability-roadmap/`](capability-roadmap/)
+re-ranks all 304 entries by capability gained** and finds 17 of §13's
+rejections to be artifacts of the old filter, including SDF (#89), EDIF (#74),
+EVCD (#67), the assertion/coverage tier, and this document's own "correct and
+permanent" Tier 7 verdict. Read §13 as *what is cheap*, and the roadmap as
+*what is worth building*.
+
 **A correction recorded in place (revision 2).** The first revision built
 §12 by asking *which certification regimes could apply to JLS* rather
 than *which regimes exist in this space* — which silently dropped the
@@ -688,7 +699,7 @@ the EDA market.
 | 301 | **Intel Foundry Accelerator / Chiplet Alliance** | Intel Foundry | Chiplet and packaging ecosystem enablement | OTHER |
 | 302 | GlobalFoundries, UMC, SMIC, Rapidus ecosystem/partner programs *(specifics unverified in this pass)* | respective foundries | Equivalent per-foundry tool and IP enablement | OTHER |
 | 303 | **PDK certification and versioning** per node | foundries | The artifact every program above hinges on; a tool is certified against a *PDK version*, not a process in the abstract | OTHER |
-| 304 | **Efabless / ChipIgnite shuttle acceptance**, `open_pdks`, OpenROAD flow conformance | Efabless / Google / open community | The open-silicon analogue: acceptance criteria for a shuttle tapeout rather than a commercial certification | ADJACENT |
+| 304 | **Open-shuttle acceptance** — Tiny Tapeout's fixed `tt_um_*` top-level signature on SKY130, `open_pdks`, OpenROAD / LibreLane (the renamed OpenLane 2) flow conformance | Tiny Tapeout / open community | The open-silicon analogue: acceptance criteria for a shuttle tapeout rather than a commercial certification. **Corrected in revision 3** — this row originally named Efabless/chipIgnite, which shut down in 2025; Tiny Tapeout survived and re-based onto other foundry partners | ADJACENT |
 
 **Why every row is OTHER, and why that is not a dodge.** These programs
 are structurally closed to a project like JLS, for reasons that have

@@ -45,6 +45,16 @@ inflate it arbitrarily.
 | **ADJACENT** | JLS could interoperate with it but should never implement it |
 | **OTHER** | belongs to other software; named so the boundary is explicit |
 
+**A correction recorded in place (revision 2).** The first revision built
+§12 by asking *which certification regimes could apply to JLS* rather
+than *which regimes exist in this space* — which silently dropped the
+question's own "or can be taken on by other software" clause, and with
+it the entire family of **foundry certification programs** (TSMC OIP,
+Samsung SAFE, Intel Foundry) that is how EDA tools are actually
+certified in this industry. That family is now §12.i (#288–#304). The
+same framing error let §13 rank a general open-source badge above ISA
+compliance; §13 is now split along the two axes it was conflating.
+
 **Currency caveat.** Revision years are given where they are load-bearing
 and are current to roughly mid-2026; IEEE, SEMI, JEDEC, and IPC revise
 continuously and several entries below are marked *(verify revision)*.
@@ -650,6 +660,49 @@ is already most of the evidence base for a VPAT.
 | 286 | **Linux Foundation / OpenSSF** certifications | Open-source practitioners |
 | 287 | **OpenSSF Best Practices Badge** (passing/silver/gold) | *Projects*, not people — the one badge JLS could earn this month |
 
+### 12.i Foundry and EDA-ecosystem certification — how EDA tools actually get certified
+
+**This is the certification regime that governs the logic-design industry
+itself**, and the first revision of this document omitted it entirely —
+an error of framing (see §0's note). When a design tool is described as
+"certified" in this field, it almost never means ISO or IEEE; it means a
+*foundry* has certified that tool, at a named version, against a named
+process node and PDK version. The programs are the real gatekeepers of
+the EDA market.
+
+| # | Program | Body | What is certified | Rel. |
+|---|---|---|---|---|
+| 288 | **TSMC OIP — EDA Alliance: Individual Tool Certification (ITC)** | TSMC | A single tool at a specific version against a specific process node/PDK | OTHER |
+| 289 | **TSMC OIP — Integrated Tool Flow (ITF)** | TSMC | A multi-tool flow working together on a node | OTHER |
+| 290 | **TSMC OIP — Reference Flow (RF)** | TSMC | A complete, published, node-specific design flow | OTHER |
+| 291 | **TSMC OIP — IP Alliance** | TSMC | Silicon-verified, foundry-specific IP catalogue membership | OTHER |
+| 292 | **TSMC9000** IP quality program | TSMC | IP quality: documentation, shuttle silicon validation, assessment results published on TSMC-Online. TSMC's own derivative of ISO 9000 | OTHER |
+| 293 | **TSMC OIP — Cloud Alliance** | TSMC | Certified cloud environments running RTL-to-GDSII and custom flows (AWS, Azure, Cadence, Synopsys as inaugural members) | OTHER |
+| 294 | **TSMC OIP — Design Center Alliance (DCA)** | TSMC | Design-service providers | OTHER |
+| 295 | **TSMC OIP — Value Chain Alliance (VCA)** | TSMC | Independent design-service companies taking designs to production | OTHER |
+| 296 | **TSMC OIP — 3DFabric Alliance** | TSMC | Advanced-packaging ecosystem enablement | OTHER |
+| 297 | **Samsung SAFE™** (Samsung Advanced Foundry Ecosystem) | Samsung Foundry | The umbrella program: PDKs, design methodologies, IP | OTHER |
+| 298 | **Samsung SAFE-QEDA** (Qualified EDA) | Samsung Foundry | EDA tools *and full flows* certified per process node (e.g. a complete flow certified for 4LPP) | OTHER |
+| 299 | **Samsung SAFE Cloud Alliance** / SAFE IP | Samsung Foundry | Certified cloud design environments; qualified IP | OTHER |
+| 300 | **Intel Foundry EDA/IP alliance** — per-node tool qualification & IP readiness | Intel Foundry | Tool qualification disclosed per node family (e.g. Intel 18A) | OTHER |
+| 301 | **Intel Foundry Accelerator / Chiplet Alliance** | Intel Foundry | Chiplet and packaging ecosystem enablement | OTHER |
+| 302 | GlobalFoundries, UMC, SMIC, Rapidus ecosystem/partner programs *(specifics unverified in this pass)* | respective foundries | Equivalent per-foundry tool and IP enablement | OTHER |
+| 303 | **PDK certification and versioning** per node | foundries | The artifact every program above hinges on; a tool is certified against a *PDK version*, not a process in the abstract | OTHER |
+| 304 | **Efabless / ChipIgnite shuttle acceptance**, `open_pdks`, OpenROAD flow conformance | Efabless / Google / open community | The open-silicon analogue: acceptance criteria for a shuttle tapeout rather than a commercial certification | ADJACENT |
+
+**Why every row is OTHER, and why that is not a dodge.** These programs
+are structurally closed to a project like JLS, for reasons that have
+nothing to do with quality: they require an NDA, PDK access under that
+NDA, a named tool version submitted for assessment against a named node,
+and *re-certification on every node and PDK revision* — a permanent
+commercial obligation, not a one-time badge. They are also the sharpest
+possible illustration of the tier boundary this document draws: the
+certification that matters in this industry attaches to tools that
+consume a PDK, and JLS neither has nor could have one. #304 is the only
+row a GPLv3 project can reach, and it is reached by *emitting a netlist
+into somebody else's open flow* — exactly the delegation stance the rest
+of this document defends.
+
 ---
 
 ## 13. What JLS should plausibly take on — ranked
@@ -658,42 +711,70 @@ Filtered from everything above by: does it serve students or the
 maintainer, does it fit the single-jar/single-maintainer constraint, and
 is it a real conformance claim rather than theater?
 
+**Two axes, kept apart.** The first revision of this section ranked
+everything on one list and let *cheap and achievable* outrank *relevant
+to logic design* — which put a general open-source badge second, above
+ISA compliance. They are now separated: §13.1 is conformance in the
+logic-design space, §13.2 is conformance the project owes as a piece of
+distributed software. Both are real; only the first answers the question
+this document was written to answer.
+
+### 13.1 Logic-design conformance
+
 1. **IEEE 91/91a + IEC 60617-12 symbol conformance (#43, #44).** A
    rectangular/IEC symbol render mode alongside the current
    distinctive-shape gates. Self-contained, GUI-only, real pedagogical
    value (European curricula), and the only entry in this whole document
    where JLS would go from "draws something gate-shaped" to "conforms to
    the symbol standard."
-2. **OpenSSF Best Practices Badge (#287).** Days of work; the project
-   already satisfies most criteria (documented contribution process,
-   security policy, reproducible builds, static analysis, test suite).
-   The most cheaply earned certification available.
-3. **VPAT/ACR + Section 508 / EN 301 549 statement (#256–#258).** The
+2. **`riscv-arch-test` / RISCOF against the `riscv/` CPU (#65, #259).**
+   Turns "we built a CPU in a logic simulator" into "we built a CPU that
+   passes the official ISA compliance suite." Extends existing
+   differential-testing machinery rather than inventing anything, and it
+   is the only entry in this document that would let JLS make a
+   *conformance claim about a design*, not about itself.
+3. **XDC/QSF/LPF constraint emitters (#82).** Already roadmapped as
+   #213 follow-ups; each is a small printer over the existing port walk.
+4. **EVCD or FST waveform output (#67, #68).** Only if trace size or
+   strength/direction information becomes a real complaint.
+5. **IP-XACT export for subcircuits (#4).** Speculative but structurally
+   free: a JLS subcircuit already carries exactly IP-XACT's payload.
+   Demand-gated, like #212.
+
+### 13.2 Institutional and project conformance — real, but not logic design
+
+These generate genuine obligations for a tool distributed to
+universities, and several are cheaper than anything in §13.1. They are
+listed **separately and second** because cheapness is not relevance:
+they belong to Tier 10 and §12, not to the logic-design stack, and the
+first revision of this document wrongly let low cost promote them up a
+single merged ranking.
+
+1. **VPAT/ACR + Section 508 / EN 301 549 statement (#256–#258).** The
    evidence exists (`docs/keyboard-a11y-verification.md`); the artifact
    does not. This is the certification most likely to be *asked for* by
    an actual institutional user.
-4. **A written "not qualified for safety-critical use" scope statement
+2. **A written "not qualified for safety-critical use" scope statement
    (§12.a).** Zero cost, removes a real liability ambiguity, and is the
    correct answer to #223/#225/#227 rather than pursuing them.
-5. **`riscv-arch-test` / RISCOF against the `riscv/` CPU (#65, #259).**
-   Turns "we built a CPU in a logic simulator" into "we built a CPU that
-   passes the official ISA compliance suite." Extends existing
-   differential-testing machinery rather than inventing anything.
-6. **XDC/QSF/LPF constraint emitters (#82).** Already roadmapped as
-   #213 follow-ups; each is a small printer over the existing port walk.
-7. **EVCD or FST waveform output (#67, #68).** Only if trace size or
-   strength/direction information becomes a real complaint.
-8. **IP-XACT export for subcircuits (#4).** Speculative but structurally
-   free: a JLS subcircuit already carries exactly IP-XACT's payload.
-9. **A CRA stance paragraph (#253).** Recorded decision, not a project.
-10. **SPDX SBOM alongside CycloneDX (#187), REUSE headers (#171),
-    AppStream metainfo (#175), XDG base directories (#174).** Small,
-    independent housekeeping items with clear consumers.
+3. **OpenSSF Best Practices Badge (#287).** Days of work; the project
+   already satisfies most criteria (documented contribution process,
+   security policy, reproducible builds, static analysis, test suite).
+   The most cheaply earned certification available — and, to be explicit
+   about its standing, a *general open-source* badge with no bearing on
+   logic design, which is why it sits here rather than in §13.1.
+4. **A CRA stance paragraph (#253).** Recorded decision, not a project.
+5. **SPDX SBOM alongside CycloneDX (#187), REUSE headers (#171),
+   AppStream metainfo (#175), XDG base directories (#174).** Small,
+   independent housekeeping items with clear consumers.
 
-Deliberately **not** recommended: SDF consumption (#89) — the first step
-onto a timing-engine slope; EDIF (#74) — conformance to a dead format;
-anything in Tiers 6–9 beyond #129; and any form of safety-tool
-qualification.
+### 13.3 Deliberately not recommended
+
+SDF consumption (#89) — the first step onto a timing-engine slope; EDIF
+(#74) — conformance to a dead format; anything in Tiers 6–9 beyond #129;
+any form of safety-tool qualification (§12.a); and every foundry program
+in §12.i, which is closed to this project by NDA and PDK access rather
+than by any judgment about merit.
 
 ---
 
@@ -711,8 +792,9 @@ qualification.
 | Tier 8 — mask, lithography, fab | 15 | 114–128 |
 | Tier 9 — test, packaging, board, reliability | 25 | 129–153 |
 | Tier 10 — the tool's own software standards | 69 | 154–222 |
-| §12 — certification & conformity regimes | 65 | 223–287 |
-| **Total named entries** | **287** | |
+| §12.a–h — certification & conformity regimes | 65 | 223–287 |
+| §12.i — foundry & EDA-ecosystem certification | 17 | 288–304 |
+| **Total named entries** | **304** | |
 
 By relevance to JLS:
 
@@ -721,13 +803,13 @@ By relevance to JLS:
 | **HAVE** | 51 | Already conformed to — dominated by Tier 10 |
 | **ROADMAP** | 1 | #82, vendor constraint formats |
 | **COULD** | 30 | §13 ranks the worthwhile subset |
-| **ADJACENT** | 21 | Interoperate, never implement |
-| **OTHER** | 118 | Owned by other tool classes |
+| **ADJACENT** | 22 | Interoperate, never implement |
+| **OTHER** | 134 | Owned by other tool classes |
 | *(declined)* | 1 | #182, Apple notarization — recorded decision #128/#135 |
-| *(unmarked)* | 65 | §12 certification regimes, which take a different reading |
+| *(unmarked)* | 65 | §12.a–h certification regimes, which take a different reading |
 
 Counts are of rows in the tables above and are mechanically checkable
-(`grep -E '^\| [0-9]+ \|' docs/standards-landscape.md`); they sum to 287.
+(`grep -E '^\| [0-9]+ \|' docs/standards-landscape.md`); they sum to 304.
 
 Three conclusions the numbers make hard to miss:
 
@@ -751,6 +833,14 @@ Three conclusions the numbers make hard to miss:
    most useful thing a schematic-first educational simulator can do
    about the bottom of that stack is emit a clean netlist and get out of
    the way — which JLS does.
+4. **"Certified" in this industry usually means a foundry said so.**
+   Of the 82 certification entries, the 17 in §12.i are the ones that
+   actually gate participation in commercial logic design — and they
+   certify a *tool version against a PDK version*, renewably, under NDA.
+   Every general-purpose regime in §12.a–h (safety, security, QMS,
+   accessibility, supply chain) is real but peripheral to how an EDA
+   tool earns its standing. A survey that omits §12.i answers the
+   standards question while missing the certification one.
 
 ---
 
@@ -759,7 +849,22 @@ Three conclusions the numbers make hard to miss:
 Standards numbers and scopes here come from the bodies' own catalogues
 (IEEE SA, Accellera, SEMI, JEDEC, IPC, Si2, OMG, W3C, IETF, NIST, ISO)
 and, for the entries JLS already implements, from this repository's own
-code and docs as cited in §1. Entries marked *(verify revision)* were
+code and docs as cited in §1.
+
+§12.i was added in revision 2 from the foundry programs' own material
+and industry reporting: TSMC's OIP pages
+(<https://www.tsmc.com/english/dedicatedFoundry/oip>, and the EDA, IP,
+Cloud, Design Center, Value Chain and 3DFabric alliance pages beneath
+it — the ITC/ITF/RF certification vocabulary and the TSMC9000 IP
+quality program), Samsung Foundry's SAFE™ and SAFE-QEDA pages
+(<https://semiconductor.samsung.com/foundry/safe/>), and Intel Foundry's
+per-node EDA/IP qualification announcements. The `tsmc.com` and
+`semiwiki.com` pages returned HTTP 403 to automated fetching during this
+pass; their content was taken from search-index text and secondary
+reporting, so the ITC/ITF/RF and alliance-membership details should be
+confirmed against the primary pages in a browser before being relied on.
+Row #302 (GlobalFoundries, UMC, SMIC, Rapidus) was not researched
+beyond confirming such programs exist. Entries marked *(verify revision)* were
 not re-checked against the publishing body in this pass. Anything
 load-bearing for a decision — particularly the §12.a tool-qualification
 clauses and the #253 CRA obligations — should be read in the primary

@@ -124,7 +124,7 @@ the migration commit.
 | Rotate CCW, context menu | `RotateElement(ccw)` | **migrated** |
 | Flip, context menu | `FlipElement` | **migrated** |
 | Probe attach/remove, context menu | `AttachProbe` / `RemoveProbe` (name prompt stays in the gesture; ops are pure data) | **migrated** |
-| Move-selection commit (mouse release) | `MoveElements` | op implemented + tested, and wired into the keyboard nudge (issue #75, `submitOp(new MoveElements(...))` at `SimpleEditor.java:3254`); the mouse-release drag commit is still inline (live drag must become preview-then-commit) |
+| Move-selection commit (mouse release) | `MoveElements` | **migrated** for a pure relocation, and already the keyboard nudge (issue #75). `SimpleEditor.moveSelectionPlan` returns a one-op `MoveElements` plan when the drop is a pure relocation - every selected element is a plain, editable element carrying no attached put, and no selected element's post-move put lands on a non-selected wire end or put; the live drag is the preview, then the pre-drag positions are restored and the op is the mutation of record, batched through `OpSink.submitAll` as one undo snapshot (`MoveGestureTest`). Any drop that would form a connection, drag a wire end, or induce colinear cleanup (wired elements, wires/wire ends, subcircuits) keeps the inline `fixPosition` + `connect()` + `removeCoLinear()` commit verbatim |
 | Placement drop (fixPosition + connect) | `AddElements` (+ implicit wiring) | op implemented + tested for the unwired case; gesture still inline (the drop's `connect()` needs the wiring vocabulary, and placement must become preview-then-commit) |
 | Matching JumpEnd creation, context menu | `AddElements` | op implemented + tested (jump-source validation included); gesture still inline (the created end stays mouse-attached in `chosen` state, so the commit point is the later drop) |
 | Delete selection (delete key, Edit menu, popup Delete, and CUT's removal half) | `RemoveWire` per attached net + `AddWire` per surviving component + `RemoveElements` | **migrated**: `SimpleEditor.deleteSelectionPlan` maps the selection to an op plan (jump starts expanded with their jump ends; per affected net one `RemoveWire` of the whole net plus, when the selection only clips it, one `AddWire.survivors` per surviving connected component; then `RemoveElements`), submitted as one batch through `OpSink.submitAll` so the gesture stays a single undo snapshot (`DeleteGestureTest`). Only subcircuits, in-progress wiring, and uneditable cascades still take the inline fallback |
@@ -152,10 +152,13 @@ rule 2; only the future `jls.collab.ui` may touch Swing).
 
 ## What lands next
 
-1. Preview-then-commit for the move, placement, and wiring gestures,
+1. Preview-then-commit for the placement and wiring gestures,
    anchored by the #91 gesture harness (`EditorGestureTest`) - the
    step that migrates the remaining gestures whose ops already exist
-   (`MoveElements`, `AddElements`, `AddWire`).
+   (`AddElements`, `AddWire`). The move-selection drag commit is done
+   for pure relocations (`MoveElements`, `moveSelectionPlan`); the
+   connect-forming and wire-end-dragging drops remain inline until the
+   commit-time wiring composition lands.
 2. Wiring the dialog-commit gestures onto `SetElementConfig`, whose op
    already exists; the commit paths mutate in place until then.
 3. Op-inverse (precise) undo activation is explicitly *not* this

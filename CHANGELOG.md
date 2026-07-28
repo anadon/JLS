@@ -7,6 +7,9 @@ All notable changes to JLS are documented here. The format follows
 
 ## [Unreleased] — 5.0.5-SNAPSHOT
 
+### Changed
+- The move-selection drag commit now routes a pure relocation through the `MoveElements` operation behind the `OpSink` seam (#167), keeping the inline `connect()`/`removeCoLinear()` commit only for drops that form a connection, drag a wire end, or induce colinear cleanup.
+
 ### Added
 - The PIT mutation-testing gate is promoted from report-only to a
   blocking climb-ratchet (#159): the `pitest` profile now carries

@@ -1065,3 +1065,54 @@ That last item alone is a different product from the one in the tree — and it 
 the only item on the list that no other tool in JLS's class can match at any
 price. Five to seven months buys JLS a claim it does not currently have the right
 to make, and it buys it before the keystone's silent stretch has even begun.
+
+---
+
+## Appendix: one item neither sweep covered
+
+Both sweeps were scoped by an enumeration axis — the first walked standards, the
+second walked eight named capability areas — and an item that falls outside the
+axis is invisible regardless of merit. Exactly one such item was identified
+during the review and reached neither sweep's prompt. It is recorded here
+unsized, because it has had none of the analysis every other item in this
+document received.
+
+### Reproducible simulation runs as a citable artifact
+
+**The idea.** JLS already produces byte-reproducible *builds*
+(`docs/reproducibility.md`, the `.buildinfo` per release, the jar and BOM
+rebuilt and re-checked on every push). Extend that property from the artifact to
+the *run*: a run manifest binding circuit hash + test-vector hash + JLS version
++ any seed, such that the same manifest reproduces a byte-identical VCD and
+stdout report anywhere, and a manifest is enough for a third party to re-derive
+the result without the original machine.
+
+**Why it is plausibly cheap.** Most of the property is already there and pinned
+by tests rather than merely believed: `docs/batch-interface.md` is a stability
+contract, the VCD profile is byte-deterministic and golden-tested
+(`VcdExportGoldenTest`), the exit-status lattice is documented, and the
+simulator is deterministic by construction. What is missing is the manifest
+format, a `--manifest` verb, and a re-run-and-compare mode.
+
+**What it would buy.** For grading: a disputed mark is re-derivable from the
+submission rather than re-argued. For research: a published result carries the
+means to reproduce it, which is a property most simulators do not offer at all.
+For the project: it extends a discipline the repository already takes seriously
+into the one place it currently stops.
+
+**What is not known.** Whether run determinism actually holds across platforms
+and JDK builds — the build is reproducible, but nothing in the tree asserts that
+a *simulation* is bit-identical across a JDK or OS change, and iteration order in
+any `HashMap`-backed path would break it silently. That question should be
+answered by experiment (run the same circuit on the three CI platforms and diff
+the VCDs) before anyone designs a manifest format. If determinism does not hold
+today, the finding is more valuable than the feature.
+
+**Relationship to the programs.** Touches P12 (the API and its stability
+contract) and P5 (the report channel and exit-status lattice, which five
+programs already share). It is a candidate slice of P5's contract work rather
+than a program.
+
+**Status: unsized and unanalysed.** Everything above is a sketch, not a study.
+It is written down so it is not lost, and flagged so it is not mistaken for the
+analysed work beside it.

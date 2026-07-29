@@ -21,9 +21,20 @@ Monday, and what to write down instead*.
 | [`10-desktop-and-housekeeping.md`](10-desktop-and-housekeeping.md) | AppStream, XDG base directories, IEC 60027-2 |
 | [`11-costed-rejections.md`](11-costed-rejections.md) | SDF, EDIF, JEDEC JESD3-C, IEEE 1149.1 BSDL |
 
+Every unverified claim across these twelve files is collected as a checklist in
+[`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md) — 92 items the authors flagged, plus the
+cross-section conflicts the grounding pass found and how each was left.
+
 ## Two things to read before acting
 
-**One hard blocker, unresolved.** Sections 09 and 10 recommend *different*
+**One hard blocker, since resolved.** The licence-identifier conflict below was
+answered after this playbook was written: the grant document was read, and the
+project elected `GPL-3.0-or-later`. The paragraph is kept because the *reasoning*
+still applies to any future identifier question, and because sections 09 and 10
+still carry blockquotes describing the conflict as live. See
+[`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md) for the resolution.
+
+**The original blocker, for the record.** Sections 09 and 10 recommend *different*
 SPDX licence identifiers — `GPL-3.0-or-later` (on `CONTRIBUTING.md`'s wording)
 versus `GPL-3.0-only` (on `flake.nix`'s `licenses.gpl3Only`, `pom.xml`, and the
 absence of any "or later" clause in `src/`). Both are internally honest on

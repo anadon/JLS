@@ -9,12 +9,24 @@ claim about HEAD carries a `file` / method anchor and was verified on
 `claude/jls-virtual-hardware-linux-njsoma` at `36cbd37`; every number is
 labeled **measured** or **estimated** and carries its method.
 
-Two companion documents are written in parallel and are not duplicated
-here: [`parity-contract.md`](parity-contract.md) (the comparison alphabet,
-the exclusion set, the sync-point rules) and
-[`machine-calibration.md`](machine-calibration.md) (the measured engine
-constants, their harnesses, and the experiments that are still owed).
-Where this document quotes a constant, that document owns its method.
+Two companion documents ship alongside this one and are not duplicated
+here:
+
+- [`parity-contract.md`](parity-contract.md) — the comparison alphabet,
+  the exclusion set, the sync-point rules, and what a binding must
+  refuse. It is a **proposed** normative contract and is **not yet
+  ratified**; it becomes normative only when the decision block its §8.3
+  describes is recorded in [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+  Nothing here may cite it as settled policy.
+- [`machine-calibration.md`](machine-calibration.md) — the measured
+  engine constants, their harnesses, the boot-cost model, and the
+  experiments that are still owed. **Every wall-clock, cycles/s and
+  s/char figure in this document is quoted from it**, and it owns the
+  method, the workload and the uncertainty band of each. Where the two
+  disagree, that document is the record.
+
+This document is the proposal: what would be built, in what order, at
+what cost, and which recorded decisions it must go through first.
 
 A warning that applies throughout. The strongest numbers here — the engine
 constants — are measured in-tree on `BatchSimulator` and are recorded in
@@ -77,11 +89,14 @@ machine parameters. The estimates dominate.
 | Honest band on the boot | 2.5–5.3 min (K1's threshold doubles it) | **1.2–6 h** (see §1.5) |
 | After the semantics-preserving engine stack (2.26×) | ~1.1 min | **44–46 min** |
 | After the full engine stack (2.7–4.9×) | ~0.5–0.9 min | **20–38 min** |
-| Echo latency per character | ~0.09–0.47 s modeled; see below | **1.5 s** today; 0.66 s at 2.26×; 0.30–0.55 s at 2.7–4.9× |
+| Echo latency per character, at a **10⁴-instruction** echo path | **~0.04 s**, modeled (3.14×10⁶ ÷ 12 ev/instr = 261,883 instructions/s) | **1.5 s** today; 0.66 s at 2.26×; 0.30–0.55 s at 2.7–4.9× |
+| The same, at the **10⁵** end of the echo-path band | ~0.4 s | 14.9 s today; 6.6 s at 2.26×; 3.0–5.5 s at 2.7–4.9× |
 | Live console? | **yes, in the 1970s-terminal sense** | **no — refused, see §1.4** |
 
-Four disclosures that must travel with those figures and are the reason
-this table is not a result:
+Every row above is a quotient derived in
+[`machine-calibration.md`](machine-calibration.md) §4.4–§4.6, which carries
+the arithmetic, the inputs and their status. Four disclosures must travel
+with these figures, and they are the reason this table is not a result:
 
 1. **Every echo figure assumes a 10⁴-instruction tty echo path.** The
    evidence base carries that path as a band of 10⁴–10⁵ instructions and
@@ -101,10 +116,13 @@ this table is not a result:
    (`src/jls/edit/InteractiveSimulator.java:879-896`) and calls
    `Editors.of(circuit())` inside `beforeEvent` (`:736`). Its per-event cost
    is **unmeasured and structurally higher**. Every interactive number in
-   this document is therefore an **upper bound of unknown tightness**.
-   Compounding (2) and (3) conservatively is how a modeled 0.1–0.5 s/char
-   becomes a plausible **0.3–1.5 s/char** in practice. Nobody may quote the
-   optimistic end as a fact.
+   this document is therefore an **upper bound of unknown tightness** —
+   the true figures can only be worse, never better. Compounding (1),
+   (2) and (3): the modeled 0.04 s/char becomes ~0.4 s at the 10⁵ end of
+   the echo band, ~0.8 s if K1's threshold also fires, and worse again by
+   whatever `InteractiveSimulator` costs. **Nobody may quote the
+   optimistic end as a fact**, and no s/char figure may appear anywhere
+   without its echo-path assumption in the same sentence.
 4. **The behavioral tier is not exempt from engine work.** An earlier draft
    of the evidence base asserted that the optimization program accrues
    entirely to the structural tier and that the behavioral row does not
@@ -132,7 +150,7 @@ narrowing matters because it changes what kind of thing the refusal is.
   **2.7–4.9×**, reaching **52,600–95,400 cycles/s**.
 - So the 10⁵ floor is missed by **1.05–5.1×** on the optimistic arm and
   **1.9–5.1×** against the honest 2.7× composition. The 10⁶ end is out of
-  reach by 10–50× on any arrangement.
+  reach by 10–51× on any arrangement.
 
 **This is a decision and a body of engineering work, not a physical
 limit.** The evidence base prices it at "roughly 30–45 maintainer-weeks";
@@ -155,9 +173,12 @@ What replaces "live" on the structural tier is two things, both real:
 **A second, quieter refusal.** "Live" on the behavioral tier means a 1970s
 timesharing terminal, not a native shell. The echo is fast; the command is
 not. `ls` is a fork, an exec and a readdir — on the order of 10⁶–2×10⁷
-instructions — and answers in **19–76 s** on the behavioral tier today
-(estimated, at 261,883 instructions/s). The number a user experiences is
-command latency, and it is the headline metric.
+instructions, itself an **order-of-magnitude estimate with no measurement
+behind it** — and answers in **4–76 s** on the behavioral tier today
+(10⁶–2×10⁷ ÷ 261,883 instructions/s, where the divisor is itself the
+modeled 12 events per instruction;
+[`machine-calibration.md`](machine-calibration.md) §4.6). The number a
+user experiences is command latency, and it is the headline metric.
 
 ### 1.5 The correction that governs every structural wall-clock figure
 
@@ -194,6 +215,12 @@ The same discipline applies to two further rows:
 - **Behavioral 2.5 min** is estimated from a **modeled** 12 events per
   instruction.
 
+The derivations behind all of this — the formula, both values of `k`,
+the element census, the optimization-stack composition and the
+live-console chain — live in
+[`machine-calibration.md`](machine-calibration.md) §4. This section
+states the consequence; that document owns the arithmetic.
+
 ---
 
 ## 2. Why this is not the category error it looks like
@@ -217,8 +244,10 @@ cost the same.
 **JLS is therefore already a mixed-abstraction simulator at the word/RTL
 tier.** Every "gate-level simulation runs at 1–10 cycles/s, therefore this
 is hopeless" verdict in the literature is a **category error** when applied
-to JLS. Descending to real gates was measured during this study at a
-**24.8–47× cost** and buys nothing at word level.
+to JLS. Descending to real gates was measured **during the design study,
+outside this repository** at a **24.8–47× cost**, and buys nothing at word
+level. That measurement is not reproducible from this repository and was not
+re-run at HEAD.
 
 The corollary matters as much: JLS *already ships* lumped-delay behavioral
 abstraction of drawn logic, and has since day one. `Adder`, `Memory`,
@@ -237,7 +266,7 @@ for the first time, **machine-checked**.
 | Arm Fast Models / FVP | 20–200 MIPS; "an OS boots in tens of seconds" | Arm Fast Models User Guide |
 | Simics (2002 interpreter) | 2.1–8.7 MIPS; booted four real operating systems | Magnusson et al., *Simics: A Full System Simulation Platform*, IEEE Computer 35(2), Feb 2002 |
 | SystemC TLM-2.0 loosely-timed + decoupling + DMI | 67.4 M transactions/s (9.5× plain LT) | measured during this study |
-| **JLS (word-level)** | **8,090 simulated CPU cycles/s warm** on the RV32I demo | measured in-tree, `capability-roadmap/keystone-c-performance.md` |
+| **JLS (word-level)** | **~8,090 simulated CPU cycles/s warm** on the RV32I demo | measured in-tree, [`machine-calibration.md`](machine-calibration.md) §2.2 (the exact division gives 8,092; `keystone-c-performance.md:138` records 8,090) |
 | ModelSim, comparable small SoC | ~18,300 cycles/s | practitioner report |
 | Commercial software RTL simulator, large SoC | ~1,260 cycles/s | vendor figure |
 | Verilator | 1.2 M cycles/s (small core) to 6.6 kHz (large core) | 180× spread — that spread *is* design size |
@@ -266,7 +295,7 @@ must state **node count and pass count** in the same sentence. The measured
 522 "nodes" are **225 logic elements + 297 nets — 2.32 nodes per logic
 element** — and a levelized design needs **two passes per clock cycle**. A
 580-element machine is therefore ~1,346 nodes, and
-`2 × 1,346 × 4.32 ns = 11.63 µs/cycle = 86,014 cycles/s`, which is the
+`2 × 1,346 × 4.32 ns = 11.63 µs/cycle ≈ 86,000 cycles/s`, which is the
 **underated ceiling**; the source itself derates twice, to
 **22,000–40,000 cycles/s**. Two independent analyses during this study got
 this wrong — one by 4.6× (counting logic elements as nodes, one pass), one
@@ -275,8 +304,13 @@ by presenting the ceiling as achievable.
 One unreconciled caveat in the primary source: it states **two** per-node
 costs for the same 522-node pass — 4.32 ns and 3.10 ns — and never
 reconciles them. Every derivation here uses the conservative 4.32. At 3.10
-the ceiling would be ~119,900 cycles/s. Any ns/node figure must name which
+the ceiling would be ~119,800 cycles/s. Any ns/node figure must name which
 line it used.
+
+The three rules, the derating, and the unreconciled pair are stated in
+full — with their anchors — in
+[`machine-calibration.md`](machine-calibration.md) §2.6, which owns them.
+§4's L0(d) is the experiment that settles the pair.
 
 ### 2.4 Nobody has done this
 
@@ -328,7 +362,11 @@ study: **six SystemC abstraction levels produced a bit-identical final
 memory image while reporting 60 M / 170 M / 200 M ns of simulated time — a
 2.8× spread in reported time with zero functional divergence and zero
 warnings.** That single experiment is the empirical justification for
-`parity-contract.md`'s "all timing may differ".
+[`parity-contract.md`](parity-contract.md) §4's "all timing may differ".
+*Provenance, and it matters:* that measurement was made **during the design
+study, outside this repository**, and is **not reproducible from it**. It
+corroborates a position the vendor documentation above already states
+normatively; nothing depends on it.
 
 **gem5 and QEMU.** gem5 *panics* rather than checkpoint classic caches and
 explicitly flushes TLBs at a CPU handover, rather than pretending
@@ -383,7 +421,9 @@ of the section.
 nobody measured. L0 measures them. It is days-to-weeks of work and it is
 commit #1; nothing below is honestly costed until it lands.
 
-**New mechanisms.** None. Throwaway experiments and two documents.
+**New mechanisms.** None. Nine throwaway experiments, each of which
+fills a named section of [`machine-calibration.md`](machine-calibration.md)
+§6; that document's §6.11 carries the map both ways.
 
 - **(a) α, CPI, and `k`.** Convert the shipped single-cycle demo into a
   2-cycle unified-memory machine (~10–15 elements: merged instruction/data
@@ -394,11 +434,13 @@ commit #1; nothing below is honestly costed until it lands.
 - **(b) The clocking-regime reconciliation, which is a prerequisite of
   (a).** Events per clock cycle has been measured at **121.5, 243.1 and
   245.5** on element-for-element identical circuits, and the in-tree
-  keystone figure of **388.4** was measured **`SigSim`-driven** (a `-t`
-  vector). A boot **cannot** be `SigSim`-driven: `SigSim.initSim` pre-posts
+  keystone figure of **388.4** was measured **TestGen-driven** (a `-t`
+  stimulus vector fed through `SigSim`). A boot **cannot** be
+  TestGen-driven: `SigSim.initSim` pre-posts
   every stimulus transition during elaboration, so a boot needs ~1.9×10⁸
-  resident `SimEvent`s — **over 12 GB of heap before the first event
-  fires**. An internal `Clock` (`src/jls/elem/Clock.java` — `initSim` posts
+  resident `SimEvent`s — **estimated at over 12 GB of heap before the first
+  event fires** (boot cycles × transitions per cycle × the measured
+  `SimEvent` footprint; an order-of-magnitude estimate, not a measurement). An internal `Clock` (`src/jls/elem/Clock.java` — `initSim` posts
   exactly one event, `react` self-reposts exactly one) is therefore a
   **hard prerequisite**. The study's most-cited constant was measured in the
   one clocking regime a boot cannot use, on exactly the axis of an
@@ -442,45 +484,44 @@ commit #1; nothing below is honestly costed until it lands.
   corruption under any future checkpoint. Adjudicate and file **before** any
   checkpoint work.
 
-**Files.** New [`machine-calibration.md`](machine-calibration.md)
-(normative-evidence: the element census, events/cycle with its clocking
-regime, `R ~ L^-0.12`, α, CPI, `k`, events/instruction, each with method) —
-so `riscv/`'s evidence outlives its files; the salvaged *design* of
-`riscv/riscv_ref.py`, `riscv/fuzz_diff.py` and `riscv/verify.py` written
-into [`parity-contract.md`](parity-contract.md) §0 **before** deletion; a
+**Files.** [`machine-calibration.md`](machine-calibration.md) — which
+already exists at HEAD as the evidence record, carrying the element
+census, the engine constants with their clocking regime, the boot-cost
+model and the re-measurement procedure, so that `riscv/`'s evidence
+outlives its files. **L0's job is to replace its §6 (nine unmeasured,
+load-bearing quantities) with measured values and their harnesses.**
+Also: the salvaged *design* of `riscv/riscv_ref.py`, `riscv/fuzz_diff.py`
+and `riscv/verify.py` written into
+[`parity-contract.md`](parity-contract.md) **before** deletion — its §9.3
+already records the limitation that must travel with that design; and a
 tracked, in-`test/fixtures/` CPU-scale benchmark fixture and harness
 replacing the untracked `riscv/build/k2000.jls`.
 
 **The `riscv/` salvage is a precondition of D5's deletion, and the
 inventory in circulation is wrong.** `git ls-files riscv/` returns **26
-tracked files**, not three. Among them:
+tracked files**, not three or four. **The asset-by-asset table, with what
+each is for and what must happen before it goes, is
+[`machine-calibration.md`](machine-calibration.md) §1.2 and is not repeated
+here.** Regenerate the inventory from `git ls-files`, not from memory or
+from any list in this corpus. Three consequences bear on the layer stack:
 
-- `riscv/gui/cpu.jls` — **one of only four tracked `.jls` files in the
-  repository**, and the fixture used for the measured second-author diff
-  churn result;
-- `riscv/examples/*.s` and `*.clk.txt`, which
-  `test/jls/RiscvCpuGoldenTest.java:25` cites by name and `:38` cites
-  `riscv/README.md` as the regeneration path — both in `{@code}` spans, not
-  `@link`, so the `-Werror` doclint gate will **not** catch the rot. Silent,
-  therefore worse;
-- the generators `riscv/build_cpu.py`, `riscv/jlsbuild.py`,
-  `riscv/make_cpu.py`, `riscv/bench_kernel.py`, and the oracle stack
-  `riscv/riscv_ref.py`, `riscv/fuzz_diff.py`, `riscv/verify.py`.
-
-`riscv/build/k2000.jls` — the performance anchor for every number in
-`capability-roadmap/keystone-c-performance.md` — is **untracked**
-(`riscv/.gitignore` line 1 is `build/`). It cannot be "re-homed"; it must be
-**regenerated and committed, with its generation method preserved**, or
-every roadmap performance number becomes unreproducible.
-`ARCHITECTURE.md:354-358`'s recorded revisit trigger for #221 will also
-name a deleted directory and needs restating in the same pass.
-
-Two corrections to the inherited record while this is being done:
-`test/jls/RiscvCpuGoldenTest.java` and `test/fixtures/riscv-sum1to10.jls`
-are **tracked, not gitignored**, and the test is **run by every
-`mvn verify`** — executed during this study: 1 test, 0 failures, 0.426 s.
-The residual true part is that its regeneration path is inside the deleted
-directory.
+- `riscv/build/k2000.jls` — the performance anchor for every number in
+  [`capability-roadmap/keystone-c-performance.md`](capability-roadmap/keystone-c-performance.md)
+  — is **untracked** (`riscv/.gitignore` line 1 is `build/`). It cannot be
+  "re-homed"; it must be **regenerated and committed, with its generation
+  method preserved**, or every roadmap performance number becomes
+  unreproducible. That is P19, and it blocks D5.
+- `ARCHITECTURE.md:354-358`'s recorded revisit trigger for #221 names the
+  `riscv/` trajectory and will, after deletion, name a directory that does
+  not exist. Restating it is part of this pass, not a follow-up.
+- Two corrections to the inherited record while this is being done:
+  `test/jls/RiscvCpuGoldenTest.java` and `test/fixtures/riscv-sum1to10.jls`
+  are **tracked, not gitignored**, and the test is **run by every
+  `mvn verify`** — executed during this study: 1 test, 0 failures, 0.426 s.
+  The residual true part is that its regeneration path is inside the deleted
+  directory, and the two javadoc citations that point at it are `{@code}`
+  spans, so the `-Werror` doclint gate will **not** catch the rot. Silent,
+  therefore worse.
 
 **Depends on.** Nothing. **Blocks.** Everything.
 
@@ -578,8 +619,9 @@ human-attended run *expressible*. Removes ceilings; makes nothing faster.
   16 MiB RAM image is **66.6 MB of text — 99.2% of the 64 MiB cap**
   (`MAX_CIRCUIT_TEXT_BYTES = 64L << 20`, `src/jls/FileAbstractor.java:65`),
   leaving about half a megabyte for the entire circuit. It does **not**
-  exceed the cap; it consumes it. (An 8 MiB kernel image is a 33 MB `.jls`;
-  a 2.4 MiB kernel is 10 MB.) Per D3 this is an **optional, independently
+  exceed the cap; it consumes it. (An 8 MiB kernel image is a ~33 MB `.jls`;
+  the real 2.38 MiB kernel image is ~9.9 MB —
+  [`machine-calibration.md`](machine-calibration.md) §5.2.) Per D3 this is an **optional, independently
   versioned section with must-understand semantics**, not a private
   sidecar: an old reader skips it and opens the circuit structurally with a
   clean diagnostic.
@@ -631,7 +673,8 @@ genuinely the first host door.
   single-thread contract (`src/jls/sim/Simulator.java:25,27,165-169`), and
   every `post()` call site outside `jls.sim` is inside `jls.elem`. The host
   thread offers bytes to a lock-free ring; the simulation thread drains it
-  **at `Simulator.beforeEvent`** (`:246-255`), the only thread-correct slot,
+  **at `Simulator.beforeEvent`** (`src/jls/sim/Simulator.java:252-255`,
+  javadoc at `:244-250`), the only thread-correct slot,
   and the same slot an in-tree causal-debug design independently identified
   as the only legal *capture* point. **This resolves a live contradiction in
   the evidence base**, which specified draining inside `Console.react` in
@@ -861,14 +904,19 @@ recorder is a **third `Simulator` subclass** needing **zero changes to
 `jls.sim`**, the identical mechanism `BatchSimulator` already ships
 (`src/jls/sim/Simulator.java:269-270`, `:285-287`). A differ with
 first-divergence reporting, both records side by side and the differing
-fields named. `--rvfi FILE` and `--diff-against`.
-[`parity-contract.md`](parity-contract.md), normative, plus a ratcheted
-exclusion set.
+fields named. `--rvfi FILE` and `--diff-against`. The comparison alphabet,
+the two regimes, the exclusion set `E` and the refusal set are already
+written in [`parity-contract.md`](parity-contract.md) and are **not
+re-specified here**; L6 builds them and its merge is what ratifies that
+document, per its own status line.
 
 **The third object.** The harness needs a reference that does **not** share
 authorship with the design, or it proves the generator self-consistent
-rather than either model correct. The in-tree standards work is blunt about
-this and prescribes Sail. That work homes its whole RISCOF plugin tree at
+rather than either model correct — [`parity-contract.md`](parity-contract.md)
+§9.3 records this as a known weakness of the contract. The in-tree
+standards work is blunt about it and prescribes Sail
+(`docs/standards-adoption/05-riscv-compliance.md`). That work homes its
+whole RISCOF plugin tree at
 `riscv/riscof/**` — a directory D5 deletes, and which does not exist yet.
 **It needs a new home and a cost band.** The cheap resolution the corpus
 never applies to its own case: commit the compiled test ELFs and reference
@@ -884,7 +932,10 @@ it justifies the program on its own.
 
 **Files.** New `src/jls/parity/*`; `src/jls/sim/BatchSimulator.java`;
 `src/jls/JLSStart.java`; [`batch-interface.md`](batch-interface.md) (new
-flags, CHANGELOG per §6); new [`parity-contract.md`](parity-contract.md).
+flags, CHANGELOG per §6); [`parity-contract.md`](parity-contract.md) —
+which exists at HEAD as an unratified proposal, so L6's work on it is the
+`ARCHITECTURE.md` decision block of §7 plus whatever the built harness
+proves wrong, not a new document.
 
 **Depends on.** L5, L4, L3.
 
@@ -1121,14 +1172,14 @@ does; **P14–P21 are proposed in §6** and do not exist yet.
 | 3 | **No machine model and no in-tree reference runner.** The only RV32I reference emulator in the tree is Python, inside the directory D5 deletes | fatal | **L5** | **P20** (new) |
 | 4 | **No guest software stack.** No kernel pin, no `.config`, no busybox, no initramfs, no device tree blob, no memory map, no reset stub, no cross toolchain, no rebuild recipe. Three commitments dereference it and none owns it | fatal | **L7** | **P21** (new) |
 | 5 | **`Memory` has no byte lanes**, so `lb/lh/lbu/lhu/sb/sh` do not exist and a 3-byte-address UART is not addressable. A hard Linux blocker | fatal | **L8** | **P2** (3–7 wk) |
-| 6 | **`SigSim` cannot express or hold a boot.** `initSim` pre-posts every transition: ~1.9×10⁸ resident events, >12 GB of heap before the first event fires. The `-t` vector for a boot is also ~11 GB of text | fatal | **L0(b)**, **L2** | **P1-S0**, **P12** |
+| 6 | **`SigSim` cannot express or hold a boot.** `initSim` pre-posts every transition: an estimated ~1.9×10⁸ resident events and >12 GB of heap before the first event fires, and an estimated ~11 GB of `-t` vector text. Both are order-of-magnitude estimates; the mechanism (`src/jls/elem/SigSim.java:129`, `:193-197`, both inside `initSim`) is verified | fatal | **L0(b)**, **L2** | **P1-S0**, **P12** |
 | 7 | **47.7% of loop time is queue/dedup, 37.6% is value representation, 4.9% is logic; 82.3% of events model no elapsed time** | major, no decision needed | **L1** | **P1-S1**, **P8 Mode T** |
 | 8 | **Time limit is 1,920–2,300× short; `pause()` is `stop()`; batch is one-shot** | major | **L2** | **P18** (new) |
 | 9 | **`DENSE_CAPACITY_LIMIT` is exactly 16 MiB with zero headroom; `initSim` doubles heap** | major | **L2** | **P2** |
 | 10 | **Kernel image unshippable.** A 16 MiB image is 66.6 MB of text — 99.2% of the 64 MiB cap, leaving ~0.5 MB for the circuit | major | **L2** | **P15** (new) |
 | 11 | **No simulation-state serialization at all.** `Memory` and `RegisterFile` save init text with no write-back path | major | **not closed** (§8) | **P9** + **P15** |
 | 12 | **No supported construction API.** The primitives are public but undocumented, untested as an API, and bypass `CircuitOp`; there is no `src/jls/api` | major | **L8** | **P12** |
-| 13 | **Structural tier is 1.05–5.1× outside the 10⁵ interactive floor and 10–50× outside the 10⁶ end** | major | **L1**, then **L9** gated | **P8** |
+| 13 | **Structural tier is 1.05–5.1× outside the 10⁵ interactive floor and 10–51× outside the 10⁶ end** | major | **L1**, then **L9** gated | **P8** |
 | 14 | **The golden oracle is 34 cycles and four value assertions, RV32I-only.** *(It is tracked and it does run in CI — the inherited "gitignored, never run" claim is false in two of three clauses; its regeneration path is what dies with `riscv/`)* | major | **L6** | **P19** (new) |
 | 15 | **The performance anchor is untracked and its generator is being deleted.** Every measured number in the roadmap becomes unreproducible | major | **L0** | **P19** (new) |
 | 16 | **No independent external golden, and its planned home is inside the deleted directory** | major | **L6** | **P16** (new) |
@@ -1136,15 +1187,15 @@ does; **P14–P21 are proposed in §6** and do not exist yet.
 | 18 | **`RegisterFile` and `FieldExtend` are un-exportable to HDL** — `EXPORTED` lists 22 classes and omits both | major | **L8** | **P3** |
 | 19 | **Diff and merge are unsafe, and D1 alone makes them less safe.** Plain text with dense ids removes XZ's accidental conflict protection and keeps the renumbering hazard — the exact configuration that produced a clean merge that loaded *and simulated* a 4-bit pin carrying `0xFFF` | major | — | **P11**; ordering in §7 |
 | 20 | **Stable-id minting can collide**, so JLS writes files it then refuses to open. *(Partly fixed at HEAD by `36cbd37`; the persisted per-install counter and the save-time uniqueness assertion are still absent)* | major | — | **P11** |
-| 21 | **No CI lane hosts a multi-hour run.** *(Partly reversed: a nightly cron with a documented single-lane convention and its own concurrency group already exists at `.github/workflows/ci.yml:8-13,21-25`. What is missing is `timeout-minutes` — zero occurrences repo-wide — a large-fixture policy, and the guest image)* | major | **L2** | **P18** (new) |
+| 21 | **No CI lane hosts a multi-hour run.** *(Partly reversed: a nightly cron with a documented single-lane convention and its own concurrency group already exists at `.github/workflows/ci.yml:8-13, 22-25`. What is missing is `timeout-minutes` — zero occurrences repo-wide — a large-fixture policy, and the guest image)* | major | **L2** | **P18** (new) |
 | 22 | **The single-source machine definition has no mechanism and no contents list.** The memory map, device base addresses, power-on register state, DTB hash, kernel cmdline, clock frequency, CLINT HZ and RAM size live implicitly in three places with nothing asserting they agree | major | **L5**, **L6** | **P16** (new) |
 | 23 | **The console byte stream is not tier-independent by construction.** With any default kernel config `CONFIG_PRINTK_TIME` stamps every line from a timer, and the two tiers reach any instruction at different simulated times — so the designated Linux-scale oracle fails on its first run | major | **L7** | **P21** (new) |
 | 24 | **K9, the highest-ranked kill criterion, is a sentence.** No performance ratchet of any kind exists in `test/` | major | governance band | — |
 | 25 | **Simulation determinism across JDK builds and OSes is unverified** and the parity contract assumes it | unknown, load-bearing | **L0(h)** | — |
-| 26 | **Subcircuits are per-instance deep copies with no parameters**; measured sharing factor exactly 1.00× | major | **not closed**; L8 is sized assuming no sharing | **P7** |
+| 26 | **Subcircuits are per-instance deep copies with no parameters.** Verified structurally at HEAD: `SubCircuit.copy()` (`src/jls/elem/SubCircuit.java:332-384`) deep-copies every element and every port per instance, so the sharing factor is exactly 1 | major | **not closed**; L8 is sized assuming no sharing | **P7** |
 | 27 | **`RegisterFile`/`FieldExtend` declare a `propDelay` they never use**, and appear in **neither** the delayed list nor the zero-delay set of [`simulation-semantics.md`](simulation-semantics.md) | moderate, and it bites L1 | **L1** | **P2** |
 | 28 | **`NetlistImporter` realizes 5 cell types and cannot emit a flip-flop**, while `CellValidator` accepts 19 direct types plus 2 parameterized memory shapes. *(And `CellValidator` claims hierarchy instances are realized as subcircuits; `NetlistImporter.mapCell:226-232` rejects exactly that. Hierarchy import is not started)* | major, out of scope here | — | **P3** |
-| 29 | **GUI per-edit cost is 58 ms at 10k elements, 552 ms at 100k** | moderate | — | **P12/#84** |
+| 29 | **GUI per-edit cost is 58 ms at 10k elements, 552 ms at 100k** *(measured during the design study, outside this repository; not reproducible from it and not re-measured at HEAD — K9's ratchet is what would make it a tracked number)* | moderate | — | **P12/#84** |
 
 Two entries in the inherited gap list are **dissolved, not closed**:
 
@@ -1311,9 +1362,9 @@ and instructs the reader to **re-run it rather than trust those numbers** —
 and D5 deletes it.
 
 Consequences, all real: P1's stage-5 acceptance criterion loses its
-baseline; P11's headline criterion (a 5,314-line diff falling to 9) becomes
-**unreproducible**, because its fixture is untracked and its generator is
-deleted; P12's whole-program criterion ("no save-format string literal
+baseline; P11's headline acceptance criterion — a five-thousand-line diff
+falling to single digits — becomes **unreproducible**, because its fixture is
+untracked and its generator is deleted; P12's whole-program criterion ("no save-format string literal
 appears anywhere in `riscv/`") becomes **vacuously satisfied by
 `rm -rf riscv/`**.
 
@@ -1386,9 +1437,10 @@ nothing". **One of the two must be withdrawn.**
 
 The resolution the evidence supports: a minimal RV32 nommu kernel plus a
 busybox initramfs is ~2–6 MB, far under GitHub's 100 MB per-file block, and
-a measured comparison found a **stored (uncompressed) container member cost
-2,397,301 bytes of `.git` over ten revisions against a raw sidecar's
-2,396,453 — within 0.04%.** Committing the pinned image as a stored member
+a comparison measured during the design study found a **stored
+(uncompressed) container member costing 2,397,301 bytes of `.git` over ten
+revisions against a raw sidecar's 2,396,453 — within 0.04%** (measured
+outside this repository; not reproducible from it). Committing the pinned image as a stored member
 is cheap and makes the lane runnable. It requires **explicitly reopening the
 exclusion**, which is a decision, not an oversight to route around.
 
@@ -1636,7 +1688,8 @@ walked back.
   the exact configuration that produced clean-but-wrong merges, one of which
   loaded *and simulated* a 4-bit pin carrying `0xFFF`. And uncompressing
   without fixing identity makes repo bloat **worse** in the guaranteed
-  front-insert case (11,003 B/rev text against 7,531 B/rev XZ). **Stable-id
+  front-insert case (11,003 B/rev text against 7,531 B/rev XZ, measured during
+  the design study outside this repository). **Stable-id
   minting, a headless `Circuit.validate()` at the end of `finishLoad`, the
   legacy sort-order fix, and the `.gitattributes`/`.gitignore` lines are a
   hard precondition of the container flip, not a preference.** This is also
@@ -1644,8 +1697,9 @@ walked back.
 - **D2 (diff stability).** `Circuit.save` reassigns **dense file-local ids
   on every save** (`src/jls/Circuit.java:1499-1503`), so inserting one
   element renumbers every later element and every reference to them —
-  measured at **5,312 changed lines in 234 hunks where the correct answer is
-  10 lines in 1 hunk**. Referencing by stable id is the structural fix and
+  measured — during the design study, on `riscv/gui/cpu.jls`, outside this
+  repository — at **5,312 changed lines in 234 hunks where the correct answer
+  is 10 lines in 1 hunk**. Referencing by stable id is the structural fix and
   its acceptance criterion is measured.
 - **D3 (internal versioning).** There is exactly **one global `FORMAT`
   integer per file** (`src/jls/Circuit.java:1482`), no per-section version
@@ -1705,7 +1759,7 @@ In the idiom of `grand-architecture.md` §9. Each exclusion states its price
 and, where one exists, its re-entry trigger.
 
 1. **A live console on drawn logic.** 1.05–5.1× outside the 10⁵ floor after
-   a fully costed optimization program, 10–50× outside the 10⁶ end. **This
+   a fully costed optimization program, 10–51× outside the 10⁶ end. **This
    is a decision and a substantial body of engineering work, not a physical
    limit** — but it is not offered, and no documentation may promise it.
    **Re-entry trigger:** the maintainer decides to spend the engine budget,
@@ -1767,7 +1821,10 @@ everything above it.**
 - **> 25:** boot > 5.3 min, echo roughly doubles, `ls` > 1.5 min. The word
   "live" is retired from all documentation; the claim becomes
   "responsive-ish, one command per minute". Program continues.
-- **> 46** (twice the 23 events/cycle budget ceiling): **stop the
+- **> 46** (about 1.5× the **31.4 events/cycle** that the measured
+  warm-loop `R` allows at the 10⁵ cycles/s interactive floor —
+  3.1426×10⁶ ÷ 10⁵. An older "2–23 events/cycle" budget circulates; it was
+  composed at a superseded `R` and must not be quoted): **stop the
   live-console claim entirely.** Ship headless, transcript and replay. L7's
   GUI console pane is cut.
 
@@ -1792,7 +1849,7 @@ harness is worse than no harness, because it converts an unchecked claim
 into a checked-looking one. Nothing downstream of L4 may merge until the
 null test fails on demand.
 
-**K5 — `jls.mach` under its coverage bar (M4).** Budget 4 months.
+**K5 — `jls.mach` under its coverage bar (M4).** Budget: M4's 4–6 months (§10).
 - **> 8 months without reaching the bar:** cut the model to RV32I + Zicsr +
   M-mode only, **abandon the Linux target**, and promote an in-jar M-mode
   self-checking payload to *the* parity workload. The architecture survives
@@ -1835,8 +1892,10 @@ environment. Verifying it is one hour of work: read the pinned kernel's
 thread.)*
 
 **K9 — the pedagogy floor (continuous, and it outranks everything above).**
-GUI startup time, per-edit cost (measured 58 ms at 10k elements, 552 ms at
-100k) and palette size are ratcheted. **Any regression to the first-year
+GUI startup time, per-edit cost (58 ms at 10k elements, 552 ms at 100k —
+measured during the design study, outside this repository, and not
+re-measured at HEAD) and palette size **would be** ratcheted — no such
+ratchet exists today; see the paragraph below. **Any regression to the first-year
 student drawing an adder stops the responsible layer, regardless of what it
 costs the flagship.** The pedagogy audience is the product; the Linux boot
 is a demonstration.
@@ -1849,8 +1908,9 @@ ratchet**. No layer in §4 builds one. The highest-ranked criterion in this
 document is a sentence. **The cheap fix is minutes of work**: one headless
 assertion on palette row count and `ElementRegistry.ALL` size —
 `src/jls/edit/Palette.java`'s `ENTRIES` list holds **32** rows against
-**35** registry types, a difference `test/jls/edit/PaletteContractTest.java`
-already governs through its `NON_PALETTE_TAGS` set, so the ratchet pins the
+**35** registry types, a difference of exactly the three tags
+`test/jls/edit/PaletteContractTest.java:44-45` already governs through its
+`NON_PALETTE_TAGS` set (`SubCircuit`, `WireEnd`, `TestGen`), so the ratchet pins the
 *count* rather than re-litigating the set, and palette bloat is caught
 outright — plus one timing test with a generous band on the existing
 10k-element path.
@@ -1869,15 +1929,17 @@ section's.
 
 ### M1 — The measurement gate and the salvage  *(~4–6 weeks, no product code)*
 
-**Deliverable.** All nine L0 experiments; [`machine-calibration.md`](machine-calibration.md);
-the `maxTime` adjudication filed; **P19's tracked CPU-scale fixture,
+**Deliverable.** All nine L0 experiments, each replacing one section of
+[`machine-calibration.md`](machine-calibration.md) §6 with a measured
+value and a named harness (that document's §6.11 maps the nine both
+ways); the `maxTime` adjudication filed; **P19's tracked CPU-scale fixture,
 benchmark and golden committed**; the `riscv/` re-homing inventory
 regenerated from `git ls-files` (26 files, not 3) including
 `riscv/gui/cpu.jls` and the two dangling javadoc references at
 `test/jls/RiscvCpuGoldenTest.java:25,38` that doclint will not catch;
 `ARCHITECTURE.md:354-358`'s revisit trigger restated so it does not name a
 deleted directory; the differential-harness *design* written into
-[`parity-contract.md`](parity-contract.md) §0; **then** `riscv/` deleted.
+[`parity-contract.md`](parity-contract.md); **then** `riscv/` deleted.
 Plus **the K9 ratchet**, which is minutes of work and without which the
 highest-ranked kill criterion does not exist.
 

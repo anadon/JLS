@@ -1,16 +1,27 @@
 # Machine calibration: what a CPU-scale JLS circuit costs
 
-**Status: normative evidence.** This document is not a plan and it authorizes
-nothing. It records **measurements** — engine throughput, per-element event
-cost, the boot-cost model and its inputs, and the guest-side facts a
-Linux-capable machine has to satisfy — so that they survive the deletion of
-the directory most of them were taken on. Where a number is an estimate it
-says so, with its method. Where two sources disagree, both are printed and
-the disagreement is named rather than averaged away.
+**Status: evidence record.** This document is not a plan, it recommends no
+architecture, and it authorizes nothing. It records **measurements** — engine
+throughput, per-element event cost, the boot-cost model and its inputs, and
+the guest-side facts a Linux-capable machine has to satisfy — so that they
+survive the deletion of the directory most of them were taken on. Where a
+number is an estimate it says so, with its method. Where two sources
+disagree, both are printed and the disagreement is named rather than averaged
+away.
+
+The only thing here that is **normative** is how these numbers may be
+quoted: section 2.5 (never quote an events-per-cycle figure without its
+clocking regime), section 2.6 (never quote a ns/node figure without node
+count, pass count and which of the source's two per-node costs), section 4.5
+(never quote 4.9× alone as "the full stack"), section 4.6 (never quote an
+s/char figure without its echo-path assumption), and section 7.3 step 6
+(a throughput number without its census and clocking regime is not a
+measurement). Those rules exist because each was already broken at least
+once.
 
 Every claim about the tree carries a `file` / method anchor and was verified
-at HEAD. Every performance number carries its workload, its date and its
-hardware. Numbers that are *derived* carry the arithmetic that derives them,
+on `claude/jls-virtual-hardware-linux-njsoma` at `36cbd37`. Every performance
+number carries its workload, its date and its hardware. Numbers that are *derived* carry the arithmetic that derives them,
 so a future reader can re-derive them against a different constant instead of
 having to trust this one.
 
@@ -19,10 +30,16 @@ Sibling documents:
 - [`simulation-semantics.md`](simulation-semantics.md) is normative for what
   a simulation *means*. Nothing here changes it; section 3.4 records two
   shipped elements it does not yet describe.
-- [`parity-contract.md`](parity-contract.md) is normative for what it means
-  for two implementations of one boundary to agree. This document supplies
+- [`parity-contract.md`](parity-contract.md) specifies what it means for two
+  implementations of one boundary to agree. (It is a *proposed* normative
+  contract, not yet ratified — see its status line.) This document supplies
   the cost model that decides which comparisons are affordable; it does not
   define the comparison.
+- [`virtual-hardware-parity.md`](virtual-hardware-parity.md) is the
+  non-normative proposal that would spend these numbers. **Every wall-clock
+  figure it quotes is owned here**, and its measurement gate (its §4, layer
+  L0) is the work that fills section 6 of this document. Where the two
+  disagree, this document is the record.
 - [`capability-roadmap/keystone-c-performance.md`](capability-roadmap/keystone-c-performance.md)
   is the primary source for section 2. This document is its durable
   distillation plus the corrections found while re-deriving it.
@@ -56,6 +73,11 @@ appear nowhere else in the tree with their method attached.
 These are preconditions, not follow-ups. Each is tracked (or, in one case,
 conspicuously not), and each has a distinct job.
 
+**Regenerate the inventory from `git ls-files riscv/`, which returns
+26 tracked files at HEAD, before the deletion commit.** Inventories of
+three or four assets have circulated; they are wrong. The table below
+covers the assets with a *distinct* job — it is not the inventory.
+
 | Asset | Tracked? | What it is for | What must happen first |
 |---|---|---|---|
 | `test/jls/RiscvCpuGoldenTest.java` | **yes** (`git ls-files`) | The RV32I integration golden. `ARCHITECTURE.md`'s #221 equivalence criterion binds any future evaluation strategy to agreeing with it bit-for-bit, so it is the oracle that makes #221 enforceable | Its javadoc cites `riscv/examples/sum1to10.s` and `riscv/README.md` as the regeneration path. Both are deleted. Re-home the regeneration recipe (the `.s` source and its assembly/clock-vector procedure) into `test/fixtures/` or this document, **and fix the javadoc** — the references are `{@code}` spans, not `{@link}`, so the `-Werror` doclint gate will not catch the rot |
@@ -64,6 +86,7 @@ conspicuously not), and each has a distinct job.
 | `riscv/bench_kernel.py` | yes | Generates the sized benchmark circuits (`k500`/`k1000`/`k2000`) and their `-t` clock vectors | Its *output* must be committed (row above). Its *method* is recorded in section 7 |
 | `riscv/riscv_ref.py`, `riscv/fuzz_diff.py`, `riscv/verify.py` | yes | The differential harness: a 975-line RV32I reference emulator, a randomized differential runner that requires identical final architectural state, and 11 directed programs | **The design survives; the code does not.** The design is what [`parity-contract.md`](parity-contract.md) formalizes. Transcribe the limitation with it: `riscv_ref.py` was written by the same author as the design under test, so it is a self-consistency oracle, not an independent one |
 | `riscv/gui/cpu.jls` | **yes** — one of only four tracked `.jls` files in the repository | Used as a real-world fixture for measured save-format churn | Decide explicitly whether it is kept as a fixture or lost. It is not replaceable by a synthetic circuit for that purpose |
+| `riscv/examples/*.s`, `*.clk.txt`, `riscv/README.md` | yes | The golden's assembly source, its clock vector, and the regeneration prose | Cited by name from `test/jls/RiscvCpuGoldenTest.java:25` and `:38`. Both citations are `{@code}` spans, not `{@link}`, so deleting them leaves a **silent** dangling reference that the `-Werror` doclint gate does not catch |
 
 Two further notes on the deletion:
 
@@ -129,6 +152,11 @@ Derived, with the division shown:
 | Events per clocked cycle | **388.4** | 2,331,793 / 6,004 — see the caveat in 2.5 |
 | Simulated cycles per second, warm loop | **8,092 /s** | 6,004 / 0.742 |
 | Simulated cycles per second, incl. init | **≈ 4,600 /s** | recorded by `keystone-c` |
+
+`keystone-c-performance.md:138` records the warm-loop figure as **8,090**;
+the exact division gives 8,092. The two-cycle difference is rounding in the
+source, and derived figures elsewhere that use 8,090 as their basis (§4.5)
+are left on the source's own number rather than silently re-based.
 
 **Always say which scope a throughput figure uses.** The two differ by 1.76×
 on this workload and confusing them has produced wrong conclusions twice in
@@ -245,7 +273,7 @@ Settling this is the cheapest high-value experiment available (section 6.2).
 
 ### 2.6 The levelized model (not an engine; a measurement of one)
 
-`keystone-c` also modelled a levelized evaluation pass over this CPU's real
+`keystone-c` also modeled a levelized evaluation pass over this CPU's real
 shape — **522 evaluation slots** (225 logic elements + 297 nets), the real
 width mix, a topologically ordered DAG, a realistic opcode mix, full 3-plane
 4-state arithmetic including the X-poison rule for `ADD`:
@@ -485,7 +513,7 @@ the central inputs give, not what the model knows.
 
 | Machine | Logic elems | CPI | ev/instr | Wall clock | Basis |
 |---|---:|---:|---:|---|---|
-| Behavioral macro-element ("virtual hardware") | ~10 | 1 | **12** | **~2.5 min** | ev/instr is **MODELLED, never measured** — see below |
+| Behavioral macro-element ("virtual hardware") | ~10 | 1 | **12** | **~2.5 min** | ev/instr is **MODELED, never measured** — see below |
 | Authored word-level, native `RegisterFile`, iterative M | ~580 | 2.9 | 468–485 | **~1.7 h**; honest band **1.2–6 h** | ev/instr derived; `k`/`α` unsettled |
 | + behavioral Multiplier/Divider (hybrid) | ~560 | 2.4 | 403 | ~1.4 h | estimated |
 | Authored, combinational multiplier | ~740 | 2.4 | 393 | ~1.4 h | estimated |
@@ -500,7 +528,7 @@ The 31-flip-flop register-file row that appears in older tables is **struck**:
 at 114.53 ev/cycle it is strictly dominated by the native `RegisterFile` on
 both axes.
 
-**The behavioral row's 12 ev/instr is modelled, not measured.** Its only
+**The behavioral row's 12 ev/instr is modeled, not measured.** Its only
 cross-check is `1.8 ev/active element × ~7 active elements ≈ 12.6`, which
 reuses the disputed `k`. Nothing should be costed against it until it is
 measured (section 6.4).
@@ -539,6 +567,16 @@ projection. The primary source says outright: *use 2.7–4.9×*.
 > job at the pessimistic end, which is the decision the number was being used
 > for.)
 
+The nommu boot rows at central inputs, for reference — each of them still
+inside the 1.2–6 h honest band of 4.2, which no optimization multiplier
+narrows:
+
+| Stage | nommu boot at central inputs |
+|---|---|
+| Today | **1.66–1.72 h** (468 and 485 ev/instr arms) |
+| After the semantics-preserving stack (2.26×) | **44–46 min** |
+| After the full stack (2.7–4.9×) | **20–38 min** |
+
 **Engine work does not accrue only to the structural tier.** The behavioral
 row's 2.5 minutes is computed as 4.0 × 10⁷ × 12 / 3.1426 × 10⁶ — it divides
 by the *same* constant the stack multiplies. Applying the stack to its own
@@ -571,6 +609,24 @@ At the 485 arm the same chain gives 18,791 cycles/s and 1.54 s/char.
 | After the full stack (2.7–4.9×) | **52,600–95,400** | **0.30–0.55** |
 | Mode C (unbuilt), derated | 22,000–40,000 | 0.73–1.3 |
 | Mode C, underated ceiling — **not a target** | ~86,000 | 0.34 |
+
+**The behavioral tier, same chain, same caveats.** At the modeled 12
+ev/instr the behavioral tier retires
+`3.1426 × 10⁶ / 12 = 261,883 instructions/s`, so:
+
+| Interaction | Instructions assumed | Latency |
+|---|---|---|
+| Echo one character, at a 10⁴-instruction echo path | 10⁴ | **~0.04 s** |
+| Echo one character, at the 10⁵ end of the echo band | 10⁵ | ~0.4 s |
+| A shell command such as `ls` (fork, exec, readdir) | 10⁶–2×10⁷ | **4–76 s** |
+
+The instruction counts in the middle column are themselves unmeasured
+bands (section 6.3 for the echo path; the command band is an
+order-of-magnitude estimate with no measurement behind it). All three rows
+divide by the **modeled, never-measured** 12 (section 6.4), and all three
+are measured-engine-over-modeled-machine quotients, not observations.
+If 12 measures at 25 — the threshold the proposal's kill criterion K1 is
+written against — every figure in the table roughly doubles.
 
 **Every s/char figure above assumes a 10⁴-instruction tty echo path, and that
 number is not measured.** The available estimate is a *band*, 10⁴–10⁵
@@ -789,8 +845,11 @@ upstream removal becomes documentation rot rather than an existential risk.
 
 ## 6. What is still unmeasured and load-bearing
 
-Each entry names the cheapest experiment that settles it. They are ordered by
-how much of section 4 they move.
+Entries 6.1–6.7 each name the cheapest experiment that settles them, and are
+ordered by how much of section 4 they move. Entries 6.8–6.10 are not
+throughput questions but are load-bearing in the same way: 6.8 is a
+capability gap, 6.9 an adjudication, 6.10 a gating check. Entry 6.11 maps
+all of them onto the proposal that would fund them.
 
 ### 6.1 α — the per-cycle active fraction
 
@@ -830,7 +889,7 @@ the echoed byte appearing at the THR. One afternoon.
 
 ### 6.4 Behavioral events per retired instruction
 
-**The modelled 12** (section 4.4). Its only cross-check reuses the disputed
+**The modeled 12** (section 4.4). Its only cross-check reuses the disputed
 `k`. Nothing on the behavioral tier — boot time, echo latency, the entire
 interactive claim — should be costed until it exists.
 
@@ -890,8 +949,47 @@ check**, then discarded without reacting or re-queueing
 Today it is a curiosity. Under any future state capture or resume it is
 silent corruption, because the dedup eviction happens first and the resumed
 run retains no record the event existed. `JLSInfo.defaultTimeLimit =
-100000000` (`src/jls/JLSInfo.java:69`) is roughly 400× short of a boot, so any
-long run meets this path.
+100000000` (`src/jls/JLSInfo.java:69`) is **1,920–2,300× short of a boot**
+— 4.0 × 10⁷ retired instructions × CPI 2.4–2.9 ≈ 0.96–1.16 × 10⁸ clocked
+cycles, at 2,000 simulated time units per clock period, is
+1.9–2.3 × 10¹¹ time units against a limit of 10⁸ — so any long run meets
+this path. `Simulator.maxTime` is a `long`, so the value itself fits.
+
+### 6.10 The reset fiction
+
+`LogicElement.initInputs` zeroes every input at every depth and
+`Register.initSim` drives the configured init value, so JLS supplies a
+reset that the drawn design does not itself have. **Whether the shipped
+demo circuit runs at all without that supplied zeroing is unmeasured.**
+It is not a throughput question, but it is load-bearing in the same way
+the others in this section are: if the answer is no, then "the drawn
+machine boots" is an unsound claim, and
+[`parity-contract.md`](parity-contract.md) §2.1 would pin a fiction into
+the machine definition as though it were the machine's power-on state.
+
+**Experiment.** Run the demo once with that zeroing disabled and see
+whether it still produces the golden's result. Hours. Cheap check, high
+stakes; it is recorded in `parity-contract.md` §9.4 as a known weakness
+of the contract until it is run.
+
+### 6.11 The map to the proposal's measurement gate
+
+[`virtual-hardware-parity.md`](virtual-hardware-parity.md) §4 layer L0
+is the work item that fills this section. The two lists are the same
+nine experiments plus one capability gap:
+
+| L0 experiment | Settles | Here |
+|---|---|---|
+| L0(a) | `α`, CPI, `k` | 6.1 |
+| L0(b) | events/cycle and its clocking regime | 6.2 |
+| L0(c) | behavioral events per retired instruction | 6.4 |
+| L0(d) | levelized ns/node at CPU scale | 6.6 |
+| L0(e) | the tty echo path | 6.3 |
+| L0(f) | `InteractiveSimulator` per-event cost | 6.5 |
+| L0(g) | the reset fiction | 6.10 |
+| L0(h) | cross-platform determinism | 6.7 |
+| L0(i) | the `maxTime` event drop | 6.9 |
+| — (owned by the roadmap, not an experiment) | memory byte lanes | 6.8 |
 
 ---
 
@@ -1019,7 +1117,7 @@ so, because the absolute numbers will shift even when the ratios do not.
 | Events per instruction | 468–485 at central inputs; 324–1,695 across the honest `k`/α sweep | **derived**, band dominated by unmeasured inputs |
 | Structural boot, nommu | ~1.7 h at central inputs; **honest band 1.2–6 h** | **derived** |
 | Sv32 boot | ~4 h | **estimated**; assumes an unmeasured ×1.4 instruction inflation and CPI 3.9 |
-| Behavioral boot | ~2.5 min | **estimated**; its 12 ev/instr is modelled, and it moves with engine work |
+| Behavioral boot | ~2.5 min | **estimated**; its 12 ev/instr is modeled, and it moves with engine work |
 | Semantics-preserving optimization stack | 2.26× | **derived** from stage midpoints; overlapping cost pools; conservative |
 | Full optimization stack | **2.7–4.9×** | a **range**; 4.9× is its top, not its value |
 | Live console today | 18,800–19,500 cycles/s; 1.5 s/char **at a 10⁴-instruction echo path** | **derived** on `BatchSimulator`; `InteractiveSimulator` is slower by an unmeasured factor |

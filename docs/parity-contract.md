@@ -1,6 +1,12 @@
 # The parity contract
 
-**Status: normative.** This document specifies what it *means* for the
+**Status: proposed normative contract — written, not yet ratified.** It
+becomes normative when the `ARCHITECTURE.md` decision block described in
+§8.3 is recorded, and not before; until then it binds nothing and no
+other document may cite it as settled. Nothing in the repository
+currently implements any mechanism it governs (§1.3).
+
+This document specifies what it *means* for the
 same software to run on virtual logic and on virtual hardware "with
 parity", precisely enough that a test can decide it. It defines the
 objects being compared, the alphabet of the comparison, the set of
@@ -27,6 +33,17 @@ Its sibling documents:
   profile, all frozen by its §6.
 - [`file-format.md`](file-format.md) stays normative for what a saved
   circuit contains and what costs a `FORMAT` version.
+- [`machine-calibration.md`](machine-calibration.md) owns **every
+  measured engine constant and every cost figure** quoted here. This
+  document never derives one; where it prints a duration it is quoting
+  that document, and that document carries the method, the workload and
+  the uncertainty band.
+- [`virtual-hardware-parity.md`](virtual-hardware-parity.md) is the
+  **proposal** that would build the mechanisms this contract governs —
+  the layer stack, the milestones, the cost bands and the governance
+  actions. It is explicitly non-normative. This document deliberately
+  says nothing about when anything is built; that document says nothing
+  about what "agree" means.
 
 ---
 
@@ -62,7 +79,9 @@ records that as a known weakness and names the only fix
 ### 1.3 What exists at HEAD
 
 Everything in sections 5.1 and 5.2 that is described as *existing* has
-a code anchor and was verified at HEAD. Everything else does not exist:
+a code anchor and was verified on
+`claude/jls-virtual-hardware-linux-njsoma` at `36cbd37`. Everything else
+does not exist:
 
 | Named here | At HEAD |
 |---|---|
@@ -131,21 +150,29 @@ port list, and both sides of the comparison are in the same run.
   already are: an arbitrary function computed in one `react()` with no
   internal delays (`docs/simulation-semantics.md` §7).
 
-**An unresolved question that this contract cannot settle.** The design
-corpus contains two incompatible answers to *what carries* the
-behavioral implementation, and both are defensible:
+**An unresolved question that this contract cannot settle.** There are two
+incompatible answers to *what carries* the behavioral implementation, both
+defensible, and the contest between them is recorded in
+[`virtual-hardware-parity.md`](virtual-hardware-parity.md) §4 (layer L4) and
+§7.8, where it is flagged as a decision the maintainer must take before the
+merge that would encode it:
 
-1. a **per-instance saved attribute on `SubCircuit`** selecting among a
-   sealed set of implementations of *that instance's definition*; or
-2. a **registered `ElementType`** compared against a drawn subcircuit
-   with the same port list, on the ground that a behavioral RV32 core
-   is not derivable from any drawing and is therefore not an
-   "implementation of that definition" in any honest sense.
+- **Reading A — the fidelity boundary:** a **per-instance saved attribute
+  on `SubCircuit`** selecting among a sealed set of implementations of
+  *that instance's definition*.
+- **Reading B — the registered element:** a **registered `ElementType`**
+  compared against a drawn subcircuit with the same port list, on the
+  ground that a behavioral RV32 core is not derivable from any drawing and
+  is therefore not an "implementation of that definition" in any honest
+  sense.
 
-Reading 1 buys a real legitimacy argument — the structural referent is
-in the same file, so the behavioral model cannot become the only thing
-that exists. That argument **does not survive at the CPU boundary under
-reading 2**, where the two sides are two separate artifacts. The
+(The labels A and B are the ones
+[`virtual-hardware-parity.md`](virtual-hardware-parity.md) §4 L4 uses; they
+name the same two readings.) Reading A buys a real legitimacy argument — the
+structural referent is in the same file, so the behavioral model cannot
+become the only thing that exists. That argument **does not survive at the
+CPU boundary under reading B**, where the two sides are two separate
+artifacts. The
 contract below is written to be checkable under either reading: it
 compares *observations at a port list*, and is silent about the carrier.
 **The carrier must be decided before any binding is specified**, because
@@ -160,11 +187,15 @@ the kernel version, its `.config`, the initramfs contents, the
 toolchain, and the checksums of every produced artifact. `P` is not
 "Linux"; `P` is one image.
 
-**None of this exists and no work item owns it.** Building and pinning
-the guest image — kernel, `.config`, busybox, initramfs, device tree,
-reset stub, cross toolchain, rebuild recipe — is unowned by every layer,
-program and milestone in the design corpus, while three of the corpus's
-commitments dereference it. A parity claim about a Linux boot is not
+**None of this exists at HEAD and nothing in the repository owns it.**
+Building and pinning the guest image — kernel, `.config`, busybox,
+initramfs, device tree, reset stub, cross toolchain, rebuild recipe — is
+owned by no shipped work item, while three separate commitments in this
+contract dereference it (§3.3, §5.4's T2, and every instruction count in
+[`machine-calibration.md`](machine-calibration.md) §5.1, which is a property
+of one particular image). [`virtual-hardware-parity.md`](virtual-hardware-parity.md)
+§6 proposes an owner for it (program P21, 4–6 maintainer-weeks estimated);
+that proposal is **not adopted**. A parity claim about a Linux boot is not
 checkable until `P` exists and is pinned.
 
 ### 2.4 `I` — the input log, indexed by retirement
@@ -515,8 +546,8 @@ than about one example.
 | **T-null** | every push | The deliberately wrong implementations the harness must reject | milliseconds |
 | **T0** | every push | Boundary equivalence on every binding (exhaustive ≤16 bits, else seeded + corners) | seconds |
 | **T1** | every push | Architecture tests and the fuzz corpus through both implementations; trace files byte-identical | seconds |
-| **T2** | nightly | Behavioral boot to prompt, console byte stream diffed against a frozen golden (stream regime) | Estimated ~2.5 min at 12 events per retired instruction — a **modelled** figure, not measured, and not immune to engine constant-factor work, which divides the same constant this estimate divides by |
-| **T3** | release cadence, by hand | Structural boot under the same script, byte stream diffed against T2's | Estimated ~1.7 h at central inputs; **honest band 1.2–6 h** until the per-cycle active fraction and the events-per-active-element constant are measured |
+| **T2** | nightly | Behavioral boot to prompt, console byte stream diffed against a frozen golden (stream regime) | Estimated **~2.5 min** at 12 events per retired instruction — a **modeled** figure, never measured. It is **not** immune to engine constant-factor work: it divides by the same 318 ns/event constant that work multiplies, so it falls to ~1.1 min after the semantics-preserving stack ([`machine-calibration.md`](machine-calibration.md) §4.4, §4.5) |
+| **T3** | release cadence, by hand | Structural boot under the same script, byte stream diffed against T2's | Estimated **~1.7 h** at central inputs; **honest band 1.2–6 h** until the per-cycle active fraction `α` and the events-per-active-element constant `k` are measured ([`machine-calibration.md`](machine-calibration.md) §4.2, §4.4) |
 
 **T3 is not in continuous integration, and this is an accepted cost
 stated plainly, not papered over.** The headline result — the drawn
@@ -530,9 +561,11 @@ with a documented single-lane convention already exists
 image `P` — not the lane.
 
 **Every cost figure in this table is an estimate carrying an unmeasured
-input**, and each is labelled above. None of them is a property of this
-contract; they are here so that nobody plans against a number whose
-uncertainty is invisible.
+input**, and each is labeled above. None of them is a property of this
+contract, and none is derived here — they are quoted from
+[`machine-calibration.md`](machine-calibration.md) §4, which owns their
+method, so that nobody plans against a number whose uncertainty is
+invisible.
 
 ---
 
@@ -684,8 +717,9 @@ comparison; that document specifies what is being compared.
 
 ### 8.2 The one edit `simulation-semantics.md` requires
 
-`simulation-semantics.md:285` assigns the **subcircuit boundary a
-propagation delay of 0**. A behavioral binding gives the boundary a
+The normative delay table in `simulation-semantics.md` §7 assigns the
+**subcircuit boundary a propagation delay of 0**
+(`docs/simulation-semantics.md:285`). A behavioral binding gives the boundary a
 lumped delay at its pins. That is a change to a normative table and it
 must be made in that document, as a stated exception, **before any
 binding exists** — not inferred from this one. A boundary's delay must
@@ -781,6 +815,9 @@ parity clock. Any design that ships a behavioral UART model *and* a
 drawn one needs a mechanism relating them, and this contract does not
 supply one. Naming it is the minimum; the alternative is a parity claim
 whose oracle is itself unchecked.
+[`virtual-hardware-parity.md`](virtual-hardware-parity.md) §4 (layer L4)
+records the same gap against its own proposed mechanism and does not close
+it either.
 
 ### 9.3 Both implementations can be wrong together
 
@@ -818,12 +855,22 @@ gem5 flushes TLBs at handover rather than pretend the state is portable.
 ### 9.6 The live-console refusal
 
 **A live console on the structural tier is refused.** Not "not yet" — it
-is outside the measured budget of the discrete-event interpreter by a
-factor that no stack of semantics-preserving constant-factor work
-closes. The refusal is narrower than it once was and its justification
-has changed: the gap is a decision and a large amount of engineering,
-not a physical limit. But nobody may promise it, and nothing in this
-contract depends on it.
+is outside the budget of the discrete-event interpreter by a factor that
+no stack of semantics-preserving constant-factor work closes. The
+numbers, which this document quotes rather than derives
+([`machine-calibration.md`](machine-calibration.md) §4.6): the drawn
+machine runs at **18,800–19,500 simulated cycles/s** today and at
+**52,600–95,400** after the full optimization stack, against a
+**10⁵–10⁶ cycles/s** requirement — the 10⁵ floor missed by **1.05–5.1×**
+and the 10⁶ end by **10–51×**. Every per-character figure behind those
+numbers assumes a **10⁴-instruction tty echo path that nobody has
+measured**; at the 10⁵ end of the available band each multiplies by ten.
+
+The refusal is narrower than it once was and its justification has
+changed: the gap is a decision and a large amount of engineering, not a
+physical limit. Any figure in maintainer-weeks for that engineering is
+currently unsourced — **no work breakdown exists**. But nobody may
+promise it, and nothing in this contract depends on it.
 
 What replaces it is real and is the industry's own answer: **bounded
 handover windows**. Toggle one boundary at a declared instant, run the

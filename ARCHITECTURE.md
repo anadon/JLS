@@ -366,3 +366,13 @@ propagation delays (§6, §7) — and it must agree bit-for-bit with the
 divergence is a specified, documented change to
 `docs/simulation-semantics.md` first, never a silent behavioral
 difference between strategies.
+
+**Related proposal, not a decision:**
+[`docs/virtual-hardware-parity.md`](docs/virtual-hardware-parity.md)
+examines this revisit trigger against measured constants
+([`docs/machine-calibration.md`](docs/machine-calibration.md)) and sets
+out what would have to be recorded here, and by which process, before a
+second strategy or a per-boundary behavioral binding could land. It
+reverses nothing above; the accompanying
+[`docs/parity-contract.md`](docs/parity-contract.md) is explicitly
+unratified until such a decision is recorded.

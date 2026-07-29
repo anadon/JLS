@@ -3,6 +3,7 @@ package jls.hdl;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +25,14 @@ import jls.elem.DelayGate;
 import jls.elem.Display;
 import jls.elem.Element;
 import jls.elem.Extend;
+import jls.elem.FieldExtend;
 import jls.elem.Gate;
 import jls.elem.Input;
 import jls.elem.InputPin;
 import jls.elem.JumpEnd;
 import jls.elem.JumpStart;
 import jls.elem.LogicElement;
+import jls.elem.Memory;
 import jls.elem.Mux;
 import jls.elem.NandGate;
 import jls.elem.NorGate;
@@ -40,12 +43,14 @@ import jls.elem.OutputPin;
 import jls.elem.Pause;
 import jls.elem.Put;
 import jls.elem.Register;
+import jls.elem.RegisterFile;
 import jls.elem.ShiftRegister;
 import jls.elem.SigGen;
 import jls.elem.Splitter;
 import jls.elem.State;
 import jls.elem.StateMachine;
 import jls.elem.Stop;
+import jls.elem.SubCircuit;
 import jls.elem.TestGen;
 import jls.elem.Text;
 import jls.elem.TriState;
@@ -188,7 +193,9 @@ public final class HdlExporter {
 				exported.add(el);
 				continue;
 			}
-			offenders.add(describe(el));
+			String reason = REJECTED.get(el.getClass());
+			offenders.add(reason == null ? describe(el)
+					: describe(el) + " (" + reason + ")");
 		}
 		if (!offenders.isEmpty()) {
 			throw new HdlExportException("circuit \"" + circ.getName()
@@ -435,6 +442,57 @@ public final class HdlExporter {
 	/** Element classes that are net topology, not instances. */
 	private static final Set<Class<?>> TOPOLOGY = Set.of(
 			Wire.class, WireEnd.class, JumpStart.class, JumpEnd.class);
+
+	/**
+	 * Element classes deliberately refused by HDL export, each with the
+	 * reason a user needs to act on it.
+	 *
+	 * Refusal is a policy decision, not an oversight: this bucket exists
+	 * so that every registered element type lands in exactly one of
+	 * {@link #EXPORTED}, {@link #SKIPPED}, {@link #TOPOLOGY} or this map,
+	 * and so that adding an element type without deciding its export
+	 * policy fails a test rather than surfacing as an unexplained export
+	 * error. {@code HdlPolicyTest} pins both halves.
+	 *
+	 * Membership here does not mean "never": each entry states what would
+	 * have to exist first, so the reason travels with the refusal.
+	 */
+	private static final Map<Class<?>, String> REJECTED = Map.of(
+			Memory.class,
+			"memory has no portable HDL rendering yet - a synthesizable"
+					+ " memory needs a technology-specific primitive"
+					+ " (block RAM, LUTRAM) chosen per target",
+			SubCircuit.class,
+			"subcircuits cannot be exported yet: the HDL model has no"
+					+ " module-instantiation statement, so hierarchy cannot"
+					+ " be rendered - flatten the circuit to export it",
+			RegisterFile.class,
+			"the register file has no portable HDL rendering yet, for the"
+					+ " same reason as memory: multi-port storage maps to a"
+					+ " technology-specific primitive",
+			FieldExtend.class,
+			"field extend is not exported yet - it is a straightforward"
+					+ " sign/zero extension and is expected to become"
+					+ " exportable; until then, build it from Splitter,"
+					+ " Binder and Extend");
+
+	/**
+	 * The element classes this exporter has a policy for, in every bucket.
+	 * Used by {@code HdlPolicyTest} to assert the policy is total over
+	 * {@link jls.elem.ElementRegistry}, so a new element type cannot ship
+	 * without an export decision.
+	 *
+	 * @return every classified element class.
+	 */
+	static Set<Class<?>> classifiedElementClasses() {
+
+		Set<Class<?>> all = new HashSet<Class<?>>();
+		all.addAll(EXPORTED);
+		all.addAll(SKIPPED);
+		all.addAll(TOPOLOGY);
+		all.addAll(REJECTED.keySet());
+		return all;
+	} // end of classifiedElementClasses method
 
 	/**
 	 * Tests the exported policy bucket.

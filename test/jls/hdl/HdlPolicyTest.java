@@ -6,9 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+
+import jls.elem.ElementRegistry;
+import jls.elem.ElementType;
 
 /**
  * The exporter's element policy (issue #60), pinned: simulation
@@ -368,5 +373,38 @@ class HdlPolicyTest {
 				result.warnings().get(0));
 		assertFalse(result.text().contains("assign y"), result.text());
 	}
+
+	/**
+	 * The export policy must be TOTAL over the element registry: every
+	 * registered element type lands in exactly one of exported, skipped,
+	 * topology or rejected.
+	 *
+	 * This exists because it was not true. RegisterFile and FieldExtend
+	 * (issue #201) shipped with no export decision at all and fell
+	 * through to the unrecognized-offender path, so a circuit using them
+	 * failed export with a message that named no reason - while Memory
+	 * and SubCircuit, refused for stated reasons, looked identical to the
+	 * user. A registered type with no export policy is a bug in the
+	 * policy, not in the circuit, and it should fail here rather than in
+	 * somebody's export.
+	 */
+	@Test
+	void exportPolicyIsTotalOverTheElementRegistry() {
+
+		Set<Class<?>> classified = HdlExporter.classifiedElementClasses();
+		List<String> unclassified = new ArrayList<String>();
+		for (ElementType type : ElementRegistry.all()) {
+			if (!classified.contains(type.elementClass())) {
+				unclassified.add(type.tag());
+			}
+		}
+		Collections.sort(unclassified);
+		assertEquals(List.of(), unclassified,
+				"every registered element type needs an export policy:"
+						+ " add it to EXPORTED, SKIPPED, TOPOLOGY or"
+						+ " REJECTED in HdlExporter (REJECTED entries"
+						+ " carry the reason the user is told)");
+	} // end of exportPolicyIsTotalOverTheElementRegistry method
+
 
 } // end of HdlPolicyTest class

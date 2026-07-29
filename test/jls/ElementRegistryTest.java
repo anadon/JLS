@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import jls.elem.Element;
 import jls.elem.ElementRegistry;
 import jls.elem.ElementType;
+import jls.elem.SaveTags;
 
 /**
  * The registry-integrity test for issue #78: the {@link ElementRegistry}
@@ -89,6 +90,59 @@ class ElementRegistryTest {
 				assertTrue(seen.add(alias), "alias '" + alias
 						+ "' collides with another tag or alias");
 			}
+		}
+	}
+
+	/**
+	 * Registered types that no conformant writer ever emits a tag for,
+	 * and which therefore have no {@link SaveTags} row: {@code TestGen}
+	 * is the batch-mode stand-in for a signal generator, constructed
+	 * from a {@code -t} vector file at run time and saved - when it is
+	 * saved at all - through its {@code SigGen} superclass's tag.
+	 * Every other registered type is writable and must appear in the
+	 * frozen tag table.
+	 */
+	private static final Set<String> NON_WRITABLE_TAGS = Set.of("TestGen");
+
+	/**
+	 * The registry and the frozen save-tag table must not drift apart.
+	 *
+	 * {@link FileFormatSpecTest} checks {@code docs/file-format.md} §7
+	 * against {@link SaveTags} - but both are hand-maintained, so a new
+	 * element added to the registry and given a {@code save} method that
+	 * emits {@code ELEMENT <tag>} drifts from *both* at once and neither
+	 * notices. That is exactly what happened to {@code RegisterFile} and
+	 * {@code FieldExtend} (issue #201): they shipped registered and
+	 * writable but absent from §7 and from {@code SaveTags}, so the
+	 * normative description of the format no longer described what JLS
+	 * writes, with the build green. The loader routes through
+	 * {@link ElementRegistry} ({@code Circuit.java}), so files still
+	 * loaded - which is precisely why nothing caught it. This test
+	 * closes the direction the other two do not cover.
+	 */
+	@Test
+	void everyWritableRegisteredTagIsInTheFrozenTagTable() {
+
+		Set<String> expected = new TreeSet<String>();
+		for (ElementType type : ElementRegistry.all()) {
+			if (!NON_WRITABLE_TAGS.contains(type.tag())) {
+				expected.add(type.tag());
+			}
+		}
+		assertEquals(expected, new TreeSet<String>(SaveTags.writableTags()),
+				"every registered element type outside the documented "
+						+ "non-writable set " + NON_WRITABLE_TAGS
+						+ " must have a SaveTags row (and a row in "
+						+ "docs/file-format.md section 7); add the missing "
+						+ "entry, or document the type as non-writable");
+
+		for (ElementType type : ElementRegistry.all()) {
+			if (NON_WRITABLE_TAGS.contains(type.tag())) {
+				continue;
+			}
+			assertSame(type.elementClass(), SaveTags.resolve(type.tag()),
+					"SaveTags must map tag '" + type.tag() + "' to the "
+							+ "same class the registry does");
 		}
 	}
 

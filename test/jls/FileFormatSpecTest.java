@@ -81,6 +81,9 @@ class FileFormatSpecTest {
 				" int bits 1\n int numInputs 1\n String orientation \"right\"\n int delay 20\n"));
 		t.append(el("Extend", id++, x += 120, 120,
 				" int bits 4\n int numInputs 1\n String orientation \"right\"\n int delay 0\n"));
+		t.append(el("FieldExtend", id++, x += 120, 120,
+				" int inbits 4\n int outbits 8\n String mode \"sign\"\n int delay 6\n"
+				+ " String orient \"RIGHT\"\n"));
 		t.append(el("Adder", id++, x += 120, 120,
 				" int bits 4\n String orient \"UP\"\n int delay 12\n"));
 		t.append(el("Clock", id++, x += 120, 120,
@@ -108,6 +111,9 @@ class FileFormatSpecTest {
 		t.append(el("Register", id++, x += 120, 120,
 				" String name \"reg\"\n int bits 4\n Int init 3\n String orient \"RIGHT\"\n"
 				+ " int delay 8\n String type \"nff\"\n int watch 1\n"));
+		t.append(el("RegisterFile", id++, x += 120, 360,
+				" String name \"rf\"\n int bits 4\n int count 8\n int read 2\n"
+				+ " int write 1\n int reg0zero 1\n int delay 10\n int watch 1\n"));
 		t.append(el("ShiftRegister", id++, x += 120, 120,
 				" String type \"ArithmeticRight\"\n int bits 8\n int delay 25\n"
 				+ " String iOrient \"DOWN\"\n String sOrient \"LEFT\"\n"));

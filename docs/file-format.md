@@ -301,6 +301,7 @@ Version-1 and version-2 writers emit exactly these 32 tags:
 | `DelayGate` | delay buffer | |
 | `Display` | value display | |
 | `Extend` | 1-to-n bit extender | |
+| `FieldExtend` | sign/zero field extender | `int inbits`, `int outbits`, `String mode` (fill rule); widens a k-bit field to n bits, where `Extend` replicates a single bit (issue #201) |
 | `InputPin` | circuit input | |
 | `JumpEnd` | named-net receiver | |
 | `JumpStart` | named-net source | |
@@ -313,6 +314,7 @@ Version-1 and version-2 writers emit exactly these 32 tags:
 | `OutputPin` | circuit output | |
 | `Pause` | simulation pause control | |
 | `Register` | latch / D flip-flop | |
+| `RegisterFile` | multi-port register file | `int bits`, `int count`, `int read` (read ports), `int write` (write ports), `int reg0zero` (register 0 reads as zero when on) (issue #201) |
 | `ShiftRegister` | combinational barrel shifter | despite the name, stateless; tag and attributes match the bsiever-fork 4.6 element (issue #122) |
 | `SigGen` | signal generator | |
 | `Splitter` | wire unbundler | `pair` items: (output index, bundle bit); **requires `String noncontig "true"`** (see note below); `orient` values `UP`/`DOWN` require version 2 (§4) |

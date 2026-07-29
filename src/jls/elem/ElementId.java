@@ -265,6 +265,21 @@ public final class ElementId implements Comparable<ElementId> {
 			throw new IllegalArgumentException("the stable id counter "
 					+ counter + " is negative");
 		}
+		// An id this install minted in an earlier run is now in use, so
+		// the creation counter must never hand it out again. The counter
+		// is process-wide and starts at zero in every JVM, while a
+		// long-edited circuit's surviving sids sit far above its element
+		// count (elements get created and deleted), so without this the
+		// second run of one install could re-mint a counter the file
+		// already declares - and JLS refuses to reopen a circuit with two
+		// identical sids, i.e. the editor would write a file it cannot
+		// read back. Only ever moves the counter forward, and only for
+		// this install's own replica: ids arriving from another replica
+		// (a collaboration peer) share no counter space with ours.
+		if (replica.equals(processReplica)) {
+			final long inUse = counter;
+			NEXT_COUNTER.getAndUpdate(next -> Math.max(next, inUse + 1));
+		}
 		return new ElementId(replica, counter);
 	} // end of parse method
 

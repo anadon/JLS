@@ -149,6 +149,59 @@ class ElementIdReplicaTest {
 	}
 
 	/**
+	 * Loading a file this install wrote must not leave the next mint
+	 * pointing at an id the file already declares.
+	 *
+	 * The creation counter is process-wide and starts at zero in every
+	 * JVM, and {@link ElementId#parse} - the only path a persisted sid
+	 * travels on load - never advanced it. So the second run of one
+	 * install would open its own saved circuit, add an element, and mint
+	 * an id the file already used. The save then contained two identical
+	 * {@code sid} lines and JLS refused to reopen it ("two elements
+	 * declare the same stable id"), i.e. the editor wrote a file it could
+	 * not read back.
+	 *
+	 * The existing {@code mintedIdsSkipIdsTheFileAlreadyUses} covers only
+	 * the {@code legacy:} minting path, which walks past used ids; the
+	 * process-replica path had no such guard.
+	 */
+	@Test
+	void mintingAfterALoadSkipsIdsTheLoadedFileAlreadyDeclares()
+			throws Exception {
+
+		// A circuit that has been edited over time: elements were created
+		// and deleted, so the surviving element's counter sits well above
+		// the element count. Nothing about this file is unusual - it is
+		// what any long-lived circuit looks like.
+		String saved = ONE_CONSTANT.replace(" Int value 5\n",
+				" Int value 5\n String sid \"feedface:5\"\n");
+
+		// The same install reopens it in a later run: the process counter
+		// restarts at zero, and loading burns only one value (each loaded
+		// element mints in its constructor before the sid overwrites it).
+		try (AutoCloseable pin = ElementId.pinForTesting("feedface", 0)) {
+			Circuit loaded = new Circuit("one");
+			assertTrue(loaded.load(new Scanner(saved)),
+					() -> "load failed: " + JLSInfo.loadError);
+			assertTrue(loaded.finishLoad(null),
+					() -> "finishLoad failed: " + JLSInfo.loadError);
+
+			// then the user draws a few elements, as users do
+			for (int i = 0; i < 8; i++) {
+				ElementId next = ElementId.mintFresh();
+				for (Element el : loaded.getElements()) {
+					assertNotEquals(el.getStableId(), next,
+							"minting after a load handed out '" + next
+									+ "', which the loaded circuit already "
+									+ "uses - saving would write a file JLS "
+									+ "refuses to reopen ('two elements "
+									+ "declare the same stable id')");
+				}
+			}
+		}
+	}
+
+	/**
 	 * Copy a loaded constant into a new circuit under a pinned replica
 	 * and save. The copy mints a fresh id, so the saved sid takes the
 	 * pinned replica - the from-scratch path of issue #183.

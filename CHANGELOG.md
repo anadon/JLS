@@ -289,6 +289,21 @@ All notable changes to JLS are documented here. The format follows
   out-of-capacity addresses. Found by the new generative fuzzer on
   its second seed.
 
+### Changed
+- The license is now declared consistently as **`GPL-3.0-or-later`**
+  across every place that states it. `CONTRIBUTING.md` and the About
+  dialog already said "or later"; `pom.xml` said "GNU General Public
+  License v3.0" and `flake.nix` said `gpl3Only`, so the published
+  package metadata contradicted the project's own stated terms. Both
+  now say or-later, and `README.md` states the terms explicitly.
+  Recorded for accuracy: `pop_GPLv3.pdf` is a letter of 16 January
+  2014 in which Michigan Technological University consents to the
+  open-source release of JLS under GPLv3 — it names GPLv3 without the
+  "or any later version" wording, so the or-later terms are this
+  project's own election rather than something the letter grants. The
+  About dialog no longer describes the release as a relicensing "by
+  the author", which that document does not show.
+
 ### Added
 - The release workflow now installs and launches every jpackage
   installer it builds (#82): deb via apt/dpkg, rpm via `rpm2cpio`

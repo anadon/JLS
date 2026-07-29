@@ -344,10 +344,19 @@ extension.
 
 ## License and provenance
 
-JLS is free software under the **GNU General Public License v3.0** (see
-[LICENSE](LICENSE)). The original author, David A. Poplawski, released the
-JLS source under GPLv3; his signed grant is preserved in this repository as
-[pop_GPLv3.pdf](pop_GPLv3.pdf).
+JLS is free software under the **GNU General Public License, version 3 or
+(at your option) any later version** — `GPL-3.0-or-later` (see
+[LICENSE](LICENSE) for the GPLv3 text). Contributions are accepted under
+the same terms ([CONTRIBUTING.md](CONTRIBUTING.md)).
+
+The provenance is preserved in this repository as
+[pop_GPLv3.pdf](pop_GPLv3.pdf): a letter of 16 January 2014 in which
+Michigan Technological University, where JLS was originally developed,
+consents that the Java Logic Simulator — "written by David Poplawski,
+Joshua Marshall, et al." — be released as open-source software under
+GPLv3. Note that the letter names GPLv3 without the "or any later
+version" wording; the or-later terms above are this project's own
+election, made by a maintainer who is one of the named authors.
 
 ## Contributing
 

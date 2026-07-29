@@ -28,7 +28,7 @@ public final class About extends JDialog implements ActionListener {
 		String line2 = "<p>Copyright David A. Poplawski";
 		String line3 = "<p>Free software under the GNU GPL v3 or later";
 		String line4 = "<p>Originally developed at Michigan Technological"
-				+ " University;<br>relicensed under the GPLv3 by the author"
+				+ " University, which<br>consented to its open-source release"
 				+ " (see pop_GPLv3.pdf)";
 		String html = "<html><center>" + line1 + line2 + line3 + line4 +
 			"</center></html>";

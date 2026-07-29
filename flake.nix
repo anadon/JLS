@@ -75,7 +75,7 @@
             meta = {
               description = "Educational digital logic circuit editor and simulator";
               homepage = "https://github.com/anadon/JLS";
-              license = nixpkgs.lib.licenses.gpl3Only;
+              license = nixpkgs.lib.licenses.gpl3Plus;
               mainProgram = "jls";
             };
           };

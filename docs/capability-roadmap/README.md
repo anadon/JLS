@@ -9,6 +9,17 @@ sweeps marked them.*
 
 ---
 
+> **Amended by [`AMENDMENT.md`](AMENDMENT.md).** This document ranks 304
+> *standards* by capability gained. A second sweep covered capabilities with
+> **no standard attached** — parameterization, compiled evaluation, causal
+> debug, formal grading, fault simulation, schematic diff/merge, a
+> programmatic API, clock domains — and found roughly as much capability
+> again, disproportionately in the leapfrog half. It adds programs P7–P13,
+> folds formal equivalence into P5, and moves the toggle counter from P4 to
+> P5. The keystone below still holds on reach but no longer monopolizes the
+> critical path; #77 joined it there. Read this document first, then the
+> amendment.
+
 ## 1. The reframe
 
 `docs/standards-landscape.md` §13 ranks 304 standards by **fit with JLS's current

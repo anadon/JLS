@@ -1,10 +1,11 @@
 ---
 name: Scientific task
 about: A rigorously framed unit of work — defect, improvement, or investigation — with a falsifiable hypothesis and evidence-backed completion criteria
+labels: ["tier:task"]
 ---
 
 <!--
-  Template: scientific-task v3 (2026-08)
+  Template: scientific-task v4 (2026-08)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
@@ -39,7 +40,18 @@ about: A rigorously framed unit of work — defect, improvement, or investigatio
      re-doing it. Re-derive any drifted line numbers before trusting them;
      a stale citation is not evidence.
   7. Labels are not applied automatically for API-filed issues: set
-     `bug` or `enhancement` explicitly, matching the corpus.
+     `bug` or `enhancement` explicitly, matching the corpus, plus the
+     tier label `tier:task`.
+  8. Tier model — task → feature → capstone (edge-legality matrix in
+     the feature template). This is the task tier: edges to tasks and
+     features only, never to capstones. A task is part_of at most ONE
+     feature (composition, single-owner); blocked_by/blocks are
+     ordering edges and must keep the cross-tier graph a DAG; related
+     is reference only. The machine block in Status & Dependencies is
+     the source of truth for graph assembly. During execution this
+     body is FROZEN — deviations are `STATUS:`/`REFUTED:`/`HANDOFF:`/
+     `SUPERSEDED:` comments (rules 2 and 6), and executors reconstruct
+     state from comments, never from checkbox state.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -79,19 +91,23 @@ about: A rigorously framed unit of work — defect, improvement, or investigatio
 <!-- The front matter an executor reads before touching anything. Keep it
      at the top, not buried in §12 (Related Work) — an issue picked up cold
      must not miss a blocker (a fix hardening code another issue is about
-     to delete is wasted work).
-       - Evidence commit — the single SHA every §2 (Observations) file:line
-         is pinned to. Cite by permalink at this commit (rule 1); if HEAD
-         has moved, re-derive the citations before trusting them.
-       - Blocked by — issues that must land first, each with the one-line
-         reason it blocks. "None" if free-standing.
-       - Blocks — issues waiting on this one.
-       - Supersession check — confirm this work has not already shipped
-         (rule 6); if it has, close as superseded rather than re-doing it. -->
+     to delete is wasted work). The machine block is the source of truth
+     for graph assembly (rule 8); annotate each blocked_by entry with the
+     one-line reason it blocks, as a YAML comment. Evidence commit is the
+     single SHA every §2 (Observations) file:line is pinned to — cite by
+     permalink at this commit (rule 1); if HEAD has moved, re-derive
+     citations before trusting them. Before executing, run the
+     supersession check: confirm the work has not already shipped
+     (rule 6); if it has, close as superseded rather than re-doing it. -->
 
-- Evidence commit:
-- Blocked by:
-- Blocks:
+```yaml
+tier: task
+evidence_commit:        # SHA all §2 citations are pinned to
+part_of_feature:        # at most one feature issue number, or blank if free-standing
+blocked_by: []          # ordering: tasks or features that must land first (never capstones)
+blocks: []              # ordering: tasks or features waiting on this one
+related: []             # reference only — never blocking
+```
 
 ## 1. Background & Prior Work
 
@@ -283,7 +299,8 @@ about: A rigorously framed unit of work — defect, improvement, or investigatio
 - [ ] `mvn verify` green (tests + SpotBugs, warnings-as-errors)
 - [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification
 - [ ] No changes outside the scope of §8 (Method); adjacent work discovered en route is filed as new issues
-- [ ] Every "Blocked by" in Status & Dependencies has landed, or the dependency was explicitly waived with a reason
+- [ ] Every `blocked_by` entry in Status & Dependencies has landed, or the dependency was explicitly waived with a reason
+- [ ] If `part_of_feature` is set: landing reported on that feature with a `STATUS:` comment, including any contract deviations the feature's plan must reconcile
 - [ ] Not superseded: the §2 (Observations) failures still reproduced at pickup (rule 6); citations re-derived if HEAD had moved
 - [ ] Every decision in Open Questions & Decisions Needed is resolved (or explicitly deferred), none left blocking
 - [ ] ...

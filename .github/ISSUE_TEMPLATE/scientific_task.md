@@ -5,7 +5,7 @@ labels: ["tier:task"]
 ---
 
 <!--
-  Template: scientific-task v4 (2026-08)
+  Template: scientific-task v5 (2026-08)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
@@ -28,8 +28,9 @@ labels: ["tier:task"]
      observation that discriminates between the candidate answers.
   4. Atomic scope. One hypothesis cluster per issue; where scopes touch a
      sibling issue, §12 (Related Work) states which issue owns which fix.
-  5. Cross-references cite number and name — "§11 (Threats to Validity)" —
-     never a bare section number.
+  5. Cross-references cite the section NAME — "§ Threats to Validity" —
+     optionally with its number. The name is canonical: numbers drift
+     across template versions, names do not. Never a bare number.
   6. Executors: before step one of §8 (Method), re-verify every
      observation in §2 (Observations) at your checkout. If one fails to
      reproduce, or a hypothesis is refuted
@@ -42,16 +43,42 @@ labels: ["tier:task"]
   7. Labels are not applied automatically for API-filed issues: set
      `bug` or `enhancement` explicitly, matching the corpus, plus the
      tier label `tier:task`.
-  8. Tier model — task → feature → capstone (edge-legality matrix in
+  8. Tier model — task → feature → capstone (canonical edge rules in
      the feature template). This is the task tier: edges to tasks and
      features only, never to capstones. A task is part_of at most ONE
-     feature (composition, single-owner); blocked_by/blocks are
-     ordering edges and must keep the cross-tier graph a DAG; related
-     is reference only. The machine block in Status & Dependencies is
-     the source of truth for graph assembly. During execution this
-     body is FROZEN — deviations are `STATUS:`/`REFUTED:`/`HANDOFF:`/
-     `SUPERSEDED:` comments (rules 2 and 6), and executors reconstruct
-     state from comments, never from checkbox state.
+     feature (composition, single-owner); the task's part_of_feature
+     field is authoritative for ownership — a feature roster that
+     disagrees must REPLAN, not win. The ORDERING GRAPH is blocked_by/
+     blocks edges PLUS composition edges read child-before-parent (a
+     parent cannot close before its children land); that combined
+     graph must stay a DAG. Consequences: a task must never be
+     blocked_by its own parent feature (deadlock), and `blocks` aimed
+     at a feature gates that feature's integration/close-out only —
+     never its children's start; block the children directly to gate
+     them. The machine block in Status & Dependencies is the source of
+     truth for the edges it can express.
+  9. Amendment & comment protocol. This body may be edited, but only
+     together with an `AMENDED:` comment stating what changed, why,
+     and on what evidence — a silent edit is invisible to executors,
+     who reconstruct state from the machine block plus the prefixed
+     comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
+     `AMENDED:` / `WAIVED:`). Post each such comment on THIS issue
+     and, when part_of_feature is set, mirror the same comment on that
+     feature. Bookkeeping is exempt from the AMENDED requirement:
+     ticking a Method or Completion checkbox whose backing evidence is
+     already recorded in a comment or PR, and re-pinning
+     evidence_commit after re-deriving citations. Checkbox state
+     remains a convenience rendering — the recorded evidence is the
+     record.
+  10. Waivers. A completion criterion may be waived only via a
+     `WAIVED:` comment naming the reason AND the successor issue that
+     now tracks the dropped obligation (or stating explicitly why no
+     successor is needed). A criterion skipped without a WAIVED
+     comment leaves the issue unclosable.
+
+  Decision/spike tasks ("evaluate X", "decide Y") use this template
+  with "verdict recorded in <named doc/section>" as the completion
+  contract; sections that presuppose a code defect are N/A (rule 2).
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -103,9 +130,11 @@ labels: ["tier:task"]
 ```yaml
 tier: task
 evidence_commit:        # SHA all §2 citations are pinned to
-part_of_feature:        # at most one feature issue number, or blank if free-standing
-blocked_by: []          # ordering: tasks or features that must land first (never capstones)
+part_of_feature: none   # owning feature number, or the literal `none` if free-standing
+blocked_by: []          # ordering: tasks or features that must land first
+                        #   (never capstones, never this task's own parent feature)
 blocks: []              # ordering: tasks or features waiting on this one
+                        #   (a feature here = gates its close-out, not its children)
 related: []             # reference only — never blocking
 ```
 
@@ -299,8 +328,10 @@ related: []             # reference only — never blocking
 - [ ] `mvn verify` green (tests + SpotBugs, warnings-as-errors)
 - [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification
 - [ ] No changes outside the scope of §8 (Method); adjacent work discovered en route is filed as new issues
-- [ ] Every `blocked_by` entry in Status & Dependencies has landed, or the dependency was explicitly waived with a reason
+- [ ] Every `blocked_by` entry in Status & Dependencies has landed, or the dependency was waived per rule 10
 - [ ] If `part_of_feature` is set: landing reported on that feature with a `STATUS:` comment, including any contract deviations the feature's plan must reconcile
+- [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs
+- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10)
 - [ ] Not superseded: the §2 (Observations) failures still reproduced at pickup (rule 6); citations re-derived if HEAD had moved
 - [ ] Every decision in Open Questions & Decisions Needed is resolved (or explicitly deferred), none left blocking
 - [ ] ...

@@ -5,7 +5,7 @@ labels: ["tier:capstone"]
 ---
 
 <!--
-  Template: capstone v1 (2026-08)
+  Template: capstone v2 (2026-08)
 
   TIER MODEL — task → feature → capstone; the full edge-legality
   matrix is in the feature template and applies unchanged. The
@@ -16,15 +16,32 @@ labels: ["tier:capstone"]
     - Ordering between capstones is expressed through features: a
       later capstone's features are blocked_by the earlier capstone.
       No direct capstone-to-capstone edges.
-    - Features may be blocked_by capstones, so cycles are possible
-      across tiers: verify the ordering graph stays a DAG before
-      adding any feature to the required set.
+    - The ordering graph (defined in the feature template: blocked_by/
+      blocks plus composition edges read child-before-parent) must
+      stay a DAG. Features may be blocked_by capstones, so cross-tier
+      cycles are possible: before adding a feature to the required
+      set, walk that feature's machine-block edges outward and confirm
+      no path returns to this capstone; record the walk in the filing
+      or REPLAN comment.
+    - Ordering edges touching this capstone are recorded HERE as well
+      as on the feature: when a feature declares blocked_by this
+      capstone, mirror it in `blocks` below. When a REPLAN adds a
+      feature to requires_features, re-derive ordering — any capstone
+      that had to precede this one must block the newly added feature
+      too, or the inter-capstone ordering silently lapses.
 
-  RULES — rules 1–7 of the scientific-task template and rules A–D of
-  the feature template apply unchanged (evidence at a pinned commit;
-  machine block as source of truth; living body with `REPLAN:`
-  comments; state reconstructed from prefixed comments, never from
-  checkboxes; explicit labels, here `tier:capstone`). In addition:
+  RULES — the scientific-task template's rules 1–7 apply adapted to
+  this tier (evidence at a pinned commit; no padding; observable
+  claims; atomic scope; section-NAME citations resolved against THIS
+  template's headings; executor re-verification; explicit labels, here
+  `tier:capstone`), together with task rules 9–10 (comment protocol
+  and waivers, with `REPLAN:` in place of `AMENDED:`) and feature
+  rules A–D read against this template: the machine block below, in
+  Status & Required Features, is the source of truth for the edges it
+  can express (A); the not-a-folder test is rule F below (B); living
+  body, plan changes REPLAN-logged, bookkeeping exempt (C); state
+  reconstructed from prefixed comments mirrored between this capstone
+  and its features, never from checkboxes (D). In addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§2, Required Feature Set & Sufficiency): why exactly these
@@ -53,8 +70,13 @@ labels: ["tier:capstone"]
 ```yaml
 tier: capstone
 evidence_commit:        # SHA the roster and acceptance claims are pinned to
-requires_features: []   # composition — the closed required set (rule E),
-                        # e.g. [78, 84]; planned-but-unfiled as "TBD: <one-line scope>"
+requires_features: []   # composition — the closed required set (rule E), FILED numbers only
+planned_features: []    # one-line scopes for required features not yet filed;
+                        #   resolve each to a number via REPLAN when it is filed
+blocked_by: []          # ordering: features that must land before this capstone closes,
+                        #   beyond the required set (mirror of the feature-side edge)
+blocks: []              # ordering: features waiting on this capstone (mirror of each
+                        #   feature's blocked_by entry naming this capstone)
 related: []             # reference only — never blocking
 ```
 
@@ -120,9 +142,11 @@ flowchart TD
 
 ## Completion Criteria (Definition of Done)
 
-- [ ] Every entry in `requires_features` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set
+- [ ] Every entry in `requires_features` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set; `planned_features` empty (each resolved to a filed issue or descoped)
+- [ ] Every cited evidence document and permalink resolves on the default branch at close
+- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10)
 - [ ] Every criterion in §4 (System-Level Acceptance Criteria) verified end-to-end at a named commit; command and output recorded in a closing comment
 - [ ] The §1 (Outcome Statement) walk-through executed at that commit and its transcript recorded
 - [ ] Every risk in §3 (Cross-Feature Integration Risks) checked at system scale; outcome recorded
-- [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A of the feature template)
+- [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A, as read against this template)
 - [ ] ...

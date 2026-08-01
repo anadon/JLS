@@ -131,3 +131,9 @@ value migration.
   done right versus 178.32 ns/op done naively for 32-digit balanced-ternary
   addition, verified against a per-digit reference on 200,000 random vector
   pairs (`07-mvl-determination.md` §1.4, `Add3Swar.java`).
+- **Cost reconciliation.** Band 8-12 mw. Tasks named for it: TASK-0056,
+  TASK-0059, TASK-0060, totalling 5.5 wk. The named tasks are the leading,
+  dividable slices of this feature, not the whole of it; the residual has no
+  task id, because the registry's task space is closed at TASK-0112. Do not
+  read 5.5 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0056, TASK-0060.

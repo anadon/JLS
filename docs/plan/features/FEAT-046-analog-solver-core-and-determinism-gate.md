@@ -24,7 +24,7 @@ a real external analog simulator.
 | CAP-12 | required | a photodiode front end, a high-pass, a gain stage and a filter are continuous-time; nothing about the monitor works without a solver |
 | CAP-14 | required | parity with an external analog simulator is a claim about a solver; the differential corpus is this feature's own acceptance evidence |
 | CAP-11 | required | an audio input front end below the mixed-signal stage is not usefully demonstrable; the preamp is analog |
-| CAP-10 | beneficial | the no-solver tier needs nothing here. The drawn R-2R ladder and LC reconstruction filter need the solver *and* its linear fast path |
+| CAP-10 | required | the no-solver tier needs nothing here. The drawn R-2R ladder and LC reconstruction filter need the solver *and* its linear fast path |
 
 ## Prerequisite features
 
@@ -164,3 +164,9 @@ tie-break with it.
   variable, unpinned in CI).
 - The optional-external-tool CI idiom to reuse:
   `test/jls/hdl/GhdlCompileTest.java:33-36`.
+- **Cost reconciliation.** Band 17.5-26 mw. Tasks named for it: TASK-0097,
+  TASK-0098, TASK-0099, TASK-0100, totalling 8 wk. The named tasks are the
+  leading, dividable slices of this feature, not the whole of it; the residual
+  has no task id, because the registry's task space is closed at TASK-0112. Do
+  not read 8 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0100.

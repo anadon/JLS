@@ -176,3 +176,10 @@ All verified at `b54e6ee`.
   refusal, `docs/parity-contract.md` owns what may differ, `docs/batch-interface.md`
   owns the `-t` grammar and its stability promise, `docs/capability-roadmap/`
   owns the programs.
+- **Cost reconciliation.** Marginal band 12-22 mw. Its 10 required features
+  sum to 67-101 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

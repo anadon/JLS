@@ -164,3 +164,10 @@ instructor and a hiring manager.
 - Do not restate: simulation semantics live in `docs/simulation-semantics.md`;
   the file format in `docs/file-format.md`; program ownership in
   `docs/capability-roadmap/`.
+- **Cost reconciliation.** Marginal band 31-46 mw. Its 11 required features
+  sum to 86-132 mw and its 8 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

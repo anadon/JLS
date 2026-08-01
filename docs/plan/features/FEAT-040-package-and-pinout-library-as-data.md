@@ -133,3 +133,6 @@ added when CAP-05 asks.
   reported together, named by line number).
 - D8 - reimplementation and absorption are a cost question, and GPL-3.0-or-later
   can absorb GPL-compatible sources with their notices: `BRIEF.md` §13 D8.
+- **Cost reconciliation.** Band 4-8 mw. Tasks named for it: TASK-0055,
+  TASK-0085, totalling 4 wk. Band and task sum agree; no reconciliation is
+  needed. Shared tasks counted once at the task level: TASK-0055, TASK-0085.

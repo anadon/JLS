@@ -23,6 +23,7 @@ between a multi-hour run being merely slow and being impossible.
 | CAP-03 | required | Same shape at ternary scale; the dump is larger per cycle because the manifest carries radix |
 | CAP-06 | required | Grading hundreds of submissions multiplies the parse cost by the submission count |
 | CAP-09 | required | Verification means running the same design many times; a quadratic parse taxes every one |
+| CAP-17 | beneficial | superlinear load and whole-run materialization are already defects at current scale and become the ceiling at partition scale |
 
 ## Prerequisite features
 
@@ -131,3 +132,8 @@ extraction.
 - Sequencing: decision D6, `BRIEF.md` §12.
 - Normative batch and VCD surface (not restated here):
   `docs/batch-interface.md`, `docs/vcd-interop.md`.
+- **Cost reconciliation.** Band 2-3 mw. Tasks named for it: TASK-0008,
+  TASK-0009, TASK-0010, totalling 3.8 wk. The task sum exceeds the band
+  because 1 of these tasks are shared with other features (TASK-0008) and
+  their weeks are counted once, at the task level, not once per consuming
+  feature.

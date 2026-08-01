@@ -23,7 +23,7 @@ citing the absence of the work.
 
 ---
 
-## TABLE 1 - CAPSTONES (17)
+## TABLE 1 - CAPSTONES (18)
 
 Priority 1 is the maintainer's named highest. Priorities 2-17 rank by
 demo-value-per-week and by real sequencing constraints, not by enthusiasm.
@@ -32,7 +32,7 @@ the cost with no shared features, where the corpus states one.
 
 | id | title | outcome (one line) | pri | marginal cost | standalone | source of band |
 |---|---|---|---:|---|---|---|
-| **CAP-00** | Deferred maintenance: a decade of it | The known-defect backlog at HEAD is closed, the silent-data-loss paths are loud, and the quadratic paths, unfloored packages and untimed CI lanes stop being a tax on every later capstone. | **1** | **24-42 mw** | 24-42 mw | derived here from HEAD; no prior phase scoped it |
+| **CAP-00** | Deferred maintenance: a decade of it | The known-defect backlog at HEAD is closed, the silent-data-loss paths are loud, and the quadratic paths, unfloored packages and untimed CI lanes stop being a tax on every later capstone. | **1** | **35-62 mw** | 35-62 mw | derived here from HEAD; raised from 24-42 mw by the link phase when FEAT-008 was regraded required (see the LINK-PHASE RECORD) |
 | **CAP-13** | KiCad interoperation parity | A JLS schematic leaves as a KiCad netlist that `pcbnew` accepts without hand editing, and a KiCad project round-trips its net structure back. | 2 | 6-12 mw | 12-22 mw | `08-views-determination.md` §2.1 (KiCad `.net` PRINT 1-2 wk over the package table) + Tier 3 (5-8) |
 | **CAP-15** | HDL toolchain parity (Yosys, Verilator, Icarus, GHDL) | Every design JLS can draw exports to and imports from the four open HDL toolchains, cross-checked in CI, with hierarchy intact. | 3 | 12-22 mw | 20-34 mw | `09-format-adoption-plan.md` §3 data 1 (3-4) + data 2 (4-6) + mapper increments + Wave 3 |
 | **CAP-05** | A manufacturable PCB | A student's drawn circuit becomes a board file a fab house accepts, with a BOM and a manufacturability report. | 4 | 11-19 mw | 15-23 mw | `10-capstone-plan.md` §3.1 (C5) |
@@ -49,6 +49,7 @@ the cost with no shared features, where the corpus states one.
 | **CAP-07** | Tape out a student design on a shuttle | A student design goes out on a Tiny Tapeout / SKY130 shuttle and comes back as a chip. | 15 | 11.5-18 mw | 14-24 mw | `08-views-determination.md` §5 "the Tiny Tapeout path (11.5-18 wk)" |
 | **CAP-02** | Boot a CLI-only Linux distribution and run commands | A JLS circuit boots Linux to a shell and a transcript of typed commands is byte-compared against a reference. | 16 | 32-58 mw | 155-250 mw | `10-capstone-plan.md` §3.1 (C2) |
 | **CAP-03** | A ternary CPU with N-ary subcircuits and a custom kernel | A drawn balanced-ternary CPU runs a hand-written monitor and prints to a live console, verified per retired instruction. Stretch: DOOM. | 17 | 28-45 mw | 98-161 mw | `10-capstone-plan.md` §3.1 (C3, ARCH-B) |
+| **CAP-17** | Distributed execution for cluster and grid deployments | A design too large for one machine is partitioned, simulated across hosts and observed as one design, and a campaign of independent runs is dispatched across a grid and aggregated. | 18 | 38-62 mw | 62-98 mw | added at maintainer request after this registry closed; band is the sum of its four new features |
 
 **Sequencing note that is not a priority claim.** CAP-02 and CAP-03 rank last on
 priority but their spine features (F037-F042) are the most expensive in the plan
@@ -58,7 +59,7 @@ last", not "fund last".
 
 ---
 
-## TABLE 2 - FEATURES (53)
+## TABLE 2 - FEATURES (57)
 
 `Owner` is a committed capability-roadmap program (`docs/capability-roadmap/`,
 P1-P13) or `UNOWNED`. UNOWNED is information, not an objection: it means the
@@ -121,6 +122,10 @@ row, `-` otherwise.
 | **FEAT-051** | P2P session foundation and shared session v1 | Two installs establish a verified encrypted session over one circuit, with membership, presence and snapshot sync. | 12-18 mw | UNOWNED | - | CAP-01, 06 |
 | **FEAT-052** | CRDT replication, collaborative undo and security hardening | Concurrent edits converge without a server, undo is per-user, and network input cannot introduce an element type the peer did not allow. | 14-22 mw | P11 | - | CAP-01, 06 |
 | **FEAT-053** | Test-vector front end and autograding at scale | A GUI front end over the batch test engine, plus a batch harness and machine-readable reports for grading many submissions. | 9-15 mw | P5 | - | CAP-06, 09, 04, 16 |
+| **FEAT-054** | Flat, compact element representation | Runtime state lives in flat primitive arrays indexed by element, cutting the per-element footprint by about an order of magnitude. | 12-20 mw | UNOWNED | - | CAP-17 |
+| **FEAT-055** | Partitioned model and streaming elaboration | A design exists as parts that load independently, with boundary nets named identically on both sides of every cut. | 10-16 mw | UNOWNED | - | CAP-17 |
+| **FEAT-056** | Distributed simulation transport and barrier protocol | Partitions in separate processes exchange boundary events under a discipline whose result does not depend on partition count or arrival order. | 10-18 mw | UNOWNED | - | CAP-17 |
+| **FEAT-057** | Campaign execution and artifact aggregation | Independent runs are dispatched across workers and aggregated into one report that does not depend on scheduling. | 6-8 mw | UNOWNED | - | CAP-17 |
 
 Also in the plan but deliberately NOT a separate feature: formal property
 checking and equivalence (P5's formal half, 14-22 mw). It is folded into
@@ -413,13 +418,110 @@ that no author re-mints a merged item:
 
 ## COUNTS
 
-**17 capstones (CAP-00 through CAP-16, no gaps).**
-**53 features (FEAT-001 through FEAT-053, no gaps).**
+**18 capstones (CAP-00 through CAP-17, no gaps).**
+**57 features (FEAT-001 through FEAT-057, no gaps).**
 **112 tasks (TASK-0001 through TASK-0112, no gaps).**
-**34 open GitHub issues, all 34 mapped, none untouched.**
+**34 open GitHub issues, all 34 mapped, none untouched.** See `issue-map.md`
+for the per-issue mapping and the plan-ids-with-no-issue list.
 
 Cross-checks a reader can run: every feature in Table 2 is referenced by at
 least one capstone's consumed-by column; every task in Table 3 names at least
 one feature in its enables column; every FEAT id named in Table 3 exists in
 Table 2; every CAP id named in Table 2 exists in Table 1. The id space is
 closed - no author may mint an id outside these ranges.
+
+---
+
+## LINK-PHASE RECORD
+
+Everything below was decided by the link pass, after the seventeen capstone
+documents, the feature documents and the 112 task documents were authored in
+parallel against this registry. It is recorded here so that no later author
+re-derives it or reverses it silently.
+
+### The grade rule
+
+Where a capstone and a feature disagreed on whether the feature is *required*
+or *beneficial*, **the consuming capstone's grade is authoritative** and the
+feature was edited to match. The reason is structural: a capstone declares its
+own acceptance test and therefore knows what it must have, while a feature is
+written without sight of every consumer's acceptance test. Nineteen
+disagreements were reconciled this way. One reversal went the other direction
+and is recorded as an editorial decision rather than as the rule:
+
+- **CAP-00 / FEAT-008 was promoted, not demoted.** CAP-00 graded the editor
+  decomposition *beneficial* on the grounds that its 12-20 mw is booked against
+  CAP-01 and CAP-04. That reads wrong on the maintainer's highest-priority
+  capstone, whose four largest constituent issues (#84, #91, #162, #101) are
+  exactly that feature. CAP-00's grade was raised to **required** and its band
+  raised from 24-42 mw to **35-62 mw**, which is the sum of its nine required
+  features (FEAT-001 1-2, 002 1-2, 003 2-4, 005 2-3, 006 3-5, 007 3-6, 008
+  12-20, 009 5-10, 011 6-10). FEAT-010 and FEAT-012 remain *beneficial* on
+  CAP-00 with their cost booked against CAP-06 and CAP-01.
+
+### The feature-side task table
+
+A feature's `## Prerequisite tasks` table lists **every task whose `## Enables
+features` names that feature** - which includes tasks that *exercise* the
+feature rather than precede it. Those rows are labeled "Consuming task" in the
+why column. The alternative, a table that means "strictly precedes", would have
+broken the both-directions rule for five real edges (TASK-0080 and TASK-0082 on
+FEAT-034, TASK-0084 on FEAT-032, TASK-0111 and TASK-0112 on FEAT-034).
+
+### Cost arithmetic
+
+Every capstone and every feature now carries a `**Cost reconciliation.**` line
+as the last bullet of its `## Evidence` section, printing the arithmetic rather
+than averaging it away. Two facts hold across the whole plan and are stated once
+here:
+
+1. **A feature's band is not the sum of its tasks.** Tasks are the leading,
+   dividable slices of a feature - what one person can sit down and finish -
+   and the task id space is closed at TASK-0112. Where the band exceeds the task
+   sum, the residual is real work with no id. Where the task sum exceeds the
+   band, tasks are shared between features and counted once at the task level.
+2. **A capstone's marginal band is not the sum of its required features.** Most
+   required features are shared spine, booked once against whichever capstone
+   funds them first. "Marginal" is the incremental cost given the spine is
+   funded; the standalone figure is the other end of that range.
+
+### CAP-17 and FEAT-054 through FEAT-057
+
+CAP-17 was added by the maintainer after this registry closed. The link phase
+kept it, normalized its three tables to the capstone template, and created the
+four feature documents its prerequisite table demanded. Consequences a reader
+must know:
+
+- Its priority is recorded as **18**, meaning "appended, not yet ranked". It
+  collided with CAP-11 at priority 12 as authored. CAP-17's own open decision 5
+  records the ranking as a maintainer decision.
+- **FEAT-054 through FEAT-057 have no tasks.** The task id space is closed and
+  the link phase did not mint any. Each of the four says so in its
+  `## Prerequisite tasks` table rather than leaving it blank. Minting them is a
+  maintainer decision.
+- **FEAT-054 overlaps FEAT-030 and FEAT-026 and must not be funded twice.** The
+  flat array layout is the same code the engine constant-factor work needs;
+  whichever is funded first pays for it and the other is re-scoped. This is
+  stated in FEAT-054, in FEAT-030's consumed-by row and in CAP-17.
+
+### Citation corrections
+
+- **#233, #242 and #244 are pull requests, not issues.** Documents citing #233
+  (the zero-margin coverage-floor flake) and #244 (the floor reconciliation and
+  the 0.50 headless line milestone) as issues were corrected to say "PR". No
+  cited number was fabricated: every number cited anywhere in `docs/plan/` was
+  resolved against the live tracker - 34 open issues, 127 closed issues, and
+  three pull requests.
+- **#84's title contains a stale measurement.** The title says `SimpleEditor` is
+  4,119 lines; it is 5,852 at HEAD. Citing the title verbatim is correct;
+  citing 4,119 as a current measurement is not.
+
+### Duplicates
+
+The pairwise similarity scan over all 187 documents found **no two documents at
+the same level describing the same work**. This registry did its job: parallel
+authors did not duplicate. One duplicate was created and removed before the link
+pass (a second FEAT-004 written under the title "shared net-partition IR", which
+its author deleted in favor of the interchange author's copy). The one remaining
+near-duplicate is a deliberate overlap, recorded above: FEAT-054 against
+FEAT-030.

@@ -37,7 +37,7 @@ Precisely what changes:
    `VcdExportGoldenTest.clockedRegisterVcdMatchesGoldenByteForByte` does not
    move.
 5. **Display.** `src/jls/edit/Trace.java:77-78` (`scaleFactor`, simulation time
-   units per pixel) and the tic labelling that reads it at `:263,276` render
+   units per pixel) and the tic labeling that reads it at `:263,276` render
    axis labels as physical time when a timebase is present and as bare ticks
    when it is not. Element delay dialogs gain the unit suffix in their label
    text only - the stored attribute stays an integer tick count.

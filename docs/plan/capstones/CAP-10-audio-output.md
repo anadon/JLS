@@ -145,3 +145,10 @@ a host door survive review - in week 4 rather than week 25.
 - Decision D8 (BRIEF §13): "orchestrate, never reimplement" is revoked as
   policy; ngspice is BSD and absorbable into a GPL-3.0-or-later tree, so the
   drawn rung's solver is a cost judgment.
+- **Cost reconciliation.** Marginal band 2-3 mw. Its 4 required features sum
+  to 28.5-42 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

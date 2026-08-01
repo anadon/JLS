@@ -20,9 +20,10 @@ claims cross-platform behavior is claiming it from one platform's evidence.
 | CAP-00 | required | Zero jobs across six workflow files carry a timeout today, and the platform lanes are not required checks |
 | CAP-02 | required | A boot run is 1.66-1.72 h at HEAD constants; it has no lane and would not fit the required gate |
 | CAP-03 | required | The ternary acceptance run has the same shape and the same lane requirement |
-| CAP-06 | beneficial | A grading batch over many submissions is a long-run-lane workload, not a required-gate workload |
+| CAP-06 | required | A grading batch over many submissions is a long-run-lane workload, not a required-gate workload |
 | CAP-09 | required | Differential and property runs are long by construction |
 | CAP-14 | required | The ngspice differential corpus is explicitly a nightly comparison, which is this lane |
+| CAP-17 | beneficial | multi-host and multi-partition tests do not fit the short blocking lane and need a lane that can host them |
 
 ## Prerequisite features
 
@@ -100,7 +101,8 @@ to be required; the plan cannot assert the setting from the tree.
 ## Risks
 
 - **Promoting a lane to required makes its flakiness everyone's problem.** The
-  measured precedent is issue #233: zero-margin per-package coverage floors
+  measured precedent is PR #233 - a pull request, not an issue: zero-margin
+  per-package coverage floors
   flake across the JDK matrix (`jls.collab.op` branch measured 0.768 against a
   0.770 floor on JDK 26), which is why every floor now keeps a point of
   headroom (`pom.xml:400-408`). The same discipline applies to the platform
@@ -128,5 +130,9 @@ to be required; the plan cannot assert the setting from the tree.
   (macOS).
 - Required-gate duration 141 s, six-hour hosted ceiling, no Git LFS and no
   large-fixture policy, 15.87 bytes per word: `BRIEF.md` §7.
-- Floor-flake precedent (#233) and the headroom convention: `pom.xml:400-408`.
+- Floor-flake precedent (PR #233, not an issue) and the headroom convention: `pom.xml:400-408`.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S14.
+- **Cost reconciliation.** Band 3-6 mw. Tasks named for it: TASK-0015,
+  TASK-0016, TASK-0017, TASK-0018, totalling 4.7 wk. Band and task sum agree;
+  no reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0016, TASK-0018.

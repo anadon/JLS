@@ -130,3 +130,8 @@ worth documenting rather than hiding.
   (`FORMAT_VERSION = 2`), `src/jls/Circuit.java:765-769`.
 - The committed roadmap's own statement of the item, which prices it inside the
   timing program: `docs/capability-roadmap/README.md:405-406`.
+- **Cost reconciliation.** Band 2-3 mw. Tasks named for it: TASK-0101,
+  totalling 1.5 wk. The named tasks are the leading, dividable slices of this
+  feature, not the whole of it; the residual has no task id, because the
+  registry's task space is closed at TASK-0112. Do not read 1.5 wk as the
+  feature.

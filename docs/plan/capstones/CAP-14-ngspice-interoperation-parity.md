@@ -151,3 +151,10 @@ Two parts, and the first exists today.
   domain today, `docs/parity-contract.md` owns what may and may not differ
   across two implementations of one machine, `docs/machine-calibration.md` owns
   measured constants, `docs/capability-roadmap/` owns program boundaries.
+- **Cost reconciliation.** Marginal band 10-16 mw. Its 7 required features
+  sum to 50.5-79 mw and its 1 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

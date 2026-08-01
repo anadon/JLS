@@ -131,3 +131,6 @@ programmatic construction, not `jls.api`.
   save-format text and re-parse it.
 - Cost: `10-capstone-plan.md` §2.1 rows S4 (1-2 wk, score 2.67) and S13
   (3-5 wk); merged per the registry's deduplication record item 4.
+- **Cost reconciliation.** Band 4-7 mw. Tasks named for it: TASK-0037,
+  TASK-0038, totalling 4 wk. Band and task sum agree; no reconciliation is
+  needed. Shared tasks counted once at the task level: TASK-0037, TASK-0038.

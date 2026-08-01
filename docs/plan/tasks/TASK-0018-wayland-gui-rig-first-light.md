@@ -86,8 +86,9 @@ toolchain it already drives (`ci.yml:406-413`):
 
 Recorded decisions, closed, cite as such: **#100** (the Wayland spot-check
 prediction P2 that `docs/wayland-desktop-checklist.md:1-14` implements),
-**#105** (the JBR release choice), **#244** (the master build breakage named in
-the promotion record).
+**#105** (the JBR release choice), and **PR #244** (the coverage-floor
+reconciliation whose measurement record the promotion record cites). #244 is a
+**pull request, not an issue**; cite it as such.
 
 ## Notes
 

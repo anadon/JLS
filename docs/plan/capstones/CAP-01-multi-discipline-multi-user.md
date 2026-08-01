@@ -75,6 +75,7 @@ It proves convergence is real before any view work or any GUI work is funded.
 | FEAT-050 | Module runtime consumed: extension points and providers | The per-view palette and per-view element contributions dispatch through the registry that boots and is not read | beneficial |
 | FEAT-030 | Engine constant factors: the semantics-preserving stack | Three simultaneous editors on one circuit raise per-edit cost; K9's floor is continuous | beneficial |
 | FEAT-031 | The per-instance fidelity toggle and its boundary harness | Lets a team member run one subcircuit behaviorally while another edits it structurally | beneficial |
+| FEAT-004 | Shared net-partition IR with stable net naming | Per-view geometry and cross-probing address artifacts by net; a net whose name moves between saves is not addressable by a peer | beneficial |
 
 ## Related GitHub issues
 
@@ -172,3 +173,10 @@ It proves convergence is real before any view work or any GUI work is funded.
 - Marginal band 30-46 mw assumes the spine features (FEAT-003, 013, 014, 015)
   are funded by CAP-00 and the format epoch; standalone 49-75 mw is the same set
   with nothing shared (`10-capstone-plan.md` §3.1, row C1).
+- **Cost reconciliation.** Marginal band 30-46 mw. Its 10 required features
+  sum to 94-146 mw and its 5 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

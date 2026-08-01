@@ -151,3 +151,10 @@ all three parity claims on a small design before any package data is acquired.
   `docs/simulation-semantics.md` owns the value domain, `ARCHITECTURE.md` owns
   the layering, `docs/capability-roadmap/` owns program boundaries and their
   cost bands.
+- **Cost reconciliation.** Marginal band 6-12 mw. Its 8 required features
+  sum to 29-50 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

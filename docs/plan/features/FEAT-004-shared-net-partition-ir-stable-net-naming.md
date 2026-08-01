@@ -19,14 +19,15 @@ external tool that annotates a JLS net by name can key on it.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-01 | beneficial | per-view geometry and cross-probing address artifacts by net, and a net whose name moves is not addressable |
-| CAP-02 | required | a boot-length differential comparison against an external simulator is keyed on signal names that must survive an edit |
-| CAP-03 | required | the same, for the ternary machine, plus a radix manifest keyed per net |
+| CAP-02 | beneficial | a boot-length differential comparison against an external simulator is keyed on signal names that must survive an edit |
+| CAP-03 | beneficial | the same, for the ternary machine, plus a radix manifest keyed per net |
 | CAP-04 | required | the breadboard consistency check asserts that two views describe the same nets, which presupposes one partition |
 | CAP-05 | required | a board netlist is a net partition; two partitioners would let the schematic and the board disagree |
 | CAP-07 | required | the shuttle wrapper binds top-level ports to nets, and a shuttle submission is not re-runnable if the names move |
 | CAP-13 | required | net isomorphism against KiCad's recovered partition is the parity assertion itself |
 | CAP-14 | required | a SPICE deck's nodes are nets; ngspice comparison is per node |
 | CAP-15 | required | hierarchy goldens must be generated once, over names that do not move |
+| CAP-17 | required | partition boundaries are cut on nets; a net must keep an identity that survives being cut and must name the same signal on both sides of the cut |
 
 ## Prerequisite features
 
@@ -134,3 +135,6 @@ study.
 - Do not restate: `docs/simulation-semantics.md` owns the value domain,
   `docs/vcd-interop.md` owns the waveform profile, `docs/file-format.md` owns
   identifier rules, `ARCHITECTURE.md` owns package layering.
+- **Cost reconciliation.** Band 2-3 mw. Tasks named for it: TASK-0007,
+  TASK-0008, totalling 3 wk. Band and task sum agree; no reconciliation is
+  needed. Shared tasks counted once at the task level: TASK-0008.

@@ -87,7 +87,7 @@ migration report and JLS-generated layout. **3-5 mw**, and it establishes claims
 ## Open decisions
 
 1. **Absorb the source tool's port geometry, or re-derive it?**
-   *Recommendation: absorb, and record the licence consequence.* Reason:
+   *Recommendation: absorb, and record the license consequence.* Reason:
    connectivity in `.circ` is purely geometric and depends on per-component port
    offset rules with hard-coded special cases; clean-room reimplementation from
    readable source is both a worse legal position and far more error-prone in
@@ -96,7 +96,7 @@ migration report and JLS-generated layout. **3-5 mw**, and it establishes claims
    upstream is asked first.
 2. **Ask upstream whether "GPLv3" means "or later"?** *Recommendation: yes, and
    before any absorption.* Reason: the wording is ambiguous enough that the
-   answer could be yes, and the question costs one message against a licence
+   answer could be yes, and the question costs one message against a license
    change that is otherwise permanent.
 3. **Does JLS commit to coordinate preservation?** *Recommendation: not in
    increment 1 - generate layout, then add coordinate preservation as its own
@@ -131,7 +131,7 @@ migration report and JLS-generated layout. **3-5 mw**, and it establishes claims
 - K4. If any XXE vector lacks a covering test, do not ship the reader. A
   circuit file that can reach the filesystem breaks the premise the whole
   project rests on, and this is the first place shipped code parses XML.
-- K5. If upstream's licence answer is "GPL-3.0-only" and the maintainer is
+- K5. If upstream's license answer is "GPL-3.0-only" and the maintainer is
   unwilling to give up "or later", the geometry-absorption route is closed and
   the capstone must be re-costed on the re-derivation route, which is both more
   expensive and more defect-prone - not quietly attempted at the absorbed price.
@@ -162,8 +162,15 @@ migration report and JLS-generated layout. **3-5 mw**, and it establishes claims
   is run.** This is the largest disagreement between two evidence documents in
   this capstone's inputs.
 - The four named risks - geometric connectivity, the name collision, XXE, and
-  the licence - are `09-format-adoption-plan.md` Wave 8 and §8 hazard 2.
+  the license - are `09-format-adoption-plan.md` Wave 8 and §8 hazard 2.
 - Do not restate: `docs/file-format.md` owns the `.jls` container and its
   versioning, `docs/simulation-semantics.md` owns what a circuit means once it
   is imported, `CONTRIBUTING.md` owns the coverage and mutation bars every new
   package inherits, `docs/capability-roadmap/` owns program boundaries.
+- **Cost reconciliation.** Marginal band 8-16 mw. Its 6 required features
+  sum to 24-44 mw and its 6 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

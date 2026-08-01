@@ -130,3 +130,8 @@ additionally needs package and footprint data (FEAT-040).
   uniquified, plus 1.5-2 for deduplication.
 - Do not restate: `docs/hdl-support-research.md` owns the staged HDL plan,
   `ARCHITECTURE.md` owns the exporter's place in the layering.
+- **Cost reconciliation.** Band 4-6 mw. Tasks named for it: TASK-0043,
+  TASK-0044, totalling 3.5 wk. The named tasks are the leading, dividable
+  slices of this feature, not the whole of it; the residual has no task id,
+  because the registry's task space is closed at TASK-0112. Do not read 3.5 wk
+  as the feature.

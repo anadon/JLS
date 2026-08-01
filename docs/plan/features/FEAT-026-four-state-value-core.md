@@ -23,7 +23,7 @@ also the storage substrate every later value-domain feature rides on.
 | CAP-15 | required | the toolchains produce X and Z; a two-state comparator must either model them or declare every X a mismatch |
 | CAP-03 | required | supplies the three-plane record whose spare code points radix 3 and 4 occupy |
 | CAP-05 | beneficial | contention and undriven nets on a real board are not "0" |
-| CAP-02 | beneficial | a drawn RV32 machine's bus behavior is honest only with real resolution |
+| CAP-02 | required | a drawn RV32 machine's bus behavior is honest only with real resolution |
 
 ## Prerequisite features
 
@@ -127,3 +127,8 @@ Landing them in the same commit destroys both signals.
   dependency).
 - Spine placement and the cheap first row: `10-capstone-plan.md` §2.1 S2
   (0.2 wk, score 15.0).
+- **Cost reconciliation.** Band 28-36 mw. Tasks named for it: TASK-0056,
+  TASK-0057, totalling 4 wk. The named tasks are the leading, dividable slices
+  of this feature, not the whole of it; the residual has no task id, because
+  the registry's task space is closed at TASK-0112. Do not read 4 wk as the
+  feature.

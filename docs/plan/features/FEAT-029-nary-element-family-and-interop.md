@@ -126,3 +126,7 @@ for exactly the same reason.
   and 4 (3-4 wk); §1.3 (the two-release-cycle finding); §4.4 (new types, never
   attributes on existing types); §4.5 (the palette and the green test that
   currently forbids disclosure).
+- **Cost reconciliation.** Band 9-13 mw. Tasks named for it: TASK-0060,
+  TASK-0061, TASK-0062, TASK-0083, TASK-0105, totalling 10 wk. Band and task
+  sum agree; no reconciliation is needed. Shared tasks counted once at the
+  task level: TASK-0060, TASK-0083, TASK-0105.

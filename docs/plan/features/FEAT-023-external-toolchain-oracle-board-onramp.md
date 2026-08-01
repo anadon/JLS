@@ -135,3 +135,7 @@ program.
   `docs/parity-contract.md` owns what may and may not differ,
   `docs/vcd-interop.md` owns the waveform profile and the live-co-simulation
   decision.
+- **Cost reconciliation.** Band 6-12 mw. Tasks named for it: TASK-0044,
+  TASK-0051, TASK-0052, TASK-0100, totalling 6.5 wk. Band and task sum agree;
+  no reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0044, TASK-0052, TASK-0100.

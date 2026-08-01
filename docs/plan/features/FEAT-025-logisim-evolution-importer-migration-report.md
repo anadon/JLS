@@ -17,7 +17,7 @@ difference between "JLS is a better tool" and "you can bring your labs".
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-16 | required | this feature is that capstone's spine |
-| CAP-06 | required | a course is its assignments; migrating the circuits without the graded material migrates half a course |
+| CAP-06 | beneficial | a course is its assignments; migrating the circuits without the graded material migrates half a course |
 | CAP-04 | beneficial | the incumbent's through-hole and 74-series material is the readiest source of the part data a breadboard view needs |
 
 ## Prerequisite features
@@ -146,3 +146,8 @@ special cases that matter.
 - Do not restate: `ARCHITECTURE.md` owns the layering, `SECURITY.md` owns the
   untrusted-input premise, `docs/file-format.md` owns what a valid JLS circuit
   is.
+- **Cost reconciliation.** Band 6-12 mw. Tasks named for it: TASK-0054,
+  TASK-0055, totalling 4 wk. The named tasks are the leading, dividable slices
+  of this feature, not the whole of it; the residual has no task id, because
+  the registry's task space is closed at TASK-0112. Do not read 4 wk as the
+  feature.

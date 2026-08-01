@@ -144,3 +144,10 @@ the difference between "grading is a string diff" and "grading is a verdict".
   `docs/reproducibility.md` and `docs/windows-msi-determinism.md` own installer
   determinism, `docs/keyboard-a11y-verification.md` owns accessibility
   verification.
+- **Cost reconciliation.** Marginal band 12-20 mw. Its 10 required features
+  sum to 65-107 mw and its 7 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

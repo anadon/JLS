@@ -123,3 +123,6 @@ shape FEAT-001 exists to prevent.
 - Do not restate: `docs/simulation-semantics.md` owns the value domain and what
   a driver may assert; `docs/standards-adoption/06-fpga-constraint-formats.md`
   owns the constraint formats' own direction vocabularies.
+- **Cost reconciliation.** Band 2-4 mw. Tasks named for it: TASK-0049,
+  totalling 2 wk. Band and task sum agree; no reconciliation is needed. Shared
+  tasks counted once at the task level: TASK-0049.

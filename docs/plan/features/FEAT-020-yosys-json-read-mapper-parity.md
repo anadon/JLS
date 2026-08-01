@@ -128,3 +128,8 @@ duplicate it.
 - Do not restate: `docs/hdl-support-research.md` owns the staged import plan and
   the restricted-cell rationale; issue #61 owns the per-cell acceptance
   criteria.
+- **Cost reconciliation.** Band 4-8 mw. Tasks named for it: TASK-0047,
+  TASK-0048, totalling 3.5 wk. The named tasks are the leading, dividable
+  slices of this feature, not the whole of it; the residual has no task id,
+  because the registry's task space is closed at TASK-0112. Do not read 3.5 wk
+  as the feature.

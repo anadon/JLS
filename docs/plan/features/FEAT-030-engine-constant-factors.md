@@ -22,6 +22,7 @@ that fits a nightly lane and one that does not.
 | CAP-09 | beneficial | verification means running the same design many times |
 | CAP-01 | beneficial | three simultaneous editors on one circuit raise per-edit cost, and K9's floor is continuous |
 | CAP-04 | beneficial | the physical simulation runs the same machine at package granularity, so event cost is the throughput budget |
+| CAP-17 | required | the flat array layout is this feature approached from the capacity side rather than the throughput side; funding it twice is the failure mode |
 
 ## Prerequisite features
 
@@ -140,3 +141,9 @@ quoting it wrong.
 - The no-partial-credit gate: kill criterion K3, `03-determination.md` §9.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S24 (12-20 wk).
 - Separation from FEAT-005: registry deduplication record item 16.
+- **Cost reconciliation.** Band 12-20 mw. Tasks named for it: TASK-0023,
+  TASK-0026, TASK-0056, TASK-0063, TASK-0064, totalling 8.5 wk. The named
+  tasks are the leading, dividable slices of this feature, not the whole of
+  it; the residual has no task id, because the registry's task space is closed
+  at TASK-0112. Do not read 8.5 wk as the feature. Shared tasks counted once
+  at the task level: TASK-0023, TASK-0026, TASK-0056.

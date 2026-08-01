@@ -94,8 +94,10 @@ fail should be assumed vacuous".
 | 78 | Element descriptor and registry: self-describing elements, a compiler-enforced authoring contract, capability interfaces, one Orientation enum | informs — its registry half already shipped and already retired the hand-enumerated toolbar factory #84 named; the plan must not re-plan that |
 
 Recorded decisions, closed, cite as such: **#37** (the dead-popup bug the
-dispatcher pattern produced), **#233** (the zero-margin floor flake),
-**#159** (the coverage ratchet), **#244** (the 0.50 headless LINE milestone).
+dispatcher pattern produced)
+and **#159** (the coverage ratchet). **PR #233** (the zero-margin floor flake)
+and **PR #244** (the 0.50 headless LINE milestone) are **pull requests, not
+issues**; cite them as such.
 
 ## Notes
 
@@ -114,7 +116,7 @@ dispatcher pattern produced), **#233** (the zero-margin floor flake),
   honest, and to raise it as headless-tractable extractions land.
 - **Leave the documented epsilon.** `CONTRIBUTING.md:83-89`: a
   `jls.collab.op` BRANCH floor of 0.770 set from JDK 25 measured 0.768 on
-  JDK 26 and turned the build red for no code reason (#233). BRANCH jitters
+  JDK 26 and turned the build red for no code reason (PR #233). BRANCH jitters
   most.
 - **`include` patterns must be dot-form.** `CONTRIBUTING.md:104-105`: the
   slash form silently matches nothing, so a wrong `jls/edit` rule would look

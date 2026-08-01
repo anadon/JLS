@@ -114,3 +114,8 @@ feature - record them, and route the ones that matter to FEAT-013.
   `BRIEF.md` §13; `src/jls/elem/ElementRegistry.java:38-77`.
 - Sequencing: decision D6, `BRIEF.md` §12.
 - Normative format reference (not restated here): `docs/file-format.md`.
+- **Cost reconciliation.** Band 1-2 mw. Tasks named for it: TASK-0001,
+  TASK-0003, TASK-0004, TASK-0054, totalling 4.9 wk. The task sum exceeds the
+  band because 2 of these tasks are shared with other features (TASK-0001,
+  TASK-0054) and their weeks are counted once, at the task level, not once per
+  consuming feature.

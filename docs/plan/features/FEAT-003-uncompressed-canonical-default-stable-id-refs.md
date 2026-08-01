@@ -20,7 +20,7 @@ writes, with no separate export step and no second serialization.
 |---|---|---|
 | CAP-00 | required | the diff amplification is a measured HEAD defect and the largest single tax on every reviewed change |
 | CAP-01 | required | replicas must save byte-identical files, and a merge that cannot be reviewed cannot be trusted |
-| CAP-05 | beneficial | the schematic under review and the emitted board netlist must both diff cleanly for a board review to exist |
+| CAP-05 | required | the schematic under review and the emitted board netlist must both diff cleanly for a board review to exist |
 | CAP-06 | required | an instructor distributing a skeleton and hashing submissions needs the canonical text to be the file |
 | CAP-13 | beneficial | a KiCad round trip is reviewed as a diff of the JLS source, not only of the emitted artifact |
 | CAP-16 | beneficial | a migrated `.circ` lands as a readable first commit rather than an opaque blob |
@@ -128,3 +128,6 @@ table is the governing split.
 - Do not restate: `docs/file-format.md` owns the container grammar and the
   `FORMAT` header; `docs/reproducibility.md` owns determinism claims;
   `docs/capability-roadmap/lf-06-diff-merge-vcs.md` owns P11's program boundary.
+- **Cost reconciliation.** Band 2-4 mw. Tasks named for it: TASK-0005,
+  TASK-0006, totalling 3 wk. Band and task sum agree; no reconciliation is
+  needed. Shared tasks counted once at the task level: TASK-0005.

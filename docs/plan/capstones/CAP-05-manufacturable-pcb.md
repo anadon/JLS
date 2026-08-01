@@ -149,3 +149,10 @@ packing pass, stable-id refdes and the netlist emitter, checked by assertions
   `cap-c5-pcb.md` §5.4, §6.
 - Do not restate: `docs/file-format.md`, `docs/simulation-semantics.md`,
   `ARCHITECTURE.md`, and `docs/capability-roadmap/` own their own claims.
+- **Cost reconciliation.** Marginal band 11-19 mw. Its 11 required features
+  sum to 46-78 mw and its 4 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

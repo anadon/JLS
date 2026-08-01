@@ -23,8 +23,8 @@ bar and a new canvas would spend the entire bundle headroom.
 | CAP-04 | required | The breadboard canvas is a second canvas inside a coverage budget that does not exist yet |
 | CAP-10 | beneficial | An audio-bearing circuit needs its palette and its panes, which is editor surface |
 | CAP-11 | beneficial | Same |
-| CAP-12 | required | The heart-rate demo is a mixed analog/digital canvas with a per-view palette |
-| CAP-16 | required | A migration target a Logisim user can actually drive is an accessibility and editor claim |
+| CAP-12 | beneficial | The heart-rate demo is a mixed analog/digital canvas with a per-view palette |
+| CAP-16 | beneficial | A migration target a Logisim user can actually drive is an accessibility and editor claim |
 
 ## Prerequisite features
 
@@ -113,7 +113,7 @@ per-edit cost is 58 ms at 10,000 elements and 552 ms at 100,000. Replacing it is
   since the issue was filed. The plan should say plainly that deferring this
   raises its own cost.
 - **A coverage floor set before decomposition can be set too high to move.**
-  TASK-0019 sets it at the *measured* value with headroom, per the #233 lesson
+  TASK-0019 sets it at the *measured* value with headroom, per the PR #233 lesson
   recorded at `pom.xml:400-408`; setting it aspirationally produces a red build
   nobody can green.
 - **GUI tests are the classic flake source.** They are also the only way to
@@ -141,3 +141,9 @@ per-edit cost is 58 ms at 10,000 elements and 552 ms at 100,000. Replacing it is
 - Element type count for criterion 5: `src/jls/elem/ElementRegistry.java:38-77`.
 - Governance bar this work must meet: `CONTRIBUTING.md`; 93.0/92.0/84.5 JaCoCo
   package aggregate plus 80/82 PIT (`BRIEF.md` §8).
+- **Cost reconciliation.** Band 12-20 mw. Tasks named for it: TASK-0018,
+  TASK-0019, TASK-0020, TASK-0021, TASK-0069, TASK-0105, totalling 10.5 wk.
+  The named tasks are the leading, dividable slices of this feature, not the
+  whole of it; the residual has no task id, because the registry's task space
+  is closed at TASK-0112. Do not read 10.5 wk as the feature. Shared tasks
+  counted once at the task level: TASK-0018, TASK-0021, TASK-0069, TASK-0105.

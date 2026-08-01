@@ -40,6 +40,10 @@ it and the harness must reject it, so the harness cannot pass vacuously.
 | TASK-0073 | The differential comparator, exclusion set and sync points | The comparator, the enumerated per-bit exclusion set under its own ratchet, and the digest comparison at declared sync points |
 | TASK-0070 | The machine package and its reference runner | Shared with FEAT-033: the parity counterparty must exist before there is a comparison |
 | TASK-0069 | Transcript capture, replay and the console pane | Shared with FEAT-032 and FEAT-008: host input logged in retirement index, which is what makes a run with input reproducible |
+| TASK-0080 | The headless boot run and its transcript comparison | Consuming task, shared with FEAT-038: the first end-to-end use of the harness at boot length, and the run that proves the exclusion set is not hiding a real disagreement |
+| TASK-0082 | The ternary reference emulator and assembler | Consuming task, shared with FEAT-039: the second counterparty the harness is pointed at, which is what shows the harness is not specific to one instruction set |
+| TASK-0111 | The test panel, the grading harness and its reports | Consuming task, shared with FEAT-053: grading reports are the comparator's output rendered for a course |
+| TASK-0112 | Property checking, equivalence and coverage over an unfamiliar design | Consuming task, shared with FEAT-053: equivalence between two designs is this comparator applied to a pair of designs rather than to a design and a reference |
 
 ## Acceptance criteria
 
@@ -150,3 +154,8 @@ the harness is proven, but none of them blocks it.
   (verification, proof and coverage), `docs/capability-roadmap/AMENDMENT.md:155`.
 - Normative event model, unchanged by this feature:
   `docs/simulation-semantics.md`.
+- **Cost reconciliation.** Band 10-16 mw. Tasks named for it: TASK-0069,
+  TASK-0070, TASK-0072, TASK-0073, TASK-0080, TASK-0082, TASK-0111, TASK-0112,
+  totalling 16 wk. Band and task sum agree; no reconciliation is needed.
+  Shared tasks counted once at the task level: TASK-0069, TASK-0070,
+  TASK-0073, TASK-0080, TASK-0082, TASK-0111, TASK-0112.

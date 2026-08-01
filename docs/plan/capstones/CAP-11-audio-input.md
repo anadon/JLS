@@ -143,3 +143,10 @@ it.
 - Decision D7 (BRIEF §12) on the one-door-at-invocation grant and on circuit
   libraries as data; decision D8 (BRIEF §13) on reimplementation as a cost
   judgment.
+- **Cost reconciliation.** Marginal band 2-3 mw. Its 4 required features sum
+  to 28.5-42 mw and its 2 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

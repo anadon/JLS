@@ -96,7 +96,8 @@ ids in the promotion commit alongside the 20-run stability record.
 
 ## Notes
 
-- **The #233 flake is the specific hazard.** `CONTRIBUTING.md:83-89` records a
+- **The PR #233 flake is the specific hazard** (#233 is a pull request, not an
+  issue).** `CONTRIBUTING.md:83-89` records a
   `jls.collab.op` BRANCH floor of 0.770, set from a JDK 25 run, measuring
   0.768 on JDK 26 and turning the build red for no code reason. Cross-platform
   jitter is larger than cross-JDK jitter, so the floors need at least the
@@ -139,7 +140,7 @@ ids in the promotion commit alongside the 20-run stability record.
   promotion drops `continue-on-error` and the maintainer then registers the
   check name.
 - `pom.xml:261-296` — the two surefire executions and the display retry count.
-- `CONTRIBUTING.md:83-99` — the #233 zero-margin incident, the epsilon rule,
+- `CONTRIBUTING.md:83-99` — the PR #233 zero-margin incident, the epsilon rule,
   and "raise floors from the canonical JDK only" / "from headless numbers
   only".
 - 25 classes carry `@Tag("display")` at HEAD, all under `test/jls/ui/`.

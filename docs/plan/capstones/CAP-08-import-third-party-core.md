@@ -66,6 +66,7 @@ importer imports real designs".
 | FEAT-023 | External toolchain differential oracle and board on-ramp | the external toolchain is the oracle that says the import behaves like the source | required |
 | FEAT-024 | Black-box HDL component and external co-simulation | the parts of a core that cannot be realized can still run, in the external simulator | beneficial |
 | FEAT-015 | Headless `CircuitOp` layer | import constructs a circuit from a program and must not need a `Graphics` | required |
+| FEAT-038 | The drawn structural RV32 machine | a drawn machine of known shape and known cost is what an imported third-party core is compared against for size, speed and behavior | beneficial |
 
 ## Related GitHub issues
 
@@ -152,3 +153,10 @@ importer imports real designs".
 - Do not restate: `docs/hdl-support-research.md` and
   `docs/standards-adoption/` own the interoperability landscape;
   `docs/simulation-semantics.md` owns execution semantics.
+- **Cost reconciliation.** Marginal band 14-24 mw. Its 13 required features
+  sum to 110-171 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

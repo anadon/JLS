@@ -18,7 +18,7 @@ the origin.
 |---|---|---|
 | CAP-08 | required | a third-party core that imports as an unreadable pile has not been imported in any sense a person cares about |
 | CAP-15 | required | round-trip parity with the toolchains includes the direction that produces a drawing |
-| CAP-16 | beneficial | migrated designs need placement wherever the source geometry cannot be preserved |
+| CAP-16 | required | migrated designs need placement wherever the source geometry cannot be preserved |
 
 ## Prerequisite features
 
@@ -133,3 +133,8 @@ what makes that a new engine rather than a new subsystem.
   already spent.
 - Do not restate: issue #62 owns the rubric's derivation and the engine
   adjudication; `ARCHITECTURE.md` owns the package layering.
+- **Cost reconciliation.** Band 4-8 mw. Tasks named for it: TASK-0048,
+  TASK-0050, totalling 3.5 wk. The named tasks are the leading, dividable
+  slices of this feature, not the whole of it; the residual has no task id,
+  because the registry's task space is closed at TASK-0112. Do not read 3.5 wk
+  as the feature.

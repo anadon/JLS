@@ -211,3 +211,10 @@ golden, the guest image and the guard that everything else is measured against.
   FEAT-033 and FEAT-038 are **UNOWNED**.
 - Marginal band 32-58 mw versus standalone 155-250 mw (`10-capstone-plan.md`
   §3.1, row C2) - the 4.8x gap is the whole argument for the shared spine.
+- **Cost reconciliation.** Marginal band 32-58 mw. Its 16 required features
+  sum to 159-253 mw and its 5 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

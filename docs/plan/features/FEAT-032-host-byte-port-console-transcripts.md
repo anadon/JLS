@@ -22,7 +22,7 @@ the arrival of interactivity.
 | CAP-03 | required | the monitor program's output and the QDOS-like console are the demo; TASK-0084 writes to this element |
 | CAP-04 | beneficial | a breadboard SAP-1 can print its accumulator instead of being read off a display |
 | CAP-06 | beneficial | autograding a submission on what it printed needs a transcript, not a screenshot |
-| CAP-09 | required | the differential comparison against a reference machine is a comparison of transcripts (TASK-0073) |
+| CAP-09 | beneficial | the differential comparison against a reference machine is a comparison of transcripts (TASK-0073) |
 
 ## Prerequisite features
 
@@ -39,6 +39,7 @@ the arrival of interactivity.
 | TASK-0067 | The host byte port seam | The sealed seam, its permits, the invocation-time grant and the session-boundary ratchet |
 | TASK-0068 | The console element | The three-address polled serial element that the guest software talks to |
 | TASK-0069 | Transcript capture, replay and the console pane | Deterministic replay, the goldens-in-live-mode ratchet, and the GUI pane |
+| TASK-0084 | The monitor program | Consuming task, shared with FEAT-039: the first program written to talk to the console element, and the check that the seam is usable rather than merely present |
 
 ## Acceptance criteria
 
@@ -133,3 +134,9 @@ that was never recorded rather than reversing a normative clause.
 - Live co-simulation as currently documented: `docs/vcd-interop.md:19-24`.
 - Cost band and spine rank: `10-capstone-plan.md:618` (S22, 10-16 wk),
   `:961` (the console floor inside wave 5), `:973` (the ordering constraint).
+- **Cost reconciliation.** Band 10-16 mw. Tasks named for it: TASK-0067,
+  TASK-0068, TASK-0069, TASK-0084, totalling 8 wk. The named tasks are the
+  leading, dividable slices of this feature, not the whole of it; the residual
+  has no task id, because the registry's task space is closed at TASK-0112. Do
+  not read 8 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0069, TASK-0084.

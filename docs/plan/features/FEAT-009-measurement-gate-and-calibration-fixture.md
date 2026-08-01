@@ -21,8 +21,9 @@ the gate that keeps them honest.
 | CAP-00 | required | Deleting `riscv/` is a maintenance deliverable and this is what unblocks it |
 | CAP-02 | required | Every boot-duration figure the capstone quotes is owned here; without it the capstone's acceptance test has no budget |
 | CAP-03 | required | Same, at ternary radix, where the element census is different and must be re-measured rather than scaled |
-| CAP-08 | beneficial | An imported core's cost is predicted from these constants |
+| CAP-08 | required | An imported core's cost is predicted from these constants |
 | CAP-09 | required | A verification run's affordability is the whole question, and it is this arithmetic |
+| CAP-17 | required | every capacity and speedup claim divides by the per-element footprint and per-event cost this feature measures |
 
 ## Prerequisite features
 
@@ -150,3 +151,7 @@ counting logic elements as nodes and one pass instead of two.
 - The 4.6x derived-figure error made twice: `BRIEF.md` §13.
 - D5 (`riscv/` will be deleted): `BRIEF.md` §11.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S15.
+- **Cost reconciliation.** Band 5-10 mw. Tasks named for it: TASK-0016,
+  TASK-0022, TASK-0023, TASK-0024, TASK-0025, TASK-0026, totalling 8.5 wk.
+  Band and task sum agree; no reconciliation is needed. Shared tasks counted
+  once at the task level: TASK-0016, TASK-0023, TASK-0026.

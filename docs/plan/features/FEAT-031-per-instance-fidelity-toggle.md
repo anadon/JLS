@@ -22,6 +22,7 @@ large design bringable-up one block at a time.
 | CAP-01 | beneficial | lets a team member run one subcircuit behaviorally while another edits it structurally |
 | CAP-04 | beneficial | bring the board up one module at a time against the schematic behavior |
 | CAP-09 | beneficial | parity as a property of a boundary is how an unfamiliar subcircuit is verified in isolation |
+| CAP-17 | beneficial | partitioning is far more tractable when a subtree can be bound behavioral at the boundary; the two mechanisms compose |
 
 ## Prerequisite features
 
@@ -142,3 +143,7 @@ mechanism.
   attribute costs no format version: `BRIEF.md` §13.
 - The null-test stop condition: kill criterion K4, `03-determination.md` §9.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S19 (5-8 wk).
+- **Cost reconciliation.** Band 5-8 mw. Tasks named for it: TASK-0023,
+  TASK-0065, TASK-0066, TASK-0079, totalling 7 wk. Band and task sum agree; no
+  reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0023, TASK-0066, TASK-0079.

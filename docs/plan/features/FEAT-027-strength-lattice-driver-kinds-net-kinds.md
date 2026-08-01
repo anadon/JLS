@@ -121,3 +121,7 @@ reasonably fund one without the other.
 - Board practice as the consumer: `cap-c4-breadboard.md` and `cap-c5-pcb.md`
   (the breadboard and PCB determinations) treat open-drain and pull-ups as
   ordinary content, not as an advanced feature.
+- **Cost reconciliation.** Band 6-9 mw. Tasks named for it: TASK-0049,
+  TASK-0057, TASK-0058, TASK-0093, totalling 8 wk. Band and task sum agree; no
+  reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0049, TASK-0057, TASK-0093.

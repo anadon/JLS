@@ -133,3 +133,10 @@ board-constraint emitter already solves.
 - Do not restate: `docs/standards-adoption/06-fpga-constraint-formats.md` owns
   the constraint-format landscape; `docs/capability-roadmap/` owns program
   boundaries; `ARCHITECTURE.md` owns the layering.
+- **Cost reconciliation.** Marginal band 11.5-18 mw. Its 6 required features
+  sum to 38.5-61 mw and its 2 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

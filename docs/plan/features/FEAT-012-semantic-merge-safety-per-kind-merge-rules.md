@@ -18,9 +18,9 @@ happened to do.
 
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
-| CAP-00 | required | silent corruption on a supported workflow is a defect, and the workflow is "two students on one lab" |
+| CAP-00 | beneficial | silent corruption on a supported workflow is a defect, and the workflow is "two students on one lab" |
 | CAP-01 | required | concurrent editing is merge by another name; a convergent replication layer that can converge onto a corrupt state has converged onto nothing |
-| CAP-06 | required | an instructor merging a skeleton update into student work must be told when it cannot be done |
+| CAP-06 | beneficial | an instructor merging a skeleton update into student work must be told when it cannot be done |
 
 ## Prerequisite features
 
@@ -130,3 +130,9 @@ this feature defines and the op layer must preserve.
 - Do not restate: `docs/file-format.md` owns the invariant list as specified,
   `docs/operation-layer.md` owns op semantics,
   `docs/collaborative-editing-research.md` owns the replication survey.
+- **Cost reconciliation.** Band 9-13 mw. Tasks named for it: TASK-0005,
+  TASK-0031, TASK-0032, totalling 5.5 wk. The named tasks are the leading,
+  dividable slices of this feature, not the whole of it; the residual has no
+  task id, because the registry's task space is closed at TASK-0112. Do not
+  read 5.5 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0005, TASK-0032.

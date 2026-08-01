@@ -18,9 +18,10 @@ between two people or two machines is a file copy.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-02 | required | a 1.66-1.72 h run that cannot be resumed is a run that cannot survive an interruption |
-| CAP-03 | required | makes a long structural run resumable and a boundary handover free |
+| CAP-03 | beneficial | makes a long structural run resumable and a boundary handover free |
 | CAP-06 | beneficial | a 300-submission grading run must survive a machine going away mid-batch |
 | CAP-09 | beneficial | a multi-hour verification run must survive a handover |
+| CAP-17 | required | a distributed run that cannot be suspended cannot be scheduled on a shared cluster, and partition state must be serializable to be moved |
 
 ## Prerequisite features
 
@@ -136,3 +137,9 @@ over.
   gap list.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S25 (10-17 wk,
   lowest score in the spine - required by two capstones and by nothing else).
+- **Cost reconciliation.** Band 10-17 mw. Tasks named for it: TASK-0014,
+  TASK-0066, TASK-0074, TASK-0075, totalling 6.5 wk. The named tasks are the
+  leading, dividable slices of this feature, not the whole of it; the residual
+  has no task id, because the registry's task space is closed at TASK-0112. Do
+  not read 6.5 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0014, TASK-0066.

@@ -175,3 +175,10 @@ downstream proportionally. A 328-line Java spike already produces the numbers.
   does **not** depend on this capstone. Analog, once it exists, improves CAP-04
   for free - the RC debounce network and the Schmitt or 555 clock compose at
   approximately zero marginal cost.
+- **Cost reconciliation.** Marginal band 11-16 mw. Its 6 required features
+  sum to 61.5-94 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

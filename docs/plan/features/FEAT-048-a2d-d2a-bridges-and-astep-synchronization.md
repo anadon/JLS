@@ -169,3 +169,8 @@ nonsense on every analog net.
   `src/jls/sim/Simulator.java:217` (the event-loop guard that never empties once
   a region is present); `src/jls/sim/BatchSimulator.java:568-570` (the two stop
   reasons this changes).
+- **Cost reconciliation.** Band 4-6 mw. Tasks named for it: TASK-0102,
+  totalling 2 wk. The named tasks are the leading, dividable slices of this
+  feature, not the whole of it; the residual has no task id, because the
+  registry's task space is closed at TASK-0112. Do not read 2 wk as the
+  feature.

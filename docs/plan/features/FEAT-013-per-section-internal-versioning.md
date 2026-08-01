@@ -23,7 +23,7 @@ makes a bulk binary payload expressible at all once the body is plain text.
 | CAP-02 | required | a kernel image and a multi-hour checkpoint cannot live in a plain-text body under the 64 MiB text cap |
 | CAP-03 | required | the same, plus a radix manifest that older readers must refuse rather than misread |
 | CAP-04 | required | breadboard geometry is a second view's section |
-| CAP-05 | beneficial | package and footprint bindings ride as an optional section rather than as element attributes |
+| CAP-05 | required | package and footprint bindings ride as an optional section rather than as element attributes |
 | CAP-16 | beneficial | a migration report and its provenance travel with the migrated file |
 
 ## Prerequisite features
@@ -129,3 +129,7 @@ edit does not invalidate every following byte.
 - Do not restate: `docs/file-format.md` owns the grammar and the version
   history; `docs/reproducibility.md` owns determinism claims; decision D3 in
   `BRIEF.md` §11 is the authority for the requirement itself.
+- **Cost reconciliation.** Band 4-7 mw. Tasks named for it: TASK-0033,
+  TASK-0034, TASK-0071, totalling 5.5 wk. Band and task sum agree; no
+  reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0034, TASK-0071.

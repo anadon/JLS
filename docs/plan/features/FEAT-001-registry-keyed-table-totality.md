@@ -112,3 +112,7 @@ sequenced behind the core extraction.
   implementations: `BRIEF.md` §13.
 - Cost and spine placement: `10-capstone-plan.md` §2.1 row S1.
 - Sequencing: decision D6, `BRIEF.md` §12.
+- **Cost reconciliation.** Band 1-2 mw. Tasks named for it: TASK-0001,
+  TASK-0002, totalling 2.1 wk. The task sum exceeds the band because 1 of
+  these tasks are shared with other features (TASK-0001) and their weeks are
+  counted once, at the task level, not once per consuming feature.

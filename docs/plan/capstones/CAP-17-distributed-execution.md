@@ -1,6 +1,6 @@
 # CAP-17 - Distributed execution for cluster and grid deployments
 
-**Status:** proposed | **Priority:** 12 | **Marginal cost:** 38-62 mw |
+**Status:** proposed | **Priority:** 18 | **Marginal cost:** 38-62 mw |
 **Standalone cost:** 62-98 mw
 
 ## Outcome
@@ -53,35 +53,36 @@ A campaign runner over the existing deterministic batch mode - job description,
 parallel dispatch, artifact collection, aggregate report - with
 `CampaignDeterminismTest` green at -j 1 versus -j N. No partitioning, no
 network, no model changes. It is immediately useful to CAP-06 (a course grades
-in parallel), CAP-09 (multi-seed verification) and the fault campaigns in
-FEAT-041's orbit, and it is not throwaway: the capacity axis needs the same job,
+in parallel) and to CAP-09 (multi-seed and fault-injection verification), and
+it is not throwaway: the capacity axis needs the same job,
 artifact and aggregation vocabulary.
 
 ## Prerequisite features
 
-| Feature | Why THIS capstone needs it | Grade |
-|---|---|---|
-| FEAT-054 flat off-heap element representation | The binding constraint. At the measured ~1,190-2,150 B/element live heap, 10^10 elements is ~15 TB and does not fit anywhere; at ~100 B/element it is ~1 TB, which is a large but purchasable single machine. This one change is worth ~15x capacity BEFORE any distribution, and it is the same plane-array representation measured in-tree at 4.32 ns/node against 22.01 for `BitSet[]`. Nothing else in this capstone is worth doing first. | required |
-| FEAT-055 partitioned model and streaming elaboration | The circuit must exist as parts that load independently. Today a design is one file under a 64 MiB decompressed cap (~695k elements - 10^10 is ~14,000x past it) and `finishLoad` is O(W^2). | required |
-| FEAT-056 distributed simulation transport and barrier protocol | Cross-partition event exchange with a synchronization discipline that is deterministic and independent of partition count and message arrival order. | required |
-| FEAT-057 campaign execution and artifact aggregation | The scale-out-runs axis; also the demo slice. | required |
-| FEAT-004 shared net partition IR, stable net naming | Partition boundaries are cut on nets; a net must have an identity that survives being cut and must name the same signal on both sides. | required |
-| FEAT-014 stable addressing and per-view geometry | A watched element inside partition 7 needs a name that does not depend on which partition it landed in. | required |
-| FEAT-006 simulation capacity and long-run ergonomics | The single-host capacity work this capstone extends; the byte-budget and long-run paths are shared. | required |
-| FEAT-030 engine constant factors | The flat representation is the same work from the other side; do not fund it twice. | required |
-| FEAT-009 measurement gate and calibration fixture | Every capacity and speedup claim here divides by constants this feature measures. No number in this capstone is trustworthy before it lands. | required |
-| FEAT-035 checkpoint and simulation state serialization | A distributed run that cannot be suspended cannot be scheduled on a shared cluster, and partition state must be serializable to move it. | required |
-| FEAT-007 CI long-run lanes, timeouts, platform parity | Multi-host tests need a lane that can host them. | beneficial |
-| FEAT-005 quadratic and materializing IO paths | O(n^2) load and whole-dump materialization are fatal at this scale; they are already defects at current scale. | beneficial |
-| FEAT-031 per-instance fidelity toggle | Partitioning is far more tractable when a subtree can be bound behavioral at the boundary; the two mechanisms compose. | beneficial |
+| FEAT-NNN | title | why THIS capstone needs it | required/beneficial |
+|---|---|---|---|
+| FEAT-054 | Flat, compact element representation | The binding constraint. At the measured per-element live heap the target design does not fit on any single system; the flat layout is worth roughly an order of magnitude of capacity before any distribution, and it is the same layout the throughput work needs. Nothing else here is worth doing first | required |
+| FEAT-055 | Partitioned model and streaming elaboration | The circuit must exist as parts that load independently; today a design is one file under a decompressed-text cap and its load walk is superlinear in wire ends | required |
+| FEAT-056 | Distributed simulation transport and barrier protocol | Cross-partition event exchange under a discipline whose result is independent of partition count and message arrival order | required |
+| FEAT-057 | Campaign execution and artifact aggregation | The scale-out-runs axis, and the demo slice that makes this capstone deliverable before any partitioning exists | required |
+| FEAT-004 | Shared net-partition IR with stable net naming | Partition boundaries are cut on nets; a net must have an identity that survives being cut and must name the same signal on both sides | required |
+| FEAT-014 | Stable addressing and per-view geometry in the shared model | A watched element inside one partition needs a name that does not depend on which partition it landed in | required |
+| FEAT-006 | Simulation capacity and long-run ergonomics | The single-host capacity work this capstone extends; the byte budget and the long-run paths are shared | required |
+| FEAT-030 | Engine constant factors: the semantics-preserving stack | The flat representation is the same work from the other side; do not fund it twice | required |
+| FEAT-009 | The measurement gate and a tracked calibration fixture | Every capacity and speedup claim here divides by constants this feature measures. No number in this capstone is trustworthy before it lands | required |
+| FEAT-035 | Checkpoint and simulation-state serialization | A distributed run that cannot be suspended cannot be scheduled on a shared cluster, and partition state must be serializable to move it | required |
+| FEAT-007 | CI long-run lanes, timeouts and cross-platform parity | Multi-host tests need a lane that can host them | beneficial |
+| FEAT-005 | Quadratic and materializing I/O paths eliminated | Superlinear load and whole-dump materialization are fatal at this scale; they are already defects at current scale | beneficial |
+| FEAT-031 | The per-instance fidelity toggle and its boundary harness | Partitioning is far more tractable when a subtree can be bound behavioral at the boundary; the two mechanisms compose | beneficial |
 
 ## Related GitHub issues
 
-| Issue | Relationship |
-|---|---|
-| no issue | The distributed-execution capability has no tracker representation. CAP-17 was added at maintainer request after the registry was fixed; an issue should be filed before any task here starts, per CONTRIBUTING.md. |
-| #84 decompose SimpleEditor | overlaps - the flat representation touches model internals the editor reads directly |
-| #77 headless core (closed) | depends on - the partitioned model must be constructible and simulable with no GUI present |
+| # | title | relationship |
+|---:|---|---|
+| - | Distributed execution for cluster and grid deployments | **no issue** - CAP-17 was added at maintainer request after the registry closed; an issue should be filed before any work here starts |
+| 232 | Simulation hot path: per-signal `java.util.BitSet` allocation and bit-by-bit conversion churn the GC; evaluate a value-typed (long,width) signal representation | overlaps - the per-signal half of the representation change FEAT-054 carries through to the element array |
+| 84 | Decompose `SimpleEditor`: 4,119 lines, a 9-state mouse machine, a 305-line `source==` dispatcher that already caused #37, and whole-circuit undo snapshots | overlaps - the flat representation touches model internals the editor reads directly |
+| 77 | Extract a headless `jls.core`: the simulator base class imports Swing, `Circuit` holds an editor reference, and `JLSInfo` is a global mutable hub | depends on, **closed** - a partition must be constructible and simulable with no graphical toolkit present |
 
 ## Open decisions
 
@@ -105,6 +106,14 @@ artifact and aggregation vocabulary.
    abstraction and its `LoopbackTransport`/`ChaosTransport` test doubles rather
    than introducing a second networking stack. Reason: it exists, it is tested,
    and the socket-confinement ArchUnit rule already names that package.
+
+5. **Where does CAP-17 rank against the seventeen commissioned capstones?**
+   Recommendation: **unranked until the campaign demo slice ships.** Reason: the
+   maintainer commissioned seventeen capstones and added this one afterwards
+   without ranking it. Priority 18 in the header means "appended, not yet
+   ranked", not "least important" - the demo slice alone is worth more per week
+   to CAP-06 and CAP-09 than several higher-ranked items, and the capacity axis
+   is worth less than any of them until FEAT-054 is measured.
 
 ## Kill criteria
 
@@ -151,3 +160,10 @@ artifact and aggregation vocabulary.
   1-5 MHz on machines costing millions. A distributed software simulator at that
   scale would be doing something the incumbents do not, which is either the
   differentiator or the signal that the workload belongs on different hardware.
+- **Cost reconciliation.** Marginal band 38-62 mw. Its 10 required features
+  sum to 81-134 mw and its 3 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

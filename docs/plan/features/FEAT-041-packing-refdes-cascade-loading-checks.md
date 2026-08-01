@@ -150,3 +150,8 @@ depend on a search; determinism is worth more than one spare 74LS04.
   `src/jls/Circuit.java:479-485`, seeded in that order by
   `src/jls/sim/Simulator.java:151,196`.
 - The error-aggregation idiom: `src/jls/hdl/board/PinBindings.java:36-55`.
+- **Cost reconciliation.** Band 5-8 mw. Tasks named for it: TASK-0078,
+  TASK-0086, TASK-0087, TASK-0088, TASK-0093, totalling 9.5 wk. The task sum
+  exceeds the band because 2 of these tasks are shared with other features
+  (TASK-0078, TASK-0093) and their weeks are counted once, at the task level,
+  not once per consuming feature.

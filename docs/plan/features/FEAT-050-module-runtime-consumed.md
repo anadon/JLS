@@ -16,7 +16,7 @@ a lab or a research fork can add an element or an exporter without forking JLS.
 
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
-| CAP-01 | required | per-view palettes and per-view element contributions must dispatch through the registry, and the op-observer notch must actually fan out |
+| CAP-01 | beneficial | per-view palettes and per-view element contributions must dispatch through the registry, and the op-observer notch must actually fan out |
 | CAP-06 | beneficial | a course ships its own element or exporter as a module rather than a fork |
 | CAP-16 | beneficial | the migration importer is exactly the shape of an out-of-tree contribution |
 | CAP-02 | beneficial | the device subsystem is hosted in the module runtime that boots and is unread |
@@ -119,3 +119,8 @@ catalog test fails, which is the desired behavior.
   `:137-144`.
 - Hot/cold plane rule: `docs/grand-architecture.md` §6 (`:314-342`).
 - Cost: `10-capstone-plan.md` §2.1 row S8 (1-2 wk, score 1.33).
+- **Cost reconciliation.** Band 5-10 mw. Tasks named for it: TASK-0106,
+  TASK-0107, totalling 4 wk. The named tasks are the leading, dividable slices
+  of this feature, not the whole of it; the residual has no task id, because
+  the registry's task space is closed at TASK-0112. Do not read 4 wk as the
+  feature.

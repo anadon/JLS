@@ -19,7 +19,7 @@ own and defend.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-07 | beneficial | the shuttle flow is a synthesis flow, and speaking the synthesis tool's own netlist shortens it |
-| CAP-08 | required | the import path and the export path must agree; a writer is what makes the round trip assertable |
+| CAP-08 | beneficial | the import path and the export path must agree; a writer is what makes the round trip assertable |
 | CAP-13 | beneficial | reaches gate-level and SPICE-shaped consumers through the synthesis tool without a second lowering pass in JLS |
 | CAP-14 | beneficial | the SPICE deck a digital design hands to ngspice is produced by the synthesis tool from this format |
 | CAP-15 | required | parity with the toolchain means writing what it reads, not only reading what it writes |
@@ -127,3 +127,8 @@ dispatch.
 - Do not restate: `docs/hdl-support-research.md` owns the staged HDL plan and
   the tool-mediated routes; `docs/standards-adoption/` owns the format
   assessments.
+- **Cost reconciliation.** Band 3-4 mw. Tasks named for it: TASK-0045,
+  TASK-0046, TASK-0111, totalling 4.6 wk. The task sum exceeds the band
+  because 1 of these tasks are shared with other features (TASK-0111) and
+  their weeks are counted once, at the task level, not once per consuming
+  feature.

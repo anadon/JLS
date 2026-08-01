@@ -21,8 +21,9 @@ be attempted and a run that cannot.
 | CAP-00 | required | Four named defects at HEAD, none with an issue, all in the same file pair |
 | CAP-02 | required | A structural boot is 1.66-1.72 h and needs at least 12 MiB of guest RAM; every ceiling here is crossed by it |
 | CAP-03 | required | Same run shape at ternary radix; the monitor program needs a run that survives an interrupt |
-| CAP-06 | beneficial | A grading batch over hundreds of submissions needs a heartbeat and a clean interrupt more than it needs speed |
+| CAP-06 | required | A grading batch over hundreds of submissions needs a heartbeat and a clean interrupt more than it needs speed |
 | CAP-09 | required | Verification runs are long by construction; a silent event drop is a wrong answer, not a slow one |
+| CAP-17 | required | the single-host capacity work a distributed run extends; the byte budget and the long-run paths are shared |
 
 ## Prerequisite features
 
@@ -130,3 +131,7 @@ with FEAT-036 and sequences with it.
 - The unrelated 64 MiB file bound: `src/jls/FileAbstractor.java`
   (`MAX_CIRCUIT_TEXT_BYTES`, issue #38).
 - Normative event model (not restated here): `docs/simulation-semantics.md`.
+- **Cost reconciliation.** Band 3-5 mw. Tasks named for it: TASK-0011,
+  TASK-0012, TASK-0013, TASK-0014, totalling 4 wk. Band and task sum agree; no
+  reconciliation is needed. Shared tasks counted once at the task level:
+  TASK-0013, TASK-0014.

@@ -223,3 +223,10 @@ built. The CPU and the monitor are the other 23-40 weeks.
   verdict led with "zero mentions across 944 tracked files", which is a
   measurement of what JLS has never offered. Its survey evidence stands; its
   verdict was re-derived as a path and a cost.
+- **Cost reconciliation.** Marginal band 28-45 mw. Its 17 required features
+  sum to 172-265 mw and its 5 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

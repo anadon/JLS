@@ -124,3 +124,8 @@ feature; it is required for the sample rate to have a unit.
   `src/` today, so the policy this feature sets is the first one.
 - The live co-simulation clause that must be reconciled rather than contradicted:
   `docs/vcd-interop.md:19-24`.
+- **Cost reconciliation.** Band 5-7 mw. Tasks named for it: TASK-0096,
+  totalling 2 wk. The named tasks are the leading, dividable slices of this
+  feature, not the whole of it; the residual has no task id, because the
+  registry's task space is closed at TASK-0112. Do not read 2 wk as the
+  feature.

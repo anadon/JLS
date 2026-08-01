@@ -196,3 +196,9 @@ deliberately not added again here.
   (32-against-35, and "until that test exists, K9 is aspiration").
 - `StrictMath`, `ProcessBuilder` and `javax.sound` each return a zero count over
   all of `src/` at HEAD, so every constraint this feature inherits is greenfield.
+- **Cost reconciliation.** Band 21-33 mw. Tasks named for it: TASK-0103,
+  TASK-0104, TASK-0105, totalling 6 wk. The named tasks are the leading,
+  dividable slices of this feature, not the whole of it; the residual has no
+  task id, because the registry's task space is closed at TASK-0112. Do not
+  read 6 wk as the feature. Shared tasks counted once at the task level:
+  TASK-0105.

@@ -25,6 +25,7 @@ view preserves that view's geometry verbatim instead of dropping it.
 | CAP-13 | beneficial | refdes assignment and cross-probing key off stable addresses |
 | CAP-02 | beneficial | addresses the boundary being toggled and the probes being read |
 | CAP-03 | beneficial | addresses the toggled boundary and the probed nets |
+| CAP-17 | required | a watched element inside one partition needs a name that does not depend on which partition it landed in |
 
 ## Prerequisite features
 
@@ -114,3 +115,8 @@ once hierarchy exists. Splitting it the other way produces two naming schemes.
 - Must-understand section semantics as the carrier: `BRIEF.md` §11 D3.
 - Op inverses as the existing contract the discriminator must not break:
   `docs/operation-layer.md` "Contract" section.
+- **Cost reconciliation.** Band 11-17 mw. Tasks named for it: TASK-0035,
+  TASK-0036, totalling 4 wk. The named tasks are the leading, dividable slices
+  of this feature, not the whole of it; the residual has no task id, because
+  the registry's task space is closed at TASK-0112. Do not read 4 wk as the
+  feature.

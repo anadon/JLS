@@ -67,6 +67,7 @@ whether the verdict is trusted before any sequential tier is funded.
 | FEAT-032 | The host byte port, a `Console` element and transcripts | a transcript is the replayable evidence for an interactive design | beneficial |
 | FEAT-033 | `jls.mach`, the reference runner and the guest software stack | the reference the unfamiliar design is checked against | beneficial |
 | FEAT-035 | Checkpoint and simulation-state serialization | a multi-hour verification run must survive a handover | beneficial |
+| FEAT-038 | The drawn structural RV32 machine | a design of known-correct provenance to calibrate the verification suite against before it is pointed at an unfamiliar one | beneficial |
 
 ## Related GitHub issues
 
@@ -157,3 +158,10 @@ whether the verdict is trusted before any sequential tier is funded.
   `docs/parity-contract.md`; the wall-clock budget discipline in
   `docs/machine-calibration.md`. Both are referenced, not restated here.
 - D10 (BRIEF §11-13) governs: this is a path and a cost, not a refusal.
+- **Cost reconciliation.** Marginal band 16-26 mw. Its 8 required features
+  sum to 66-103 mw and its 7 beneficial features are additional. The marginal
+  band is smaller than the required set because most of those features are
+  shared spine, booked once against whichever capstone funds them first.
+  "Marginal" here means the incremental cost given the spine is funded; the
+  standalone figure in the header is the other end of that range. The required
+  sum is printed rather than reconciled away.

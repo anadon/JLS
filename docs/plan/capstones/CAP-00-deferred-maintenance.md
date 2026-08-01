@@ -1,7 +1,7 @@
 # CAP-00 - Deferred maintenance: a decade of it
 
-**Status:** proposed | **Priority:** 1 | **Marginal cost:** 24-42 mw |
-**Standalone cost:** 24-42 mw
+**Status:** proposed | **Priority:** 1 | **Marginal cost:** 35-62 mw |
+**Standalone cost:** 35-62 mw
 
 ## Outcome
 
@@ -65,7 +65,7 @@ the rest measurable.
 | FEAT-007 | CI long-run lanes, timeouts and cross-platform parity | No workflow has a timeout and only one platform is required; the gate is not measuring what it claims to | required |
 | FEAT-009 | The measurement gate and a tracked calibration fixture | The only CPU-scale performance anchor in the tree is untracked, which is what blocks deleting `riscv/` per D5 | required |
 | FEAT-011 | Accessibility, keyboard operability and onboarding | Three open issues on the editor surface, all older than a year, all sharing one test substrate | required |
-| FEAT-008 | `SimpleEditor` decomposition, a UI harness and a floored `jls.edit` | The largest single maintenance debt in the tree and the reason `jls.edit` is unfloored; marked beneficial only because its full 12-20 mw is booked against CAP-01 and CAP-04, which also require it | beneficial |
+| FEAT-008 | `SimpleEditor` decomposition, a UI harness and a floored `jls.edit` | The largest single maintenance debt in the tree and the reason `jls.edit` is unfloored; #84, #91, #162 and #101 are the substance of this capstone and it cannot be graded below the features it funds | required |
 | FEAT-010 | Deterministic native installers and file association | Seven open issues; the bring-your-own-JDK barrier is the first thing a new user hits. Booked against CAP-06 | beneficial |
 | FEAT-012 | Semantic merge safety and per-kind merge rules | A three-way merge can produce a file that parses and is semantically corrupt; booked against CAP-01 | beneficial |
 
@@ -119,7 +119,8 @@ the rest measurable.
    than a bounded one it can.
 5. **Which JDKs are in the required matrix once three platforms are required?**
    Recommendation: canonical JDK plus one leading-edge leg per platform.
-   Reason: #233's finding that zero-margin floors flake across the matrix means
+   Reason: PR #233's finding - a pull request, not an issue - that zero-margin
+   floors flake across the matrix means
    matrix width has a real recurring cost.
 
 ## Kill criteria
@@ -188,3 +189,6 @@ the rest measurable.
 - Binding decisions: D1 (uncompressed default), D2 (diff stability is a
   requirement), D5 (`riscv/` will be deleted), D6 (fixes land immediately, not
   gated on the core extraction), D10 (path and cost, never precedent).
+- **Cost reconciliation.** Marginal band 35-62 mw. Its 9 required features
+  sum to 35-62 mw and its 2 beneficial features are additional. The marginal
+  band covers the required set; no reconciliation is needed.

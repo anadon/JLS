@@ -138,7 +138,7 @@ all three parity claims on a small design before any package data is acquired.
 - The projection thesis is shipped, not proposed: `VerilogEmitter.java` (752
   lines) and `VhdlEmitter.java` (1,149) render the same `HdlModel` port walk in
   unrelated syntaxes; a netlist emitter is a fourth renderer over the same walk.
-- The hierarchy gate is real at HEAD: `src/jls/hdl/HdlExporter.java:460` rejects
+- The hierarchy gate is real at HEAD: `src/jls/hdl/HdlExporter.java:460-477` rejects
   `SubCircuit` with the reason "the HDL model has no module-instantiation
   statement"; `grep -rn InstanceStatement src/` returns **0**.
 - The `INOUT` gap: `src/jls/hdl/HdlModel.java:28-33` defines `Direction` as

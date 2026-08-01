@@ -65,6 +65,13 @@ assumed, and the inspector's report is a golden.
 | TASK-0097 | A device model is a stamp into `MnaMatrix` plus a contribution to the Newton residual and Jacobian. Both types, and the escape ladder the limiters feed, are created there. |
 | TASK-0099 | Model cards arrive through `CardReader`; a level-dispatched model with no card grammar to dispatch from is untestable against any real vendor file. |
 
+TASK-0104 is **not** a hard blocker but should land first, and the analog
+determination sequences it that way ("Depends: S5, realistically S10"): the
+transistor families are the hardest thing in the tree to converge, and building
+them against an unhardened escape ladder means debugging the model and the
+solver simultaneously. Doing this task first is possible and costs the
+difference in debugging time, not a redesign.
+
 ## Acceptance test
 
 `test/jls/analog/models/DeviceStampTest.java`, new - one nested class per

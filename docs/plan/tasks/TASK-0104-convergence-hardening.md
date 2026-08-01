@@ -1,6 +1,6 @@
 # TASK-0104 - Convergence hardening
 
-**Status:** proposed | **Cost:** 2 wk | **Blocked by:** TASK-0097, TASK-0103
+**Status:** proposed | **Cost:** 2 wk | **Blocked by:** TASK-0097, TASK-0099
 
 ## Deliverable
 
@@ -60,8 +60,15 @@ element.
 
 | TASK-NNNN | why |
 |---|---|
-| TASK-0097 | The ladder is inside `Newton`'s loop and the accept/reject rule is inside `TimestepController`; both are created there. |
-| TASK-0103 | The `convTest` veto is a per-device method and the corpus is a corpus of circuits built from devices. Hardening a solver that only stamps `R C L V I` hardens nothing - the measured 10x spread in Newton iterations per timepoint at constant circuit size comes **from the models**. |
+| TASK-0097 | The ladder is inside `Newton`'s loop and the accept/reject rule is inside `TimestepController`; both are created there, along with the `R L C V I D` stamps the corpus is first built from. |
+| TASK-0099 | The corpus's hard circuits are diode bridges, astables and hard comparators - all of which need controlled sources, standard waveforms and `.model` card reading to exist. A corpus of linear circuits converges trivially and proves nothing. |
+
+**Not** blocked by TASK-0103, and the ordering runs the other way: the analog
+determination sequences the transistor stage *after* this one ("Depends: S5,
+realistically S10"), because the transistor models are the hardest thing to
+converge and building them against an unhardened ladder means debugging two
+things at once. Land this first, then extend the `convTest` veto to each new
+device family as TASK-0103 adds it.
 
 ## Acceptance test
 

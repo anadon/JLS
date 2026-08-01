@@ -81,10 +81,12 @@ element layout takes a `TextMetrics` and the GUI supplies a
 substitution against an already-designed seam, which is why the band is weeks
 and not months.
 
-Second, **the remaining gestures**. `SimpleEditor` still has 14 `markChanged()`
-sites and the file has grown to 5,852 lines. Both #84's "4,119 lines" and
-#167's "4,477 lines / 17 sites" are stale; cite the measured figures, not the
-issue text. The gestures the registry names as outstanding - placement drop,
+Second, **the remaining gestures**. `SimpleEditor` mentions `markChanged()` 16
+times, of which **13 are mutation-marking call sites** (one is an
+anonymous-`OpSink`-adapter override at `:5497`, one its body at `:5500`, one a
+comment), and the file has grown to 5,852 lines. Both #84's "4,119 lines" and
+#167's "4,477 lines / 17 sites" are stale; cite the measured figures with their
+counting rule, not the issue text. The gestures the registry names as outstanding - placement drop,
 paste, wire-attach finish, dialog commits - are the ones #167 §9 predicted
 would need commit-time modeling rather than per-gesture modeling.
 
@@ -121,8 +123,10 @@ programmatic construction, not `jls.api`.
   `SetElementConfig.java:55,98`, `ToggleWatched.java:20`.
 - The replacement abstraction already in core: `src/jls/core/TextMetrics.java:1-19`.
 - Editor size and remaining sites: `src/jls/edit/SimpleEditor.java` is 5,852
-  lines with 14 `markChanged();` sites, measured at `addc6c5` - both #84 and
-  #167 quote smaller, stale figures.
+  lines; `grep -n "markChanged()"` returns 16 lines, of which 13 are call sites
+  (`:749,1402,2560,2819,2873,2929,3439,4964,5105,5244,5552,5569,5754`) and
+  `:5497`/`:5500` are the adapter override - both #84 and #167 quote smaller,
+  stale figures.
 - No construction API: `BRIEF.md` §7 - all six in-tree generative paths emit
   save-format text and re-parse it.
 - Cost: `10-capstone-plan.md` §2.1 rows S4 (1-2 wk, score 2.67) and S13

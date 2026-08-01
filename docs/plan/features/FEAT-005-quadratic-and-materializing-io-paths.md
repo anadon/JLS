@@ -79,8 +79,14 @@ The three sites, exactly:
   constraint recorded at `src/jls/Circuit.java:76` - wire-net construction
   depends on insertion (file) order, so the linear rewrite must preserve that
   order exactly or it changes net identity.
-- **Materializing dump.** `src/jls/sim/BatchSimulator.java:475` and `:518`
-  return accumulated output via `toString()`.
+- **Materializing dump.** The whole run is held three times over. Every sample
+  is retained in `eventTrace` (`src/jls/sim/BatchSimulator.java:24-25`) and
+  `probeTrace` (`:33-34`) for the run's duration; `toVcd()` (`:384`) then folds
+  each signal into a `TreeMap<Long,BitSet>` (`:393-401`) and appends the entire
+  dump into one `StringBuilder` (`:386`), returned by `toString()` at `:475`;
+  the file path at `:368` calls `toVcd().getBytes(UTF_8)`, which copies the
+  whole dump a second time. There is exactly one `toVcd()` and it has no
+  incremental form.
 
 One measurement caution the task author must carry: a JFR profile of a batch run
 attributes about 50% of *in-loop* allocation among named non-`byte[]` classes to
@@ -113,7 +119,13 @@ extraction.
 - Quadratic load fixup: `src/jls/Circuit.java:1300-1422` (`finishLoad`);
   80,000 wire ends measured at 46 s (`BRIEF.md` §7). Order constraint:
   `src/jls/Circuit.java:76`.
-- Materializing dump: `src/jls/sim/BatchSimulator.java:475`, `:518`.
+- Materializing dump: `src/jls/sim/BatchSimulator.java:24-25`, `:33-34`
+  (retained sample maps), `:384` (`toVcd()`), `:386` (one `StringBuilder`),
+  `:393-401` (per-signal fold), `:475` (`return out.toString()`), `:368`
+  (`toVcd().getBytes(...)`, the second full copy). Verified at HEAD: `grep -n
+  "toString()" src/jls/sim/BatchSimulator.java` returns `:475` and `:518`, and
+  `:518` is the per-signal `vcdId` identifier builder, not a dump path - it must
+  not be cited as one.
 - Allocation-scope caution: `BRIEF.md` §13.
 - Separation from FEAT-030: registry deduplication record item 16.
 - Sequencing: decision D6, `BRIEF.md` §12.

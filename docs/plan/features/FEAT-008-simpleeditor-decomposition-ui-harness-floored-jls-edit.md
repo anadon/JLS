@@ -100,8 +100,9 @@ one undo snapshot. The remaining coupling is `CircuitOp.apply(Circuit, Graphics)
 metrics abstraction - and `Circuit.finishLoad` already takes
 `jls.core.TextMetrics` (`src/jls/Circuit.java:1300`), so the pattern exists.
 
-Undo remains whole-circuit snapshotting (`CircuitSnapshot`, `markChanged` at
-`src/jls/edit/SimpleEditor.java:749` and five further sites), and the measured
+Undo remains whole-circuit snapshotting (`CircuitSnapshot`; `markChanged()`
+occurs 16 times in the file, of which 13 are mutation-marking call sites, one is
+an anonymous-adapter override at `:5497` and one is a comment), and the measured
 per-edit cost is 58 ms at 10,000 elements and 552 ms at 100,000. Replacing it is
 *not* in this feature's scope; making it replaceable is.
 
@@ -133,8 +134,9 @@ per-edit cost is 58 ms at 10,000 elements and 552 ms at 100,000. Replacing it is
   `pom.xml:400-418`, especially `:408-409`.
 - Op layer at HEAD: `src/jls/collab/op/` (21 files), `CircuitOp.java:51`
   (`apply(Circuit, Graphics)`), `OpSink.java:24,42`, `docs/operation-layer.md`.
-- Undo snapshotting: `src/jls/edit/CircuitSnapshot.java`;
-  `src/jls/edit/SimpleEditor.java:749,1402,2560,2819,2873`.
+- Undo snapshotting: `src/jls/edit/CircuitSnapshot.java`; the 13 mutation-marking
+  call sites at `src/jls/edit/SimpleEditor.java:749,1402,2560,2819,2873,2929,
+  3439,4964,5105,5244,5552,5569,5754`, plus the adapter override at `:5497-5500`.
 - Per-edit cost 58 ms at 10k elements, 552 ms at 100k: `BRIEF.md` §7.
 - Element type count for criterion 5: `src/jls/elem/ElementRegistry.java:38-77`.
 - Governance bar this work must meet: `CONTRIBUTING.md`; 93.0/92.0/84.5 JaCoCo

@@ -116,6 +116,12 @@ mechanism.
 - **The banner is not optional.** A run whose numbers came from a behavioral
   binding, presented without saying so, is the exact failure the parity contract
   exists to prevent.
+- **The "costs no format version" argument is time-limited by FEAT-002.** It
+  rests on unknown attribute *names* being silently ignored, which is exactly the
+  behavior FEAT-002 removes. Old released readers keep ignoring it, so backward
+  compatibility is unaffected; but once FEAT-002's policy epoch closes, a reader
+  that does not know the fidelity attribute must have a declared answer. The two
+  features must agree on the epoch (FEAT-013 owns it) rather than each assuming.
 
 ## Evidence
 
@@ -129,8 +135,9 @@ mechanism.
 - Lumped-behavior precedents already shipped: `Adder`'s
   `propDelay = bits * defaultPropDelay` where `defaultPropDelay = 30`
   (`src/jls/elem/Adder.java:33`, `:261`), `Memory`'s lumped access time
-  (`src/jls/elem/Memory.java:107`), and `RegisterFile`, which collapses about 95
-  elements into one (`src/jls/elem/RegisterFile.java:21-28`).
+  (`src/jls/elem/Memory.java:108-109`, the `accessTime` field), and
+  `RegisterFile`, whose own javadoc states it collapses the ~95 elements a RISC
+  register file otherwise needs into one (`src/jls/elem/RegisterFile.java:21-28`).
 - Unknown attribute *names* are already ignored by old readers, so the new
   attribute costs no format version: `BRIEF.md` §13.
 - The null-test stop condition: kill criterion K4, `03-determination.md` §9.

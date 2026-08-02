@@ -61,7 +61,8 @@ artifact and aggregation vocabulary.
 
 | FEAT-NNN | title | why THIS capstone needs it | required/beneficial |
 |---|---|---|---|
-| FEAT-054 | Flat, compact element representation | The binding constraint. At the measured per-element live heap the target design does not fit on any single system; the flat layout is worth roughly an order of magnitude of capacity before any distribution, and it is the same layout the throughput work needs. Nothing else here is worth doing first | required |
+| FEAT-054 | Flat, compact element representation | The binding constraint AT SCALE: at the measured per-element live heap the target design does not fit on any single system, the flat layout is worth roughly an order of magnitude of capacity before any distribution, and it is the same layout the throughput work needs. **It is NOT the first thing to fund** - see the measured wall ordering in Evidence; heap is the FOURTH wall, not the first | required |
+| FEAT-005 | Quadratic and materializing I/O paths eliminated | **PROMOTED TO REQUIRED AND TO FIRST** on measurement. `finishLoad` is the first wall any `.jls`-borne design hits, at ~165,000 runtime elements, and the fix measured here is one data-structure swap. Nothing in this capstone is reachable until it lands | required |
 | FEAT-055 | Partitioned model and streaming elaboration | The circuit must exist as parts that load independently; today a design is one file under a decompressed-text cap and its load walk is superlinear in wire ends | required |
 | FEAT-056 | Distributed simulation transport and barrier protocol | Cross-partition event exchange under a discipline whose result is independent of partition count and message arrival order | required |
 | FEAT-057 | Campaign execution and artifact aggregation | The scale-out-runs axis, and the demo slice that makes this capstone deliverable before any partitioning exists | required |
@@ -72,7 +73,6 @@ artifact and aggregation vocabulary.
 | FEAT-009 | The measurement gate and a tracked calibration fixture | Every capacity and speedup claim here divides by constants this feature measures. No number in this capstone is trustworthy before it lands | required |
 | FEAT-035 | Checkpoint and simulation-state serialization | A distributed run that cannot be suspended cannot be scheduled on a shared cluster, and partition state must be serializable to move it | required |
 | FEAT-007 | CI long-run lanes, timeouts and cross-platform parity | Multi-host tests need a lane that can host them | beneficial |
-| FEAT-005 | Quadratic and materializing I/O paths eliminated | Superlinear load and whole-dump materialization are fatal at this scale; they are already defects at current scale | beneficial |
 | FEAT-031 | The per-instance fidelity toggle and its boundary harness | Partitioning is far more tractable when a subtree can be bound behavioral at the boundary; the two mechanisms compose | beneficial |
 
 ## Related GitHub issues
@@ -138,6 +138,25 @@ artifact and aggregation vocabulary.
   the responsible task regardless of what it costs this capstone.
 
 ## Evidence
+
+- **THE WALL ORDERING WAS MEASURED, AND IT REVERSES THIS CAPSTONE'S FIRST MOVE.**
+  The original text said the flat representation was the binding constraint and
+  that "nothing else here is worth doing first". That was reasoning from the
+  heap arithmetic alone. Measured against HEAD, the walls arrive in this order:
+  (A) a stack overflow on a recursive walk in the import path at 4,000-5,000
+  cells of combinational depth, about 62,000 elements - an eight-line fix, or
+  set `-Xss`; (B) `finishLoad` at about 165,000 runtime elements - a ONE-LINE
+  data-structure swap, `LinkedList` to `LinkedHashSet`, measured; (C) the 64 MiB
+  decompressed file cap, THIRD, not first; (D) heap, FOURTH, and only on a small
+  machine. With A and B patched the reachable size goes from ~165,000 to
+  ~695,000 elements - **4.2x for two lines** - and a new second-order wall
+  appears behind them, the spatial-index rebuild, which becomes the largest
+  single cost. So FEAT-005 is promoted to required and to first, and FEAT-054
+  keeps its rationale but loses its primacy.
+- Largest fixed open RISC-V design surveyed: XiangShan. Its 16-core
+  configuration needs roughly twenty AMD VU19Ps - the largest monolithic FPGA
+  ever built, ~9 million logic cells - so even the largest public design is far
+  from this capstone's target and a generated stressor remains unavoidable.
 
 - Per-element live heap measured at ~1,190 B (a 1,551-element CPU) and ~2,150 B
   (a 60,004-element wire-heavy chain); ~96.6 B/element on disk. 6.8x runtime

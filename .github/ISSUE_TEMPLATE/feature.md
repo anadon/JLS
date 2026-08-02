@@ -79,6 +79,31 @@ labels: ["tier:feature"]
      serves_capstones. A fresh agent reconstructs execution state from
      the machine block plus the prefixed comments; checkbox state is a
      convenience rendering, never evidence.
+
+  QUOTING THROUGH THIS TRACKER — settled by experiment 2026-08-02.
+  Do not re-derive it, and do not "fix" what it explains.
+    - The API read path that tooling uses (mcp__github__issue_read and
+      equivalents) DELETES tag-shaped runs — anything matching
+      `<word...>` — from the body it hands back, INCLUDING inside fenced
+      code blocks. Java generics (List of ElementType written with angle
+      brackets), XML element names, and HTML tags all vanish from the
+      READ. Angle brackets that are not tag-shaped (`1 << 22`, `A>`,
+      mermaid's `-->`) survive.
+    - The STORED body is NOT affected. The rendered issue page carries
+      the intact text. Confirmed by comparing the two paths on this
+      repository's own issues.
+    - Therefore WRITE the byte-exact line. Never substitute lookalike
+      characters for angle brackets, never paraphrase a generic type
+      argument into prose, and never add a note claiming this tracker
+      strips generics — it does not, and the note is then itself a false
+      claim sitting in the issue body.
+    - Empty backticks, or a bare `List` where a generic belongs, in a
+      body you READ are a read artifact and not a defect. Do not report
+      one and do not repair one. Judge any quote containing angle
+      brackets against the source file at `evidence_commit`, which is
+      the authority — the evidence rule is satisfied there, not in a
+      read-back.
+
 -->
 
 ## Abstract

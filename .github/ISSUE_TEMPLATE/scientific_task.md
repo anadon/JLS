@@ -5,7 +5,7 @@ labels: ["tier:task"]
 ---
 
 <!--
-  Template: scientific-task v5 (2026-08)
+  Template: scientific-task v6 (2026-08)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
@@ -31,6 +31,9 @@ labels: ["tier:task"]
   5. Cross-references cite the section NAME — "§ Threats to Validity" —
      optionally with its number. The name is canonical: numbers drift
      across template versions, names do not. Never a bare number.
+     Subsections of § Interface & Data Contract may use the short form
+     "§7.N (<short name>)" — e.g. "§7.4 (Internal interfaces — public)"
+     — the parenthesized name is still required.
   6. Executors: before step one of §8 (Method), re-verify every
      observation in §2 (Observations) at your checkout. If one fails to
      reproduce, or a hypothesis is refuted
@@ -44,19 +47,26 @@ labels: ["tier:task"]
      `bug` or `enhancement` explicitly, matching the corpus, plus the
      tier label `tier:task`.
   8. Tier model — task → feature → capstone (canonical edge rules in
-     the feature template). This is the task tier: edges to tasks and
-     features only, never to capstones. A task is part_of at most ONE
-     feature (composition, single-owner); the task's part_of_feature
-     field is authoritative for ownership — a feature roster that
-     disagrees must REPLAN, not win. The ORDERING GRAPH is blocked_by/
-     blocks edges PLUS composition edges read child-before-parent (a
-     parent cannot close before its children land); that combined
-     graph must stay a DAG. Consequences: a task must never be
-     blocked_by its own parent feature (deadlock), and `blocks` aimed
-     at a feature gates that feature's integration/close-out only —
-     never its children's start; block the children directly to gate
-     them. The machine block in Status & Dependencies is the source of
-     truth for the edges it can express.
+     the feature template). This is the task tier: COMPOSITION and
+     ORDERING edges go to tasks and features only, never to capstones
+     (the sole exception: a capstone may hold a recorded orphaned-scope
+     edge to this task per capstone rule G — that edge lives on the
+     capstone's side). `related` is reference-only and may point at ANY
+     tier. An issue's tier is defined by its machine block's `tier:`
+     key; the tier:* label is a mirror for filtering — a missing or
+     stale label is bookkeeping to fix, never an edge violation. A
+     task is part_of at most ONE feature (composition, single-owner);
+     the task's part_of_feature field is authoritative for ownership —
+     a feature roster that disagrees must REPLAN, not win. The
+     ORDERING GRAPH is blocked_by/blocks edges PLUS composition edges
+     read child-before-parent (a parent cannot close before its
+     children land); that combined graph must stay a DAG.
+     Consequences: a task must never be blocked_by its own parent
+     feature (deadlock), and `blocks` aimed at a feature gates that
+     feature's integration/close-out only — never its children's
+     start; block the children directly to gate them. The machine
+     block in Status & Dependencies is the source of truth for the
+     edges it can express.
   9. Amendment & comment protocol. This body may be edited, but only
      together with an `AMENDED:` comment stating what changed, why,
      and on what evidence — a silent edit is invisible to executors,
@@ -64,12 +74,21 @@ labels: ["tier:task"]
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). Post each such comment on THIS issue
      and, when part_of_feature is set, mirror the same comment on that
-     feature. Bookkeeping is exempt from the AMENDED requirement:
-     ticking a Method or Completion checkbox whose backing evidence is
-     already recorded in a comment or PR, and re-pinning
-     evidence_commit after re-deriving citations. Checkbox state
-     remains a convenience rendering — the recorded evidence is the
-     record.
+     feature. When an edit REMOVES or NARROWS any claim, observation,
+     prediction, criterion, or scope item, the AMENDED comment must
+     carry a "Dropped/Retired" ledger enumerating each removed item
+     with its disposition — retired with reason, moved to issue #N, or
+     restated where — so omissions are auditable by reading the
+     comment, not only by diffing bodies. Bookkeeping is exempt from
+     the AMENDED requirement: ticking a Method or Completion checkbox
+     whose backing evidence is already recorded in a comment or PR,
+     and re-pinning evidence_commit after re-deriving citations.
+     Checkbox state remains a convenience rendering — the recorded
+     evidence is the record. Write mechanics: cite a line range as ONE
+     link — "[L100–L120](<permalink>#L100-L120)" — never two adjacent
+     links joined by a dash (some write paths corrupt that form), and
+     after any body edit re-fetch the issue and verify the rendered
+     result before considering the edit done.
   10. Waivers. A completion criterion may be waived only via a
      `WAIVED:` comment naming the reason AND the successor issue that
      now tracks the dropped obligation (or stating explicitly why no
@@ -246,7 +265,24 @@ related: []             # reference only — never blocking
 <!-- How the inputs of §7.3 (Data consumed) and the stored data of §7.7
      (Data durably tracked) become the outputs of §7.6 (Data provided):
      the pipeline stage by stage, with the representation at each stage
-     boundary, so a reviewer can locate each stage in the diff. -->
+     boundary. Every transform must be FULLY DEFINED — no "then it is
+     processed" hand-waving — and expressed as embedded LaTeX math
+     using GitHub's math rendering (inline $`...`$ or display $$...$$
+     blocks; syntax reference:
+     https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions).
+     For each stage: name the transform, give its signature over the
+     structures declared in §7.3 (Data consumed) and §7.6 (Data
+     provided), and define the mapping itself, e.g.
+
+       $$f_{\mathrm{route}} : \mathrm{Wire} \times \mathrm{Grid}
+         \to \mathrm{Segment}^{*}, \qquad
+         f_{\mathrm{route}}(w, g) = \ldots$$
+
+     with side conditions and partiality explicit — wherever a
+     transform is undefined, §7.11 (Failure modes & error handling)
+     owns the behavior. Prose may accompany the math; it may not
+     replace it. A reviewer must be able to locate each defined stage
+     in the diff. -->
 
 ### 7.11 Failure modes & error handling
 

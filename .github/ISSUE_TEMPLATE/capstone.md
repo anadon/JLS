@@ -5,17 +5,29 @@ labels: ["tier:capstone"]
 ---
 
 <!--
-  Template: capstone v2 (2026-08)
+  Template: capstone v3 (2026-08)
 
   TIER MODEL — task → feature → capstone; the full edge-legality
-  matrix is in the feature template and applies unchanged. The
+  matrix is in the feature template and applies unchanged (`related`
+  is reference-only and may point at any tier; tier identity is the
+  machine block's `tier:` key, labels are mirrors). The
   capstone-specific consequences:
-    - Capstones reference features ONLY. If a capstone appears to need
-      a task directly, that task belongs inside one of its features —
-      file it there and cite the feature.
+    - Capstones reference FEATURES (requires_features) and
+      SUB-CAPSTONES (requires_capstones). A task may be referenced
+      only through the rule G orphaned-scope exception below — if a
+      capstone appears to need a task and no orphan event justifies
+      it, that task belongs inside one of its features.
+    - Nested capstones: list a sub-capstone in requires_capstones (its
+      whole outcome gates this one; the DAG rule covers the composition
+      edge), OR enumerate the sub-capstone's features directly in
+      requires_features (the consume-its-features form). If you choose
+      the second, record a mirror obligation in BOTH issues: any REPLAN
+      to either roster must re-sync the other, or the two silently
+      drift.
     - Ordering between capstones is expressed through features: a
       later capstone's features are blocked_by the earlier capstone.
-      No direct capstone-to-capstone edges.
+      Direct capstone-to-capstone ORDERING edges remain forbidden
+      (composition via requires_capstones is the nesting mechanism).
     - The ordering graph (defined in the feature template: blocked_by/
       blocks plus composition edges read child-before-parent) must
       stay a DAG. Features may be blocked_by capstones, so cross-tier
@@ -52,6 +64,17 @@ labels: ["tier:capstone"]
      that no single feature's completion criteria cover. If every
      criterion is already owned by a feature, this is a milestone
      label, not a capstone — do not file it.
+  G. Orphaned scope. When a required feature closes, is re-tiered, or
+     is descoped while leaving scope this capstone still needs, the
+     REPLAN must give that scope a disposition: (a) re-home it into
+     another required feature; (b) file it as a task and — as a
+     RECORDED EXCEPTION — list it in `requires_tasks_exception` below,
+     with the REPLAN comment that justifies it; or (c) descope it,
+     re-deriving the §2 (Required Feature Set & Sufficiency) argument.
+     `requires_tasks_exception` is the ONLY legal capstone→task edge;
+     each entry exists because an orphan event was recorded, and the
+     preferred end-state is re-homing it under a feature when one
+     fits.
 -->
 
 ## Abstract
@@ -71,8 +94,14 @@ labels: ["tier:capstone"]
 tier: capstone
 evidence_commit:        # SHA the roster and acceptance claims are pinned to
 requires_features: []   # composition — the closed required set (rule E), FILED numbers only
-planned_features: []    # one-line scopes for required features not yet filed;
-                        #   resolve each to a number via REPLAN when it is filed
+requires_capstones: []  # composition — sub-capstones whose whole outcome gates this one
+                        #   (nesting; see the tier-model note on the consume-its-features
+                        #   alternative and its mirror obligation)
+requires_tasks_exception: []  # rule G ONLY: orphaned-scope tasks adopted by recorded
+                        #   REPLAN exception; empty unless an orphan event is on record
+planned_features: []    # one-line scopes for required features not yet filed; verify each
+                        #   scope is ABSENT at evidence_commit before listing it; resolve
+                        #   each to a number via REPLAN when it is filed
 blocked_by: []          # ordering: features that must land before this capstone closes,
                         #   beyond the required set (mirror of the feature-side edge)
 blocks: []              # ordering: features waiting on this capstone (mirror of each
@@ -142,7 +171,8 @@ flowchart TD
 
 ## Completion Criteria (Definition of Done)
 
-- [ ] Every entry in `requires_features` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set; `planned_features` empty (each resolved to a filed issue or descoped)
+- [ ] Every entry in `requires_features`, `requires_capstones`, and `requires_tasks_exception` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set; `planned_features` empty (each resolved to a filed issue or descoped)
+- [ ] Every `requires_tasks_exception` entry traces to a recorded orphan-event REPLAN (rule G); none was added as a convenience edge
 - [ ] Every cited evidence document and permalink resolves on the default branch at close
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10)
 - [ ] Every criterion in §4 (System-Level Acceptance Criteria) verified end-to-end at a named commit; command and output recorded in a closing comment

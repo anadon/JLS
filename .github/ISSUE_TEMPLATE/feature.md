@@ -5,13 +5,19 @@ labels: ["tier:feature"]
 ---
 
 <!--
-  Template: feature v2 (2026-08)
+  Template: feature v3 (2026-08)
 
-  TIER MODEL — task → feature → capstone. Edge legality:
+  TIER MODEL — task → feature → capstone. Edge legality (composition
+  and ordering edges; `related` is reference-only and may point at ANY
+  tier from any tier):
     - Tasks (scientific_task template) may hold edges to tasks and
       features, never to capstones.
     - Features may hold edges to tasks, other features, and capstones.
-    - Capstones hold edges to features only — never to tasks directly.
+    - Capstones hold edges to features and sub-capstones; to tasks
+      only via the recorded orphaned-scope exception (capstone rule G).
+  An issue's tier is defined by its machine block's `tier:` key; the
+  tier:* label is a mirror for filtering — a missing or stale label is
+  bookkeeping to fix, never an edge violation.
   Edge kinds are distinct and every link declares which it is:
     - Composition: a task is part_of at most ONE feature; a capstone
       requires_features. Single-owner for tasks — the task's
@@ -92,8 +98,10 @@ labels: ["tier:feature"]
 tier: feature
 evidence_commit:        # SHA the roster and contract claims are pinned to
 requires_tasks: []      # composition: FILED children only, numbers, e.g. [101, 102]
-planned_tasks: []       # one-line scopes for children not yet filed;
-                        #   resolve each to a number via REPLAN when it is filed
+planned_tasks: []       # one-line scopes for children not yet filed; verify each
+                        #   scope is ABSENT at evidence_commit before listing it
+                        #   (a landed scope is Background, not a plan); resolve
+                        #   each to a number via REPLAN when it is filed
 blocked_by: []          # ordering: tasks, features, or capstones that must land first
 blocks: []              # ordering: issues waiting on this feature
 serves_capstones: []    # capstones whose required set includes this feature
@@ -135,9 +143,12 @@ flowchart TD
      handoffs: which child provides which interface to which sibling,
      citing the child's contract subsection by name (e.g. "#101
      provides `ElementRegistry` per its Internal interfaces provided —
-     public; consumed by #102"). When a child lands with a contract
-     deviation, this section is stale until a REPLAN comment resolves
-     it. -->
+     public; consumed by #102"). Transformations at the feature
+     boundary follow the task template's §7.10 (Data transformations)
+     discipline: fully defined and expressed in embedded LaTeX math
+     (GitHub math rendering), never prose alone. When a child lands
+     with a contract deviation, this section is stale until a REPLAN
+     comment resolves it. -->
 
 ## 4. Global Invariants
 
@@ -172,8 +183,14 @@ flowchart TD
      feature still has a beneficiary; a child dropped from the roster
      or this feature descoped → the REPLAN comment gives EACH affected
      child a disposition: re-homed (new part_of_feature), freed
-     (part_of_feature: none), or closed — no dangling owners. Every
-     response ends in a REPLAN comment here. -->
+     (part_of_feature: none), or closed — no dangling owners. Closing
+     this feature with scope UNMET while a serving capstone still
+     needs it → each unmet scope item gets a disposition in the
+     closing REPLAN: re-homed into another required feature, filed as
+     a task the capstone adopts via its rule G orphaned-scope
+     exception, or descoped with the capstone's sufficiency argument
+     re-derived — never silently dropped. Every response ends in a
+     REPLAN comment here. -->
 
 ## Open Questions & Decisions Needed
 

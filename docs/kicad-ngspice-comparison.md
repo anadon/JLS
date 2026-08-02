@@ -475,7 +475,9 @@ a future," the honest options are not KiCad:
   test-vector grading. `grand-architecture.md` §7 already surveys them.
   A `.jls` → Logisim-evolution or `.jls` → Digital converter would
   preserve far more of what a JLS user has than a KiCad converter, at a
-  fraction of the cost, because the target model actually matches.
+  fraction of the cost, because the target model actually matches. That
+  claim is now priced in its own survey:
+  [`docs/logisim-digital-comparison.md`](logisim-digital-comparison.md).
 - **KiCad as a *downstream*, not a successor.** The one genuinely
   sensible KiCad integration is the direction §3.5 already points and
   `capability-roadmap/README.md` already names: JLS emits a netlist;

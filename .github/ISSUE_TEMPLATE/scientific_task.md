@@ -119,6 +119,13 @@ labels: ["tier:task"]
       argument into prose, and never add a note claiming this tracker
       strips generics — it does not, and the note is then itself a false
       claim sitting in the issue body.
+    - There IS a lossless read path: `search_issues` with `body` among
+      its requested fields returns the body unstripped. Verified against
+      this repository — the same line that comes back as `Map REJECTED
+      = Map.of(` through the read tool comes back whole through search.
+      Use it whenever you intend to REWRITE a body: an update call
+      carries the complete body, so a rewrite driven off a stripped read
+      silently bakes the read artifact into storage.
     - Empty backticks, or a bare `List` where a generic belongs, in a
       body you READ are a read artifact and not a defect. Do not report
       one and do not repair one. Judge any quote containing angle

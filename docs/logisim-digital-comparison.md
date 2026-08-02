@@ -57,7 +57,15 @@ than cosmetic:
    migration rewrites every autograder in the userbase regardless of how
    good the circuit converter is.
 
-The recommendation (§6): **build a one-way `.jls` → `.dig` exporter, not
+**Which of the two, if one must be chosen: Logisim-evolution** — decided
+in §5 on project health rather than features, and against the
+feature-fit case, which favours Digital. Digital is in maintenance mode
+(6 commits and 0 merged pull requests in twelve months, no release since
+September 2024); Logisim-evolution merged 218 pull requests in the last
+six months. An earlier revision of this document recommended Digital on
+element-vocabulary grounds; §5 supersedes it.
+
+The recommendation (§7): **build a one-way `.jls` → `.circ` exporter, not
 a migration** — architecturally a third printer beside the Verilog and
 VHDL emitters — and ship it with a **differential harness** that
 certifies each converted circuit by re-simulating it. Without the
@@ -216,30 +224,38 @@ Items 1–4 are *circuit* losses a converter must confront. Items 5–9 are
 
 ### Stage 0 — pick the target
 
-**Recommend Digital**, on four grounds: the element vocabulary is the
-closest match (FSM editor, memory with contents, 74xx, generics); its
-HDL philosophy is identical to the one JLS already adopted from it
-(`hdl-support-research.md` §2, "deployment vehicle, not HDL tutorial");
-its test-case model — a table plus a small DSL inside a drawable element
-— is what `capability-roadmap/sweep-04` already identifies as the shape
-JLS's own test surface should move toward; and it is the tool JLS's
-research corpus already treats as the reference point.
+**Recommend Logisim-evolution**, on project-health grounds that override
+the feature-fit argument. See §5, which is the section that decides this
+and which supersedes an earlier revision of this document that
+recommended Digital on element-vocabulary grounds alone.
 
-**The decisive argument against Digital**, stated plainly: `.dig` has no
-element identifier. If the stable-id / semantic-merge / collaboration
-line of work matters, Digital cannot receive it, and Logisim-evolution
-(`.circ`, per-component ids unverified) is the only candidate that might.
+The feature-fit case for Digital is real and is not withdrawn: its
+element vocabulary is the closer match (FSM editor, memory with
+contents, 74xx, generics), its HDL philosophy is the one JLS already
+adopted from it (`hdl-support-research.md` §2), and its test-case model
+is the shape `capability-roadmap/sweep-04` wants for JLS's own test
+surface. On a snapshot of today's features, Digital is arguably the
+better program.
 
-Choose Logisim-evolution instead if the deciding factor is institutional
-install base in US CS courses, FPGA board coverage, or the `--substitute`
-grading workflow.
+It is not the better *target*, for two independent reasons:
+
+- **§5: it is in maintenance mode** — 6 commits in the last 12 months,
+  no release since September 2024, 26 open pull requests, 97% of all
+  contributions from one person. Feature work cannot be landed there.
+- **`.dig` has no element identifier**; identity is `<pos x= y=>`. The
+  stable-id / semantic-merge / collaboration line of work cannot be
+  expressed in that format at all.
+
+Choose Digital anyway only if the conversion is a one-shot dead-end
+export whose output nobody will maintain, and the FSM/truth-table
+element fidelity matters more than everything downstream of it.
 
 ### Stage 1 — the mechanical half (cheap, and not the risk)
 
 `.jls` is a documented line-oriented text format (`docs/file-format.md`)
 and both targets are XML. A converter walks the loaded `Circuit` and
 emits the target tree: elements, positions, wire nets, hierarchy
-(`SubCircuit` → nested `.dig`/`.circ`), text annotations, watched flags.
+(`SubCircuit` → nested `.circ`/`.dig`), text annotations, watched flags.
 
 **The one real hazard here is Digital's coordinate-implied
 connectivity.** Digital has no netlist; two things are connected because
@@ -294,7 +310,7 @@ normative semantics spec, a golden test suite pinning it
 `VcdExportGoldenTest`), a headless simulator with a machine-readable
 output contract, and a *working precedent for differential fuzzing* in
 `riscv/fuzz_diff.py`, which already fuzzes a drawn CPU against a
-reference emulator. A `.jls`→`.dig` differential harness is the same
+reference emulator. A `.jls`→`.circ` differential harness is the same
 pattern pointed at a different oracle.
 
 Other reconciliations, all smaller:
@@ -337,7 +353,104 @@ afterwards.
 
 ---
 
-## 5. Cost
+## 5. Project health and contributability — the deciding section
+
+The feature tables above compare two *snapshots*. Choosing a tool to
+send users to, and to invest contribution effort in, is a bet on
+*trajectory*. On trajectory the two are not close, and the direction is
+opposite to what the feature comparison suggests.
+
+All figures fetched from the GitHub API, 2026-08-02:
+
+| | Logisim-evolution | Digital |
+|---|---|---|
+| Commits, trailing 52 weeks | **808** | **6** |
+| Last release | **v4.1.0, 2026-02-15** (v4.0.0 2025-09-07) | **v0.31, 2024-09-03** (~23 months) |
+| Last push | 2026-07-31 | 2026-06-12 |
+| Contributors | **218** | 28 |
+| Top contributor's share | 27.5% (BFH-ktt1) | **~97%** (hneemann, 4,473 of ~4,600) |
+| Open pull requests | **12** | **26** |
+| PRs merged since 2026-02-01 | **218** | 0 (implied by the commit count) |
+| Open issues | 161 | 196 |
+| Stars / forks | 7,388 / 977 | 5,882 / 586 |
+| License | GPL-3.0 | GPL-3.0 |
+
+Read the pull-request rows together: **Logisim-evolution merged 218
+pull requests in six months while holding a 12-PR backlog; Digital has a
+26-PR backlog and merged approximately none.** One of the waiting PRs is
+"Feature: #1372 Adds CLI HDL Export," open since 2026-02-16 — precisely
+the class of contribution a parity effort would consist of.
+
+That single comparison decides the question as posed. **A plan that
+depends on landing missing features upstream cannot be executed against
+Digital.** Its maintainer is not hostile — the most recent commits are
+bug fixes closing issues, and the project is neither archived nor
+declared dead — but 6 commits and 0 merges in a year is maintenance mode,
+and a 97% single-author share means there is no second person who can
+merge. Contributions would live out of tree indefinitely.
+
+Three honest counterweights, so the call is made with them in view:
+
+- **Low commit volume can mean "finished," not "abandoned."** Digital is
+  mature, feature-dense, and has fewer open issues per star than
+  Logisim-evolution. If the requirement were "a tool that works today,"
+  this row would not be disqualifying. It is disqualifying only because
+  the stated requirement is *to change the tool*.
+- **Logisim-evolution carries the heavier architectural debt.** It is a
+  fork of Carl Burch's Logisim 2.7 lineage; its simulation is tick-based,
+  which `capability-roadmap/lf-08-clocks-and-cdc.md:373` already records
+  as making clocks of unrelated periods awkward; its HDL support costs
+  one hand-written Java generator per component
+  (`hdl-support-research.md` §7.1); its embedded-HDL component still
+  requires commercial Questa/ModelSim, with GHDL support requested since
+  issue #84 and never merged; and it has no subcircuit parameterization
+  where Digital does. Choosing it means inheriting those.
+- **Concentration risk is reduced, not eliminated.** A 27.5% top share
+  across 218 contributors is a genuine project; it is not a large team.
+
+**The extension escape hatch, which cuts the same way.** Logisim-evolution
+inherits Logisim's documented **JAR library API** — external components
+loaded from a jar, with automatic custom-library loading at startup and
+unit tests covering it. Features can therefore ship *without* an upstream
+merge, which de-risks the parity plan considerably. The caveat is real:
+the component-library cleanup in the 4.x line is expected to break most
+existing external jars, so the API is churning and anything built on it
+today should expect to track it. Digital also supports custom Java
+components in jars — but with a dormant upstream, out-of-tree is the
+only state such a component would ever reach.
+
+### On "scaling to real professional and research use"
+
+This deserves a direct answer rather than a ranking, because the honest
+one is that **neither tool scales there, and the gap is not incremental.**
+Both cap signals at 64 bits. Both are single-process Swing desktop
+applications. Neither has assertions, functional coverage, formal or
+equivalence checking, static timing analysis, clock-domain-crossing
+analysis, fault simulation, or a constrained-random verification layer —
+`capability-roadmap/AMENDMENT.md:672` records the formal and fault
+categories as verified absent in both.
+
+Professional and research digital design runs on HDL plus
+Verilator / Yosys / cocotb / GHDL / SymbiYosys, and the schematic tools'
+role in that world is as an *on-ramp* and a teaching surface. So the
+correct shape is not "pick the tool that scales to professional use" —
+neither does — but **"pick the on-ramp with the healthiest trajectory,
+and treat HDL export as the professional exit."** That is the same
+conclusion JLS already reached for itself
+(`hdl-support-research.md` §5, and `kicad-ngspice-comparison.md` §6), and
+on the HDL-exit axis Logisim-evolution also leads: 29 board definitions
+and four toolchains including a fully open-source
+GHDL→Yosys→nextpnr→openFPGALoader flow, against Digital's BASYS3 /
+TinyFPGA BX plus GAL JEDEC output.
+
+### Verdict
+
+**Logisim-evolution**, for the stated purposes — where to send users, and
+where to invest feature work. Digital is the better program today and the
+worse bet, and the margin on the bet is roughly two orders of magnitude
+of development velocity.
+
+## 6. Cost
 
 Rough, in the same units `capability-roadmap` uses (maintainer-weeks),
 and calibrated against the existing `VerilogEmitter` — which is the same
@@ -356,12 +469,21 @@ weeks and is worth approximately nothing without Stage 3.
 
 ---
 
-## 6. The determination
+## 7. The determination
 
 **Neither Logisim-evolution nor Digital is a strict superset of JLS, but
-Digital is close enough that a migration is a real engineering project
+both are close enough that a migration is a real engineering project
 rather than a category error** — which is the substantive difference from
 the KiCad answer, where the gap was architectural.
+
+**Between the two, the answer is Logisim-evolution**, and the axis that
+decides it is §5's, not §1's: Digital is the better program on today's
+feature set and is in maintenance mode (6 commits and 0 merged PRs in
+twelve months, no release since September 2024, ~97% single-author);
+Logisim-evolution merged 218 pull requests in the last six months across
+218 contributors. Any plan that involves *changing* the tool — sending
+users there and closing feature gaps upstream — resolves to
+Logisim-evolution by roughly two orders of magnitude of velocity.
 
 What each fails to contain is narrow and specific: unbounded bit width,
 a per-instance editable delay model, the truth table and state diagram as
@@ -372,7 +494,7 @@ distribution.
 
 The recommendation:
 
-- **Build `-export out.dig` as a one-way exporter**, sitting beside
+- **Build `-export out.circ` as a one-way exporter**, sitting beside
   `-export out.v` and reusing the same emitter architecture
   (`src/jls/hdl/HdlEmitter` walk, third printer). Frame it exactly as
   hneemann frames HDL export and as JLS already adopted for its own:
@@ -397,7 +519,7 @@ to stay.**
 
 ---
 
-## 7. Verification notes
+## 8. Verification notes
 
 JLS claims are anchored in the tree at HEAD. Peer claims carry inline
 marks; the load-bearing ones and their status:

@@ -351,11 +351,24 @@ should fail and passes one it should pass."* That is a stronger bar than any oth
 feature in this capstone and it is the reason to build it.
 
 **FEAT-061 is reserved, not scheduled.** It exists so the eye/BER capstone can be
-commissioned later without a registry collision.
+commissioned later without a registry collision. **Reserved in this sentence and
+nowhere else: no FEAT-061 scope exists anywhere in the corpus** — no feature
+document, no `REGISTRY.md` row, no filed issue, and no scope statement outside
+the one table row above. A reservation held only in prose protects nothing
+mechanical, which is why the count below stops at FEAT-060.
 
-**Registry deltas:** 19 capstones (CAP-00..CAP-18), 61 features
-(FEAT-001..FEAT-061), 112 tasks unchanged. Priority 19 means *"appended, not yet
-ranked"*, following CAP-17's recorded precedent. **The recommendation is to rank
+**Registry deltas (CORRECTED 2026-08-03 under D14):** 19 capstones
+(CAP-00..CAP-18), **60 features (FEAT-001..FEAT-060)**, 112 tasks unchanged.
+**The figure this line carried at authoring — "61 features
+(FEAT-001..FEAT-061)" — was never true and is superseded rather than
+reinterpreted.** The arithmetic: 57 feature documents existed at
+`2d0ca9dcd9db78b36c3caf4c6c57dd8701862cc7` (`git ls-tree --name-only 2d0ca9d
+docs/plan/features/ | wc -l` → 57, highest FEAT-057), so the claim over-counted
+by **four** when written; this pass wrote FEAT-058, FEAT-059 and FEAT-060 and
+filed them, giving 57 + 3 = **60**, so it over-counts by **one** now.
+**FEAT-061 was not minted**: it names no scope, and minting an id to make a
+count true would be adjusting a number to fit. Priority 19 means *"appended, not
+yet ranked"*, following CAP-17's recorded precedent. **The recommendation is to rank
 the demo slice early** — it serves CAP-04 and CAP-05 immediately at zero palette,
 zero format version of its own and zero element type — **and to leave the rest
 unranked until the lint's noise rate on `examples/` is measured (K18-3).**

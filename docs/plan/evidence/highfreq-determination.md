@@ -1473,7 +1473,17 @@ commissioned later without a registry collision.
 
 **Registry deltas:** 19 capstones (CAP-00..CAP-18), 61 features
 (FEAT-001..FEAT-061), 112 tasks unchanged. Priority 19 means *"appended, not yet
-ranked"*, following CAP-17's recorded precedent. **The recommendation is to rank
+ranked"*, following CAP-17's recorded precedent.
+
+> **CORRECTION 2026-08-03 (D14).** The feature count in the line above is
+> wrong and is left in place only because this file is a determination
+> transcript. **57 feature documents existed at `2d0ca9d`, not 61**, so the
+> claim over-counted by four when written. FEAT-058, FEAT-059 and FEAT-060 have
+> since been written and filed, making the true count **60
+> (FEAT-001..FEAT-060)**. **FEAT-061 was not minted** — it names no scope
+> anywhere in the corpus and exists only as the reservation sentence above.
+> The corrected figure is carried in `docs/plan/REGISTRY.md` COUNTS and in the
+> capstone document `CAP-18-net-that-stopped-being-a-wire.md`. **The recommendation is to rank
 the demo slice early** — it serves CAP-04 and CAP-05 immediately at zero palette,
 zero format version of its own and zero element type — **and to leave the rest
 unranked until the lint's noise rate on `examples/` is measured (K18-3).**

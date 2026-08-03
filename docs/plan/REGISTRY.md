@@ -23,7 +23,7 @@ citing the absence of the work.
 
 ---
 
-## TABLE 1 - CAPSTONES (18)
+## TABLE 1 - CAPSTONES (19)
 
 Priority 1 is the maintainer's named highest. Priorities 2-17 rank by
 demo-value-per-week and by real sequencing constraints, not by enthusiasm.
@@ -50,6 +50,7 @@ the cost with no shared features, where the corpus states one.
 | **CAP-02** | Boot a CLI-only Linux distribution and run commands | A JLS circuit boots Linux to a shell and a transcript of typed commands is byte-compared against a reference. | 16 | 32-58 mw | 155-250 mw | `10-capstone-plan.md` §3.1 (C2) |
 | **CAP-03** | A ternary CPU with N-ary subcircuits and a custom kernel | A drawn balanced-ternary CPU runs a hand-written monitor and prints to a live console, verified per retired instruction. Stretch: DOOM. | 17 | 28-45 mw | 98-161 mw | `10-capstone-plan.md` §3.1 (C3, ARCH-B) |
 | **CAP-17** | Distributed execution for cluster and grid deployments | A design too large for one machine is partitioned, simulated across hosts and observed as one design, and a campaign of independent runs is dispatched across a grid and aggregated. | 18 | 38-62 mw | 62-98 mw | added at maintainer request after this registry closed; band is the sum of its four new features |
+| **CAP-18** | A net that stopped being a wire | A drawn net too long for its driver's edge rate is identified as a transmission line, its reflection and overshoot are shown, a termination fixes them, and the electrical intent leaves JLS as a constraint file a real board tool enforces. | 19 | 11-19 mw | 19-34 mw | added at maintainer request after this registry closed; `CAP-18-net-that-stopped-being-a-wire.md` header. **Both bands are superseded by #313's recomputed sums (marginal 11-20, standalone 35-60, cumulative 51-89); the header figures are carried here unchanged so the supersession stays visible** |
 
 **Sequencing note that is not a priority claim.** CAP-02 and CAP-03 rank last on
 priority but their spine features (F037-F042) are the most expensive in the plan
@@ -59,7 +60,7 @@ last", not "fund last".
 
 ---
 
-## TABLE 2 - FEATURES (57)
+## TABLE 2 - FEATURES (60)
 
 `Owner` is a committed capability-roadmap program (`docs/capability-roadmap/`,
 P1-P13) or `UNOWNED`. UNOWNED is information, not an objection: it means the
@@ -126,6 +127,9 @@ row, `-` otherwise.
 | **FEAT-055** | Partitioned model and streaming elaboration | A design exists as parts that load independently, with boundary nets named identically on both sides of every cut. | 10-16 mw | UNOWNED | - | CAP-17 |
 | **FEAT-056** | Distributed simulation transport and barrier protocol | Partitions in separate processes exchange boundary events under a discipline whose result does not depend on partition count or arrival order. | 10-18 mw | UNOWNED | - | CAP-17 |
 | **FEAT-057** | Campaign execution and artifact aggregation | Independent runs are dispatched across workers and aggregated into one report that does not depend on scheduling. | 6-8 mw | UNOWNED | - | CAP-17 |
+| **FEAT-058** | Edge rate, declared physical length and the electrical-length lint | Two declared physical attributes and a design check that computes the critical length and prints a verdict, with "not assessable" where a net did not opt in. | 3-6 mw | P4 | - | CAP-18, 04, 05, 07 |
+| **FEAT-059** | The closed-form transmission-line element and the reflection lab | A lossless-line element between two ordinary nets with the four canonical terminations, computed in closed form and shown on a real-valued trace row. | 2-3.5 mw | UNOWNED | - | CAP-18, 04 |
+| **FEAT-060** | Signal-integrity constraint authorship and PCB constraint export | An authored SI constraint set on nets, emitted as a rule file an external DRC enforces, with routed-length back-annotation. | 5.5-9.5 mw | P3 | - | CAP-18, 05, 13 |
 
 Also in the plan but deliberately NOT a separate feature: formal property
 checking and equivalence (P5's formal half, 14-22 mw). It is folded into
@@ -418,9 +422,16 @@ that no author re-mints a merged item:
 
 ## COUNTS
 
-**18 capstones (CAP-00 through CAP-17, no gaps).**
-**57 features (FEAT-001 through FEAT-057, no gaps).**
+**19 capstones (CAP-00 through CAP-18, no gaps).**
+**60 features (FEAT-001 through FEAT-060, no gaps).**
 **112 tasks (TASK-0001 through TASK-0112, no gaps).**
+
+Counted, not asserted: `ls docs/plan/capstones/` is 19 files and
+`ls docs/plan/features/` is 60 files after CAP-18's three features were written.
+**FEAT-061 was never minted.** It is *reserved* inside CAP-18's own text for a
+future eye/BER capstone that does not exist; there is no FEAT-061 document, no
+row here and no filed issue, so the id space ends at FEAT-060 and the count is
+60 rather than 61. See the CAP-18 addendum below.
 **34 open GitHub issues, all 34 mapped, none untouched.** See `issue-map.md`
 for the per-issue mapping and the plan-ids-with-no-issue list.
 
@@ -503,6 +514,41 @@ must know:
   flat array layout is the same code the engine constant-factor work needs;
   whichever is funded first pays for it and the other is re-scoped. This is
   stated in FEAT-054, in FEAT-030's consumed-by row and in CAP-17.
+
+### CAP-18 and FEAT-058 through FEAT-060
+
+CAP-18 was added by the maintainer after this registry closed, in the same shape
+as CAP-17 and by the same route. Its three features were written later still,
+under maintainer ruling D14 (*"this is obviously a mechanical fix"*), by
+transcription from `docs/plan/capstones/CAP-18-net-that-stopped-being-a-wire.md`
+and `docs/plan/evidence/highfreq-determination.md`. Consequences a reader must
+know:
+
+- Its priority is recorded as **19**, meaning "appended, not yet ranked",
+  following CAP-17's precedent. The recommendation in its own text is to rank
+  the demo slice (FEAT-058) early and leave the rest unranked until the lint's
+  noise rate on `examples/` is measured.
+- **FEAT-058 through FEAT-060 have no tasks.** The task id space is closed at
+  TASK-0112 and none was minted, following the recorded FEAT-054..FEAT-057
+  precedent. Each of the three says so in its `## Prerequisite tasks` table
+  rather than leaving it blank. Minting them is a maintainer decision.
+- **The capstone document's registry-delta line claimed "61 features
+  (FEAT-001..FEAT-061)". That count was never true and is corrected in place.**
+  57 documents existed at `2d0ca9d`; three were added here; the total is **60**.
+  FEAT-061 is reserved in prose for an eye/BER capstone and was never written,
+  so the claimed 61 over-counted by four at the time it was written and by one
+  now.
+- **The three bands are the capstone's own §7.1 figures and two of the three do
+  not reconcile with the same document's stage table.** Each feature prints both
+  derivations in its Cost reconciliation rather than adjusting either. Summarised:
+  FEAT-058 3-6 mw against a staged 3.5-7 (and an itemised 2.5-5); FEAT-059
+  2-3.5 mw plus a separately-priced 0.5-1 mw trace row against a staged 3.5-5.5;
+  FEAT-060 5.5-9.5 mw, which agrees on both derivations.
+- **The three are sequenced by PERMANENCE, not by cost**: FEAT-058, then
+  FEAT-060, then FEAT-059. FEAT-059 is the cheapest and is the only one
+  committing a frozen save tag, a mandatory palette entry and a K9 obligation.
+  A scheduler reading this table by cost alone will invert it; that inversion is
+  a REPLAN, not a preference.
 
 ### Citation corrections
 

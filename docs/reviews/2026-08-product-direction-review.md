@@ -237,9 +237,10 @@ and ceremony are liabilities:
 ## 6. What was done as part of this review
 
 - This report committed to `docs/reviews/`.
-- Meta-issue filed summarizing the review and disposition table.
+- Meta-issue #508 filed summarizing the review and disposition table.
 - Closed as duplicate, per the merge dispositions above: #299 (→ #163),
-  #303 (→ #308), #307 (→ #298), each with the surviving criteria named.
+  #303 (→ #308), #307 (→ #298), each with the surviving criteria named in a
+  closing comment.
 - Closed as not planned: #295 (CAP-03), with the re-entry path recorded.
 - All other dispositions are recommendations recorded here and in the
   meta-issue; deferred capstones remain open — deferral is free on the graph

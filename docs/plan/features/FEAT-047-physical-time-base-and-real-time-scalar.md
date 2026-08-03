@@ -22,6 +22,7 @@ golden is untouched.
 | CAP-10 | required | a sample rate is samples per second. The drawn tier inherits this through the analog region; the no-solver tier can carry a rate on the element instead |
 | CAP-11 | required | as above, for the capture direction |
 | CAP-07 | beneficial | timing data handed to a fabrication flow is in real units; the tape-out path needs the same declaration for a different reason |
+| CAP-18 | required | a 345.6 ps flight time and a 50 ps edge rate are meaningless against a dimensionless tick, and the electrical-length lint multiplies a time by a velocity. The declared physical length also rides this feature's format bump rather than minting one. Added 2026-08-03 under D16: the filed issue #367 declares `serves_capstones: [... 313 ...]` and #313 carries 367 in `requires_features`; this table's omission was a transcription defect |
 
 ## Prerequisite features
 

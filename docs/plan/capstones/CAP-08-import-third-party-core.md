@@ -62,7 +62,7 @@ importer imports real designs".
 | FEAT-037 | Reset semantics, clock and domain architecture | a third-party core is reset-driven; an initial value is not the same thing | required |
 | FEAT-034 | Retirement-indexed parity harness and `RetireRecord` | `ThirdPartyCoreExecutionTest` compares per retired instruction, not by final state | required |
 | FEAT-009 | Measurement gate and tracked calibration fixture | `ThirdPartyCoreBudgetTest` divides by measured constants and needs a tracked fixture | required |
-| FEAT-019 | Yosys JSON write | round-tripping the imported core back out is how the import is proven lossless | beneficial |
+| FEAT-019 | Yosys JSON write | round-tripping the imported core back out is how the import is proven lossless - and that round trip is a named step of this capstone's outcome, so without the write direction the step cannot be executed at all, which is exactly the minimality test a `beneficial` row is supposed to fail. Corrected 2026-08-03 under D16: this row read `beneficial`, and the filed capstone issue #304 carries 321 in `requires_features` with the correction argued in its §2, while the filed FEAT-019 issue #321 declares `serves_capstones: [304, 310]`. Both ends say required; the document was the outlier | required |
 | FEAT-023 | External toolchain differential oracle and board on-ramp | the external toolchain is the oracle that says the import behaves like the source | required |
 | FEAT-024 | Black-box HDL component and external co-simulation | the parts of a core that cannot be realized can still run, in the external simulator | beneficial |
 | FEAT-015 | Headless `CircuitOp` layer | import constructs a circuit from a program and must not need a `Graphics` | required |

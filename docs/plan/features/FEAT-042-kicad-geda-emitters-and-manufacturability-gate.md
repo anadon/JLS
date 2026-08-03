@@ -19,6 +19,7 @@ report, so "it exported" and "it can be built" stop being the same claim.
 | CAP-04 | beneficial | Shares the cascade rule and the footprint column; the breadboard capstone consumes the same package layer |
 | CAP-05 | required | The netlist itself, plus the check that says whether the board can be built |
 | CAP-13 | required | The emitters are this capstone's spine; the gate is their acceptance criterion |
+| CAP-18 | required | The signal-integrity constraint file rides alongside this netlist and names the same nets; a constraint on a net the board tool never heard of is inert by construction. Added 2026-08-03 under D16: the filed issue #366 declares `serves_capstones: [298, 307, 313]` and #313 carries 366 in `requires_features`; this table's omission was a transcription defect |
 
 ## Prerequisite features
 

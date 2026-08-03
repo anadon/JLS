@@ -28,6 +28,7 @@ external tool that annotates a JLS net by name can key on it.
 | CAP-14 | required | a SPICE deck's nodes are nets; ngspice comparison is per node |
 | CAP-15 | required | hierarchy goldens must be generated once, over names that do not move |
 | CAP-17 | required | partition boundaries are cut on nets; a net must keep an identity that survives being cut and must name the same signal on both sides of the cut |
+| CAP-18 | required | a signal-integrity constraint is attached to a net, so a net needs a name that survives save, load and export unchanged - otherwise the board tool's violation cannot name the net back. Added 2026-08-03 under D16: the filed issue #336 declares `serves_capstones: [... 313 ...]` and #313 carries 336 in `requires_features`; this table's omission was a transcription defect |
 
 ## Prerequisite features
 

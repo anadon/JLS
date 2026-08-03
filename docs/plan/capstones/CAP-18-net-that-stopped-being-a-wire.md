@@ -116,8 +116,11 @@ adds a third.
 
 | # | title | relationship |
 |---:|---|---|
-| - | A net that stopped being a wire | **no issue** - CAP-18 was derived from a maintainer research request after the registry closed; an issue should be filed before any work here starts |
-| - | FEAT-058 through FEAT-061, the entire high-frequency programme | **no issue** - the planning corpus contains no signal-integrity vocabulary at all, verified by grep at `529e5be` |
+| 313 | CAP-18: a drawn net that is electrically long says so, shows its reflections, and exports a constraint a real board tool enforces | **is** - this capstone, filed 2026-08-03. The "no issue" this row carried at authoring is superseded |
+| 486 | FEAT-058: edge rate, declared physical length and the electrical-length lint | **is** - rung 1, filed 2026-08-03 under D14, `serves_capstones: [313]`, `blocked_by: [367, 336, 319]` |
+| 487 | FEAT-060: signal-integrity constraint authorship and PCB constraint export | **is** - rung 2, filed 2026-08-03 under D14, `serves_capstones: [313]`, `blocked_by: [486, 336, 366, 318, 319]` |
+| 490 | FEAT-059: the closed-form transmission-line element and the reflection lab | **is** - rung 3, filed 2026-08-03 under D14, `serves_capstones: [313]`, `blocked_by: [487, 367]`. Note the three were filed in **permanence** order, so their issue numbers do not follow their FEAT numbers |
+| - | FEAT-061, the Touchstone reader / channel characterisation / statistical eye | **no issue, no document, no REGISTRY row, and no scope statement anywhere** - it is reserved in prose only, for an eye/BER capstone that has not been commissioned. That reservation protects nothing mechanical, which is why the registry count below is 60 and not 61 |
 | 89 | SDF timing annotation | overlaps - SDF carries transition times as well as delays, so FEAT-058's edge rate is owed to it independently |
 | 87 | Liberty cell library | overlaps - `docs/capability-roadmap/sweep-02-timing.md:110` already states the gap verbatim: "JLS has one integer, no slew, no load, no fanout awareness" |
 | 93 | SDC constraints | informs - a constraint object model is the same shape as an SI constraint set, and both want a time base |

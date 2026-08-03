@@ -19,7 +19,7 @@ own and defend.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-07 | beneficial | the shuttle flow is a synthesis flow, and speaking the synthesis tool's own netlist shortens it |
-| CAP-08 | beneficial | the import path and the export path must agree; a writer is what makes the round trip assertable |
+| CAP-08 | required | the import path and the export path must agree; a writer is what makes the round trip assertable, and that round trip is a named step of that capstone's outcome rather than an improvement to one. Corrected 2026-08-03 under D16: this row read `beneficial`, and both filed issues say otherwise - #304 carries 321 in `requires_features` and this feature's own issue #321 declares `serves_capstones: [304, 310]`. `CAP-08-import-third-party-core.md` carried the same stale grading and is corrected in the same pass |
 | CAP-13 | beneficial | reaches gate-level and SPICE-shaped consumers through the synthesis tool without a second lowering pass in JLS |
 | CAP-14 | beneficial | the SPICE deck a digital design hands to ngspice is produced by the synthesis tool from this format |
 | CAP-15 | required | parity with the toolchain means writing what it reads, not only reading what it writes |

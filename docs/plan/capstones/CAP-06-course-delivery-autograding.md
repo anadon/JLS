@@ -60,13 +60,22 @@ the difference between "grading is a string diff" and "grading is a verdict".
 | FEAT-015 | Headless `CircuitOp` layer | grading is headless and must construct and mutate circuits without a `Graphics` | required |
 | FEAT-035 | Checkpoint and simulation-state serialization | a 300-submission run must survive a machine going away mid-batch | beneficial |
 | FEAT-032 | Host byte port, `Console` and transcripts | labs whose answer is a transcript, graded by replay rather than by final register values | beneficial |
-| FEAT-011 | Accessibility, keyboard operability and onboarding | a course cannot assign a tool a student cannot operate, and a first-run student must not be dropped on a blank canvas | required |
-| FEAT-010 | Deterministic native installers and file association | a course of 300 installs the tool without bringing its own JDK | required |
+| FEAT-011 | Accessibility, keyboard operability and onboarding | a course cannot assign a tool a student cannot operate, and a first-run student must not be dropped on a blank canvas - but this **SUBSTANTIALLY SHIPPED**, and the residual owns no observation in this capstone's outcome. See the note below the table | **background - not required** |
+| FEAT-010 | Deterministic native installers and file association | a course of 300 installs the tool without bringing its own JDK - but this **SUBSTANTIALLY SHIPPED**, and the residual owns no observation in this capstone's outcome. See the note below the table | **background - not required** |
 | FEAT-012 | Semantic merge safety and per-kind merge rules | group labs merge; a merge that parses but is corrupt is an ungradable submission | beneficial |
 | FEAT-050 | Module runtime consumed: extension points and providers | a course ships its own element or exporter as a module rather than a fork | beneficial |
 | FEAT-051 | P2P session foundation and shared session v1 | paired lab work and live instructor assistance in a student's own file | beneficial |
 | FEAT-052 | CRDT replication, collaborative undo, security hardening | a shared classroom session must not let one peer inject an element type the other did not allow | beneficial |
 | FEAT-025 | Logisim-Evolution `.circ` importer and migration report | a course migrating its existing lab bank arrives with `.circ` files | beneficial |
+
+**FEAT-010 and FEAT-011 left the required set, and the correction is recorded rather than made silently (D16, 2026-08-03).** This table graded both `required`; the filed capstone issue **#300** omits both from `requires_features`, and the disagreement is decided in the issue's favour on evidence rather than on the template's authority rule alone:
+
+- **FEAT-010, deterministic native installers and `.jls` file association - SUBSTANTIALLY SHIPPED.** `scripts/build-installer.sh` drives `jpackage` with the file association wired per platform (`:363`, `:409`, `:477`); determinism is measured by `.github/workflows/repro-installers.yml` as a report-only probe; #190 (the msi determinism leg) closed as completed. The live residual is promoting the probe to a gate and clean-machine install verification (#188, #191, #284, #285), now carried at feature tier by **#338**.
+- **FEAT-011, keyboard operability and accessibility - SUBSTANTIALLY SHIPPED.** `docs/keyboard-a11y-verification.md` exists at `2d0ca9d` and is 146 lines; `test/jls/ui/` holds 34 files, of which 28 match `*Test.java`. #75's own title records keyboard operability as landed with a named residual, and #73 owns first-run onboarding. Now carried at feature tier by **#355**.
+- **Two independent witnesses on the far side.** **#338 declares `serves_capstones: []`** - it serves no capstone at all - and **#355 declares `serves_capstones: [296]`** - CAP-00, not CAP-06. A feature that believed itself required by this capstone would carry `300` there; neither does.
+- **The minimality test is what actually decides it.** Neither residual has an answer to *"what breaks in the outcome statement if it is removed"*. Both are asserted not to have regressed, by that capstone issue's AC-6, which needs no feature to build it.
+
+Both remain in `## Related GitHub issues` below and in this table as **background**; neither is in the required set, and the required-feature sum in the Cost section is the eight-row sum with their 8-16 mw and 6-10 mw removed.
 
 ## Related GitHub issues
 
@@ -144,8 +153,17 @@ the difference between "grading is a string diff" and "grading is a verdict".
   `docs/reproducibility.md` and `docs/windows-msi-determinism.md` own installer
   determinism, `docs/keyboard-a11y-verification.md` owns accessibility
   verification.
-- **Cost reconciliation.** Marginal band 12-20 mw. Its 10 required features
-  sum to 65-107 mw and its 7 beneficial features are additional. The marginal
+- **Cost reconciliation.** Marginal band 12-20 mw. **Its 8 required features
+  sum to 51-81 mw** and its 7 beneficial features are additional.
+  **Recomputed 2026-08-03 under D16, and the arithmetic is shown rather than
+  the total edited:** this line read *"10 required features sum to 65-107 mw"*,
+  which counted FEAT-010 at 8-16 mw and FEAT-011 at 6-10 mw. Both left the
+  required set as background (see the note under the prerequisite table), so
+  `65 - 8 - 6 = 51` and `107 - 16 - 10 = 81`. The eight remaining rows are
+  FEAT-003, FEAT-005, FEAT-006, FEAT-007, FEAT-015, FEAT-016, FEAT-017 and
+  FEAT-053, which is exactly `requires_features` on #300. **The marginal band
+  is unchanged at 12-20 mw**: removing rows cannot raise a marginal band, and
+  no row was re-priced. The marginal
   band is smaller than the required set because most of those features are
   shared spine, booked once against whichever capstone funds them first.
   "Marginal" here means the incremental cost given the spine is funded; the

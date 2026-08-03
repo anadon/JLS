@@ -19,7 +19,7 @@ one build pipeline with one acceptance surface.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-00 | beneficial | Seven open issues on one pipeline; the bring-your-own-JDK barrier is the first thing a new user hits. Its full band is booked against CAP-06, which requires it |
-| CAP-06 | required | A course of 300 cannot be asked to install a JDK; the install step is where a lab loses its first hour |
+| CAP-06 | background - not required | A course of 300 cannot be asked to install a JDK; the install step is where a lab loses its first hour - but this **SUBSTANTIALLY SHIPPED** (`scripts/build-installer.sh` wires the file association per platform at `:363`, `:409`, `:477`; `.github/workflows/repro-installers.yml` measures determinism as a report-only probe; #190 closed as completed), and the residual owns no observation in CAP-06's outcome statement. Corrected 2026-08-03 under D16: this row read `required`, and the filed issues say otherwise - CAP-06's issue #300 omits 338 from `requires_features`, and **this feature's own issue #338 declares `serves_capstones: []`**, i.e. it claims no capstone at all. `CAP-06-course-delivery-autograding.md` carried the same stale grading and is corrected in the same pass. CAP-06's AC-6 asserts the shipped half has not regressed |
 
 ## Prerequisite features
 

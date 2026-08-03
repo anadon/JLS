@@ -26,6 +26,7 @@ view preserves that view's geometry verbatim instead of dropping it.
 | CAP-02 | beneficial | addresses the boundary being toggled and the probes being read |
 | CAP-03 | beneficial | addresses the toggled boundary and the probed nets |
 | CAP-17 | required | a watched element inside one partition needs a name that does not depend on which partition it landed in |
+| CAP-18 | required | the back-annotated routed length is a second view's datum about a first view's net, addressed the same way every other view is. Note the half that shipped is the wrong half: per-element permanent identity landed with #165, but a constraint is attached to a **net**, and stable net identity did not. Added 2026-08-03 under D16: the filed issue #318 declares `serves_capstones: [... 313 ...]` and #313 carries 318 in `requires_features`; this table's omission was a transcription defect |
 
 ## Prerequisite features
 

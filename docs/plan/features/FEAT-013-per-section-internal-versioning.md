@@ -25,6 +25,7 @@ makes a bulk binary payload expressible at all once the body is plain text.
 | CAP-04 | required | breadboard geometry is a second view's section |
 | CAP-05 | required | package and footprint bindings ride as an optional section rather than as element attributes |
 | CAP-16 | beneficial | a migration report and its provenance travel with the migrated file |
+| CAP-18 | required | the signal-integrity attribute and constraint blocks ride as OPTIONAL sections, so an older JLS opens an annotated circuit structurally with a clean diagnostic instead of refusing it - and a dropped constraint is a silently unmanufactured requirement, which is the one case the format's silent-ignore valve must not reach. Added 2026-08-03 under D16: the filed issue #319 declares `serves_capstones: [... 313 ...]` and #313 carries 319 in `requires_features`; this table's omission was a transcription defect |
 
 ## Prerequisite features
 

@@ -53,11 +53,17 @@ codec and a resampler that are already built for CAP-10.
 | FEAT-048 | A2D/D2A bridge elements and A-STEP synchronization | samples crossing into the digital engine is exactly the A2D boundary, and the lock-step between the two loops is what makes it reproducible | required |
 | FEAT-043 | The breadboard canvas and its physical-simulation binding | a microphone preamp is a breadboard circuit before it is anything else | beneficial |
 | FEAT-008 | `SimpleEditor` decomposition, a UI harness and a floored `jls.edit` | the live trace on the preamp node is editor surface | beneficial |
+| FEAT-049 | Analog device models, the drawn palette and convergence hardening - **ADMISSION SLICE ONLY** | the analog port permit and the datum/node-partition contract, i.e. the element-hierarchy widening that lets an analog terminal exist at all. FEAT-048's own prerequisite table names it, and the filed FEAT-048 issue #368 confirms it from its own side with `blocked_by: [331, 351]`, so a closed required set has to contain it. **Nothing else of FEAT-049 - no model library, no drawn palette, no convergence hardening - is needed by any step of this capstone's outcome**; those stay out and are funded by CAP-12. Added 2026-08-03 under D16 | required |
 
-Deliberately absent: FEAT-049. The minimum needs no transistor models at all -
-an op-amp macromodel arriving as a `.subckt` data file gets the same capstone,
-which is why audio input lands ahead of the device library rather than behind
-it.
+**FEAT-049's element-admission slice entered the required set, and the correction is recorded rather than made silently (D16, 2026-08-03).** This document previously read *"Deliberately absent: FEAT-049"* - a stronger claim than `beneficial`, and the one being refuted. The filed capstone issue **#303** carries **#331** in `requires_features`, and the filed FEAT-049 issue **#331** declares `serves_capstones` including **303**. Both ends say required; the document was the outlier. Three independent checks decide it on evidence rather than on the template's authority rule alone:
+
+1. **The mechanism genuinely does not exist.** At `2d0ca9d`, `src/jls/elem/Element.java:17-18` is `public abstract sealed class Element` permitting `DisplayElement, LogicElement, Wire`, and `src/jls/elem/Put.java:57` takes a `LogicElement` - so an analog bridge has no legal terminal. Without the widening, FEAT-048 cannot be built at all.
+2. **FEAT-048's own prerequisite table names it**, and the filed #368 mirrors that with `blocked_by: [331, 351]`. A required set that omits a required feature's own stated prerequisite is a rule-E defect.
+3. **The carve is a decision, not a drift.** The admission slice - the analog port permit plus the datum/node-partition contract - is required here; the rest of FEAT-049 is not. FEAT-049's own document draws that boundary at `docs/plan/features/FEAT-049-analog-device-models-palette-convergence.md:47-53`, requiring that *"The port widening lands as a **standalone commit carrying no analog code**"*.
+
+**The slice is UNPRICED and that is stated rather than hidden.** The corpus prices FEAT-049 whole at 21-33 mw and does not decompose it, so this capstone's required sum is a **lower bound** until the slice has a band. #331 whole is funded by CAP-12 (#305); a reader adding the two capstone sums today counts the slice exactly once, in CAP-12, and must not read this capstone's figure as having absorbed it. **No number was invented to close the gap.**
+
+The rest of FEAT-049 stays out for the reason this document already gave, which remains correct for everything except the slice: the minimum needs no transistor models at all - an op-amp macromodel arriving as a `.subckt` data file gets the same capstone, which is why audio input lands ahead of the device library rather than behind it.
 
 ## Related GitHub issues
 

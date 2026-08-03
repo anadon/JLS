@@ -18,7 +18,7 @@ issues older than a year all share.
 | CAP-NN | required/beneficial | what it needs from this feature |
 |---|---|---|
 | CAP-00 | required | Three open issues on the editor surface, all older than a year, all sharing one test substrate |
-| CAP-06 | required | A course cannot assign a tool a student cannot operate, and a first-run student must not be dropped on a blank canvas |
+| CAP-06 | background - not required | A course cannot assign a tool a student cannot operate, and a first-run student must not be dropped on a blank canvas - but this **SUBSTANTIALLY SHIPPED** (`docs/keyboard-a11y-verification.md` is 146 lines at `2d0ca9d`; `test/jls/ui/` holds 34 files of which 28 are test classes; #75's own title records keyboard operability as landed with a named residual), and the residual owns no observation in CAP-06's outcome statement. Corrected 2026-08-03 under D16: this row read `required`, and the filed issues say otherwise - CAP-06's issue #300 omits 355 from `requires_features`, and **this feature's own issue #355 declares `serves_capstones: [296]`**, i.e. CAP-00 and not CAP-06. `CAP-06-course-delivery-autograding.md` carried the same stale grading and is corrected in the same pass. CAP-06's AC-6 asserts the shipped half has not regressed |
 | CAP-16 | beneficial | A migrating user arrives fluent in another editor and lands in an unfamiliar one; onboarding is part of whether the migration succeeds |
 
 ## Prerequisite features

@@ -23,7 +23,7 @@ between a multi-hour run being merely slow and being impossible.
 | CAP-03 | required | Same shape at ternary scale; the dump is larger per cycle because the manifest carries radix |
 | CAP-06 | required | Grading hundreds of submissions multiplies the parse cost by the submission count |
 | CAP-09 | required | Verification means running the same design many times; a quadratic parse taxes every one |
-| CAP-17 | beneficial | superlinear load and whole-run materialization are already defects at current scale and become the ceiling at partition scale |
+| CAP-17 | required | **PROMOTED TO REQUIRED AND TO FIRST** on measurement. Superlinear load and whole-run materialization are already defects at current scale and become the ceiling at partition scale: `finishLoad` is the first wall any `.jls`-borne design hits, at ~165,000 runtime elements, and nothing in that capstone is reachable until it lands. Corrected 2026-08-03 under D16 - this row read `beneficial`, which contradicted three other sources: `CAP-17-distributed-execution.md:65` grades it required-and-first, the filed CAP-17 issue #312 carries 353 in `requires_features`, and the filed FEAT-005 issue #353 declares `serves_capstones: [296, 301, 295, 300, 306, 312]`. The document was the outlier and is the defect |
 
 ## Prerequisite features
 

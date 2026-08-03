@@ -579,3 +579,123 @@ question to answer is always "what is the path, and what does it cost" - never
 (07-mvl-determination.md) and the multi-view determination
 (08-views-determination.md). Their SURVEY evidence stands; their VERDICTS were
 reached under the forbidden reasoning and must be re-derived as paths and costs.
+
+## 14. MAINTAINER RULINGS, round 3 (BINDING; supersede every determination above)
+
+Six questions were put to the maintainer after the capstone and feature tiers
+were filed. All six are answered. Recorded here as D11-D16 so no later pass
+re-opens them.
+
+### D11. #59 is closed. The ultimate outcome is what matters, not the bookkeeping.
+
+Verbatim: *"Close it? It really doesn't matter what so long as the ultimate
+outcome is good."*
+
+Executed 2026-08-03: #59 closed as `not_planned`, `tier:capstone` retired from
+its labels, mirror comments on #59 and #310. #310 (CAP-15) is now the sole
+capstone-tier owner of the staged HDL programme, in the consume-its-features
+form.
+
+**The one live obligation this created**, recorded on #310 because a closed
+issue cannot carry one: #59 held #291 (the Stage-1 Memory export remainder) as
+a capstone-direct task under the tier-model exception. **No filed feature claims
+#291.** It needs re-homing, most plausibly into #358 (FEAT-018).
+
+The governing half of this ruling is the second sentence. Bookkeeping form is
+not worth a decision cycle; the outcome is. Do not escalate a
+disposition-shaped question again where any disposition leaves the outcome
+sound - pick one, execute it, and record which.
+
+### D12. Citations pin to a commit, or anchor to a landmark. Not to a bare line.
+
+Verbatim: *"PR to some commit, then. Or use some relative offset from landmarks
+like a function declaration."*
+
+The problem this answers: `docs/plan/evidence/` landed in `3a81a4a`, after the
+`2d0ca9d` evidence commit the issues declare, so citations to it do not resolve
+at the commit they are pinned to, and bare line numbers rot on the next edit
+regardless.
+
+Two accepted forms, either is sufficient:
+1. **Commit-pinned.** Cite `<path>:<line>` together with the commit the line was
+   read at, and say plainly when that commit differs from the issue's own
+   `evidence_commit` (which pins CODE claims). A permalink at that commit is the
+   strongest form.
+2. **Landmark-relative.** Anchor to a named, greppable declaration - a method or
+   field signature, a heading - and express the citation relative to it. A
+   landmark survives edits above it; a line number does not.
+
+Prefer landmark-relative for anything expected to move. Prefer commit-pinned for
+one-shot evidence. A bare `file:line` with no commit and no landmark is not a
+citation and does not satisfy the evidence rule.
+
+### D13. Dependencies are a list of prerequisite issues. Nothing more.
+
+Verbatim: *"A dependency system simply listing prerequisite completed issues is
+sufficient. I don't think that these require such fuss. Just make something that
+works."*
+
+This SUPERSEDES the elaborate treatment the planning corpus and the filed issues
+grew around ordering. Specifically:
+
+- The "beneficial features are hard `blocked_by` prerequisites of required
+  features" finding is **not a rule-E violation and needs no reconciliation**.
+  A prerequisite is a prerequisite. Whether a feature also owns an observation
+  in a capstone's outcome statement is a separate and much less important
+  question, and the two need not agree.
+- Do not re-derive sufficiency or minimality arguments because an ordering edge
+  crosses a required/beneficial boundary.
+- Do not open questions, file REPLANs, or write reconciliation obligations for
+  this class. Record the prerequisite and move on.
+
+The standing test for an edge is unchanged and is the whole of it: **A must land
+before B.** Scheduling preference is not an edge.
+
+### D14. CAP-18's missing features are a mechanical fix.
+
+Verbatim: *"This is obviously a mechanical fix."*
+
+FEAT-058, FEAT-059 and FEAT-060 are named in #313's required set with no feature
+document, no REGISTRY.md row and no filed issue - the whole of that capstone's
+11-20 mw marginal band sits in them. The corpus document also claims a registry
+of 61 features where only 57 exist.
+
+Write the three documents from CAP-18's own content, add their REGISTRY rows,
+file them, and resolve #313's `planned_features` to their numbers. This is
+transcription from a source that already exists, not new planning. Do not raise
+it as a question again.
+
+### D15. The guest image is a FILE. Files require import-to-subcircuit.
+
+Verbatim: *"File. Files will also require 'import to subcircuit' to nest
+systems."*
+
+Settles the #301 vs #343 disagreement in favour of the sidecar file with a
+recorded digest, against the in-format optional binary section. Consequence
+already priced: #343's position was that a sidecar needs no section mechanism
+and therefore does not gate on #319 (FEAT-013), which is what keeps CAP-02's
+demo slice near 10 mw rather than 30.
+
+**The second sentence is a scope addition, not a restatement.** Choosing files
+as the carrier creates a requirement that did not exist before: an
+**import-to-subcircuit** path, so a system carried as a file can be nested
+inside another design as a subcircuit. Without it, files compose only at the
+top level and "nest systems" is false. This lands as scope on the
+subcircuit/definition features - it is not free and must not be absorbed
+silently into an existing band.
+
+### D16. Stale corpus documents are mechanical fixes, not questions.
+
+Verbatim: *"These are again mechanical fixes and not actually a question."*
+
+Where a filed issue and its corpus document disagree and the issue has been
+verified correct at a named commit, correct the document. Known instances:
+`CAP-06-course-delivery-autograding.md` on FEAT-010/FEAT-011 (both shipped);
+`FEAT-005-quadratic-and-materializing-io-paths.md:26` grading CAP-17
+`beneficial` where three other sources say required-and-first; the consumed-by
+tables of FEAT-004, FEAT-013, FEAT-014, FEAT-042 and FEAT-047 carrying no
+CAP-18 row though their filed issues all name 313 in `serves_capstones`.
+
+Generalise it: a document/issue disagreement where the issue is verified is a
+transcription defect. Fix the document. Do not file an open question, do not
+ask, do not carry it as a reconciliation obligation.

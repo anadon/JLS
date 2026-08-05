@@ -92,7 +92,7 @@
     <dependency>
       <groupId>org.jspecify</groupId>
       <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -587,7 +587,7 @@
              (issue #65; publishing with releases rides #44) -->
         <groupId>org.cyclonedx</groupId>
         <artifactId>cyclonedx-maven-plugin</artifactId>
-        <version>2.9.2</version>
+        <version>2.9.3</version>
         <executions>
           <execution>
             <phase>package</phase>

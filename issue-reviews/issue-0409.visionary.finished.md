@@ -156,4 +156,28 @@ evidence.
   *extraction* of `jls.CircuitInvariants` from `canConnect` and the op validators. That is
   the change that makes every later consumer — merge driver, CRDT, importer — correct for
   free, and without it TASK-0031 ships a fourth opinion about what a legal circuit is.
-- **The `blocked_by` on #436** for five of the six checks.
+- **The `blocked_by` on #436** for five of the six checks. Only the dangling-reference
+  finding (P3) needs it, and this issue's own DoD already licenses the waiver — "P3
+  explicitly deferred and its successor named." The successor is named already: #436
+  §7.11 commits to *refusing* a dangling `sref` at load, and #436's Related Work calls
+  that "this task's local case" of the general pass #409 owns. Keeping the edge instead
+  inherits #436's own `blocked_by: [315]`, so the real chain is 315 → 436 → 409 → 415 —
+  four deep, on the critical path of the one feature #356 already concedes is not
+  parallel.
+
+## Verdict
+
+**endorse-with-reframing.** The capability is real and the flagship evidence is
+excellent: O2 catches a data-destruction bug red-handed, and O3's silent widening is
+worse than the issue knows, because `HdlExporter` folds net width the same way. But the
+issue prices a reporting layer where the first defect wants a five-line fix, and it mints
+a fourth statement of "legal circuit" in a codebase whose entire style is one authority
+per contract — `canConnect` says it in four copies, `AddWire.validate` and
+`AddElements.validate` say it against a live circuit, and `SemanticCheck` would say it
+again with its own record and its own enum. Re-cut it: fix the `WireEnd.init` nesting;
+extract `jls.CircuitInvariants` and make `canConnect`, the op validators, the load path,
+`-check` and TASK-0032's merge driver consumers of it; give `LoadError` a severity rather
+than stand up a second taxonomy; derive the check set from the op validators'
+preconditions instead of from a list of six; and let the op layer construct H2's corpus.
+What is left is a smaller task than the one filed, it is unblocked today, and every later
+constructor of a circuit — merge, CRDT, importer, undo — gets the same answer for free.

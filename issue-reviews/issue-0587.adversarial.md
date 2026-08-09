@@ -1,0 +1,61 @@
+# Issue #587: FEAT-C35-4: a wrong hotkey, an undocumented flag or a missing element page fails the build — the two existing help ratchets generalize into docu-tests
+- Lens: adversarial
+- Date: 2026-08-08
+- Reviewer: Claude Sonnet 5
+- Verdict: needs-rework
+
+## Summary of the ask
+
+Generalize two narrow existing "docs can't lie" ratchets (`HotkeysHelpAccuracyTest`, and the topic-existence checks in `HelpTopicsTest`) plus close a documented gap (`CliFlagTableTest` never reads a doc file) into a full docu-test suite: flags (AC-1), element-page *content* — ports/parameters/behavior, not just existence (AC-2), hotkeys anywhere in the content tree (AC-3), run against both the in-jar and hosted-site generated targets (AC-4), and proven with four planted-failure negative checks (AC-5).
+
+## Findings, most severe first
+
+### 1. [High] AC-2's "registry descriptor" has no ports/parameters/behavior data to check against
+
+AC-2 says: "each page's documented ports, parameters and stated behavior are checked against the registry descriptor, not merely that a topic id resolves." I read the actual registry types the issue is presumably pointing at:
+
+- `src/jls/elem/ElementType.java` (the "core" descriptor from #78): fields are only `tag`, `aliases`, `elementClass`, `factory` (lines 33-43). No ports, no parameters.
+- `src/jls/edit/PaletteEntry.java` (the "GUI" descriptor): fields are only `type`, `group`, `iconName`, `fallbackText`, `tooltip`, `helpTopic` (lines 28-44). No ports, no parameters, no behavior.
+
+Neither descriptor carries structured metadata for element ports/parameters, and there is no third structured source I could find — element port counts are computed imperatively inside each element's `init()` method, and behavior is free English prose in the help pages themselves, e.g. `resources/help/elements/components/mux.html`: "The multiplexor will output 0 when the selector is greater than the highest numbered input." Checking that sentence against `Mux.java`'s implementation is not a diffable assertion; it requires either (a) inventing and back-filling a new structured ports/params/behavior schema across ~30 element classes — large, unscoped prerequisite work the issue never names — or (b) semantic/NLP comparison, which is not a deterministic CI gate. AC-2 reads as if this data already exists ("checked against the registry descriptor") when it does not. **Recommendation:** split AC-2 into (a) a ports/parameters structural check, scoped only after the missing metadata is added to the registry as its own prerequisite issue, and (b) drop or radically narrow "stated behavior" to something mechanically checkable (e.g. a delay-formula or bit-width invariant already expressible in code), not open-ended prose fidelity.
+
+### 2. [High] AC-4's prerequisite is only half-declared in `ordering_after`
+
+AC-4 requires the ratchets to "run against the *generated* targets from FEAT-C35-1 (in-jar tree and hosted site alike)." But the hosted-site target is explicitly owned by **FEAT-C35-2 (#585)**, not FEAT-C35-1: #585's own body says "The static site FEAT-C35-1 emits is published per release under a versioned path" — i.e. #584 (FEAT-C35-1) only emits the site directory; #585 is what actually publishes it live. The issue's own front-matter, though, declares `ordering_after: [FEAT-C35-1]` only — #585 is not listed. Both #584 and #585 are themselves open, unimplemented features today (verified: #584 "Outcome" describes a not-yet-built single-source pipeline; #585 "Outcome" describes a not-yet-built publishing step). A contributor or scheduler honoring the declared `ordering_after` literally could start #587 the moment #584 lands, then discover AC-4 is unsatisfiable until #585 also lands — a dependency the issue itself asserts ("hosted site alike") but doesn't schedule against. This is corroborated by the issue's own first comment, which reconfirms "AC-4 here requires the ratchets to run against **both** generated targets from #584" — the comment even mis-cites #584 as the sole source of both targets, compounding the gap rather than catching it. **Recommendation:** add `585` to `ordering_after`, or explicitly scope AC-4's hosted-site leg out until #585 lands (with a WAIVED-style note), rather than leaving a silent blocker.
+
+### 3. [Medium] AC-1 would fail immediately against the current repo — undocumented flags already exist
+
+`FLAGS` in `src/jls/JLSStart.java` (lines 759-789) lists `s`, `board`, and `pins` among others. I checked README.md's CLI section (lines 126-146, the section this issue would presumably assert against) and `docs/batch-interface.md`:
+
+- `-board` and `-pins`: not mentioned anywhere in README.md. `docs/batch-interface.md` doesn't mention them either (only greps for a usage-string appearance of `-s`, line 22).
+- `-s` (startup parameter file): appears only in a bare usage-string in `docs/batch-interface.md` line 22 and one line of prose (line 52); not documented in README's CLI bullet list at all.
+- `-export`'s VHDL capability: `FLAGS` documents `-export` as writing `.v`/`.vhd`/`.vhdl` ("Export the circuit as Verilog-2005 or VHDL, chosen by the file extension" — JLSStart.java line 781), but README's `-export` prose (lines 135-137) describes only "a structural Verilog-2005 module," never mentioning VHDL.
+
+If AC-1 is implemented as literally stated ("every `FLAGS` entry is documented somewhere the assertion names; an undocumented new flag fails"), the ratchet is red on day one against `-board`, `-pins`, and (depending on how strictly "documented" is interpreted) the VHDL half of `-export`. The issue frames itself purely as adding *test infrastructure* ("the two existing help ratchets generalize into docu-tests"), but landing AC-1 also requires real documentation-content authoring work that isn't acknowledged as in-scope or estimated. **Recommendation:** either fold "write the missing flag documentation" explicitly into this issue's scope/estimate, or file it as a blocking prerequisite issue so #587's own PR doesn't silently balloon into a doc-content rewrite.
+
+### 4. [Medium] AC-3's generalization is a much harder parsing problem than "coverage beyond that one page" suggests, and misses a second accelerator source
+
+`HotkeysHelpAccuracyTest` (test/jls/HotkeysHelpAccuracyTest.java) works today only because `hotkeys.html` is one rigid two-column HTML table, matched by a single regex (`ROW`, lines 78-79), and it only checks accelerators reachable via `EditOp.accelerator(String)`. AC-3 asks for "every documented accelerator anywhere in the content tree" to be checked. I looked at other pages that mention hotkeys:
+
+- `resources/help/editor/editing/keyboard.html`: keys appear in free prose inside `<b>` tags — `<b>r</b> (rotate clockwise)`, `<b>shift-r</b>`, `<b>w</b>` to start a wire, `<b>Enter</b>`, `press <b>F5</b> to simulate it`.
+- `resources/help/editor/editing/paste.html`: "You can also type the ctrl-V key to paste..." — lower-case "ctrl" with capital "V", a third distinct spelling convention from the table's `ctrl-a` style.
+
+There is no table structure here to regex-match; a generic "documented accelerator" extractor over arbitrary prose, multiple casing conventions, and parenthetical asides is a materially harder engineering task than "the delta AC-3 owns is coverage beyond that one page" implies. Worse, **F5 is not an `EditOp` accelerator at all** — it's bound directly in `JLSStart.java:1711`: `run.setAccelerator(KeyStroke.getKeyStroke("F5"));`. `HotkeysHelpAccuracyTest`'s entire design (and `MenuAcceleratorPolicy`, referenced in its javadoc) is built around `EditOp.accelerator()` as the single source of truth; AC-3 silently requires a second source of truth (menu-level `setAccelerator` calls in `JLSStart`) that the issue never names. **Recommendation:** name the F5/F7-class menu accelerators as a second source the generalized checker must read, and treat free-prose accelerator extraction as its own design problem (parenthetical rules, casing normalization, false-positive risk from any bold single-letter/word in help text) rather than a mechanical extension of the existing regex.
+
+### 5. [Low-Medium] AC-5's "committed negative-check record" is underspecified and gameable
+
+"Four planted wrong claims ... each fail CI in a committed negative-check record, and the failure message names the file and the contradicted source of truth" is ambiguous between (a) a permanent, isolated self-test that keeps proving the mechanism fires on every future run (the project's own precedent: README lines 263-269 describe `scripts/wayland-rig-selftest.sh`, which "drives the unmodified rig against a stub toolchain ... and asserts each scenario is classified with the documented exit code," run on every CI event) and (b) a one-time transcript in the PR showing four hand-broken docs failed CI, then reverted and never re-checked. Interpretation (b) satisfies the literal AC-5 text while giving zero regression protection after merge — exactly the "verification could pass while the real goal fails" failure mode this review is asked to hunt for. **Recommendation:** state explicitly that the four negative checks are permanent, fixture-isolated self-tests in the `wayland-rig-selftest.sh` pattern (broken docs live in a test fixture directory, a meta-test asserts the ratchet rejects them, real shipped docs are untouched), not a one-off demonstration.
+
+### 6. [Low] The issue inherits a stale claim from ARCHITECTURE.md that undercuts its own AC-2 premise
+
+`ARCHITECTURE.md` line 117 states flatly: "There is no element registry yet — issue #78 will introduce one." But #78's own body (comment 2026-07-18 STATUS, and the "Background & Prior Work" section) documents that the core registry (`ElementType`/`ElementRegistry`) already landed via prior PRs, and I confirmed both files exist in the checked-out tree (`src/jls/elem/ElementRegistry.java`, `src/jls/elem/ElementType.java`, 130-137 lines). So ARCHITECTURE.md — the document this repo calls its "contributor's map" and the natural first read for anyone picking up #587 — is stale on exactly the fact AC-2 depends on ("the registry descriptor"). This isn't #587's bug to fix, but the issue doesn't flag or correct it either, and a contributor trusting ARCHITECTURE.md at face value would wrongly conclude AC-2 has no registry to check against at all (when in fact one exists, just not with the needed fields — see finding 1). **Recommendation:** note the ARCHITECTURE.md staleness in this issue or file a one-line doc-fix alongside it, since an issue about "docs that lie" landing on top of a stale architecture doc is a bad look either way.
+
+## What's solid
+
+- AC-1's core shape (bind `FLAGS` to doc prose, not just to `usage()`) is a sound, well-precedented idea — it closes a gap `CliFlagTableTest` (#71) explicitly leaves open, and the issue correctly cites the exact test and exact gap ("it reads no documentation file at all").
+- The "Boundary and references" section is unusually disciplined about not re-doing what `HelpTopicsTest` and `HotkeysHelpAccuracyTest` already cover — the delta framing for AC-2/AC-3 is scoped correctly *in principle*, even though (per findings 1 and 4) the practical delta is larger than advertised.
+- The dedup comment against #524 and #585 AC-4 (issue comment) is a genuinely careful piece of boundary analysis and correctly identifies that link-integrity (#585) and claim-accuracy (#587) are orthogonal.
+
+## Net assessment
+
+The framing — "the two existing help ratchets generalize" — undersells what's actually being asked. AC-1 needs real doc-content authoring work on top of test code; AC-2 needs a registry schema that doesn't exist yet (ports/parameters/behavior) with no visible path from "existence descriptor" to "content descriptor"; AC-3 needs a second accelerator source of truth and a much harder prose-parsing mechanism than the single-table precedent suggests; and AC-4 has an incompletely declared cross-feature dependency. None of these are fatal to the goal, but as written the issue understates the actual engineering surface and would likely blow its stated band (1-2 mw) once AC-2's real prerequisite is discovered mid-implementation. Needs rework before this is ready to hand to an implementer.

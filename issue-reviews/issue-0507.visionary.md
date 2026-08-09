@@ -4,185 +4,201 @@
 - Reviewer: Claude Opus 5
 - Verdict: endorse-with-reframing
 
-## What this issue is actually for
+## The claim, and whether it is the right one
 
-Strip the six planned features away and the claim is: **JLS should be the first
-schematic simulator where a blind student can do the assigned lab, not a
-workaround for it.** That is a real and correctly-chosen goal. It is also
-consistent with the project's stated identity — a pedagogy tool for a course
-ecosystem — in a way that most of the capstone roster is not: this one changes
-who can take the course.
+The end state — a blind student completes the same lab as everyone else, and a
+colorblind student never depends on hue — is the right ambition and it is
+genuinely category-defining. Nothing below argues with the outcome. What I am
+arguing with is the route: CAP-26 cuts along the *canvas* seam (make the
+painted picture speak) when the project's whole trajectory already points at a
+different seam (make the circuit's *meaning* a first-class artifact, of which
+the picture is one rendering). Cut there instead and four of the six planned
+features collapse into one model plus thin views, the named blow-out risk
+(KC-26-2) stops being architectural, and the result works on Windows and macOS
+rather than only inside a Linux Orca rig.
 
-I endorse the goal without reservation. I do not endorse the route, and I am
-explicitly disregarding one acceptance constraint (K9 / KC-26-4) because as
-written it forbids the single cheapest fix the outcome depends on.
+I am also explicitly disregarding two stated acceptance criteria: AC-5's
+pixel-identity clause and AC-2's Orca-session-in-CI. Reasons in §4 and §5.
 
-## The trajectory the issue is being judged against
+## 1. The reframing: one non-visual circuit model, four consumers
 
-JLS's architecture has one dominant commitment, visible everywhere:
-**the model is real, the view is a thin shell over it.** `Simulator` and
-`BatchSimulator` import no AWT (`HeadlessCoreRatchetTest`); undo is save/load
-(`CircuitSnapshot`); every editor mutation is migrating to a closed, validated,
-serializable op vocabulary in `jls.collab.op` that is explicitly headless
-(`ArchitectureRulesTest.collabLayersAreHeadless`); the batch/CLI surface is a
-*documented stability contract* while SVG export deliberately is not. The
-project's leverage has always come from adding a **new front end over the model**,
-never from making the canvas smarter.
+JLS already builds a language-neutral structural model of a drawn circuit:
+`HdlExporter.buildModel` → `src/jls/hdl/HdlModel.java` (1005 lines: ports, nets,
+per-element statements, deterministic legalized names, a `renames` map), fed to
+pluggable emitters (`VerilogEmitter`, `VhdlEmitter`). That is 90% of "what is
+in this circuit and what connects to what", already headless, already
+deterministic, already tested.
 
-CAP-26's PF-3 does the opposite. "Screen-reader circuit navigation with spoken
-element, connection and live signal-state announcements" is, concretely, a
-custom `AccessibleContext` over `SimpleEditor`'s custom-painted canvas plus live
-change notification — the one place in the codebase where the picture, not the
-model, is the source of truth. It is the most expensive (5–8 mw of a 14–23 mw
-band), most platform-fragile part of the plan, and the capstone knows it: the
-whole band is gated behind an Orca feasibility spike, and KC-26-2 exists solely
-to survive its failure.
+Build **one circuit-outline model** on that walk, and derive:
 
-The project already reached the same conclusion and wrote it down. Its own
-playbook, `docs/standards-adoption/03-accessibility-conformance.md` §6, costs
-the canvas accessible-tree route at **8–15 maintainer-days for a credible v1,
-plus permanent maintenance on every new element type, plus a genuine risk that
-java-atk-wrapper surfaces none of it to Orca**, and recommends against building
-it. CAP-26 cites neither that document nor its recommendation.
+1. **An outline view** — a stock `JTree`/`JTable` docked beside the canvas:
+   elements, ports, nets, live values. Because it is stock Swing it is
+   accessible *for free* on Windows (Access Bridge), macOS (Cocoa peer) and
+   Linux (AT-SPI), with no per-element accessible-proxy layer and no live-region
+   trickery. Revised 508 **E101.2 Equivalent Facilitation** is exactly the
+   provision that makes this a conforming answer rather than a dodge.
+2. **The prose narrative (PF-4a)** — a third emitter over the same walk, sibling
+   to the two HDL emitters. AC-6's byte-identical determinism then comes for
+   free from machinery `SvgExportTest`/`DeterministicSaveTest` already pin.
+3. **Live signal state (PF-3's hard half)** — a value column that updates on the
+   EDT. A `JTable` cell change is an accessible-value change every bridge
+   already ships support for. KC-26-2 ("can Swing deliver live announcements at
+   all?") is a question about custom-painted canvases; it does not arise here.
+4. **The VPAT's evidence for 1.1.1 / 1.3.1 / 4.1.2** — the criteria whose
+   current answer is "the canvas is opaque" become "an equivalent accessible
+   representation of the same information is provided."
 
-## Reframing 1 (the main one): equivalent facilitation, not a talking canvas
+This is not my invention: `docs/standards-adoption/03-accessibility-conformance.md`
+(in-tree, §6) costs the full JAAPI canvas scene model at **8–15 maintainer-days
+plus permanent per-element maintenance plus a genuine risk java-atk-wrapper
+surfaces none of it**, and recommends the outline view at 3–4 days instead —
+"gate the full JAAPI canvas tree on an actual user request." CAP-26 funds the
+rejected option (PF-3, 5–8 mw, its own named risk band) and never mentions the
+recommended one. That is the single biggest divergence between this capstone
+and the project's recorded thinking.
 
-Do not make the drawing speak. **Ship a second, equal-power, textual view of the
-circuit** — a focusable outline (`JTree`/`JList`/`JTable`) of elements, names,
-values, and connections, beside the canvas, editing through `OpSink.submit`.
+The outline model also pays outside accessibility, which is how you can tell it
+is the right seam: it is what a circuit diff wants (#170 collab), what an
+autograder or an LLM reading a `.jls` wants, what an instructor writing a lab
+key wants, and it is the same "structural model + emitters" shape the HDL work
+already committed to. An `AccessibleContext` proxy layer over the canvas serves
+exactly one consumer and adds a seventeenth entry to ARCHITECTURE.md's
+sixteen-step "adding an element today" list, forever.
 
-Why this is the better cut, not just the cheaper one:
+## 2. PF-1 is mostly already shipped; retarget it
 
-- Stock Swing components carry working `AccessibleContext` implementations on
-  **all three AT stacks today** — Java Access Bridge, NSAccessibility, AT-SPI —
-  with zero bridge-specific work. The custom-canvas route has to earn each one.
-- "Live signal-state announcement" stops being a live-region research problem
-  and becomes a table model update on rows the reader already tracks. KC-26-2
-  largely evaporates rather than being survived.
-- It composes with the op layer instead of fighting the 4k-line mouse state
-  machine: an outline that submits `AddElements`/`AddWire`/`SetElementConfig` is
-  a *third* client of the vocabulary #163 is already building for. That is the
-  seam the project has been cutting toward for a year.
-- Revised 508 **E101.2 Equivalent Facilitation** explicitly contemplates it, so
-  the VPAT story is stronger, not weaker.
-- The playbook prices it at **3–4 days** against 8–15, and recommends gating the
-  full JAAPI canvas tree on an actual user request.
+`src/jls/edit/WireRenderer.java:41-54` (`strokeFor`) already encodes wire state
+in a **non-color channel**: HiZ dashed, non-zero thick, zero thin — plus an open
+ring glyph on a touching wire end — and `test/jls/elem/WireValueChannelTest.java`
+proves by rendering that each state leaves a different footprint *independent of
+the colors chosen*. The capstone's Background asserts "there is no redundant
+non-color encoding". Its falsification grep (`tritanop|vpat|tactile|swell`)
+could not have found this, so the absence claim is an artifact of the search
+terms, not of the tree.
 
-The one thing lost is spatial reading of the drawing — which the canvas route
-does not deliver either, since bounds-hit-testing through an AT bridge is
-precisely the part most likely to fail the spike.
+Retarget PF-1 to the actual delta, which is small: add tritanopia to
+`ThemeTest`'s ΔE≥25 ratchet (a third simulation matrix, lines not weeks); build
+the grayscale/CVD screenshot oracle; and extend the second channel to the states
+that *have* none — `watch`, `highlight`, `initialState`, bus values, error. The
+2–3 mw demo slice is days, not weeks, and AC-1 gets its apparatus almost
+immediately.
 
-## Reframing 2: PF-3 and PF-4 are one thing, not two
+## 3. The prerequisite nobody owns: the Windows installers ship no Access Bridge
 
-An outline row ("AND gate `g3`, inputs from `a` and `carry`, output drives `sum`,
-currently 1"), a prose narrative sentence, and a tactile SVG label are the same
-function of the circuit at three verbosities. Build **one `CircuitDescription`
-renderer over the element/net graph** and give it three sinks: rows for the
-outline view, paragraphs for the export, labels+geometry for the tactile
-profile. Filed as PF-3 and PF-4 they are two pipelines with two decay paths and
-two totality tests; as one they share a registry-keyed totality test (which the
-landed `src/jls/elem/ElementRegistry.java` now makes trivial to write) and one
-determinism golden. The tactile SVG is then a *render profile* of the existing
-`CircuitRenderer`, not an "export pipeline."
+`scripts/build-installer.sh:145` derives the jlink module set from
+`jdeps --print-module-deps`. `jdeps` reports *static* dependencies, so
+`jdk.accessibility` — the module carrying the Java Access Bridge — can never
+appear. I grepped `scripts/` and `.github/`: `jdk.accessibility` and
+`accessibility.properties` appear **nowhere**. Every `.msi` this project
+publishes therefore bundles a runtime through which **NVDA and JAWS receive
+nothing at all**, no matter what PF-3 builds. A GitHub search finds no open
+issue mentioning it, and none of #542–#549 covers it.
 
-## Reframing 3: the lab path a blind engineer would actually pick is text
+So CAP-26's §1 step 2 ("a blind student builds a two-gate circuit by keyboard
+with spoken feedback") is, on the project's flagship distribution, false at the
+end of the capstone as scoped — and PF-5's generated VPAT would have to rate
+508 §502.3.\*, EN 11.5.2.\* and WCAG 4.1.2 **Does Not Support** for Windows
+while six features' worth of work sits behind a bridge that is not loaded. This
+is a one-line module addition plus a properties write in the same build step as
+`clamp_mtimes`, pinned by a source-grep test in the house
+`KeyPadAccessibilityPinTest` style. It belongs at the front of this capstone,
+not absent from it.
 
-Blind hardware engineers work in HDL text, not spoken schematics. JLS already
-has: plain-text `.jls` saves that diff in version control, structural Verilog
-export (`-export`), `-t` test vectors, VCD, and a documented batch contract —
-plus an HDL *import* roadmap (#33/#59, Yosys JSON netlists). A text-authored
-circuit that round-trips into a `.jls` the instructor grades with the same
-autograder is a complete lab path built entirely on the project's **strongest**
-surface, and it is largely already funded by other issues. CAP-26 never
-considers it. If the course requires drawing, the outline view covers that leg;
-if it does not, text is a better student experience than any narration.
+## 4. AC-5's pixel-identity gate contradicts PF-5
 
-## Reframing 4: a conformance ledger, not a VPAT generator
+K9/KC-26-4 gates every PF-1 commit on the default theme being *pixel-unchanged*.
+But `Theme.DEFAULT` provably fails WCAG **1.4.11 Non-text Contrast** today:
+`nonZero` `#E69F00` = 2.10:1, `watch` `#56B4E9` = 2.31:1, and the #75 keyboard
+caret is painted in `selectionColor` `(240,240,240)` on white
+(`SimpleEditor.java:2509`) = **1.14:1** — the focus indicator of the keyboard
+feature the whole blind-lab path stands on is invisible. Pixel identity forbids
+the fix; PF-5 then has to publish the failure. And shipping the fix only as a
+non-default theme is the exact move the in-tree playbook rules out ("1.4.11 is
+judged on what the user gets out of the box").
 
-PF-5's real invention is "no claim without a named passing test." That rule
-should not be spent on one document. `docs/standards-adoption/` holds eleven
-playbooks (RISC-V compliance, waveform formats, IP-XACT, IEC/IEEE symbols,
-CRA/supply chain, tool qualification) each of which ends in a claim someone will
-be asked to back. Build a **generic claims→evidence ledger** (a table of
-claim rows, each naming a test; one test asserting every row's test exists and
-passes; renderers per report) and the ACR is its first consumer. Same cost,
-n-fold reuse, and it strengthens the standards program rather than annexing one
-corner of it.
+Re-derive K9 as what it actually protects: **`Theme.CLASSIC` stays
+byte-identical** (that is the real promise to existing users, already pinned by
+`ThemeTest.classicReproducesTheLegacyPalette`), no state ever silently changes
+meaning, and every default-palette change lands in `CHANGELOG.md`. Pixel
+identity of `DEFAULT` is not that promise; it is a proxy that here forbids the
+goal.
 
-## Reframing 5: put the CVD oracle on the headless path
+## 5. Verify the accessible tree, not the screen reader
 
-PF-2 as filed (#543) is a framebuffer filter in the GUI. But AC-1's actual
-requirement is *automated screenshot analysis in CI*, and JLS already exports
-PNG/SVG headlessly (`-i`). A `--simulate-cvd=deuteranopia|protanopia|tritanopia`
-post-filter on the export path gives CI its oracle, gives instructors a
-checkable artifact for their handouts, needs no display, and honors the
-headless-core discipline. The in-app preview then becomes a thin view of the
-same filter — which is the ordering this project uses everywhere else.
+AC-2 puts a scripted Orca session in CI on the #101 Wayland rig. The same
+in-tree playbook recommends **against** exactly this: it needs a session D-Bus,
+GNOME GSettings schemas, and java-atk-wrapper, and the `gui-wayland` lane's own
+history (twenty runs to earn promotion, an `UNVERIFIED-PLACEHOLDER` checksum,
+`PIXEL_DIFF_MIN` still at 0) is the honest cost estimate. A lane that is red for
+substrate reasons erodes the green build that every other ratchet depends on.
 
-## Where I disregard the stated acceptance criteria
+Stronger evidence for less flake: a **golden accessible-tree dump** (depth,
+name, role, focusable, value) compared byte-exact, run under the existing
+`@Tag("display")` Xvfb execution — it is simultaneously the regression guard and
+the appendix a procurement reviewer can read — plus a dated per-release **manual
+AT checklist** across Orca/NVDA/VoiceOver, modeled on
+`docs/wayland-desktop-checklist.md`. That covers the two platforms Orca-in-CI
+will never reach, and it keeps PF-5's honesty rule intact: no row rated above
+"Not Evaluated" for 502.3/11.5.2/4.1.2 without a dated AT session.
 
-**K9 / KC-26-4 ("default visual theme pixel-unchanged for existing users,
-gating every PF-1 commit") should be struck.** The project's own analysis
-computes that `Theme.DEFAULT` fails WCAG 1.4.11 today: `nonZero` `#E69F00` at
-2.10:1 and `watch` `#56B4E9` at 2.31:1 against the white canvas, and — worse —
-the #75 keyboard caret is painted in `selectionColor` `(240,240,240)`, the same
-value as the grid, at **1.14:1**. The keyboard path this entire capstone stands
-on has an indicator a low-vision user cannot see. A "pixel-unchanged default"
-gate forbids fixing that. `Theme.CLASSIC` already exists precisely so no user is
-forced off the old colors; that is the compatibility promise, and it is enough.
-Replace K9 with "CLASSIC stays byte-identical; DEFAULT changes are announced in
-CHANGELOG.md," and keep the ΔE≥25 constraint joint with a new ≥3:1 floor in one
-run.
+Corollary for PF-2: put the CVD simulation transform in AWT-free color math so
+the *same* function serves the in-app framebuffer preview and the AC-1
+screenshot assertions — then AC-1 runs in the plain headless surefire lane, not
+the fragile display one. One filter, two consumers, no new CI lane.
 
-## The blockers the capstone does not mention, and must
+## 6. Tactile export is a render profile, not a pipeline
 
-Each is red today, cheap, and gates the outcome as stated:
+`CircuitRenderer` already emits SVG via JFreeSVG and hands back
+`svg.getSVGDocument()` (`:355`) — a DOM you can post-process deterministically.
+"Tactile" is then a **presentation profile** of the existing renderer (stroke
+widths, spacing, symbol substitutions) plus `<title>`/`<desc>` injection, not a
+second export path. Make the profile registry the deliverable: one
+state → (color, stroke, glyph) mapping, registry-keyed with a totality test,
+with profiles for screen / dark / print (CAP-24's symbols) / CVD-preview /
+tactile. Risk 3.4 already sees that this seam must exist; promote it from a risk
+note to PF-1's actual product, and CAP-24's print symbols, #355's DARK variant,
+and the 126 hardcoded-black call sites all get funded by the same sweep.
 
-1. **`scripts/build-installer.sh:145` derives the jlink module set from
-   `jdeps --print-module-deps`.** `jdk.accessibility` is a static-dependency
-   invisible module and appears nowhere in that script — so **every shipped
-   Windows MSI bundles a runtime with no Java Access Bridge, and NVDA/JAWS get
-   nothing from an installed JLS.** §1 step 2's "NVDA documented" is
-   unachievable on the primary Windows distribution until a one-line change
-   lands. No open issue surfaced by search owns this.
-2. **`src/jls/edit/Trace.java` is 626 lines of `MouseListener`/
-   `MouseMotionListener` with no `setFocusable`, no key bindings, and no
-   accessible wiring.** The trace window is where signal state over time
-   actually lives; it is a WCAG 2.1.1 **Level A** failure and it is the natural,
-   stock-Swing home for "spoken signal-state changes" — roughly two days, versus
-   the live-region work PF-3 proposes.
-3. **`CircuitRenderer`'s SVG export emits no `<title>`/`<desc>`.** PF-4's tactile
-   SVG builds on this renderer; injecting a title and a pin/element inventory is
-   a golden update (SVG is not a stability contract) that serves sighted docs
-   too, and it is the first brick of the description renderer in Reframing 2.
+## 7. Duplication and ordering
 
-## Duplication and pull-against
+- **PF-3 vs #355 TASK-0029 / #380.** #544 says it "extends, does not re-own"
+  #355's canvas `AccessibleContext`. But static reporting and traversal are two
+  halves of one object graph: that is a seam drawn through the middle of a
+  class, and it will be renegotiated at implementation time. Under the outline
+  reframing the overlap dissolves — CAP-26 owns the outline model and its views
+  and never touches the canvas; #355 keeps the canvas scene model if it is ever
+  wanted.
+- **Fund the provable failures before the report about them.** Today, un-owned
+  by any of #542–#549: the Access Bridge module (§3); the three 1.4.11 contrast
+  defects (§4); `resources/help/**` — 83 files, 10 `<img>`, **zero** `alt`,
+  **zero** `lang` (straight 1.1.1 and 3.1.1 Level A failures in the product
+  documentation, in scope as EN clause 10 / 508 602.2); and `Trace.java:20`,
+  626 lines of mouse-only `JPanel` with no key bindings and no accessible
+  wiring — a **Level A 2.1.1** failure sitting inside the simulator the lab path
+  runs through. Each of these is days. A VPAT generated before they are fixed is
+  honest and embarrassing; generated after, it is the document the capstone
+  wants.
+- **The i18n note in risk 3.5 understates itself.** A generated prose narrative
+  is the first artifact whose *entire content* is English sentences, which is a
+  far larger surface than the dialog strings the non-goal was recorded against —
+  and, being generated, the cheapest place to make translation possible later.
+  Template the sentences against a phrase table; never concatenate. That costs
+  nothing now and keeps ARCHITECTURE.md's revisit trigger honest.
 
-- PF-3 vs **#355 TASK-0029**: #355 already owns "an `AccessibleContext` over the
-  editor canvas exposing each drawn element as an accessible child," and names
-  the reach of that scene model as *the* decision that sets its cost. #544's
-  "extends, does not re-own" is a label, not a boundary. Under Reframing 1 the
-  conflict dissolves: #355 keeps the canvas tree (gated on demand), CAP-26 takes
-  the outline view, and they stop bidding for the same work.
-- PF-1's redundant encoding rides the same ~126 hardcoded-black call sites that
-  #289/#381's dark variant must sweep. One sweep, two consumers — or two sweeps
-  and a merge conflict.
+## Reordered spine (what I would fund, in order)
 
-## What to keep exactly as written
+0. `jdk.accessibility` + `accessibility.properties` in the installer, pinned.
+1. The three contrast fixes: dedicated `focus` role, visible caret, canvas focus
+   ring, palette recolor jointly against ΔE≥25 — with `ThemeContrastTest`.
+2. Help `alt`/`lang` sweep + an accessibility help page (508 §602.3 / EN 12.1.1).
+3. Trace-window keyboard operability.
+4. **The circuit outline model + outline view** — the capstone's real centre.
+5. Prose narrative as a third emitter; tactile SVG as a render profile.
+6. Tritanopia + CVD filter (headless) + grayscale oracle; operability ratchet.
+7. VPAT generator last, mechanical, over a product whose Level A defects are
+   closed.
 
-The no-test-no-claim rule (KC-26-3), the AC-5 falsification requirement, the
-operability ratchet (PF-6), and the refusal to over-claim in prose are the best
-parts of this issue and are what make it more honest than most accessibility
-work anywhere. Keep them; move them onto a smaller, sooner, more portable
-target.
-
-## Suggested shape
-
-Tier 0 (~3 weeks, unblocks everything): Access Bridge module + properties, the
-contrast/caret fixes with the joint ΔE+contrast test, help `alt`/`lang` + an
-accessibility help topic, SVG `<title>`/`<desc>`, PF-6's ratchet armed.
-Tier 1 (~1 week): the accessible outline view over `OpSink` + the description
-renderer; Trace made focusable and readable. Tier 2: prose narrative and tactile
-SVG as sinks of the same renderer; CVD filter on the export path; the
-conformance ledger with the ACR as its first report. Tier 3, gated on a real
-user request: the full canvas JAAPI tree and live announcements.
+Steps 0–3 are roughly a week and move more students than PF-3 as filed. Step 4
+is where the category-defining claim actually lives. PF-6 and PF-5 are endorsed
+as written; PF-2 is endorsed with the headless-filter note; PF-1 shrinks to its
+real delta; PF-3 and PF-4 are the two I would re-cut along the outline seam.

@@ -6,171 +6,154 @@
 
 ## What this issue is actually for
 
-Two things are bundled here, and only one of them is a task.
+Strip the apparatus away and the claim is: *JLS knows what a legal circuit is, but only
+the editor's mouse knows it.* Every other way a `Circuit` comes into existence — file
+load, undo restore through `CircuitSnapshot`, a netlist import, a collab op from a peer,
+a git merge — bypasses that knowledge. The end state worth wanting is not "a checker
+exists"; it is **one authority on circuit legality, consulted by every constructor of a
+circuit.** Judged against that, #409 is directionally right and structurally wrong in
+three places.
 
-The first is a **loader defect that destroys user data**. `src/jls/elem/WireEnd.java:104`
-puts the attachment-resolution block inside the wire loop opened at `:102`, so a wire end
-with zero `ref wire` items never resolves its `attach`/`put` declaration. The consequence
-O2 measures is not "a corrupt file loads quietly" — it is that JLS reads a declared
-connection, discards it, and then **re-saves the file without it**, because
-`WireEnd.save` (`src/jls/elem/WireEnd.java:597`) emits `ref attach` only when
-`isAttached()`. The file the student opens is not the file the student had.
+## Reframe 1 — the flagship defect is a loader bug, not a missing reporting layer
 
-The second is a **capability**: JLS has no answer to "is this circuit well-formed?" that
-lives anywhere except the editor's mouse handler. That is the real gap, it is the "or"
-branch of #356, and it is worth building.
+Open Question 1 recommends default **(a)**: have `WireEnd.init` stash an
+unresolved-declaration residue so `SemanticCheck` can *narrate* the loss, and file the
+nesting fix separately. That is backwards, and the issue's own O2 says why: the load
+"succeeds," the attachment is dropped, **and the re-save persists the loss**. Option (a)
+buys an end state where JLS prints a finding about the corruption *and still writes the
+corrupted file back to disk*. A loud diagnostic beside silent data destruction is worse
+than either alone.
 
-The issue merges them, and the merge is what I want to change. It treats the loader
-defect as *evidence for* the validator, recommends Open Question 1 option (a) — teach
-`WireEnd` to carry a residue recording that the loader failed to do its job, so the new
-checker can observe the failure — and pushes the one-line fix into "adjacent work
-discovered en route... filed as new issues." That inverts the leverage. Below: three
-reframings, ordered by how much they change.
+Option (b) — hoist the `if (loadPut != null)` block out of `next:for (int elid :
+loadWires)` at `src/jls/elem/WireEnd.java:102-104` — is rejected as "changes load
+behaviour and would make previously-lossy files load differently." That objection has
+the sign inverted. Loading them *losslessly* is the repair. And the blast radius is
+provably nil for files JLS itself writes: an end carrying `attach`+`put` and zero `ref
+wire` items is not editor-producible (the editor creates ends in wire pairs; the four
+`SimpleEditor.canConnect` overloads at `:3992`, `:4109`, `:4229`, `:4346` never yield
+one), so §7.12 claim 1 and P5 hold trivially. The fix also deletes the N-times
+`p.setAttached(this)` re-entry the issue notes as "harmless only because."
 
-## 1. Fix the nesting, do not build a subsystem to observe it
+**Concretely:** the flagship deliverable of TASK-0031 should be a ~5-line nesting fix
+plus a regression test asserting the round-trip preserves `ref attach`. That is a
+same-day PR. Then `SemanticCheck` asserts the invariant rather than inventing a
+breadcrumb field to report its violation — which is what a check layer is *for*, and it
+removes the "blocks execution" flag from OQ1 entirely.
 
-Option (b) is a dedent. It is also, on inspection, a **security fix**, which the issue
-does not say. The three throws of O5 that the issue is careful to preserve — dangling
-attach element, non-existent named put, and the double-attachment guard
-`p.isAttached() && p.getAttached() != this` — all live inside the same mis-nested block.
-So at HEAD **none of them runs for a wire end with zero wire references**. The
-double-attachment guard exists specifically because #58 found that silently honoring the
-last attachment simulates a subtly wrong circuit; #38 and #170 classify `.jls` bytes as
-hostile input. A hostile file therefore reaches an unguarded path today by the trivial
-expedient of omitting `ref wire`. The issue's §7.11 asserts those four rejections stay
-load failures (P8) while its own O1 shows one of them is conditionally unreachable — and
-its plan leaves that unreachable for however long TASK-0005 → TASK-0031 takes.
+## Reframe 2 — do not mint a fourth encoding of "legal"; extract the first
 
-The stated objection to (b) is that "previously-lossy files load differently." Consider
-which files: a `WireEnd` block carrying `attach` + `put` + zero `wire` items. JLS itself
-cannot write one (`save` guards on `isAttached()`, and an attached end reached through the
-editor's connect gesture always has the wire that carried it there). The affected set is
-exactly the corrupt-merge set — the population this whole feature exists to serve — and
-for them "loads differently" means "keeps the connection instead of deleting it." That is
-the fix, not a risk of the fix.
+Legality is currently written down in at least three independent dialects:
 
-And it dissolves the issue's own worst threat to validity (§11, second bullet: "the check
-runs after `finishLoad`, so it sees a circuit the load path has already normalised"). With
-the block dedented, the put resolves, the object graph is truthful, and the flagship
-finding becomes an ordinary read over the loaded circuit — an *attached end driving no
-wire* — with **no residue field, no new load-time state, and no `SemanticCheck` access to
-`loadAttach`/`loadPut`**. Option (a) buys the checker a memory of a bug; option (b)
-removes the bug and leaves the checker a simpler question to ask.
+1. `SimpleEditor.canConnect` ×4 — gesture time, `overlapMessage` strings. The width rule
+   `if (bits1 > 0 && bits2 > 0 && bits1 != bits2)` is copy-pasted four times (#356 §1
+   pins the line numbers).
+2. `jls.collab.op.*` validators — `AddWire.validate` (`src/jls/collab/op/AddWire.java`
+   ~`:320-365`) already checks named-put existence, put-is-free, single-claim, and
+   per-net tri-state agreement; `AddElements.validate` (`:95-159`) already checks
+   stable-id freshness and **element-name collision**, which is one of #356's two named
+   silent classes. Both throw `OpRejected`.
+3. `jls.SemanticCheck` — proposed, with its own record, its own enum, its own text.
 
-**Concretely: file the dedent as its own defect issue, land it this week, and rebase this
-task on the fixed loader.** It is hours of work, it stops data loss now, it restores a
-guard, and it deletes Open Question 1 — which the issue marks *blocks execution*.
+So four of #409's six checks are *already implemented*, in the op layer, against a live
+`Circuit`, with the same "validate before mutate" discipline. §12 claims "this task owns
+the post-load check and nothing else," but nothing in the issue reconciles it with
+`AddWire.validate`. §11's threat — "drift between `SemanticCheck` and the simulator would
+surface first on tri-state circuits" — is a self-inflicted wound: drift is only possible
+because a second copy is being written.
 
-## 2. The check set has a principled source, and the issue is not using it
+This project's whole architectural style is single-authority-per-contract:
+`SaveTags.resolve` is the only tag table, `JLSStart.FLAGS` is the only flag table,
+`TellUser` is the only dialog site, `ElementRegistry` collapsed the per-element switch,
+and `ArchitectureRulesTest`/`NotificationRatchetTest` exist to keep those singletons
+singular. A `SemanticCheck` that restates `canConnect` and `AddWire.validate` pulls
+directly against that arc.
 
-The title says "structurally corrupt in ways the editor would never let anyone draw."
-That sentence names the closure argument, and then the issue declines to use it: H1's six
-classes are "chosen from measured merge failure modes, not hypotheticals," with #356's
-nine-scenario matrix as the completeness oracle. An enumeration of observed failures has
-no closure property. "Everything the editor's connect gesture refuses" does.
+**The seam to cut along:** `jls.CircuitInvariants` — a headless, AWT-free module holding
+each rule *once*, expressed over circuit state rather than over a gesture. Then:
+`canConnect` calls it (four width copies collapse to one), `AddWire`/`AddElements`
+validators call it, the post-load pass calls it, `-check` calls it, and TASK-0032's merge
+driver calls it. The load-path deliverable becomes a thin *consumer*, which is a smaller
+task than the one filed, not a larger one. Add a ratchet test in the
+`ArchitectureRulesTest` family asserting the width/attachment predicates appear at
+exactly one call site — that is how JLS keeps authorities single, and it is how §11's
+drift threat is *eliminated* rather than "watched."
 
-Look at what `SimpleEditor.canConnect(WireEnd, Put)` (`src/jls/edit/SimpleEditor.java:4229`)
-already enforces, per gesture: end must be dangling; put must be unattached; bit widths
-must agree; no second input on a net unless both sides are tri-state; no tri-state/normal
-mixing in a bundle; no multiple drivers. That is *four of this task's six classes* plus
-two the task never lists — stated once, in code, by the person who defined what "drawable"
-means. #356 §1 already records the smell: the same three-line width check appears
-identically at `:4014`, `:4141`, `:4246`, `:4357`. This task proposes to write it a fifth
-time, in a different vocabulary, over a different data shape, and then §11 worries that its
-copy will drift from the simulator on tri-state circuits.
+## Reframe 3 — one diagnostic record with a severity, not a second taxonomy
 
-**The seam to cut along is a single predicate module — `jls.core.CircuitRules` — that
-answers legality over circuit state, with two callers:** the editor asking about a
-hypothetical post-gesture state, and the load path asking about a whole circuit. Then:
+§7.1 says findings report "through the existing `LoadError` channel, not a second
+reporting mechanism." §7.4 then defines a new `Finding` record. Those contradict. The
+STAGE-3 comment already flags that three diagnostic vocabularies (#409, #404, #608) are
+being minted concurrently over adjacent surfaces and hopes they will agree by convention.
 
-- The four duplicated width checks collapse into one, which is cleanup #356 has already
-  flagged and nobody owns.
-- Drift between "what the editor allows" and "what the checker demands" becomes
-  structurally impossible rather than a discipline the §11 bullet hopes for.
-- #356's Open Question 3 — "which invariants are format-level rather than editor-level?"
-  — is answered by construction: *all of them are*, because there is one set. That
-  question is currently marked as blocking arming.
-- H2 (zero false positives on the corpus) gets an argument rather than a fixture count.
-  A rule the editor enforces on every gesture cannot fire on a file the editor wrote;
-  three tracked fixtures (O9) is not evidence, it is a spot check, and §11 admits it.
-- The one class with no editor counterpart — reference integrity over `sref` — stays
-  where it belongs, in the loader, and is the only part genuinely blocked on TASK-0005.
+`LoadError` is already `(Category, detail, line, element, hint)` — category, location,
+explanation, remedy. Adding `severity` (`REFUSED` | `REPORTED`) plus a stable-id set
+covers everything §7.6 asks for, publishes through `JLSInfo.setLoadError` unchanged, and
+makes P8 (the four existing rejections stay load failures) a *field value* rather than a
+layering rule that O6's catch-all keeps threatening. It also gives #404 and #608 a home
+instead of a coordination memo. The "no `default:` arm so a seventh category is a compile
+error" ritual becomes unnecessary — `LoadError.Category` already carries that property
+and already has tests asserting on it.
 
-This also unblocks the task's other execution-blocking question. Open Question 2 asks
-whether the check runs on `CircuitSnapshot` restore, and worries about per-undo cost. With
-rules single-sourced, an undo snapshot is not untrusted input: it was produced by this
-process from a state the gesture guard already validated. The hazard #356 invariant 5
-names is the *loader's leniency*, not the snapshot's provenance — and the right coverage
-for it is a test property (every generated circuit round-trips and validates clean, in
-`GenerativeRoundTripFuzzTest`), not a runtime cost on every Ctrl-Z. Check at the boundary
-where foreign bytes enter; assert the interior in the suite.
+## Reframe 4 — the totality question has a better form than "six classes"
 
-## 3. Half these findings are a tax on how a wire is encoded — say so before #334 freezes
+H1 enumerates six corruption classes and §10 concedes it is refuted by any scenario
+nobody thought of. An enumeration can never be shown total. But #356 §4 invariant 4
+already states the sharper property: *a merge expressed as ops cannot produce a file JLS
+refuses to load.* Turn that around and the load-path question becomes: **is this circuit
+reachable by some sequence of legal `CircuitOp`s?** That is total by construction, it is
+the same predicate the collab layer must enforce anyway (#170, #171, #279), and it makes
+"which invariants are format-level rather than editor-level" (#356 OQ3) answerable rather
+than a standing debate. I am not proposing #409 implement op-reachability — that is a
+feature. I am proposing the check set be *derived from* the op validators' preconditions
+rather than from a list, so that every rule the op layer enforces is automatically a rule
+the load path enforces, and the six classes become an observation about today's
+validators rather than a hypothesis about corruption.
 
-`Wire.save` (`src/jls/elem/Wire.java:123`) is a no-op: *"Wires don't get saved."* A wire is
-an edge stored twice, as reciprocal `ref wire` items on two `WireEnd` records. Every one of
-the merge scenarios driving this task is a consequence of that: one side deletes a record,
-the other keeps its half, and no textual merge can see that the two halves were one object.
-O2 is precisely "the edge lost one endpoint." A dangling `ref wire` is "the edge lost the
-other." Interestingly, an *asymmetric* `ref wire` heals silently today, because
-`WireEnd.init:147-149` calls `addWire` on both ends — so the format is redundant, and the
-loader already treats one side as authoritative.
+## Reframe 5 — the TASK-0005 (#436) dependency is spec-induced, not natural
 
-If a wire were a single record — `ELEMENT Wire` with `sref end1`, `sref end2`, and its
-probe — then "one side deleted the wire, the other kept the end" is a delete/modify
-conflict on one record, which git reports natively, with no validator, no rule row and no
-finding category. The problem does not get detected better; it stops existing.
+`blocked_by` cites #436 because *one* of six checks — dangling `sref` — is phrased over
+an item kind that does not exist. Five of six need nothing from it. #356 §6 says the
+three-link chain TASK-0005 → 0031 → 0032 "is not parallel, and that is a real property."
+It is not: restating the reference-integrity finding over whatever reference form is
+current, or deferring that one check to #436's own PR, unblocks this task today and
+deletes a link from the only chain on the feature's critical path. Given #356 OQ2's own
+recommendation — "ship the validator first and independently" — the ordering as filed
+contradicts the parent's stated strategy.
 
-This task correctly disclaims format ownership. But #334 (FEAT-003) is *actively reopening*
-canonical text and reference form, and TASK-0032 is about to write a per-record-kind merge
-rule table over whatever kinds exist when it runs. Freezing "a wire is an invariant coupling
-two `WireEnd` records" into a validator, a rule table and a git driver is a decision made by
-default. **Post one comment on #334 asking whether the wire edge becomes a record in the
-`sref` epoch, before TASK-0032 writes rules against the two-record form.** Cost: one
-comment. Value: possibly deleting two of the six classes and one rule row permanently.
+## The corpus is not an oracle
 
-## 4. Verification: search for the classes instead of enumerating them
+§11 admits it: three fixtures, one of which #356's sibling D5 deletes. H2 as written is
+close to unfalsifiable-in-practice. The repo already has far better false-positive
+oracles that the issue does not name: `AllElementsRoundTripTest`,
+`GenerativeRoundTripFuzzTest`, `ElementSimulationGoldenTest`/`BatchSimulationGoldenTest`
+circuits, `RiscvCpuGoldenTest`, and — best of all — the op layer, which can *construct*
+arbitrary legal circuits. "Every circuit any sequence of accepted ops can build produces
+zero findings" is a real H2; "three files are clean" is not.
 
-H1 is refutable only by someone imagining a scenario the six classes miss — a falsifier
-that depends on the falsifier's imagination. The repo already has the machinery for a
-better one: `ContainerMutationFuzzTest` and `GenerativeRoundTripFuzzTest`. Generate a
-circuit, canonical-save it, apply a *merge-shaped* line mutation family (delete a record,
-duplicate a record, graft a record from a sibling save, drop one item line), reload, and
-assert the trichotomy #356 actually promises: **load fails, or the check reports, or the
-result is a circuit the gesture guard would have permitted**. Any input landing outside
-those three is a named, reproducible refutation of H1, found by search rather than by
-committee. That is also the only form of evidence that makes "$|S| = 2$ is really 3" (O4)
-a converged number rather than the next surprise.
+Related: `HdlExporter` folds net width with `Math.max` too (`:254`, and per-element
+`Math.max(...,1)` throughout). So the width disagreement of O3 does not merely mis-size a
+net — it silently propagates into exported Verilog. That is a second consumer that has
+independently guessed at an invariant nobody owns, and it is the strongest argument in
+the issue that #409's *width* check is genuinely needed. It belongs in the issue as
+evidence.
 
-## Where I agree without reservation
+## What I endorse unchanged
 
-Findings as data with a stable rendering, not booleans. No `default:` arm. Purity asserted
-against the canonical-save oracle rather than assumed. One code path for the person, the CI
-lane and the merge driver. `-check` on stderr because `docs/batch-interface.md` §1 promises
-stdout is results — that is the kind of contract-awareness this tracker does well. And the
-exit-code answer in Open Question 3 is right and generalizes: "loaded with findings" is not
-a runtime failure and must not reuse code 1; give it its own code and record it, because
-ARCHITECTURE.md's 0/1/2 table is the thing every autograder reads.
+- The `-check` flag joining `JLSStart.FLAGS` with a distinct exit code, findings on
+  stderr, stdout reserved (§7.1, OQ3). Correct, and consistent with `docs/batch-interface.md`.
+- Purity (P6/H3) asserted against `DeterministicSaveTest`'s canonical writer.
+- Reporting rather than rejecting, so `P_accepted` shrinks only via #356's arming ratchet.
+- Wiring `CircuitSnapshot` restore (OQ2, default yes). Anything less leaves undo unguarded.
+- Not paraphrasing multi-driver legality from `docs/simulation-semantics.md`.
 
-## What I would do with this issue
+## Acceptance criteria I am explicitly disregarding
 
-Keep it. Change its shape:
-
-1. Split out the `WireEnd.init` dedent as a standalone loader defect and land it first.
-   It stops data loss, restores the double-attachment guard for zero-wire ends, and
-   deletes Open Question 1 (currently execution-blocking).
-2. Reframe the deliverable as **extracting** the invariant set the editor already
-   enforces into one shared predicate module, with the load path as a second caller —
-   not as authoring a parallel one. This answers H2's completeness, kills the drift
-   threat, collapses a four-way duplication, and resolves #356 Open Question 3.
-3. Replace H1's enumerated six with the mutation-fuzz trichotomy above; keep the six as
-   the named categories the search is expected to land in.
-4. Answer Open Question 2 as "load boundary only, with a round-trip property in the
-   suite" rather than "run it on every undo."
-5. Post the wire-as-one-record question on #334 before TASK-0032 begins.
-
-I am explicitly setting aside the completion criterion that the nesting fix be deferred to
-a follow-up issue, and the recommended answer (a) to Open Question 1. Adding a field to the
-model whose only purpose is to remember that the loader dropped something is the wrong
-direction for a project whose stated arc is fewer places where a circuit's meaning is
-defined, not more.
+- **OQ1 default (a).** Take (b) and fix `WireEnd.init`. Reporting a bug you could fix, in
+  a run that then persists the damage, is not the end state this project wants.
+- **§7.4's new `Finding` record and its category enum.** Extend `LoadError` with a
+  severity instead; it satisfies §7.6, §7.11 and P8 with less surface and folds #404/#608 in.
+- **§12's "this task owns the post-load check and nothing else."** The task should own the
+  *extraction* of `jls.CircuitInvariants` from `canConnect` and the op validators. That is
+  the change that makes every later consumer — merge driver, CRDT, importer — correct for
+  free, and without it TASK-0031 ships a fourth opinion about what a legal circuit is.
+- **The `blocked_by` on #436** for five of the six checks.

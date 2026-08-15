@@ -1,0 +1,251 @@
+{
+ "chunk": 2,
+ "fixed": [
+  703,
+  704,
+  705,
+  706,
+  707,
+  708,
+  709,
+  710,
+  711,
+  712,
+  713,
+  714,
+  715,
+  716,
+  717,
+  718,
+  719,
+  720,
+  721,
+  722,
+  723,
+  724,
+  725
+ ],
+ "flagged": [],
+ "superseded_comments": [
+  {
+   "issue": 717,
+   "comment_id": 5227523289
+  },
+  {
+   "issue": 724,
+   "comment_id": 5227303180
+  }
+ ],
+ "other_issue_edits": [
+  {
+   "target": 701,
+   "change": "Update the Boundary sentence that says per-file check annotations were reserved for a task that \"has never been filed\" (TASK-C526-2) \u2014 #703 is now filed, open, and rewritten as a `where`-locator renderer, not the artifact-path consumer the old #703 text implied.",
+   "reason": "Stale/false-at-HEAD claim in #701 about #703's filing status, surfaced while cross-checking #703's dependency chain.",
+   "from": 703
+  },
+  {
+   "target": 466,
+   "change": "Add a `where = (unit, sid)` field to the VerdictSet per-expectation record (\u00a77.5/\u00a77.6), sourced from the element's permanent stable id (#165) and the lab's declared unit id, so downstream consumers (TestPanel, `jls -b -check` diagnostics, the Gradescope adapter, and #703's Classroom annotation renderer) share one environment-free locator instead of each inventing file/line attribution independently.",
+   "reason": "Visionary review Reframing 1: one verdict-record field has four consumers; #703 can only be presentation-only once this field exists upstream.",
+   "from": 703
+  },
+  {
+   "target": 524,
+   "change": "Add the `where = (unit, sid)` verdict field (once #466 adds it) to the frozen schema's field list, and state explicitly that the schema excludes filesystem paths.",
+   "reason": "Visionary review Reframing 2: without an explicit exclusion, a contributor could satisfy #703's original AC-2 wording by adding a path field to the frozen artifact, which breaks #524's own AC-4 cross-container determinism guarantee.",
+   "from": 703
+  },
+  {
+   "target": 705,
+   "change": "Add or extend an acceptance criterion requiring the starter template's lab circuit and README instruct students to save/commit in plain-text `.jls` form (`File > Save As` plain-text, or `jls -savetext`), not the default XZ-binary form.",
+   "reason": "Visionary review's 'unexamined fact that decides the design': #703's whole annotation value proposition depends on the annotated file being human-readable on GitHub, which the default JLS save format is not.",
+   "from": 703
+  },
+  {
+   "target": 708,
+   "change": "TASK-C528-2's outcome text ('the wiring that points the question at the external-grader image') and its ordering_after: [\"TASK-C528-1\"] should be checked against #706's rewrite: #706 no longer builds any image, only an adapter script that runs inside the already-published ghcr.io/anadon/jls image. #708's language should be updated to say the kit wires the question to that adapter, not to 'an image' TASK-C528-1 builds.",
+   "reason": "Discovered while reconciling #706 with its parent #528 (updated 2026-08-12, after the reviews, to state the cluster publishes no second image) and with the visionary review's Reframing A, which #706's rewrite now follows; #708 was not in scope for this task so its stale 'image' language is reported rather than edited.",
+   "from": 706
+  },
+  {
+   "target": 710,
+   "change": "TASK-C528-3's Boundary line ('image and kit are TASK-C528-1 and TASK-C528-2') should drop 'image' in favor of 'adapter and kit', matching #706's redefined scope.",
+   "reason": "Same redefinition as above: #706 is now explicitly an adapter, not an image-building task, so sibling issues that describe TASK-C528-1 as 'the image' are now inaccurate and out of sync with #706 and with parent #528.",
+   "from": 706
+  },
+  {
+   "target": 709,
+   "change": "Resequence TASK-C536-2's ordering_after away from TASK-C536-1 (or re-scope its ACs): it assumes #707 delivers a print Theme variant with no screen chrome and a bundled font, but #707 has been redirected to a sizing experiment only, deferring the bundled-font/RenderProfile work to unopened follow-on tasks.",
+   "reason": "#709's stated dependency on #707 no longer matches what #707 now delivers.",
+   "from": 707
+  },
+  {
+   "target": 536,
+   "change": "Reconcile FEAT-C24-1 AC-3 ('Theme/symbol seam', extending Theme.java's colour seam for print) with the RenderProfile(Palette, ChromePolicy, TextMetrics) mechanism the visionary review recommends instead of a Theme variant, now recorded on #707's Proposed disposition.",
+   "reason": "#536's AC-3 assumed the same Theme-variant mechanism #707 was reviewed against and has now moved away from.",
+   "from": 707
+  },
+  {
+   "target": 706,
+   "change": "TASK-C528-1's AC-4 pins its own copy of the PrairieLearn contract version alongside the entry point; it should instead read the canonical contract.lock this rewrite assigns to #710, rather than maintaining an independently-drifting second pin.",
+   "reason": "Adversarial finding 6 (duplicate-ownership of contract-version pinning between #706 and #710) \u2014 resolved on #710's side by making contract.lock's ownership explicit, but #706 still needs the corresponding edit and cannot be edited from here.",
+   "from": 710
+  },
+  {
+   "target": 531,
+   "change": "FEAT-C21-6's AC-2/AC-5 (\"each platform's documented contract is pinned in the fixture\"; \"adapter lanes are dedicated CI lanes\") should cite TASK-C528-3 (#710) and its sibling per-platform lane tasks (#699, #705, TASK-C530-3) as the task-level issues discharging those properties per platform, and record the ordering/consumption relationship explicitly.",
+   "reason": "Visionary review: '#531 AC-2 and AC-5 already own... the same ground #710's AC-1 and AC-3 claim, with no ordering edge recorded between them... record the ordering edge to #531... in both directions.' #710's side of the edge is now recorded in its Boundary section; #531's side is a maintainer edit this task cannot make.",
+   "from": 710
+  },
+  {
+   "target": 502,
+   "change": "Add a REPLAN: comment considering the visionary review's Reframe 4 \u2014 making each platform's report an output format of the frozen CLI (`--report=<platform>`) rather than a per-platform mapping script/container, which would shrink #710 (and #699/#705/TASK-C530-3) to schema validation plus a generated walkthrough and make CAP-21's four-way parity true by construction.",
+   "reason": "Visionary review explicitly flags this reframe as 'worth a REPLAN comment on #502' rather than something a task-level rewrite can adopt; recorded on #710 under 'Recorded, not adopted' per repo convention, but the REPLAN itself is a #502-level maintainer action.",
+   "from": 710
+  },
+  {
+   "target": 711,
+   "change": "Flag for review: #711 (TASK-C536-3) scopes PDF as \"produced directly by the same renderer that produces the SVG,\" but the parent #536 (updated 2026-08-12, after both #709 reviews) now states \"PDF is out of scope... CAP-24 (#505) resolves Open Question 3: JLS does not emit a PDF back end.\" These directly contradict; #711 needs its own review pass to reconcile with #536's current text (or #536 needs correcting if that line is itself wrong).",
+   "reason": "Discovered while grounding #709 against its live parent #536 to fix #709's own dependency claims; unrelated to #709's two reviews but directly upstream of #711's (TASK-C536-3's) validity, and out of scope for me to edit #711 directly.",
+   "from": 709
+  },
+  {
+   "target": 536,
+   "change": "Add a cross-reference in the boundary/reference notes naming #711 explicitly as the suspended direct-PDF task, since the current text excludes PDF in general terms but never names the task issue it invalidates.",
+   "reason": "A reader landing on #536 has no pointer to #711's now-orphaned status; the exclusion is stated but its downstream consequence isn't linked.",
+   "from": 711
+  },
+  {
+   "target": 505,
+   "change": "Post the REPLAN comment its own \u00a75 protocol requires (\"Every response ends in a REPLAN: comment here\") documenting when/why OQ-3 was resolved against a JLS-emitted PDF back end.",
+   "reason": "The body already shows OQ-3 resolved, but no comment substantiates the decision, contrary to the issue's own re-planning protocol - a process gap independent of #711.",
+   "from": 711
+  },
+  {
+   "target": 709,
+   "change": "Update the \"Scope vs. #711\" boundary note, which currently reads \"PDF is a separate concern (#711, TASK-C536-3)\", to reflect that #711 is suspended/superseded rather than an active parallel PDF task.",
+   "reason": "709's body (updated 2026-08-15, after #536/#505's PDF exclusion) still describes #711 as live PDF scope, which now conflicts with #536's own explicit 'PDF is out of scope' text.",
+   "from": 711
+  },
+  {
+   "target": 715,
+   "change": "Narrow scope: drop the CI doc-test lane (moved to #713's AC-4); #715 should own only the shared parity-vector export/join with #531 and its own byte-identity assertion.",
+   "reason": "Visionary reframing 4: cutting #713/#715 along \"does it run\" vs \"does it agree\" front-loads the real risk (a Jupyter/nbgrader toolchain entering the tree) into a doc-tested CI lane instead of leaving an unexercised, hand-run notebook as #713's only evidence.",
+   "from": 713
+  },
+  {
+   "target": 757,
+   "change": "Extend the shared grading rubric with platform-neutral per-test-id point/max-point fields, consumable by adapters instead of adapter-local cell metadata.",
+   "reason": "#713's rewritten AC-1 now reads point values from #757's rubric (matching #525's AC-6, which depends on the same gap and is already noted on #530's own boundary); #757 does not yet carry these fields.",
+   "from": 713
+  },
+  {
+   "target": 690,
+   "change": "Record #713 (alongside #525/#526/#528) as a consumer expecting the '-version'/'-contract N' flags, mirroring the ordering edge #713 now declares in its own machine block.",
+   "reason": "#713's rewritten AC-3 makes version refusal the CLI's job via #690's flags rather than adapter-local logic; #690's body does not yet list #713 as a dependent.",
+   "from": 713
+  },
+  {
+   "target": 719,
+   "change": "Reconcile TASK-C531-2's cross-adapter byte-identity design ('asserts they are identical byte for byte... across all four') with FEAT-C21-6's (#531) current body, which now states explicitly it does NOT compare `--report` writers' outputs against each other and pins each writer only to its own golden fixture ('Comparing raw bytes across four structurally different formats ... is not well-defined'). Sibling adapter tasks already rewritten today disagree about this: #701's rewrite states cross-adapter byte comparison 'no longer exists in CAP-21', while #708's rewrite still treats #719's CrossPlatformScoreParityTest as doing cross-adapter byte comparison.",
+   "reason": "TASK-C530-2 (#715) feeds #719 its per-student vector and cites #719 as the consumer of the four-way parity claim; if #719's own design is stale relative to #531's redesign, every adapter task that says 'ready for CrossPlatformScoreParityTest' (including the rewritten #715) is pointing at a test whose actual assertion is now unclear. This is #719's and #531's contradiction to resolve, not something #715 can fix by editing itself.",
+   "from": 715
+  },
+  {
+   "target": 718,
+   "change": "Reconsider or scope down ordering_after: [TASK-C538-1] \u2014 it currently gates all of #718 on #716's GUI-selection-gesture work finishing too, not just on the headless RunTrace/WaveJSON-writer pieces #718 actually needs.",
+   "reason": "The visionary review argues the dependency direction is backwards: RunTrace, the WaveJSON writer, and a VCD reader are CI-verifiable headless work with no display dependency, while #716's chronogram mouse-selection gesture is new interaction design on a widget with no existing selection code. Gating #718 on the whole of #716 (including the GUI gesture) needlessly serializes headless-only work behind GUI work it doesn't depend on.",
+   "from": 716
+  },
+  {
+   "target": 719,
+   "change": "TASK-C531-2 (CrossPlatformScoreParityTest) still asserts a byte-for-byte cross-adapter comparison, but #502 (CAP-21) and #525/#531's current bodies (updated 2026-08-11/12, after both reviews) have re-scoped CAP-21 AC-1 to require only that each adapter derive its score field from the same xUnit verdict set via one named writer function \u2014 not byte-identity across adapters. #719 was not updated to match and should be re-reviewed for whether its core assertion still holds under the current CAP-21 scope.",
+   "reason": "Discovered during live-issue verification for #717; #719 is #717's stated consumer so the mismatch is directly relevant, but only #719's own owners/reviewers can resolve it, and I was not authorized to edit #719.",
+   "from": 717
+  },
+  {
+   "target": 538,
+   "change": "FEAT-C24-3's acceptance criterion 6 (the scripts/-level `scripts/vcd-to-wavejson` degraded convenience mode) now has no owning task: #716 (TASK-C538-1) owns the GUI/in-memory-run WaveJSON writer and #718 (TASK-C538-2, just rewritten) owns the batch `-wavejson` flag over the recorded run, but neither owns the VCD-file-to-WaveJSON scripts/ tool AC-6 describes. Consider naming a TASK-C538-3 (or similar) for it, or folding an explicit ownership note into #538 itself.",
+   "reason": "Discovered while reframing #718 off VCD-parsing per the visionary review; not a defect in #718 itself, so not something I can fix by editing #718, and I was not authorized to edit #538 or open a new issue.",
+   "from": 718
+  },
+  {
+   "target": 717,
+   "change": "Update the Boundary text that still says '#719 (TASK-C531-2) has not itself been updated to match that re-scope' and describes #719 as owning 'the cross-adapter parity assertion' \u2014 #719 has now been rewritten to a structural WriterProvenanceTest that matches the re-scope, so that sentence is stale.",
+   "reason": "#717's own body explicitly flagged this exact mismatch as unresolved; my edit to #719 resolves it, so #717's cross-reference should be updated to stop describing it as open.",
+   "from": 719
+  },
+  {
+   "target": 717,
+   "change": "Consider adding the perturbation/diff-quality criterion (\"a diff naming the student, the test and the two differing values\") to ScoreVectorRoundTripTest's failure reporting, or to each adapter's own task.",
+   "reason": "The visionary review endorsed keeping this diff-quality bar verbatim but retargeted to round-trip failures rather than a live cross-adapter comparison; #719 no longer owns a live per-adapter comparison to attach it to, so it has no current home unless #717 or the adapter tasks pick it up.",
+   "from": 719
+  },
+  {
+   "target": 722,
+   "change": "TASK-C539-2's body still describes the pre-redefinition scope (an APNG writer producing a GIF alternative, from a recorded-run input) and needs the same kind of rewrite: retarget it to the value-overlay/recorded-run half of FEAT-C24-4's redefined static SVG filmstrip (feeding per-cycle draws with overlaid signal values into this issue's layout loop), dropping all APNG/GIF/encoder language to match #539's 'no image-sequence or video encoder of any kind' redefinition.",
+   "reason": "#539 (FEAT-C24-4) was redefined by #505's REPLAN from animated APNG/GIF to a static SVG filmstrip with zero encoders, but #722 (the mirror half of the original two-task split, ordering_after: [TASK-C539-1]) was never updated to match \u2014 it still targets the obsolete encoder-based capture design.",
+   "from": 720
+  },
+  {
+   "target": 539,
+   "change": "Establish a native GitHub sub-issue link from #539 to #720 (and to #722), not just the prose/YAML part_of_feature field.",
+   "reason": "The adversarial review verified via issue_read get_parent that #720 has has_parent:false \u2014 the FEAT-C24-4/TASK-C539-1 relationship exists only as text, invisible to any tooling that walks GitHub's native issue hierarchy instead of parsing YAML. This tool call was scoped to issue_read/issue_write only, so the link could not be created here.",
+   "from": 720
+  },
+  {
+   "target": 717,
+   "change": "Add 721 to the `blocks` list (currently `blocks: [719]`) so it reads `blocks: [719, 721]`.",
+   "reason": "#721's ordering_after has always included TASK-C531-1 (#717), before and after this rewrite, but #717's own blocks list (which it otherwise maintains explicitly, per its 2026-08-08 comment auditing missing blocks edges) never mirrored that edge.",
+   "from": 721
+  },
+  {
+   "target": 524,
+   "change": "Add a `blocks` entry (or equivalent note) naming 721, since this rewrite added `ordering_after: [..., 524, ...]` on #721.",
+   "reason": "New edge created by this rewrite; #524 currently has no `blocks` field at all, so this is a suggestion for consistency with the mirroring convention seen on #717, not a fix to an existing declared field.",
+   "from": 721
+  },
+  {
+   "target": 525,
+   "change": "Add a `blocks` entry (or equivalent note) naming 721, since this rewrite added `ordering_after: [..., 525]` on #721.",
+   "reason": "New edge created by this rewrite; #525 currently has no `blocks` field at all, so this is a suggestion for consistency with the mirroring convention seen on #717, not a fix to an existing declared field.",
+   "from": 721
+  },
+  {
+   "target": 707,
+   "change": "Remove/decouple its ordering_after: [TASK-C540-1] edge \u2014 under the redirect, #707 is the device axis (screen vs. print chrome/metrics) and #723 is the style axis (SymbolSet); neither blocks the other.",
+   "reason": "Visionary review: 'Ordering is also inverted... under the reframing the dependency straightens out \u2014 #707 becomes the device axis, this task becomes the style axis, and neither blocks the other.'",
+   "from": 723
+  },
+  {
+   "target": 725,
+   "change": "Rescope/retitle from authoring 'print symbols' against a print-only mapping to authoring symbols (ElementOutline instances) consumed through the shared ElementRenderers/SymbolSet vocabulary that #723 now builds.",
+   "reason": "Visionary review: 'Then #725 authors symbols, not print symbols, and #43/#44, #537 and #546 inherit them instead of re-deriving them.'",
+   "from": 723
+  },
+  {
+   "target": 505,
+   "change": "Add a sentence in the Background section disambiguating this symbol-vocabulary work from the existing PrinterJob-based Print.../-p feature in JLSStart.java, and mark Open Question 1 (ANSI/IEEE-91 vs. IEC rectangular) resolved by adopting docs/standards-adoption/01-iec-ieee-symbols.md's SymbolSet design, since it no longer blocks PF-5's filing.",
+   "reason": "Adversarial finding 2 (undisambiguated 'print' collision) and finding 7 (OQ-1 blocks PF-5 filing) \u2014 both resolved by #723's redirected scope but the resolution needs recording on the parent capstone issue, not just here.",
+   "from": 723
+  },
+  {
+   "target": 540,
+   "change": "Retitle/rescope FEAT-C24-5's own body away from a 'print symbol' mapping toward the shared ElementOutline geometry vocabulary + SymbolSet style axis + ElementRenderers totality, to stay consistent with its child task #723's redirected mechanism.",
+   "reason": "Visionary review's redirect is grounded in FEAT-C24-5's own risk 2 language ('This makes CAP-24's risk 2 disappear rather than police it') and in facts drawn from #540's own scope; leaving #540 describing a print-only table while #723 builds something else would re-introduce the confusion the redirect fixes.",
+   "from": 723
+  },
+  {
+   "target": 720,
+   "change": "Remove/update the sentence in #720's 'Proposed disposition' section stating '#722 has not yet been updated to match #539's redefinition \u2014 it still describes an APNG/GIF capture task.'",
+   "reason": "That sentence is now false: #722 was rewritten in this pass to match #539's redefinition (static SVG filmstrip, no recorded-run artifact, no encoder), so #720's cross-reference to it as stale is stale itself.",
+   "from": 722
+  },
+  {
+   "target": 524,
+   "change": "AC-2's sentence attributing the 'check runs before any adapter lane executes in the assembled four-way fixture' guarantee to '#531's own acceptance criterion (its AC-3)' is mislabeled/stale: #531's AC-3 is about extensibility, not ordering, and #531's own ordering criterion (AC-2) is scoped to writer-goldens, not the four-adapter-lane fixture. #687's Boundary section already correctly attributes this guarantee to #724 (TASK-C531-4). #524's AC-2 should be updated to point at #724 to match #687 and #724's own scope.",
+   "reason": "Discovered while verifying #724's dependency/ownership claims per the adversarial review's finding 3 (which is otherwise resolved: #524's ordering_after has in fact already been corrected to [466] since the review was written); left as a report only since editing #524 is out of scope for this task.",
+   "from": 724
+  }
+ ]
+}

@@ -1,0 +1,176 @@
+{
+ "chunk": 5,
+ "fixed": [
+  774,
+  775,
+  776,
+  777,
+  778,
+  779,
+  780,
+  781,
+  782,
+  783,
+  784,
+  785,
+  786,
+  787,
+  788,
+  789,
+  790,
+  791,
+  792,
+  793,
+  794,
+  795,
+  796
+ ],
+ "flagged": [],
+ "superseded_comments": [],
+ "other_issue_edits": [
+  {
+   "target": 773,
+   "change": "Extend TASK-C551-1's acceptance criteria so its scripted render command also emits, per circuit, the batch output (-b -t table or -r trace), a resolvable .jls source link, and the container run-command string \u2014 not only an SVG plus caption.",
+   "reason": "#775's rewritten AC-1 (folding in the visionary review's evaluation-surface reframing, and #551 AC-1(c)) now consumes that data from TASK-C551-1's output, but #773 as currently scoped only generates SVG + caption, so the dependency is unfilled until #773 is extended.",
+   "from": 775
+  },
+  {
+   "target": 588,
+   "change": "Reconcile the Boundary's live reference to TASK-C588-2 (the timing/waveform note) with #588's own \"Timing note \u2014 deferred\" section, which now says that note is out of scope pending #504. As written, a reader following #588 could believe the timing note is deferred while a reader following #774/#589's boundary notes could believe TASK-C588-2 is an active, scheduled task.",
+   "reason": "Surfaced while verifying #774's live dependencies against its parent #588 (which was substantially rewritten 2026-08-12, after both reviews). Not a #774 dependency-edge mirror, but a genuine cross-issue inconsistency I am not authorized to fix by editing #588 directly.",
+   "from": 774
+  },
+  {
+   "target": 780,
+   "change": "Re-scope TASK-C552-3's Outcome/ACs away from an in-tool lesson panel entered from the welcome pane/Examples menu (or retitle/repurpose it as the docs-page renderer task).",
+   "reason": "Since the reviews were written (2026-08-08), CAP-27 (#511, updated 2026-08-12) revised KC-27-2 to state no in-tool lesson tooling is built at any point, by design, and FEAT-C27-5 (#552, updated 2026-08-12) now states the docs-page renderer is the feature's entire delivery mechanism with no in-tool/docs fork to hedge against. #780 as currently worded still targets exactly the in-tool panel that no longer exists in its parents' scope; I cannot edit #780 from here.",
+   "from": 777
+  },
+  {
+   "target": 588,
+   "change": "Reconcile #588's 'Timing note \u2014 deferred, out of scope for this feature today' section with #776's rewrite. #588 defers the timing-honesty note until #504's chronogram lands because publishing today would force the note to open with two conceded losses (no waveform UI, 2-state+HiZ value domain). #776 has now been restructured to a self-disclosure-first shape (JLS's own limits stated first, reproducing sweep-02-timing.md \u00a70's fourteen-row table, before any competitor is named) \u2014 this is the direct structural answer to #588's stated objection. #588's maintainer should either lift the deferral for this restructured version (and drop the #504 ordering_after on #776), or explicitly re-affirm that #504 still gates it and say why the reframing doesn't resolve the objection. Either way #588's 'Timing note \u2014 deferred' section and its citation-set duplication should be updated to point at #776 by number rather than re-describing the scope inline.",
+   "reason": "I can correct #776's own blocked_by/ordering_after list, but #588 is a different issue and editing it is out of my mandate; this is the mirror-side reconciliation #588 needs.",
+   "from": 776
+  },
+  {
+   "target": 777,
+   "change": "Bind each lesson step to a jls.collab.op op block alongside its caption (not just a bare step-NN.jls snapshot), and add a headless test asserting lesson 1's op-block replay equals its shipped example's canonical save byte-for-byte (or structural-normalization equivalent) \u2014 the same non-gameable equality check #779 AC-4 now requires for lessons 2 and 3, so lesson 1 gets parity instead of only a load-and-simulate check.",
+   "reason": "The visionary review's load-bearing reframing (a lesson step = op block + caption, checked by replay-equals-canonical-save) is a format decision that belongs in TASK-C552-1 (#777), not #779; #779 AC-4 now assumes this format exists, so #777 needs the matching change or #779's AC-4 has no format to rest on.",
+   "from": 779
+  },
+  {
+   "target": 589,
+   "change": "Change ordering_after's '#300 CAP-06 ...' entry to name #466 instead of #300.",
+   "reason": "Same defect the adversarial review found on #781: #300's own body states the standing rule that downstream consumers order after #466 for the verdict engine/report/exit-status, not after the capstone itself, which closes only when its entire ~23-40 mw required set closes. #524 already follows this rule; #589 (the parent feature) still carries the old #300 edge as of this check (updated_at 2026-08-11), and the adversarial review explicitly asked for the same correction to be filed there.",
+   "from": 781
+  },
+  {
+   "target": 552,
+   "change": "Tighten AC-5's dead clause \"the welcome pane is an additional entry point only if #550 lands one\" \u2014 #550 has since definitively ruled out any welcome-pane chrome, so the condition can never be true. Also add a Decomposition/Boundary note (matching #548's and #550's own decomposition tables) naming #780 as the task that implements AC-4 (docs-page renderer) and AC-5 (Examples-menu discovery), since #552 currently states those criteria without recording which filed task owns them.",
+   "reason": "Keeps #552 internally consistent with #550's already-recorded decision and makes #780's redirected scope traceable from the parent feature, matching the decomposition-table convention #548 and #550 already use.",
+   "from": 780
+  },
+  {
+   "target": 764,
+   "change": "Add an acceptance criterion or boundary note anticipating a lesson-pointer affordance on Open-Example entries (or a named hook #780 can consume), since FEAT-C27-5/#552 AC-5 now names the Examples menu as lessons' sole guaranteed entry point but #764's current AC-1 only accounts for the caption/exercise pointer, not a lesson pointer.",
+   "reason": "Without this, #780's AC-2 (a lesson pointer beside an Open-Example entry) has no corresponding hook on the menu-owning side, and #764 could land before #780 without leaving room for it.",
+   "from": 780
+  },
+  {
+   "target": 781,
+   "change": "TASK-C589-1's own ordering should be reviewed: this rewrite removes TASK-C589-1 from #783's ordering_after (the register no longer waits on the paper's prose) and states that the paper should instead render its guarantee statements from #783's register, which likely means #781 should gain #783 as a prerequisite rather than the reverse.",
+   "reason": "mirror half of the ordering_after edge removed from #783; #781 was not edited because this task may only edit its own issue",
+   "from": 783
+  },
+  {
+   "target": 513,
+   "change": "Consider recording, under CAP-29 PF-1 (#556) or in CAP-29's own body, the visionary review's recommendation to generalize PF-1's shared import-report contract into a capability-claim ledger (claim id -> state -> code predicate -> owning issue) that #545, both #553 tasks' four pages, and #783's white paper could all render from, instead of each surface building its own one-directional 'does X exist' check.",
+   "reason": "The visionary review on #784 proposed this ledger as a new small infrastructure item; #784 cannot create new issues, and #513/PF-1 (#556) is the existing issue that already owns the closest-shaped contract (source construct -> disposition -> location -> explanation), making it the natural place to record the suggestion for a future filing decision.",
+   "from": 784
+  },
+  {
+   "target": 591,
+   "change": "AC-1 says the JOSS pre-submission scope query answer is \"recorded in this issue\" (#591); consider adding a pointer that the operational query-and-record work, plus the format-requirements lookup, is now tracked and recorded in #785 (TASK-C591-1), so the two issues don't each assume they're the record of truth.",
+   "reason": "Not a dependency-edge fix, just a cross-reference consistency note surfaced while rewriting #785 to fit #591's already-updated JOSS-first scope; left as a report rather than an edit since #591 is another issue.",
+   "from": 785
+  },
+  {
+   "target": 785,
+   "change": "TASK-C591-1's venue-selection task still frames the choice as SIGCSE/WCAE/ASEE-class with a fallback venue, but its parent #591 was rewritten 2026-08-12 to make JOSS the default target (with a pre-submission scope query as #591's own AC-1) and to delete the SIGCSE-class tool-paper track as an anti-goal. #785 should be updated to reflect JOSS as the primary target and re-scope what 'fallback venue' means now.",
+   "reason": "Internal contradiction between a feature and its own venue-selection subtask, discovered by cross-referencing live issue state against the review's date.",
+   "from": 786
+  },
+  {
+   "target": 591,
+   "change": "Reconcile the 'JOSS submission ~0.5-1 mw of JLS's own work' band_mw note against the sum of its own child tasks (#785 0.25-0.5 + #786 0.5-1 + #790 0.25-0.5 = 0.75-2.0 mw) \u2014 either the parent band is a marginal/optimistic figure that should say so explicitly, or it needs re-deriving.",
+   "reason": "Numerical inconsistency surfaced while re-scoping #786 to match #591's post-review rewrite; not something #786 can fix on its own since it isn't #591's own field.",
+   "from": 786
+  },
+  {
+   "target": 509,
+   "change": "Add an acceptance criterion (or fold into the existing ratification-conversation note) requiring IRB/FERPA/ethics clearance to be recorded before any course-experience/migration-report section is drafted from real student data, and explicitly route the co-authorship-with-Dr.-Siever approach through the ratification conversation this issue already requires.",
+   "reason": "Adversarial finding 1 (missing human-subjects precondition) and visionary finding 3 (move the co-authorship approach into #509, let #790 only record the outcome) both land on #509 now that #591/#786 have moved the course-experience/migration-report content entirely out of #790's scope; #509's current body has no IRB/FERPA AC and its ratification-conversation note doesn't mention paper co-authorship.",
+   "from": 790
+  },
+  {
+   "target": 785,
+   "change": "Add a check, alongside AC-3's venue-class/deadline/format checks, for whether a named replacement venue (if JOSS declines scope) uses blind or double-blind review, and if so confirm compatibility with #786's publicly-attributed, publicly-linked reproducibility appendix before submission.",
+   "reason": "Adversarial finding 5 (anonymity vs. reproducibility-appendix conflict) was never addressed; #785's current AC-3 checks class bar, deadline, and page limits but not review-anonymity policy, and this is venue-selection work, not #790's.",
+   "from": 790
+  },
+  {
+   "target": 793,
+   "change": "Re-scope away from a single big-bang mechanical migration + byte-auditable diff report for all ~83 pages. Since #792 now emits the static site directly from today's existing in-jar tree, #793's AC-3 ('the same mvn goal emits the static site directory alongside the in-jar tree') is now false/duplicated \u2014 that goal is #792's. Recommend #793 become opportunistic, per-page migration to the format #791 picks (mixed .md/.html source tree, generator passes .html through byte-identically and renders .md), so the diff-report burden disappears for any unmigrated page. Also drop 'ordering_after: [TASK-C584-2]' as a hard corpus-migration dependency since #792 no longer needs the migrated corpus to complete.",
+   "reason": "Visionary review Reframe 1 and Reframe 2, applied to #792, leaves #793 describing a goal #792 now owns and a migration strategy the review argues against.",
+   "from": 792
+  },
+  {
+   "target": 791,
+   "change": "Drop any listing of #792 as a downstream dependent of the source-format decision (the edge is already removed on #792's side). Also fold in Reframe 4: price a JEditorPane/HTMLEditorKit stylesheet upgrade (Help.buildWindow, src/jls/Help.java:207) before or alongside KC-35-1's pricing, since it redefines what the 'viewer-safe subset' even needs to be and is a near-zero-cost alternative to a degraded source format. The GPLv3-compatible-license note for whichever Markdown/AsciiDoc library is adopted (originally flagged against #792) belongs here now, since #792 no longer parses Markdown/AsciiDoc at all.",
+   "reason": "#792's redirected scope (site generator over today's existing tree) removed its dependency on and need for #791's source-format decision; #791 should stop treating #792 as blocked on it, and the viewer-pricing and license-note findings from #792's reviews land more correctly on #791's scope.",
+   "from": 792
+  },
+  {
+   "target": 584,
+   "change": "Reconcile FEAT-C35-1's Outcome/AC-1/AC-2/AC-5, which still describe 'one generated site tree' built from a new migrated source that ships both as the in-jar tree and the static site, with TASK-C584-2's redirected scope (site generated from today's unmigrated in-jar tree, in-jar tree never rewritten). As currently written #584 and the redirected #792 describe incompatible pipelines.",
+   "reason": "#584 was already edited after its own review pass (updated_at 2026-08-12) in the original two-outputs-from-one-new-source direction; #792's rewrite per its own visionary review now conflicts with that parent-level design and the parent needs a coordinated pass, which is out of this task's scope to make directly.",
+   "from": 792
+  },
+  {
+   "target": 792,
+   "change": "Loosen AC-2 so it no longer requires the full existing HelpTopicsTest content set to already resolve through the generator at #792's own completion; validate #792 against a partial/fixture-scale content set instead.",
+   "reason": "Adversarial Finding 1: #792 is ordered before #793, but #793 is the task that actually produces the full migrated corpus. As written, #792's AC-2 ('HelpTopicsTest unchanged and green') is unverifiable at #792's own completion since the full source content doesn't exist yet. #793's rewrite now states explicitly that it, not #792, owns the full-corpus migration milestone, so #792's AC must be loosened to match.",
+   "from": 793
+  },
+  {
+   "target": 584,
+   "change": "Loosen AC-1's 'ships verbatim... two ways' language to allow per-target rendering skins (in-jar HTML-3.2-subset markup vs. site HTML5/CSS/search markup) derived from one shared content/topic list, rather than requiring byte-identical output in both targets.",
+   "reason": "Visionary review's 'one page-set, two skins' redirect (adopted in full in #793's rewritten AC-5) derives both build targets from one topic list but intentionally renders them differently per target's needs. #584's current AC-1 phrasing ('ships verbatim... inside the jar and... published') is closer to byte-identical output in both targets and would conflict with #793's redirected design unless loosened to 'same content, per-target rendering.'",
+   "from": 793
+  },
+  {
+   "target": 793,
+   "change": "TASK-C584-3's site-generation target (its AC-3, 'the same mvn goal emits the static site directory alongside the in-jar tree') should be scoped to emit into the versioned-path layout TASK-C585-1 (#794) already publishes, rather than #794 continuing to block on #793 landing first.",
+   "reason": "#794 dropped its ordering_after: [TASK-C584-3] edge per the visionary review's Reframing 1 (publish first, migrate second); the dependency direction is now #793 -> #794's layout, and #793's body doesn't yet say its site target must match a layout #794 already owns.",
+   "from": 794
+  },
+  {
+   "target": 585,
+   "change": "Reconcile FEAT-C35-2's resolver architecture (current AC-2: exact version -> nearest published version with a mismatch banner -> immutable GitHub blob at the tag) with its task children: neither rewritten #794 (storage/addressing layer only) nor #795/TASK-C585-2 (which only falls back one tier, running version -> latest) currently builds the nearest-published-fallback or GitHub-blob-fallback tiers. Assign that resolver logic explicitly to one of the two tasks, or add scope for it.",
+   "reason": "#585 was edited (updated_at 2026-08-12) after the 2026-08-08 reviews to describe a query-based resolver (/h/?v=) with a three-tier fallback chain that goes well beyond the plain versioned-path + latest-alias scheme both reviews evaluated; #794's rewrite intentionally stayed within the simpler scheme the reviews assessed and flags the resulting gap rather than silently inventing new scope for #794.",
+   "from": 794
+  },
+  {
+   "target": 793,
+   "change": "Consider (non-blocking, per the visionary review's Reframing 3) building the hosted site directly from the in-jar resources/help/** tree plus a nav shell/search index/stylesheet layered on at publish time, rather than as a second rendering whose parity with the in-jar tree is only asserted by a test.",
+   "reason": "Raised during #794's review as a design point the reviewer explicitly scoped to #791/#793 ('not a demand on #794'); recorded here via the required channel so it isn't lost, since this rewrite cannot edit #793 directly.",
+   "from": 794
+  },
+  {
+   "target": 797,
+   "change": "Update TASK-C586-2's body (currently: \"every manifest entry must name a window, pane and circuit that still exist\") to the Class 1 (circuit)/Class 3 (chrome, default-view-only) vocabulary now used by #586 and the rewritten #796, dropping the 'pane' axis language that no longer exists in the producer schema.",
+   "reason": "#797 (ordering_after: [TASK-C586-1]) directly consumes #796's manifest and was not in scope for me to edit, but it is now inconsistent with both #586 (updated 2026-08-11, after the reviews) and the rewritten #796 -- its own 'window, pane and circuit' phrasing matches the axis this rewrite removed as unrealizable.",
+   "from": 796
+  }
+ ]
+}

@@ -1,0 +1,163 @@
+{
+ "chunk": 6,
+ "fixed": [
+  797,
+  798,
+  799,
+  800,
+  801,
+  802,
+  803,
+  804,
+  805,
+  806,
+  807,
+  808,
+  809,
+  810,
+  811,
+  812,
+  813,
+  814,
+  815,
+  816,
+  817,
+  818,
+  819
+ ],
+ "flagged": [],
+ "superseded_comments": [
+  {
+   "issue": 804,
+   "comment_id": 5227336738
+  }
+ ],
+ "other_issue_edits": [
+  {
+   "target": 854,
+   "change": "Add an explicit acknowledgment (in #854's own body, e.g. a Boundary/Related note) that it owns the store-listing screenshot-freshness check for the Flathub channel, since #798 no longer builds a check against \"CAP-34 store listings\" as a group and #854's own AC-1/AC-3 are the only CAP-34 commitment to sourcing screenshots from the shared set.",
+   "reason": "Visionary review: 'the store-listing check moves to #854 by explicit hand-off comment' \u2014 #798 can report this but must not edit #854 itself.",
+   "from": 798
+  },
+  {
+   "target": 801,
+   "change": "AC-2's planted-defect list still says 'element page with a stale port list' (inherited from #800's old AC-3 wording); update to 'a hand-edited generated ports/parameters block' to match #800's now-generate-not-assert approach, since there is no hand-authored port table left to go stale.",
+   "reason": "801 (TASK-C587-3) builds the permanent committed negative-check record from the same four planted defects #800 demonstrates once; its wording still describes the pre-rewrite mechanism #800 no longer uses.",
+   "from": 800
+  },
+  {
+   "target": 793,
+   "change": "The Outcome section's sentence 'a follow-up task generates their port/parameter/behavior content from #78's element registry' names no issue number; add '(#800)' so the cross-reference is concrete instead of implicit.",
+   "reason": "793 (TASK-C584-3) explicitly defers element-page registry-generation as a named follow-up without citing which issue owns it; #800 is now that issue and the live text should say so for any reader who lands on 793 first.",
+   "from": 800
+  },
+  {
+   "target": 800,
+   "change": "Add an explicit requirement that element port/parameter ground truth (documented ports/params checked against the registry) is read through one shared accessor over the instantiated element's Put list + Attribute registrations, not a hand-rolled extraction independent of what TASK-C587-3's claim index consumes.",
+   "reason": "Visionary review Reframing 2's oracle caveat: ElementType/PaletteEntry carry no port descriptor by design, so two independently-written extractors (TASK-C587-2's check and TASK-C587-3's index) risk drifting into two different notions of \"what ports an element has,\" the same failure mode TASK-C587-1's resolveFlagToken accessor was built to prevent for flags.",
+   "from": 801
+  },
+  {
+   "target": 521,
+   "change": "Re-verify or correct the evidence header's citation set \u2014 Digital #1308 (wire coloring) and #1129 (monospace), Logisim-Evolution #88 (labels) and #1234 (component search) \u2014 none of these four numbers appear in #510, the survey #521 itself cites as its evidence source (#510's Digital/Logisim-Evolution rows cite #151/#1477/#84/#882/#1464/#1470 and #786/#1546/#598/#1871/#2454 respectively). Either #521's numbers are independently sourced and #521 should say so, or they are stale/wrong and need correcting before #802 authors rows against them.",
+   "reason": "Adversarial review Finding 3, re-verified live: #802's AC-1 (now tightened to require independent verification) inherits this citation set from #521's evidence header via #592, so the defect's root is on #521, not on #802, and I cannot edit #521 directly.",
+   "from": 802
+  },
+  {
+   "target": 592,
+   "change": "AC-1 carries the same unverified Digital #1308/#1129 and Logisim-Evolution #88/#1234 citations inherited from #521; once #521's citation set is corrected (see the #521 edit above), #592's AC-1 text should be updated to match rather than left pointing at the stale numbers.",
+   "reason": "Same root defect propagates one level down from #521 into #592's own acceptance criteria, and #592 is a different issue than the one I was authorized to rewrite.",
+   "from": 802
+  },
+  {
+   "target": 593,
+   "change": "Narrow Layer 3's boundary (AC-5, currently \"blocked on #84\") so it no longer implicitly claims modifier-key resolution and marquee-containment mode as gesture-binding work that must wait for #84 \u2014 #804/TASK-C593-1 now delivers SelectionGesturePolicy.resolve(...) and MarqueePolicy.select(...) as headless, #84-independent Layer-2-style policies (same injected-parameter pattern as DeleteKeyPolicy). Layer 3 should be restated as owning only the raw AWT MouseEvent-to-input-alphabet wiring and drag thresholds, not the modifier/containment decisions themselves.",
+   "reason": "#593's current text (updated 2026-08-12) still assigns rubber-band gesture and modifier-key bindings to Layer 3 (blocked on #84), which now conflicts with #804's redirected scope showing that decision layer is headless and unblocked; leaving both as-is means the two issues disagree about which one owns modifier/containment semantics.",
+   "from": 804
+  },
+  {
+   "target": 593,
+   "change": "Add an AC/boundary note owning two feature-level prerequisites the visionary review identified: (1) generalizing the op vocabulary to per-element deltas (MoveElements(List<Move>)) so group drag/nudge/duplicate share one op kind, designed once at feature level rather than discovered inside a task; (2) filing and tracking a batch-atomicity fix for OpSink.submitAll (today ops before a mid-batch rejection are applied/recorded, ops after are not, with no undo snapshot for the partial result), which every multi-op Layer-2 behaviour (duplicate at minimum) needs before it can ship safely.",
+   "reason": "Visionary review reframings 2 and 3: both are feature-level design decisions #805 cannot make unilaterally, and no tracking issue exists yet for either.",
+   "from": 805
+  },
+  {
+   "target": 804,
+   "change": "804's own body/frontmatter (ordering_after and the Outcome prose) still cite the now-closed #441 and 'driven through #441's interaction machine' directly, even though a 2026-08-08 'STALE REFERENCE \u2014 CORRECTION' comment on #804 already explains the real chain is #440 \u2192 #84 \u2192 #804. The comment fixed the narrative but the live body text was never updated to replace #441 with #84.",
+   "reason": "Adversarial review Finding 1 verified this discrepancy directly on #804 while checking #805's context; leaving #804's body uncorrected risks the same dangling-pointer confusion the comment was meant to resolve.",
+   "from": 805
+  },
+  {
+   "target": 804,
+   "change": "Add TASK-C593-3 (#806) to ordering_after (or otherwise cite it as a dependency).",
+   "reason": "#804 AC-1 specifies jls.edit.SelectionGesturePolicy.resolve(Selection, HitResult, int modifiers) \u2014 HitResult is the type #806's HitResolver work defines, but #804 currently lists no dependency on #806 and its own ordering_after is empty.",
+   "from": 806
+  },
+  {
+   "target": 482,
+   "change": "Add #807 (TASK-C594-1) to the related/consumers list: its search index is specified to read through #482's future module/view-filtered palette accessor (not ElementRegistry), so #482 gains a downstream consumer of the visibility guarantee it's building, alongside its existing #329/#361/#401 entries.",
+   "reason": "#807 now names #482 in ordering_after and documents that its AC-1/AC-3 depend on #482's palette-visibility mechanism to keep hidden module types out of search results; #482's own issue does not yet list #807 as a consumer.",
+   "from": 807
+  },
+  {
+   "target": 277,
+   "change": "Note #807 (TASK-C594-1) as an informative downstream reader of Palette's boot-snapshot-backed accessor once #277 lands, since #807's index build is specified to call through Palette.entries()/groups() (or its post-#277 replacement) rather than assume the current static-table shape.",
+   "reason": "#807 now cites #277 in ordering_after as the seam that would make its palette read future-proof; #277's own related list does not currently mention it.",
+   "from": 807
+  },
+  {
+   "target": 536,
+   "change": "Add #812 to a dependents/blocks list (or equivalent note) since #812 is now blocked_by 536 pending the bundled symbolic font-role (@sans/@serif/@mono) work.",
+   "reason": "Mirror half of the blocked_by edge added to #812; #536 currently has no reference back to #812.",
+   "from": 812
+  },
+  {
+   "target": 592,
+   "change": "When #592's parity catalog is authored, add a @ParityRow for the Digital #1129-class (monospace text) complaint with owner=596, graded HAVE-today/portability-blocked, cross-referencing #536.",
+   "reason": "#812 AC-4 (rewritten) now requires this catalog row to exist before further funding; #592 currently has no row for this item since the catalog document does not exist yet.",
+   "from": 812
+  },
+  {
+   "target": 542,
+   "change": "Add #811 by number to the 'Downstream consumers' bullet list in the Boundary and funding notes section (alongside #543, #546, #547, #596), since #811 now names #542 as a hard blocker for its WireState/ColorVision/Theme accent-ramp vocabulary rather than a generic reference to '#596's long-tail wire coloring item'.",
+   "reason": "Keeps #542's own downstream-consumer list accurate now that #811 is explicitly blocked_by: [542] rather than loosely routed through it via #596.",
+   "from": 811
+  },
+  {
+   "target": 816,
+   "change": "Drop or soften the hard 'TASK-C168-1 (glyph assets)' entry in #816's ordering_after machine-block list, and revise #816 AC-1 so the pass/fail gate is the SAS words matching (with glyph images, if present, treated as optional reinforcement that never blocks Confirm).",
+   "reason": "Feature #168's body (live as of this check, updated 2026-08-09, after both reviews) now explicitly descopes #814 to 'optional polish, not required for this feature's close-out' and marks the #814->#816 edge 'optional, not required' in its own mermaid graph \u2014 but #816's own ordering_after and AC-1 still treat glyph images as a hard prerequisite and a joint pass criterion. #816 is the mirror half of an edge #814 does not control, so it could not be corrected from here.",
+   "from": 814
+  },
+  {
+   "target": 168,
+   "change": "Mark the 'Open Questions > Join-string fingerprint-prefix format' item as resolved (>=32 hex chars / >=128 bits of IdentityKey.fingerprint()), since #815's rewritten AC-1 now decides it.",
+   "reason": "#168 \u00a7'Open Questions' explicitly deferred this decision to #815 ('Decide inside #815 before it lands'); #815 now carries that decision, so #168's open-question line is stale but I cannot edit #168 myself.",
+   "from": 815
+  },
+  {
+   "target": 815,
+   "change": "Share's printed join string and Join's parser need to support the optional `ip:port#<pin>` pin format introduced by #816 AC-1, and Join needs to pass the expected fingerprint through to the new net-layer check.",
+   "reason": "The visionary review's Reframing 1 (pin the sharer's fingerprint into the invite) changes the join-string contract that #815's Share/Join dialogs own; #816 cannot silently redefine another issue's deliverable, so #815 needs its own follow-up edit.",
+   "from": 816
+  },
+  {
+   "target": 816,
+   "change": "Consider absorbing a test-only MITM relay harness (terminates the joiner's handshake and re-originates it to the sharer, built from existing SocketSession/SessionListener) as new scope, with headless assertions that the two sides' SAS values and rendered glyph panels differ under relay.",
+   "reason": "Visionary reframing B: neither #816 (dialog, happy-path only) nor #817 as originally filed ever tested the mismatch/MITM case, which is the actual reason the SAS ceremony exists rather than a decorative comparison step. #817's rewrite now depends on this harness existing (see its Dependencies section) but cannot build it itself without exceeding a single task's scope.",
+   "from": 817
+  },
+  {
+   "target": 815,
+   "change": "Consider filing or absorbing collab-lan-rig.sh (two containers/network namespaces on a user-defined bridge, headless sway/Xvfb, launches Share+Join, screenshots both Verify dialogs, asserts pixel/SAS equality, optional --drop-inbound firewall-failure assertion) as new scope or a new sibling task, so the LAN/firewall/address-selection claims run in CI on every push instead of once by hand.",
+   "reason": "Visionary reframing A: this project already builds exactly this shape of rig for every other 'obviously manual' claim (wayland-rig.sh, x11-rig.sh, macos-rig.sh, windows-rig.ps1, icestick-handoff.sh, each with a -selftest). #817's rewrite now lists this rig as an unfiled precondition it depends on but does not build.",
+   "from": 817
+  },
+  {
+   "target": 185,
+   "change": "Add a structured GitHub sub-issue (parent/child) link between #185 and #819, not just the existing machine-block/prose cross-references (issue_read(get_sub_issues,185) is empty and issue_read(get_parent,819) is null).",
+   "reason": "Adversarial finding 4: #819 claims part_of_feature: 185 and #185's own dependency graph names #819 in requires_tasks, but no structured GitHub hierarchy link exists in either direction, so tooling that audits #185's DAG via GitHub's own parent/child API would not discover #819.",
+   "from": 819
+  }
+ ]
+}

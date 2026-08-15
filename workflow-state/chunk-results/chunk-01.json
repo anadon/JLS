@@ -1,0 +1,220 @@
+{
+ "chunk": 1,
+ "fixed": [
+  680,
+  681,
+  682,
+  683,
+  684,
+  685,
+  686,
+  687,
+  688,
+  689,
+  690,
+  691,
+  692,
+  693,
+  694,
+  695,
+  696,
+  697,
+  698,
+  699,
+  700,
+  701,
+  702
+ ],
+ "missing": [],
+ "flagged": [],
+ "superseded_comments": [
+  {
+   "issue": 682,
+   "comment_id": 5227537722
+  },
+  {
+   "issue": 686,
+   "comment_id": 5227298282
+  },
+  {
+   "issue": 697,
+   "comment_id": 5227522108
+  }
+ ],
+ "other_issue_edits": [
+  {
+   "target": 679,
+   "change": "Update AC3 and the Boundary section's failure-kind language ('non-zero exit, crash, timeout and missing-artifact') to #681's redirected vocabulary ('exit-nonzero, no-record, missing-artifact, unknown').",
+   "reason": "#679 cites #681's kind names verbatim; #681 was rewritten to drop 'crash' and 'timeout' as separately-observable OS-level kinds (JLS cannot observe them since dispatch is now external per #350 \u00a71) and instead subsumes both under a receipt/manifest-derived 'no-record' kind, so #679's citation is now stale.",
+   "from": 681
+  },
+  {
+   "target": 527,
+   "change": "Re-derive band_mw (currently 2-3 for the whole FEAT-C23-1) and explicitly assign SampleSink-seam construction to a task in its decomposition text. #527's Outcome describes the SampleSink producer plumbing (Simulator.probeSample + watched-element samples off WireNet.propagate) as already existing/assumed, but no task claimed building it after #678 was redirected away from supplying a tap. #680 now explicitly claims that work, which likely makes #680 alone consume close to the full 2-3 mw feature budget, leaving the stated sum (#678:1 + #680:2-3 + #682:1) inconsistent with #527's own 2-3 total.",
+   "reason": "Discovered while re-deriving #680's own Outcome/band against the current (post-2026-08-08) state of #527 and #678; #527's band_mw comment ('re-derived from a HEAD audit') no longer accounts for the SampleSink-seam gap it created by leaving #678's redirect unaddressed in its own sum.",
+   "from": 680
+  },
+  {
+   "target": 882,
+   "change": "Remove `blocks: [682]` from the machine-readable header, and rewrite/delete the 'This task is not #682' boundary bullet that claims 'The blocked_by: [682] edge is recorded on both ends' (that claim was already false on #682's side, and after #682's rewrite deleted its physical-unit acceptance criteria entirely, there is no cross-issue block left to record on either end).",
+   "reason": "Mirror-edge accuracy: adversarial review finding #1 (false claim about a two-sided edge that never existed on #682) plus visionary reframing 4, which #682's rewrite adopted by relocating all physical-unit-display work to #882 rather than blocking #682 on it.",
+   "from": 682
+  },
+  {
+   "target": 702,
+   "change": "In #702's Outcome, name explicitly that 'the chronogram cursor' refers to the single existing rewind playhead already broadcast per-lane by the `Traces` panel today, and that it is distinct from the two independent measurement cursors #682 introduces.",
+   "reason": "Adversarial review finding #6: #702 (ordering_after #682) refers to a singular 'the chronogram cursor' for rewind-to-state-at-T, but #682 introduces two measurement cursors; #682's rewrite resolves its own side of the ambiguity (Boundary section) but #702's text still needs the same clarification on its own page.",
+   "from": 682
+  },
+  {
+   "target": 524,
+   "change": "Reconcile #524's own AC-1 doc-drift test (BatchInterfaceSpecTest, which parses the exit-status table and validates the xUnit schema) with #686's CliContractConformanceTest \u2014 the two issues currently spec overlapping/duplicate test suites for the same clauses.",
+   "reason": "Found while re-verifying #686's ordering_after against #524's current body: #524 has evolved since the 2026-08-08 reviews to directly own much of what TASK-C524-1 (#686) was scoped to build, which the original reviews could not have seen.",
+   "from": 686
+  },
+  {
+   "target": 524,
+   "change": "#524's AC-1 still pins a generic checked-in xUnit XSD/RELAX-NG and validates reports against it; reframe it around #466's versioned VerdictSet record (xUnit as a golden-pinned rendering) instead, the way #686 has now been reframed.",
+   "reason": "The adversarial review of #686 explicitly states this determinism conflict (generic xUnit schema vs. #466's timestamp/hostname/time omission) is 'Mirrored on #524, #369 and #466'; #524's current body still carries the un-mirrored, unfixed version of the defect.",
+   "from": 686
+  },
+  {
+   "target": 524,
+   "change": "Clarify whether TASK-C524-2 (ratchet/versioning) and TASK-C524-3 (queryable version) remain separate planned tasks to be filed, since #524's own current AC-3 and AC-5 already implement the ratchet-integer and version-query behaviors directly.",
+   "reason": "Observed while rewriting #686's Boundary, which still refers out to TASK-C524-2/TASK-C524-3 as unfiled future issues; if #524 has absorbed that scope directly, those two designators should be retired rather than left as phantom forward references on #686.",
+   "from": 686
+  },
+  {
+   "target": 532,
+   "change": "Add a note that TASK-C532-1 (#688) was redirected from a per-event ring buffer to a net-change journal per lf-03-causal-debug.md; record TASK-C532-1b (checkpoint/restore/runUntil replay) as a recommended follow-on task to be filed once 1a (#688) lands; re-sum the TASK-C532-* child cost bands against #532's inherited 4-6 mw now that #688's band dropped to 1-1.5.",
+   "reason": "The parent's decomposition and budget assumed the original ring-buffer design across all three TASK-C532-* children; that design is dropped for #688 by this rewrite, so #532's roster and costing are stale until updated.",
+   "from": 688
+  },
+  {
+   "target": 689,
+   "change": "Update TASK-C532-2 to consume the new NetChange/site-index journal (producerId, causeIndex, siteId, value) instead of #688's original per-event producer/consumer/element/delay ring-buffer tuple; re-derive the 'element that fired and the propDelay it consumed per hop' requirement from the new accessor shape.",
+   "reason": "#689 was written to read #688's original accessor; that accessor's shape changed from a bounded per-event tuple to a net-change journal keyed by site index.",
+   "from": 688
+  },
+  {
+   "target": 691,
+   "change": "Re-check TASK-C532-3's reconvergent-path acceptance criteria against the new siteId/causeIndex fields instead of the old zero-field PinChanged-based design.",
+   "reason": "The adversarial review found #691 could not distinguish reconvergent paths under #688's old design (PinChanged carries no identity); the new net-change journal design appears to resolve that granularity gap, but #691's own criteria still reference the old accessor and should be verified against the new one.",
+   "from": 688
+  },
+  {
+   "target": 686,
+   "change": "ordering_after should be [466] not [369, 466] \u2014 drop the #369 edge, which pulls in #316/#321/#347 (a Swing editor refactor and an HDL netlist exporter) that the headless CLI contract does not need.",
+   "reason": "Discovered while reading sibling context for #687: #524's own 2026-08-08 revision comment already made this correction for itself and explicitly says it must be mirrored onto #686 (\"which carries the same ordering_after: [369, 466] defect\"), but #686's live body still shows the uncorrected [369, 466] as of this session. Out of scope for me to edit since it is not #687.",
+   "from": 687
+  },
+  {
+   "target": 466,
+   "change": "Consider adding an optional leading `CONTRACT N` production to the expectations grammar being drafted in docs/batch-interface.md \u00a72.5, analogous to `FORMAT n` for save files, so a lab can carry a durable contract pin independent of any adapter or CLI flag.",
+   "reason": "Visionary review Reframing B: the lab file outlives the adapter shim, so the pin belongs there too; #466 is drafting \u00a72.5 now, making this the cheapest moment, but it is #466's document to edit, not #690's.",
+   "from": 690
+  },
+  {
+   "target": 689,
+   "change": "Scope or reword AC-5's forward reference (\"multiple candidate ancestors, see TASK-C532-3 (#691)\") so it doesn't overpromise: #691 is now built around a two-edge pulse diff (leading/trailing transition of one net), which is narrower than AC-5's general \"more than one candidate producer at a hop\" case (e.g. a single gate with several simultaneously-live causeIndex inputs).",
+   "reason": "The visionary review's redirect (adopted in #691's rewrite) scopes the dynamic rendering to pulse pairs, not arbitrary single-hop multi-producer fan-in, so #689's cross-reference should say precisely what #691 will and won't resolve.",
+   "from": 691
+  },
+  {
+   "target": 504,
+   "change": "Reconcile the planned_features roster entry \"PF-0 causality journal ... Not yet filed\" with the fact that TASK-C532-1 (#688) has already been rescoped (per its own 2026-08-08 visionary-review disposition) to deliver a site-indexed NetChange/causeIndex journal via a headless --why query -- functionally PF-0's scope, filed under a different designator.",
+   "reason": "#691's rewrite (and #689's current body) both assume #688 already supplies this journal; #504's own roster and REPLAN protocol currently say PF-0 is unfiled, which is now stale and could mislead anyone gating work on #504's Definition of Done (including this task's KC-23-1 gate).",
+   "from": 691
+  },
+  {
+   "target": 524,
+   "change": "Bump band_mw from '2-3' to include TASK-C524-4's 0.5-1 cost (correct sum, e.g. 2.5-4), and register #692 as a GitHub-native sub-issue of #524 (currently no sub-issue link exists; #524's band_mw is an exact sum of only its three known children #686+#687+#690).",
+   "reason": "Adversarial finding 1, re-verified live on 2026-08-15: #524's body and its two comments (issuecomment-5176015975, issuecomment-5227296462) name exactly three children and #524's band_mw sums exactly from them; #692 declares part_of_feature:524 but is invisible to the parent's own budget and has no GitHub-native parent link (has_parent:false), so a scheduler reading #524 literally undercounts the feature's true cost. #692 cannot fix this itself since it can only edit its own machine block.",
+   "from": 692
+  },
+  {
+   "target": 697,
+   "change": "TASK-C525-2's body still says \"the containerized template\" grades submissions and describes \"the adapter\" in the pre-reframing vocabulary; it should be updated to say the corpus test runs the generated kit / GradescopeReport renderer produced by TASK-C525-1, consistent with #694's rewrite.",
+   "reason": "697's ordering_after already names \"TASK-C525-1\" by title text, and its Outcome/AC wording (containerized template, adapter) no longer matches the renderer + generate-don't-copy kit #694 now describes; leaving it as-is creates a terminology mismatch between parent-task siblings.",
+   "from": 694
+  },
+  {
+   "target": 699,
+   "change": "TASK-C525-3's body still refers to \"the template\", \"the template README\", and failure classification as \"adapter-side (mapping)\"; should be updated to reference the generated kit's README and the GradescopeReport renderer instead of an adapter.",
+   "reason": "699's own Boundary note (\"the template itself is TASK-C525-1\") ties it directly to #694's artifact set, which #694 has now renamed and reshaped (renderer + generated kit, not a copied template + adapter).",
+   "from": 694
+  },
+  {
+   "target": 525,
+   "change": "AC-6 cites #757 (TASK-C576-2) as the issue that \"owns the rubric\" and will extend the lab-as-data format with points/visibility/output-bound fields, but #757's current filed body (fetched during this rewrite) is scoped to \"one command grades a directory of submissions\" and does not mention rubric, points, or visibility fields at all.",
+   "reason": "#694's AC-2 now depends on rubric fields living on the lab itself, sourced from the same citation #525's AC-6 makes to #757; if #757 does not actually carry that scope, neither #525's AC-6 nor #694's AC-2 has a real owner for it, and the maintainer should either re-target the citation or extend #757's filed scope.",
+   "from": 694
+  },
+  {
+   "target": 533,
+   "change": "Reconcile ownership of the in-flight snapshot / overlay model: #533's own rewritten body already defines InFlightOverlayTest and TrajectoryRecorderPassthroughTest over the same (elementId, remainingDelay) snapshot that #695 now builds as TASK-C533-2. Feature and task maintainers should decide whether #533 still needs its own copy of this AC or should delegate it to #695, to avoid two issues independently specifying the same mechanism.",
+   "reason": "Discovered while rewriting #695 around the visionary review's view-clock/snapshot design, which turned out to duplicate work #533 had separately absorbed from its own review pass; #695's ordering_after/part_of_feature edges to #693/#533 were left unchanged, so no mirror-edge edit was needed there.",
+   "from": 695
+  },
+  {
+   "target": 717,
+   "change": "TASK-C531-1 (the 300-submission corpus + golden vectors task) should be reviewed for closure or re-scope: its stated consumer (a corpus-scale, cross-adapter parity architecture) no longer exists anywhere in CAP-21/#502 as currently scoped \u2014 #525's own Boundary note now says explicitly that neither #525 nor #531 needs a submission corpus.",
+   "reason": "Discovered via live-state verification: #502/#525/#531 were REPLANned after both reviews (2026-08-08) and after this issue's own maintainer comment, eliminating the 300-submission corpus and cross-platform byte-parity concepts this task's dependency graph assumed.",
+   "from": 697
+  },
+  {
+   "target": 719,
+   "change": "TASK-C531-2 (CrossPlatformScoreParityTest) should be reviewed for closure or re-scope: its Outcome asserts four-way byte-identical score vectors, but #531's current AC-1/Boundary state plainly that no such cross-adapter byte comparison exists anywhere in CAP-21/#502 as currently scoped.",
+   "reason": "Same live REPLAN discovery as above; #719's premise directly contradicts its own parent feature's (#531) current, more-recently-edited scope.",
+   "from": 697
+  },
+  {
+   "target": 534,
+   "change": "Add #696 (and #698) to the 'Follow-ups needed on other issues' list, noting they need re-scoping now that FEAT-C23-5's 2026-08-12 disposition replaced the two-new-canvas-element model they were split from; #696 has since been narrowed to thin Trigger/EdgeDetect/PulseWidth primitives that consume #534's jls.sim predicate service and unified recorder instead of duplicating them, and now declares ordering_after: [FEAT-C23-5].",
+   "reason": "#534's own disposition section dropped the two-new-canvas-element premise its sub-tasks (#696, #698) were filed under, but its follow-up list currently mentions only #504 and #538 -- the mirror half of the new #696-to-#534 ordering edge is missing there.",
+   "from": 696
+  },
+  {
+   "target": 700,
+   "change": "Re-check TASK-C534-3's AC wording ('an analyzer firing', 'exporting a capture', 'instrument captures') against #696's redirected scope: #696 no longer owns a capture or an analyzer, only a Trigger marker written onto #534's shared recording. #700's ACs likely need 'a fired Trigger element' / 'the shared recording's export' language, and its ordering_after may need FEAT-C23-5 (#534) added alongside TASK-C534-1.",
+   "reason": "#700 was written against the original appliance-shaped #696; leaving it unsynced would reintroduce the second-recorder/second-capture-contract ambiguity the visionary review flagged (finding: 'the seam that is actually missing... a third sample store').",
+   "from": 696
+  },
+  {
+   "target": 700,
+   "change": "Add TASK-C534-2 (#698) to #700's ordering_after list (currently [TASK-C534-1, TASK-C527-2]), since #700's AC-2 (\"a test asserts no second trace writer exists for instrument captures\") and AC-3 (byte-identical capture export) only hold once #698 lands the unified interactive/batch recorder.",
+   "reason": "mirror half of a dependency edge: #698 now explicitly owns building the recorder #700 assumes exists (adversarial finding 1); #700's own header does not yet reflect that it depends on #698.",
+   "from": 698
+  },
+  {
+   "target": 504,
+   "change": "Pin a concrete numeric kernel-event-throughput / first-year-adder-flow tolerance for AC-5 (currently 'measured tolerance' with no number recorded anywhere in the repo).",
+   "reason": "Adversarial finding 1: the unquantified, self-referential tolerance in #504 AC-5 was re-imported verbatim by #696 and #700. #700's own AC-4 has been rewritten here to no longer cite it (replaced with a hard, structurally-asserted zero-overhead-when-unarmed requirement), but #504's own AC-5 text is still circular/unquantified and any other consumer that still cites 'AC-5's tolerance' remains ungrounded.",
+   "from": 700
+  },
+  {
+   "target": 504,
+   "change": "Reconcile the PF-5 cost line: TASK-C534-1 (0.5-1) + TASK-C534-2 (4-6, after its 2026-08-15 redirect absorbed recorder unification) + TASK-C534-3 (1) now sum to 5.5-8 mw against #504's stated 3-4 mw ceiling for PF-5.",
+   "reason": "Adversarial finding 6 flagged a 0.5 mw overrun from the original three-way split; #698's subsequent redirect enlarged that overrun substantially. #700 cannot fix #504's cost line itself, so this needs a REPLAN comment on #504.",
+   "from": 700
+  },
+  {
+   "target": 705,
+   "change": "Update TASK-C526-3's body to (a) drop the 'wiring the jls-grade Action' wording and the 'the Action's behaviour is TASK-C526-1 and TASK-C526-2' boundary line, since #701 no longer builds a published Action (it's a direct workflow step invoking the container) and TASK-C526-2 has never been filed; (b) add an explicit AC requiring the starter template's pre-flight check mandate plain-text `.jls` saves (`-savetext`), which parent feature #526 already states but #705 (the task that actually builds the template) does not yet carry; (c) add an AC that the template enables GitHub Classroom's protected-repository restriction on `.github/workflows/`, since #701 now names that as the only in-scope mitigation for the workflow-editing exfiltration risk and #705 is the task that would implement it.",
+   "reason": "Adversarial finding 4 (hidden-vector secrecy) and visionary reframing 2 (plain-text template requirement) both land on the sibling template task, not on #701 itself, and #701's own instructions forbid editing another issue directly.",
+   "from": 701
+  },
+  {
+   "target": 502,
+   "change": "Reconsider re-targeting CAP-21's ~1 mw 'demo slice' (currently assigned to PF-2/Gradescope/#525 in the Cost section) to the Classroom adapter (#701/#526) instead, since #701 now ships against the currently-shipped three-status contract with no new container artifact and no editor/netlist-writer prerequisite.",
+   "reason": "Visionary review reframing 6: 'assign it here instead' \u2014 this adapter can generate the real requirements (score-weight shape, redaction boundary, template constraints) before #524's freeze happens, which is a #502 Cost-section decision, not something #701 can self-declare.",
+   "from": 701
+  },
+  {
+   "target": 526,
+   "change": "Revisit whether #526's own `ordering_after: [\"FEAT-C21-1\"]` (i.e. #524) still reflects reality now that its child task #701 targets the currently-shipped three-status contract and carries no ordering dependency on #524.",
+   "reason": "Keeps the parent feature's declared ordering consistent with the child task's actual (now looser) dependency after this rewrite; #701 cannot edit #526 itself.",
+   "from": 701
+  }
+ ]
+}

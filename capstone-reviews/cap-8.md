@@ -1,49 +1,60 @@
-**Capstone:** CAP-08 (#304) — a published RV32 core JLS did not write imports, opens as a readable hierarchy, and a student can watch its own firmware run inside it
-**Verdict:** **not-ready** — the machine block needs one REPLAN pass (two required features are closed-as-duplicate and must be repointed; the headline acceptance criterion has no filed feature behind it), and the open direction review #508 currently places this capstone in its Defer set.
+# CAP-8 (#304) readiness review
 
-The body itself is one of the strongest in the corpus: every code citation was verified true at the pinned evidence commit, the cost section refuses to restate untraceable numbers, and the redirected scope (VCD replay instead of an in-house parity engine) is coherent. What fails is the filed graph underneath it — it moved after the rewrite and the machine block was not updated.
+**Capstone:** CAP-08 — a published RV32 core JLS did not write imports, opens as a readable hierarchy, and a student can watch its own firmware run inside it.
+
+**Verdict: ready-with-gaps** — the startable slice is real and unblocked, but the machine block carries two edges to closed-as-duplicate issues, one loudly-asserted ordering claim is no longer true on either side, and the headline "watch its firmware run" criterion has no filed feature behind it (declared in-body).
+
+---
 
 ## 1. Decomposition
 
-**Two of the eight `requires_features` entries are closed.**
+The machine block declares `requires_features: [314, 320, 321, 337, 340, 342, 357, 358]`, `requires_capstones: []`, `requires_tasks_exception: []`. Native children of #304: only #321 (the other seven are shared features owned elsewhere, consistent with the corpus convention).
 
-- **#320 (FEAT-020, the declared "spine") is closed as duplicate**, absorbed into **#61** (open, "feature deduplication, pass 2"). The scope survives: #61 carries `requires_tasks: [448, 449]` — TASK-0047 (every validator-accepted cell becomes a drawn element) and TASK-0048 (multi-module netlist imports as nested subcircuits) — plus a planned bit-level Splitter/Binder mesh task that matches this capstone's Open Question 2 recommendation. But CAP-08's roster, mermaid graph, and "three counts agree" invariant all still count #320.
-- **#342 (FEAT-022 residual) is closed as duplicate**, absorbed into **#62** (open). #62 carries `requires_tasks: [290, 388]` and the hierarchy-placement residual as planned work, and its `serves_capstones` does list 304.
-- **The replacement spine does not acknowledge this capstone.** #61's `serves_capstones` is explicitly `[]` ("left empty rather than guessed") — the composition edge CAP-08 depends on most exists only on CAP-08's side, and via a closed number. An orchestrator walking `requires_features` dispatches two work-streams into closed issues and never finds #448/#449.
-- **Both #61 and #62 are natively parented under #59, which is closed (`not_planned`).** The read-half's two largest work-streams live under a dead capstone in the native hierarchy; CAP-08's only native child is #321 (FEAT-019, open, tasks #414/#418 open).
-- **AC-3 — the capstone's title-level promise — has no filed feature.** `planned_features` (VCD capture-and-replay) is still unfiled; a corpus search confirms no VCD-replay feature exists. The body is honest about this, but it means the filed children compose to the "read" half only: every filed child can close and "a student can watch its own firmware run inside it" still fails. CAP-08's own completion criteria require `planned_features` resolved to a filed issue before close.
-- The remaining six required features (#314, #321, #337, #340, #357, #358) are all open and filed, with open task children (#372/#404/#408/#451, #414/#418, #382, #292). No double ownership found: #310 (CAP-15)'s rewrite dropped its prior claims on #320/#321/#342 entirely.
-- Minor: #321 declares `requires_tasks: []` while #414/#418 are filed and natively linked under it, and #321's own body states #414's filed scope "describes the superseded native-writer design; its scope needs updating before pickup."
+**Six of eight required features are open with open TASKs:**
 
-## 2. Acceptance criteria
+| Feature | State | Children (all open) |
+|---|---|---|
+| FEAT-002 #314 fail-loud loader | open | #404, #408 |
+| FEAT-019 #321 Yosys JSON write | open (native child) | #414, #418 |
+| FEAT-015 #337 headless CircuitOp (residual) | open | #382, #412 |
+| FEAT-016 #340 VLNV / type identity | open | #417, #446 |
+| FEAT-017 #357 shared parameterized definitions | open | #447, #473 |
+| FEAT-018 #358 hierarchical HDL IR | open | #292 |
 
-- **AC-0** (core pin) is a genuine capstone-level deliverable with a falsifiable observation; `test/fixtures/core-pin.properties` confirmed absent at the evidence commit. No child owns it — acceptable for a capstone, but nothing in the tree will produce it by accident. The licensing question in selection criterion 2 (derivative `.jls`/netlist/VCD obligations from a copyleft core) is explicitly unsettled and correctly flagged as must-settle-before-committing.
-- **AC-1/AC-2/AC-5** map cleanly onto #61 (#448/#449) + #314, with #62/#358/#340/#357 carrying AC-2's "placed as instances, one definition N times." AC-1's externally-computed manifest is a well-designed guard against a self-consistent-but-wrong mapper. **AC-4** (round trip) maps to #321 + #358/#292.
-- **AC-3 composes to nothing** — see above. This is the gap where every child passes and the capstone fails, and the body says so itself.
-- **Composition risk on AC-2's dedup half:** after the corpus rewrite, #357's redirected scope is intra-file *authored-plane* dedup ("blocked_by: [] under its redirected authored-plane scope") and #340 is restaged around cross-file reference/library identity. Whether "N imported instances of one source module reference one definition" — the *imported*-plane dedup CAP-08's §2 assigns to FEAT-016/FEAT-017 — is still owned by either, or falls to #449, should be pinned in the REPLAN. Uniquified-first (OQ3's default) keeps this from blocking, but the eventual dedup increment is currently diffusely owned.
+**Two of eight are closed — and the body does not know it.**
+
+- **FEAT-020 #320 (the spine)** was closed **`duplicate` of #61** on 2026-08-04 ("Closing as a duplicate of #61 — feature deduplication, pass 2"). #61 is open and carries the identical scope as native sub-issues: **#448** (TASK-0047, mapper parity + bit-level mesh) and **#449** (TASK-0048, hierarchy import) — both open. #61's own rewritten body confirms it is the canonical owner.
+- **FEAT-022 #342 (layout residual)** was closed **`duplicate` of #62** on the same pass. #62 is open and carries the scope as **#290** (rubric/corpus) and **#388** (TASK-0050, per-cell invariants + hierarchy-instance placement) — both open.
+
+The #304 body was rewritten (retitled 2026-08-09) *after* those closes, yet still lists both as "**required** — filed" and answers its own Open Question 5 ("narrow #62 in place") as if the dedup had not already resolved it the other way. The three-counts invariant the body brags about (machine block = table = mermaid, all 8) is internally consistent but consistent with a roster that no longer exists. **No scope was lost** — every step of the Outcome Statement still has an open owner once 320→#61 and 342→#62 are repointed — but the repoint must be recorded via the body's own `REPLAN:` protocol before orchestration keys off `requires_features`. (Sibling note: per #61's body, CAP-15 #310's `requires_features` carries the same stale #320 citation.)
+
+**Unfiled scope, declared:** step 4 / AC-3 (VCD capture-and-replay) is carried in `planned_features` with an explicit "No feature issue exists for this yet." Verified by search: nothing filed covers loading an external simulator's VCD back into an imported schematic (#704 is adjacent and states "not currently funded by any capstone"; #63 — open — is the black-box/co-sim stage the body itself says must be checked before filing, as it may be the "named demand"). **AC-0** (the core pin) is capstone-direct work owned by no child; the body makes it deliverable-first, which is coherent, but note it is unowned by any FEAT/TASK.
+
+## 2. Acceptance criteria composition
+
+- **AC-0** (pin exists) — fails today as claimed: `test/fixtures/core-pin.properties` absent at the evidence commit. Owner: capstone-direct. The licensing rider (derivative `.jls`/round-tripped netlist/VCD obligations from a copyleft core) is correctly forced into the pin decision rather than deferred.
+- **AC-1** (zero problems on realized set, externally-computed manifest) — composes onto #61/#448. The *independent manifest script* is not explicitly in #448's scope; it is carried by this capstone's own completion checklist, so it cannot silently fall between issues, but the orchestrator should treat it as CAP-level work.
+- **AC-2** (named hierarchy as instances) — composes onto #449 (import) + #358 (IR) + #340/#357 (identity/dedup) + #388 (instance placement). No overlap conflict: #449 uniquified-first vs #340/#357 dedup matches Open Question 3's default.
+- **AC-3** (firmware runs visibly) — **no filed backing** (see above). Every child could close and this criterion would still be unstartable. The body says so itself; the gap is honest but real, and it is the capstone's title.
+- **AC-4** (lossless round trip) — composes onto #321/#414 (writer) + #358/#292 (export half). Sound.
+- **AC-5** (unrealizable construct named, never mis-mapped) — already held by shipped code (`NetlistImporter` default arm; pinned by `NetlistImporterTest.java:227`, `unrealizedButValidCellIsRejectedNotMismapped()`, present at the evidence commit) and satisfiable on the required set alone. Sound.
+
+Composition upward is complete except through AC-3; there is no criterion where all children pass and the capstone silently fails — the two ways the capstone can fail (no pin, no replay feature) are both named in the body.
 
 ## 3. Dependency chains
 
-- **Stale mirrored-edge claims.** CAP-08 asserts "#340 blocks [357] / #357 blocked_by [...340...]" — both sides now declare the edge dropped (`#340 blocks: []`, `#357 blocked_by: []`). Its mermaid graph draws F016→F017 on an edge that no longer exists. The asserted "#320 blocks [342]" edge now survives only at task granularity as #62 `blocked_by: [448]` — which is real and acyclic.
-- **The "sharp case" has dissolved.** CAP-08 states #320 declares `blocked_by: [339]` and #339 declares `blocks: [320, 328, 360]`. Reality: #339 now declares `blocks: [328, 429]`, `serves_capstones: [298, 302, 310]` (304 dropped), and #61 declares `blocked_by: []`. No filed edge anywhere makes FEAT-021 (bidirectional ports) precede the spine. The engineering point may still be real — an RV32 core with `inout` pads needs a third port direction — but if it is, the edge must be re-declared against #61/#448; today the completion criterion "close #339 before this capstone" is an unmirrored obligation.
-- **The recorded out-of-set prerequisite list is stale.** Walking the current `blocked_by`/`requires_tasks` closure of the corrected required set yields: **#319** (via #340), **#336** (via #358 and #321), plus each feature's own open tasks (#448/#449, #292, #382, #372/#404/#408/#451, #290/#388, #414/#418). **#315, #318, #334 and #339 are no longer in the closure** — the completion criterion naming all six is out of date on four of them.
-- **No cycles found.** No unfunded external tool prerequisite: the external simulator class AC-3 needs is the one the tree already shells out to.
-- **Governance edge:** the open direction review **#508 places CAP-08 in the Defer set** ("priced backlog, free on the graph … promoted by adoption evidence; re-priced at pickup"). Undertaking CAP-08 now contradicts the standing wedge sequence unless the owner explicitly promotes it. Not an external block, but a start gate the orchestrator must not walk past silently.
+- **Broken edges as filed:** two of the eight composition edges (`#320 → CAP08`, `#342 → CAP08`) point at closed/redirected issues. After repointing to #61/#62 the graph is real and acyclic: #61 declares `blocked_by: []`; #62 declares `blocked_by: [448]` (a task inside #61, mirrored from #62's side); #340→#357 is mirrored. No cycle returns to #304.
+- **The #339 claim is stale on both sides.** The body asserts, emphatically, that #339 (FEAT-021, bidirectional ports) "must land before #320 regardless of anything else in this issue," and the completion checklist requires #339 closed before CAP-08 closes. That mirrored edge no longer exists anywhere: #339's rewritten machine block declares `blocks: [328, 429]` only, and canonical #61 declares `blocked_by: []` with bidirectional ports explicitly out of scope and non-gating. The spine is *less* blocked than the body claims. (Substantively fine for the outcome: a PicoRV32-class core has no top-level `inout`.)
+- **Prerequisite closure needs re-derivation.** The recorded closure (#315, #318, #319, #334, #336, #339 — all currently open, so no dead references) was walked from the old required set; walked from {#61, #62, #314, #321, #337, #340, #357, #358} it differs (at minimum #339 drops out). The completion checklist inherits this staleness.
+- **External prerequisites:** the external HDL simulator for AC-3 is runtime tooling of the class the tree already shells out to, not an unfunded engineering dependency; the unfunded piece is the internal replay feature, covered above. Nothing else external sits on the critical path. The demo slice (bit-level mesh + `$add`/`$dff` over a small module) is genuinely startable now: it is #448's scope, and #448 is open and unblocked.
 
-## 4. Staleness / gaps
+## 4. Staleness and gaps
 
-- **Evidence is fresh and accurate — the strongest part of this issue.** `evidence_commit` c5cee1b is the current default-branch head, and every load-bearing claim verified against it: `CellValidator.java:58-68` accepts exactly 19 cell types; `NetlistImporter.java:234-259` realizes exactly 5 with the fail-loud `default:` arm at :250; :227-231 refuses non-`$` cells; `NetlistImporterTest.java:227` pins the discipline; `HdlExporter.java:87-89/422-428` rejects SubCircuit; `SubCircuit.java:332` is a deep copy; layout wired at `NetlistImporter.java:104` (8 files); 21 files under `src/jls/collab/op/`; no VLNV/YosysWriter hits; 35 registry element types; `core-pin.properties` absent.
-- **Cost section is honest** (no phantom bands), and the demo slice (mesh synthesis + `$add`/`$dff`) agrees with #61's own planned-task ordering — it is startable today, independent of the core pin and of #508's deferral if scoped as #61 work rather than capstone work.
-- **Open Question 6 is stale.** It records CAP-15 (#310) sharing five of the eight required rows. #310's rewrite now requires `[358, 339, 336, 315, 327, 359]` — sharing only #358 — and explicitly defers the netlist-interchange trio (#321/#320/#342) to a future issue "reconciled with #304 up front."
-- **Open Question 2 is substantially answered from the other side.** #310 retired KC-15-1 to that future interchange issue ("It applies if and when that future issue is filed, not to this capstone's required set"), so the co-decision CAP-08 asks for is now one-sided; the CAP text should record that rather than re-litigate it at pickup.
-- **Open questions that block start:** OQ1 (name and pin the core, including the licensing determination) blocks AC-0/AC-1 and all core-scale work; only the demo slice escapes it.
+- **Evidence commit resolves and claims verify.** `evidence_commit: c5cee1b` is a real default-branch head (the review clone's local master is behind it; c5cee1b is *newer*, not dangling). Verified at c5cee1b: `core-pin.properties` absent; `NetlistImporter` realizes exactly `$not/$and/$or/$xor/$mux` + constants with a fail-loud `default:` arm and refuses non-`$` cells; `CellValidator` accepts exactly 19 types; `HdlExporter`'s `EXPORTED` set omits `SubCircuit` with the reject javadoc; the pinning test sits at `NetlistImporterTest.java:227`; `src/jls/collab/op/` is 21 files; `src/jls/hdl/layout/` exists (8 files, 1,794 lines). Every load-bearing "fails today" claim is true.
+- **The one stale region is issue-graph state, not code state:** the #320/#342 duplicate closes and the #339 narrowing all predate or accompany the corpus rewrite, and the body missed them (§1, §3 above).
+- **Cost:** no per-feature bands asserted; the body explicitly declines to cite the absent `docs/plan/REGISTRY.md` rather than restating phantom numbers. No contradiction to flag; the demo slice is correctly identified as the cheapest honest evidence.
+- **Open questions:** OQ1 (name the core + settle derivative licensing) blocks AC-0/AC-1 and #320-successor mapper work against the pinned core, but not the demo slice. OQ2's co-decision with CAP-15 #310 is pre-answered in-body with #310's own KC-15-1 reading — low risk. None blocks start.
 
-## What the REPLAN must do before orchestration can trust this issue
+## Verdict: ready-with-gaps
 
-1. Repoint `requires_features`: 320 → 61, 342 → 62 (or their task-level equivalents #448/#449/#388/#290), re-derive §2 sufficiency/minimality, regenerate the mermaid graph so the three counts are equal over open issues only; ask #61 to mirror `serves_capstones: [304]`.
-2. File the VCD-replay feature (checking #63's retired co-simulation scope first, as the body itself suggests) and move it into `requires_features`, or explicitly descope AC-3 and retitle the capstone — one or the other; the title promise cannot rest on an unfiled paragraph.
-3. Prune the prerequisite list to the current closure (#319, #336 + open tasks); either re-declare the #339 inout edge against #61/#448 with a mirror, or drop it from the completion criteria.
-4. Refresh OQ2/OQ6 against #310's rewrite, and resolve the imported-plane dedup ownership question (§2 risk above).
-5. Reconcile with #508: either the owner promotes CAP-08 out of the Defer set, or implementation starts only with the demo slice under #61.
-
-None of this is architecture work — it is one careful bookkeeping pass plus one feature filing — but until it lands, orchestrating from this issue as filed would dispatch work into closed issues and could complete every child while missing the capstone's headline outcome.
+Start now with (a) the demo slice (#448: bit-level mesh + `$add`/`$dff`) and (b) the AC-0 core pin including the licensing determination. Before orchestration consumes this capstone's machine block, land one `REPLAN:` comment that: repoints `requires_features` 320→**#61** and 342→**#62** and regenerates the table/mermaid so the three counts match reality; re-derives the prerequisite closure (dropping the unmirrored "#339 gates the spine" claim or deliberately re-mirroring it); and resolves Open Question 5 to match the dedup outcome (#62 is the canonical owner; #342 is gone). File the VCD-replay feature (checking #63 as the possible named demand) before any AC-3 work is funded — until then the capstone can progress but cannot complete.

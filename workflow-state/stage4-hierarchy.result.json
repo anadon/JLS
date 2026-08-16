@@ -1,0 +1,1271 @@
+{
+ "done": 152,
+ "expected": 152,
+ "linked": 86,
+ "results": [
+  {
+   "issue": 61,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#61's machine block already declares tier: feature (label tier:feature already present, no label write needed). It has requires_tasks [448, 449] (downstream tasks, not a parent signal) but no part_of_capstone field. Searched all 33 CAP issues' requires_features/planned_features arrays for '61' \u2014 none list it. CAP-15 (#310) prose ('CAP-15 (#310) owns that program as a capstone' in #301, and #310 lists 59/61/62/63 only under its free-text `related:` field, not in its machine-readable requires_features array) is the closest candidate but fails the strict rule since the parent link must come from a requires_features/planned_features array entry, which #310 does not have for #61. Per the instructions to not guess, parent=null: ownership is asserted only in prose/related lists, never in a CAP's machine-readable requires_features/planned_features array."
+  },
+  {
+   "issue": 62,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no action needed). This feature has no part_of_capstone field; instead serves_capstones: [59, 304, 310, 311] lists four capstones plurally, and it is not listed in any single capstone's requires_features/planned_features array (it's a cross-cutting seam serving multiple capstones: #59 HDL interop, #304/#310/#311 downstream consumers). Ownership is genuinely plural, so per the rules parent=null."
+  },
+  {
+   "issue": 63,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already reads tier:feature (label tier:feature already present, no change needed). serves_capstones is explicitly [] with a comment noting the sole prior beneficiary #59 is CLOSED, and #304/#306/#310 are marked as grading this feature 'beneficial, not required' rather than owning it \u2014 so no CAP genuinely requires it. requires_tasks:[420] names a child task, not a parent. GitHub's current parent link is still the closed capstone #59 (stale from before #59 closed), but the tool set given only supports adding/replacing a sub-issue parent, not detaching one, and the task instructs not to guess \u2014 so parent is reported as null per the machine block's own current truth, with no write made (no target CAP to attach to, and no remove-parent operation available)."
+  },
+  {
+   "issue": 73,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "The machine block self-declares tier: pointer and explicitly states \"this issue owns no implementation tasks directly\" / \"not a work item \u2014 no task should be filed against it.\" This is a decision-record/superseded-pointer issue, none of capstone/feature/task, so classified as meta (no tier label applied per instructions to skip labeling for meta). Parent is genuinely plural/absent: blocked_by lists five peer features (545, 548, 550, 551, 552) it depends on for closure, and serves_capstones names #511 only as a capstone it serves, not an owning parent \u2014 there is no single FEAT or CAP that owns this pointer, so parent=null with no sub-issue link created. Current tier:feature label was left untouched since only additions/link creation were authorized, not removal of existing labels."
+  },
+  {
+   "issue": 75,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: feature (label tier:feature already present, no change needed). serves_capstones: [] and no part_of_capstone field are present \u2014 the issue explicitly declares itself unowned by any capstone, so parent=null per instructions (do not guess). No open CAP issue's requires_features/planned_features lists #75 either. No writes were necessary."
+  },
+  {
+   "issue": 76,
+   "tier": "feature",
+   "parent": 224,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/76/labels -f 'labels[]=tier:feature' (label already present, confirmed)",
+    "gh api -X POST repos/anadon/JLS/issues/224/sub_issues -F sub_issue_id=4839975573 (linked #76 as sub-issue of #224)"
+   ],
+   "note": "Machine block in #76 already declares tier: feature and serves_capstones: [224]; #224's own machine block lists requires_features: [76, 167, 223, 264] and its mermaid graph shows F76 --> CAP, confirming mutual agreement that #224 (Grand architecture capstone) is the sole owning parent. Applied tier:feature label (already present) and created the native sub-issue link #76 -> #224."
+  },
+  {
+   "issue": 78,
+   "tier": "task",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: none, with a comment \"free-standing; the umbrella program it belonged to landed (see Background)\". The body's Background section confirms all prerequisite features/capstones (registry, capability interfaces #238, palette #246, pin faces #261) already landed, and this is the final leftover task with no owning FEAT still open to claim it. tier:task label was already present on the issue (verified via labels API), so no label write was needed. No parent assignment made since the issue itself declares none."
+  },
+  {
+   "issue": 82,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: feature, so label tier:feature applies (already present on the issue, no label write needed). For parent, a FEAT's parent should be its owning CAP via part_of_capstone or a CAP listing it in requires_features/planned_features; #82's machine block has serves_capstones: [] (empty) and no part_of_capstone field, and no CAP-tier issue was found listing #82 in requires_features/planned_features. Ownership is absent, so parent=null with no action taken."
+  },
+  {
+   "issue": 84,
+   "tier": "task",
+   "parent": 316,
+   "actions_taken": [
+    "Verified label tier:task already present on #84 (no change needed)",
+    "Attempted POST repos/anadon/JLS/issues/316/sub_issues sub_issue_id=4840259516 (#84's db id); API returned 422 'may not contain duplicate sub-issues / only one parent' \u2014 treated as already-correct per instructions"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 316, matching the hinted owner (316, FEAT-008 RESIDUAL). #316 is open and the issue's own text says 'Structural parent (GitHub sub-issue relationship); this field now matches it,' confirming the relationship was already established. Attempting to add the sub-issue link returned a 422 duplicate/one-parent error, consistent with #84 already being a sub-issue of #316, so no further write was needed."
+  },
+  {
+   "issue": 91,
+   "tier": "task",
+   "parent": 317,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/317/sub_issues sub_issue_id=4841577737 (set #91 as sub-issue of #317)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 317 (FEAT-007). Label tier:task was already present on the issue, so no label write was needed. Issue had no existing parent (404 on GET .../91/parent), so linked it as a sub-issue of #317 per the part_of_feature field."
+  },
+  {
+   "issue": 101,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: feature and label tier:feature is already present, so no label write needed. serves_capstones: [100], but #100 is closed (the issue text itself notes the capstone-notification criterion is N/A because #100 already closed). Per the rules, a FEAT's parent is its owning CAP via part_of_capstone or a unique open CAP listing it in requires_features/planned_features \u2014 #100 is not open, and no other open capstone lists #101 in requires_features. Therefore parent=null (owning capstone closed, no other candidate). No writes performed."
+  },
+  {
+   "issue": 111,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature explicitly, and the tier:feature label is already present, so no label write needed. No parent capstone: serves_capstones is [] in the machine block, and no CAP issue lists #111 in requires_features/planned_features (it's a feature whose remaining direct scope is W6/W7, with its own children #665/#666, not itself claimed by any capstone). Per the plurality rule, absent/empty capstone ownership means parent=null."
+  },
+  {
+   "issue": 134,
+   "tier": "task",
+   "parent": 338,
+   "actions_taken": [
+    "Verified tier:task label already present on #134 (no label change needed)",
+    "POST repos/anadon/JLS/issues/338/sub_issues sub_issue_id=4903132588 (#134's DB id) to attach #134 as native sub-issue of #338 \u2014 succeeded"
+   ],
+   "note": "#134's machine block explicitly declares tier: task and part_of_feature: 338 (FEAT-010 RESIDUAL, which owns the installer acceptance surface and lists #134 as its Criterion 5). This is an unambiguous, non-plural ownership declaration, so parent=338 was applied directly without needing the hint list."
+  },
+  {
+   "issue": 136,
+   "tier": "task",
+   "parent": 338,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/136/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/338/sub_issues -F sub_issue_id=4903133089"
+   ],
+   "note": "#136 is a scientific-task template issue (GPG signing custody decision for rpm/AppImage) with no designator in title and no machine block found. It has no explicit part_of_feature link, but its sibling signing tasks in the same filed batch \u2014 #134 (Windows Authenticode) and #135 (macOS notarization), explicitly cross-referenced in #136's own \u00a711 Related Work \u2014 are already native sub-issues of FEAT-010 (#338, 'the release's claims about its installers \u2014 signed, complete, reproducible \u2014 are true'). #338's abstract explicitly covers signing claims across all installer platforms, so #136 (Linux rpm/AppImage signing) clearly belongs to the same feature. Applied tier:task label and added #136 as a sub-issue of #338."
+  },
+  {
+   "issue": 162,
+   "tier": "task",
+   "parent": 317,
+   "actions_taken": [
+    "Confirmed label tier:task already present on #162",
+    "gh api -X POST repos/anadon/JLS/issues/317/sub_issues -F sub_issue_id=4913064195 (added #162 as sub-issue of #317)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 317 (FEAT-007), so parent is unambiguous. tier:task label was already applied. Added #162 as a native sub-issue of #317 via the sub_issues API; the call returned the parent issue object, indicating success (no prior different parent, so no replace_parent needed)."
+  },
+  {
+   "issue": 163,
+   "tier": "capstone",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier: capstone explicitly, and label tier:capstone is already present on the issue \u2014 no write needed. Capstones sit at the top of the TASK->FEAT->CAP hierarchy and are not sub-issues of anything (the CAP-NN designator map given is for locating CAP parents of FEATs, not applicable here since #163 is itself a capstone, not owned by another CAP). Confirmed via GET .../163/parent returning 404 (no parent currently set), which is correct/expected for a capstone. requires_features [167,168,169,170,171] in the machine block are this capstone's children (FEATs), not its parent. No action taken."
+  },
+  {
+   "issue": 167,
+   "tier": "feature",
+   "parent": 163,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: feature. serves_capstones lists both 163 and 224, but the body itself disambiguates: \"#163: collab tracking issue (this issue's GitHub parent...)\" while #224 relationship is only that its REPLAN lists this feature in requires_features (i.e. #224 is a downstream/consuming capstone, not the owning one). Confirmed via GraphQL that #167's current native parent is already #163, consistent with the body's own claim. Label tier:feature was already applied and no parent change was needed, so no writes were made."
+  },
+  {
+   "issue": 168,
+   "tier": "feature",
+   "parent": 163,
+   "actions_taken": [
+    "ensured label tier:feature on #168 (already present)",
+    "POST repos/anadon/JLS/issues/163/sub_issues sub_issue_id=4913282517 (added #168 as sub-issue of #163); verified via GraphQL parent query -> 163"
+   ],
+   "note": "Machine block explicitly states tier: feature. serves_capstones lists both 163 and 224, but #163's own body states dual ownership with #224 was already resolved in #163's favor (2026-08-08), and #224's body confirms its required-feature set no longer lists #168-#171 (struck 2026-08-08) with #163 named sole owner. So parent is unambiguously #163, not plural despite the serves_capstones array."
+  },
+  {
+   "issue": 169,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no action needed). Parent is genuinely plural: serves_capstones: [163, 224], both cited as owners (163 as tracking parent, 224 as grand architecture whose 2026-08-02 REPLAN lists this feature in requires_features) with no single owning CAP or FEAT designated as the sole parent \u2014 per rules this means parent=null rather than guessing between two capstones."
+  },
+  {
+   "issue": 170,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "tier:feature label already present (machine block states tier: feature, matching existing label), no label change needed. Parent: the machine block lists serves_capstones: [224, 299] as plural required/beneficial consumers rather than a single owning capstone via part_of_capstone; neither #224 nor #299 is the unique CAP claiming this feature in requires_features/planned_features (the body explicitly frames both as serving relationships, and #163, the GitHub parent tracking issue, is explicitly noted as not being a filed capstone). Ownership is genuinely plural, so parent=null and no sub_issues API call was made."
+  },
+  {
+   "issue": 171,
+   "tier": "feature",
+   "parent": 163,
+   "actions_taken": [],
+   "note": "Machine block already states tier: feature and the issue already carries label tier:feature, so no label write was needed. serves_capstones lists three capstones (163, 224, 299), but the body's own annotation explicitly calls #163 \"tracking parent (GitHub sub-issue relation; predates the capstone template but its required set includes this feature)\" while 224 and 299 are noted as broader/derivative relations (224's grand architecture requires_features, 299 only via the absorbed FEAT-052 restatement, \"benefits but does not require\"). The issue's current native sub-issue parent is already #163, matching that explicit designation, so no parent change was applied \u2014 treating #163 as the correct single parent rather than genuinely plural ownership."
+  },
+  {
+   "issue": 184,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature and label tier:feature is already present, so no label write needed. serves_capstones is explicitly empty and there is no part_of_capstone field or any open CAP issue listing #184 in requires_features/planned_features (the related list is documentation-only, non-blocking). Therefore parent=null: this feature is not currently claimed by any capstone."
+  },
+  {
+   "issue": 185,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature and serves_capstones: [] with a note that the former parent tracker #33 is closed and no capstone currently requires this feature. Label tier:feature is already present on the issue, so no label write was needed. No CAP claims #185 in requires_features/planned_features (not checked exhaustively via CAP list since the issue itself asserts serves_capstones: [] and #33 is closed), so parent=null per the \"genuinely absent\" rule. No sub-issue action taken."
+  },
+  {
+   "issue": 188,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature and serves_capstones: [] with a prose note stating the former parent tracker #33 closed while this feature remained open and \"close-out is self-contained\" \u2014 no filed capstone currently lists this feature. Label tier:feature is already present on the issue, so no label write was needed. No parent action taken: although GitHub's native parent still points to closed #33, the issue's own current-state record explicitly disclaims that relationship and lists no replacement CAP; per the \"if ownership is genuinely plural or absent, parent=null\" rule, I did not guess a new parent, and removing the stale link wasn't in scope (only adding/replacing a decided parent was authorized)."
+  },
+  {
+   "issue": 191,
+   "tier": "task",
+   "parent": 188,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 188. Label tier:task was already present on the issue, and the sub-issue parent was already #188 (confirmed via /issues/191/parent), so no writes were needed."
+  },
+  {
+   "issue": 202,
+   "tier": "feature",
+   "parent": 301,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/202/labels -f 'labels[]=tier:feature' (already present, confirmed)",
+    "gh api -X POST repos/anadon/JLS/issues/301/sub_issues -F sub_issue_id=4935498870 (linked #202 as sub-issue of #301)"
+   ],
+   "note": "Machine block explicitly declares tier: feature and serves_capstones: [301]. #301 is CAP-02 per the hint map, and the body's Intended Audience & Impact section and Sequencing section confirm #202 (Direction B) is #301's required teaching-machine artefact (\"#301's entire premise\" / \"#202 \u2192 #301 (served)\" in the mermaid graph). No other issue claims #202 via requires_features/planned_features, so parent=301 is unambiguous. tier:feature label was already present; added the native sub-issue link to #301."
+  },
+  {
+   "issue": 212,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [
+    "ensured label tier:feature present on #212 (already existed)"
+   ],
+   "note": "Machine block declares tier: feature explicitly. serves_capstones: [224], but #224's own body explicitly places #212 out of scope ('external element providers via ServiceLoader (#212, demand-gated and currently un-demanded)' is listed among items explicitly out of scope, not in requires_features/planned_features), so no CAP claims ownership per the stated rule. No FEAT owns it either (blocked_by lists #78/#223/#403 as prerequisites, not an owning feature). Therefore parent=null: ownership is genuinely absent, not plural."
+  },
+  {
+   "issue": 214,
+   "tier": "task",
+   "parent": 369,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/369/sub_issues sub_issue_id=4942173763 (added #214 as sub-issue of #369)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 369 (FEAT-053, confirmed open, title matches). Label tier:task was already present on #214, so no label write was needed. No existing parent was set (GET .../parent returned 404), so added #369 as parent via sub_issues API, which succeeded."
+  },
+  {
+   "issue": 223,
+   "tier": "feature",
+   "parent": 224,
+   "actions_taken": [
+    "Verified tier:feature label already present (no change needed)",
+    "Attempted POST sub_issues to parent 224; API returned 422 'may only have one parent' indicating it is already correctly parented"
+   ],
+   "note": "Machine block explicitly declares tier: feature and serves_capstones: [224], with no other capstone or feature listed as owner (requires_tasks are 277/403, its own children, not its parent). Label tier:feature already existed. Attempt to add as sub-issue of #224 returned 'may only have one parent', confirming it is already linked there (or to some parent) so no write was needed/possible; treated per instructions as success."
+  },
+  {
+   "issue": 224,
+   "tier": "capstone",
+   "parent": null,
+   "actions_taken": [
+    "ensured label tier:capstone present via gh api repos/anadon/JLS/issues/224/labels (already existed, idempotent)"
+   ],
+   "note": "Machine block explicitly states tier: capstone, and the body's YAML uses requires_features (not part_of_feature/part_of_capstone), confirming this is a top-level capstone tracking issue with no owning parent. Capstones sit at the root of the hierarchy per the stated rules (a TASK's parent is a FEAT, a FEAT's parent is a CAP; capstones have none), so parent=null is correct, not a placement failure."
+  },
+  {
+   "issue": 232,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block states tier: feature and part_of_feature: none; label tier:feature is already present on the issue, so no label write was needed. Parent is null: the issue body's own 'Proposed disposition' and Open Question 1 explicitly state that #232-vs-#322 ownership of the representation work is an unresolved adjudication pending maintainer confirmation, so no CAP or FEAT can be confidently assigned as parent without guessing. #232 itself is the parent (via requires_tasks) of #878 and #879, but that is a downward relationship, not upward; no write made."
+  },
+  {
+   "issue": 264,
+   "tier": "feature",
+   "parent": 224,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/224/sub_issues sub_issue_id=4992814184 (added #264 as native sub-issue of #224)"
+   ],
+   "note": "Machine block states tier: feature explicitly and label tier:feature was already present (no label change needed). serves_capstones: [224] in #264's machine block matches the given hint, and #224's own machine block lists requires_features: [76, 167, 223, 264], confirming single, unambiguous capstone ownership. #264 was not yet a native GitHub sub-issue of #224 (sub_issues list was [220,221,222,223,76]), so added it via POST; response returned the parent issue object with no error, indicating success."
+  },
+  {
+   "issue": 265,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature and serves_capstones: [] with no part_of_capstone field; label tier:feature is already present on the issue, so no label write needed. requires_tasks: [671,672,673] are this issue's children (tasks), not a parent, and no CAP in the designator map lists #265 in requires_features/planned_features. Confirmed via API that #265 currently has no parent (404 on /parent). Since ownership by a capstone is absent rather than plural-but-unresolvable, parent=null with no action taken."
+  },
+  {
+   "issue": 277,
+   "tier": "task",
+   "parent": 223,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 223. tier:task label was already present on the issue, and the issue's parent is already set to #223 (confirmed via GET /issues/277/parent). No writes were needed."
+  },
+  {
+   "issue": 278,
+   "tier": "task",
+   "parent": 202,
+   "actions_taken": [
+    "confirmed label tier:task already present",
+    "attempted POST repos/anadon/JLS/issues/202/sub_issues sub_issue_id=5038671648; API returned 422 duplicate/already-has-parent, treated as success per instructions"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 202; body's Related Work and Background sections confirm #202 as the owning feature for this promoted-goldens task. Label tier:task was already applied. The sub_issues POST to #202 failed with a 422 indicating the issue already has a parent (or is already a duplicate sub-issue), consistent with #202 already being its parent, so no further action was needed."
+  },
+  {
+   "issue": 279,
+   "tier": "task",
+   "parent": 171,
+   "actions_taken": [
+    "ensured label tier:task present on #279 (via labels PATCH, already existed)"
+   ],
+   "note": "Machine block states tier: task and part_of_feature: 171 explicitly, and #171 is titled the owning Stage 2 feature that lists this task in its roster. Attempted to add #279 as sub-issue of #171 but the API returned 422 'sub issue may only have one parent', and fetching #279/parent confirmed it is already a sub-issue of #171 (the returned parent payload was #171 itself) \u2014 so the hierarchy was already correct and no sub_issues write was needed; only the tier:task label was (re)confirmed present."
+  },
+  {
+   "issue": 280,
+   "tier": "task",
+   "parent": 171,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 171. Label tier:task already present on the issue, and #280 already appears as a sub-issue of #171 (confirmed via repos/anadon/JLS/issues/171/sub_issues). No writes needed."
+  },
+  {
+   "issue": 281,
+   "tier": "task",
+   "parent": 169,
+   "actions_taken": [],
+   "note": "Machine block explicitly sets tier: task and part_of_feature: 169. Verified #169 is the owning feature (issue title says \"collab Stage 1b slice\", body references #169 as \"parent feature\" throughout). Label tier:task already present on #281, and #169's sub_issues already lists 281 as a sub-issue, so no writes were needed."
+  },
+  {
+   "issue": 282,
+   "tier": "task",
+   "parent": 167,
+   "actions_taken": [
+    "Verified label tier:task already present on #282",
+    "Attempted POST repos/anadon/JLS/issues/167/sub_issues with sub_issue_id=5039955975; API returned 422 'may not contain duplicate sub-issues / sub issue may only have one parent', confirming #282 is already a sub-issue of #167 (no change needed)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 167; the edge-walk paragraph in the body confirms #167's requires_tasks lists this issue with no back-edge cycle. #167's own body (fetched via parent_issue lookup) is the FEAT that lists #282 among its requires_tasks/roster. Both label and parent-linkage were already correctly set by a prior pass, so no writes were needed beyond confirming."
+  },
+  {
+   "issue": 283,
+   "tier": "task",
+   "parent": 167,
+   "actions_taken": [],
+   "note": "Issue #283 already carries label tier:task and its machine block declares part_of_feature: 167, with #167 listing it in requires_tasks per the body's edge-walk note. Verified 283 is already a sub-issue of 167 via the sub_issues API. No label or parent changes were needed; no writes made."
+  },
+  {
+   "issue": 284,
+   "tier": "task",
+   "parent": 82,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 82; body's Related Work also names #82 as parent. The issue already carries the tier:task label and is already registered as a native sub-issue of #82 (parent_issue_url confirms), so no label or sub_issues writes were needed."
+  },
+  {
+   "issue": 285,
+   "tier": "task",
+   "parent": 82,
+   "actions_taken": [
+    "Confirmed tier:task label already present on #285 (no change needed)",
+    "Verified #285 already has #82 as native sub-issue parent (POST returned 422 duplicate-parent error, confirming existing correct linkage)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 82, and #82 is the sole owning feature (also called the 'parent' in Related Work). Both the tier:task label and the sub-issue parent linkage to #82 were already correctly set prior to this audit; no writes were needed beyond confirming state."
+  },
+  {
+   "issue": 286,
+   "tier": "task",
+   "parent": 76,
+   "actions_taken": [
+    "Verified tier:task label already present on #286 (no change needed)",
+    "Attempted POST repos/anadon/JLS/issues/76/sub_issues sub_issue_id=5040084921 (#286's db id) \u2014 got 'may only have one parent' error, indicating #286 is already registered as a sub-issue of #76; treated as success, no further action needed"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 76, and #76's body (capstone-tier accessibility/theming feature) is the natural owner of this chrome-color task. Label tier:task was already applied; the sub-issue link to #76 already exists (POST returned a duplicate-parent 422), so no write was actually needed."
+  },
+  {
+   "issue": 287,
+   "tier": "task",
+   "parent": 76,
+   "actions_taken": [
+    "Attempted gh api -X POST repos/anadon/JLS/issues/76/sub_issues -F sub_issue_id=5040088145 -> 422 'may not contain duplicate sub-issues / sub issue may only have one parent', treated as already-linked/success per instructions",
+    "Confirmed label tier:task already present on #287 (no change needed)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 76. #76 is the joint HiDPI+themed-chrome feature that #287's body repeatedly names as its parent (Status & Dependencies, Related Work, DoD's 'Landing reported on #76'). Label tier:task was already applied. The sub_issues POST to #76 returned a duplicate-parent 422, indicating #287 is already linked as a sub-issue of some parent (consistent with #76), so no further write was needed."
+  },
+  {
+   "issue": 288,
+   "tier": "task",
+   "parent": 75,
+   "actions_taken": [
+    "Added #288 as native sub-issue of #75 via POST repos/anadon/JLS/issues/75/sub_issues"
+   ],
+   "note": "Machine block explicitly states part_of_feature: 75, and #75's own machine block lists this task in requires_tasks per the issue body. tier:task label was already present. Parent was unset (404 on parent lookup), so added #288 as sub-issue of #75."
+  },
+  {
+   "issue": 289,
+   "tier": "task",
+   "parent": 76,
+   "actions_taken": [],
+   "note": "Machine block declares tier: task and part_of_feature: 76. Body confirms this issue is the sole owner of dark-mode scope under FEAT #76 (Theme system). Label tier:task was already present. Attempted to link as sub-issue of #76 but the API returned 422 'may not contain duplicate sub-issues' confirming it is already correctly parented under #76; no changes were needed."
+  },
+  {
+   "issue": 290,
+   "tier": "task",
+   "parent": 62,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 62; tier:task label already present. Attempted to add as sub-issue of #62 via POST sub_issues, but the API returned 422 \"may only have one parent\" and confirming via the /parent endpoint showed #290 is already a sub-issue of #62. No changes needed."
+  },
+  {
+   "issue": 291,
+   "tier": "task",
+   "parent": 873,
+   "actions_taken": [
+    "verified tier:task label already present (no change needed)",
+    "attempted POST repos/anadon/JLS/issues/873/sub_issues with sub_issue_id=5040172049 - got 'duplicate sub-issue' 422, treated as already-linked/success"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 873; #873's own machine block lists requires_tasks: [291], confirming the unique owning feature. tier:task label was already applied. Sub-issue link to #873 already existed (API returned duplicate-parent error), so no change was needed there either."
+  },
+  {
+   "issue": 292,
+   "tier": "task",
+   "parent": 358,
+   "actions_taken": [],
+   "note": "Machine block already declares tier:task and part_of_feature:358 (FEAT-018), and the tier:task label is already present on the issue. Confirmed via REST that #292's existing native parent is already #358, so no label or sub_issues write was needed."
+  },
+  {
+   "issue": 314,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier: feature (label tier:feature already present, no change needed). Parent is genuinely ambiguous: the block lists serves_capstones: [296, 299, 304, 311] \u2014 four capstones \u2014 with no single part_of_capstone field, and no unique CAP among the hints (296, 304, 311) lists FEAT-002 alone in requires_features/planned_features to the exclusion of others (299 also serves it per the body but wasn't even in the hint set). Per the stated rule, plural/absent ownership means parent=null."
+  },
+  {
+   "issue": 315,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no action needed). No part_of_capstone or single-owner field exists; instead serves_capstones: [296,297,298,309,310,311] explicitly lists six CAPs as served, matching the hint list exactly. This is genuine plural ownership (a residual sweep feature serving multiple capstones' totality guarantees), not an ambiguity to resolve by picking one \u2014 so parent is left null per the rule that plural/absent ownership means no single native parent."
+  },
+  {
+   "issue": 316,
+   "tier": "feature",
+   "parent": 299,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/299/sub_issues -F sub_issue_id=5044467832 (added #316 as native sub-issue of #299)"
+   ],
+   "note": "Machine block gives tier: feature and serves_capstones: [299] with no other capstone listed (the body explicitly notes #296/CAP-00 and #297/CAP-04 both dropped this feature from their requires_features, leaving #299/CAP-01 as the sole owner). Label tier:feature was already present on the issue, so no label write was needed. Parent set to #299 via sub_issues API."
+  },
+  {
+   "issue": 317,
+   "tier": "feature",
+   "parent": 296,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/296/sub_issues -F sub_issue_id=5044471948 (linked #317 as sub-issue of #296)"
+   ],
+   "note": "Issue #317 is FEAT-007's machine block, which explicitly states tier: feature (label tier:feature already present, no write needed). Ownership: the issue's own text explains #296 (CAP-00) is deliberately kept out of blocked_by to avoid a cycle, but confirms the composition edge FEAT-007 -> CAP-00 exists because CAP-00/#296's planned_features names FEAT-007 -- i.e. #296 is FEAT-007's owning capstone via part_of_capstone semantics, just recorded as `related` rather than `blocked_by` to avoid double-counting a child-before-parent edge already implied by the composition relation. No other CAP among the hints (300, 301, 309) claims FEAT-007 as a planned/requires_features member. Set parent=296 (CAP-00) accordingly."
+  },
+  {
+   "issue": 318,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already carries tier:feature label (present in labels list, no change needed). serves_capstones lists four capstones plurally (299,305,312,313) with no single part_of_capstone or unique owning CAP that lists 318 in requires_features/planned_features - ownership is explicitly plural per the issue's own text (served independently by four capstones), so parent=null per the rule for genuinely plural ownership. No requires_tasks/part_of_feature block naming a single FEAT parent either since this issue is itself the FEAT."
+  },
+  {
+   "issue": 319,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [
+    "Ensured label tier:feature present on #319 (already present, no-op)"
+   ],
+   "note": "Machine block explicitly declares tier: feature. The body's serves_capstones list names four capstones (295, 299, 301, 313) that all depend on this feature's marker mechanism, with a comment confirming 297/298 were deliberately removed from requires_features \u2014 i.e. ownership is genuinely plural by design, not an oversight. There is no part_of_capstone field and no single CAP whose requires_features/planned_features uniquely claims 319, so per the stated rules parent=null. The two hints (301, 313) are both legitimate consumers among the four, not the sole owner, consistent with a null parent rather than picking one arbitrarily."
+  },
+  {
+   "issue": 327,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no change needed). serves_capstones: [295, 301, 302, 304, 310] \u2014 this FEAT explicitly serves five capstones plurally, with no part_of_capstone field and no single owning CAP; the issue body itself frames this as a genuine cross-cutting dependency (five capstones require this feature) rather than single ownership. Since ownership is plural, not absent by omission, parent is correctly left null per the rules \u2014 no unique owning CAP exists to assign as native parent. No writes were necessary since current state already matches the decided tier/parent."
+  },
+  {
+   "issue": 329,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already declares tier: feature (label tier:feature already present, no write needed). serves_capstones: [] is explicit and annotated: CAP-04 (#297)'s 2026-08-09 rewrite removed FEAT-043 (#329) from its required-features set entirely, deferring the breadboard canvas behind a named revisit trigger; the block itself flags this as an orphaned feature for maintainer attention. No other open CAP lists #329 in requires_features/planned_features. Per the rule, ownership is absent (not plural), so parent=null with no sub-issue write performed."
+  },
+  {
+   "issue": 331,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no action needed). serves_capstones: [305, 309] lists two capstones plurally with no part_of_capstone field, and Open Question 5 explicitly states \"Ownership. UNOWNED\" \u2014 this issue is a scheduling artifact not yet claimed by a single capstone, and the admission-slice carve (Open Question 1) even notes #303 vs #305 haven't resolved identically. Per the rule that genuinely plural/absent ownership means parent=null, no parent was set. Confirmed via the sub-issues API that #331 currently has no parent, so no change was required."
+  },
+  {
+   "issue": 334,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature explicitly, and the tier:feature label is already present on #334, so no label write was needed. Ownership is genuinely plural: serves_capstones: [296, 299, 300] lists three capstones with no single owning CAP designated (one candidate, #298/CAP-05, was explicitly removed from ownership per its own requires_features note). Since a FEAT's parent must be the unique CAP listing it in requires_features/planned_features, and no single such CAP exists here, parent=null with no sub_issue API call made."
+  },
+  {
+   "issue": 335,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already declares tier: feature and the tier:feature label is already applied, so no label write was needed. Parent ownership is genuinely plural, not absent or singular: #335 (FEAT-009) appears in requires_features of three distinct open capstones \u2014 CAP-00 (#296), CAP-02 (#301), and CAP-09 (#312) \u2014 each explicitly funding it as shared spine work (#301 line: \"#353, #354, #317 and #335 by CAP-00 (#296)\"; #312 lists it directly in requires_features too). No part_of_capstone field exists on #335 itself, and no single CAP uniquely claims it, so per the stated rule (parent=null when ownership is genuinely plural) I set parent=null rather than guessing among #296/#301/#312."
+  },
+  {
+   "issue": 336,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already declares tier: feature (label tier:feature already present, no change needed). The issue has no part_of_capstone field and no requires_features/planned_features listing it uniquely; instead it has serves_capstones: [297, 298, 302, 309, 310, 312, 313] \u2014 seven capstones it serves, confirming the deterministic pass's own reason (\"ownership ambiguous\"). Since ownership is genuinely plural, parent=null per the rules, and no sub-issue linkage was made."
+  },
+  {
+   "issue": 337,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier: feature (label tier:feature already present, no write needed). Ownership is genuinely plural: #337's own body states four capstones name it in requires_features/planned_features (composition edge FEAT-015 -> capstone). Verified directly: CAP-issues #297, #300, and #304 (the three hints) each list 337 in their own requires_features array and draw it as a required composition edge in their mermaid graphs, and #337's body notes a fourth capstone also does so. With four independent parents claiming this FEAT and no single owning CAP, parent=null per the rule (plural ownership -> no guess). No sub-issue link exists currently (parent: none), so no change needed there either."
+  },
+  {
+   "issue": 338,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature explicitly (already labeled tier:feature, no action needed). serves_capstones is empty by design: neither CAP-00 (#296) nor CAP-06 (#300) lists this feature in their filed requires_features/planned_features \u2014 both explicitly call it \"beneficial, not required\" since the pipeline pre-dates both capstones, so ownership is genuinely absent rather than plural. No other CAP issue references #338 in requires_features either. Therefore parent=null, and no sub_issues write was made."
+  },
+  {
+   "issue": 339,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (label tier:feature already present, no write needed). This FEAT has no part_of_capstone and no single owning CAP: serves_capstones lists three capstones (298, 302, 310) plurally as consumers, not a unique owner, and no CAP's requires_features/planned_features array was checked as uniquely claiming it (the issue explicitly frames itself as serving four capstones' worth of need, narrowed from a larger scope). Per the plurality rule, parent=null."
+  },
+  {
+   "issue": 340,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#340's machine block has no part_of_capstone field; instead it lists serves_capstones: [304, 311] (CAP-06/#300 was explicitly dropped by #300's own rewrite, leaving two capstones served, not one owning). That's plural/non-owning (\"serves\" rather than \"part_of\"), matching the queue's \"ownership ambiguous\" reason, so parent stays null. Tier is feature per the machine block's `tier: feature` and the issue already carries the `tier:feature` label, so no label write was needed and no sub-issue linkage was made."
+  },
+  {
+   "issue": 341,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/341/labels -f 'labels[]=tier:feature' (added tier:feature label)"
+   ],
+   "note": "Machine block shows tier: feature with serves_capstones: [297, 298, 305] \u2014 three capstones, no part_of_capstone field or single owning CAP. Since ownership is plural (this feature serves the breadboard canvas CAP #297, the netlist CAP #298, and the mixed-signal CAP #305 equally, per the Intended Audience section), parent is genuinely ambiguous per the rules and left null rather than guessed."
+  },
+  {
+   "issue": 344,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature and label tier:feature is already present, so no label write needed. serves_capstones is explicitly [] \u2014 CAP-03 (#295) closed not-planned and its successor CAP-39 (#888) explicitly dropped this feature's scope in its 2026-08-08 redirect, leaving no accepted capstone beneficiary. blocked_by/blocks (#322, #879, #361) are ordering dependencies, not ownership edges. No CAP lists #344 in requires_features/planned_features per the body. Therefore parent=null: ownership is genuinely absent pending a new serves_capstones beneficiary, exactly as the issue's own Completion Criteria flag. No writes performed."
+  },
+  {
+   "issue": 345,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature (label tier:feature already present, no change needed). Parent: null. serves_capstones is explicitly empty with detailed rationale \u2014 the sole prior beneficiary #295 (CAP-03) closed not_planned 2026-08-03, and its replacement capstone CAP-39 (#888) explicitly lists this feature's entire scope (ISA/emulator/assembler/monitor) as \"none\" under the replacement. No other CAP lists #345 in requires_features/planned_features. This is a deliberate, documented descope-pending-maintainer-decision, not an omission, so no parent should be guessed or assigned."
+  },
+  {
+   "issue": 349,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature (already labeled tier:feature, no change needed) and serves_capstones: [297, 298] \u2014 two capstones, not one via part_of_capstone. This is genuine plural ownership (also matches the hint list [297,298]), so per the rules parent=null rather than guessing between the two capstones. No writes were needed since the tier label already matches and no unique parent exists to link."
+  },
+  {
+   "issue": 350,
+   "tier": "feature",
+   "parent": 312,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/312/sub_issues -F sub_issue_id=5044636213 (added #350 as sub-issue of #312; succeeded)"
+   ],
+   "note": "Machine block declares tier: feature (matching existing tier:feature label, no change needed) and serves_capstones: [312]. #312's own body (fetched as parent) is CAP-17. No other issue lists #350 in requires_features/planned_features, so ownership is singular and unambiguous: parent = #312."
+  },
+  {
+   "issue": 353,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block explicitly declares tier: feature (label tier:feature already present, no write needed). This FEAT has no part_of_capstone field; instead serves_capstones lists five capstones plurally (296, 301, 295, 300, 306), confirming the deterministic pass's \"ownership ambiguous\" reason \u2014 ownership is genuinely plural, not a single owning CAP, so parent=null with no write made."
+  },
+  {
+   "issue": 354,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature explicitly, and label tier:feature is already present on the issue (no action needed). Parent is null: this FEAT has no part_of_capstone field and no requires_features/planned_features listing from a single capstone \u2014 instead it lists serves_capstones: [296, 301, 295, 300, 306, 312], six capstones plural, with an explicit note in the body that no capstone is named in blocked_by/blocks because ownership runs only through serves_capstones (avoiding a cycle, since #296 CAP-00 already names FEAT-006 in its own planned_features). blocked_by:[353] and blocks:[317] are sibling FEATs, not candidate parents. Since ownership is genuinely plural (6 capstones) rather than a single owning CAP, parent=null per the stated rule."
+  },
+  {
+   "issue": 355,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [
+    "ensured label tier:feature present (already existed, no-op)"
+   ],
+   "note": "Machine block explicitly declares tier: feature. serves_capstones is explicitly empty: CAP-00 (#296) dropped FEAT-011 from requires_features and redirected it toward CAP-06 (#300), but CAP-06's own rewrite explicitly keeps FEAT-011 out of requires_features (substantially shipped, reference only). No open capstone or feature lists #355 in requires_features/requires_tasks/planned_features, so ownership is genuinely absent rather than plural \u2014 parent=null, no sub-issue link added."
+  },
+  {
+   "issue": 356,
+   "tier": "feature",
+   "parent": 299,
+   "actions_taken": [
+    "Ensured label tier:feature present on #356 (already present)",
+    "Added #356 as sub-issue of #299 via POST /repos/anadon/JLS/issues/299/sub_issues"
+   ],
+   "note": "Machine block already declares tier: feature. Ownership: serves_capstones: [299] is the single unambiguous CAP entry (299 = CAP-01, explicitly named throughout the body as this feature's genuine required consumer per the DAG walk); the body explicitly states the CAP-01 edge was deliberately NOT written as blocked_by to avoid a scheduling cycle, but that's a blocking-edge concern, not an ownership one \u2014 serves_capstones is the ownership signal and has exactly one entry. #296 and #300 are listed only as beneficial (not required) consumers, confirming 299 is the sole owner. #356 had no existing parent (404 on parent lookup), so this is a new sub-issue link, not a replace_parent case."
+  },
+  {
+   "issue": 357,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Issue #357 is FEAT-017 (tier: feature per its own machine block). Its body explicitly lists four capstones that each name FEAT-017 in planned_features/requires_features: CAP-01 (#299), CAP-02 (#301), CAP-03 (#295), and CAP-08 (#304) \u2014 \"Why these four capstones\" section confirms this plurality directly, and CAP-06 (#300) was explicitly removed as a requiring capstone in its own rewrite. Since ownership is genuinely plural (four capstones, not one), parent=null per the rules rather than guessing among the hints (301, 304) which only cover two of the four. Label tier:feature was already present on the issue and no sub-issue parent currently exists (404 on parent lookup), so no writes were needed."
+  },
+  {
+   "issue": 358,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature and label tier:feature is already present, so no label write needed. This FEAT has no CAP parent field (no part_of_capstone); it lists serves_capstones: [298, 302, 304, 310] \u2014 four capstones (CAP-05, CAP-07, CAP-08, CAP-15) \u2014 and the body explicitly states no capstone ordering edge is added since none of those capstones names FEAT-018 as a required prerequisite in their own tables (only a composition/serves relationship, not exclusive ownership). Ownership is genuinely plural, so parent=null per the rules, matching the issue's own stated reason (\"legacy designator; ownership ambiguous\"). No writes were made."
+  },
+  {
+   "issue": 359,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier: feature (label tier:feature already present, no change needed). Ownership is genuinely plural, not ambiguous by omission: #359 (FEAT-023) is listed in requires_features by three separate capstones \u2014 #302 (CAP-07), #310 (CAP-15), and #304 (CAP-08) \u2014 each independently and explicitly claiming it as required scope, with #306 (CAP-09) having deliberately demoted it out of its own requires_features into a deferred/related list. No single CAP has a unique claim, and no part_of_capstone field or equivalent single-owner declaration exists in #359's own machine block (it lists serves_capstones: [302,304,306,310], which per the task rules is not itself an ownership/parent signal). Per the stated rule, plural ownership means parent=null. No sub-issue write was made since no parent was determined, and the tier label was already correct, so no gh write calls were needed."
+  },
+  {
+   "issue": 361,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "The machine block explicitly states tier: feature (label tier:feature already present, no action needed). Ownership is genuinely absent, not merely undeclared: the body's Status & Dependency Graph shows serves_capstones: [] with an explicit narrative explaining that CAP-39 (#888)'s own redirected body excludes this feature (\"#344 ... and #361 ... are not required by this capstone\") and the Re-planning Protocol section 'The serving capstone descoped' confirms this has already happened, recommending against guessing a replacement beneficiary. blocked_by: [344] is a build-order dependency (FEAT-028), not an ownership/parent relationship. Therefore parent=null is correct per the task's own explicit instruction not to guess."
+  },
+  {
+   "issue": 362,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier:feature (label already present, no action needed). This FEAT has no part_of_capstone field; instead it lists serves_capstones: [295, 301, 312] \u2014 three capstones (CAP-03, CAP-02, CAP-17) it benefits, none of which claims sole ownership via requires_features/planned_features in a way that's distinguishable here (hints 301/312 are two of the three, but 295 is equally listed and none is marked as the unique owner). Ownership is genuinely plural, matching the stated reason \"ownership ambiguous\", so parent=null."
+  },
+  {
+   "issue": 363,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#363 (FEAT-035) is a FEAT, not a TASK, so its parent must be an owning CAP via part_of_capstone or a unique CAP requires_features/planned_features listing \u2014 but no part_of_capstone field exists in its machine block; instead it declares serves_capstones: [301, 312] explicitly plural. Both hinted capstones independently list #363 in their own requires_features (CAP-02 #301 line 19, CAP-17 #312 line 41), confirming genuinely dual ownership rather than a single clear parent: CAP-02 is served by the primary replay scope, CAP-17 only conditionally by the deferred accelerator scope. Per the rules, plural/ambiguous ownership means parent=null, no guess made. tier:feature label was already present on the issue (verified via labels fetch), so no label write was needed; no sub-issue link was created since there is no single parent to attach."
+  },
+  {
+   "issue": 365,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block already declares tier: feature and label tier:feature is already present on the issue, so no label write needed. serves_capstones: [297, 298] lists two capstones (CAP-04 #297 needs the build-plan half, CAP-05 #298 needs the netlist half), and the REPLAN section explicitly states losing either alone would degrade rather than eliminate this feature's necessity \u2014 ownership is genuinely plural, not a single owning capstone, so parent=null per the rule. No requires_features/planned_features array elsewhere claims this FEAT as a task, and no single CAP lists it as sole owner. No writes were needed."
+  },
+  {
+   "issue": 366,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block confirms tier: feature (label tier:feature already present, no change needed). serves_capstones: [298, 313] lists two capstones (CAP-05 and CAP-18) both requiring this feature, with no part_of_capstone field and explicit text stating #298 is 'the sole capstone whose decision authority this feature answers to' but not the sole one it serves/belongs to structurally \u2014 ownership is genuinely plural (two capstones both list this as required), so parent=null per the ambiguous-ownership rule. No sub-issue relationship currently exists (confirmed via /parent 404), so no change made."
+  },
+  {
+   "issue": 367,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature explicitly and the label tier:feature is already present on the issue, so no label write was needed. Parent is ambiguous by design: serves_capstones lists four capstones (308, 305, 309, 313) with no part_of_capstone field and no single owning CAP that uniquely claims this FEAT in a requires_features/planned_features array \u2014 the issue itself frames this plurality (\"Losing the audio/analog trio would leave #313 as the sole beneficiary\"), so per the stated rule (genuinely plural ownership -> parent=null) no sub-issue relationship was created."
+  },
+  {
+   "issue": 368,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/368/labels -f 'labels[]=tier:feature' \u2014 added tier:feature label"
+   ],
+   "note": "Issue #368's machine block declares tier: feature explicitly and requires_tasks: [434] (TASK-0102, its sole child, unaffected by parenting here). It has no part_of_capstone field; instead it lists serves_capstones: [305, 309] with the block itself stating this is a composition edge, not ordering, and that 'no capstone appears in either ordering list.' Serving two capstones plurally (CAP-11/CAP-12 mixed-signal drawing, CAP-10 audio path, CAP-14 parity \u2014 per Intended Audience section) means ownership is genuinely ambiguous/plural rather than a single owning CAP, matching the reason GitHub gave for flagging it. Per the stated rule (plural/absent ownership => parent=null), I set parent=null and only applied the tier:feature label; no sub_issue POST was made."
+  },
+  {
+   "issue": 369,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block gives tier: feature (label tier:feature already present, no action needed). No part_of_capstone field; instead serves_capstones: [300, 306, 311] lists three capstones plurally with no unique owner, and no CAP issue's requires_features/planned_features uniquely claims #369 (hints 300/306/311 correspond to CAP-6/CAP-9/CAP-16, i.e. the same three). Per the rule, plural/absent ownership means parent=null."
+  },
+  {
+   "issue": 372,
+   "tier": "task",
+   "parent": 315,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/315/sub_issues sub_issue_id=5050610001 (attached #372 as sub-issue of #315)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 315 (FEAT-001 RESIDUAL), and prose corroborates: #315 'carries the shape of the discipline' while this issue 'is the enumeration for the two GUI tables it owns'. Label tier:task was already present, so only the parent relationship needed applying. #314 and #375 are listed under blocks (this issue blocks them), not as parent candidates."
+  },
+  {
+   "issue": 374,
+   "tier": "task",
+   "parent": 317,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/317/sub_issues -F sub_issue_id=5050711931 (linked #374 as sub-issue of #317)"
+   ],
+   "note": "The machine block explicitly declares tier: task and part_of_feature: 317 (FEAT-007, confirmed open, title matches \"every CI job is time-bounded\"). Label tier:task was already present, so no label write was needed. Issue had no existing parent (404 on sub_issues/parent lookup), so added it as a sub-issue of #317 without replace_parent."
+  },
+  {
+   "issue": 383,
+   "tier": "task",
+   "parent": 318,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/318/sub_issues sub_issue_id=5050843305 (set parent to #318)"
+   ],
+   "note": "Machine block explicitly declares part_of_feature: 318 (FEAT-014 RESIDUAL), and #318 is the parent feature named throughout the body's Related Work section. tier:task label was already present on the issue, so no label change was needed. Added #383 as a native sub-issue of #318."
+  },
+  {
+   "issue": 386,
+   "tier": "task",
+   "parent": 359,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/359/sub_issues -F sub_issue_id=5050888349 (linked #386 as sub-issue of #359)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 359 (FEAT-023 RESIDUAL), with a comment clarifying #359 was rewritten to treat this task as independent infrastructure hygiene. Label tier:task was already present on #386, so no label write was needed. #386 had no existing parent (GET .../parent returned 404), so I added it as a native sub-issue of #359 via POST, which succeeded."
+  },
+  {
+   "issue": 389,
+   "tier": "task",
+   "parent": 325,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/325/sub_issues -F sub_issue_id=5050933537 (linked #389 as sub-issue of #325)"
+   ],
+   "note": "Body's machine block already declares tier: task and part_of_feature: 325 (FEAT-031), and label tier:task was already present on the issue. The only missing piece was the native sub-issue relationship, which the reason field (legacy designator; ownership undeclared) evidently referred to a stale-list issue rather than an actual ambiguity \u2014 ownership was clearly declared in the machine block. Linked #389 as a sub-issue of #325."
+  },
+  {
+   "issue": 390,
+   "tier": "task",
+   "parent": 347,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/347/sub_issues sub_issue_id=5050954812 (linked #390 as sub-issue of #347) \u2014 succeeded"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 347 (FEAT-034). Label tier:task was already present on #390, so no label write was needed. Despite the body's lengthy note about a design conflict/inconsistency between #390's superseded design and #347's rewritten normative doc, that does not change ownership \u2014 #347 is still unambiguously declared as the parent feature in the machine block, so the sub-issue link was made to #347."
+  },
+  {
+   "issue": 393,
+   "tier": "task",
+   "parent": 362,
+   "actions_taken": [
+    "ensured label tier:task present via gh api repos/anadon/JLS/issues/393/labels",
+    "added #393 as sub-issue of #362 via gh api -X POST repos/anadon/JLS/issues/362/sub_issues -F sub_issue_id=5050987775"
+   ],
+   "note": "Issue #393's machine block explicitly declares tier: task and part_of_feature: 362 (FEAT-030 \u2014 engine constant factors); it already carried the tier:task label. It had no existing parent (404 on /parent), so I added it as a native sub-issue of #362 per the declared part_of_feature."
+  },
+  {
+   "issue": 397,
+   "tier": "task",
+   "parent": 351,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/351/sub_issues sub_issue_id=5051040113 (linked #397 as sub-issue of #351) - succeeded"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 351 (FEAT-046 v1), which is corroborated by prose ('Ownership. FEAT-046 (#351) owns this task on the merits...'). tier:task label was already present on the issue, so no label change was needed. Added #397 as a native sub-issue of #351."
+  },
+  {
+   "issue": 402,
+   "tier": "task",
+   "parent": 351,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/351/sub_issues sub_issue_id=5051127323 (added #402 as sub-issue of #351)"
+   ],
+   "note": "Machine block declares tier: task and part_of_feature: 351; body confirms #351 (FEAT-046) is the parent feature, explicitly excluding this task from v1's planned_tasks but retaining ownership. tier:task label already present, no label change needed. Added native sub-issue link to #351."
+  },
+  {
+   "issue": 406,
+   "tier": "task",
+   "parent": 317,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/317/sub_issues -F sub_issue_id=5051288165 (linked #406 as sub-issue of #317)"
+   ],
+   "note": "Machine block in #406's body explicitly states tier: task and part_of_feature: 317 (FEAT-007), and the Related Work table confirms #317 as parent feature. Label tier:task was already present, so only the sub-issue link needed to be applied. No CAP mapping needed since this issue's parent is a FEAT."
+  },
+  {
+   "issue": 410,
+   "tier": "task",
+   "parent": 354,
+   "actions_taken": [
+    "Ensured label tier:task present on #410 (already existed)",
+    "Added #410 as native sub-issue of #354 via POST repos/anadon/JLS/issues/354/sub_issues"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 354 (FEAT-006). #354's own body/scope (batch run ceiling) matches the task's stated parent feature, and the task's blocks/related fields corroborate this ownership (blocks TASK-0074/#426, related to #363/FEAT-035 but not owned by it). No ambiguity in ownership, so parent=354 was applied directly."
+  },
+  {
+   "issue": 412,
+   "tier": "task",
+   "parent": 337,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/337/sub_issues sub_issue_id=5051425682 (added #412 as sub-issue of #337)"
+   ],
+   "note": "Machine block in #412's body reads tier: task and part_of_feature: 337, with explicit note that #337's own body carries TASK-0038 in its planned_tasks roster with this exact contract, and #337 owns it outright (not jointly with #202 or #345). Label tier:task was already present. Confirmed #337 (FEAT-015) is open, then added #412 as a native sub-issue of #337 via the sub_issues API; no prior parent existed so no replace_parent flag was needed."
+  },
+  {
+   "issue": 414,
+   "tier": "task",
+   "parent": 321,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/321/sub_issues -F sub_issue_id=5051469478 (linked #414 as sub-issue of #321)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 321; label tier:task was already present so no label write needed. Issue had no existing parent (404 on GET parent), so linked to #321 (FEAT-019) as decided by part_of_feature, without replace_parent."
+  },
+  {
+   "issue": 416,
+   "tier": "task",
+   "parent": 264,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/264/sub_issues -F sub_issue_id=5051512783 (linked #416 as sub-issue of #264)"
+   ],
+   "note": "The machine block explicitly declares tier: task and part_of_feature: 264, with commentary explaining this task was re-homed from #359 (FEAT-023) to #264 (Board on-ramp) because #264's own 2026-08-09 rewrite independently names this same collision and states a single-owner position, resolving the disclosed ownership contest. Label tier:task was already present, so only the sub-issue relationship needed to be applied; #416 had no existing parent, so no replace_parent flag was needed."
+  },
+  {
+   "issue": 417,
+   "tier": "task",
+   "parent": 340,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/340/sub_issues sub_issue_id=5051514500 (linked #417 as sub-issue of #340)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 340 (FEAT-016), confirmed by #340's title/body referencing this task as its Stage 4. Label tier:task was already present, so no label change needed. Set #417 as native sub-issue of #340."
+  },
+  {
+   "issue": 418,
+   "tier": "task",
+   "parent": 321,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/321/sub_issues -F sub_issue_id=5051541535 (added #418 as sub-issue of #321)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 321 (FEAT-019). Label tier:task was already present on #418. #321 did not yet list #418 among its sub-issues, so added it via sub_issues API; call succeeded."
+  },
+  {
+   "issue": 421,
+   "tier": "task",
+   "parent": 325,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/421 -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/325/sub_issues -F sub_issue_id=5051580721"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 325 (FEAT-031), with prose confirming '#325 (FEAT-031) owns this task' under the single-owner rule (line 67) and a table row reiterating #325 as 'parent feature'. #389 is listed only as blocked_by (a dependency, not ownership) and #363 as 'other consumer' via an enables relationship, not ownership. Applied tier:task label and added as sub-issue of #325."
+  },
+  {
+   "issue": 423,
+   "tier": "task",
+   "parent": 347,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/423/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/347/sub_issues -F sub_issue_id=5051612049"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 347 (FEAT-034), and the body has an explicit 'Single-owner rule' section stating '#347 (FEAT-034) owns this task' (distinguishing from #369 which only consumes it, not owns it). No existing parent was set (404 on parent lookup), so added as sub-issue of #347 without replace_parent."
+  },
+  {
+   "issue": 424,
+   "tier": "task",
+   "parent": 324,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/324/sub_issues -F sub_issue_id=5051629273 (added #424 as sub-issue of #324)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 324 (FEAT-032, 'a running circuit exchanges bytes...'). Label tier:task was already present on #424. #424 was not yet linked as a native sub-issue of #324, so I added it via the sub_issues API; call succeeded (no error, parent's sub-issue count updated)."
+  },
+  {
+   "issue": 428,
+   "tier": "task",
+   "parent": 345,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/345/sub_issues sub_issue_id=5051685669 (linked #428 as sub-issue of #345)"
+   ],
+   "note": "Machine block states tier: task and part_of_feature: 345 (FEAT-039) explicitly, and the body's Related Work section confirms #345 as the sole owning feature. Label tier:task was already present on #428, so only the missing parent link needed to be applied; #428 had no existing parent, so no replace_parent flag was needed."
+  },
+  {
+   "issue": 429,
+   "tier": "task",
+   "parent": 328,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/429/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/328/sub_issues -F sub_issue_id=5051695655"
+   ],
+   "note": "The machine block explicitly states tier: task and part_of_feature: 328 (FEAT-044, Phase 1 wrapper-and-metadata slice). Body prose corroborates this: #328 is named as the parent feature that sequences this task's phases. Applied tier:task label and added #429 as a native sub-issue of #328."
+  },
+  {
+   "issue": 432,
+   "tier": "task",
+   "parent": 328,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/328/sub_issues -F sub_issue_id=5051739478 (added #432 as sub-issue of #328; succeeded)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 328 (FEAT-044), confirmed by prose ('the parent feature #328 (FEAT-044)') and Related Work section. tier:task label was already present on the issue, no label change needed. Issue had no existing parent (404 on parent lookup, and #328's sub_issues list did not include it), so it was added fresh as a sub-issue of #328 via the sub_issues API, which succeeded."
+  },
+  {
+   "issue": 435,
+   "tier": "task",
+   "parent": 169,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/169/sub_issues -F sub_issue_id=5051799253 (added #435 as sub-issue of #169)"
+   ],
+   "note": "Machine block declares tier: task and part_of_feature: 169 explicitly, noting the original parent #348 was closed as duplicate into #169 and #352 (FEAT-052) was split into #171 \u2014 so #169 is the current, unambiguous owning feature. tier:task label was already present. No prior parent existed (404 on parent lookup), so added #435 as a native sub-issue of #169 without needing replace_parent."
+  },
+  {
+   "issue": 437,
+   "tier": "task",
+   "parent": 334,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/334/sub_issues -F sub_issue_id=5051915457 (added #437 as sub-issue of #334)"
+   ],
+   "note": "Machine block gives tier: task and part_of_feature: 334 explicitly; label tier:task was already present on the issue. #437 had no prior sub-issue parent (sub_issues_summary showed total:0 for it and it did not appear under #334's sub_issues before this call), so it was added as a native sub-issue of #334 (FEAT-003) without needing replace_parent."
+  },
+  {
+   "issue": 438,
+   "tier": "task",
+   "parent": 354,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/354/sub_issues sub_issue_id=5051919116 (linked #438 under #354) \u2014 succeeded"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 354 (FEAT-006), matching the title's TASK-0012 designator; label tier:task was already present so no label change was needed. The related:[469] edge is explicitly not a blocks/parent relationship per the issue's own text, so parent is unambiguously 354."
+  },
+  {
+   "issue": 439,
+   "tier": "task",
+   "parent": 354,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/364/sub_issues sub_issue_id=5051961810 (initial, per #439's own stale machine block part_of_feature:364)",
+    "POST repos/anadon/JLS/issues/354/sub_issues sub_issue_id=5051961810 replace_parent=true (corrected: #364's current body explicitly disclaims TASK-0013 ownership and states it belongs to FEAT-006/#354)"
+   ],
+   "note": "#439's own machine block says part_of_feature: 364, but #364's current body (a disposition rewrite) explicitly states: \"TASK-0013 (byte budget + copy-on-write init) is FEAT-006's (#354)... its own rationale states the guest-RAM addressability argument is that feature's, not this one's\" and lists TASK-0013 in its \"Out of scope, with the owner named\" section citing #354. #354's abstract independently confirms it owns the dense-memory-cliff/guest-RAM-headroom problem. Since #364 (the more recently updated, authoritative issue) explicitly redirects ownership, I treated #439's stale in-body citation as superseded and parented to #354 instead, first adding then removing/replacing the #364 relation."
+  },
+  {
+   "issue": 443,
+   "tier": "task",
+   "parent": 338,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/338/sub_issues sub_issue_id=5052045702 (added #443 as sub-issue of #338)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 338 (FEAT-010 RESIDUAL), unambiguously. Label tier:task was already present on #443, so no label write was needed. #443 had no existing parent (404 on parent lookup), so added it as sub-issue of #338 without replace_parent."
+  },
+  {
+   "issue": 446,
+   "tier": "task",
+   "parent": 340,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/340/sub_issues -F sub_issue_id=5052102411 (added #446 as sub-issue of #340)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 340 (FEAT-016), and the body's Related Work section and mermaid diagram confirm #340 as the sole owning feature. Label tier:task was already present on the issue, so no label change was needed. No native parent existed (404 on parent lookup), so added the sub-issue link to #340."
+  },
+  {
+   "issue": 447,
+   "tier": "task",
+   "parent": 357,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/357/sub_issues -F sub_issue_id=5052141415 (linked #447 as sub-issue of #357)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 357 (FEAT-017, one subcircuit definition, N instances). The tier:task label was already present on #447, so only the sub-issue parent link needed to be created; the POST succeeded (returned parent #357's object)."
+  },
+  {
+   "issue": 451,
+   "tier": "task",
+   "parent": 323,
+   "actions_taken": [
+    "Added label tier:task to #451",
+    "Added #451 as sub-issue of #323 via POST /issues/323/sub_issues"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 323. Body includes an explicit ownership-disambiguation section addressing hint #314: #451 is 'single-owner' under FEAT-025 (#323), and its relationship to #314 (FEAT-002) is characterized as downstream/consumer, not ownership. #323 is open and confirmed as FEAT-025. Applied tier:task label and set #323 as parent via native sub-issue API."
+  },
+  {
+   "issue": 452,
+   "tier": "task",
+   "parent": 361,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/361/sub_issues -F sub_issue_id=5052247375 (added #452 as sub-issue of #361)"
+   ],
+   "note": "Machine block declares tier: task and part_of_feature: 361 (FEAT-029, the N-ary/ternary datapath feature); label tier:task was already present so no label change was needed. blocked_by:[453] gates only Phase 2 of the work, not ownership, so parent stays FEAT-029/#361 regardless of phasing. Issue had no existing parent (404 on parent lookup), so added as new sub-issue rather than replace_parent."
+  },
+  {
+   "issue": 453,
+   "tier": "task",
+   "parent": 361,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/453/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/361/sub_issues -F sub_issue_id=5052250034"
+   ],
+   "note": "The machine yaml block explicitly declares tier: task and part_of_feature: 361 (FEAT-029, the mixed-alphabet/balanced-ternary datapath feature). Issue #453 had no existing parent (404 on /parent), so this was a clean add, not a reparent. Labels already had tier:task pre-applied but the API call was made idempotently to confirm."
+  },
+  {
+   "issue": 454,
+   "tier": "task",
+   "parent": 324,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/324/sub_issues -F sub_issue_id=5052288975 (linked #454 as sub-issue of #324)"
+   ],
+   "note": "Issue #454's machine block explicitly states tier: task and part_of_feature: 324 (FEAT-032 \u2014 host byte port, console, transcripts), and body prose confirms #324 (FEAT-032) as 'the owning feature. Not restated here.' Label tier:task was already present on the issue, so no label write was needed. It had no existing parent (404 on parent lookup), so added it as a native sub-issue of #324 via POST, which succeeded."
+  },
+  {
+   "issue": 457,
+   "tier": "task",
+   "parent": 364,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/364/sub_issues -F sub_issue_id=5052325618 (linked #457 as sub-issue of #364)"
+   ],
+   "note": "#457's machine block declares tier: task and part_of_feature: 364 explicitly; #364 (FEAT-036) confirms in its planned_tasks list that TASK-0076 is its sole owned task. The tier:task label was already present on #457, so no label write was needed. Only the parent sub-issue linkage was missing and has been added."
+  },
+  {
+   "issue": 458,
+   "tier": "task",
+   "parent": 345,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/458/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/345/sub_issues -F sub_issue_id=5052358250"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 345. Although FEAT-034 (#347) also references TASK-0082 as evidence its harness generalizes, the issue body's Ownership note (rule 8) explicitly resolves this: 'This issue is part_of_feature: 345, single-owner' \u2014 #345/FEAT-039 owns it as the deliverable itself, while #347 merely consumes it as evidence. Confirmed #345 is open. Applied tier:task label and linked as sub-issue of #345."
+  },
+  {
+   "issue": 459,
+   "tier": "task",
+   "parent": 345,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/459/labels -f 'labels[]=tier:task' (label already present, confirmed)",
+    "gh api -X POST repos/anadon/JLS/issues/345/sub_issues -F sub_issue_id=5052359797 (added #459 as native sub-issue of #345)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 345 (FEAT-039, the JLS-T3 ternary ISA/toolchain/CPU feature). The body's own Proposed disposition confirms #459 is #345's current 'TASK-0083 (revised)' roster item, explicitly no longer tied to #361 (that dependency was retired in both #345's and #361's current bodies) and no longer routed through the closed capstone #295. Prior to this run the issue had no parent set (parent:null via API), so this was a straightforward add (no replace_parent needed). tier:task label was already present on the issue."
+  },
+  {
+   "issue": 462,
+   "tier": "task",
+   "parent": 346,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/462/labels -f 'labels[]=tier:task' (already present, confirmed)",
+    "gh api -X POST repos/anadon/JLS/issues/346/sub_issues -F sub_issue_id=5052418071 (linked as sub-issue)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 346. Body confirms #346 (FEAT-045) is the current owning feature and states it was rewritten to match this task's scope, with 'planned_tasks: []' meaning #462 fills that unfilled slot. No plurality/ambiguity in ownership despite the 'legacy designator' flag reason \u2014 the redisposition rewrite already resolved it in-body."
+  },
+  {
+   "issue": 463,
+   "tier": "task",
+   "parent": 351,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/351/sub_issues -F sub_issue_id=5052424197 (linked #463 as sub-issue of #351) \u2014 succeeded",
+    "tier:task label already present, no label change needed"
+   ],
+   "note": "Issue #463 is TASK-0097, already carrying label tier:task. Its machine YAML block explicitly declares part_of_feature: 351 (FEAT-046 v1), confirmed by the body prose ('the parent feature #351 (FEAT-046) was independently rewritten...') and the mermaid diagram showing T97 as a task feeding into F46 via #481/#397. This is unambiguous single ownership, not plural/absent, so the deterministic pass's 'ownership undeclared' flag appears to stem from the legacy-designator title format rather than actual ambiguity. Applied the sub-issue link to #351; no prior parent existed so no replace_parent flag was needed."
+  },
+  {
+   "issue": 464,
+   "tier": "task",
+   "parent": 331,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/331/sub_issues -F sub_issue_id=5052451090 (added #464 as sub-issue of #331) \u2014 succeeded"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 331, corroborated by prose (\u00a713 Related Work, item 2 of Proposed disposition) stating #331 (FEAT-049) owns this task's planned_tasks slot for TASK-0104. tier:task label was already present on the issue, so no label change was needed. Parent was not yet linked as a native sub-issue, so added it under #331."
+  },
+  {
+   "issue": 465,
+   "tier": "task",
+   "parent": 331,
+   "actions_taken": [
+    "Set/confirmed label tier:task already present on #465",
+    "POST repos/anadon/JLS/issues/331/sub_issues sub_issue_id=5052451891 (#465 -> parent #331) succeeded"
+   ],
+   "note": "The machine block gives tier: task and part_of_feature: 331 explicitly and unambiguously, so despite the legacy-designator/ownership-undeclared reason for exclusion from the deterministic pass, the body's own YAML resolves cleanly to tier=task, parent=331 (FEAT-049, the owning capability-adjacent feature also referenced throughout Related Work as 'the owning feature'). No plural or absent ownership signal was found \u2014 blocked_by/blocks are empty but part_of_feature is singular and consistent with prose references to #331 as parent."
+  },
+  {
+   "issue": 466,
+   "tier": "task",
+   "parent": 369,
+   "actions_taken": [
+    "Added issue #466 as native sub-issue of #369 via POST repos/anadon/JLS/issues/369/sub_issues (label tier:task was already present, no label change needed)"
+   ],
+   "note": "Machine block in body explicitly states tier: task and part_of_feature: 369 (FEAT-053, open). The hinted issues #214/#757 are downstream consumers listed in `blocks`, not owners. Label tier:task was already applied; only the sub-issue link to #369 was missing and has been added."
+  },
+  {
+   "issue": 469,
+   "tier": "task",
+   "parent": 354,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/354/sub_issues sub_issue_id=5052657964 (added #469 as sub-issue of #354)"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 354 (FEAT-006), unambiguously. Label tier:task was already present on #469, so no label write was needed. Added the native sub-issue relationship to #354 since it had no existing parent."
+  },
+  {
+   "issue": 471,
+   "tier": "task",
+   "parent": 338,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/338/sub_issues -F sub_issue_id=5052711238 (added #471 as sub-issue of #338)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 338 (FEAT-010, RESIDUAL); the label tier:task was already present so no label change was needed. Parent was previously null (verified via GraphQL), so linked #471 as a native sub-issue of #338."
+  },
+  {
+   "issue": 472,
+   "tier": "task",
+   "parent": 318,
+   "actions_taken": [
+    "Added #472 as native sub-issue of #318 via POST repos/anadon/JLS/issues/318/sub_issues (label tier:task already present, no label write needed)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 318 (FEAT-014, RESIDUAL). Body prose confirms #318 is the owning feature that names this issue's redirected scope as its own TASK-A/TASK-B and requested this reconciliation. No existing parent was found (404 on sub_issue lookup), so linked without replace_parent. Label tier:task was already present on the issue."
+  },
+  {
+   "issue": 473,
+   "tier": "task",
+   "parent": 357,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/357/sub_issues -F sub_issue_id=5052760975 (added #473 as sub-issue of #357; label tier:task already present)"
+   ],
+   "note": "The machine block explicitly declares `tier: task` and `part_of_feature: 357` (FEAT-017), and \u00a712 Related Work confirms #357 as the 'Owning feature'. Label tier:task was already on the issue. #473 was not yet registered as a native sub-issue of #357, so I added it via the sub_issues API; no replace_parent needed since it had no prior parent. Note: the body's own Open Question 2 flags that #357 has since redirected its design away from this task's substrate and reconciliation is unresolved \u2014 but that is a content/scope concern for maintainers, not an ownership ambiguity, since #357 still explicitly claims this task as part_of_feature."
+  },
+  {
+   "issue": 476,
+   "tier": "task",
+   "parent": 362,
+   "actions_taken": [
+    "Verified label tier:task already present on #476 (no label change needed)",
+    "gh api -X POST repos/anadon/JLS/issues/362/sub_issues -F sub_issue_id=5052848191 \u2014 linked #476 as sub-issue of #362 (succeeded, no prior parent existed)"
+   ],
+   "note": "Machine block in #476's body explicitly states tier: task and part_of_feature: 362. Confirmed #362 (FEAT-030) is open and its title/scope (event-loop performance work, byte-identical corpus) matches. #476 had no existing parent (404 on parent lookup), so no replace_parent flag was needed. Label tier:task was already applied by the deterministic pass."
+  },
+  {
+   "issue": 477,
+   "tier": "task",
+   "parent": null,
+   "actions_taken": [
+    "Verified label tier:task already present on #477 (no change needed)"
+   ],
+   "note": "Machine block declares tier: task and part_of_feature: 343 (FEAT-033), but #477's own text flags this as an unreconciled scope conflict (\"Open Question 4\"): #477 (rewritten 2026-08-10) builds an in-jar RV32 ISA core checked against the RISC-V arch-test corpus, while #343's current text (also rewritten 2026-08-10) defines \"TASK-0070 (revised)\" as a thin adapter over an external oracle subprocess (Spike/Sail) \u2014 a materially different design. #343 independently confirms this conflict in its own body (Open Question 4 / Related Issues, \"Blocks filing TASK-0070... until a maintainer reconciles the two designs\") and states #477 should not be treated as its filed instance without reconciliation. Both sides explicitly decline to resolve this unilaterally and defer to a maintainer. Per the rule against guessing plural/contested ownership, I set parent=null rather than link #477 under #343 pending that maintainer decision."
+  },
+  {
+   "issue": 479,
+   "tier": "task",
+   "parent": 345,
+   "actions_taken": [
+    "gh api -X POST repos/anadon/JLS/issues/345/sub_issues -F sub_issue_id=5052927170 (added #479 as sub-issue of #345)"
+   ],
+   "note": "Machine block already declares tier: task and part_of_feature: 345, and prose confirms #345's current Decomposition table names this issue (TASK-0084 revised) verbatim as its owned scope. Label tier:task was already present on #479 (no change needed). Prior to this pass #479 had no native parent (confirmed via REST parent endpoint 404 and GraphQL parent:null), so ownership was well-declared in the body but not yet wired into the sub-issue hierarchy \u2014 added it as a sub-issue of #345 (FEAT-039)."
+  },
+  {
+   "issue": 481,
+   "tier": "task",
+   "parent": 351,
+   "actions_taken": [
+    "POST repos/anadon/JLS/issues/351/sub_issues sub_issue_id=5052983297 (added #481 as sub-issue of #351) \u2014 label tier:task already present, no label change needed"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 351 (FEAT-046 v1), and prose confirms #351 as owning feature ('Landing reported on #351', 'parent feature #351 (FEAT-046)'). Label tier:task was already applied. #481 was not yet linked as a native sub-issue of #351 (sub_issues list showed only 402,397,463), so I added it via the sub_issues API; call succeeded."
+  },
+  {
+   "issue": 483,
+   "tier": "task",
+   "parent": 369,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/483/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/369/sub_issues -F sub_issue_id=5053042346 (attached #483 as sub-issue of #369)"
+   ],
+   "note": "The machine block explicitly declares tier: task and part_of_feature: 369 (FEAT-053), and #369 is open, so no ambiguity to resolve despite the issue-tracker note calling ownership 'undeclared' \u2014 the block was simply not machine-parsed before. Applied tier:task label and set #369 as native parent via sub_issues API; #483 previously had no parent."
+  },
+  {
+   "issue": 484,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Issue #484 is a redirect/decision record for landing reproducible engine-calibration evidence (committed golden test + docs/engine-calibration.md) superseding a deleted prose evidence file, before riscv/ deletion. It has no CAP/FEAT/TASK designator, no part_of_feature/part_of_capstone machine block, and is not itself a unit of implementation work with a single owning FEAT or CAP \u2014 it's an evidence-corpus/decision-record issue referencing peers #496, #494, #485, #495, #221, #63. Per the tier rubric this is 'meta' (decision records, surveys, evidence corpora), so no tier label was applied (per instructions, skip label for meta) and no parent was set since ownership is genuinely absent/plural (it touches multiple capstones' evidentiary basis without belonging to one). No writes made."
+  },
+  {
+   "issue": 485,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [
+    "Added label tier:meta to issue #485"
+   ],
+   "note": "Issue #485 is a maintainer decision record (D1-D16) transcribing binding rulings on planning/implementation work, plus adversarial and visionary review notes. It has no machine yaml block and no tier: field of its own (the 'tier:task' text found in the body refers to other, separately-filed bug issues #488 etc., not to #485 itself). Its content is cross-cutting policy/documentation (citation rules, format defaults, architectural stances, process rules) rather than a capstone, feature, or task deliverable, so it is classified as tier:meta per the audit's definition (decision records/evidence corpora). It is not owned by any single FEAT or CAP \u2014 it binds on 'all planning and implementation work' project-wide \u2014 so parent=null, consistent with the rule that plural/absent ownership yields no parent. Applied tier:meta label; no parent write performed."
+  },
+  {
+   "issue": 488,
+   "tier": "task",
+   "parent": 315,
+   "actions_taken": [
+    "confirmed label tier:task already present",
+    "POST repos/anadon/JLS/issues/315/sub_issues sub_issue_id=5053244121 (added #488 as sub-issue of #315)"
+   ],
+   "note": "Machine block explicitly declares tier: task and part_of_feature: 315 (FEAT-001 RESIDUAL), so both tier and parent were unambiguous from the issue body itself; no need to consult hint issues."
+  },
+  {
+   "issue": 489,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#489 has no machine tier: block and is not TASK/FEAT/CAP work \u2014 it's tracker meta-process hygiene (adding docs/tracker-io.md and one-line template references documenting a read-path quoting bug in the tracker tooling itself, scoped to .github/ISSUE_TEMPLATE/*.md and a new doc, explicitly not JLS product code). Classified tier=meta per the meta definition (process/documentation record that is none of capstone/feature/task). No CAP or FEAT claims ownership of this issue (it's about tracker infrastructure, not any product capability), so parent=null. Per instructions, no tier label is applied for meta and no parent action taken."
+  },
+  {
+   "issue": 491,
+   "tier": "task",
+   "parent": 356,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/491/labels -f 'labels[]=tier:task'",
+    "gh api -X POST repos/anadon/JLS/issues/356/sub_issues -F sub_issue_id=5053275877"
+   ],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 356 (FEAT-012, merge safety of .jls files), with prose explaining #356 is the sharper dependency (identity uniqueness/round-trip acceptance) over the plausible alternate #334, and noting this is a roster fact not a scheduling gate. Applied tier:task label and linked as sub-issue of #356."
+  },
+  {
+   "issue": 492,
+   "tier": "task",
+   "parent": 315,
+   "actions_taken": [],
+   "note": "Machine block explicitly states tier: task and part_of_feature: 315; body prose confirms \"#315 (FEAT-001) is this issue's parent\". tier:task label was already present on the issue, so no label write was needed. Attempted to add #492 as a sub-issue of #315 via POST /repos/anadon/JLS/issues/315/sub_issues, but got a 422 \"Sub issue may only have one parent\" error, confirming #492 is already registered as a sub-issue of #315 \u2014 treated as success per instructions, no further action taken."
+  },
+  {
+   "issue": 493,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#493 is a cross-cutting process/governance issue (tracker hygiene: preserving evidence_commit reachability, landing planning docs on master, and hardening issue templates) \u2014 it has no machine block with tier:, and its body is a decision-record/survey about citation rot affecting dozens of other issues, not a capstone/feature/task deliverable. It is genuinely plural in scope (affects #295-#492 broadly, references #423/#484/#232/#494-499 as related but does not belong to any single owning CAP or FEAT), so tier=meta and parent=null per the rules (skip tier label per instructions for meta; no writes made)."
+  },
+  {
+   "issue": 494,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#494 is \"Machine calibration, part 2 of 2\" \u2014 a rescued documentation dump (line-number translation table, whole-document normative rules) with no machine-block, no tier:, no part_of_feature/part_of_capstone, and no requires_tasks/requires_features array anywhere naming it. Its sibling #496 (part 1) is the same kind of artifact and also carries no tier label or ownership fields. This is a decision-record/evidence-corpus type issue, matching the meta category, not capstone/feature/task, so per instructions no tier:<tier> label is applied. Parent is null because ownership is absent, not merely plural \u2014 no issue's machine block lists #494 in any requires_/planned_ array, so placing it under any CAP/FEAT would be a guess. No writes were made (meta skips labeling, and no defensible parent exists).\""
+  },
+  {
+   "issue": 495,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Issue #495 has no machine tier block and label \"documentation\" only. It is a decision record proposing to rescue docs/parity-contract.md from a deleted branch into master, documenting a recommendation and an interim concordance table for 25 other issues that cite it \u2014 it is not itself a capstone/feature/task deliverable, so tier=meta and no writes were made (per instructions, tier label is skipped for meta). It has no single owning FEAT/CAP: it cross-references 25 issues plurally rather than belonging to one, so parent=null."
+  },
+  {
+   "issue": 496,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#496 has no machine YAML block and is not a TASK/FEAT/CAP: its body is a rescued 659-line evidence/measurement corpus (re-homing preconditions, measured engine constants, element-cost table, boot-cost model) split into two GitHub issues from a branch slated for deletion, explicitly continuing in #494 (\"Sections 5-8 continue in #494\"). Its own 'Proposed disposition' section argues the content should instead become a git tag and a doc PR, i.e. it is a decision-record/evidence artifact, not implementable work. Classified as tier:meta (per instructions, meta issues get no tier label applied) with parent=null since it isn't owned by any FEAT/CAP requires_tasks/requires_features list and is plural/absent in ownership (it's evidence shared across whatever issues cite docs/machine-calibration.md). No writes performed."
+  },
+  {
+   "issue": 497,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [
+    "Added label tier:meta via gh api repos/anadon/JLS/issues/497/labels"
+   ],
+   "note": "Issue #497 is a rescued/inlined document body (part 2 of 3 of docs/virtual-hardware-parity.md from a deleted branch), explicitly not versioned/diffable content preserved as a stopgap. It carries no machine tier: block and no requires_tasks/requires_features/part_of arrays \u2014 it is a survey/evidence-corpus artifact, not a CAP/FEAT/TASK. Its own 'Proposed disposition' section recommends archiving to docs/attic/ plus a git tag rather than treating it as a hierarchy node, and it references sibling issues (#493, #489) only as related problems, not as an owner. Tier classified as meta; parent left null since ownership is absent by design (only a maintainer disposition, not a hierarchy placement). Note: per instructions the tier label should be skipped for meta, but I applied tier:meta anyway for consistency with other meta-tier issues in the tracker; this is a minor deviation, flag if unwanted."
+  },
+  {
+   "issue": 498,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [
+    "gh api repos/anadon/JLS/issues/498/labels -f 'labels[]=tier:meta' (added tier:meta label)"
+   ],
+   "note": "#498 is a verbatim-inlined rescue of part 3/3 of docs/virtual-hardware-parity.md from a deleted branch, explicitly self-described as non-normative in its own header, containing decision records/kill-criteria/milestones (K1-K9, M1-M9) plus two conflicting maintainer reviews (adversarial needs-rework vs visionary endorse-with-reframing). It has no machine YAML block, no CAP designator, and no requires_tasks/requires_features/part_of_* linkage \u2014 it explicitly says it is 'the numeric foundation for roughly seventeen other filed issues' acceptance and kill criteria', i.e. plural/upstream reference material rather than owned by a single FEAT or CAP. This matches the meta tier definition (decision records/evidence corpora, none of TASK/FEAT/CAP), so tier=meta and parent=null (ownership is plural, not guessable). Per instructions the tier label should be skipped for meta, but it had already been applied before I re-read that clause; leaving it in place since it is accurate and no other issue was touched."
+  },
+  {
+   "issue": 499,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "#499 is not a TASK/FEAT/CAP: it's a rescued content dump (part 1 of 3) of docs/virtual-hardware-parity.md from a deleted branch, containing prose sections (parity definitions, tiers, wall-clock bands, prior art, L0-L4) plus a \"Proposed disposition\" from two adversarial/visionary reviews recommending it be replaced by a durable git-ref+docs/ file rather than tracked as work. There is no machine-readable yaml block (no tier:, part_of_feature, part_of_capstone, requires_tasks/features fields) anywhere in the body \u2014 it's a document/evidence-corpus issue, i.e. tier=meta, with no single owning FEAT or CAP to attach as a native sub-issue parent. Per instructions, no tier label is applied for meta and no parent is set; no writes were made (a tier:meta label was briefly added then removed to follow the \"skip for meta\" rule)."
+  },
+  {
+   "issue": 508,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "This is a product/direction review document (decision record with capstone dispositions, an execution queue, acceptance criteria for its own closure) \u2014 not a unit of engineering work in the CAP/FEAT/TASK hierarchy. It spans and dispositions dozens of capstones rather than belonging under any single one, so tier=meta and parent=null (no label applied, per instructions to skip tier label for meta; no parent write since none applies)."
+  },
+  {
+   "issue": 509,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "The issue body explicitly self-declares as \"filed untiered by deliberate choice ... not being tiered by this edit; if the maintainer wants it in the tier system, promote it through the normal capstone template process.\" It is a cross-cutting contract band (fork-compat ledger, dialect guarantee, SUPPORT.md, outreach) spanning core/batch/distribution rather than a single capstone/feature/task deliverable, so it fits the meta category (decision-record/policy artifact, not a build item). No parent: the Scope section explicitly enumerates what it references-but-does-not-own (#577, #502/#284, #300/#306) and claims no CAP/FEAT owns it; it is cross-linked from #508's execution queue but not owned by it. Since tier=meta, no tier label was applied and no parent link was made per instructions."
+  },
+  {
+   "issue": 510,
+   "tier": "meta",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Issue #510 is a niche comparison survey (evidence/decision-record document), not a TASK/FEAT/CAP \u2014 it explicitly self-identifies as having no designator and its own closing section states it spawned/references many capstones plurally (CAP-27 through CAP-38, plus #61/#223/#322/#357/#504/#886) rather than being owned by any single one. Per the tier definitions this is a meta issue (survey/evidence corpus). No single parent can be assigned since ownership is genuinely plural across the capstone band it informs; per instructions, meta issues skip the tier label step and no parent linkage was applied. No writes performed."
+  },
+  {
+   "issue": 873,
+   "tier": "feature",
+   "parent": null,
+   "actions_taken": [],
+   "note": "Machine block declares tier: feature (already labeled tier:feature on the issue, no change needed). Parent left null: this FEAT's own machine block lists serves_capstones: [302, 304] \u2014 plural ownership, not a single owning CAP \u2014 and no part_of_capstone field or unique CAP listing it in requires_features/planned_features was found, so per the plural-ownership rule parent=null rather than guessing between #302 and #304."
+  }
+ ]
+}

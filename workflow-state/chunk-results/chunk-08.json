@@ -1,0 +1,308 @@
+{
+ "chunk": 8,
+ "fixed": [
+  843,
+  844,
+  845,
+  846,
+  847,
+  848,
+  849,
+  850,
+  851,
+  852,
+  853,
+  854,
+  855,
+  856,
+  857,
+  858,
+  859,
+  860,
+  861,
+  862,
+  863,
+  864,
+  865
+ ],
+ "flagged": [],
+ "superseded_comments": [],
+ "other_issue_edits": [
+  {
+   "target": 370,
+   "change": "Add a note (or update the existing 'Related issues' disposition line for #843) recording that #843 has landed re-scoped onto the NetlistBuilder seam per #370's own 2026-08-10 recommendation, mirroring the notification #842 already committed to giving #370 for its own re-scope.",
+   "reason": "#370's live body currently tells whoever reads it that #843 is only 'recommended' for re-scoping/closing; that recommendation has now been acted on, and #370's text should reflect it so a reader of #370 does not have to separately check #843 to learn its current disposition.",
+   "from": 843
+  },
+  {
+   "target": 574,
+   "change": "Remove/update the stale 'blocked on #572's go/no-go being recorded' language in the Outcome and Boundary notes, and the 'regardless of which FEAT-C32-1 mechanism ships (a CheerpJ-wrapped interactive session ... or a recorded walkthrough)' hedge \u2014 CAP-32's Direction (#516) has since rejected CheerpJ outright and #572's current body states no feasibility spike or go/no-go is needed at all.",
+   "reason": "Discovered while reading #574 for #845's header/AC conventions; #574's body still narrates a resolved uncertainty as open, which is the same 'stale machine-readable/contradictory state' defect class the adversarial review flagged on #845.",
+   "from": 845
+  },
+  {
+   "target": 551,
+   "change": "Remove the line 'this issue is unaffected if #572's go/no-go for #573 says no' in the Boundary and reference notes \u2014 #572 no longer has a go/no-go (CheerpJ was rejected outright by #516's Direction; #572 is now a committed design).",
+   "reason": "Discovered while confirming #551 is a safe, non-#572-risk-bearing Phase 1 link target for #845; the stale go/no-go phrase in #551 misdescribes the current state of that dependency.",
+   "from": 845
+  },
+  {
+   "target": 848,
+   "change": "Its ordering_after prose still names TASK-C370-3 (#846) as a prerequisite (\"the queue's element identity must already be flat-backed\"). Since #846 now carries no in-place scope and #370 itself separately recommends closing #848 as superseded (the derived Netlist owns the id space by construction, no index contract to write between two independently-evolving structures), #848 needs its own redirect/disposition pass.",
+   "reason": "Mirror-edge consistency: #846's rewrite states this dependency is stale on #848's side, matching the pattern #843 already used when flagging #362's stale blocks:[370] edge.",
+   "from": 846
+  },
+  {
+   "target": 574,
+   "change": "Remove/replace the stale 'ordering_after: FEAT-C32-1 (#572) \u2014 go/no-go on the browser-demo mechanism must be recorded before this issue's AC-3 can be confirmed achievable' entry and the boundary note 'this issue is blocked on #572's go/no-go being recorded' with language reflecting that #516's Direction (updated 2026-08-11) already rejected CheerpJ outright and committed #572 to the SVG/lookup-table/VCD mechanism with no feasibility spike or go/no-go.",
+   "reason": "#574 was last updated 2026-08-12 but still frames #572's mechanism as an open go/no-go gate; #572 and #516 have since settled that question, so #574's blocking condition is fiction and should not gate AC-1/AC-3 anymore.",
+   "from": 847
+  },
+  {
+   "target": 574,
+   "change": "Update the 'Manifest note' boundary section, which currently says 'no issue currently declares that manifest's owner or schema. Declaring one is out of this issue's band; #548/#551/#573/#847 are the right place to pick an owner' \u2014 #548 AC-3 now names the manifest explicitly as resources/samples/samples.properties and lists its consumers, so this note is stale and should point to #548 AC-3 as the resolved owner instead of an open question.",
+   "reason": "#548's current AC-3 (last updated 2026-08-12) already names and owns the shared manifest that #574, #551, #573 and #847 all consume; #574's text predates that resolution and still describes it as undecided.",
+   "from": 847
+  },
+  {
+   "target": 370,
+   "change": "Update the \"Related issues\" bullet for #848 (currently \"(open, unmodified)\") to note that #848 has since been rewritten to carry an explicit Proposed-disposition/recommend-closing section, matching the treatment already given to #842/#843/#846.",
+   "reason": "#370's own body describes #848 as unmodified; that description is now stale since this task's rewrite, and #370 explicitly tracks the disposition of all six TASK-C370-* children in its Open Question 1 / Related issues section.",
+   "from": 848
+  },
+  {
+   "target": 852,
+   "change": "Add a 'Proposed disposition: on hold' note (and ordering_after covering #579) mirroring #849's, since TASK-C579-2 is chained directly behind TASK-C579-1 and #579's own body already states #852 is on hold pending its go/no-go decision.",
+   "reason": "#579 (FEAT-C34-1) already lists TASK-C579-1 through TASK-C579-4 (#849, #852, #853, #854) as put on hold pending its AC-1 decision; #852 currently shows no sign of that hold and its ordering_after still names only #849, so a reader of #852 alone would not learn the whole chain is paused.",
+   "from": 849
+  },
+  {
+   "target": 853,
+   "change": "Same hold annotation as #852.",
+   "reason": "Same chain-wide hold declared by #579; #853 depends transitively on #849/#852 resolving, which now will not happen until #579's decision reverses the Flathub decline.",
+   "from": 849
+  },
+  {
+   "target": 854,
+   "change": "Same hold annotation as #852/#853.",
+   "reason": "Same chain-wide hold declared by #579.",
+   "from": 849
+  },
+  {
+   "target": 370,
+   "change": "Update the #850 disposition note in the 'Related issues' section: #370 currently recommends closing #850 or narrowing it to its measurement half only, on the grounds that AC-1/AC-2 'no longer describe a real migration.' #850 has since been rewritten to apply the visionary review's full redirect (geometry single-writer + version-stamp mechanism, proof-bridge A6, footprint measurement) rather than narrowing to measurement-only; #370's text should reflect that #850's redirected scope is self-contained and does not depend on FEAT-054's runtime-state migration at all.",
+   "reason": "#370's 2026-08-10 rewrite postdates both reviews used for #850's rewrite and makes a disposition recommendation for #850 that this rewrite did not follow; leaving #370 unedited would leave the two issues' mutual descriptions of #850 out of sync.",
+   "from": 850
+  },
+  {
+   "target": 842,
+   "change": "Add a row (or column) to the per-element-type structural cost model for SpatialIndex's own per-element resident footprint (HashMap.Node + Bounds record + per-cell ArrayList/HashMap.Node overhead), measured on the same two fixtures (test/fixtures/riscv-sum1to10.jls and the wire-heavy-chain generator #842 commits) using #842's existing forced-GC/5-trial methodology.",
+   "reason": "The visionary review recommends this measurement live beside #842's structural cost model rather than as a standalone rebuild-latency number in #850; #842's current scope (per-ElementRegistry-type costs) does not yet include auxiliary structures like SpatialIndex, so #842 needs to explicitly adopt this row for the recommendation to be enacted rather than merely proposed in #850.",
+   "from": 850
+  },
+  {
+   "target": 851,
+   "change": "Redirect #851 (TASK-C370-6) the same way as #850: drop its prose-only ordering_after pointing at TASK-C370-3 (no migration is landing, per #846's superseded disposition and #370's derived-Netlist redirect), and redraw its scope along the mechanism/evidence split the visionary review proposes \u2014 #851 becomes the 'evidence' half, measuring per-edit cost and startup time against the geometry-version-stamp mechanism #850 now builds, rather than against a flat-state migration that no longer exists. Its current AC-2 duplicates #850's mutation test and its AC-3 per-edit-cost measurement overlaps #850's AC-4 rebuild-cost number, since per-edit cost on a large circuit is dominated by the same hit-testing.",
+   "reason": "#851 is #850's sibling task, filed against the same superseded in-place-flattening design, still carrying the identical unenforced ordering_after and the identical duplicated-AC problem the visionary review's finding 6 identified; it was out of this task's write scope (editing only #850 is authorized) but needs the same treatment to avoid two issues measuring the same thing by two methods.",
+   "from": 850
+  },
+  {
+   "target": 852,
+   "change": "Add a 'Proposed disposition: on hold' section mirroring #849 and #853, gated on #579 AC-1 resolving 'reverse'.",
+   "reason": "#579 AC-2 states TASK-C579-1 through TASK-C579-4 (#849, #852, #853, #854) are all put on hold pending its decision; #849 and now #853 carry that disposition but #852 does not yet, leaving the cluster inconsistent.",
+   "from": 853
+  },
+  {
+   "target": 854,
+   "change": "Add the same on-hold disposition, and note that its AC-4 per-release-cost bookkeeping and the CAP-34 kill-criterion arithmetic can be read directly off #853's AC-5 freshness-monitor log ('N releases, N automatic bumps, 0 interventions') once #853 exists, instead of separate manual bookkeeping.",
+   "reason": "Visionary review reframing 2 explicitly ties #854's cost ledger to #853's freshness monitor as its data source; #854's current body treats the cost record as a manual chore with no named source.",
+   "from": 853
+  },
+  {
+   "target": 849,
+   "change": "Consider adding the checker's git-tag-bump 'x-checker-data' manifest property (or an explicit pointer to #853) to #849's own acceptance criteria, since the propagation mechanism is arguably a property of the manifest #849 owns, not a separate submission-time task.",
+   "reason": "Visionary review reframing 4 argues x-checker-data belongs in #849 alongside the url/checksum fields it annotates; #849's existing rewrite (already on hold, build-from-source direction) does not mention it, so it currently lives only in #853.",
+   "from": 853
+  },
+  {
+   "target": 580,
+   "change": "Once #853 builds its AC-5 freshness-check script, note in #580 that it should reuse that shared shape (channel id, query URL, extraction rule) rather than inventing a winget-specific staleness check.",
+   "reason": "Visionary review reframing 2 identifies winget/Homebrew/Flathub as the same foreign-manifest-freshness problem solved three separate times, and recommends cutting the seam once.",
+   "from": 853
+  },
+  {
+   "target": 581,
+   "change": "Same as the #580 edit: reuse #853's freshness-check shape for the Homebrew cask instead of a bespoke one.",
+   "reason": "Same as above \u2014 reframing 2 names #580 and #581 together as the other two instances of the pattern.",
+   "from": 853
+  },
+  {
+   "target": 518,
+   "change": "Amend KC-34-1 from a cost-only kill threshold to a cost-per-install (or cost-and-benefit) rule, since Flathub is the one CAP-34 channel with a public per-app install-count API and a cost-only rule preferentially kills the channel that succeeds.",
+   "reason": "Visionary review's kill-rule finding; #854 has no authority to redefine a criterion recorded in #518, so it is proposed upward rather than enacted in #854's own AC-5.",
+   "from": 854
+  },
+  {
+   "target": 796,
+   "change": "Add a 'store-listing eligible' (or similar downstream-consumer) tag to the capture-manifest schema so #854 (and any future channel) can select screenshots by an explicit flag rather than an ad hoc rule.",
+   "reason": "Closes the loop #798's own boundary note opens ('the Flathub store-listing screenshot check belongs to #854's release flow ... see the linked follow-up #854 needs'); #854 can reference manifest entry ids today but a dedicated flag removes the remaining selection ambiguity (adversarial finding #5).",
+   "from": 854
+  },
+  {
+   "target": 586,
+   "change": "Add TASK-C579-4 (#854) to AC-5's named consumer list for the Tier-C/chrome screenshot pipeline, alongside the existing #580/#581 mentions.",
+   "reason": "#586's own AC-5 currently names only #580/#581 as consumers; #854 now declares a real dependency on #586/#796's manifest and the mirror edge is missing on #586's side.",
+   "from": 854
+  },
+  {
+   "target": 853,
+   "change": "Consider giving TASK-C579-3 (#853) the same 'Proposed disposition: on hold pending #579' treatment already applied to #849, #852, and now #854.",
+   "reason": "#579's own AC-2 puts all four TASK-C579-* siblings on hold pending its go/no-go decision; #853 is the one sibling not yet updated to reflect that, so it currently reads as unblocked when its own feature says it isn't.",
+   "from": 854
+  },
+  {
+   "target": 580,
+   "change": "Add a Decomposition entry (mirroring #338's pattern for #443/#471) naming TASK-C580-1 (#855) as the child task discharging the checksum-verification/schema-correctness surface, and record #855 in the machine block's tracking.",
+   "reason": "#855 declares part_of_feature: 580, but #580's own body never names #855 as its child task the way #338 explicitly lists #443/#471 \u2014 a reader of #580 alone cannot discover #855 exists.",
+   "from": 855
+  },
+  {
+   "target": 443,
+   "change": "Add 580 and/or 855 to the related list in #443's machine block.",
+   "reason": "#855 now declares ordering_after: [443] (a real cross-feature coupling: #855's checksum/attestation ACs fail loudly if #443 hasn't promoted the Windows leg out of experimental), but #443's own machine block has no mirror edge recording that #855 depends on it.",
+   "from": 855
+  },
+  {
+   "target": 511,
+   "change": "Add 855 alongside 579/580 in the blocks list, or note the transitive edge via #580.",
+   "reason": "#855's AC-5 (listing metadata) is now explicitly ordering_after_by_criterion: [511]; #511's blocks list currently names only 579/580, not the task that actually consumes its shared text.",
+   "from": 855
+  },
+  {
+   "target": 856,
+   "change": "Add 857 to ordering_after, and add a release-workflow step that appends a `measured` row (attention_mw/latency_hours/intervention_count derived per #857 AC-3) to docs/distribution/channels.tsv when the winget-pkgs PR merges, using #857's AC-6 append contract.",
+   "reason": "#857 now ships before #856 and defines the shared ledger #856's automation must write into to satisfy #580 AC-5's cost-recording requirement; #856 currently has no ledger-writing step and does not depend on #857.",
+   "from": 857
+  },
+  {
+   "target": 860,
+   "change": "Add 857 to ordering_after, and change AC-4's reference to 'the shared per-channel maintenance ledger' into a named pointer at docs/distribution/channels.tsv and #857's AC-6 append contract.",
+   "reason": "#860 AC-4 already promises to record into 'the shared per-channel maintenance ledger' but names neither the file nor #857, and does not depend on #857 existing first.",
+   "from": 857
+  },
+  {
+   "target": 861,
+   "change": "Point AC-2's tracked output file at the same docs/distribution/channels.tsv schema #857 defines (the reach column family: reach_metric, reach_value), instead of a second, separately-curated data file.",
+   "reason": "Visionary review reframing 1: two independently-curated per-channel data files (#857's cost ledger and #861's download-count file) force a future reader to join them by hand to evaluate KC-34-1 against actual reach; merging into one file with two column families removes that join.",
+   "from": 857
+  },
+  {
+   "target": 863,
+   "change": "AC-1's 'pointer to the data file' should name the merged docs/distribution/channels.tsv (reach columns) rather than assume a channel-download-count file separate from #857's cost ledger.",
+   "reason": "Same reframing 1 consolidation, so #863's KPI policy names one canonical per-channel file rather than silently assuming #861's file and #857's file are different.",
+   "from": 857
+  },
+  {
+   "target": 580,
+   "change": "Reconcile AC-2's clause \"if winget-pkgs' own review rejects or stalls specifically over the unsigned installer, that is recorded against this AC and #134's custody case\" against #856's redirected design, where the `--submit` step is now gated behind #134's SignPath secrets being set (so an unsigned installer is never actually submitted for public review in the first place). Either update that AC-2 clause to reflect that the unsigned-rejection scenario should no longer occur, or explicitly override #856's gate if the maintainer prefers submitting unsigned regardless.",
+   "reason": "The visionary review of #856 (endorse-with-reframing, 'One ordering judgement') argues submission specifically (not manifest generation) should be conditional on #134 landing, to avoid a first-run SmartScreen prompt undermining the channel's 'installs like everything else' promise. #580's current AC-2 text still anticipates and accepts an unsigned-installer rejection happening in the wild, which is now in tension with #856's gate.",
+   "from": 856
+  },
+  {
+   "target": 855,
+   "change": "Consider shrinking TASK-C580-1's generator scope to a locale/metadata template plus a hash-assertion check (\"the hash we are about to publish equals the one we attested\"), rather than a full manifest-authoring implementation, now that #856 delegates PR-submission mechanics to a maintained community tool (wingetcreate/komac).",
+   "reason": "Visionary review Reframe 3's corollary: if submission tooling absorbs manifest mechanics as commodity, #855's generator scope duplicates less work and can shrink accordingly. This is #855's scope decision, not #856's, so it is reported rather than edited.",
+   "from": 856
+  },
+  {
+   "target": 581,
+   "change": "Title still reads \"...with the Gatekeeper caveat single-sourced from the README\" but #581's own AC-3 body now specifies the caveat and the README are both generated from a shared fragment (README is a consumer, not the source) \u2014 the title should say \"single-sourced fragment\" or similar, not \"from the README.\"",
+   "reason": "Internal inconsistency between #581's title and its own AC-3, found while aligning #859 with #581's already-decided fragment-based design; #859's own rewrite cannot fix another issue's title.",
+   "from": 859
+  },
+  {
+   "target": 858,
+   "change": "AC-3 and the issue framing still present the tap-vs-homebrew/cask location as an open decision to be recorded (\"the tap-versus-homebrew/cask decision is recorded in-tree with its reasons\"), but #581's Proposed disposition has already made that decision (maintainer-owned anadon/homebrew-jls tap only, never homebrew/cask, with notability-gate arithmetic as the reason).",
+   "reason": "858 has not been rewritten to reflect the decision #581 already recorded; leaving it as an open question duplicates a decision that's now settled one level up and could let an implementer re-litigate it.",
+   "from": 859
+  },
+  {
+   "target": 860,
+   "change": "AC-1 says the release-workflow update goes \"via a PR to homebrew/cask or a direct commit to the project tap, whichever TASK-C581-1 decided\" \u2014 this is now resolved (direct commit/automation against anadon/homebrew-jls only) and the conditional phrasing is stale.",
+   "reason": "Same upstream decision in #581's Proposed disposition resolves this fork for #860 as it does for #858 and #859; noticed while making #859 consistent with the tap-only design.",
+   "from": 859
+  },
+  {
+   "target": 581,
+   "change": "Loosen the Outcome/AC-2 wording away from \"a release-workflow step updates the cask\" / \"via a maintainer-owned automation step\" to mechanism-neutral language covering a tap-owned scheduled/pull workflow, so it doesn't read as contradicting #860's now-adopted livecheck-based design. Also consider adding TASK-C580-3 (#857) to ordering_after, since AC-5's cost-recording now points at a concrete ledger file.",
+   "reason": "Visionary review's rethink verdict on #860 replaced the release.yml push mechanism with a tap-repo pull mechanism; #581 (parent feature, already independently rewritten by another pass) still describes the old push framing and doesn't cite the ledger #857 defines.",
+   "from": 860
+  },
+  {
+   "target": 858,
+   "change": "Add an explicit note (e.g. alongside the existing formula-vs-cask Notes bullet) stating that the cask's update loop needs no tap credential, PAT, or bot configuration, since #860 adopts a livecheck + tap-owned-workflow design using only that repo's default GITHUB_TOKEN.",
+   "reason": "Visionary review point 4 (\"fold the credential question into #858 rather than leaving it implicit, and note in #858 that the pull design needs none\") \u2014 #858 currently doesn't mention credentials at all, so an implementer reading only #858 could still assume a cross-repo secret is needed.",
+   "from": 860
+  },
+  {
+   "target": 862,
+   "change": "AC-1's language (\"a scheduled workflow\") and the title's \"runs on a schedule\" framing are stale: the live #582 AC-2 (updated 2026-08-12, after the reviews) now specifies the logging step lives inside release.yml's release job, triggered by a tag push with [skip ci], not a separate cron schedule. #862 should be re-worded to match, or the discrepancy explained.",
+   "reason": "Parent feature #582 was replanned after both reviews were written; #862 was not updated to match and now contradicts its own parent's AC-2.",
+   "from": 861
+  },
+  {
+   "target": 863,
+   "change": "AC-1 (\"names release-asset downloads as the adoption KPI\") contradicts live #582 AC-1/AC-4, which now name ADOPTERS.md as the adoption KPI and state download counts are a supporting signal only, never promoted to the KPI. #863's AC-1 and Outcome text need rewording to match the current #582.",
+   "reason": "Same #582 replan as above: the KPI now belongs to ADOPTERS.md, not to the download-count series #863 was written to codify as policy.",
+   "from": 861
+  },
+  {
+   "target": 861,
+   "change": "Consider adding an acceptance criterion for landing the ARCHITECTURE.md 'Recorded decisions' entry (naming ADOPTERS.md as the KPI and #861's data file as its instrument) alongside the collector, if the maintainer accepts folding #863 into #861.",
+   "reason": "The visionary review recommends merging #863's deliverable into #861 rather than shipping it separately; #863 cannot edit #861's acceptance criteria itself, so this is reported for the maintainer/other-issue owner to action.",
+   "from": 863
+  },
+  {
+   "target": 582,
+   "change": "AC-4 currently names only 'a one-line policy doc (or a section of ADOPTERS.md)' as the location for the KPI/instrument statement. Consider broadening it to also permit 'a recorded decision in ARCHITECTURE.md's Recorded Decisions section', matching the format #863 (its child task) now targets and this repo's existing convention for decisions of this size.",
+   "reason": "Keeps the parent feature's own acceptance criterion consistent with the implementation approach its child task now specifies.",
+   "from": 863
+  },
+  {
+   "target": 861,
+   "change": "State explicitly in AC-6 that the collector's 'writes nothing on failure' guarantee is implemented as build-full-content-in-memory then rename(2)-over-target, not merely asserted by exit code.",
+   "reason": "Visionary Reframing 3: makes the never-zeroed-row guarantee structurally impossible to violate rather than test-only; #862's rewritten AC-3 now explicitly relies on this guarantee to justify dropping a separate workflow-level failure simulation.",
+   "from": 862
+  },
+  {
+   "target": 582,
+   "change": "AC-4 (or the boundary notes) should state as fact, not open policy: winget and Homebrew casks fetch the GitHub release asset directly by URL, so those installs are already inside the GitHub release-asset counter and cannot be separated out; only Flathub rebuilds and hosts its own artifact and has a genuinely disjoint counter.",
+   "reason": "Visionary review's 'one factual correction for the sibling issue' \u2014 #582 currently presents a three-way inclusion choice that reality has already resolved for two of the three channels.",
+   "from": 862
+  },
+  {
+   "target": 863,
+   "change": "Same factual correction as above should land in AC-2's policy language, and AC-3/AC-5 should note that per-asset counts are also the only evidence for which artifact legs (e.g. aarch64 MSI, rpm) are worth the CI matrix cost they impose, not only an adoption-headline number.",
+   "reason": "Visionary Reframing 4 plus the factual correction are both explicitly targeted at #863's policy doc, which #862 has no authority to edit.",
+   "from": 862
+  },
+  {
+   "target": 518,
+   "change": "CAP-34 AC-3 restates '\u22654 consecutive tagged releases' as its own tracked fact identical to #582 AC-3; have CAP-34 AC-3 reference #582 AC-3 as the single source rather than duplicate the count.",
+   "reason": "Adversarial Finding 5: the same real-world fact is independently claimed by three tracked entities (CAP-34, #582, #862) with no single place enforcing it stays in sync; #862's rewrite fixed its own copy but can't fix CAP-34's or #582's duplication.",
+   "from": 862
+  },
+  {
+   "target": 583,
+   "change": "Reconcile #583's current AC-1 (admissibility check), AC-2 (packageability contract), AC-5 (go/no-go home), and AC-6 (apt-repo/#136 alternative) \u2014 all added after the 2026-08-08 reviews of #864/#865 were written \u2014 with #864's and #865's task-level scope. #583 no longer names either sub-task by number anywhere in its body.",
+   "reason": "Verification read of #583 (updated 2026-08-12, after the review date) showed it had been independently rewritten to already contain most of the visionary review's reframing (the four named shaded deps, landing the verdict in an existing docs/ home, the #136 apt-key tension) at the feature level, without updating or even referencing #864/#865. This creates real scope-overlap/drift risk between #583 and its two children that only an edit to #583 or #865 (outside this task's mandate, which is #864 only) can resolve.",
+   "from": 864
+  },
+  {
+   "target": 864,
+   "change": "Add `blocks: [865]` to TASK-C583-1's machine-readable header block.",
+   "reason": "Mirrors #865's own `ordering_after: [\"#864 (TASK-C583-1...)\"]` edge, matching this repo's sibling convention for keeping ordering_after/blocks edges mirrored on both issues (e.g. #857's `blocks: [856, 860]` / matching `ordering_after` on those issues).",
+   "from": 865
+  }
+ ]
+}

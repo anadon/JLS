@@ -1,0 +1,297 @@
+{
+ "162": [
+  "Visionary Reframe 1 (concrete alternative): propose an in-JVM `TestCapability`/`jls.test.require` ratchet mechanism instead of a shell/YAML fail-closed edit, arguing the YAML fix only proves apt succeeded, not that tests actually executed (misses `@Tag` typos, `assumeFalse` regressions, pom reconfiguration). The rewritten body keeps the pure YAML approach (\u00a78) and never mentions or declines this ratchet-based alternative anywhere in the body.",
+  "Adversarial Finding #4 (no lasting regression guard for the fail-closed behavior itself, analogous to `wayland-rig-selftest.sh`): body's \u00a78/\u00a714 still only require a one-time manual branch demonstration (P1/P3), with no permanent checked-in test guarding against a future `ci.yml` edit silently reintroducing `|| echo` or the `else mvn -B verify` softening. Not reflected or dispositioned in the body.",
+  "Visionary Reframe 2 (collapse #162/#386/#406/part of #91 into one shared capability-arming mechanism across Linux/Windows/macOS lanes): not adopted and not explicitly declined anywhere in the body; the body's Related Work section cross-references #386/#406 only as 'keeping wording consistent,' not addressing the proposed unification of mechanism."
+ ],
+ "169": [
+  "Visionary Claim 2 (retarget snapshot broadcast #281 from 'the steady-state sync mechanism' to 'join bootstrap and divergence repair', with an ordered op-log over OpSink as the steady-state path once writes are totally ordered under the token) is neither adopted nor explicitly declined with reasoning anywhere in the rewritten body. The Decomposition & Rationale section (\u00a72) and Sequencing (\u00a76) still describe #281's snapshot broadcast as the steady-state sync data path ('Snapshot broadcast is next because it is the data path both follow mode and any future floor-control slice need identically') with no acknowledgment of the op-log alternative or why it was not taken."
+ ],
+ "202": [
+  "Visionary review Reframe 5 ('buy independence instead of building it') argues riscv-arch-test/RISCOF against the Sail reference model (already specified in docs/standards-adoption/05-riscv-compliance.md, #65/#259) is a more independent oracle than #343/jls.mach, and that #343 should have to justify itself against that alternative rather than being a flat prerequisite. The rewritten body does not reflect this reframing nor explicitly decline it: #343 (jls.mach) still appears unchanged in blocked_by with the same rationale ('the independent counterparty Direction B's parity needs'), and riscv-arch-test/RISCOF/#65/#259 are not mentioned anywhere in the body."
+ ],
+ "111": [
+  "Adversarial #4 (flake-gameability of the 20-run promotion gate): not mentioned or dispositioned in the rewritten body.",
+  "Adversarial #5 (scope/process disproportion): not addressed or explicitly declined in the body.",
+  "Visionary Alternative framing 2 (skip-census / platform-skips.yaml mechanism): not adopted and not explicitly declined with reasoning.",
+  "Visionary W3 narrowing (require only non-Robot subset, keep Robot gestures advisory): not reflected in the body and not explicitly declined."
+ ],
+ "223": [
+  "visionary review Observation 4 / Reframing D (\"prove one seam end-to-end rather than wiring four\" \u2014 narrow remaining scope to a single out-of-tree ServiceLoader-discovered elem.element-provider demo before wiring #403/#277's full four-consumer dispatch) is neither adopted nor explicitly declined anywhere in the rewritten body; \u00a72/\u00a73/DoD still scope #403+#277 as wiring all four consumers with no mention of a single-seam proof-of-concept alternative"
+ ],
+ "291": [
+  "Visionary finding 5 (ElementRegistry reframing: move HDL disposition onto a fifth ElementType field instead of the hand-kept REJECTED map/HdlExporter EXPORTED set, making totality structural) is neither adopted nor explicitly declined anywhere in the body. The rewritten body still commits to the REJECTED-map design (Decision 1, P4, DoD) sourced from #492, with no mention of ElementRegistry or reasoning for staying with the map-based mechanism."
+ ],
+ "297": [
+  "Visionary Reframe 4 (\"one physical-target layer, three emitters\") proposed merging FEAT-040's package/pinout library with the existing src/jls/hdl/board target layer into one binding with multiple emitters (PCF, BOM, wiring list, KiCad), arguing this retires the #298/#307 shared-ownership problem architecturally rather than by convention. The rewritten body only cites src/jls/hdl/board/PinBindings.java et al. as a 'data-not-code precedent... to be read before #349's implementation is designed' in the Cost section, and instead resolves the shared-ownership concern via a governance mechanism (a documented Feature-Level Interface & Data Contract in docs/realization-layer.md/ARCHITECTURE.md, per \u00a73). It neither adopts the target-layer unification nor explicitly declines it with reasoning; the proposal itself is never named or dispositioned anywhere in the body."
+ ],
+ "327": [
+  "Adversarial finding #6: the issue body still pins `evidence_commit: 2d0ca9dcd9db78b36c3caf4c6c57dd8701862cc7` unchanged, with no note anywhere in the rewritten body that this SHA is unreachable from origin (the review found `git cat-file -t` fails and it's absent from log/branches). The review's recommendation \u2014 note the unreachability or replace the SHA \u2014 is neither applied nor explicitly declined with reasoning."
+ ],
+ "304": [
+  "Visionary review, 'Alternative 3 \u2014 ship a corpus, not a compatibility guarantee': the reframing to skip a general-purpose importer entirely and instead commit a curated `.jls` examples library (offline pipeline, no `jls -import` compatibility guarantee) is neither adopted nor explicitly declined anywhere in the rewritten body \u2014 the body keeps the general-import framing (AC-0 core-pin, AC-1 manifest-matching, mapper-parity spine) without addressing why the cheaper corpus alternative was passed over.",
+  "Adversarial review, finding 9 (scope vs. maintenance model): the concern that even the narrowed capstone's scope should be weighed against JLS being a stated 'single-maintainer pedagogy tool' is not explicitly discussed in the rewritten body \u2014 the scope reduction from 14 to 8 required features implicitly responds to it, but no line in the body visibly dispositions the maintainer-capacity question itself.",
+  "Visionary review, 'the row that is mis-filed': the suggestion to promote FEAT-016/FEAT-017 (SubCircuit.copy() deep-copy defect, src/jls/elem/SubCircuit.java:332) out of this capstone into their own standalone issue (since the defect affects hand-drawn circuits independent of any import) is not addressed \u2014 the rewritten body keeps both features required within CAP-08 with no comment on whether they should instead be filed/promoted separately."
+ ],
+ "345": [
+  "Visionary Reframe 5 (riscv/ precedent): explicitly asked that before this feature is reported as funded, the issue 'state what riscv/ cost and what its bring-up failures were' as a check on the 200-250 LoC/mw cost ratio. The rewritten Cost section neither cites riscv/'s actual cost/failures nor explains why that comparison is being skipped \u2014 it only says the redirected-scope cost is 'not yet re-estimated', which sidesteps rather than dispositions this specific finding.",
+  "Visionary 'Missing entirely' section: asked that the teaching claim be validated (e.g. one lab handout/instructor trial) since 'the beneficiary is currently an assertion.' Nothing in the rewritten body proposes or declines this \u2014 it is not mentioned in Intended Audience & Impact, Completion Criteria, or Open Questions."
+ ],
+ "351": [
+  "Visionary review \u00a75 proposed a specific, costed alternative to the in-process port: emit the drawn linear subcircuit as a SPICE deck and read a waveform back via subprocess (reusing the shipped self-skip idiom), explicitly as an unconsidered option paired with the linear engine. The rewritten body never mentions or dispositions this alternative \u2014 it retains Invariant 1's blanket ProcessBuilder ban unchanged and only addresses licensing for a future in-process port, without acknowledging or rejecting the subprocess-delegation design the review raised."
+ ],
+ "368": [
+  "Visionary review's 'out-of-the-box alternative' section (proposing a sampled-host-source element -- WAV/mic/PPG trace driving a digital bus -- as a solver-free way to serve capstones #308/#303/#305, with ngspice co-simulation as the alternative if real physics is wanted) is not reflected or dispositioned anywhere in the rewritten body. The rewrite addresses Reframing 1 (descriptor ownership), Reframing 2 (paced-participant seam, explicitly deferred), and Reframing 3 (quiescence, adopted in full), and the roadmap-trajectory argument (via the governance-gap section on #351/#331), but this specific alternative-scoping proposal has no visible acceptance, rejection, or reasoning in the issue body."
+ ],
+ "375": [
+  "Visionary review Alternative C (put cardinality/totality on the ExtensionPoint seam via #277, checked once generically at boot) is never adopted or explicitly declined with reasoning in the body \u2014 only a generic #277 relation note ('the base's key set moves with them, noted in the base's javadoc') appears in \u00a712 Related Work, which does not engage with the specific 'checked once, generically, at boot in production \u2014 not N times in test' reframing.",
+  "Adversarial finding 5 (exemption honor-system: require exempt() entries to carry a linked, filed follow-up issue number in a machine-checkable format, so an exemption can't quietly become permanent) is not adopted and not explicitly declined anywhere in the rewritten body \u2014 \u00a77.4/\u00a714 still only require the exemption reason string to 'match \u00a72 verbatim', with no machine-checkable linkage to a tracked issue for the surviving exemptions (TestGen, WireEnd, Wire)."
+ ],
+ "396": [
+  "Visionary review, 'One design objection under any framing': proposed making the provider selection a run-time parameter (flag or GUI banner) instead of durable per-circuit saved state, warning that invisible saved state changing simulation results is dangerous for grading. The rewritten body's \u00a77.7 and Open Question 3 still specify a per-circuit saved provider selection defaulting to SCHEMATIC, with no mention of the run-parameter alternative or reasoning for rejecting it.",
+  "Adversarial finding 5 / visionary 'second alignment problem': both reviews recommended landing maintainer ruling D9's operative text as a permanent recorded-decision entry in ARCHITECTURE.md's 'Recorded decisions' section (the pattern #98/#165/#221 use) rather than leaving it sourced only to this issue's quoted paraphrase of a now-nonexistent doc. The rewritten body only re-pins/quotes D9 in its own 'Evidence pin' paragraph and Interface \u00a77.12; it neither adopts the ARCHITECTURE.md recorded-decision move nor gives explicit reasoning for declining it."
+ ],
+ "397": [
+  "Visionary \u00a74 (export-first alternative): the review argued JLS should ship a SPICE deck exporter first \u2014 delivering standalone value via #336/#367/#331 without needing the solver at all \u2014 before building the ngspice differential-oracle task. The rewritten body never mentions this sequencing alternative or explains why it was rejected in favor of proceeding with TASK-0100 as a solver-comparison task; it is neither adopted nor declined with reasoning anywhere in the body.",
+  "Visionary \u00a76 (trajectory/documentation gap): the review flagged that TASK-0100's founding warrant cites maintainer directive D8 from docs/plan/evidence/BRIEF.md \u00a713, but docs/plan/ does not exist in the tree, and that three landed strategy documents (README.md, ARCHITECTURE.md, docs/capability-roadmap/README.md \u00a76) still frame JLS as excluding SPICE-class analog simulation \u2014 recommending a one-paragraph amendment to those docs before the programme proceeds. The rewritten body's Status/Dependencies and Background sections do not mention this documentation-gap finding, the unlanded docs/plan/ citation, or any decision to fix or defer it."
+ ],
+ "425": [
+  "visionary Reframing 2 (console-tap element seam): the review's core suggestion to cut the transcript seam at a new SerialPort/ConsoleTap element (bound via a save-format attribute) rather than a CLI flag is never addressed \u2014 the rewritten body's \u00a77.1/Open Question 2 only debates double-dash vs single-dash flag naming for --transcript/--clock-period, leaving the element-based design neither adopted nor explicitly declined with reasoning.",
+  "visionary Reframing 4 (guest image as a flake output): the review's recommendation to express #395's pinned Linux image as a flake.nix derivation output (so no multi-megabyte blob enters git and the pin becomes a lock-file hash) is not mentioned anywhere in the rewritten body \u2014 Open Question 5 discusses where the guest image lives only in terms of #395's informational release-asset design, never engaging the flake-output alternative."
+ ],
+ "420": [
+  "Visionary review's 'Alternative 2' (\u00a799-121): argues the export bucket choice is backwards \u2014 a black-box instantiation's Verilog is trivial/canonical (`mymod u0(.a(n1),...)`) and should be EXPORTED, not rejected, making the element the forcing function for capability C5 (an HDL instance-statement kind, priced 3-4mw as 'cheapest high-value item in the sweep', unlocking EDIF/BLIF/hierarchical Verilog/SubCircuit export). The rewritten body's P8 and \u00a78.9 instead make exporting a circuit containing the element throw `HdlExportException` naming it \u2014 the opposite disposition \u2014 with no acknowledgment or rebuttal anywhere of the visionary's C5/instantiation-export argument. O5 only rebuts the adversarial review's REJECTED-bucket/test-infrastructure point, not this separate reframing."
+ ],
+ "423": [
+  "Visionary review, \"Where it pulls against the arc\" point 4 / Reframing C: recommended harvesting riscv/fuzz_diff.py's random program generator into test/ before #413 deletes riscv/, arguing the generator (not build_cpu.py) is the reusable asset. The rewritten body's \u00a71 and Related Work only treat riscv/ as a read-only interim bisect target for #413's deletion and never mention fuzz_diff.py or porting its generator \u2014 this finding is neither adopted nor explicitly declined anywhere in the body."
+ ],
+ "452": [
+  "Visionary review, 'Seam correction 2': recommends deleting the SigSim pre-pass entirely and parsing each token at point of use, rather than extending the pre-pass with more regex branches. The rewritten body neither adopts this nor explicitly declines it with reasoning \u2014 \u00a78 Method for Phase 1 explicitly keeps the extend-the-pre-pass approach ('add the 0b/0o branches to ... pre-pass at SigSim.java:50-68'), the opposite of the review's recommendation, with no acknowledgment of the review's argument or why it was rejected."
+ ],
+ "460": [
+  "adversarial Finding 2 (scope/feasibility vs docs/standards-landscape.md \u00a713 candidate survey): the rewritten body never mentions standards-landscape.md or reconciles the KiCad/PCB programme against that survey's ranked candidate list; no disposition (adopted or declined-with-reasoning) appears anywhere in the body.",
+  "visionary \u00a75 (portfolio leverage: RV32I CPU export via HdlExporter/Memory/SubCircuit hierarchy is the higher-leverage physical-boundary move, per sweep-06-physical-boundary.md and grand-architecture.md's three funded trajectories): not referenced or dispositioned anywhere in the rewritten body \u2014 no comparison, acceptance, or explicit rejection of that reprioritization argument."
+ ],
+ "467": [
+  "Visionary R6 ('The arc question'): recommended adding the jls.collab module to ARCHITECTURE.md's Module layout section plus a recorded 'Collaborative editing: pure-P2P, opt-in, no server' decision with a revisit trigger, arguing the largest subsystem in the tree remains invisible to contributors/maintainers/LLM agents. The rewritten body never mentions ARCHITECTURE.md and does not adopt or explicitly decline this recommendation anywhere (Proposed disposition, Related Work, or Completion Criteria)."
+ ],
+ "489": [
+  "Visionary review, 'Seam 1 \u2014 wrong audience': the review shows agents that trigger this bug file issues via `mcp__github__issue_write`, which never renders the ISSUE_TEMPLATE files, so a warning line added only inside the templates' HTML comment (as the rewritten body still does in item 2) would not reach the agents who need it; the review proposed reaching them instead via `.claude/settings.json`/session-start hook/CLAUDE.md. The rewritten body neither adopts a non-template delivery channel nor explicitly declines the point with reasoning \u2014 it is not mentioned anywhere in the current body."
+ ],
+ "472": [
+  "Visionary review \u00a74 ('The identity that is actually broken today'): Wire.save is a no-op and WireEnd.init rebuilds each Wire with a fresh sid on every load, so AttachProbe's existing sid-based binding already breaks across save/load \u2014 reviewer calls this 'the strongest argument for the reframing' and recommends a one-line fix in WireEnd.save. The rewritten body adopts the reframing's conclusion (derived, non-persisted net/group identity) but never mentions this wire-sid durability bug or the recommended WireEnd.save fix anywhere \u2014 not in O2 (which only restates 'Wire.save is a no-op' as a convenience for derivation, not as a pre-existing probe-binding defect), not in Related Work, not in Open Questions, not in scope/out-of-scope."
+ ],
+ "490": [
+  "Adversarial finding 6 (process overhead: 8 invariants, 6 integration criteria, 11-item DoD, mandatory REPLAN comment on every response, vs. an '8 lines of textbook theory' kernel priced at 2.25-4mw) is neither reduced nor explicitly declined with reasoning in the rewritten body \u2014 Global Invariants (\u00a74) is still 8 items, Integration Criteria (\u00a75) still 6, Completion Criteria (DoD) still 11 items, and \u00a77's 'every response ends in a REPLAN: comment' requirement is unchanged, with no comment anywhere weighing or dispositioning the overhead-vs-payload complaint."
+ ],
+ "532": [
+  "Adversarial finding #2 (HIGH, process): #532 was filed ~3.5h after #508 established a planning ratchet ('no new tier:feature/tier:task until two capstones close'), with the filer's own #504 comment acknowledging the conflict as unresolved. Neither the rewritten body nor any issue comment mentions the ratchet, retroactively justifies overriding it, or defers the issue pending capstone closures \u2014 this HIGH finding is neither reflected nor dispositioned anywhere."
+ ],
+ "543": [
+  "Adversarial finding 4 (OQ5/#507 gate): the review required filing a REPLAN comment on #507 recording that Open Question 5's framebuffer-vs-theme default was accepted/overridden, since #507's own body still lists it as blocking. The rewritten #543 body never mentions #507, OQ5, or a REPLAN \u2014 it silently proceeds with the (now further-revised) decorator mechanism without recording that disposition, so the contradiction the review flagged in #507's canonical record is still unaddressed anywhere in #543's body."
+ ],
+ "541": [
+  "Adversarial finding 4 (structured sub-issue relationship never created): the rewritten body's Cross-issue notes only prose-reference #874/#875 as re-scoped children; no GitHub sub-issue link was created and the body never acknowledges that #541 still shows has_children:false / zero structured children \u2014 the gap is neither closed nor dispositioned.",
+  "Visionary 'Trajectory' section (issue is being elaborated out of order; recommends #541 stay dormant and be re-filed as one task only after #536's demo slice retires CAP-24 gate KC-24-1): the rewritten body instead proceeds to fully re-elaborate ACs and boundary notes now, with no acknowledgment of or reasoning against the dormancy recommendation anywhere in the body."
+ ],
+ "537": [
+  "visionary Reframing 2: the body still specifies TikZ output as a 1:1 path-dump from the shared sink (\"every element is path-dumped 1:1 from what the schematic scene already draws... Nothing is approximated\"), which is exactly the 'pixel-transcribed TikZ' option the visionary review explicitly identified as near-worthless to courseware authors ('offers a courseware author almost nothing over \\includegraphics of FEAT-C24-1's PDF: not editable in any meaningful sense, not in CircuiTikZ's vocabulary, not restyleable') versus the 'anchor-native CircuiTikZ' option it argued was the actual engineering core of the feature. The final body only carves out a small opt-in substitution table for specific gates but never engages with or rebuts the visionary's core critique that the chosen default (path-dump) delivers little value over the PDF export it's meant to complement; no reasoning is given anywhere in the body for picking path-dump-as-default over anchor-native-as-default."
+ ],
+ "553": [
+  "Visionary 'Concrete alternative C' (put orientation inline as captions on #548's curated examples, e.g. 'Logisim calls this a Tunnel; Digital calls it a Wire label') is never mentioned or dispositioned anywhere in the rewritten body \u2014 the body retains the four standalone docs pages without acknowledging or declining this cheaper alternative the review proposed as possibly better addressing the actual bounce."
+ ],
+ "544": [
+  "visionary Reframe 5 point 2: the #75 keyboard caret's ~1.14:1 contrast (selectionColor 240,240,240 on white) is flagged as a low-vision-blocking defect that should be routed explicitly into FEAT-C26-1's palette work \u2014 the rewritten #544 body never mentions this caret-contrast finding or names where it was routed, so it is neither reflected nor dispositioned anywhere in the issue (Reframe 5 point 1, the Access Bridge/jdk.accessibility gap, IS addressed via a Boundary Notes entry citing CAP-26 PF-7; point 2 has no equivalent treatment)."
+ ],
+ "559": [
+  "Visionary review \u00a75 proposes shipping a parse-only .cv \u2192 construct-histogram measurement pass first, using .cv's cheap corpus (~1.1M public projects) as CAP-29's measurement gate (mirroring CAP-16's KC-16-1/#323 I6) before committing to mapping-table breadth. The rewritten body (now a hand-executed-recipe disposition) neither adopts this corpus-histogram-first step nor explicitly declines it with reasoning anywhere in the Outcome, ACs, Boundary notes, or Open question section."
+ ],
+ "583": [
+  "Adversarial finding 4 (KC-34-1): the rewritten body never checks or dispositions AC-4's maintainer-weeks figure against CAP-34's sibling kill-criterion KC-34-1 (>0.5 mw/cycle is dropped) \u2014 no mention of KC-34-1 anywhere in the body, and no stated exemption reasoning either.",
+  "Visionary 'The answer is already recorded' section: the Flathub/#579 contradiction with docs/standards-adoption/10-desktop-and-housekeeping.md's 'Do not pursue Flathub' finding is not surfaced anywhere in the rewritten body \u2014 the review said #583 is where that conflict should at least become visible even if fixed elsewhere, but the body only reconciles the Debian/(/opt) finding, not the Flathub one."
+ ],
+ "610": [
+  "Adversarial finding #5 (merge/supersession rule): the review flagged that #610, as a child of #556, inherits the sibling rule that if #311/#323's REPLAN prefers absorbing this generalization, #610 merges there with lower number winning \u2014 and that #610's own body never states this so a reader scoped to #610 alone can't know the ground can move. The rewritten body still never restates this inherited merge-risk clause anywhere (not in the YAML frontmatter, Boundary notes, Consumers, or elsewhere) \u2014 it is neither reflected nor explicitly declined."
+ ],
+ "612": [
+  "ordering_after in the yaml metadata block is still just [314] \u2014 both reviews (adversarial Finding 1, HIGH; visionary 'Concrete gaps' bullet 'ordering_after: [314] omits #451/#323') explicitly asked that the dependency on #451/#323 be encoded in the machine-readable ordering_after field, not just narrated in prose, precisely so a scheduler can't pick up #612 before #451 lands. The rewritten body adds extensive prose about #451 being 'designed second client' but never adds 451 or 323 to ordering_after, and gives no explicit reasoning for declining to do so."
+ ],
+ "622": [
+  "Visionary finding 3 (semantic profile extension to ElementType, explicitly flagged by the reviewer as 'if only one idea here is adopted, adopt that one') is neither reflected in the rewritten body nor visibly dispositioned. The body's disposition section only addresses/declines the kernel-feature hoist (finding 1) via 'reported onward'; AC-2 now asks for prose 'semantic basis' per row, a much lighter, non-machine-checkable substitute, but the body never acknowledges or declines the machine-readable ElementType-profile proposal itself."
+ ],
+ "619": [
+  "visionary 'The silent loss already in the tree': finishImport already silently drops SigGen elements today with no report; reviewer suggested fixing/routing that through #556's shared report as a first, lower-risk validation of the contract. Body never mentions this existing defect or dispositions the suggestion anywhere.",
+  "visionary 'KC-29-1's fallback already half-exists': the .dig\u2192Digital-Verilog\u2192Yosys-JSON\u2192JLS path via existing NetlistImporter was proposed as a documented escape recipe/differential oracle to ship now and de-risk the kill criterion. Body's Boundary notes touch KC-29-1 only to resolve the 1.5x-band arithmetic question (adversarial finding 4) but never mentions or dispositions the Yosys-path suggestion."
+ ],
+ "635": [
+  "Visionary review's internal-signal/probe suggestion (main body, 'The third: the value domains do not meet' section) \u2014 that -t/expectations bind only top-level InputPins and that JLS's existing probe mechanism (BatchSimulator.findProbes, VCD-only) could give internal-signal Digital test assertions a home \u2014 is neither adopted (AC-2 still scopes resolution to 'the imported circuit's ports' only) nor explicitly declined with reasoning anywhere in the rewritten body."
+ ],
+ "652": [
+  "Both reviews flag `band_mw: \"1\"` as stale for the corrected scope (adversarial finding #5: 'unbandable until #642 pins N and #644/#652 stop disagreeing'; visionary 'Banding' section: reprice as TableModel+JTable swap shared with #644, addInput change, bounds policy class). The live body's yaml block still reads `band_mw: \"1\"` verbatim, with no re-banding, no blocked marker, and no comment anywhere in the body acknowledging the estimate needs revisiting."
+ ],
+ "656": [
+  "Visionary review 'Reframed' semantic-landmine paragraph: TruthTable.react leaves outputs unchanged on no-row-match (issue #52), so a partial table holds state while a synthesized two-level network drives a definite 0 \u2014 visionary flags this as load-bearing, requiring #655 AC-2's don't-care rule and #872 AC-2's state-holding-element registry to classify TruthTable. The rewritten #656 body never mentions this state/statelessness distinction or the #872 cross-issue classification implication anywhere.",
+  "Visionary review's proposed AC-6 (the netlist handed to NetlistImporter should be a value type, not parsed JSON, defining the 'hdl.importer' input contract docs/extension-points.md lists as 'to be defined', shared with #653/#62) is not reflected or explicitly declined in the rewritten body \u2014 AC-5 only references '#653's two-level netlist builder ... calling #62's shared generated-netlist entry point' without addressing the value-type-contract reframing or dispositioning it."
+ ],
+ "675": [
+  "Visionary reframing 3 (stderr allowlist file, e.g. scripts/wayland-known-stderr.txt, so the exception census becomes a ratcheted/regenerable baseline rather than one-off prose) is neither adopted nor explicitly declined anywhere in the body \u2014 AC2 still just names stack-trace-free toolkit warnings as a known-benign class in prose, with no allowlist mechanism or reasoning for omitting one."
+ ],
+ "681": [
+  "Visionary Reframing 3 (\"do not mint a second result vocabulary; adopt the grading harness's PASS/FAIL/UNRUN algebra\") is not reflected or dispositioned anywhere in the rewritten body: the taxonomy still ships as its own invented four kinds (exit-nonzero/no-record/missing-artifact/unknown) with no mention of the grading harness's PASS/FAIL/UNRUN vocabulary, #350 \u00a77's Open Question 1 (dedup between two result vocabularies), or any explicit decision to keep vs. reject adopting the grading side's algebra."
+ ],
+ "674": [
+  "Adversarial finding 1 (Critical): #350's same-day comment says #674 'should not land a description format' pending an owner-authored maintainer decision on Open Question 1, and recommended an explicit blocked label. The rewritten body neither adds a blocked/on-hold marker nor references that escalation comment or requires maintainer sign-off \u2014 it simply asserts in prose ('the receipt vocabulary is owned by #350 and consumed by #369, so there is no format-ownership race') without any owner-authored decision comment being pointed to.",
+  "Adversarial finding 2 (High): the specific ask to replace the self-certifiable OQ1 checkbox with a hard precondition (an owner-authored decision comment on #350) is not reflected in the new acceptance criteria \u2014 there is no AC requiring maintainer sign-off before the format is treated as stable."
+ ],
+ "691": [
+  "visionary Reframe 3 (text-first/batch rendering): the review argues the inspector output should be a deterministic text artifact under docs/batch-interface.md rather than GUI-only, citing tension with #689 AC-4's 'not constructed in headless/batch runs' and grading-integrity goals. The rewritten body never states whether the pulse/chain rendering is GUI, text, or both, nor explicitly declines the text-first recommendation \u2014 this reframe is neither adopted nor dispositioned anywhere in the body."
+ ],
+ "684": [
+  "Visionary Reframing 2: the provenance-node API shape (`record Provenance(emitter, firedAt, delayConsumed, producer)`) meant to give #684 and #689 one resolution path \u2014 not adopted in the rewritten AC-1/AC-3 resolution mechanics, and not explicitly declined anywhere in the body.",
+  "Visionary Reframing 3 (reveal primitive): the specific call to resolve the JScrollPane-vs-Viewport ambiguity ('reveal belongs at the Viewport layer, panning only, zoom out only if needed') is not addressed \u2014 AC-2 just says 'scrolls the flashed element into view' without naming a mechanism.",
+  "Visionary Reframing 3: the recommendation to build an ElementId\u2192Element index on Circuit as a named, reusable deliverable (for #688/#689/collab/#78) is not mentioned in the body.",
+  "Visionary 'One risk the issue does not name': the pedagogical hazard that the flash points at the last (least informative) gate on a reconvergent glitch, with the suggested mitigation (one line of status text + a disabled 'why did this change?' affordance) is neither adopted nor explicitly declined."
+ ],
+ "690": [
+  "Visionary review's 'Ordering' section argues #690 should land FIRST in the C524 sequence (ordering_after should point to #686/nothing, not #687) so the ratchet has a concrete number to enforce and no report is emitted anonymous. The rewritten body's yaml still has `ordering_after: [\"TASK-C524-2\"]` unchanged, and no part of the body (Outcome, ACs, or Boundary) mentions or declines this reordering recommendation \u2014 it is neither adopted nor dispositioned."
+ ],
+ "694": [
+  "visionary review 'Sequencing, and the demand question' section: argues no instructor is named anywhere in #502/#525/#694 and recommends gating the speculative four-platform-adapter surface on demand ('let demand decide the rest') rather than building ahead of a named user, consistent with the project's stated pattern (i18n, #212, LTI). The rewritten body narrows to one platform (Gradescope) per reframing 2, which is partially responsive, but never names an instructor/demand signal or explicitly declines the demand-gating argument anywhere in the body.",
+  "adversarial finding 6 (Low): GitHub's native issue-relationship API sees #694 as unowned (get_sub_issues on #525 empty, get_parent on #694 null) despite prose declaring part_of_feature: 525 \u2014 not addressed in the rewritten body, though the review itself flags this as a repo-wide pattern not scored heavily against #694 specifically."
+ ],
+ "705": [
+  "adversarial finding 6 (Medium): the estimate-marginality caveat is not reflected anywhere \u2014 band_mw stays '0.5-1' and ordering_after stays '[\"TASK-C526-1\"]' with no note that the real chain (#524\u2192#701\u2192#705, with #524 itself blocked on open #369/#466) makes the estimate marginal-only; body/boundary sections never mention this dependency depth or caveat it."
+ ],
+ "701": [
+  "Visionary #2 (annotation anchor): the rewritten body defers per-file annotations to TASK-C526-2/#703, but never dispositions the reviewer's specific sub-finding that the starter template must mandate plain-text `.jls` saves (e.g. via `-savetext`) for any future line-anchored annotation to be meaningful \u2014 this requirement is not mentioned anywhere in the issue body or Boundary section.",
+  "Visionary #5 (digest pinning expiry): the body explains digest pinning for caching/reproducibility but never addresses the reviewer's concern that a template-frozen digest becomes an unpatchable fossil against untrusted student-input parsing \u2014 no mention of asserting the CLI contract version, failing on mismatch, or a documented/Dependabot-visible refresh path."
+ ],
+ "712": [
+  "Visionary 'Explicitly disregarded' section, AC-4 item: reviewer asked to keep the byte-identity test but drop the claim that it 'retires determinism risk' as a CAP-24 AC-2 share, since text emission over stable names has no real cross-platform variance (the real risk is #536's font metrics). The rewritten AC-4 still labels itself '(CAP-24 AC-2 share)' unchanged, with no disposition \u2014 neither adopted-with-caveat nor explicitly declined.",
+  "Visionary 'seam is the emitter family, not the print renderer' section: reviewer raised that a versioned/documented compatibility contract is needed for the emitted .tex once it lands in student-facing course repos (analogous to the VCD/-t grammar freeze in docs/batch-interface.md), because a later symbol-mapping change would silently churn every author's diffs. The rewritten body's AC-3 documents the CLI flag mapping but nowhere addresses format-stability/versioning for the emitted .tex content itself \u2014 this point is neither reflected nor visibly declined anywhere in the body."
+ ],
+ "716": [
+  "Visionary review's 'Ordering: this task should not be first' section argued the RunTrace/WaveJSON-writer core (CI-verifiable, no display needed) should be built before the GUI selection gesture, inverting #716/#718's ordering. The rewritten body keeps `ordering_after: []` unchanged and contains no discussion, adoption, or explicit rejection of this reframing anywhere in the body."
+ ],
+ "724": [
+  "Adversarial finding #1 (HIGH): issue still does not conform to scientific_task.md template (no tier:, evidence_commit:, blocked_by/blocks arrays, Observations/Hypothesis/Predictions/Interface&Data Contract sections) \u2014 the rewritten body keeps the same non-conforming Outcome/Acceptance-criteria/Boundary shape with no acknowledgement or explicit decision to retain the legacy format."
+ ],
+ "719": [
+  "Visionary 'Reframing B: the score vector is the wrong noun to freeze' (verdict-envelope {pass|fail|error|skipped} + counterexample presence should be what's frozen, not a raw score scalar, citing lf-04-formal-and-grading.md's don't-care semantics and batch-interface.md \u00a71's status-3/stdout-parse-error blind spot) is not reflected or explicitly declined anywhere in the rewritten body \u2014 the canonical schema adopted is still `(student, test, score, max)`, a pure score vector, with no mention of verdict/status fields or the parse-error blind-spot the reviewer specifically raised."
+ ],
+ "725": [
+  "adversarial finding 1 (blocking precondition): the rewritten body never mentions or dispositions CAP-24 (#505) Open Question 1 / the absence of a REPLAN comment adjudicating ANSI/IEEE-91-vs-IEC before filing \u2014 it proceeds on the recorded default without addressing whether #505's blocking-filing precondition was ever resolved or explicitly waived"
+ ],
+ "732": [
+  "Visionary 'An alignment win the issue misses': suggested publishing the ARCHITECTURE.md:355 revisit-trigger threshold (e.g. 'below 10 kcycles/s on the #202 golden's CPU') on the same page as the perf numbers, turning the doc into a live design instrument. Not reflected in the rewritten body and not explicitly declined anywhere.",
+  "Adversarial finding 8 (Low, process): part_of_feature/parent relationship is only in freeform YAML, invisible to GitHub's native issue-graph queries (has_parent:false, get_sub_issues:[]). The rewritten body still only encodes part_of_feature in a YAML block with no native GitHub sub-issue link and no comment addressing/declining the gap."
+ ],
+ "749": [
+  "Visionary review \u00a74 (\"SVG is the wrong physical carrier\"): argued the embossable deliverable must be a page-sized PDF at exact physical dimensions (citing #536's deterministic PDF renderer, AC-3, no SVG\u2192PDF conversion), keeping SVG only as an inspectable/lintable intermediate, because print paths default to 'fit to page' and silently void the physical-scale guarantee. The rewritten body's AC-1 and AC-2 still describe the exported/decomposed artifact purely as SVG with no mention of PDF output, an exact-scale print guarantee, or the fit-to-page rescaling risk \u2014 the finding is neither adopted nor explicitly declined anywhere in the body."
+ ],
+ "750": [
+  "Adversarial finding #4 (Medium): the chain #750\u2192#749\u2192#747 depends on 'the registry' from #747, which per ARCHITECTURE.md as of HEAD does not yet exist (issue #78 introduces it) \u2014 a dependency missing from #750's ordering_after and CAP-26's blocking graph. The rewritten body's ordering_after is still just [TASK-C546-2] and neither adds #78 nor explains why it's a non-issue (e.g. naming collision with #542's registry) anywhere in the body or notes.",
+  "Visionary 'seam I would cut differently' (one invocation \u2192 N artifacts \u2192 one manifest as a reusable job abstraction, not a bespoke accessible-bundle mode, serving #540/#536 and the autograder trio as consumers 2 and 3): only half-adopted. The manifest schema is kept generic per the implementer notes, but the CLI is still built as a single bespoke `-accessible-bundle` flag rather than the generalized multi-artifact job seam the reviewer proposed; the body doesn't explicitly accept or decline the generalized-seam framing itself."
+ ],
+ "754": [
+  "Visionary review Problem 3 (\"a mapping file is an assertion, not a derivation\") \u2014 proposed binding evidence at the point of the test via a `@Criterion` annotation read from compiled test classes/surefire output, so drift becomes structurally impossible rather than test-detected. The rewritten body still describes the ledger (docs/accessibility-conformance-report.md) as a hand-maintained typed-field dataset with no mention of annotation-based derivation, no discussion of the drift-seam risk, and no explicit reasoning for declining the reframe."
+ ],
+ "752": [
+  "Visionary review's 'gap the issue does not consider: inbound content terms' \u2014 CONTRIBUTING.md:139 requires all contributions under GPL-3.0-or-later with no inbound path for CC-BY content, so a CC-BY/CC0 outbound license (which the rewrite adopts) contradicts the inbound agreement once outside lab authors contribute. The rewrite addresses the sibling point (naming a university/institution as rights holder where holder != author) but never mentions or dispositions the CONTRIBUTING.md inbound-terms contradiction anywhere in the body."
+ ],
+ "765": [
+  "visionary 'Second reframing' section: the recommendation to promote #171 (SPDX/REUSE) as the mechanism for AC-4, and specifically to settle the repo's own GPL-3.0-only vs GPL-3.0-or-later identifier dispute (flake.nix/pom.xml vs CONTRIBUTING.md/README.md) as a prerequisite before any kit license claim is made \u2014 not reflected or dispositioned anywhere in the rewritten body; AC-4 requires an SPDX-style content license but never touches the code-license identifier conflict the review says undermines 'both are stated'.",
+  "visionary concrete recommendation 5: keep #517 PF-4's Donzellini-mapped pack as the one canonical in-tree, owned kit alongside the registry of external kits \u2014 not mentioned or explicitly declined anywhere in the body."
+ ],
+ "769": [
+  "Visionary review, section 'One thing the trio never asks': the point that a kit leaving the repo needs to be a single verifiable artifact (zip+manifest, checksummed/attested via existing SHA256SUMS/cosign machinery) validated before an instructor opens it, is neither adopted into an AC nor explicitly declined anywhere in the rewritten body \u2014 the body only covers in-tree/directory validation (AC-1 covers a CLI verb runnable by a third-party author, but not artifact packaging/attestation of the kit itself)."
+ ],
+ "764": [
+  "visionary 'Where I disregard the stated criteria' (AC-1 reframe): recommended structuring the Examples surface into categories (Combinational | Sequential | FSM | Datapath | Showcase) with a few recommended items plus a 'More examples...' browser link, arguing a flat \u226510-item list is itself the conceptual-load violation K9 forbids. The rewritten body's AC1/AC6 keep a flat, index-ordered list (rendering whatever #766's index rows contain in `order`) with no mention of category-grouped presentation or a curated top-level subset vs. full-browser split, and no explicit statement that this is deferred to #766 or declined.",
+  "visionary 'The alternative I considered and would run alongside': proposed wiring Tutorial.PAGES entries to an 'Open this circuit' button bound to the same OpenExampleAction, and giving each example a resources/help/ topic (reusing HelpTopicsTest's link checker) instead of a parallel metadata format in #768, explicitly framed as something to do 'rather than choose between the two.' The rewritten body adds a Help-menu pointer beside Tutorial but does not address wiring Tutorial's own pages to OpenExampleAction, nor whether caption/exercise content lives in resources/help/ vs #768's separate metadata rows -- no adoption or explicit decline with reasoning appears anywhere in the body or boundary notes."
+ ],
+ "772": [
+  "Adversarial #7 (effort band doesn't price external-dependency wait): band_mw stays '0.5-1' unchanged in the rewritten body's yaml block, and no text splits the engineering deliverable from clock-time-bound external review or otherwise disposes of this finding.",
+  "Visionary section 3 (ship 'jls --check-kit'/'jls --new-kit' as CLI flags in the binary so outside authors get the checker without a checkout): not adopted (no CLI-flag AC) and not explicitly declined with reasoning anywhere in the body; body only references 'jls kit verify' (per #769) without addressing the reframing toward binary-shipped self-service tooling."
+ ],
+ "770": [
+  "AC3's runtime conditional ('resolves against #548's Examples set when it exists, and degrades ... when not yet present') is carried into the rewritten body essentially verbatim. Both adversarial finding 3 and visionary's 'AC-3's conditional dissolves if there is one catalog' section flagged this as a gameable/undefined criterion and recommended naming a concrete seam or declaring one classpath-enumerated catalog with no fallback branch. The rewritten body neither adopts that fix nor explicitly declines it with reasoning anywhere (not in AC3's text, not in the Outcome/Boundary paragraphs)."
+ ],
+ "778": [
+  "Adversarial finding 5 (performance citations route through open, unshipped #512/#560): body's new bullet says perf numbers 'cite #512 / #560 rather than being measured... here' but never dispositions the actual problem raised \u2014 that #512/#560 are still open/unshipped, making any such citation unreproducible until they land \u2014 and `ordering_after` still lists only TASK-C588-1/TASK-C588-2, not #512/#560, despite the review's explicit recommendation to add them or state citations must be deferred."
+ ],
+ "780": [
+  "Adversarial Finding 4: undefined shorthand 'K9' and 'band_mw' \u2014 the rewritten body still uses 'K9 holds, CAP-27 KC-27-1' in AC-2 and keeps 'band_mw: 1-1.5' in the YAML header, with no glossary added and no disposition (accept/decline) recorded anywhere in the body for this specific finding."
+ ],
+ "783": [
+  "Visionary review's opening finding \u2014 the contradiction between #781/AC-1 (paper must be self-contained enough to read as a PDF with no repository access) and AC-3 (citing a test class/method gives a no-repo reader nothing to check) \u2014 is never mentioned or dispositioned in the rewritten body. The visionary's concrete fix (ship a `--verify-contract`/`scripts/verify-guarantees.sh` mode so a reader can run a pass/fail check against their own build) does not appear anywhere; the body's register+enforcer design still leaves a PDF reader with only a citation to trust, not a runnable check."
+ ],
+ "785": [
+  "visionary review's Reframe 3 (CITATION.cff + Zenodo release hook as a near-zero-cost, unblocked artifact that delivers #591's 'citable' outcome independently of the venue-note chain) is never mentioned, adopted, or declined anywhere in the rewritten body \u2014 the disposition text only addresses the JOSS-default and registration-funding reframings, leaving this material recommendation undispositioned."
+ ],
+ "786": [
+  "Adversarial finding #3 (effort estimate not credible for scope): band_mw is still \"0.5-1\" in the rewritten body's YAML front-matter, unchanged from the original. Even though scope was somewhat narrowed (no related-work section now, decoupled from #588/#589), the body still adds new engineering work (CI-gated artifact lane, digest-pinned container appendix, manifest, named external review with recorded substantive change) without re-estimating or explicitly declining to re-estimate. No visible disposition of this finding anywhere in the body."
+ ],
+ "787": [
+  "Adversarial finding 5 (no reviewer/adversarial check on the D10 justification's judgment calls, with recommendation to require a stated counterfactual and/or a second reviewer's sign-off) is not reflected or dispositioned anywhere in the rewritten body \u2014 the four required fields (path/cost/beneficiary/alternative) address unfalsifiability but not the single-author-with-no-adversarial-check risk that was the finding's core point.",
+  "Adversarial finding 6 (band_mw estimate likely underscoped, revisit once D10 is defined) is not addressed; the estimate was instead lowered further (0.5mw -> 0.25mw) with no stated rationale tied to the now-reduced, catalog-row-only scope."
+ ],
+ "797": [
+  "Visionary review's 'Ground truth' section identifies src/jls/tutorial/{AornotB,AornotBprobe,halfadder,fulladder,counter,signext}.jpg (referenced from tutorial1-4.html via jls.Tutorial) as 'the actual rotting screenshot corpus' that neither #586 nor the original #797 named. The rewritten body's AC-1/AC-2 scope remains 'README or in-jar help' only (plus the deferred hosted manual) with no mention of the tutorial dialog or src/jls/tutorial/**, and there is no visible disposition (accepted or declined) of this specific finding anywhere in the body or implementer notes."
+ ],
+ "830": [
+  "Adversarial finding #5 (success path leaves #333 stale): the rewritten body never addresses updating or commenting on #333's own quoted 'remains unverified' text if/when the determinism gate succeeds \u2014 no AC, boundary note, or explicit disposition anywhere in the body touches this, even though the rest of the review's substance (AC-2 citation fix, advisory/promotion tension, scope honesty) was clearly absorbed via the visionary rewrite."
+ ],
+ "842": [
+  "Visionary 'Widen the run, not the task': recommended taking #370's \u00a74 invariant-3 editor per-edit-cost/startup-time before-baseline in the same instrumented run on the same fixtures, to avoid a second measurement task later needing its own fixture-provenance argument. The rewritten body's AC-1\u2013AC-8 and Method section make no mention of editor per-edit cost, startup time, or invariant 3 \u2014 the suggestion is neither adopted nor explicitly declined anywhere in the body."
+ ],
+ "844": [
+  "Visionary Reframe 1 (\"one site seam, not one paragraph per page\") \u2014 the proposal to build a single in-tree site/ publishing layer with one shared install/scope partial consumed by #844, #551, and #519 is not adopted, mentioned, or declined anywhere in the rewritten body; the body still frames this as a per-demo-page footer partial owned solely by #844/#573, with no disposition of the cross-issue consolidation idea.",
+  "Visionary Reframe 3 (\"ship the funnel before the demo, on #551\") \u2014 the suggestion to land the scope-statement+install-link on #551's already-buildable gallery first, as a cheap measured experiment ahead of #572/#573/#841, is neither adopted nor explicitly declined in the body or boundary notes; the body proceeds with the original demo-page-footer plan without addressing why the #551-first ordering was not taken."
+ ],
+ "855": [
+  "Visionary Reframing 1: proposed making the reusable artifact an in-tree AppStream metainfo file (product-metadata source shared by winget/Homebrew/Flathub/AppImage) instead of a winget-specific emitter, and explicitly listed AC-4's CAP-27/#511 dependency under 'What I would disregard'. The rewritten body still sources listing metadata from #580's shared descriptor / CAP-27 (#511) and gates it via ordering_after_by_criterion AC-5:[511], with no mention of AppStream/metainfo anywhere and no stated reasoning for declining that reframing."
+ ],
+ "864": [
+  "Visionary review's 'out-of-the-box alternative' section (ship packaging skeleton via contrib/debian/ + docs/packaging-for-distributions.md instead of pursuing archive inclusion) is neither adopted nor explicitly declined anywhere in the rewritten body \u2014 no AC or Outcome text mentions a packaging-skeleton alternative, contrib/debian/, or a decision to reject that route."
+ ],
+ "868": [
+  "Adversarial Finding 1 (High): recommended adding an explicit GitHub blocking relationship (sub-issue/blocked-by) on #866 and #867, not just a prose ordering_after note. The rewritten body's YAML `ordering_after` field is more specific now (names docs/positioning.md and docs/release/README.md instead of just issue numbers) but is still a prose/YAML annotation, not a structural GitHub blocking relationship \u2014 the finding is neither implemented nor explicitly declined with reasoning anywhere in the body."
+ ],
+ "862": [
+  "Adversarial Finding 1 (ratchet-exemption lineage question: was CAP-34/#582/#862 exempt from #508's 'no new tier:feature/tier:task until two capstones close' rule, and why) \u2014 not mentioned or dispositioned anywhere in the rewritten body.",
+  "Visionary Reframing 1 (build a generic append-only 'metrics ledger' covering scorecard/mutation series too, rather than a downloads-only collector) \u2014 not adopted and not explicitly declined; body stays downloads-only with no reasoning given for rejecting the broader scope.",
+  "Visionary Reframing 4 (bind the series to a concrete decision \u2014 which artifacts in the wide install matrix are dead weight \u2014 and record that next to the data) \u2014 not adopted into AC-5's provenance note or elsewhere, and not explicitly declined."
+ ],
+ "873": [
+  "Visionary section 'The reframing: a fourth disposition, LOWERED, and a conformance rig' (point 1): proposes adding a first-class 'LOWERED' disposition to the four-bucket policy model (exported/skipped/topology/rejected) to hold compositional desugars like FieldExtend (and possibly RegisterFile), so the IR-statement-kind tax isn't paid for elements that are just rewrites. The rewritten body absorbed the *substance* of the desugar approach (AC-3's decomposition into BitMapStatement/ReplicateStatement/ConstantStatement) but never mentions the LOWERED-disposition proposal itself, nor explicitly declines it with reasoning anywhere in the body or machine block.",
+  "Adversarial finding #6 (minor/process wrinkle): the part_of_feature YAML staleness on #292/#492 vs GitHub's native parent links is not mentioned or dispositioned in the rewritten body \u2014 low severity, and the review itself labels it 'not a defect in #873's content,' so this is a minor gap rather than a blocking one."
+ ],
+ "874": [
+  "Visionary review's headline Reframing A (recast the bundle as a registry sweep over a catalogued `figure.exporter` seam, modeled on `hdl.exporter`/`HdlExporter`, rather than a hardcoded four-way composer) is neither adopted nor explicitly declined with reasoning anywhere in the rewritten body \u2014 the body still describes composition as four named back ends (#536/#537/#538/#539) with a fixed count of four artifact kinds, the exact shape the reframing argued against, and gives no acknowledgment of the registry alternative or why it was rejected."
+ ],
+ "884": [
+  "visionary review, 'Reframing 2: the right seam is #468, and it is already filed and unblocked' \u2014 the review's core concrete recommendation ('change ordering_after: [356] to [468]', route the fingerprint through NetPartition/#468 rather than any save-format seam) is neither adopted nor mentioned anywhere in the rewritten body. The body does reject #356 (addressing reframings 1 and 3 via the Ordering section's rationale), but substitutes a third approach (reuse of `jls -export` + Yosys) without ever discussing or declining the #468/NetPartition alternative; #468 is absent from the issue's `related` list and from the Ordering/Boundary sections even though 872 and 356 are both discussed there."
+ ],
+ "567": [
+  "Both reviews independently flagged that #567 is a new tier:feature issue filed one day after #508 recorded a 'planning ratchet: no new tier:feature/tier:task until two capstones close' (adversarial finding #5; visionary 'Register' risk). The rewritten body never states whether two capstones closed, why this filing is exempt, or otherwise dispositions the ratchet conflict anywhere in AC text or Notes \u2014 the word 'ratchet' does not appear in the body at all. This is neither fixed nor explicitly declined with reasoning."
+ ],
+ "412": [
+  "Visionary \u00a75 'Vocabulary vs. registry': routing trusted in-process construction through ElementVocabulary's 34-token allowlist (rather than the total ElementRegistry) means a first-party program can't place a type a first-party file may contain, and provider types (#212) can never appear at all. The rewritten body still routes construction through ElementVocabulary (O7, P5) with no acknowledgment of this critique or reasoning for keeping the untrusted-input allowlist on the trusted construction path.",
+  "Visionary \u00a77/step 5: geometry should be derivable (e.g. via SchematicLayouter) rather than demanded as explicit x/y from every caller, since hand-placing a ~580-element machine is exactly why jlsbuild.py needs replacing. The rewritten body's builder surface (place/element, \u00a77.4) is silent on this \u2014 no mention of auto-layout, geometry derivation, or an explicit decision to keep manual coordinates instead."
+ ],
+ "623": [
+  "Visionary review flagged that the transmission-line element is a simulating element owed a row (or recorded exemption) in ElementSimulationGoldenTest's completeness ratchet (test/jls/ElementSimulationGoldenTest.java:508-600) \u2014 the rewritten body never mentions this obligation or dispositions it.",
+  "Visionary review flagged that AllElementsRoundTripTest and HelpTopicsTest are part of the 'registration tax' checklist #618 must reconcile and that this golden task touches neither \u2014 the rewritten body does not mention or disposition this gap."
+ ],
+ "563": [
+  "Visionary Reframing B (put the combinational/sequential predicate on ElementType so HdlExporter's bucket policy, LayoutGraph's cycle detection, and #872's cone extractor share one definition instead of #872 becoming a second authority on 'combinational') is not reflected anywhere in the rewritten body, and is not explicitly declined with reasoning either \u2014 it's simply absent. Everything else from both reviews (dependency graph fix to #872, transitive #468\u2192#872\u2192#563 chain stated, AC-2 bound formula N_eval/N_view, AC-3 rescoped as integration-only with a named fixture test, AC-4 batch-interface stability contract obligations, TruthTable-element materialization adopting Reframing A with the addInput/addOutput blocker called out, and bit-parallel evaluation adopting Reframing C) is visibly absorbed into the body."
+ ],
+ "424": [
+  "Visionary's 'Right-size the seal' critique (sealing as a security argument is weak because ARCHITECTURE.md decision #222 already concedes external providers ship in-process with full JVM authority, so the seal doesn't defend against the threat it's credited with stopping) is neither adopted nor explicitly declined anywhere in the rewritten body \u2014 D7 is quoted verbatim with the original out-of-process rationale and #222 is never mentioned.",
+  "Adversarial finding 4 (task-size vs. sibling #324 estimate being optimistic given the actual acceptance-criteria surface) is not addressed or dispositioned anywhere in the rewritten issue \u2014 no comment on scope/estimate sizing appears despite the checklist growing rather than shrinking in the rewrite."
+ ],
+ "827": [
+  "Adversarial finding 6 (scope overlap with #825 on 'compiled in CI' ownership of the example project) is neither reflected nor dispositioned anywhere in the rewritten body \u2014 the new AC-2 describes a single literate doc/example but never cross-references #825's overlapping AC-3 commitment to a CI-compiled worked example for the same seam, so the ambiguity the review flagged (same artifact vs. duplicate maintenance commitment) remains unresolved."
+ ]
+}

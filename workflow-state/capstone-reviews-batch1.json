@@ -1,0 +1,141 @@
+{
+ "done": 17,
+ "results": [
+  {
+   "cap": "CAP-5",
+   "issue": 298,
+   "verdict": "ready-with-gaps",
+   "summary": "All eight required features (#315/#336/#339/#341/#349/#358/#365/#366) are filed and open with real task rosters beneath them, the closure is acyclic with no edge to a closed issue, and every load-bearing code claim spot-checked verifies exactly against master (Put sealed, 35 registry types with matching line cites, HDL-only export, footprint grep = 0). Gaps that must be dispositioned before the first slice is staffed: #349's central AC (text-file part library, IC-1) directly contradicts CAP-5 \u00a73/Decision 7 (Java-constants v1 table), and the \"ship #349+#365+#366 first\" demo slice contradicts the filed graph (#365/#366 are blocked_by #336, which owns AC-1 checks 5 and 7 that the slice claims). Staleness: the CAP still draws #315\u2192#358 though #358 withdrew that edge 2026-08-08, calls #322 a source though it is now blocked_by open #879 (an unpriced two-deep tail into #341), and three required features cite evidence commit 2d0ca9d which resolves on no branch (#493). Structural inconsistencies: native child #523 (isomorphism gate, 2.5-4 mw) is absent from requires_features and the cost sum, and the sap1-alu fixture set plus docs/realization-layer.md and docs/kicad-handoff.md have no owning issue; the hierarchical-subcircuit INOUT half of #339's narrowed scope is deliberately unfiled while the CAP's minimality prose still claims full bidirectional coverage. The pcbnew footprint-discard premise underpinning the whole reframe is flagged by #349 itself as needing a source citation. No external blocker exists; start now with the named fixes front-loaded.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-5.md"
+  },
+  {
+   "cap": "CAP-12",
+   "issue": 305,
+   "verdict": "not-ready",
+   "summary": "CAP-12's body is current and every code citation reproduces at master HEAD (= its evidence commit c5cee1b), but its redirected block-chain design exists nowhere in the filed children: FEAT-049 (#331) was never narrowed (still the full device/Newton programme, blocked_by #351, with its only filed tasks #465/#464 blocked on an unfiled \"FEAT-046b\"), so the conditioning-block palette \u2014 the capstone's central deliverable \u2014 has no filed owner. FEAT-048 (#368) is filed against the solver-trajectory design and, with #331, transitively puts FEAT-046 (#351) back on the critical path the capstone explicitly excludes; FEAT-014 (#318) redirected per-view geometry out of its own scope (task #383 unreconciled), and FEAT-047 (#367) dropped the real-time scalar, leaving step 1's two-view claim and step 2's \"in real time\" unowned. The admission-slice carve decisions (OQ-1/OQ-3) point at #303, closed 2026-08-03 as a duplicate of #308, which dropped all analog features. Dependency graph is acyclic with clean mirrors, but AC-5's architecture-of-record gate is unsatisfied and #331's own open questions block filing children. AC-6's comparison spike and AC-5's doc amendments can start today; everything else needs the child rewrites first. Report posted as one comment on #305 (issuecomment-5309037035).",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-12.md"
+  },
+  {
+   "cap": "CAP-9",
+   "issue": 306,
+   "verdict": "not-ready",
+   "summary": "CAP-9's body is well-evidenced (every load-bearing code claim re-verified against master, evidence commit resolves) and its feature-tier decomposition is clean \u2014 one required row, FEAT-053 (#369), filed and open. But the task roster beneath that row no longer covers the capstone's core outcome: #483 self-narrowed to timestamp-closure sampling and coverage only, leaving the refutation channel (-refute/-cex, COUNTEREXAMPLE/NOT_REFUTED, exit statuses) as explicitly unfiled \"phase 3\" roadmap, and the two reference corpora that KC-09-3/KC-09-4/AC-9 are measured over appear in no task's contract \u2014 so every filed child could close green while the capstone's \u00a71 walk-through remains impossible. The dependency chain has no dead edges or cycles, but CAP-9's DoD binds to #369's full close, which transits #316/#321/#347 \u2014 including work CAP-9's own minimality argument demoted as unnecessary \u2014 contradicting the ~10-16 mw cost band; and the cone extractor #872 has been re-homed to FEAT-004 (#336) with an undisclosed hard prerequisite #468, making CAP-9's homing references stale. Required before orchestration: file the refutation-channel task, contract the corpora to an owner, and resolve the #369-close binding (execute its own proposed FEAT-053a/b split or re-derive the DoD line); bookkeeping fixes for #872/#468 should ride the same edit. Report posted as one comment on #306 (issuecomment-5309030790).",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-9.md"
+  },
+  {
+   "cap": "CAP-10",
+   "issue": 308,
+   "verdict": "not-ready",
+   "summary": "CAP-10's required set (FEAT-045 #346, FEAT-047 #367) is filed, open, acyclic, task-covered (#462, #882), and uniquely owned \u2014 but it no longer composes to the capstone's promised outcome. Both features were rewritten in the 2026-08-08/10 review cycle to a strictly file-mode scope (-wav export + wav2t import, \"no new element, no live device, no invocation-time grant\"), leaving the capstone's title claim of live speaker/microphone audio, outcome steps 3-5 (live halves), AC-2's grant-refusal behavior, AC-5 entirely, the whole \u00a73 --allow capability architecture, and DoD items 2/3 with no owner anywhere in the tree \u2014 KC-10-2's fallback state is pre-triggered by scope. This is a parent-child conflict of theories (FEAT-045 argues the door apparatus is unnecessary; CAP-10 calls it the strategic security guard), and neither #508 nor #485-D7 settles it, so a maintainer decision plus a capstone body rewrite (rescope to file-mode, or file a new door-owning feature) must precede orchestration. Secondary staleness: CAP-10's evidence_commit 2d0ca9d is unreachable from any clone (branch deleted; grep claims re-verified true at master), the 7-10 mw cost band is ~4x above the children's current ~2 mw, AC-3's 209k samples/s citation no longer exists in #346, and #346 still names closed duplicate #303 as a serving capstone in its mermaid/DoD. After the rescope decision the surviving file-mode capstone would be ready and cheap.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-10.md"
+  },
+  {
+   "cap": "CAP-15",
+   "issue": 310,
+   "verdict": "ready-with-gaps",
+   "summary": "All six required features (#358, #339, #336, #315, #327, #359) are open, correctly cross-referenced (all list 310 in serves_capstones), the dependency graph is real and acyclic with no edges to closed issues, and every code anchor verifies on master at evidence commit 8288226. The decisive gap: CAP-15's AC-1 specifies a three-verdict multi-backend comparator with a per-run UNCONSTRAINED rate (which also gates the demoted FEAT-026 four-state decision), but its owner #359 was rewritten to a committed-trace two-layer oracle with a non-gating, skip-when-absent external leg and no third verdict \u2014 so every child could pass while the capstone's step 2 and its title promise (\"required behavioral witnesses\") fail, and #359 explicitly disavows the 6-12 mw band CAP-15's cost table still prints. Secondary gaps: #492 (the REJECTED-bucket work AC-3 depends on) is bound by prose only \u2014 absent from #315's requires_tasks and CAP-15's requires_tasks_exception, with only an unmirrored blocks edge; the CAP body misquotes three feature edges (stale F001\u2192F018, wrong #359 blocked_by, and risk 8 omits out-of-set prerequisite #363); and #339/#327 still pin the doomed 2d0ca9d evidence commit. Five of six features are startable immediately (#339 has no blockers; chain #315\u2192#336\u2192{#358, #327}); the G3 reconciliation REPLAN plus Open Question 2 only gate #359, which is last in every chain. Verdict: ready-with-gaps \u2014 start now, reconcile the CAP-15/#359 oracle contract before scoping #359.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-15.md"
+  },
+  {
+   "cap": "CAP-16",
+   "issue": 311,
+   "verdict": "ready-with-gaps",
+   "summary": "CAP-16's spine (#323/#451, plus #314/#315/#340/#369) is filed, open, acyclic, and its startable frontier (#315, #314, corpus assembly) is unblocked today; every load-bearing code citation verifies on current master and the evidence commit is a master ancestor. However, the capstone predates the 2026-08-04 dedup pass: required feature #342 is closed as duplicate of #62 (which serves 311 but retired the core-scale rubric and carries no course-circuit corpus, orphaning AC-6), and blocked_by still lists closed #320 (dup of #61; re-derives to {316,319,321,347}+#448). AC-3's machinery (vector generator, INCOMPARABLE verdict, dual-tool Logisim-headless parity harness) is asserted as FEAT-053 residual scope but appears nowhere in #369/#466, so every child could close while AC-3 stays unbuilt; the recommended first increment (Yosys bridge + KC-16-1 corpus measurement) has no filed issue, and #451 explicitly excludes it. Positives: the #349 spurious edge was already dropped on both ends, #323's fragment-codomain/XXE/corpus scope composes exactly to AC-1/AC-2/AC-4/AC-5, and no external prerequisite gates the default path (licence question gates only the never-started fallback). Verdict: start now; repair the five named issue-edit-sized gaps before orchestrating the AC-3/AC-6 phases.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-16.md"
+  },
+  {
+   "cap": "CAP-18",
+   "issue": 313,
+   "verdict": "ready-with-gaps",
+   "summary": "All eight required features and all eleven rung TASKs are filed, open, mirrored via serves_capstones:[313], acyclic, with no edge at a closed issue, and rung 1's first task (#603) plus the whole spine are startable now; task-tier ACs are strong and cover all five outcome steps, including the ngspice independent oracle (#623) the CAP thought was unscoped. The decisive gaps are that the CAP body is now behind its own children: #318 (FEAT-014, the largest cost row at 11-17 mw) remains in requires_features though #487/#616 explicitly disclaim any dependency on it; AC-7 cannot pass as written because #609 deliberately makes older readers refuse-by-name on constraints while #605 moved attributes to a sidecar; AC-6's examples/ corpus contains zero circuits; and the CAP's blocked_by is stale in two of five rows (#334 and #337 no longer gate anything, #468 is uncounted). The #367-to-rung-1 dependency has four contradictory owners (#367, #486, #605, #607), the 059/060 resequencing DoD item is unresolved (survives only as #487's unmirrored blocks:[490]), the #620 trace-row task is on-hold/unfunded while the CAP costs it as required, and evidence commits on #313/#487/#490 do not resolve on the default branch. All fixes are reconciliation edits (one REPLAN comment on #313 plus small child edits), not new decomposition, so implementation can start while they land.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-18.md"
+  },
+  {
+   "cap": "CAP-23",
+   "issue": 504,
+   "verdict": "ready-with-gaps",
+   "summary": "CAP-23's tree is complete (6 FEATs, 15 TASKs, all open, acyclic, no closed-edge dependencies) and the 2026-08 rewrites genuinely rescoped the children to the journal-first design, so work can start now on #678, #476, #684, and #698. The decisive gaps: P1-S0 (per-Simulator SimEvent.sequence counter) is a hard prerequisite named in #504's blocked_by that is still unfiled \u2014 and #476, which #688 orders after, contractually pins the static counter rather than fixing it; AC-1's HazardDiagnosisWalkthroughTest and its Layer-2/3 GUI-harness extension are unowned and unpriced; and #533's on-canvas signal-value-rendering prerequisite is unfiled. Two children contradict the capstone body as written \u2014 #696 ships three new react() canvas elements against #504's \"no new canvas elements, no save-format change\" row, and #535/#702 ship a beyond-horizon re-simulation fallback with a progress display against step 4's \"no re-simulation, no progress bar\". Bookkeeping is materially stale: the promised REPLANs pointing PF-0/PF-0b at #688 and the roster at the rescoped FEATs were never posted, the cost table (PF-1/2/3 at 3-4 mw vs filed 8-12 mw; PF-0 4-6 vs #688's 1-1.5) and mermaid graph (PF5\u2192PF123 edge is backwards vs #700-after-#680) contradict the tree, and evidence_commit 646d5ae8 is a sweep-slated branch checkpoint not on master (claims do resolve at master c5cee1b). All gaps are REPLAN/single-filing fixes, not re-decomposition; #704 (unfunded external-viewer export) needs moving out of the native tree or a pre-recorded waiver before close.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-23.md"
+  },
+  {
+   "cap": "CAP-26",
+   "issue": 507,
+   "verdict": "ready-with-gaps",
+   "summary": "All six required features (#542/#543/#544/#546/#547/#549) and their 17 tasks are filed, open, acyclic, and compose to the capstone outcome; every spot-checked code claim at evidence commit 646d5ae holds (installer jdeps gap, help alt/lang zeros, Trace.java mouse-only, strokeFor, caret contrast). Five gaps, none requiring re-decomposition: (1) PF-7 (Access Bridge) and PF-8 (help/Trace Level-A) remain unfiled, leaving capstone AC-7/AC-8 unowned despite PF-7 being funding-order position 1; (2) #731 is superseded-but-open with ACs contradicting #542's five-state WireState vocabulary, and #543/#877 ordering edges still point at it; (3) the shared CVD transform is double-owned as jls.core.ColorVision (#542 AC-4) vs jls.core.CvdSimulation (#876 AC-1) \u2014 an acknowledged open maintainer decision; (4) PF-4's tactile SVG hard-depends on CAP-24's #540\u2192#536 sink seam while the capstone machine block says requires_capstones: [] and its \u00a71 step 3 assumes the existing JFreeSVG path; (5) capstone-body staleness \u2014 OQ3's narrative-ordering authority is actually resolved in #747 (DIAGRAM Center), and #544's note about #737's spike apparatus is overtaken by #737's two-tier rewrite. PF-3/PF-4 also run through open external issues #316\u2192#380, which the orchestrator must treat as funded critical-path work. Start now in the capstone's own funding order, dispatching the five named actions first.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-26.md"
+  },
+  {
+   "cap": "CAP-28",
+   "issue": 512,
+   "verdict": "ready-with-gaps",
+   "summary": "The tree (4 FEATs, 9 TASKs, all open and natively linked) is acyclic with no edges to closed issues, all redirect claims (#442 no-band, #378 checkpoint-chain, #413 unblocked) verify against live bodies, and every load-bearing code/doc evidence claim checks out against current master c5cee1ba \u2014 so #413 and #726's scaffolding can start now. However, #554 AC-1's batch-mode run-record flag is unowned and directly contradicted by #726's no-src-change test-tree design; FEAT-C28-4 (#560) is inverted \u2014 its required core (packaged harness+invitation, capability-deficit table) has zero task coverage while both its tasks build the explicitly optional self-run head-to-head, and #740 plugs into a \"shared runner/adapter-descriptor contract\" no issue owns; the capability-deficit table (CAP AC-5) is orphaned by triangular assignment (#560\u2192#555, which never mentions it), #557 AC-1's PublishedNumberProvenanceTest is self-flagged as unowned, #555 AC-6/AC-7 have no task, and #732's mandated CLI end-to-end figure has no field in #730's schema under its own no-hand-typed-numbers rule. Task-tier bands sum to 5.5-10.5 mw vs the CAP's 4.5-8. All gaps are fixable by issue edits before the affected feature closes; none blocks the demo slice's first commit.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-28.md"
+  },
+  {
+   "cap": "CAP-29",
+   "issue": 513,
+   "verdict": "not-ready",
+   "summary": "Child specs are mostly high quality and every codebase claim verified against master, but the capstone body fails as an orchestration source. Two of its five ACs are unsatisfiable as written: AC-2 demands translated -t vectors while #562/#635 redesigned PF-5 as a direct reader against #466's verdict channel with no -t file emitted (correctly \u2014 the -t grammar has no expected-value production), and AC-3 demands round-tripping a .circ report that #556 correctly notes does not exist. The declared funding order is broken: the \"funded first, independent of PF-2\" demo slice #562 is blocked_by [556, 558, 466], with #466 (an unbuilt, out-of-capstone 9-15 mw verdict channel) absent from the capstone's ordering_after. Six open TASKs under the recipe FEATs #559/#561 still specify de-funded parser work (#621/#624/#626/#628/#633 self-recommend closure as superseded; #629/#631 remain full parser specs under a \"no parser ships\" feature), #558's task bands sum 6-9 mw against its 4-6 mw feature band (self-declared unresolved), and #558 AC-7 (invocation surface) has no owning task. Repair is a bounded editing/closure pass (rewrite CAP AC-2/AC-3 and funding order, add the #466 edge, disposition seven tasks, file the AC-7 task, reconcile bands); PF-1 (#556/#608) is startable immediately once that pass lands.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-29.md"
+  },
+  {
+   "cap": "CAP-30",
+   "issue": 514,
+   "verdict": "not-ready",
+   "summary": "CAP-30's tree is structurally complete (5 open FEATs matching requires_features, 14 open TASKs, acyclic dependencies, no edges to closed issues) and its task-tier code claims verify almost perfectly against master, but the layers contradict each other where it matters most. Capstone AC-5 (filtered-issues-view link) and AC-7 (independent rebuild + non-maintainer merge rights) are owned by no child; #568's mechanically-generated-shelf ACs are flatly incompatible with #823/#824's hand-curated-families design; #567 and #820 disagree on the chooser layout, diagnostics surface, and AC numbering \u2014 and PF-1/PF-2 are the first features in the capstone's own required order. Capstone AC-6 still demands an external element jar contingent on #212 while #569/#827 retargeted delivery to a jar-free SubCircuit/.jls walkthrough, and the capstone's PF-5 \"0.5-1 mw design-and-invite trial\" was reversed by #570 into a 4-7 mw full build, pushing children's summed bands (9-16 mw) to double the capstone's 4.5-8 band; #570's build chain also sits behind an undeclared cross-capstone gate on #592 (CAP-37). Fixes are a roughly one-day reconciliation editing pass, not new design; meanwhile #822, #825/#826, #828, #829, and #831's pilot are startable off the contradicted surfaces.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-30.md"
+  },
+  {
+   "cap": "CAP-31",
+   "issue": 515,
+   "verdict": "ready-with-gaps",
+   "summary": "Decomposition is thorough and every feature/task is filed, open, and natively linked, with code-level claims verified accurate against master; work can start immediately on three unblocked fronts (#648 minimizer, #566 slice A, #657 parity doc) plus the #468\u2192#872 chain for PF-1. Four AC-composition gaps mean all children could pass while the capstone fails: CAP AC-7's hazard-free cover is owned by no child, AC-2's StateMachine Expand-then-Collapse identity is architecturally unsatisfiable (#872 refuses state-holding elements and no issue owns FSM re-collapse), AC-5's one-analysis-verb decision is punted three inconsistent ways across #646/#651/#660 (#651 even cites a nonexistent coordination comment), and the CAP's output-don't-care refusal clause contradicts #648's documented fixed-at-0 default. Graph defects: #872 is triple-homed (native child of #563, YAML says #336, #306 says #563), the #62 shared-layout-entry-point promotion is double-described and zero-owned between #565 and #654, #660 is ordered after its own parent, and CAP-31's machine block lacks the requires_features/requires_capstones/requires_tasks_exception arrays CAP-09 carries. Cost band 8-13 mw is contradicted by task-band sums of 17-19 mw plus #872 (2-3) and unbanded #468; #566's own body records that its band undercovers its scope with the re-file decision parked on the CAP owner. Stale refs: #83 is a closed release-tag PR cited as the JEDEC/GAL path, and two tracked cross-issue edits (#306 third-consumer note, #642 expanded-bit-count arithmetic) remain unapplied. None of this requires restructuring before starting, so: ready-with-gaps.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-31.md"
+  },
+  {
+   "cap": "CAP-35",
+   "issue": 519,
+   "verdict": "ready-with-gaps",
+   "summary": "The tree (4 open native FEATs #584-587, 11 open TASKs #791-801) is acyclic with no edge to a closed issue, and its code evidence verifies almost perfectly against HEAD (Map.jhm 84\u219283, 95 font tags, PIXEL_DIFF_MIN record-only, Desktop unused, ElementType fields, image duplicates). Five gaps: #585's AC-2 resolver fallback tiers are self-declared unassigned scope with no owning task and an unpriced static-hosting (GitHub Pages) feasibility question; CAP AC-3's hosted \"Contracts\" root contradicts #585's deliberate single-homing decision and has no producer anywhere in the tree; #584's completed-migration ACs no longer compose from #793's rewritten opportunistic per-page scope (nobody owns \"migration complete\"); #795 is hard-blocked on two commitments (frozen alias-preserving topic-id table, shared search index) that #585 asks of #584 but #584's ACs never accepted; and cost bands are stale \u2014 task sums (~11-17.5 mw) run ~1.5x the capstone's 6-10 band, with #586 and #587 each exceeding their own bands. CAP AC-2's \"extended ElementType/PaletteEntry descriptors\" wording is also stale against the children's agreed live-instance design, and #799 narrows CAP AC-5's flag leg to code-span mentions only. Start now on #799, #791, #792, #794, #796, none of which touch a gapped AC; reconcile the named gaps before #585's later ACs and capstone closure.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-35.md"
+  },
+  {
+   "cap": "CAP-36",
+   "issue": 520,
+   "verdict": "not-ready",
+   "summary": "The tree is structurally sound \u2014 all 4 FEATs and 11 TASKs filed and open, no closed/redirected edges, no cycles, and every load-bearing codebase claim verified against remote master (exit codes still 0/1/2; all cited docs and golden tests exist). But the #588 subtree does not compose: no task delivers AC-1's conformance spec/matrix (docs/grading-contract-conformance.md \u2014 the ~2 mw band gap confirms it), and #774 declares itself publishable today with no gate, contradicting KC-36-3 and #588's own must-clear-before-publication disposition. KC-36-1's retraction mechanism is specified two incompatible ways (CAP AC-2's auto-pull vs #778's human-verified flag), #589 AC-6 (jls --guarantees) has no owning task, #776\u2192#778 transitively gates the grading-slice freshness apparatus behind CAP-23 #504, and #783 hard-orders after three demand-gated kits that may never land. The acknowledged CITATION.cff/DOI work remains unfiled, the CAP band is stale against #591's 2026-08-16 re-derivation, and #776's #504-gate decision is explicitly pending. All fixes are issue-text reconciliation; since CAP-36 is deferred per #508 with all prerequisites (#466/#300, #560, #524, #545/#548/#550) unstarted, the work is non-urgent but must precede promotion out of the defer set.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-36.md"
+  },
+  {
+   "cap": "CAP-37",
+   "issue": 521,
+   "verdict": "ready-with-gaps",
+   "summary": "CAP-37's tree (5 open FEATs #592-#596, 12 open TASKs #802-#813) is acyclic, points at no closed issues, and its ground-truth code claims are almost all exact at HEAD (5,852-line SimpleEditor, 179 Color. sites, bare-String OpRejected, Math.max WireNet folds, non-atomic submitAll all verified), with the entry-point tasks (#802, #806, #804) startable today. The decisive gaps: CAP AC-4's gesture-budget ratchet is owned for only 1 of its 4 corpus tasks and CAP AC-5's startup/per-edit regression half has no instrument and no owner; FEAT-593's Layer 3 has no owning task (and #805 mis-attributes it to #804) plus the declared submitAll-atomicity prerequisite is unfiled; #802/#803 double-own the funding-score column and the 4-bit-counter ratchet; FEAT-594 AC-2's MRU ranking is unowned after #808's deliberate re-cut. Staleness: the \"#381 first-run gate\" citation in #592/#802 points at an issue that now disclaims that scope (it moved to CAP-27's #550/#548/#545), #593 AC-8 still mandates the stopwatch protocol CAP AC-4 explicitly rejects, and CAP PF-5's semantic-token-layer prose and cost bands no longer match #596's rewritten residual-bucket shape. All fixes are issue-text edits or single new filings, not re-decomposition, so implementation can start on PF-1 now.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-37.md"
+  },
+  {
+   "cap": "CAP-39",
+   "issue": 888,
+   "verdict": "ready-with-gaps",
+   "summary": "CAP-39's tree is sound: the single required feature #322 is open with a real, acyclic, fully-filed chain (#878 -> #879 -> #322, plus unblocked child #391), the mixed-alphabet redirect is coherently reconciled on #344/#361 (both now honestly record serves_capstones: [] per the redirect), and every evidence anchor verifies (commit 8288226, maintainer comment 5227653907, roadmap section 3 keystone, keystone-c 8.1 baseline, batch-interface frozen clauses, 35/27 code counts at HEAD). Two substantive gaps: AC-5 asserts every element \"reports a [0,1] domain\" swept over ElementRegistry, but no domain-reporting API exists at HEAD and the only feature that would build one (#344) is explicitly not required and its absorption forbidden by KC-39-2 \u2014 it is a stale carryover of #361's integration criterion 2 and must be rewritten or dropped; and the capstone's own increment (three fixtures, goldens, k2000 benchmark harness \u2014 note riscv/build/k2000.jls is a generated artifact, not committed) is unfiled and unestimated, so all upstream issues could close with nobody owning AC-1..AC-4. Smaller items: #322's serves_capstones still lists closed #295 and omits #888 (its DoD notifications would skip this capstone), the #232-vs-#322 ownership adjudication of the representation migration is open on the critical path, and AC-4 is ambiguous on whether a flat benchmark passes. Start is viable now on the filed chain while these are fixed.",
+   "comment_posted": true,
+   "report_file": "/home/anadon/.claude/jobs/e68642b9/tmp/j99xga/capstone-reviews/cap-39.md"
+  }
+ ]
+}

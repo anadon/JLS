@@ -11,31 +11,29 @@ stage advances.
 |---|---|
 | 1. Review fleet: 605 open issues x 2 lenses (adversarial=Sonnet, visionary=Opus) | DONE — 1,210 `issue-NNNN.<lens>.finished.md` files in this directory |
 | 2. Completeness audit: 605 Haiku judges renamed every review `.finished`/`.incomplete` | DONE — 1 real truncation repaired (0409 visionary), 1 false positive (0426) |
-| 3. Fixer fleet: one Sonnet agent per issue rewrites the live GitHub issue per both reviews + purges in-content history; then a reconcile pass applies cross-issue dependency-edge fixes | IN PROGRESS — see `fixer-state.json`: `fix_done` (215) vs `fix_remaining` (390). Reconcile phase NOT started. |
+| 3a. Fixer fleet: one Sonnet agent per issue rewrites the live GitHub issue per both reviews + purges in-content history | DONE — 605/605. Authoritative state: `/workflow-state/fix-status.json` (chunked completion by a second session after the original run's journal was rolled back by a container restart; GitHub edits were durable) |
+| 3b. Reconcile pass: apply cross-issue dependency-edge fixes | PREPARED, NOT EXECUTED — 858 edits over 389 targets, ready as four self-contained workflow scripts in `/workflow-state/reconcile-chunks/rchunk-0[1-4].js`. CLAIM before running (commit a claim note, per the chunk protocol in the fix-phase history) to avoid two sessions racing. |
 | 4. Tracking audit: Haiku agent per issue enforces native sub-issue hierarchy (TASK -> FEAT -> CAP per designators), labels, milestones; emits `gh` scripts for what this environment cannot do | QUEUED |
 | 5. Capstone reviews: one Fable agent per open capstone (33 CAP-NN issues) reviews the full FEAT/TASK tree for readiness; reports to `capstone-reviews/cap-NN.md`, report-only | QUEUED |
 | 6. Final deliverables: comment-purge `gh` script, Project-board sync `gh` script, consolidated report | QUEUED |
 
-## Stage 3: how to continue the fixer fleet
+## Stage 3: state and what remains
 
-The workflow script is committed here as `fix-issues-per-reviews.workflow.js`
-(it contains the full per-agent prompt — read it; it IS the spec). The
-original run's journal cache is same-session-only, so a fresh session must
-re-scope instead of resuming: edit the script's `const ISSUES = [...]` to the
-`fix_remaining` list from `fixer-state.json`, then launch it with the
-Workflow tool. Do NOT re-run issues in `fix_done` — their GitHub issues are
-already rewritten; re-running would double-edit them.
+Fix phase is COMPLETE (605/605). The original per-agent prompt is preserved
+in `fix-issues-per-reviews.workflow.js` in this directory; per-issue fixer
+outputs live in `/workflow-state/chunk-results/chunk-0[1-9].json`; merged
+cross-issue edge edits (with requesting issue and rationale) are in
+`/workflow-state/reconcile-input.json` (389 targets, 858 edits).
 
-The Fix phase returns per-issue `other_issue_edits` (cross-issue dependency
-edge changes) and `superseded_comment_ids`. The 215 finished issues'
-contributions are already captured in `fixer-state.json`
-(`edge_edits_so_far`, 563 entries; `superseded_comments_so_far`, 623
-entries). A re-scoped run only reports these for the issues it runs, so the
-Reconcile phase and comment-purge script must MERGE the new results with the
-saved ones. Simplest: strip the Reconcile phase from the re-scoped script
-(return the Fix results), merge edge edits with `edge_edits_so_far`, group by
-target issue, then run the reconcile prompts (in the script) over the merged
-set as a second workflow.
+To finish stage 3, execute the four prepared reconcile workflows
+(`/workflow-state/reconcile-chunks/rchunk-0[1-4].js`) — after committing a
+claim. Caveat from the second session (in `fix-status.json`): the
+superseded-comment purge manifest is INCOMPLETE — fixer reports for the
+issues completed before the Aug-12 rollback were lost, so the comment-purge
+script (stage 6) must be built by direct audit: for each issue, list live
+comments and mark those fully superseded by the rewritten body (they carry
+changelog/REPLAN content the body no longer references). This audit can fold
+into stage 4's per-issue Haiku agents.
 
 Operational notes learned the hard way:
 - Container restarts kill workflows AND in-container watchdogs silently, with

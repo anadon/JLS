@@ -1,0 +1,61 @@
+# CAP-34 (#518) — Own the channels JLS can control
+
+## Capstone readiness review — 2026-08-16
+
+**Reviewed:** #518 body + machine block; native children #579, #580, #581, #582, #583; their tasks #849/#852–#854, #855–#857, #858–#860, #861–#863, #864–#865; referenced issues #443, #317, #134, #338, #511, #586, #508, #510. Code claims verified against GitHub `master` HEAD `c5cee1b` (2026-08-05) via a fresh shallow clone — the local checkout at `/home/anadon/Documents/code/JLS` is stale (July 28, pre-dating the standards-adoption docs the issues cite; see §4).
+
+**Machine-block note:** #518 carries no `requires_features` / `requires_capstones` / `requires_tasks_exception` arrays; its equivalents are `planned_features` (PF-A→#581, PF-B→#580, PF-C *new-unfiled*, PF-D *new-unfiled*, PF-E→#582) and `ordering_after: [#443]`. All findings below are read against those fields.
+
+---
+
+### 1. Decomposition
+
+**Two of five planned features are not filed.** PF-C (Maven Central publication of `io.github.anadon:jls`) and PF-D (GitHub Action Marketplace listing) are declared `new-unfiled` in #518's own machine block, and a full-corpus search confirms no issue anywhere owns either (the only "Maven Central" / "Marketplace" hits are #518 itself and unrelated CAP-21/CAP-185 issues). Both appear in the capstone's Outcome ("`io.github.anadon:jls` is resolvable from Maven Central"; "`uses: anadon/jls@v5` runs JLS as a GitHub Action") and in AC-1 and AC-4. **Every filed child could close and the capstone would still fail on its own Outcome and on AC-1/AC-4's Maven+Action legs.** The `pom.xml` coordinate (`io.github.anadon:jls`, with a real `<description>`) exists at HEAD, so PF-C's substrate is real — the issue simply doesn't.
+
+**Two native children are disowned by both the capstone and themselves.** #579 (Flathub go/no-go) and #583 (Debian go/no-go) are wired as GitHub-native sub-issues of #518, yet both declare `serves_capstones: []`, and #518's Constraints section explicitly excludes Flathub and drops Debian ITP from scope. The texts are internally consistent about *why* (both were redirected into decision-record features, mirroring each other), but the native hierarchy contradicts the declared roster: an orchestrator walking sub-issues executes five features; an orchestrator reading the machine block executes three filed + two missing. This parentage must be resolved one way (re-parent #579/#583 out of #518's tree, or amend #518 to name them as attached-but-out-of-band decision records) before orchestration, or scope and cost accounting diverge silently (see §4 cost bands).
+
+**Held tasks sit open inside the tree.** #849/#852/#853/#854 (Flatpak manifest/association/automation/store-page) are open sub-issues of #579, whose AC-2 puts them "on hold" pending the go/no-go — and #849's own body records the hold and `ordering_after: ["579"]`. Correctly self-describing, but they are indistinguishable from startable work in the native hierarchy; a hierarchy-driven orchestrator needs the hold surfaced structurally, not only in prose.
+
+**No double-ownership found.** #580/#581/#582 each declare `serves_capstones: [518]` and nothing else claims them; #511 (CAP-27)'s `blocks: [579, 580]` is a consumer edge, not ownership. #580's Decomposition table lists only #855/#856 while three sub-issues exist — #857 (TASK-C580-3, the shared cost/reach ledger) is missing from the parent feature's `planned_tasks` roster (minor bookkeeping gap; #857 itself declares `part_of_feature: 580` correctly).
+
+### 2. Acceptance criteria
+
+**CAP AC-2 vs. #856 AC-1: the winget evidence loop is conditionally unsatisfiable as written.** #518's Outcome promises winget installs "the same signed-or-not-yet-signed MSI," and AC-2 requires ≥3 consecutive releases with merged winget-pkgs PRs (counted after #443). But #856 AC-1 gates the `--submit` step on **both** (a) #443's promotion **and** (b) #134's SignPath secrets being set — an unsigned installer is never submitted. #134 is `blocked_by: [maintainer-decision]`, and its legitimate outcomes include "resolve unsigned-by-choice." Under that outcome, `--submit` never runs, #580 AC-2's evidence never accrues (its own text admits this: "#856's `--submit` step never running"), and CAP AC-2 is permanently unsatisfiable while the capstone's "signed-or-not-yet-signed" framing claims otherwise. Either #518 AC-2 must be made conditional on #134 resolving *enroll*, or #856's gate (b) must be revisited — one of the two texts is wrong about whether an unsigned MSI ships via winget.
+
+**CAP AC-4 has no owner for half its surface.** AC-4's winget and Homebrew legs are held by #855 AC-5 and #581 AC-4 respectively (both correctly source from CAP-27/#511's shared descriptor). Its Maven POM-description leg and its Action-screenshots leg belong to the unfiled PF-C/PF-D — nobody holds them.
+
+**Otherwise composition is good.** CAP AC-3 explicitly delegates the ≥4-release logging evidence to #582 AC-3 ("tracked there once, not restated here") — clean single-ownership; #582's AC-1–AC-5 fully cover the ledger + outreach + fail-loud logging. KC-34-1's measurement methodology composes precisely: #857 defines the ledger schema and threshold, #856 AC-2 and #860 append measured rows, #581 AC-5 and #580 AC-5 record cost per the same methodology. CAP AC-1's per-channel provenance-vs-byte-identity distinction is discharged for winget by #855 AC-3 (download-and-hash cross-checked against `SHA256SUMS-installers-*` **and** `gh attestation verify` — stronger than the CAP asks) and for Homebrew by #581 AC-1; its Maven/Action legs are again unowned.
+
+### 3. Dependency chains
+
+**Real and acyclic, but deeper and wider than #518 declares.**
+
+- Declared: #518 → `ordering_after: [#443]` (open). Verified real at HEAD: `release.yml`'s Windows x86_64/aarch64 and macOS legs are all `experimental: true` under `continue-on-error: ${{ matrix.experimental }}` (lines ~297–312), exactly as the gating rationale claims. #580, #581, #855, #858 all mirror the #443 edge correctly, and #443's `related` list mirrors back to 580/855.
+- **Undeclared depth:** #443 is itself `blocked_by: [317]` (FEAT-007, open — platform lanes as required checks), and #443's own block notes #317 does not carry the mirror `blocks` entry for 443. The true chain for PF-A/PF-B is #518 → #443 → #317, two open internal issues deep. Funded, acyclic, but the capstone's critical path is longer than its machine block shows.
+- **Undeclared external prerequisite on the demo-slice path:** per §2, CAP AC-2's evidence additionally requires #134 (SignPath OSS enrollment — an external program approval plus a maintainer custody decision with no ETA). #518 nowhere lists #134; it sits on the completion path of the capstone's own demo slice.
+- **Cross-capstone edge:** listing text for every channel sources from CAP-27/#511's shared description (per #580 AC-4, #855 AC-5 `ordering_after_by_criterion: AC-5: [511]`, #581 AC-4's switch-over clause). #511 is a 9–15 mw capstone still in flight. Acyclic, and #855/#581 correctly firewall it so channel mechanics can land first — but CAP-34 AC-4 cannot *complete* before CAP-27 delivers the description (and screenshots, for the unfiled PF-D). #511's `blocks: [579, 580]` is half-stale: #579 has been redirected to a decision record whose AC-4 now says it "neither commissions nor consumes screenshots."
+- **No cycles found.** #857 → {#856, #860} edges are mirrored on both consumers (#856 `ordering_after` includes #857; #860 names the exact mirror). #864 → #865 mirrored both ways. #857 honestly flags that all these `ordering_after`/`blocks` fields are free-text convention, not GitHub-native dependencies — nothing structurally stops out-of-order starts.
+- **No edge points at a closed issue.** All referenced issues (#443, #317, #338, #134, #511, #586, #857) are open. #579/#583 point at nothing closed; #134's closed siblings (#133/#135/#136) are cited as boundaries only.
+
+**Startable today, independent of every gate:** #582 and its tasks #861→#862/#863 (`ordering_after: []`), #857 (schema needs no data), #583's #864→#865, and #579's decision record. That is roughly the PF-E half of the capstone plus both decision records.
+
+### 4. Staleness / gaps
+
+- **The local clone is stale and would have falsified the corpus.** Local `master` (July 28) lacks `docs/standards-adoption/` entirely; at GitHub HEAD `c5cee1b` every doc citation resolves: `10-desktop-and-housekeeping.md:81–102` ("Flathub: recommend no," four reasons), the reopening trigger at ~:348–352, the AppStream ID at :44, `standards-landscape.md` present. Anyone orchestrating implementation from this clone must fetch first.
+- **One evidence claim is already resolved:** #579 AC-3 cites "unresolved `GPL-3.0-only` (`flake.nix:78`) vs `GPL-3.0-or-later` (`CONTRIBUTING.md:138`)." At HEAD, `flake.nix:78` reads `gpl3Plus` — the conflict no longer exists. Only bites on #579's "reverse" branch; should be struck when #579 is executed.
+- **Claims verified true at HEAD:** JBR placeholder digests (`build-installer.sh` ~:297–299, `UNVERIFIED-PLACEHOLDER-...-see-issue-101`); mac bundle ID `io.github.anadon.jls` (~:410); `Editor.java:103` `.jls~` sibling write; `ARCHITECTURE.md` § "Recorded decisions" (line 233) has no Flathub/Flatpak entry; `installers` job computes `SHA256SUMS-installers-*` and attests `target/installer/dist/*`; `SIGNPATH_ENROLLED`-style skip gate exists; `ci.yml` triggers on any push to master with no path filter (as #582 AC-2 assumes); `CliFlagTableTest`/`HelpTopicsTest` exist for #580's `DistributionManifestTest` family claim; `ADOPTERS.md` and `docs/distribution/channels.tsv` correctly do not exist yet.
+- **Cost bands:** #518's `band_mw: 2.5–3` sums PF-A..E only (0.5 + 0.5–1 + 0.5 + 0.5 + 0.5) — and honestly discloses exceeding #508's ≈1–2 mw pricing. But (a) if #579 (1–2 mw) and #583 (1–2 mw) are counted as tree members — which the native hierarchy says they are — the tree totals 4.5–7 mw, back at the original band #518 says it came down from; the parentage resolution in §1 decides which number is true. (b) Task sums exceed feature bands in two places: #580's tasks total 0.75–1.75 vs the feature's 0.5–1 (with #855 explicitly widened by review beyond its original band), and #582's tasks total 0.75–1.25 vs 0.5–1. Modest, disclosed-in-parts drift, but the capstone band was not re-summed after the task-level widenings.
+- **Stale intra-corpus text:** #855's machine-block comment still calls submission automation "a currently-unfiled sibling task" — #856 is filed. #580's `planned_tasks` omits #857 (§1).
+- **Open questions that block start:** none for the startable set. #855 AC-2 flags `ProductCode`/`UpgradeCode` stability as a possible blocking finding, correctly scoped as its own to discover.
+
+---
+
+### Verdict: **not-ready** — decomposition/AC work needed first (small, enumerable)
+
+The filed sub-tree is unusually high quality — mirrored edges, per-criterion ordering, honest disclosure of its own conventions' limits — and PF-E (#582/#861–#863), #857, and both decision records (#579, #583/#864–#865) could start today. But the tree as filed cannot compose to the capstone's promised outcome, and this review's charter is orchestration-from-issues:
+
+1. **File PF-C (Maven Central) and PF-D (GitHub Action)** — 2 of 5 planned features, present in Outcome/AC-1/AC-4, exist nowhere (§1).
+2. **Reconcile CAP AC-2 with #856 AC-1's SignPath gate** — as written, a legitimate resolution of #134 ("unsigned-by-choice") makes the capstone's AC-2 permanently unsatisfiable while its Outcome promises "signed-or-not-yet-signed" winget delivery (§2). Decide which text is right; name #134 in #518's dependency roster either way.
+3. **Resolve #579/#583 parentage** — native children vs. `serves_capstones: []` vs. capstone-body exclusion cannot all be true for an orchestrator; the answer also decides whether the tree costs 2.5–3 or 4.5–7 mw (§1, §4).
+
+Lesser fixes to fold into the same pass: strike #579 AC-3's resolved license-conflict citation, fix #511's stale `blocks: [579]` rationale, add #857 to #580's task roster, and note the #443→#317 chain depth on #518. All three blocking items are issue-text work measured in hours; once done, this capstone re-reviews as ready with #443/#317 (and conditionally #134) as its named in-flight gates.

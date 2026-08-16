@@ -1,0 +1,323 @@
+{
+ "chunk": 9,
+ "fixed": [
+  866,
+  867,
+  868,
+  872,
+  873,
+  874,
+  875,
+  876,
+  877,
+  878,
+  879,
+  880,
+  882,
+  883,
+  884,
+  885,
+  886,
+  888,
+  889
+ ],
+ "flagged": [],
+ "superseded_comments": [
+  {
+   "issue": 878,
+   "comment_id": 5227604595
+  },
+  {
+   "issue": 878,
+   "comment_id": 5227612399
+  },
+  {
+   "issue": 880,
+   "comment_id": 5227539462
+  },
+  {
+   "issue": 883,
+   "comment_id": 5227538319
+  },
+  {
+   "issue": 888,
+   "comment_id": 5227653907
+  },
+  {
+   "issue": 889,
+   "comment_id": 5227654743
+  }
+ ],
+ "other_issue_edits": [
+  {
+   "target": 590,
+   "change": "AC-4 currently names the deliverable path `docs/release/announcement-checklist.md`; update it to `docs/release/README.md` (or generalize to \"the release runbook, with a gated announcement section\") to match #867's rewritten deliverable.",
+   "reason": "The visionary review found #867's original leaf-file path orphaned relative to four other in-repo docs already citing an unbuilt central 'release checklist', and redirected #867 to land as a section inside a new runbook file instead. #590 (the parent feature) still names the old path in its own AC-4, so the two are now inconsistent and #590 needs the mirror-side edit, which is out of scope for this task to make itself.",
+   "from": 867
+  },
+  {
+   "target": 867,
+   "change": "Update AC-3 (and the Outcome paragraph's line 'the same record #868 files into that release's notes') so the filled Part B form is also written as a dated row in an in-tree ledger, docs/release/announcements.md, with the release notes linking that row rather than being the record itself.",
+   "reason": "The rewritten #868 now treats the in-tree ledger as the audit trail (per the visionary review's critique that GitHub-generated release notes are not diffable, in-tree, or checked). #867's current text still says the record is filed into the release's notes, which contradicts #868's new mechanism unless #867 is updated to match.",
+   "from": 868
+  },
+  {
+   "target": 590,
+   "change": "Clarify AC-6/AC-7 (and the boundary note tying them to #545/#548/#550) to state that the 'rehearsed on an ordinary release' bar is satisfied by #868's kit-build-plus-ledger-row mechanism (an honest 'flare: none' row is sufficient), not only by an actual posting/dispatch event.",
+   "reason": "As written, #590 AC-6/AC-7 still read as requiring a real posting on the rehearsal release, which is a narrower bar than #868's redirected scope (kit builds, ledger row written, posting only on a genuine flare) now implements; leaving them unreconciled means the parent feature's own acceptance criteria disagree with the child task's.",
+   "from": 868
+  },
+  {
+   "target": 468,
+   "change": "Add 872 to the `blocks` list in TASK-0007's machine block (currently only lists 336).",
+   "reason": "Mirror edge: #872 now declares blocked_by:[468] as a hard dependency; #468's own blocks list should name it back.",
+   "from": 872
+  },
+  {
+   "target": 336,
+   "change": "Add a third row to FEAT-004's Decomposition & Rationale table for TASK-C563-0 (#872), and note its two consumers (563, 306) in the feature body.",
+   "reason": "#872's part_of_feature was changed from 563 to 336 (FEAT-004) per the visionary review's re-homing argument; FEAT-004's own roster currently lists only TASK-0007/#468 and TASK-0008/#373 and does not yet know about this new child.",
+   "from": 872
+  },
+  {
+   "target": 306,
+   "change": "Revisit Open Question 7's decided answer (\"leave it under #563\") -- #872 is now homed under FEAT-004 (#336), not #563, and the `related` note describing #872 as \"homed under #563/FEAT-C31-1\" is stale.",
+   "reason": "#306 recorded a considered 2026-08-09 decision to leave #872 under #563 specifically to avoid filing a new CAP-09-owned feature; re-homing under the already-existing FEAT-004 is compatible with that reasoning but wasn't the option #306 evaluated, so a human should reconcile the two rather than have the record silently diverge.",
+   "from": 872
+  },
+  {
+   "target": 563,
+   "change": "Update the \"Shared-component boundary with CAP-09\" note to say the cone extractor (#872) is homed under FEAT-004 (#336), consumed by both #563 and #306, rather than implying #563 owns it.",
+   "reason": "Minor bookkeeping follow-up to the re-home; #563's outward behavior (still consumes #872's signature) is unaffected, but its dependency prose now understates the new arrangement.",
+   "from": 872
+  },
+  {
+   "target": 492,
+   "change": "Drop 873 from `blocks: [292, 873]` (or reframe as related), and reconsider whether RegisterFile's `Refused` entry text should still defer to #873 as \"disputed, not settled\" \u2014 #873 AC-4 has now settled that the technology-primitive claim does not apply to RegisterFile and expects it to export.",
+   "reason": "Mirror of #873 dropping `blocked_by: [492]` and of AC-4's rewrite resolving the dispute #492's current RegisterFile reason text explicitly deferred to #873.",
+   "from": 873
+  },
+  {
+   "target": 291,
+   "change": "Consider dropping `492` from `blocked_by: [492, 292]` (keep `292`), since moving Memory.class into HdlExporter's existing EXPORTED set does not require #492's REJECTED map to exist first.",
+   "reason": "Consistency with #873's own blocked_by:[492] removal and its Ordering section's reasoning, which applies identically to #291's Memory work.",
+   "from": 873
+  },
+  {
+   "target": 541,
+   "change": "Remove or update the 'Cross-issue notes (maintainer action needed; not edited here)' section, which currently says #874 'still carries this issue's superseded design' \u2014 that is no longer true now that #874 has been re-scoped to match #541's -t-derived-run / provenance-stamp / no-PDF / four-artifact-kind design.",
+   "reason": "#541's own body is now stale about #874's state; leaving it as-is would reintroduce the same kind of drift this rewrite just fixed.",
+   "from": 874
+  },
+  {
+   "target": 875,
+   "change": "Re-scope TASK-C541-2 the same way #874 was re-scoped: drop the 'recorded-run artifact' input model and its unspecified 'run identity' language, drop PDF from any artifact enumeration, align to four artifact kinds (schematic SVG, TikZ, WaveJSON+timing SVG, filmstrip SVG), and read AC-2's self-consistency check from the (circuit-hash, JLS-version, window) provenance stamp #874's HandoutBundleProvenanceTest now defines on every artifact, rather than an unowned 'run identity' concept.",
+   "reason": "#875 was filed alongside the old #874 design and shares every one of the same staleness defects (undefined recorded-run artifact, PDF, five kinds); #541's Cross-issue notes flag it explicitly as needing the same treatment, but my mandate covers only #874.",
+   "from": 874
+  },
+  {
+   "target": 874,
+   "change": "Rescope TASK-C541-1 the same way this rewrite rescoped #875: replace the distinct 'recorded-run artifact' input with the `-t`-derived-run model, drop the arity-refusal-on-a-recorded-artifact contract, drop PDF from the bundle's deterministic set, cut the roster to four artifact kinds (no animation), and pin AC-5's provenance stamp explicitly as a circuit-hash/JLS-version/simulation-window content digest (not an undefined 'run identity' field) so #875's AC-2 has a defined format to read.",
+   "reason": "#541's own body already flags #874 (alongside #875) as still carrying its superseded pre-REPLAN design; this task only had authorization to edit #875, so #874's half of the same fix is unresolved.",
+   "from": 875
+  },
+  {
+   "target": 541,
+   "change": "In the 'Cross-issue notes' section, remove #875 from the list of issues still carrying the superseded design (only #874 remains) and add a note that #875 was rescoped on 2026-08-16 to match #541's current Outcome/AC.",
+   "reason": "#541's Cross-issue notes currently say both #874 and #875 need re-scoping; #875's half is now done, so that note is stale for #875 specifically.",
+   "from": 875
+  },
+  {
+   "target": 714,
+   "change": "Record in #714's own body/boundary notes that its LaTeX CI lane is now a shared precondition with #875 (one pinned, cacheable TeX Live/Tectonic install backing both documents, per #505 KC-24-3), not merely an optional simplification 'welcome if it happens.'",
+   "reason": "#875's rewritten criterion 4 makes the shared lane a precondition (visionary reframing 3) and now names #714 in its own ordering_after; #714's text should record the same fact so the dependency is legible from either side without relying on #875's comment thread.",
+   "from": 875
+  },
+  {
+   "target": 877,
+   "change": "Update ordering_after from [TASK-C543-1] to [TASK-C543-1a, 731], and drop the 'K9 / D9' citation in AC-5's zero-cost clause in favour of a structural/component-hierarchy check (e.g. assert no colour decorator is installed in the component tree when the preview is off).",
+   "reason": "TASK-C543-1 was renamed to TASK-C543-1a (adversarial finding 5: the old id was reused verbatim from closed duplicate #736 with a different scope); the #731 redundant-encoding dependency belongs on the live-preview task, not the pure-transform task (visionary finding 7); and K9 is defined by #542 AC-5 as being about default-theme colour-role/legibility, not per-frame cost, so the citation #877 inherited from #876 unchanged does not resolve to anything checkable (adversarial finding 1, re-verified live).",
+   "from": 876
+  },
+  {
+   "target": 543,
+   "change": "Use sub_issue_write to link #876 and #877 as actual GitHub sub-issues under #543.",
+   "reason": "The capstone->feature->task chain #543's disposition comment argues for preserving exists only in issue-body prose and YAML (part_of_feature: 543), not in GitHub's structured hierarchy - issue_read get_parent on #876 still returns no parent (adversarial finding 4, re-verified against current HEAD).",
+   "from": 876
+  },
+  {
+   "target": 542,
+   "change": "Reconcile with #543 which class name/owner is authoritative for the shared CVD transform primitive (#542 AC-4 claims to build jls.core.ColorVision; #543 AC-1 independently claims jls.core.CvdSimulation), e.g. via a REPLAN: on #507.",
+   "reason": "Both #542 (updated 2026-08-12) and #543 (updated 2026-08-11) - edited after the 2026-08-08 reviews - currently claim ownership of building the shared transform under different names, with #542's own boundary notes wrongly assuming #543 'wraps' #542's class; discovered during live verification for this rewrite, not a review finding.",
+   "from": 876
+  },
+  {
+   "target": 876,
+   "change": "Update TASK-C543-1's mechanism from \"one callable framebuffer filter\" to a Graphics2D draw-call decorator (and reconcile its type name, jls.core.CvdSimulation, against #542/#734's jls.core.ColorVision), matching #543's redirected AC-1/AC-3.",
+   "reason": "#543 (FEAT-C26-2) was redirected 2026-08-11 away from the framebuffer-level mechanism, explicitly calling it unsafe (mutates global JLSInfo.Palette state, corrupts concurrent export/print), but its disposition left #876 unedited, so #876's title/AC-1 still describe the superseded pre-redirect design.",
+   "from": 877
+  },
+  {
+   "target": 734,
+   "change": "Expose the per-state-pair distinguishability computation as a callable library, not only bound inside CvdStateDistinguishabilityTest.",
+   "reason": "Visionary review's highest-priority reframe (Reframe 3): #877's new in-app \"check this circuit\" checker (criterion 4) needs to call this computation directly; #734's current AC-4 already disclaims a second display apparatus and names the right shared primitive, it just isn't exposed as a public entry point yet.",
+   "from": 877
+  },
+  {
+   "target": 507,
+   "change": "Re-resolve Open Question 5 (currently \"Resolved: framebuffer-level filter (#543's filing default)\") to reflect #543's since-redirected decorator-level mechanism, and reconcile the jls.core.CvdSimulation (#543/#876) vs jls.core.ColorVision (#542/#734) naming split into one canonical type.",
+   "reason": "#507's OQ5 text is now stale relative to its own downstream feature #543; the transform's name/ownership is asserted two contradictory ways across the #542/#734 pair and the #543/#876 pair, and #876 itself records this as an unresolved 'REPLAN on #507' item.",
+   "from": 877
+  },
+  {
+   "target": 543,
+   "change": "Correct AC-3's prose, which cites \"the same menu pattern as other View-menu toggles\" \u2014 the actual existing analogous control (\"Color scheme\") lives in JLSStart.globalMenu() (src/jls/JLSStart.java:1941), not viewMenu() (line 1791).",
+   "reason": "Minor factual inaccuracy found while grounding #877's menu-placement criteria in the actual code #543's own AC-3 depends on.",
+   "from": 877
+  },
+  {
+   "target": 232,
+   "change": "Its Proposed Disposition section flags an unresolved two-plane-vs-three-plane adjudication between #878 and #322 as \"out of reach of this edit.\" #878 has now been rewritten to freeze the three-plane, width-split (Word/Wide) shape that matches #322's Open Question 1 exactly, resolving that adjudication from #878's side. #232's Open Questions / Proposed Disposition text should be updated to record this once a maintainer confirms.",
+   "reason": "#232 itself explicitly says it cannot make this edit and named it as blocking confidence in #878/#879's design; #878's rewrite performs the reconciliation #232 asked for.",
+   "from": 878
+  },
+  {
+   "target": 322,
+   "change": "Open Question 1 (\"blocks TASK-0056's filing\" pending two-plane-vs-three-plane reconciliation) can be marked resolved: #878 now freezes exactly the three-plane sealed interface LogicValue permits Word, Wide shape this open question requires, naming keystone-c-performance.md \u00a75/\u00a710/\u00a711 as the measured justification.",
+   "reason": "#322's own Open Question 1 was the blocking condition; #878's rewrite satisfies it verbatim, so #322's open-question text is now stale and should record the resolution rather than continue reading as open.",
+   "from": 878
+  },
+  {
+   "target": 878,
+   "change": "Replace the still-unresolved placeholder `blocks: - 999999 # TASK-C232-2 ... replace with its number at the link pass` with the real number, 879.",
+   "reason": "Verified live on #878: the placeholder was never updated after #879 was filed. This is #878's own edge to fix; I cannot edit #878 directly.",
+   "from": 879
+  },
+  {
+   "target": 878,
+   "change": "Derive the frozen operation-set list (S5) from #879's actual callers before/alongside freezing it: add a width-safe addCarry(a,b,cin) -> (sum, carryOut) op, an integer-conversion op for addressing (today's BitSetUtils.ToInt), and radix 10/16 signed/unsigned formatting/display ops (today's BitSetUtils.ToString*/toDisplay) -- or explicitly document why each is deliberately deferred to #419/elsewhere.",
+   "reason": "Visionary review Reframings 3 and 4 (verified directly against #878's current op-set freeze and #879's ~24 react-body / ~20 display-site call sites): as frozen today, widening Put.currentValue in #879 forces either a BitSet back-conversion at ~20 sites (defeating the compatibility-overload ban) or an ad hoc op-set change mid-#879. #879's rewritten body records this as O5/S7 but cannot fix #878's own freeze.",
+   "from": 879
+  },
+  {
+   "target": 883,
+   "change": "TASK-C880-1's corpus manifest needs the assignment's skeleton file added, the independent-solution count/floor and functional (jls -t) verification requirement from AC-1 folded in, and planted pairs increased from 3 (1/class) to 15 (5/class), each transforming one of the independent solutions rather than a shared ancestor.",
+   "reason": "adversarial review findings 5-8 (leakage, unspecified corpus generation, untestable escape hatch) and visionary review's statistical-power and AC-1 circular/legitimate-null critique; #506's own Cost section already directs this re-scoping.",
+   "from": 880
+  },
+  {
+   "target": 884,
+   "change": "TASK-C880-2's erasure-layer design (built on #356's canonical form, ordered behind #356, producing a label-refinement fingerprint score) needs replacing with Yosys/HdlExporter-based canonicalization producing a bucket hash (raw + skeleton-delta), matching #880's rewritten AC-2/AC-3.",
+   "reason": "adversarial findings 2-4 (misattributed/nonexistent/self-undermining dependency on #356) and visionary's Alternative-A upper-bound-experiment reframing; also required by #506's Cost-section re-scoping directive.",
+   "from": 880
+  },
+  {
+   "target": 885,
+   "change": "TASK-C880-3's AC-4/AC-5 (score-distribution overlap, binary separation-achieved/not-achieved threshold verdict) need replacing with the bucket-membership verdict form from #880's rewritten AC-4/AC-5, and the verdict comment must state it authorizes filing PF-1/PF-2 only, never PF-3.",
+   "reason": "adversarial findings 6 and 9 (statistically unsupportable n=3 binary verdict; verdict feeding a future PF-3 filing without addressing the moratorium/calibration gap) and visionary's point that the gate must be explicitly one-sided; also required by #506's re-scoping directive.",
+   "from": 880
+  },
+  {
+   "target": 367,
+   "change": "Update the Decomposition table's Step 2 row and the Evidence section's item 4, both of which say '#882 ... scope needs narrowing per this rewrite', to reflect that #882 has now been narrowed to match (fixed 1ps quantum, no per-circuit TimeBase, migration + ratchet + capstone tests) rather than still pending.",
+   "reason": "#367's own text is now stale in the direction of understating progress: it still describes #882's narrowing as a to-do item that this rewrite of #882 has already completed.",
+   "from": 882
+  },
+  {
+   "target": 717,
+   "change": "Add #883 to related, and evaluate adopting the corpus-generator + manifest schema #883 now defines (provenance, transform-class declaration, regeneration determinism) instead of independently inventing one for the 300-submission corpus.",
+   "reason": "Visionary review: #717 and #883 independently invent overlapping corpus-provenance/manifest apparatus for different-sized corpora; the seam to share is the generator and schema, not the fixtures.",
+   "from": 883
+  },
+  {
+   "target": 884,
+   "change": "Reconcile #884's body with #880's 2026-08-16 redesign: #884 still describes a label-refinement fingerprint over 435 scored pairs with threshold-avoidance language, but #880's current body replaced that with Yosys-normalized canonical-equivalence bucket hashing (no score, no threshold) and 15 planted pairs (not 3). #880's own rewrite comment already flagged this as pending maintainer follow-up that was not done at that time. Mirror edge blocked_by:[883] is already correct and needs no change.",
+   "reason": "Discovered during required live-issue verification for this task: #880 (the parent feature) was substantially rewritten after both #883 reviews were dated, and #884/#885 are stale against it in the same way #883 was before this edit.",
+   "from": 883
+  },
+  {
+   "target": 885,
+   "change": "Reconcile #885's body with #880's 2026-08-16 redesign: #885 still describes a two-distribution overlap report and a threshold-based separation verdict, but #880 now calls for an exact bucket-membership report/verdict with no score or threshold anywhere in the pipeline.",
+   "reason": "Same as the #884 entry above \u2014 part of the same deferred reconciliation #880's rewrite already named but did not perform.",
+   "from": 883
+  },
+  {
+   "target": 883,
+   "change": "Correct the self-referential `blocks: [883, 884]` line in the body to `blocks: [884, 885]` (883 is this issue's own number).",
+   "reason": "Adversarial review finding 5. A comment (id 5227538319, posted 2026-08-08) already states the correction, but the body itself \u2014 the machine-readable source of truth \u2014 was never edited, so automated readers of the block still see the self-loop.",
+   "from": 884
+  },
+  {
+   "target": 883,
+   "change": "Update the body to match #880's 2026-08-16 rewrite: add the assignment's skeleton file to the corpus (#880 AC-1a), raise planted pairs from 3 to 15 (5 per transform class across the 3 declared classes, #880 AC-1d), raise independent solutions to at least 20 with a documented enumeration space of at least 8 structurally distinct implementations (#880 AC-1c), and drop calibrated-score/threshold framing in favor of bucket-membership framing throughout.",
+   "reason": "#880's own body states #883's body 'still describes the calibrated-score design this rewrite replaces' and names updating #883 to match as outstanding maintainer follow-up; this session could verify and edit only #884.",
+   "from": 884
+  },
+  {
+   "target": 885,
+   "change": "Rewrite around bucket membership rather than score distributions: replace 'the score distribution of the 3 planted pairs vs. 432 independent pairs, and their overlap' with 'whether all 15 planted pairs share a canonical-equivalence or skeleton-delta bucket with their partner, and whether any independent solution shares a skeleton-delta bucket with a planted pair' (#880 AC-4/AC-5), and rewrite the two permitted verdict outcomes to match #880 AC-5's bucket-membership wording instead of a threshold/separation wording.",
+   "reason": "#880's 2026-08-16 rewrite replaced the calibrated similarity-score design with exact canonical-equivalence bucket membership; #885's body still describes distributions, overlap and a pre-registered separation threshold that no longer exist anywhere upstream of it.",
+   "from": 884
+  },
+  {
+   "target": 884,
+   "change": "Re-scope #884 from the calibrated label-refinement/distribution-overlap design (435-pair scoring, threshold, ordering_after:[356]) to the exact canonical-equivalence bucket-hashing design #880 now specifies: canonicalize via `jls -export` + Yosys (not a canonicalizer built on #356), compute raw and skeleton-delta bucket hashes, no threshold/score of any kind, and drop the ordering_after:[356] edge since #880's redesign explicitly removes that dependency.",
+   "reason": "#880 (the parent feature) and #883 (the sibling corpus task) were both already rewritten to the exact-bucket-membership design as of 2026-08-16, and #880's own Cost section states this re-scoping is required on #883/#884/#885 but 'tracked on those issues, not here.' #883 has already been updated; #884 (updated_at == created_at, unchanged since 2026-08-08) still encodes the old score/threshold/#356-dependent design and is now the last stale link in the #880->#883->#884->#885 chain, which I cannot edit myself.",
+   "from": 885
+  },
+  {
+   "target": 516,
+   "change": "Update the PF-4/#886 note (currently \"#886's 1-2 mw is excluded while on hold\") to cite #886's re-derived band, 0.5-1 mw for its now-unblocked encoding sub-scope, since #886 no longer carries a flat 1-2 mw figure.",
+   "reason": "Adversarial finding 5 (band asserted, not derived) plus this rewrite's re-scoping means #516's cross-reference to #886's cost is now stale.",
+   "from": 886
+  },
+  {
+   "target": 500,
+   "change": "Add an explicit line to CAP-19/#500's closure record stating that a serialization of already-canonical circuit text (deflate/base64url, no execution) is not the \"second execution engine\" the closure refused, so later features consuming canonical text (like #886's encoding) aren't misread as relitigating #500.",
+   "reason": "Visionary review: 'Say that on #500 and get it recorded; do not let a serialization sneak in as a side effect of a link.' #886's own Boundary section now asserts this, but the authoritative closure record (#500) doesn't yet say so.",
+   "from": 886
+  },
+  {
+   "target": 573,
+   "change": "Amend AC-2's \"no user content\" wording (currently read-only-by-construction / no user content at all) to something like \"no user content is persisted, transmitted or executed as code,\" for if/when #886's adapter sub-scope (paste box + fragment link) is ever funded by the #516 decision \u2014 otherwise a funded adapter would make #573's own AC-2 literally false.",
+   "reason": "Visionary review's REPLAN recommendation, retargeted from #516 (where the review pointed it) to #573, which is where the exact \"no user content\" AC wording actually lives.",
+   "from": 886
+  },
+  {
+   "target": 835,
+   "change": "Amend AC-5's \"no save, upload, or file-open UI element\" wording for the same reason as the #573 edit above, if/when the adapter sub-scope is funded.",
+   "reason": "Same structural conflict as the #573 edit: #835 AC-5 currently asserts an absolute absence that a funded paste-box adapter would contradict.",
+   "from": 886
+  },
+  {
+   "target": 344,
+   "change": "Re-examine the generic-tier/differential-oracle scope (\u00a71 items 7-8, Global Invariant 8, IC-5) and the [0,255]-bridge dependency now that its sole serves_capstones beneficiary (#888) no longer requires a mixed-alphabet fixture or an unbounded-N tier.",
+   "reason": "#344 currently states serves_capstones:[888] and prices the generic tier specifically for CAP-39's mixed-alphabet demo; #888's redirect removes that beneficiary.",
+   "from": 888
+  },
+  {
+   "target": 361,
+   "change": "Re-examine serves_capstones:[888] and the transport/operator element-family scope, since CAP-39 no longer draws a ternary datapath or [0,255] bridge and #361 has no other named beneficiary.",
+   "reason": "#361's own header names #888 as its sole serves_capstones entry for exactly the fixture this redirect drops.",
+   "from": 888
+  },
+  {
+   "target": 361,
+   "change": "Add #889/TASK-C361-1 to planned_tasks (or explicitly record that its original scope is retired in favor of TASK-0060/0061/0062), since #889 declares part_of_feature: 361 but #361's redirected roster does not list it.",
+   "reason": "Roster/mirror-edge gap discovered while rewriting #889: the parent feature's own redirected body has no record of this child task's existence or disposition.",
+   "from": 889
+  },
+  {
+   "target": 453,
+   "change": "Decide whether TASK-0061 absorbs a distinct TruthTable UNMAPPED output sentinel (separate from the don't-care encoding being relocated by O6/P8) in the same generalization pass, or explicitly leaves it to #889.",
+   "reason": "The only residual scope left after #889's reframing (a 'refuse by value' sentinel for partial crossings) overlaps directly with #453's own TruthTable don't-care relocation work, and neither issue's body currently assigns ownership of it.",
+   "from": 889
+  },
+  {
+   "target": 419,
+   "change": "Update the #889 row in the Related Work table (\"the mechanism RadixBridge will consume for any crossing beyond a trivial embedding\") since RadixBridge was retired by #453's redirect and #889 no longer proposes a standalone mapping mechanism.",
+   "reason": "Stale cross-reference discovered while verifying #419: it still describes #889 in terms of a class (RadixBridge) and a mechanism that no longer exist in the current design.",
+   "from": 889
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+# Blank issues are disabled: every issue must start from one of the three tier
+# templates. The compact `task_id`/`band_mw` form is not a sanctioned shape, and
+# a blank issue is how one gets filed by hand.
+#
+# This only governs the web UI. Issues created through the API or
+# `gh issue create --body` bypass templates entirely -- those are caught after
+# the fact by .github/workflows/issue-template-conformance.yml.
+blank_issues_enabled: false

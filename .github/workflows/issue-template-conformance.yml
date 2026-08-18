@@ -1,0 +1,160 @@
+name: Issue template conformance
+
+# Enforces that every issue matches its tier template
+# (.github/ISSUE_TEMPLATE/{scientific_task,feature,capstone}.md). The compact
+# `task_id`/`band_mw`/`ordering_after` form is a hard failure, not a shortcut.
+#
+# WHY A WORKFLOW AND NOT A RULESET: GitHub rulesets scope to refs (branches,
+# tags) and pushes -- they have no issue scope, and there is no pre-receive
+# equivalent for issue creation. Nothing can BLOCK a malformed issue from being
+# filed. Issue *forms* (.yml with `required: true`) enforce at creation but only
+# through the web UI, so anything filed via the API or `gh issue create --body`
+# bypasses them entirely -- which is most of this backlog. This workflow is the
+# only mechanism that sees API-filed issues, so enforcement here is
+# detect-label-and-comment, applied after the fact.
+#
+# The `needs-template-fix` label is the machine-readable signal; filter it out
+# of any "ready to work" query.
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  workflow_dispatch:
+    inputs:
+      sweep:
+        description: "Validate every open issue instead of just one"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  # serialise per issue so a rapid edit-then-edit cannot race two label writes
+  group: issue-conformance-${{ github.event.issue.number || 'sweep' }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate against tier template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ensure the label exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create needs-template-fix \
+            --color B60205 \
+            --description "Body does not match its tier issue template" \
+            --force
+
+      - name: Validate one issue
+        if: github.event_name == 'issues'
+        id: one
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          # No pipe: `... | tee` would give us tee's exit status, not python's.
+          set +e
+          python3 scripts/validate-issue-template.py \
+            --issue "$NUMBER" --json result.json > report.txt 2>&1
+          status=$?
+          set -e
+          cat report.txt
+          if [ "$status" -eq 0 ]; then
+            echo "conforms=yes" >> "$GITHUB_OUTPUT"
+          elif [ "$status" -eq 1 ]; then
+            echo "conforms=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "validator failed to run (exit $status)" >&2
+            exit "$status"
+          fi
+
+      - name: Label and comment
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          CONFORMS: ${{ steps.one.outputs.conforms }}
+        run: |
+          if [ "$CONFORMS" = "yes" ]; then
+            # Clear the flag when an edit fixes the body; ignore "not labeled".
+            gh issue edit "$NUMBER" --remove-label needs-template-fix || true
+            echo "issue #$NUMBER conforms"
+            exit 0
+          fi
+
+          gh issue edit "$NUMBER" --add-label needs-template-fix
+
+          # One rolling bot comment per issue rather than a new one per edit.
+          # Built in a file so no leading indentation leaks into the markdown.
+          marker="<!-- template-conformance-bot -->"
+          {
+            printf '%s\n' "$marker"
+            printf 'This issue does not match its tier template '
+            printf '(`.github/ISSUE_TEMPLATE/`). Every section is required; use\n'
+            printf '`N/A — <reason>` where one genuinely does not apply. The compact\n'
+            printf '`task_id`/`band_mw` form is not a sanctioned shape.\n\n'
+            printf '```\n'
+            cat report.txt
+            printf '```\n\n'
+            printf 'Re-validate locally with:\n\n'
+            printf '```\n'
+            printf 'scripts/validate-issue-template.py --issue %s\n' "$NUMBER"
+            printf '```\n'
+          } > comment.md
+
+          existing=$(gh issue view "$NUMBER" --json comments \
+            --jq ".comments[] | select(.body | startswith(\"$marker\")) | .id" \
+            | head -1)
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$GH_REPO/issues/comments/$existing" \
+              -F body=@comment.md >/dev/null
+          else
+            gh issue comment "$NUMBER" --body-file comment.md
+          fi
+
+      - name: Sweep every open issue
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Reports only; the sweep does not mass-label a 679-issue backlog.
+          python3 scripts/validate-issue-template.py --all-open \
+            --json sweep.json || true
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("sweep.json"))
+          ok = sum(1 for x in r if x["conforms"])
+          print(f"## Issue template conformance\n")
+          print(f"- conforming: **{ok} / {len(r)}**")
+          print(f"- need migration: **{len(r) - ok}**\n")
+          bad = [x for x in r if not x["conforms"]]
+          print("| issue | tier | first error |")
+          print("|---|---|---|")
+          for x in bad[:100]:
+              err = (x["errors"][0] if x["errors"] else "").replace("|", "\\|")
+              print(f"| #{x['number']} | {x['tier'] or '?'} | {err[:110]} |")
+          if len(bad) > 100:
+              print(f"\n_...and {len(bad) - 100} more (see sweep.json artifact)._")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: issue-conformance-sweep
+          path: sweep.json

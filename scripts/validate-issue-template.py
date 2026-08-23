@@ -16,13 +16,17 @@ Usage:
   scripts/validate-issue-template.py --body-file /tmp/body.md --tier task
   # sweep every open issue
   scripts/validate-issue-template.py --all-open [--json report.json]
+  # sweep offline from a snapshot_corpus.py dump (no gh calls)
+  scripts/validate-issue-template.py --all-open --snapshot DIR
 
 Exit status:
   0  every validated issue conforms
   1  at least one issue does not conform
   2  usage or environment error
 
-Design notes, both learned from a 679-issue audit on 2026-08-17:
+Parsing rules live in scripts/issue_corpus.py, shared with the graph, hygiene,
+and board validators. Design notes, both learned from a 679-issue audit on
+2026-08-17:
   - A YAML key populated by an indented block-style list on FOLLOWING lines is
     populated. Reading only the same line reports false emptiness.
   - A heading may carry a suffix or a plural ("4. Hypotheses (falsifiable)",
@@ -32,137 +36,8 @@ Design notes, both learned from a 679-issue audit on 2026-08-17:
 """
 import argparse, json, re, subprocess, sys
 
-TEMPLATES = {
-    "task": {
-        "version": "scientific-task v6",
-        "file": "scientific_task.md",
-        "label": "tier:task",
-        "yaml_keys": ["tier", "evidence_commit", "part_of_feature",
-                      "blocked_by", "blocks", "related"],
-        "headings": [
-            "Abstract", "Intended Audience & Impact", "Status & Dependencies",
-            "1. Background & Prior Work", "2. Observations",
-            "3. Research Question", "4. Hypothesis (falsifiable)",
-            "5. Predictions", "6. Materials & Apparatus",
-            "7. Interface & Data Contract", "8. Method / Experimental Design",
-            "9. Data Collection & Analysis", "10. Falsification Criteria",
-            "11. Threats to Validity", "12. Related Work",
-            "13. Conclusion & Future Work", "Open Questions & Decisions Needed",
-            "14. Completion Criteria (Definition of Done)",
-        ],
-        "subheadings": [f"7.{n}" for n in range(1, 13)],
-    },
-    "feature": {
-        "version": "feature v3",
-        "file": "feature.md",
-        "label": "tier:feature",
-        "yaml_keys": ["tier", "evidence_commit", "requires_tasks",
-                      "planned_tasks", "blocked_by", "blocks",
-                      "serves_capstones", "related"],
-        "headings": [
-            "Abstract", "Intended Audience & Impact",
-            "Status & Dependency Graph",
-            "1. Capability Statement & Scope Boundary",
-            "2. Decomposition & Rationale",
-            "3. Feature-Level Interface & Data Contract",
-            "4. Global Invariants", "5. Integration Criteria & Evidence Plan",
-            "6. Sequencing & Parallelism", "7. Re-planning Protocol",
-            "Open Questions & Decisions Needed",
-            "Completion Criteria (Definition of Done)",
-        ],
-        "subheadings": [],
-    },
-    "capstone": {
-        "version": "capstone v3",
-        "file": "capstone.md",
-        "label": "tier:capstone",
-        "yaml_keys": ["tier", "evidence_commit", "requires_features",
-                      "requires_capstones", "requires_tasks_exception",
-                      "planned_features", "blocked_by", "blocks", "related"],
-        "headings": [
-            "Abstract", "Intended Audience & Impact",
-            "Status & Required Features", "1. Outcome Statement",
-            "2. Required Feature Set & Sufficiency",
-            "3. Cross-Feature Integration Risks",
-            "4. System-Level Acceptance Criteria", "5. Re-planning Protocol",
-            "Open Questions & Decisions Needed",
-            "Completion Criteria (Definition of Done)",
-        ],
-        "subheadings": [],
-    },
-}
-
-BANNED_YAML_KEYS = ("task_id", "band_mw", "ordering_after")
-
-YAML_BLOCK = re.compile(r"```ya?ml\s*\n(.*?)```", re.S)
-HEADING = re.compile(r"^#{1,4}\s*(.+?)\s*$", re.M)
-STOP = {"and", "the", "of", "a", "to", "for", "in", "on", "its", "definition"}
-
-
-def norm(s):
-    s = s.lower().replace("&", "and")
-    s = re.sub(r"[^a-z0-9. ]+", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
-
-
-def sig_tokens(title):
-    """Significant words, in order, with the leading section number stripped."""
-    t = re.sub(r"^\s*\d+(\.\d+)*\.?\s*", "", norm(title))
-    return [w for w in t.split() if w and w not in STOP]
-
-
-def sig(title):
-    return set(sig_tokens(title))
-
-
-def yaml_key_state(block, key):
-    """'absent' | 'empty' | 'populated', honouring block-style lists."""
-    lines = block.split("\n")
-    for i, line in enumerate(lines):
-        m = re.match(rf"^{re.escape(key)}\s*:(.*)$", line)
-        if not m:
-            continue
-        if re.sub(r"#.*$", "", m.group(1)).strip():
-            return "populated"
-        for nxt in lines[i + 1:]:
-            if not nxt.strip():
-                continue
-            if not re.match(r"^\s+", nxt):
-                break
-            if re.sub(r"#.*$", "", nxt).strip():
-                return "populated"
-        return "empty"
-    return "absent"
-
-
-def find_heading(headings, canonical):
-    """(actual, drifted) if the section is present, else (None, False).
-
-    A drift match needs BOTH half the canonical's significant words AND the
-    canonical's LEADING significant word (compared on a 6-char stem, so
-    "Hypothesis"/"Hypotheses" match). Overlap alone is too loose: it lets
-    "Acceptance criteria" stand in for "10. Falsification Criteria" on the
-    shared word "criteria", which would suppress a real missing-section error.
-    """
-    canon_n = norm(canonical)
-    for raw in headings:
-        if norm(raw) == canon_n:
-            return raw, False
-
-    want_tokens = sig_tokens(canonical)
-    if not want_tokens:
-        return None, False
-    want, lead = set(want_tokens), want_tokens[0][:6]
-
-    best, best_score = None, 0.0
-    for raw in headings:
-        have = sig_tokens(raw)
-        if not any(w.startswith(lead) or lead.startswith(w[:6]) for w in have):
-            continue
-        score = len(want & set(have)) / len(want)
-        if score > best_score:
-            best, best_score = raw, score
-    return (best, True) if best_score >= 0.5 else (None, False)
+from issue_corpus import (TEMPLATES, BANNED_YAML_KEYS, YAML_BLOCK, HEADING,
+                          find_heading, load_corpus, yaml_key_state)
 
 
 def validate(number, body, labels, forced_tier=None):
@@ -281,6 +156,9 @@ def main():
                     help="label to assume with --body-file (repeatable)")
     ap.add_argument("--json", help="write the full report to this path")
     ap.add_argument("--limit", type=int, default=2000)
+    ap.add_argument("--snapshot",
+                    help="with --all-open: read issues from this snapshot "
+                         "directory instead of calling gh")
     args = ap.parse_args()
 
     results = []
@@ -292,6 +170,10 @@ def main():
     elif args.body_file:
         results.append(validate(None, open(args.body_file).read(),
                                 args.label, args.tier))
+    elif args.snapshot:
+        corpus = load_corpus(args.snapshot)
+        for iss in sorted(corpus.issues.values(), key=lambda i: i.number):
+            results.append(validate(iss.number, iss.body, iss.labels, None))
     else:
         for d in gh_json(["issue", "list", "--state", "open", "--limit",
                           str(args.limit), "--json", "number,body,labels"]):

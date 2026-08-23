@@ -1,0 +1,92 @@
+# Weekly report-only sweep of the cross-issue graph and template shape.
+#
+# Deliberately a sibling of issue-template-conformance.yml rather than a job
+# in it: that workflow triggers on issue events and must stay cheap; this one
+# snapshots the whole corpus (REST bulk, no per-issue fan-out) and runs the
+# graph validator, which only makes sense corpus-wide. Report-only by design —
+# the sweep never labels or edits a 600-issue backlog (same restraint as the
+# template sweep). The board validator is NOT here: the default GITHUB_TOKEN
+# carries no Projects scope; board checks run in the maintainer's audit
+# sessions instead.
+name: issue-graph-conformance
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # G18 checks evidence_commit ancestry
+
+      - name: Validator self-tests
+        run: |
+          python3 scripts/tests/test_validate_issue_graph.py
+          python3 scripts/tests/test_validate_board.py
+          python3 scripts/tests/test_validate_hygiene.py
+
+      - name: Snapshot corpus (REST only, board skipped)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/snapshot_corpus.py \
+            --out /tmp/snapshot --repo "$GITHUB_REPOSITORY" \
+            --repo-root . --skip-board
+
+      - name: Graph sweep
+        id: graph
+        run: |
+          set +e
+          python3 scripts/validate_issue_graph.py \
+            --snapshot /tmp/snapshot --repo-root . \
+            --json graph-findings.json | tail -40
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Template sweep (offline, from the same snapshot)
+        run: |
+          set +e
+          python3 scripts/validate-issue-template.py \
+            --all-open --snapshot /tmp/snapshot \
+            --json template-report.json | tail -5
+          exit 0
+
+      - name: Step summary
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import collections, json
+          r = json.load(open("graph-findings.json"))
+          c = collections.Counter((f["check"], f["severity"])
+                                  for f in r["findings"])
+          errs = sum(n for (chk, sev), n in c.items() if sev == "error")
+          print(f"## Graph sweep: {len(r['findings'])} findings, "
+                f"{errs} errors\n")
+          print("| check | severity | count |")
+          print("|---|---|---|")
+          for (chk, sev), n in sorted(c.items()):
+              print(f"| {chk} | {sev} | {n} |")
+          t = json.load(open("template-report.json"))
+          bad = [x["number"] for x in t if not x["conforms"]]
+          print(f"\n## Template sweep: {len(t) - len(bad)}/{len(t)} "
+                "conforming")
+          if bad:
+              print("Non-conforming: "
+                    + ", ".join(f"#{n}" for n in bad[:50]))
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue-graph-sweep
+          path: |
+            graph-findings.json
+            template-report.json
+          retention-days: 90

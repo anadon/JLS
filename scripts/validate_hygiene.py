@@ -375,12 +375,23 @@ def h06(ctx):
 
 def h07(ctx):
     out = []
+    # A task no longer declares an owner (scientific-task v7): ownership lives
+    # in each owning feature's requires_tasks roster, and a task may have any
+    # number of owners. Build the reverse index once, then a task's mirror
+    # obligation runs to EVERY feature that lists it.
+    task_owners = {}
+    for fn, fi in ctx.corpus.issues.items():
+        if fi.tier != "feature" or not fi.machine:
+            continue
+        for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
+            task_owners.setdefault(t, []).append(fn)
+
     for n, iss in ctx.issues():
         mb = iss.machine
         if not mb:
             continue
         if iss.tier == "task":
-            parents = parse_edge_field(mb, "part_of_feature")["numbers"]
+            parents = task_owners.get(n, [])
         elif iss.tier == "feature":
             parents = parse_edge_field(mb, "serves_capstones")["numbers"]
         else:

@@ -104,12 +104,13 @@ def main():
 
     # B03 both directions, info-only.
     b03_blocked = of(findings, "B03", 3)
-    assert len(b03_blocked) == 1 and b03_blocked[0]["severity"] == "info", \
+    # ratified ruling (docs/board-status-ruling.md): B03 accuses now
+    assert len(b03_blocked) == 1 and b03_blocked[0]["severity"] == "warn", \
         b03_blocked
     assert "no OPEN issue" in b03_blocked[0]["message"], b03_blocked
     b03_ready = of(findings, "B03", 4)
     assert len(b03_ready) == 1 and "[1]" in b03_ready[0]["message"], b03_ready
-    assert b03_ready[0]["severity"] == "info", b03_ready
+    assert b03_ready[0]["severity"] == "warn", b03_ready
 
     # B04: null Status on an open issue.
     b04 = of(findings, "B04")
@@ -118,7 +119,7 @@ def main():
 
     # B05: In Progress, unassigned, no STATUS: comment.
     b05 = of(findings, "B05")
-    assert [f["issue"] for f in b05] == [8] and b05[0]["severity"] == "info", b05
+    assert [f["issue"] for f in b05] == [8] and b05[0]["severity"] == "warn", b05
 
     # B06: duplicate items for issue 5.
     b06 = of(findings, "B06")
@@ -147,7 +148,7 @@ def main():
     assert proc.returncode == 1, (proc.returncode, proc.stdout, proc.stderr)
     with open(out_json) as fh:
         report = json.load(fh)
-    assert report["validator"] == "board" and report["check_version"] == "b-v1"
+    assert report["validator"] == "board" and report["check_version"] == "b-v2"
     assert report["snapshot"]["fetched_at"] == FETCHED
     assert len(report["findings"]) == len(findings)
 
@@ -159,8 +160,10 @@ def main():
     assert proc.returncode == 0, (proc.returncode, proc.stdout, proc.stderr)
     with open(out_json) as fh:
         narrowed = json.load(fh)["findings"]
+    # B10 corroborates B03 here: #3 is Status=Blocked with no open blocker,
+    # so the derivation says Ready and the board disagrees.
     assert {f["issue"] for f in narrowed} == {3} and \
-        {f["check"] for f in narrowed} == {"B03"}, narrowed
+        {f["check"] for f in narrowed} == {"B03", "B10"}, narrowed
 
     # A fully coherent snapshot exits 0.
     clean = tempfile.TemporaryDirectory(prefix="board-selftest-clean-")

@@ -42,6 +42,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 GH_LIMIT = 65536
 
@@ -61,6 +62,10 @@ def main():
                     "and the live-drift guard")
     ap.add_argument("--bodies-dir", help="default <scratchpad>/migrated")
     ap.add_argument("--comment-dir", help="default = bodies dir")
+    ap.add_argument("--pace", type=float, default=0.0,
+                    help="seconds to sleep between issues during --apply; "
+                    "GitHub's secondary content-creation limiter trips on "
+                    "fast comment/edit bursts (observed ~430 in a run)")
     args = ap.parse_args()
 
     SP, REPO, COMMIT = args.scratchpad, args.repo_root, args.commit
@@ -84,6 +89,13 @@ def main():
         vig = vig_mod
         corpus = load_corpus(args.snapshot)
 
+    # Pre-edit bodies, for the citation gate's delta baseline. Without a
+    # snapshot there is nothing to diff against and the gate stays absolute.
+    snap_bodies = ({n: i.body for n, i in corpus.issues.items()}
+                   if corpus else None)
+    pre_existing = {}
+    pre_existing_vacuous = []
+
     passed, held = [], []
 
     for r in results:
@@ -101,7 +113,14 @@ def main():
         if len(body) > GH_LIMIT:
             reasons.append(f"body {len(body)} > GitHub limit {GH_LIMIT}")
 
-        # --- citation gate
+        # --- citation gate (DELTA, not absolute)
+        # Blind spot 8: an absolute gate holds a one-line machine-block repair
+        # because of a BAD citation the body already had — and a body may cite
+        # a dead path *deliberately*, to record that it is unrecoverable (see
+        # #370 citing docs/plan/REGISTRY.md, deleted in 742da74, precisely to
+        # say so). Neither is this edit's fault. So we gate the same way the
+        # graph gate does: establish the pre-edit baseline from the snapshot
+        # body and hold only on citations this edit ADDS.
         commit = r.get("evidence_commit", COMMIT)
         cg = run(["python3", verify, REPO, commit, path])
         cite_line = next((l for l in cg.stdout.split("\n")
@@ -109,8 +128,23 @@ def main():
         if cg.returncode != 0:
             bad = [l.strip() for l in cg.stdout.split("\n")
                    if l.strip().startswith("BAD")]
-            reasons.append(f"fabricated/unresolvable citations: {len(bad)}")
-            reasons += [f"  {b}" for b in bad[:5]]
+            base_bad = set()
+            old_body = (snap_bodies or {}).get(n)
+            if old_body is not None:
+                ob = f"{SP}/.baseline-{n}.md"
+                with open(ob, "w") as fh:
+                    fh.write(old_body)
+                bg = run(["python3", verify, REPO, commit, ob])
+                base_bad = {l.strip() for l in bg.stdout.split("\n")
+                            if l.strip().startswith("BAD")}
+                os.unlink(ob)
+            introduced = [b for b in bad if b not in base_bad]
+            if introduced:
+                reasons.append("fabricated/unresolvable citations INTRODUCED "
+                               f"by this edit: {len(introduced)}")
+                reasons += [f"  {b}" for b in introduced[:5]]
+            elif bad:
+                pre_existing[n] = len(bad)
 
         # --- vacuous-evidence gate
         # A body with zero citations passes the citation gate trivially (0 BAD
@@ -132,10 +166,31 @@ def main():
                 or "zero hits" in low or "absent" in low
             )
             if not proves_absence:
-                reasons.append(
-                    "zero file:line citations and no absence-proving search "
-                    "— rule 1 requires evidence; body carries none"
-                )
+                # Same blind spot the citation gate had: a body with zero
+                # citations was already in that state before this edit, and a
+                # machine-block-only repair cannot have caused it. Hold only
+                # if THIS edit made it worse (citations existed, now none).
+                had_cites = False
+                ob = (snap_bodies or {}).get(n)
+                if ob is not None:
+                    p2 = f"{SP}/.baseline-vac-{n}.md"
+                    with open(p2, "w") as fh:
+                        fh.write(ob)
+                    bg = run(["python3", verify, REPO, commit, p2])
+                    bl = next((l for l in bg.stdout.split("\n")
+                               if "citations=" in l), "")
+                    try:
+                        had_cites = int(bl.split("citations=")[1].split()[0]) > 0
+                    except (IndexError, ValueError):
+                        had_cites = False
+                    os.unlink(p2)
+                if ob is None or had_cites:
+                    reasons.append(
+                        "zero file:line citations and no absence-proving "
+                        "search — rule 1 requires evidence; body carries none"
+                    )
+                else:
+                    pre_existing_vacuous.append(n)
 
         # --- scratchpad-leak gate
         # The pipeline stages issue text in a private cache. A body that cites
@@ -149,12 +204,22 @@ def main():
             body,
         )
         if leaks:
-            uniq = sorted(set(leaks))[:5]
-            reasons.append(
-                f"leaks pipeline scratchpad paths into a public issue "
-                f"({len(leaks)} refs, e.g. {', '.join(uniq)}) — cite the "
-                f"issue (#584), not the cache file"
-            )
+            # Blind spot 7: a /tmp/claude-* path that is COMMITTED in the
+            # tree (git grep finds it at the pinned commit) is the body
+            # QUOTING a repo defect, not leaking its own cache. Never exempt
+            # anything under the current pipeline's scratchpad.
+            def committed(path):
+                return path.startswith("/tmp/claude-") and run(
+                    ["git", "-C", REPO, "grep", "-qF", path, commit]
+                ).returncode == 0
+            real = [l for l in leaks if not committed(l)]
+            if real:
+                uniq = sorted(set(real))[:5]
+                reasons.append(
+                    f"leaks pipeline scratchpad paths into a public issue "
+                    f"({len(real)} refs, e.g. {', '.join(uniq)}) — cite the "
+                    f"issue (#584), not the cache file"
+                )
 
         # --- template gate
         tier = r.get("tier", "task")
@@ -224,6 +289,21 @@ def main():
             passed = still
 
     print(f"gated {len(results)}  ->  PASS {len(passed)}   HELD {len(held)}\n")
+    if pre_existing_vacuous:
+        print(f"  note: {len(pre_existing_vacuous)} issue(s) carry ZERO "
+              "citations and no absence proof — a pre-existing rule 1 "
+              "violation this edit did not cause, needing its own repair: "
+              + ", ".join(f"#{n}" for n in sorted(pre_existing_vacuous)))
+        print()
+    if pre_existing:
+        tot = sum(pre_existing.values())
+        print(f"  note: {len(pre_existing)} issue(s) carry {tot} PRE-EXISTING "
+              "bad citation(s)")
+        print("  not introduced by this edit — passed the delta gate, still "
+              "worth a separate repair:")
+        for k in sorted(pre_existing)[:10]:
+            print(f"    #{k}: {pre_existing[k]}")
+        print()
     for n, why in held:
         print(f"  HELD #{n}")
         for w in why:
@@ -259,11 +339,21 @@ def main():
                           "re-audit against a fresh snapshot")
                     continue
 
-            cmd = ["gh", "issue", "edit", str(n),
-                   "--body-file", p["path"],
-                   "--add-label", f"tier:{p['tier']}",
-                   "--add-label", p["kind"]]
-            res = run(cmd, cwd=REPO)
+            def retried(cmd):
+                """Run cmd; on failure back off through the secondary
+                content-creation limiter (60/180/600s) before giving up."""
+                for delay in (0, 60, 180, 600):
+                    if delay:
+                        time.sleep(delay)
+                    res = run(cmd, cwd=REPO)
+                    if res.returncode == 0:
+                        return res
+                return res
+
+            res = retried(["gh", "issue", "edit", str(n),
+                           "--body-file", p["path"],
+                           "--add-label", f"tier:{p['tier']}",
+                           "--add-label", p["kind"]])
             if res.returncode != 0:
                 failed.append((n, res.stderr.strip()[:200]))
                 print(f"  FAILED  #{n}: {res.stderr.strip()[:200]}")
@@ -272,8 +362,8 @@ def main():
             print(f"  applied #{n}  ({p['chars']} chars, {p['cites']})")
 
             if p["comment"]:
-                cres = run(["gh", "issue", "comment", str(n),
-                            "--body-file", p["comment"]], cwd=REPO)
+                cres = retried(["gh", "issue", "comment", str(n),
+                                "--body-file", p["comment"]])
                 if cres.returncode != 0:
                     failed.append((n, "PROTOCOL COMMENT FAILED after body "
                                    "edit: " + cres.stderr.strip()[:150]))
@@ -281,6 +371,8 @@ def main():
                           "AMENDED/REPLAN comment did not post; fix by hand")
                 else:
                     print(f"  commented #{n}")
+            if args.pace:
+                time.sleep(args.pace)
 
     report = {"passed": [p["number"] for p in passed],
               "held": {str(n): w for n, w in held},

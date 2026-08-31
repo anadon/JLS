@@ -5,41 +5,66 @@ labels: ["tier:feature"]
 ---
 
 <!--
-  Template: feature v3 (2026-08)
+  Template: feature v4 (2026-08)
 
-  TIER MODEL — task → feature → capstone. Edge legality (composition
-  and ordering edges; `related` is reference-only and may point at ANY
-  tier from any tier):
-    - Tasks (scientific_task template) may hold edges to tasks and
-      features, never to capstones.
-    - Features may hold edges to tasks, other features, and capstones.
-    - Capstones hold edges to features and sub-capstones; to tasks
-      only via the recorded orphaned-scope exception (capstone rule G).
+  TIER MODEL — task → feature → capstone. THIS BLOCK IS CANONICAL: the
+  task and capstone templates cite it rather than restating it.
+
+  The model is strictly layered. Each tier composes the tier below and
+  orders against its own tier; NO EDGE EVER POINTS UPWARD.
+
+    COMPOSITION — "is carried out by":
+      capstone  composes  features, capstones (nesting)
+      feature   composes  tasks
+      task      composes  nothing
+
+    ORDERING — "depends on" (blocked_by / blocks):
+      task      depends on  tasks
+      feature   depends on  features, tasks
+      capstone  depends on  capstones, features
+
+    REFERENCE — `related` is non-blocking and informational only, and
+    may point at ANY tier from any tier. It carries no ownership and
+    no ordering. Do not use it to record either.
+
+  A TASK MAY BE SHARED BY ANY NUMBER OF FEATURES. Shared work is simply
+  shared — there is no single-owner rule and no per-task owner field.
+  Ownership is recorded ONLY here, in this feature's requires_tasks
+  roster, which is the sole authority. To learn which features own a
+  task, read the rosters; the task itself does not claim an owner.
+  (v3 and earlier imposed a single-owner rule via a task-side
+  `part_of_feature` field. That was never the intended model. The rule
+  was fully obeyed — at the time of the v4 correction no open task had
+  more than one owner — so the cost is not a corrupted corpus but an
+  unrepresentable one: wherever work genuinely served several features,
+  the plan could not say so, and the relationship could only be noted
+  in `related`, which carries no ownership. The field is retired; each
+  task's single claim was preserved into its owning feature's roster
+  first, so nothing was lost.)
+
+  A feature may likewise serve any number of capstones; there the
+  capstone's requires_features is authoritative and serves_capstones
+  mirrors it.
+
   An issue's tier is defined by its machine block's `tier:` key; the
   tier:* label is a mirror for filtering — a missing or stale label is
   bookkeeping to fix, never an edge violation.
-  Edge kinds are distinct and every link declares which it is:
-    - Composition: a task is part_of at most ONE feature; a capstone
-      requires_features. Single-owner for tasks — the task's
-      part_of_feature field is authoritative, and a roster that
-      disagrees must REPLAN. A feature may serve any number of
-      capstones; there the capstone's requires_features is
-      authoritative and serves_capstones mirrors it.
-    - Ordering: blocked_by / blocks. THE ORDERING GRAPH IS blocked_by/
-      blocks PLUS every composition edge read child-before-parent (a
-      parent cannot close before its children land). That combined
-      graph must stay a DAG at the instance level, across all tiers —
-      tier legality alone does not prevent a cycle (a capstone
-      requiring feature A while A is blocked_by that capstone; a task
-      blocked_by its own parent feature). Before adding an edge, walk
-      the machine blocks of the issues it names — following their
-      listed edges outward — and confirm no path leads back here;
-      record that walk in the filing or REPLAN comment. A cycle is a
-      filing defect.
-    - Blocking a composite: an ordering edge aimed at a feature or
-      capstone gates that issue's integration/close-out only, never
-      its children's start — to gate children, block them directly.
-    - Reference: related — non-blocking, informational only.
+
+  THE ORDERING GRAPH IS blocked_by/blocks PLUS every composition edge
+  read child-before-parent (a parent cannot close before its children
+  land). That combined graph must stay a DAG at the instance level,
+  across all tiers — tier legality alone does not prevent a cycle (a
+  capstone requiring feature A while A is blocked_by that capstone).
+  Before adding an edge, walk the machine blocks of the issues it names
+  — following their listed edges outward — and confirm no path leads
+  back here; record that walk in the filing or REPLAN comment. A cycle
+  is a filing defect.
+
+  Blocking a composite: an ordering edge aimed at a feature or capstone
+  gates that issue's integration/close-out only, never its children's
+  start — to gate children, block them directly. Because upward edges
+  are illegal, a task that "waits on a feature" must instead name the
+  specific sibling TASKS it waits on.
 
   RULES — the scientific-task template's rules 1–7 apply here, adapted
   to this tier: evidence with file:line at a pinned commit (1); no
@@ -98,14 +123,22 @@ labels: ["tier:feature"]
 tier: feature
 evidence_commit:        # SHA the roster and contract claims are pinned to
 requires_tasks: []      # composition: FILED children only, numbers, e.g. [101, 102]
+                        #   AUTHORITATIVE for ownership. A task may appear in any
+                        #   number of feature rosters — a shared task is shared,
+                        #   and lists it in each. Tasks carry no owner field.
 planned_tasks: []       # one-line scopes for children not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it
                         #   (a landed scope is Background, not a plan); resolve
-                        #   each to a number via REPLAN when it is filed
-blocked_by: []          # ordering: tasks, features, or capstones that must land first
-blocks: []              # ordering: issues waiting on this feature
+                        #   each to a number via REPLAN when it is filed. A
+                        #   non-empty planned_tasks means this feature's rule B
+                        #   sufficiency argument is PROVISIONAL and the feature
+                        #   is not Ready.
+blocked_by: []          # ordering: features or tasks that must land first
+                        #   (never capstones — upward edges are illegal)
+blocks: []              # ordering: features or capstones waiting on this feature
 serves_capstones: []    # capstones whose required set includes this feature
-related: []             # reference only — never blocking
+                        #   (mirror; the capstone's requires_features is authoritative)
+related: []             # reference only — never blocking, never ownership
 ```
 
 ```mermaid
@@ -164,7 +197,36 @@ flowchart TD
      no single child's completion criteria assert (rule B). Name the
      integration test, golden file, or recorded manual procedure that
      pins each, and note which do not exist yet and which child (or
-     this issue's close-out) builds them. -->
+     this issue's close-out) builds them.
+
+     ANNOTATE OWNERSHIP PER CRITERION. Do NOT open this section with a
+     blanket sentence like "none of these is covered by any single
+     child alone" and then leave the individual criteria unattributed.
+     A 2026-08 audit of all 173 open features found that pattern is the
+     single highest-yield defect in the corpus: features carrying a
+     blanket preamble almost always had at least one criterion that a
+     child's own Definition of Done covered end to end, while features
+     that attributed each criterion individually had almost none. A
+     blanket claim is not checkable, so it does not get checked.
+
+     Instead, give every criterion one of:
+       - "spans #A + #B" — and state what each contributes, so the
+         claim can be falsified by reading either child.
+       - "covered alone by #A" — honest, and it simply does not count
+         toward rule B. Listing it is fine; miscalling it a span is not.
+       - "no child; built by this feature's close-out".
+       - "UNOWNED — no builder yet" — a real gap, worth stating.
+
+     WRITE THIS AGAINST THE CHILD'S ACTUAL TEXT, not from memory or
+     from the plan you filed it under. Several features in this corpus
+     record that they were written without reading their children
+     ("child issue body not read during this migration"), and their
+     span claims are wrong as a direct result. If a child later amends
+     its scope by REPLAN, this section is stale until re-derived.
+
+     A child that cites one of these criteria by number as its own
+     deliverable is proof the criterion is not a span; validator check
+     G22 reports that case. -->
 
 ## 6. Sequencing & Parallelism
 
@@ -182,8 +244,11 @@ flowchart TD
      reconciliation; a serving capstone descoped → whether this
      feature still has a beneficiary; a child dropped from the roster
      or this feature descoped → the REPLAN comment gives EACH affected
-     child a disposition: re-homed (new part_of_feature), freed
-     (part_of_feature: none), or closed — no dangling owners. Closing
+     child a disposition: re-homed (added to another feature's
+     requires_tasks), freed (in no roster — legal, it is simply
+     unowned), or closed. Because a task may be shared, dropping it
+     from THIS roster does not orphan it if another roster still lists
+     it — check before assuming a disposition is needed. Closing
      this feature with scope UNMET while a serving capstone still
      needs it → each unmet scope item gets a disposition in the
      closing REPLAN: re-homed into another required feature, filed as

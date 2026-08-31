@@ -2,21 +2,24 @@
 """Validate the "JLS Roadmap" GitHub-Project board against the issue corpus.
 
 Runs entirely offline from a snapshot_corpus.py dump; never talks to GitHub.
-Board Status semantics and milestone policy have NO written spec yet (a
-maintainer ruling is pending), so the checks that would encode semantics —
-B03 (Blocked coherence), B05 (In Progress staleness), B08 (milestones) —
-emit severity "info" only: they report, they do not accuse. B07 is the
-standing corpus-level marker of that condition and disappears only when the
-ruling lands and this validator is upgraded past check_version b-v1.
+
+Status semantics are now RATIFIED in docs/board-status-ruling.md, so B03 and
+B05 accuse rather than merely report, and B07 (the standing
+"semantics-unwritten" marker) is retired. Milestone policy is still unwritten,
+so B08 remains info-only. Ready/Blocked are DERIVED from the corpus by
+scripts/derive_board_status.py; In Progress and Done are asserted by a human
+or a workflow and are never derived. B10 reports where the board disagrees
+with the derivation — on disagreement the board is what is wrong.
 
 Checks:
   B01  every open issue is a board item          (error, fix: sync-roadmap-project.sh)
   B02  CLOSED-content item not in Done           (warn) + corpus-level delta breakdown
-  B03  Status=Blocked <-> open blocked_by        (info until Status ruling)
+  B03  Status=Blocked <-> open blocked_by        (warn; ruling ratified)
   B04  open board item with no Status            (warn, no default column ruled)
-  B05  In Progress, unassigned, no fresh STATUS: (info until Status ruling)
+  B05  In Progress, unassigned, no fresh STATUS: (warn; ruling ratified)
   B06  duplicate board items for one issue       (error)
-  B07  Status-semantics-unwritten marker + Status distribution (info)
+  B07  RETIRED by the ruling; now reports the Status distribution only (info)
+  B10  board Status disagrees with the derived value (warn)
   B08  milestone coverage/distribution           (info until milestone ruling)
   B09  label-taxonomy coverage: orphan labels, issues without area:* (info)
 
@@ -44,7 +47,7 @@ from datetime import datetime, timedelta
 from issue_corpus import (finding, findings_report, load_corpus,
                           parse_edge_field)
 
-CHECK_VERSION = "b-v1"
+CHECK_VERSION = "b-v2"
 STATUS_STALENESS_DAYS = 14
 ORPHAN_LIST_CAP = 20
 
@@ -138,13 +141,13 @@ def check_b03(corpus):
         open_blockers = sorted(b for b in set(numbers) if b in corpus.issues)
         if status == "Blocked" and not open_blockers:
             out.append(finding(
-                iss.number, "B03", "info",
+                iss.number, "B03", "warn",
                 f"Status=Blocked but machine-block blocked_by "
                 f"({numbers or 'none'}) lists no OPEN issue",
                 objects=["blocked-without-open-blocker", numbers]))
         elif status in ("Ready", "In Progress") and open_blockers:
             out.append(finding(
-                iss.number, "B03", "info",
+                iss.number, "B03", "warn",
                 f"Status={status} while blocked_by lists open issue(s) "
                 f"{open_blockers}",
                 objects=["open-blocker-not-blocked", status, open_blockers]))
@@ -190,7 +193,7 @@ def check_b05(corpus):
                 break
         if not fresh:
             out.append(finding(
-                iss.number, "B05", "info",
+                iss.number, "B05", "warn",
                 f"Status=In Progress but no assignee and no STATUS: comment "
                 f"in the last {STATUS_STALENESS_DAYS} days "
                 f"(as of {corpus.meta.get('fetched_at')})",
@@ -222,9 +225,62 @@ def check_b07(corpus):
                       sorted(dist.items(), key=lambda kv: (-kv[1], kv[0])))
     return [finding(
         0, "B07", "info",
-        "Status semantics unwritten — B03/B05 report-only pending ruling. "
-        f"Current Status distribution over {len(corpus.board)} items: {shown}",
+        "Status distribution over "
+        f"{len(corpus.board)} items: {shown}. (The former "
+        "'semantics unwritten' marker is retired: the ruling is ratified in "
+        "docs/board-status-ruling.md and B03/B05 now accuse.)",
         objects=[dict(dist)])]
+
+
+def check_b10(corpus, findings_paths):
+    """Board Status vs the value derived from the corpus.
+
+    The ruling (docs/board-status-ruling.md) makes Ready/Blocked a FUNCTION of
+    the corpus, so a board that disagrees is the thing that is wrong. The
+    derivation lives in derive_board_status.py and is imported rather than
+    reimplemented — two copies of a rule this load-bearing would drift.
+
+    In Progress and Done are asserted, never derived, so they are skipped.
+    Without --findings only the corpus-derivable clauses apply (open
+    blocked_by, non-empty planned_*), which under-reports rather than
+    over-reports: it can miss a Blocked, never invent one.
+    """
+    try:
+        from derive_board_status import derive
+    except Exception:
+        return []
+    error_issues, cycle_issues = {}, set()
+    for path in findings_paths or []:
+        try:
+            data = json.load(open(path))
+        except Exception:
+            continue
+        for f in data.get("findings", []):
+            if f.get("check") == "G04":
+                cycle_issues.add(f.get("issue"))
+                cycle_issues.update(x for x in f.get("objects", [])
+                                    if isinstance(x, int))
+            if f.get("severity") == "error" and f.get("issue"):
+                error_issues.setdefault(f["issue"], set()).add(f["check"])
+
+    want = derive(corpus, error_issues, cycle_issues)
+    out = []
+    for it in corpus.board:
+        n = it.get("issue")
+        if not n or n not in corpus.issues:
+            continue
+        cur = it.get("status")
+        if cur in ("In Progress", "Done"):
+            continue
+        exp, why = want.get(n, (None, ""))
+        if exp and cur != exp:
+            out.append(finding(
+                n, "B10", "warn",
+                f"board Status={cur or '<none>'} but the corpus derives "
+                f"{exp}" + (f" ({why[:150]})" if why else "")
+                + " — Status is derived; run derive_board_status.py --apply",
+                objects=["status-drift", cur, exp], fix_class="auto"))
+    return out
 
 
 def check_b08(corpus):
@@ -274,10 +330,11 @@ CHECKS = (check_b01, check_b02, check_b03, check_b04, check_b05,
           check_b06, check_b07, check_b08, check_b09)
 
 
-def run_checks(corpus):
+def run_checks(corpus, findings_paths=None):
     out = []
     for check in CHECKS:
         out.extend(check(corpus))
+    out.extend(check_b10(corpus, findings_paths))
     return out
 
 
@@ -293,6 +350,10 @@ def main(argv=None):
                          "(0 = corpus-level findings)")
     ap.add_argument("--json", dest="json_out", default=None,
                     help="write the findings report to this path")
+    ap.add_argument("--findings", action="append", default=[],
+                    help="graph/hygiene findings JSON, for B10's full "
+                         "derivation; repeatable. Without it B10 applies only "
+                         "the corpus-derivable clauses and under-reports.")
     args = ap.parse_args(argv)
 
     started = time.monotonic()
@@ -307,7 +368,7 @@ def main(argv=None):
               file=sys.stderr)
         return 2
 
-    findings = run_checks(corpus)
+    findings = run_checks(corpus, args.findings)
     if args.issue is not None:
         findings = [f for f in findings if f["issue"] == args.issue]
 

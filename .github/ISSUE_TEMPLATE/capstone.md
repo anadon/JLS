@@ -5,18 +5,23 @@ labels: ["tier:capstone"]
 ---
 
 <!--
-  Template: capstone v3 (2026-08)
+  Template: capstone v4 (2026-08)
 
   TIER MODEL — task → feature → capstone; the full edge-legality
   matrix is in the feature template and applies unchanged (`related`
   is reference-only and may point at any tier; tier identity is the
   machine block's `tier:` key, labels are mirrors). The
   capstone-specific consequences:
-    - Capstones reference FEATURES (requires_features) and
-      SUB-CAPSTONES (requires_capstones). A task may be referenced
-      only through the rule G orphaned-scope exception below — if a
-      capstone appears to need a task and no orphan event justifies
-      it, that task belongs inside one of its features.
+    - Capstones COMPOSE features (requires_features) and SUB-CAPSTONES
+      (requires_capstones), and ORDER against capstones and features
+      (blocked_by / blocks). Both directions are downward or
+      same-tier; no edge from a capstone ever points at a task, and
+      nothing upward exists above this tier.
+    - Capstones never reference TASKS. Since feature v4 a task may be
+      shared by any number of features, so scope that once needed a
+      direct capstone→task edge is now simply listed in an additional
+      feature's roster. See rule G, which is retained only for scope
+      that no feature can host at all.
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
       edge), OR enumerate the sub-capstone's features directly in
@@ -24,23 +29,23 @@ labels: ["tier:capstone"]
       the second, record a mirror obligation in BOTH issues: any REPLAN
       to either roster must re-sync the other, or the two silently
       drift.
-    - Ordering between capstones is expressed through features: a
-      later capstone's features are blocked_by the earlier capstone.
-      Direct capstone-to-capstone ORDERING edges remain forbidden
-      (composition via requires_capstones is the nesting mechanism).
+    - Ordering between capstones is now expressed DIRECTLY:
+      capstone-to-capstone blocked_by / blocks is legal. (v3 forbade
+      it and routed inter-capstone ordering through the later
+      capstone's features being blocked_by the earlier capstone. That
+      indirection is retired: it required an upward feature→capstone
+      edge, which the corrected model makes illegal.) Use
+      requires_capstones when a sub-capstone's whole outcome is PART OF
+      this one, and blocked_by when it merely must land first.
     - The ordering graph (defined in the feature template: blocked_by/
       blocks plus composition edges read child-before-parent) must
-      stay a DAG. Features may be blocked_by capstones, so cross-tier
-      cycles are possible: before adding a feature to the required
-      set, walk that feature's machine-block edges outward and confirm
-      no path returns to this capstone; record the walk in the filing
-      or REPLAN comment.
-    - Ordering edges touching this capstone are recorded HERE as well
-      as on the feature: when a feature declares blocked_by this
-      capstone, mirror it in `blocks` below. When a REPLAN adds a
-      feature to requires_features, re-derive ordering — any capstone
-      that had to precede this one must block the newly added feature
-      too, or the inter-capstone ordering silently lapses.
+      stay a DAG. Before adding a capstone or feature to the required
+      set, walk its machine-block edges outward and confirm no path
+      returns to this capstone; record the walk in the filing or
+      REPLAN comment.
+    - Ordering edges touching this capstone are recorded on BOTH
+      sides: when another capstone declares blocked_by this one,
+      mirror it in `blocks` below.
 
   RULES — the scientific-task template's rules 1–7 apply adapted to
   this tier (evidence at a pinned commit; no padding; observable
@@ -66,15 +71,18 @@ labels: ["tier:capstone"]
      label, not a capstone — do not file it.
   G. Orphaned scope. When a required feature closes, is re-tiered, or
      is descoped while leaving scope this capstone still needs, the
-     REPLAN must give that scope a disposition: (a) re-home it into
-     another required feature; (b) file it as a task and — as a
-     RECORDED EXCEPTION — list it in `requires_tasks_exception` below,
-     with the REPLAN comment that justifies it; or (c) descope it,
-     re-deriving the §2 (Required Feature Set & Sufficiency) argument.
-     `requires_tasks_exception` is the ONLY legal capstone→task edge;
-     each entry exists because an orphan event was recorded, and the
-     preferred end-state is re-homing it under a feature when one
-     fits.
+     REPLAN must give that scope a disposition: (a) re-home it — add
+     the task to another feature's requires_tasks roster; (b) file a
+     new feature to host it and add that feature to requires_features;
+     or (c) descope it, re-deriving the §2 (Required Feature Set &
+     Sufficiency) argument.
+     There is NO capstone→task edge. The v3 `requires_tasks_exception`
+     field is retired: it existed only because the single-owner rule
+     could leave a task with nowhere to go, and feature v4's shared
+     ownership removes that condition entirely — option (a) is now
+     always available, since a task may sit in any number of rosters.
+     A capstone that appears to need a task directly is missing a
+     feature; file one.
 -->
 
 ## Abstract
@@ -97,16 +105,16 @@ requires_features: []   # composition — the closed required set (rule E), FILE
 requires_capstones: []  # composition — sub-capstones whose whole outcome gates this one
                         #   (nesting; see the tier-model note on the consume-its-features
                         #   alternative and its mirror obligation)
-requires_tasks_exception: []  # rule G ONLY: orphaned-scope tasks adopted by recorded
-                        #   REPLAN exception; empty unless an orphan event is on record
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
-                        #   each to a number via REPLAN when it is filed
-blocked_by: []          # ordering: features that must land before this capstone closes,
-                        #   beyond the required set (mirror of the feature-side edge)
-blocks: []              # ordering: features waiting on this capstone (mirror of each
-                        #   feature's blocked_by entry naming this capstone)
-related: []             # reference only — never blocking
+                        #   each to a number via REPLAN when it is filed. A non-empty
+                        #   planned_features means the §2 sufficiency argument is
+                        #   PROVISIONAL and this capstone is not Ready.
+blocked_by: []          # ordering: capstones or features that must land before this
+                        #   capstone closes, beyond the required set. Never tasks.
+blocks: []              # ordering: capstones waiting on this one (mirror of their
+                        #   blocked_by entry naming this capstone)
+related: []             # reference only — never blocking, never ownership
 ```
 
 ```mermaid
@@ -152,7 +160,34 @@ flowchart TD
      one not covered by any single feature's completion criteria
      (rule F). Name the end-to-end test, golden artifact, or recorded
      procedure that pins each, and which feature (or this issue's
-     close-out) builds the ones that do not exist yet. -->
+     close-out) builds the ones that do not exist yet.
+
+     A "Spans #A, #B" ANNOTATION IS NOT EVIDENCE. A 2026-08 audit of
+     all 36 capstones found this to be the most repeated defect at
+     this tier: a criterion annotated as spanning two features while
+     one of those features' own §5 or Definition of Done already
+     carried the whole assertion, sometimes word for word. Four
+     capstones failed rule F outright because EVERY criterion turned
+     out to be single-feature-covered — they are milestone labels, not
+     capstones.
+
+     So: before writing "spans #A, #B", open #A and #B and read their
+     Integration Criteria and DoD. State what each contributes. If one
+     of them already asserts the whole thing, say "covered alone by
+     #A" — that is honest, and it simply does not count toward rule F.
+     A capstone needs only ONE genuine system-level criterion, but it
+     does need one.
+
+     Watch for these, all found in this corpus:
+       - the second party named in a "span" is not in requires_features
+         at all — then it is not a composition claim and the criterion
+         is effectively unowned;
+       - a criterion whose named owner DISCLAIMS it (one feature's
+         scope boundary explicitly refuses the work the capstone
+         assigns it);
+       - a criterion no feature covers and no task owns — acceptance
+         evidence with no work item anywhere;
+       - text left stale by a feature's later REPLAN. -->
 
 ## 5. Re-planning Protocol
 
@@ -171,8 +206,7 @@ flowchart TD
 
 ## Completion Criteria (Definition of Done)
 
-- [ ] Every entry in `requires_features`, `requires_capstones`, and `requires_tasks_exception` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set; `planned_features` empty (each resolved to a filed issue or descoped)
-- [ ] Every `requires_tasks_exception` entry traces to a recorded orphan-event REPLAN (rule G); none was added as a convenience edge
+- [ ] Every entry in `requires_features` and `requires_capstones` closed as landed, or removed via a `REPLAN:` comment with the §2 sufficiency argument re-derived for the reduced set; `planned_features` empty (each resolved to a filed issue or descoped)
 - [ ] Every cited evidence document and permalink resolves on the default branch at close
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10)
 - [ ] Every criterion in §4 (System-Level Acceptance Criteria) verified end-to-end at a named commit; command and output recorded in a closing comment

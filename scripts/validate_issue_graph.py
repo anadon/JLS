@@ -18,48 +18,107 @@ Usage:
 Exit status: 0 no error-severity findings, 1 some, 2 environment error.
 
 Check ids (stable): G01 parse defects; G02 nonexistent referents; G03 edge
-tier-legality; G04 combined-graph cycles; G05 task blocked_by own parent;
-G06 part_of_feature/roster reciprocity; G07 multiple owners; G08
+tier-legality; G04 combined-graph cycles; G05 RETIRED (task->feature ordering
+is now illegal outright — G03 owns it); G06 roster entries resolve to open
+tasks; G07 RETIRED (a task may be owned by many features); G08
 serves_capstones/requires_features mirror; G09 ordering symmetry (info) and
 feature<->capstone mirror obligations; G10 native sub-issue agreement; G11
-edges to closed issues; G12 requires_tasks_exception without an orphan-event
+edges to closed issues; G12 surviving retired capstone->task exception
 REPLAN comment; G13 planned_* hygiene (filed numbers still in planned;
 orphaned K/M/L/P/D scope ids); G14 mermaid vs machine block; G15
-part_of_feature multiplicity; G16 self-edges/dupes/contradictions; G17
+G15 RETIRED (multiple owners are legal); G16 self-edges/dupes/
+contradictions; G17
 `related` hygiene; G18 evidence_commit resolution and staleness.
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
 
 from issue_corpus import (COMMENT_PREFIXES, MERMAID_BLOCK, TEMPLATES,
                           finding, findings_report, load_corpus,
-                          machine_block, parse_edge_field)
+                          machine_block, parse_edge_field,
+                          RETIRED_YAML_KEYS, yaml_key_state)
 
 CHECK_VERSION = "g-v1"
 
 # field -> (source tier, set of legal target tiers)
+# The model is strictly layered (feature v4 is canonical): each tier composes
+# the tier below and orders against its own tier. NO EDGE POINTS UPWARD.
+# A task declares no composition edge at all — ownership lives solely in each
+# owning feature's requires_tasks roster, and a task may be owned by many.
 COMPOSITION_TARGETS = {
-    "part_of_feature": ("task", {"feature"}),
     "requires_tasks": ("feature", {"task"}),
     "serves_capstones": ("feature", {"capstone"}),
     "requires_features": ("capstone", {"feature"}),
     "requires_capstones": ("capstone", {"capstone"}),
-    "requires_tasks_exception": ("capstone", {"task"}),
 }
-# ordering targets by source tier (feature template's legality matrix; direct
-# capstone-to-capstone ordering edges are forbidden — nesting goes through
-# requires_capstones)
+# ordering targets by source tier. Capstone-to-capstone ordering is LEGAL as
+# of capstone v4 (v3 routed it through an upward feature->capstone edge, which
+# the corrected model forbids).
 ORDERING_TARGETS = {
-    "task": {"task", "feature"},
-    "feature": {"task", "feature", "capstone"},
-    "capstone": {"feature"},
+    "task": {"task"},
+    "feature": {"feature", "task"},
+    "capstone": {"capstone", "feature"},
 }
 PLANNED_FIELDS = {"planned_tasks", "planned_features"}
 SCOPE_ID = re.compile(r"\b([KLPD]\d+|M(?!0\b|1\b|2\b|3\b|4\b)\d+)\b")
 EVIDENCE_SHA = re.compile(r"^evidence_commit\s*:\s*([0-9a-f]{7,40})\b", re.M)
+
+
+def planned_entries(mb, key):
+    """List entries under a planned_* key.
+
+    These hold PROSE, not issue numbers, so parse_edge_field's `numbers` is
+    always empty for them — counting that would report zero unfiled work for
+    a feature carrying nine unfiled scopes. Count list entries directly.
+    """
+    if not mb:
+        return []
+    m = re.search(r"^" + re.escape(key) + r":[ \t]*(.*)$", mb, re.M)
+    if not m:
+        return []
+    inline = m.group(1).split("#")[0].strip()
+    if inline.startswith("["):
+        inner = inline[1:inline.rfind("]")] if "]" in inline else inline[1:]
+        return [x.strip() for x in inner.split(",") if x.strip()]
+    if inline in ("~", "null", "none", "[]"):
+        return []
+    out = []
+    for line in mb[m.end():].split("\n"):
+        if re.match(r"^\s+-\s+", line):
+            out.append(line.strip()[1:].strip())
+        elif re.match(r"^\S", line):
+            break
+    return out
+
+
+# A child task that cites its OWN PARENT feature's integration criterion by
+# number is the highest-precision signal of a feature rule B violation that
+# exists in this corpus. Rule B requires at least one §5 criterion that no
+# single child covers alone; when the child's own body says "this is #F's
+# Integration Criterion 5", that criterion is covered alone by construction.
+# Two independent audits converged on this as "the most reliable tell".
+# Backticks/brackets around the reference are common, so they are tolerated.
+PARENT_CRIT = re.compile(
+    r"[`\[]?#(\d{2,4})[`\]]?(?:'s)?\s+(?:own\s+)?(?:§\s*5\s+)?"
+    r"(?:Integration\s+)?[Cc]riteri(?:on|a)\s*"
+    r"(\d+(?:\s*(?:[-\u2013,]|and)\s*\d+)*)"
+    r"|[`\[]?#(\d{2,4})[`\]]?(?:'s)?\s+(I|IC|AC)-?(\d+)\b")
+
+
+def cited_parent_criteria(body, parent):
+    """Criterion labels this body attributes to `parent`, by number."""
+    out = set()
+    for m in PARENT_CRIT.finditer(body or ""):
+        ref = m.group(1) or m.group(3)
+        if not ref or int(ref) != parent:
+            continue
+        out.add((m.group(2) or "").strip() or
+                f"{m.group(4)}-{m.group(5)}")
+    return sorted(x for x in out if x)
 
 
 class Node:
@@ -68,11 +127,21 @@ class Node:
         self.tier = iss.tier
         self.machine = iss.machine
         self.fields = {}
+        # Retired keys live in their own map, NOT in self.fields: G01 treats an
+        # absent entry in self.fields as a defect, and a retired key is absent
+        # from every healthy issue. G12/G20 read self.retired instead.
+        self.retired = {}
         if self.machine and self.tier in TEMPLATES:
             for key in TEMPLATES[self.tier]["yaml_keys"]:
                 if key in ("tier", "evidence_commit"):
                     continue
                 self.fields[key] = parse_edge_field(self.machine, key)
+            for key in RETIRED_YAML_KEYS:
+                self.retired[key] = parse_edge_field(self.machine, key)
+
+    def retired_numbers(self, key):
+        f = self.retired.get(key)
+        return f["numbers"] if f else []
 
     def numbers(self, key):
         f = self.fields.get(key)
@@ -204,12 +273,26 @@ def run(corpus, repo_root, only_issue=None):
                                          objects=[key, t],
                                          fix_class="adjudicate"))
                 elif key in ("blocked_by", "blocks"):
-                    legal = ORDERING_TARGETS.get(node.tier, set())
-                    if ttier and ttier not in legal:
+                    # Direction matters. `A blocked_by B` means A depends on
+                    # B, so judge against A's row. `A blocks B` means B
+                    # depends on A, so judge against B's row — using A's row
+                    # for both silently legalises every upward edge written
+                    # from the parent's side (e.g. `feature blocks task`,
+                    # which IS `task blocked_by feature`).
+                    if key == "blocked_by":
+                        dependent, depended = node.tier, ttier
+                    else:
+                        dependent, depended = ttier, node.tier
+                    legal = ORDERING_TARGETS.get(dependent, set())
+                    if ttier and depended not in legal:
+                        rel = (f"this {node.tier} depends on #{t} "
+                               f"(tier:{ttier})" if key == "blocked_by"
+                               else f"#{t} (tier:{ttier}) depends on this "
+                                    f"{node.tier}")
                         F.append(finding(n, "G03", "error",
-                                         f"{key}: #{t} is tier:{ttier}; "
-                                         f"{node.tier} ordering edges may "
-                                         f"target {sorted(legal)} only",
+                                         f"{key}: {rel}, but a {dependent} "
+                                         f"may depend on {sorted(legal)} "
+                                         "only — no upward edges",
                                          objects=[key, t],
                                          fix_class="adjudicate"))
                 if t in corpus.closed and key != "related":
@@ -241,20 +324,16 @@ def run(corpus, repo_root, only_issue=None):
             F.append(finding(n, "G17", "warn", "related: self-reference",
                              objects=[n], fix_class="body"))
 
-        # G15 + G05
-        pof = node.numbers("part_of_feature")
-        if node.tier == "task":
-            if len(pof) > 1:
-                F.append(finding(n, "G15", "error",
-                                 f"part_of_feature names {len(pof)} features "
-                                 f"{pof}; a task is part_of at most ONE",
-                                 objects=pof, fix_class="adjudicate"))
-            if pof and pof[0] in node.numbers("blocked_by"):
-                F.append(finding(n, "G05", "error",
-                                 f"task is blocked_by its own parent feature "
-                                 f"#{pof[0]} — a parent gates close-out, not "
-                                 "child start; this deadlocks",
-                                 objects=[pof[0]], fix_class="body"))
+        # G20: machine-block keys retired by the v7/v4 tier-model correction.
+        # G05 (task blocked_by its own parent) and G15 (multiple parents) are
+        # both retired with the field they policed: task->feature ordering is
+        # now illegal outright (G03 owns it) and multiple owners are legal.
+        for rk, why in RETIRED_YAML_KEYS.items():
+            if yaml_key_state(node.machine, rk) != "absent":
+                F.append(finding(n, "G20", "warn",
+                                 f"machine block still carries retired key "
+                                 f"`{rk}` — {why}",
+                                 objects=[rk], fix_class="body"))
 
         # G13: filed numbers still sitting in planned_*
         for key in PLANNED_FIELDS & set(node.fields):
@@ -284,20 +363,19 @@ def run(corpus, repo_root, only_issue=None):
 
         # G12
         if node.tier == "capstone":
-            exc = node.numbers("requires_tasks_exception")
-            if exc:
-                comments = corpus.comments.get(n, [])
-                for t in exc:
-                    ok = any(c.get("body", "").startswith("REPLAN:")
-                             and f"#{t}" in c.get("body", "")
-                             and "orphan" in c.get("body", "").lower()
-                             for c in comments)
-                    if not ok:
-                        F.append(finding(n, "G12", "warn",
-                                         f"requires_tasks_exception #{t} has "
-                                         "no REPLAN comment recording the "
-                                         "orphan event (capstone rule G)",
-                                         objects=[t], fix_class="comment"))
+            # G12: capstone rule G's orphaned-scope exception is RETIRED
+            # (capstone v4) — shared task ownership removes the condition it
+            # existed for. Any surviving entry is scope that must be re-homed
+            # into a feature roster, which is a stronger finding than the old
+            # "missing REPLAN comment" warning.
+            exc = node.retired_numbers("requires_tasks_exception")
+            for t in exc:
+                F.append(finding(n, "G12", "error",
+                                 f"requires_tasks_exception #{t} — retired "
+                                 "capstone->task edge; re-home the task into "
+                                 "a feature's requires_tasks (a task may be "
+                                 "in any number of rosters) and drop the key",
+                                 objects=[t], fix_class="adjudicate"))
 
         # G14 mermaid
         if node.tier in ("feature", "capstone"):
@@ -369,45 +447,121 @@ def run(corpus, repo_root, only_issue=None):
                                          fix_class="body"))
 
     # --- cross-issue: reciprocity, mirrors, ownership -----------------------
+    # G07 (single-owner) is RETIRED: a task may appear in any number of
+    # feature rosters — a shared task is simply shared (feature v4).
     owners = {}
     for n, node in sorted(nodes.items()):
         if node.tier == "feature":
             for t in node.numbers("requires_tasks"):
                 owners.setdefault(t, []).append(n)
-    for t, fs in sorted(owners.items()):
-        if len(fs) > 1 and (want(t) or any(want(f) for f in fs)):
-            F.append(finding(min(fs), "G07", "error",
-                             f"task #{t} appears in requires_tasks of "
-                             f"{len(fs)} features: {fs} (single-owner rule)",
-                             objects=[t] + fs, fix_class="adjudicate"))
+
+    # G06: the roster is now the SOLE authority for ownership, so there is no
+    # second side to reciprocate against. What remains checkable is that every
+    # roster entry is really an open task of this repo.
+    # G19: planned_tasks / planned_features hold REAL scope that is not an
+    # issue, not on the board, and not executable by any workflow. The
+    # templates stage work there and require each entry to "resolve to a
+    # number via REPLAN when it is filed", but attach no gate forcing that
+    # resolution — so the scope can sit unfiled indefinitely while the parent
+    # looks complete. It is not: a feature carrying planned_tasks cannot
+    # satisfy rule B, and a capstone carrying planned_features cannot satisfy
+    # rule E, because part of the roster does not exist yet.
+    for n, node in sorted(nodes.items()):
+        if not want(n):
+            continue
+        key = ("planned_tasks" if node.tier == "feature"
+               else "planned_features" if node.tier == "capstone" else None)
+        if key is None:
+            continue
+        entries = planned_entries(node.machine, key)
+        if entries:
+            F.append(finding(n, "G19", "warn",
+                             f"{key} holds {len(entries)} unfiled scope "
+                             f"item(s) — this work is not an issue, not on "
+                             f"the board and not executable; the "
+                             f"{'rule B' if node.tier == 'feature' else 'rule E'}"
+                             " sufficiency argument is provisional until each "
+                             "is filed and resolved by REPLAN",
+                             objects=[key, len(entries)],
+                             fix_class="adjudicate"))
+
+    # G22: rule B risk — a child that claims its parent's own criterion.
+    for n, node in sorted(nodes.items()):
+        if node.tier != "feature" or not want(n):
+            continue
+        for t in node.numbers("requires_tasks"):
+            child = nodes.get(t)
+            if child is None:
+                continue
+            crits = cited_parent_criteria(child.iss.body, n)
+            if crits:
+                F.append(finding(
+                    n, "G22", "warn",
+                    f"child #{t} names this feature's own integration "
+                    f"criteri{'on' if len(crits) == 1 else 'a'} "
+                    f"{', '.join(crits)} as its own deliverable — if no other "
+                    "§5 criterion is jointly owned, rule B is not met and "
+                    "this is a folder, not a feature",
+                    objects=[t] + crits, fix_class="adjudicate"))
+
+    # G21: owned_by_derived is an OPTIONAL, explicitly non-authoritative
+    # convenience copy of "which features list this task", so a task read
+    # alone still names its owners (scientific-task v7 removed the
+    # authoritative field). Being derived, it can rot — so it is checked
+    # against the rosters, which are the truth, and never the other way round.
+    for n, node in sorted(nodes.items()):
+        if node.tier != "task" or not want(n):
+            continue
+        state = yaml_key_state(node.machine, "owned_by_derived")
+        if state == "absent":
+            continue
+        got = sorted(parse_edge_field(node.machine,
+                                      "owned_by_derived")["numbers"])
+        real = sorted(owners.get(n, []))
+        if got != real:
+            F.append(finding(n, "G21", "warn",
+                             f"owned_by_derived {got or '[]'} disagrees with "
+                             f"the feature rosters that actually list this "
+                             f"task {real or '[]'} — it is derived state; "
+                             "regenerate it, do not hand-edit",
+                             objects=sorted(set(got) ^ set(real)),
+                             fix_class="auto"))
 
     for n, node in sorted(nodes.items()):
-        if node.tier == "task":
-            for f_num in node.numbers("part_of_feature"):
-                feat = nodes.get(f_num)
-                if feat and feat.tier == "feature" and want(f_num):
-                    roster = set(feat.numbers("requires_tasks"))
-                    if n not in roster:
-                        F.append(finding(
-                            f_num, "G06", "error",
-                            f"task #{n} declares part_of_feature: {f_num} "
-                            "but is absent from requires_tasks — the task's "
-                            "field is authoritative; the roster must REPLAN",
-                            objects=[n], fix_class="body"))
         if node.tier == "feature":
             declared_children = set(node.numbers("requires_tasks"))
             for t in sorted(declared_children):
+                if not want(n):
+                    continue
                 child = nodes.get(t)
-                if child and child.tier == "task" and want(n):
-                    cpof = child.numbers("part_of_feature")
-                    if not cpof or cpof[0] != n:
+                if child is None:
+                    # A roster legitimately RETAINS a completed child: that is
+                    # how a reader sees the feature's work is done. Only an
+                    # entry that resolves to nothing, or to abandoned scope
+                    # still being counted as delivered, is a defect.
+                    rec = corpus.closed.get(t)
+                    if rec is None:
                         F.append(finding(
                             n, "G06", "error",
-                            f"requires_tasks lists #{t} but that task's "
-                            f"part_of_feature is "
-                            f"{cpof[0] if cpof else 'none'} — task field is "
-                            "authoritative; REPLAN this roster",
+                            f"requires_tasks lists #{t}, which is not an open "
+                            "issue and not a known closed one — a roster is "
+                            "the sole record of ownership, so a dangling "
+                            "entry silently drops that scope",
                             objects=[t], fix_class="body"))
+                    elif (rec.get("state_reason") or "") == "not_planned":
+                        F.append(finding(
+                            n, "G06", "warn",
+                            f"requires_tasks lists #{t}, closed as NOT "
+                            "PLANNED — the roster still counts abandoned "
+                            "scope as delivered; drop it via REPLAN or "
+                            "re-home the scope",
+                            objects=[t], fix_class="adjudicate"))
+                elif child.tier != "task":
+                    F.append(finding(
+                        n, "G06", "error",
+                        f"requires_tasks lists #{t}, which is tier "
+                        f"{child.tier}, not task",
+                        objects=[t], fix_class="body"))
             for c_num in node.numbers("serves_capstones"):
                 cap = nodes.get(c_num)
                 if cap and cap.tier == "capstone" and want(n):
@@ -444,30 +598,32 @@ def run(corpus, repo_root, only_issue=None):
                                     if sev == "warn" else ""),
                                  objects=[t], fix_class="body"))
 
-        # G10 native sub-issues vs machine block
+        # G10 native sub-issues vs machine block.
+        # A task may be owned by many features, and GitHub's native sub-issue
+        # link is single-parent, so it can only ever mirror ONE owner. It is
+        # therefore checked for CONSISTENCY (the native parent must be one of
+        # the real owners), never for completeness.
         native_parent = corpus.parent.get(n)
-        declared_parent = None
         if node.tier == "task":
-            pof = node.numbers("part_of_feature")
-            declared_parent = pof[0] if pof else None
+            declared_owners = owners.get(n, [])
         elif node.tier == "feature":
-            sc = node.numbers("serves_capstones")
-            declared_parent = sc[0] if len(sc) == 1 else None
-        if want(n) and declared_parent:
+            declared_owners = node.numbers("serves_capstones")
+        else:
+            declared_owners = []
+        if want(n) and declared_owners:
             if native_parent is None:
                 F.append(finding(n, "G10", "warn",
-                                 f"machine block names parent "
-                                 f"#{declared_parent} but no native "
+                                 f"owned by {declared_owners} but no native "
                                  "sub-issue link exists",
-                                 objects=[declared_parent],
+                                 objects=list(declared_owners),
                                  fix_class="auto"))
-            elif native_parent != declared_parent and node.tier == "task":
+            elif native_parent not in declared_owners:
                 F.append(finding(n, "G10", "error",
                                  f"native sub-issue parent #{native_parent} "
-                                 f"disagrees with part_of_feature "
-                                 f"#{declared_parent} (machine block is "
-                                 "source of truth)",
-                                 objects=[native_parent, declared_parent],
+                                 f"is not among this issue's owners "
+                                 f"{declared_owners} (the machine block is "
+                                 "the source of truth)",
+                                 objects=[native_parent] + list(declared_owners),
                                  fix_class="auto"))
 
     # --- G04: combined ordering graph is a DAG ------------------------------
@@ -484,7 +640,7 @@ def run(corpus, repo_root, only_issue=None):
                 continue
             for t in node.numbers(key):
                 if t in nodes:
-                    if key in ("part_of_feature", "serves_capstones"):
+                    if key == "serves_capstones":
                         edges.add((n, t))       # child before parent
                     else:                        # requires_*: children first
                         edges.add((t, n))
@@ -498,6 +654,178 @@ def run(corpus, repo_root, only_issue=None):
     return F
 
 
+# ---------------------------------------------------------------------------
+# Coverage report: is the corpus a complete PLAN, not just a set of legal edges
+# ---------------------------------------------------------------------------
+# Every G-check above asks whether a declared edge is well-formed and legal.
+# None of them ask whether the capstone -> feature -> task tree actually covers
+# its own stated scope. That is a different question and it has a different
+# answer shape: almost everything here is a judgment call for the maintainer,
+# so this is a REPORT, never a pass/fail gate.
+
+ROADMAP_DOC = re.compile(
+    r"docs/(capability-roadmap/[\w.\-]+\.md|grand-architecture\.md"
+    r"|standards-adoption/[\w.\-]+\.md)")
+C_FAMILY = re.compile(r"^(?:TASK|FEAT|CAP)-(C\d+)")
+
+
+def cited_paths(body):
+    """Source paths a body cites, by either spelling. No git, no resolution —
+    this is a co-citation signal, not a verification."""
+    out = set()
+    for m in re.finditer(r"([\w./\-]+\.(?:java|py|md|xml|yml|yaml|sh|v|sv|"
+                         r"json|txt|cfg|toml|properties)):\d+", body or ""):
+        out.add(m.group(1))
+    for m in re.finditer(r"github\.com/[\w.\-]+/[\w.\-]+/blob/[0-9a-f]{7,40}/"
+                         r"([^\s)`\"'#]+)#L\d+", body or ""):
+        out.add(m.group(1))
+    return out
+
+
+def coverage(corpus, repo_root):
+    nodes = {n: Node(i) for n, i in corpus.issues.items()}
+    tier = lambda t: [n for n, nd in nodes.items() if nd.tier == t]
+    caps, feats, tasks = tier("capstone"), tier("feature"), tier("task")
+
+    cap_feat = {n: nodes[n].numbers("requires_features") for n in caps}
+    feat_task = {n: nodes[n].numbers("requires_tasks") for n in feats}
+    owned_feats = {x for v in cap_feat.values() for x in v}
+    owned_tasks = {x for v in feat_task.values() for x in v}
+
+    roster_orphan_tasks = sorted(n for n in tasks if n not in owned_tasks)
+    # Under feature v4 a roster is the ONLY record of ownership, so "in no
+    # roster" is the whole of orphanhood; there is no second, weaker tier.
+    full_orphan_tasks = roster_orphan_tasks
+
+    rootedness = {
+        "features_serving_no_capstone":
+            sorted(n for n in feats if n not in owned_feats),
+        "tasks_in_no_feature_roster": roster_orphan_tasks,
+        "tasks_in_no_roster_at_all": full_orphan_tasks,
+        "capstones_requiring_nothing":
+            sorted(n for n in caps if not cap_feat[n]),
+    }
+    decomposition = {
+        "features_with_empty_roster":
+            sorted(n for n in feats if not feat_task[n]),
+        "features_with_single_task":
+            sorted(n for n in feats if len(feat_task[n]) == 1),
+        "capstones_with_single_feature":
+            sorted(n for n in caps if len(cap_feat[n]) == 1),
+    }
+
+    # --- roadmap traceability, both directions
+    docs = {}
+    cap_docs = {}
+    for n, nd in nodes.items():
+        hits = set(ROADMAP_DOC.findall(nd.iss.body or ""))
+        if nd.tier == "capstone":
+            cap_docs[n] = hits
+        for d in hits:
+            e = docs.setdefault(d, {"capstones": [], "features": 0,
+                                    "tasks": 0})
+            if nd.tier == "capstone":
+                e["capstones"].append(n)
+            elif nd.tier == "feature":
+                e["features"] += 1
+            else:
+                e["tasks"] += 1
+    on_disk = []
+    for sub in ("capability-roadmap", "standards-adoption"):
+        d = os.path.join(repo_root, "docs", sub)
+        if os.path.isdir(d):
+            on_disk += [f"{sub}/{f}" for f in sorted(os.listdir(d))
+                        if f.endswith(".md")]
+    on_disk.append("grand-architecture.md")
+    roadmap = {
+        "docs": {d: {"capstones": sorted(v["capstones"]),
+                     "features": v["features"], "tasks": v["tasks"]}
+                 for d, v in sorted(docs.items())},
+        "capstones_citing_no_roadmap_doc":
+            sorted(n for n in caps if not cap_docs.get(n)),
+        "docs_cited_by_no_capstone":
+            sorted(d for d in on_disk
+                   if not docs.get(d, {}).get("capstones")),
+        "docs_cited_by_nothing":
+            sorted(d for d in on_disk if d not in docs),
+    }
+
+    # --- `related` edge characterization
+    paths = {n: cited_paths(nd.iss.body) for n, nd in nodes.items()}
+    fam = {}
+    for n, nd in nodes.items():
+        m = C_FAMILY.match(nd.iss.title or "")
+        fam[n] = m.group(1) if m else None
+    rel = {n: set(nodes[n].numbers("related")) for n in nodes}
+    pairs, recip, cross_tier, cross_fam, no_shared = set(), 0, 0, 0, 0
+    for a, ts in rel.items():
+        for b in ts:
+            if b not in nodes:
+                continue
+            pairs.add((min(a, b), max(a, b)))
+    for a, b in pairs:
+        if a in rel.get(b, ()) and b in rel.get(a, ()):
+            recip += 1
+        if nodes[a].tier != nodes[b].tier:
+            cross_tier += 1
+        if fam[a] != fam[b]:
+            cross_fam += 1
+        if not (paths[a] & paths[b]):
+            no_shared += 1
+    related = {"distinct_pairs": len(pairs),
+               "reciprocated": recip,
+               "one_way": len(pairs) - recip,
+               "cross_tier": cross_tier,
+               "cross_c_family": cross_fam,
+               "no_shared_cited_path": no_shared}
+
+    # --- co-citation shortlist: pairs sharing a cited path, for X04
+    by_path = {}
+    for n, ps in paths.items():
+        for p_ in ps:
+            by_path.setdefault(p_, []).append(n)
+    hot = {p_: sorted(ns) for p_, ns in by_path.items()
+           if 2 <= len(ns) <= 12}
+
+    return {"schema": 1, "report": "coverage", "version": "cov-v1",
+            "snapshot": corpus.meta,
+            "totals": {"capstone": len(caps), "feature": len(feats),
+                       "task": len(tasks)},
+            "rootedness": rootedness, "decomposition": decomposition,
+            "roadmap": roadmap, "related_edges": related,
+            "shared_path_shortlist": hot}
+
+
+def print_coverage(c):
+    t = c["totals"]
+    print(f"corpus: {t['capstone']} capstones, {t['feature']} features, "
+          f"{t['task']} tasks\n")
+    r = c["rootedness"]
+    print("ROOTEDNESS — is every issue attached to the tree?")
+    print(f"  features serving no capstone            {len(r['features_serving_no_capstone']):4}")
+    print(f"  tasks in no feature roster              {len(r['tasks_in_no_feature_roster']):4}")
+    print(f"    (a roster is the only ownership record) {len(r['tasks_in_no_roster_at_all']):4}")
+    print(f"  capstones requiring nothing             {len(r['capstones_requiring_nothing']):4}")
+    d = c["decomposition"]
+    print("\nDECOMPOSITION — is each parent actually decomposed?")
+    print(f"  features with an empty requires_tasks   {len(d['features_with_empty_roster']):4}  (fails feature rule B)")
+    print(f"  features with exactly one task          {len(d['features_with_single_task']):4}")
+    print(f"  capstones with exactly one feature      {len(d['capstones_with_single_feature']):4}")
+    m = c["roadmap"]
+    print("\nROADMAP TRACEABILITY — both directions")
+    print(f"  capstones citing no roadmap/arch doc    {len(m['capstones_citing_no_roadmap_doc']):4}")
+    print(f"  docs no capstone claims                 {len(m['docs_cited_by_no_capstone']):4}")
+    print(f"  docs nothing at all cites               {len(m['docs_cited_by_nothing']):4}")
+    e = c["related_edges"]
+    print("\n`related` WEB — structure or decoration?")
+    print(f"  distinct pairs                          {e['distinct_pairs']:4}")
+    print(f"  reciprocated / one-way                  {e['reciprocated']:4} / {e['one_way']}")
+    print(f"  cross-tier                              {e['cross_tier']:4}")
+    print(f"  cross C-family                          {e['cross_c_family']:4}")
+    print(f"  with no shared cited path               {e['no_shared_cited_path']:4}")
+    print(f"\nX04 shortlist: {len(c['shared_path_shortlist'])} paths cited by 2-12 issues")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -506,6 +834,11 @@ def main():
                     "ego network")
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--json", help="write findings report here")
+    ap.add_argument("--coverage", metavar="OUT.json",
+                    help="instead of the findings pass, emit the corpus "
+                    "coverage report: rootedness, decomposition adequacy, "
+                    "roadmap traceability and `related`-web structure. "
+                    "A report, never a gate — most of it is a maintainer call.")
     args = ap.parse_args()
 
     try:
@@ -513,6 +846,13 @@ def main():
     except OSError as e:
         print(f"cannot load snapshot: {e}", file=sys.stderr)
         sys.exit(2)
+
+    if args.coverage:
+        c = coverage(corpus, args.repo_root)
+        print_coverage(c)
+        with open(args.coverage, "w") as fh:
+            json.dump(c, fh, indent=1)
+        sys.exit(0)
 
     F = run(corpus, args.repo_root, args.issue)
     for f in F:

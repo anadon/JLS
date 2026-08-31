@@ -31,10 +31,10 @@ import re
 
 TEMPLATES = {
     "task": {
-        "version": "scientific-task v6",
+        "version": "scientific-task v7",
         "file": "scientific_task.md",
         "label": "tier:task",
-        "yaml_keys": ["tier", "evidence_commit", "part_of_feature",
+        "yaml_keys": ["tier", "evidence_commit",
                       "blocked_by", "blocks", "related"],
         "headings": [
             "Abstract", "Intended Audience & Impact", "Status & Dependencies",
@@ -50,7 +50,7 @@ TEMPLATES = {
         "subheadings": [f"7.{n}" for n in range(1, 13)],
     },
     "feature": {
-        "version": "feature v3",
+        "version": "feature v4",
         "file": "feature.md",
         "label": "tier:feature",
         "yaml_keys": ["tier", "evidence_commit", "requires_tasks",
@@ -70,11 +70,11 @@ TEMPLATES = {
         "subheadings": [],
     },
     "capstone": {
-        "version": "capstone v3",
+        "version": "capstone v4",
         "file": "capstone.md",
         "label": "tier:capstone",
         "yaml_keys": ["tier", "evidence_commit", "requires_features",
-                      "requires_capstones", "requires_tasks_exception",
+                      "requires_capstones",
                       "planned_features", "blocked_by", "blocks", "related"],
         "headings": [
             "Abstract", "Intended Audience & Impact",
@@ -93,18 +93,44 @@ BANNED_YAML_KEYS = ("task_id", "band_mw", "ordering_after")
 
 # Machine-block edge fields, by the direction template rules assign them.
 EDGE_FIELDS = {
-    "task": {"composition": ["part_of_feature"],
+    # A task declares NO composition edge: ownership lives solely in each
+    # owning feature's requires_tasks roster (feature v4), and a task may be
+    # owned by any number of features.
+    "task": {"composition": [],
              "ordering": ["blocked_by", "blocks"],
              "soft": ["related"]},
     "feature": {"composition": ["requires_tasks", "serves_capstones"],
                 "planned": ["planned_tasks"],
                 "ordering": ["blocked_by", "blocks"],
                 "soft": ["related"]},
-    "capstone": {"composition": ["requires_features", "requires_capstones",
-                                 "requires_tasks_exception"],
+    "capstone": {"composition": ["requires_features", "requires_capstones"],
                  "planned": ["planned_features"],
                  "ordering": ["blocked_by", "blocks"],
                  "soft": ["related"]},
+}
+
+# Legal edge TARGETS by (source tier, edge kind). The model is strictly
+# layered: each tier composes the tier below and orders against its own tier.
+# No edge ever points upward. Canonical statement lives in feature.md.
+COMPOSITION_TARGETS = {
+    "task": set(),
+    "feature": {"task", "capstone"},      # requires_tasks / serves_capstones
+    "capstone": {"feature", "capstone"},  # requires_features / requires_capstones
+}
+ORDERING_TARGETS = {
+    "task": {"task"},
+    "feature": {"feature", "task"},
+    "capstone": {"capstone", "feature"},
+}
+
+# Machine-block keys retired by the v7/v4 tier-model correction. They are not
+# in BANNED_YAML_KEYS: the corpus still carries them while the migration runs,
+# and a retired key is a body-fix finding, never a parse failure.
+RETIRED_YAML_KEYS = {
+    "part_of_feature": "retired in scientific-task v7 — ownership lives in "
+                       "each owning feature's requires_tasks roster",
+    "requires_tasks_exception": "retired in capstone v4 — shared task "
+                                "ownership removes the orphaned-scope case",
 }
 
 # Comment prefixes the templates recognize (task rule 9 / feature rule C).

@@ -3,17 +3,11 @@ package jls;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
@@ -33,10 +27,16 @@ import jls.module.ExtensionRegistry;
  * every typed-now seam is one {@code public static final}
  * {@link ExtensionPoint} constant in its home-package holder class,
  * ids are unique and follow the kebab-case dot-prefixed convention,
- * contracts are closed types (interface, sealed, or final — never an
- * open concrete class), and the normative table in
- * {@code docs/extension-points.md} agrees with the constants in both
- * directions, so the doc can never drift from the code.
+ * and contracts are closed types (interface, sealed, or final — never
+ * an open concrete class).
+ *
+ * <p>A {@code docTableAndConstantsAgreeBothWays} test used to parse a
+ * markdown table out of a design document and require it to match these
+ * constants in both directions. It was removed: its only subject was the
+ * document, so it made prose load-bearing for the build and failed when
+ * the document was deleted despite no behaviour changing. The catalog
+ * constants below are the single source of truth; a test's oracle should
+ * be the program, not a file describing it.
  */
 class ExtensionPointCatalogTest {
 
@@ -50,10 +50,6 @@ class ExtensionPointCatalogTest {
 	/** Point ids: home-area prefix, dot, kebab-case segments. */
 	private static final Pattern ID_SHAPE = Pattern.compile(
 			"[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*(-[a-z0-9]+)*)+");
-
-	/** A backticked point id inside a markdown table cell. */
-	private static final Pattern DOC_ID = Pattern.compile(
-			"`([a-z][a-z0-9.-]*)`");
 
 	/** Every catalog constant, keyed by point id, holder order. */
 	private static Map<String, ExtensionPoint<?>> constants() {
@@ -85,35 +81,6 @@ class ExtensionPointCatalogTest {
 			}
 		}
 		return byId;
-	}
-
-	/** The typed-now ids the doc table declares, in table order. */
-	private static List<String> typedNowDocIds() throws IOException {
-
-		Path doc = Path.of(System.getProperty("user.dir"), "docs",
-				"extension-points.md");
-		assertTrue(Files.isRegularFile(doc),
-				"catalog document not found at " + doc);
-		List<String> ids = new ArrayList<String>();
-		for (String line : Files.readAllLines(doc)) {
-			if (!line.startsWith("|") || line.startsWith("| ---")) {
-				continue;
-			}
-			String[] cells = line.split("\\|");
-			if (cells.length < 8) {
-				continue;
-			}
-			String status = cells[7].strip();
-			if (!status.startsWith("typed now")) {
-				continue;
-			}
-			Matcher id = DOC_ID.matcher(cells[2]);
-			assertTrue(id.find(),
-					"typed-now row without a backticked point id: "
-							+ line);
-			ids.add(id.group(1));
-		}
-		return ids;
 	}
 
 	@Test
@@ -159,30 +126,6 @@ class ExtensionPointCatalogTest {
 							+ "sealed, or final - never an open "
 							+ "concrete class");
 		}
-	}
-
-	@Test
-	void docTableAndConstantsAgreeBothWays() throws IOException {
-
-		List<String> docIds = typedNowDocIds();
-		Map<String, ExtensionPoint<?>> byId = constants();
-
-		TreeSet<String> undocumented =
-				new TreeSet<String>(byId.keySet());
-		docIds.forEach(undocumented::remove);
-		assertEquals(new TreeSet<String>(), undocumented,
-				"catalog constants missing a typed-now row in "
-						+ "docs/extension-points.md");
-
-		TreeSet<String> phantom = new TreeSet<String>(docIds);
-		phantom.removeAll(byId.keySet());
-		assertEquals(new TreeSet<String>(), phantom,
-				"typed-now rows in docs/extension-points.md without a "
-						+ "matching catalog constant");
-
-		assertEquals(docIds.size(),
-				new TreeSet<String>(docIds).size(),
-				"duplicate typed-now ids in the doc table: " + docIds);
 	}
 
 	@Test

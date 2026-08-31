@@ -5,7 +5,7 @@ labels: ["tier:task"]
 ---
 
 <!--
-  Template: scientific-task v6 (2026-08)
+  Template: scientific-task v7 (2026-08)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
@@ -47,24 +47,31 @@ labels: ["tier:task"]
      `bug` or `enhancement` explicitly, matching the corpus, plus the
      tier label `tier:task`.
   8. Tier model — task → feature → capstone (canonical edge rules in
-     the feature template). This is the task tier: COMPOSITION and
-     ORDERING edges go to tasks and features only, never to capstones
-     (the sole exception: a capstone may hold a recorded orphaned-scope
-     edge to this task per capstone rule G — that edge lives on the
-     capstone's side). `related` is reference-only and may point at ANY
-     tier. An issue's tier is defined by its machine block's `tier:`
-     key; the tier:* label is a mirror for filtering — a missing or
-     stale label is bookkeeping to fix, never an edge violation. A
-     task is part_of at most ONE feature (composition, single-owner);
-     the task's part_of_feature field is authoritative for ownership —
-     a feature roster that disagrees must REPLAN, not win. The
+     the feature template; read them there, they are not restated
+     here). This is the task tier, and the model is strictly layered:
+     A TASK'S ORDERING EDGES GO TO TASKS ONLY. Never to a feature,
+     never to a capstone — upward edges are illegal in both
+     directions. A task that seems to "wait on a feature" is really
+     waiting on specific sibling TASKS inside it; name those.
+     `related` is reference-only, may point at ANY tier, and carries
+     neither ordering nor ownership.
+
+     THIS TASK DECLARES NO OWNER. A task may be shared by any number
+     of features, and ownership lives solely in each feature's
+     requires_tasks roster. There is no part_of_feature field: it was
+     retired in scientific-task v7 / feature v4 because the
+     single-owner rule it enforced was never the intended model and
+     had pushed genuine shared ownership into `related`. To find the
+     features that own this task, search the rosters — an executor
+     does not need them to do the work, and the readiness derivation
+     supplies them to any workflow that does.
+
+     An issue's tier is defined by its machine block's `tier:` key;
+     the tier:* label is a mirror for filtering — a missing or stale
+     label is bookkeeping to fix, never an edge violation. The
      ORDERING GRAPH is blocked_by/blocks edges PLUS composition edges
      read child-before-parent (a parent cannot close before its
-     children land); that combined graph must stay a DAG.
-     Consequences: a task must never be blocked_by its own parent
-     feature (deadlock), and `blocks` aimed at a feature gates that
-     feature's integration/close-out only — never its children's
-     start; block the children directly to gate them. The machine
+     children land); that combined graph must stay a DAG. The machine
      block in Status & Dependencies is the source of truth for the
      edges it can express.
   9. Amendment & comment protocol. This body may be edited, but only
@@ -73,8 +80,8 @@ labels: ["tier:task"]
      who reconstruct state from the machine block plus the prefixed
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). Post each such comment on THIS issue
-     and, when part_of_feature is set, mirror the same comment on that
-     feature. When an edit REMOVES or NARROWS any claim, observation,
+     and mirror the same comment on every feature whose requires_tasks
+     roster lists this task (there may be several, or none). When an edit REMOVES or NARROWS any claim, observation,
      prediction, criterion, or scope item, the AMENDED comment must
      carry a "Dropped/Retired" ledger enumerating each removed item
      with its disposition — retired with reason, moved to issue #N, or
@@ -149,12 +156,18 @@ labels: ["tier:task"]
 ```yaml
 tier: task
 evidence_commit:        # SHA all §2 citations are pinned to
-part_of_feature: none   # owning feature number, or the literal `none` if free-standing
-blocked_by: []          # ordering: tasks or features that must land first
-                        #   (never capstones, never this task's own parent feature)
-blocks: []              # ordering: tasks or features waiting on this one
-                        #   (a feature here = gates its close-out, not its children)
-related: []             # reference only — never blocking
+owned_by_derived: []    # OPTIONAL and NON-AUTHORITATIVE. A generated copy of the
+                        #   features whose requires_tasks lists this task, so the
+                        #   issue names its owners when read alone. Those rosters
+                        #   are the only real record; regenerate this rather than
+                        #   hand-editing it. Validator G21 reports any drift.
+blocked_by: []          # ordering: TASKS that must land first — tasks only.
+                        #   Never a feature, never a capstone (upward edges are
+                        #   illegal); name the specific sibling tasks instead.
+blocks: []              # ordering: TASKS waiting on this one — tasks only
+related: []             # reference only — never blocking, never ownership.
+                        #   Ownership is not recorded here: it lives in each
+                        #   owning feature's requires_tasks roster (feature v4).
 ```
 
 ## 1. Background & Prior Work
@@ -365,7 +378,7 @@ related: []             # reference only — never blocking
 - [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification
 - [ ] No changes outside the scope of §8 (Method); adjacent work discovered en route is filed as new issues
 - [ ] Every `blocked_by` entry in Status & Dependencies has landed, or the dependency was waived per rule 10
-- [ ] If `part_of_feature` is set: landing reported on that feature with a `STATUS:` comment, including any contract deviations the feature's plan must reconcile
+- [ ] Landing reported with a `STATUS:` comment on every feature whose `requires_tasks` lists this task, including any contract deviations those plans must reconcile
 - [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10)
 - [ ] Not superseded: the §2 (Observations) failures still reproduced at pickup (rule 6); citations re-derived if HEAD had moved

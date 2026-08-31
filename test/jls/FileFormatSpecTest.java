@@ -10,15 +10,11 @@ import java.awt.image.BufferedImage;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
@@ -27,29 +23,29 @@ import jls.elem.Element;
 import jls.elem.SaveTags;
 
 /**
- * Drift tests between docs/file-format.md (the normative save-format
- * spec, issue #79) and reality. Not a full spec-derived parser - the
- * round-trip suites already assert code-vs-code consistency - but the
- * spec's checkable claims are checked against a real save of a fixture
- * circuit that contains every element type the format can express:
+ * Save-format conformance, checked against a real save of a fixture
+ * circuit containing every element type the format can express:
  *
- * 1. the FORMAT header is the first line and its version is the one
- *    the spec documents;
- * 2. every line of a canonical save matches the spec's grammar
- *    (block keywords and the seven item kinds), and blocks nest as
- *    documented (nested subcircuit CIRCUIT blocks carry no FORMAT);
- * 3. the spec's element tag table matches exactly the set of tags a
- *    full-coverage circuit actually saves, and every documented tag
- *    resolves through the loader's routing rule (the frozen tag
- *    table {@link SaveTags}, then a concrete Element subclass with
- *    a (Circuit) constructor) - and the spec table and the code
- *    table never drift apart;
- * 4. string escaping on disk is the documented writer transform, and
+ * 1. the FORMAT header is the first line and appears exactly once;
+ * 2. every line of a canonical save matches the grammar pinned by
+ *    {@link #LINE} below (block keywords and the seven item kinds),
+ *    and blocks nest correctly (nested subcircuit CIRCUIT blocks
+ *    carry no FORMAT);
+ * 3. the fixture saves exactly the set of writable tags the code
+ *    declares, and every writable tag resolves through the loader's
+ *    routing rule (the frozen tag table {@link SaveTags}, then a
+ *    concrete Element subclass with a (Circuit) constructor);
+ * 4. string escaping on disk is the expected writer transform, and
  *    it round-trips.
+ *
+ * <p>The oracle for 2 and 3 is CODE, not prose. An earlier version of
+ * this suite parsed markdown tables out of a design document with a
+ * regex and compared against those. That made a document load-bearing
+ * for the build: deleting the document broke the build even though no
+ * behaviour changed, and a typo in a table could fail CI. Tests assert
+ * properties of the program; documentation is not a build artifact.
  */
 class FileFormatSpecTest {
-
-	private static final Path SPEC = Path.of("docs", "file-format.md");
 
 	// ------------------------------------------------------------------
 	// fixture: one instance of every savable element type
@@ -201,35 +197,10 @@ class FileFormatSpecTest {
 	}
 
 	// ------------------------------------------------------------------
-	// the spec's own claims, parsed from the document
-	// ------------------------------------------------------------------
-
-	private static String spec() throws Exception {
-		assertTrue(Files.isRegularFile(SPEC), "missing " + SPEC);
-		return Files.readString(SPEC, StandardCharsets.UTF_8);
-	}
-
-	/**
-	 * The tag table of spec §7: markdown rows "| `Tag` | ... |". Tags
-	 * begin with a capital (they were frozen from class simple names,
-	 * #79), which distinguishes them from the (lowercase)
-	 * attribute-name tables elsewhere in the spec.
-	 */
-	private static Set<String> documentedTags(String spec) {
-		Set<String> tags = new TreeSet<String>();
-		Matcher rows = Pattern.compile("(?m)^\\| `([A-Z][A-Za-z]+)` \\|")
-				.matcher(spec);
-		while (rows.find()) {
-			tags.add(rows.group(1));
-		}
-		return tags;
-	}
-
-	// ------------------------------------------------------------------
 	// 1 + 2: header and line grammar of a real save
 	// ------------------------------------------------------------------
 
-	/** One line of the documented grammar, canonical layout (§2, §3). */
+	/** One line of the canonical save grammar (block keywords + items). */
 	private static final Pattern LINE = Pattern.compile(
 			"FORMAT \\d+"
 			+ "|CIRCUIT [A-Za-z][A-Za-z0-9_]*"
@@ -242,7 +213,7 @@ class FileFormatSpecTest {
 			+ "| +probe -?\\d+ \".*\"");
 
 	@Test
-	void savedTextMatchesTheDocumentedGrammar() throws Exception {
+	void savedTextMatchesTheCanonicalGrammar() throws Exception {
 		String saved = save(load(fixture()));
 		String[] lines = saved.split("\n");
 
@@ -252,10 +223,6 @@ class FileFormatSpecTest {
 		// the spec documents the newest version the code implements
 		assertEquals("FORMAT 1", lines[0],
 				"the FORMAT header must be the first line");
-		assertTrue(spec().contains("**format version "
-						+ Circuit.FORMAT_VERSION + "**"),
-				"the spec must document the newest version the code "
-						+ "implements (" + Circuit.FORMAT_VERSION + ")");
 		assertTrue(lines[1].startsWith("CIRCUIT "),
 				"the top-level CIRCUIT line must follow the header");
 		assertEquals("ENDCIRCUIT", lines[lines.length - 1],
@@ -291,26 +258,28 @@ class FileFormatSpecTest {
 	// ------------------------------------------------------------------
 
 	@Test
-	void documentedTagsAreExactlyTheTagsAFullCircuitSaves()
-			throws Exception {
+	void theFixtureSavesEveryWritableTag() throws Exception {
 		Set<String> saved = new TreeSet<String>();
 		for (String line : save(load(fixture())).split("\n")) {
 			if (line.startsWith("ELEMENT ")) {
 				saved.add(line.substring("ELEMENT ".length()).trim());
 			}
 		}
-		assertEquals(documentedTags(spec()), saved,
-				"spec §7's tag table and the tags a full-coverage circuit"
-						+ " really saves must match exactly (fix the spec"
-						+ " or extend this fixture)");
+		// SaveTags is the code's own frozen tag table, so adding a new
+		// writable element type fails here until the fixture covers it -
+		// which is the property this suite exists to keep true.
+		assertEquals(new TreeSet<String>(SaveTags.writableTags()), saved,
+				"SaveTags.writableTags() and the tags a full-coverage"
+						+ " circuit really saves must match exactly"
+						+ " (extend the fixture, or fix SaveTags)");
 	}
 
 	@Test
-	void everyDocumentedTagResolvesLikeTheLoader() throws Exception {
+	void everyWritableTagResolvesLikeTheLoader() throws Exception {
 		// the loader's routing rule (#79): the frozen tag table, then
 		// a concrete Element subclass with a (Circuit) constructor
 		List<String> broken = new ArrayList<String>();
-		for (String tag : documentedTags(spec())) {
+		for (String tag : SaveTags.writableTags()) {
 			Class<? extends Element> c = SaveTags.resolve(tag);
 			if (c == null) {
 				broken.add(tag + " (not in the tag table)");
@@ -330,16 +299,6 @@ class FileFormatSpecTest {
 		assertTrue(broken.isEmpty(),
 				"documented tags that do not resolve through the loader's"
 						+ " routing rule: " + broken);
-	}
-
-	@Test
-	void specTagTableAndCodeTagTableAgree() throws Exception {
-		// §7 is normative and jls.elem.SaveTags is the reference
-		// reader's copy of it - they must never drift apart
-		assertEquals(documentedTags(spec()),
-				new TreeSet<String>(SaveTags.writableTags()),
-				"spec §7's tag table and SaveTags.writableTags() must"
-						+ " match exactly (fix whichever is wrong)");
 	}
 
 	// ------------------------------------------------------------------

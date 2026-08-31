@@ -31,46 +31,58 @@ def build_snapshot(tmp):
     ec = subprocess.run(["git", "-C", SCRIPTS, "rev-parse", "HEAD"],
                         capture_output=True, text=True).stdout.strip()
     issues = [
-        # 10: healthy task under feature 20
+        # 10: healthy task, owned by feature 20. Declares no owner itself —
+        #     under feature v4 the roster is the sole ownership record.
         mk_issue(10, "task", "TASK-A", [
-            f"evidence_commit: {ec}", "part_of_feature: 20",
-            "blocked_by: none", "blocks: none", "related: none"]),
-        # 11: task blocked_by its own parent (G05), self-edge (G16),
-        #     edge to nonexistent (G02 error), part_of two features (G15)
+            f"evidence_commit: {ec}",
+            # stale derived back-reference: really owned by 20, claims 21
+            "owned_by_derived: [21]",
+            "blocked_by: none", "blocks: none", "related: none"],
+            # G22: a child claiming its own parent's criterion by number is
+            # the highest-precision rule-B tell. Backtick-wrapped on purpose:
+            # that spelling is common in the corpus and must still match.
+            body_extra="P8 verifies `#20`'s own Integration Criterion 3.\n"),
+        # 11: illegal UPWARD ordering edge to feature 20 (G03), self-edge
+        #     (G16), edge to nonexistent (G02), retired key still present (G20)
         mk_issue(11, "task", "TASK-B", [
-            f"evidence_commit: {ec}", "part_of_feature: [20, 21]",
+            f"evidence_commit: {ec}", "part_of_feature: 20",
             "blocked_by: [20, 11, 99999]", "blocks: none", "related: none"]),
-        # 12: task with prose in edge field (G01), unresolvable commit (G18)
+        # 12: prose in an edge field (G01), unresolvable commit (G18)
         mk_issue(12, "task", "TASK-C", [
             "evidence_commit: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-            "part_of_feature: none",
             "blocked_by: [ask-the-maintainer]", "blocks: none",
             "related: none"]),
-        # 13/14: ordering cycle (G04)
+        # 13/14: task<->task ordering cycle (G04)
         mk_issue(13, "task", "TASK-D", [
-            f"evidence_commit: {ec}", "part_of_feature: none",
+            f"evidence_commit: {ec}",
             "blocked_by: [14]", "blocks: none", "related: none"]),
         mk_issue(14, "task", "TASK-E", [
-            f"evidence_commit: {ec}", "part_of_feature: none",
+            f"evidence_commit: {ec}",
             "blocked_by: [13]", "blocks: none", "related: none"]),
-        # 20: feature whose roster omits 10 and 11 (G06 x2), claims 13 which
-        #     points elsewhere (G06), serves capstone 30 not mirrored (G08)
+        # 20: roster lists 10 and 13, plus 99998 which is not an open issue
+        #     (G06). serves capstone 30, not mirrored there (G08).
         mk_issue(20, "feature", "FEAT-A", [
-            f"evidence_commit: {ec}", "requires_tasks: [13]",
+            f"evidence_commit: {ec}", "requires_tasks: [10, 13, 99998]",
             "planned_tasks: none", "blocked_by: none", "blocks: none",
             "serves_capstones: [30]", "related: none"]),
-        # 21: feature also claiming 13 (G07 with 20); quoted hash form entry
+        # 21: ALSO owns task 13 — sharing is legal now, must NOT raise G07
         mk_issue(21, "feature", "FEAT-B", [
             f"evidence_commit: {ec}", "requires_tasks:", '  - "#13"  # note',
             "planned_tasks: none", "blocked_by: none", "blocks: none",
             "serves_capstones: none", "related: none"]),
-        # 30: capstone requiring feature 22 (nonexistent -> G02 warn range),
-        #     requires_features omits 20 though 20 serves it (G08 on 20 side
-        #     already); ordering edge to capstone forbidden -> use feature
+        # 30: capstone. requires_features omits 20 though 20 serves it (G08
+        #     on the 20 side). Retains a retired requires_tasks_exception
+        #     (G12 error + G20 warn). blocked_by capstone 31 is now LEGAL.
         mk_issue(30, "capstone", "CAP-A", [
             f"evidence_commit: {ec}", "requires_features: [21]",
             "requires_capstones: none", "requires_tasks_exception: [10]",
-            "planned_features: none", "blocked_by: none", "blocks: none",
+            "planned_features: none", "blocked_by: [31]", "blocks: none",
+            "related: none"]),
+        # 31: capstone with an illegal downward ordering edge to a task (G03)
+        mk_issue(31, "capstone", "CAP-B", [
+            f"evidence_commit: {ec}", "requires_features: none",
+            "requires_capstones: none",
+            "planned_features: none", "blocked_by: [10]", "blocks: [30]",
             "related: none"]),
     ]
     with open(os.path.join(tmp, "issues.jsonl"), "w") as fh:
@@ -84,6 +96,41 @@ def build_snapshot(tmp):
         json.dumps({"parent": 20, "children": [10],
                     "children_state": {"10": "open"}}) + "\n")
     return tmp
+
+
+def check_coverage(tmp, corpus):
+    """--coverage is a REPORT, not a gate: it must always exit 0 and must
+    describe the same synthetic tree the findings pass sees."""
+    out = os.path.join(tmp, "cov.json")
+    r = subprocess.run(
+        [sys.executable, os.path.join(SCRIPTS, "validate_issue_graph.py"),
+         "--snapshot", tmp, "--repo-root", SCRIPTS, "--coverage", out],
+        capture_output=True, text=True)
+    assert r.returncode == 0, (
+        "--coverage must exit 0 even on a corpus full of findings; "
+        f"got {r.returncode}\n{r.stderr}")
+    c = json.load(open(out))
+    assert c["report"] == "coverage" and c["version"] == "cov-v1", c
+    assert c["totals"] == {"capstone": 2, "feature": 2, "task": 5}, c["totals"]
+
+    root = c["rootedness"]
+    # 21 is required by capstone 30; 20 is required by nobody
+    assert root["features_serving_no_capstone"] == [20], root
+    # tasks 10 and 13 are in rosters; 11, 12, 14 are in none
+    assert root["tasks_in_no_feature_roster"] == [11, 12, 14], root
+    # a roster is the only ownership record, so that IS the orphan set
+    assert root["tasks_in_no_roster_at_all"] == [11, 12, 14], root
+    assert root["capstones_requiring_nothing"] == [31], root
+
+    dec = c["decomposition"]
+    assert dec["features_with_empty_roster"] == [], dec
+    assert dec["features_with_single_task"] == [21], dec
+    assert dec["capstones_with_single_feature"] == [30], dec
+
+    # the report carries the structural keys downstream tooling reads
+    for k in ("roadmap", "related_edges", "shared_path_shortlist"):
+        assert k in c, f"coverage report missing {k}"
+    assert c["related_edges"]["distinct_pairs"] == 0, c["related_edges"]
 
 
 def main():
@@ -106,20 +153,35 @@ def main():
             f"expected {check}/{sev} on #{issue}; got "
             + "\n".join(sorted(f"{a} {b} {c}" for a, b, c in got)))
 
-    has(11, "G05")                 # blocked_by own parent
+    has(11, "G03")                 # task blocked_by a FEATURE — upward, illegal
     has(11, "G16")                 # self-edge
-    has(11, "G15")                 # two part_of_feature values
     has(11, "G02")                 # 99999 nonexistent
+    has(11, "G20", "warn")         # retired part_of_feature key still present
     has(12, "G01")                 # prose in blocked_by
     has(12, "G18")                 # unresolvable evidence_commit
     has(13, "G04")                 # 13<->14 cycle (min node owns it)
-    has(20, "G06")                 # roster omits declaring child
+    has(20, "G06")                 # roster entry 99998 is not an open task
     has(20, "G08", "warn")         # serves_capstones not mirrored
-    has(20, "G07")                 # task 13 claimed by 20 and 21
     has(21, "G01", "info")         # quoted '#13' style
-    has(30, "G12", "warn")         # exception without REPLAN comment
-    # healthy task 10 must carry no error-severity finding
+    has(30, "G12")                 # retired capstone->task exception survives
+    has(30, "G20", "warn")         # ...and the retired key itself
+    has(31, "G03")                 # capstone blocked_by a TASK — illegal
+
+    # --- the corrected model must NOT fire the retired checks
+    retired = {c for _, c, _ in got} & {"G05", "G07", "G15"}
+    assert not retired, f"retired checks still firing: {retired}"
+    # task 13 is owned by BOTH 20 and 21 — sharing is legal, no finding at all
+    assert not any(c == "G07" for _, c, _ in got), got
+    # capstone 30 blocked_by capstone 31 is legal ordering -> no G03 on 30
+    assert (30, "G03", "error") not in got, "capstone->capstone ordering is legal"
+    has(10, "G21", "warn")         # derived back-reference drifted from roster
+    has(20, "G22", "warn")         # child #10 claims feature #20's criterion 3
+    # G22 must not fire where no child claims a parent criterion
+    assert not any(i == 21 and c == "G22" for i, c, s in got), got
+    # ...and G21 is a WARN, never an error: task 10 stays error-clean
     assert not any(i == 10 and s == "error" for i, c, s in got), got
+
+    check_coverage(tmp, corpus)
     print("graph self-test: OK", f"({len(F)} findings on synthetic corpus)")
 
 

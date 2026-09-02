@@ -36,7 +36,7 @@ ARG SOURCE_DATE_EPOCH
 # binutils: the archive's JDK carries unstripped native libraries, so
 # jlink --strip-debug shells out to objcopy (Temurin's jmods come
 # pre-stripped, which is why the old Temurin build stage never needed it)
-FROM ubuntu:26.04@sha256:678c6550cc43645e08669028bc177f50be4e7c5b8cca677067b1914d4afc7a03 AS runtime
+FROM ubuntu:26.04@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea2648d2c0e09b AS runtime
 ARG APT_SNAPSHOT
 RUN echo "APT::Snapshot \"${APT_SNAPSHOT}\";" > /etc/apt/apt.conf.d/50snapshot \
     && apt-get -o Acquire::Retries=3 update \
@@ -52,7 +52,7 @@ RUN set -eux; \
 # fontconfig + DejaVu let batch image export (-i) render text headlessly
 # (Acquire::Retries: the arm64/riscv64 ports mirror drops connections
 # often enough under QEMU-length builds that one retry pass is not enough)
-FROM ubuntu:26.04@sha256:678c6550cc43645e08669028bc177f50be4e7c5b8cca677067b1914d4afc7a03
+FROM ubuntu:26.04@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea2648d2c0e09b
 ARG APT_SNAPSHOT
 # the snapshot pin is dropped after installing so derived images and
 # debugging shells get the normal moving archive, not a frozen one

@@ -316,16 +316,23 @@ relevant axis:
 | `SCOPE-EXHAUSTION` | HL ≤ 1 | The agent lands the first third, declares victory, and leaves scaffolding the next executor must reverse-engineer. |
 | `NONE` | no axis in its trigger range | — |
 
-### Decomposition hint (capstones and features)
+### Decomposition (capstones and features)
 
-For `tier:capstone` and `tier:feature`, the grade of the parent is
-near-useless on its own. Every capstone/feature grade therefore also
-reports:
+For `tier:capstone` and `tier:feature`, the parent's own band is nearly
+useless in isolation — a capstone is a composition, so it is HL-capped by
+construction and would read as D/F no matter how good it is. The parent's
+band therefore answers only "can this be handed over as one unit" (almost
+always: no). The useful quantity is the **delegable fraction** of its
+roster — how many of its declared children are individually band A or B —
+and the **blocking child**, the one whose ED or DA cap propagates upward.
 
-- **Delegable fraction** — of the named children, how many are individually
-  band A or B.
-- **Blocking child** — the single child whose ED or DA cap propagates
-  upward, if one does.
+Both are computed corpus-wide, after every tier has been graded, and are
+reported in the corpus report rather than in the per-issue comment: a
+parent is graded before its children's bands exist, so a per-comment
+fraction would be either stale or a second pass. Each capstone/feature
+grade records its declared roster (`requires_tasks` / `requires_features`
+/ `requires_capstones`) so the fraction is derivable without re-reading
+anything.
 
 ---
 

@@ -430,10 +430,14 @@ related: []             # reference only — never blocking, never ownership.
   is a ROUTING DECISION, NOT A CRITICISM. Fill at filing time; re-score on
   any `AMENDED:` edit that changes scope, evidence or open decisions.
 
-  THIS IS THE CANONICAL ANCHOR TABLE for all three tiers. The feature and
-  capstone templates carry only their tier deltas and refer here, the same
-  way this template refers to the feature template for the edge-legality
-  matrix.
+  THIS SECTION IS SELF-CONTAINED. The feature and capstone templates carry
+  their own tier-adjusted copies of these anchors, worded for what those
+  tiers actually deliver. That is deliberate duplication: markdown issue
+  templates have no include, transclusion or file-reference mechanism in
+  either the .md or the issue-forms .yml dialect, and a filer must be able
+  to score an issue from the one template in front of them. The three
+  copies CAN drift — when you change an axis here, change it in all three,
+  and bump the version line above in each.
 
   Two failure modes are rated, not one: (i) the agent does not finish, and
   (ii) the agent finishes in a way that leaves a maintenance liability —

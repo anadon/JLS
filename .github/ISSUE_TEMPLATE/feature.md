@@ -491,6 +491,16 @@ flowchart TD
 
   A low band is a routing decision, not a criticism. Issues can be excellent
   work and band F because closing them needs a person or a device.
+
+  REVIEW GATE. The two boxes below are a fast filter: an issue with both
+  ticked has been read adversarially and by a peer, and neither read left
+  anything substantial outstanding. Tick them yourself; the filer reviewing
+  their own issue is fine.
+    - SUBSTANTIAL means acting on the finding would change a score above, a
+      completion criterion, a prediction, or the scope. Wording is not.
+    - Unticked means not yet reviewed. It is not a defect and does not block
+      filing; it means the band above is still unvalidated.
+    - Where a review comment exists, point `review_evidence` at it.
 -->
 
 ```yaml
@@ -510,8 +520,13 @@ band:            # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
 action:          # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
                  #   SPLIT | HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
 debt:            # first tag whose trigger fires, or NONE
+review_clean:    # true|false|pending — both boxes below
+review_evidence: # permalink to the review comment, if there is one
 roster_delegable: # k/n over requires_tasks, or `pending`
 ```
+
+- [ ] Adversarial review of this issue found no substantial finding
+- [ ] Peer review of this issue found no substantial finding
 
 <!-- One or two sentences: which children are delegable today, which
      child is costing the roster most, and — if ED<=1 — which part of the

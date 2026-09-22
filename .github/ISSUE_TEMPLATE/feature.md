@@ -358,13 +358,17 @@ flowchart TD
         differential check against an independent implementation
       4 behavioural assertions over enumerated cases INCLUDING the named
         negative and failure cases; or a compiler, type or analysis gate
-        that fails loudly
+        THAT THIS CHANGE WOULD FAIL BEFORE THE FIX. A standing project-wide
+        gate that every change already passes is not this issue's oracle
+        and does not score here
       3 existence- or smoke-shaped: the artifact is produced, the command
         exits zero, the output is non-empty — satisfiable without being
         correct
       2 a threshold or a count, with no behavioural content
       1 a person reads prose and agrees
       0 none; the children's green runs are treated as the proof
+      `os:` records the score AFTER any deduction; `os_deduction:` records
+      which one fired, because the debt tags depend on knowing that.
       DEDUCT 2 (floor 0) if the same change authors both the implementation
       and the expected values that certify it. That is the configuration in
       which a failing check gets "fixed" by weakening it.
@@ -401,10 +405,15 @@ flowchart TD
       1 more than a week, or integration crosses a subsystem it must first
         learn
       0 a multi-week programme in its own right
-      A feature that mostly composes scores 0-1 here in the ordinary case —
-      not as an absolute, since a thin feature really can be a one-hour
-      integration check. Where it is low, that is the tier working as
-      designed. Do not inflate it and do not read it as
+      This is an expectation, never a bound: score the chain you actually
+      see. A feature whose children have landed and whose integration is
+      one scripted check is genuinely short work and scores 4-5. A feature
+      whose integration must reconcile contracts across several children
+      scores low, and that is the tier working as designed.
+      Do not count time spent waiting for the roster; that is an ordering
+      dependency, recorded in the roster and in `blocked_by`. If the roster
+      has not landed, score the integration as it will be once it has, and
+      say so in the prose line. Do not inflate it and do not read it as
       a defect: this block's own band answers only "can this be handed over
       as ONE unit", and for something that composes, the answer is
       structurally no.
@@ -422,6 +431,11 @@ flowchart TD
       common in the wider world — which is how a codebase with a deliberate
       house style acquires code that compiles, passes, and reads as though
       it came from somewhere else.
+      A young project scores low here across the board. That is accurate,
+      not punitive: with nothing to copy, the duplication risk really is
+      higher. It is also self-correcting — the first instance of each shape
+      raises the score for everything that follows, which is a reason to
+      land one carefully rather than a reason to discount the axis.
 
   CF  CONTEXT FOOTPRINT — how much must be held in mind simultaneously, not
       merely read.
@@ -471,9 +485,21 @@ flowchart TD
         the executor does not hold ................................ cap C
       1 needs hardware someone must physically possess or operate, or a
         recording of a real session ............................... cap F
-      0 needs OTHER PEOPLE: a trial with human subjects, an independent
-        reproducer, a second maintainer holding approval rights, an
-        external reviewer or publisher ............................ cap F
+      0 needs OTHER PEOPLE TO PRODUCE THE EVIDENCE: a trial with human
+        subjects, an independent reproducer, a person who must personally
+        run or witness an evidence-producing step, an external publisher
+        whose acceptance is itself the evidence ................... cap F
+      ORDINARY REVIEW AND MERGE APPROVAL ARE NOT ED FACTORS. A second
+      person approving the change is how most projects merge anything, and
+      it is band B's checkpoint, not an environmental constraint. Score
+      only people whose participation PRODUCES evidence that would not
+      otherwise exist.
+      SCORE THE EVIDENCE THE WORK REQUIRES, NOT ONLY WHAT THE CRITERIA
+      DEMAND. If a criterion was left out because it could not be produced
+      unattended, that omission is exactly what this axis is for; score the
+      evidence needed to establish the work is correct, whether or not it
+      was written down. Otherwise the axis rewards omitting the hard
+      criterion.
       A low score is NOT a criticism. It means the deliverable is not a
       patch. Much of the work may still be produced unattended — the
       harness, the script, the checklist, the analysis template — but the
@@ -494,9 +520,11 @@ flowchart TD
       5 no open decisions; every choice is stated here or forced by existing
         code ...................................................... no cap
       4 only local, reversible choices remain — a name, where a helper
-        lives ..................................................... no cap
-      3 decisions are named AND each carries a stated preference, so
-        execution proceeds unblocked .............................. cap B
+        lives; OR every decision this issue names is resolved by a stated
+        preference an executor may act on without asking .......... no cap
+      3 decisions are named and a preference is stated, but the preference
+        is explicitly NOT this issue's to make — it is offered pending
+        someone else's confirmation ............................... cap B
       2 exactly one structural decision is genuinely open, no preference
         stated .................................................... cap C
       1 two or more are open with no preference, or a decision is routed to
@@ -509,14 +537,26 @@ flowchart TD
         - bookkeeping: confirming another issue's status, re-syncing a
           roster, an entry not yet filed
         - a question this issue poses and then answers with a stated
-          preference
-        - a decision already owned by another issue this one waits on —
-          that is an ordering dependency, and it scores under Horizon Length
+          preference an executor may act on without asking — that is a
+          decision MADE, and it scores 4, never 3. Anchor 3 is only for a
+          preference offered pending someone else's confirmation
+        - a decision already ANSWERED by another issue, where the answer is
+          recorded there and cited here. An unmade decision owned elsewhere
+          is NOT excluded: it is anchor 1, because this issue cannot be
+          finished until someone else decides. Record the wait in
+          `blocked_by` as well; the wait itself scores on no axis
       A template that requires an open-questions section will have one on
       every issue. A populated section is therefore NOT evidence of an open
       decision: score the entries, not the section's existence. Failing to
       make that distinction collapses this axis to a constant and destroys
       its value.
+      SCORE THE DECISIONS THE WORK REQUIRES, NOT ONLY THE ONES WRITTEN
+      DOWN. A decision an executor will certainly hit that this issue does
+      not name scores as unnamed and open (1 or 0), never as absent.
+      Otherwise the axis rewards concealment: a section reading "N/A —
+      fully specified" would score 5 by saying nothing. An N/A does not by
+      itself support 4 or 5; it supports them only when nothing in the
+      declared contract or criteria still has an unsettled shape.
       Note the asymmetry with Environmental Determinism: a 0 here caps at D,
       not F, because research and drafting on an undecided question is
       genuinely most of the value — what cannot be delegated is the
@@ -575,9 +615,12 @@ flowchart TD
                                     against it. NOTE the boundary with the
                                     tag below: an artifact authored by the
                                     same change it certifies fires the
-                                    deduction, so its oracle cannot reach 4
-                                    and it is HOLLOW-ORACLE, not this
-    HOLLOW-ORACLE (OS<=2, or a deduction fired)
+                                    2-point deduction, so its oracle cannot
+                                    reach 4 and it is HOLLOW-ORACLE, not
+                                    this. The 1-point deduction does not
+                                    move a case between these two tags
+    HOLLOW-ORACLE (OS<=2, or the 2-point self-certification deduction
+    fired)
     SPEC-DRIFT (SC<=2)
     PREMATURE-SEAM (DA<=2)
     PARTIAL-INTEGRATION (BR<=1 or CF<=1)
@@ -607,7 +650,8 @@ flowchart TD
       a stated preference an executor may proceed on, a blocking question
       naming who must answer, or an item that is hygiene rather than a
       decision at all. An unmarked entry reads as an unresolved structural
-      decision and scores DA<=1, which is usually not what was meant.
+      decision, scored by the table above — 2 if it is the only one, 1 if
+      there are two or more — which is usually not what was meant.
 
   A low band is a signal, not a confession. The cheapest way to raise one
   is almost always to answer an open question or to pre-commit the expected
@@ -618,6 +662,7 @@ flowchart TD
 adr: 1
 sc:                  # 0-5  specification closure of the integration criteria
 os:                  # 0-5  oracle strength of the integration evidence
+os_deduction:              # 0|1|2 — which OS deduction fired, 0 if none
 br:                  # 0-5  the integration work's own blast radius
 hl:                  # 0-5  the integration chain, measured after the roster lands
 pd:                  # 0-5  precedent density

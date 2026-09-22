@@ -428,8 +428,9 @@ related: []             # reference only — never blocking, never ownership.
   that leaves a liability behind — the second is the dangerous one, because
   it is invisible to the gate that accepted it.
   Fill at filing; re-score when an amendment changes scope, evidence or
-  open decisions. Each axis is scored in exactly one place: where two rules
-  could apply to one fact, the anchor ladder wins.
+  open decisions. Where two ANCHORS in one axis could apply to one fact,
+  take the lower. Caps and deductions stated inside an axis apply on top of
+  the anchor chosen; they are not in competition with it.
   Self-contained by design; the other tier templates carry their own
   tier-adjusted copies. They can drift — change an axis in all of them and
   bump the version above together.
@@ -600,8 +601,11 @@ related: []             # reference only — never blocking, never ownership.
                                             commitment, wrong and not
                                             cheaply withdrawn
     HOLLOW-ORACLE            OS<=2, or the 2-point deduction fired
-    GOLDEN-LOCK-IN           RD=2 and OS>=4 a correct expected artifact that
-                                            entrenches as ground truth
+    GOLDEN-LOCK-IN           RD=2           an expected artifact this work
+                                            commits that later work is then
+                                            graded against. HOLLOW-ORACLE
+                                            above already took the
+                                            self-certified cases
     SPEC-DRIFT               SC<=2
     PREMATURE-SEAM           DA<=2
     PARTIAL-INTEGRATION      BR<=1 or CF<=1

@@ -233,12 +233,17 @@ flowchart TD
   important or urgent the work is. A LOW BAND IS A ROUTING DECISION, NOT A
   CRITICISM.
 
-  THIS TIER IS NEVER A SINGLE DELEGATION, AND THIS BLOCK DOES NOT PRETEND
-  OTHERWISE. Horizon Length and Context Footprint are 0-1 by construction,
-  because an outcome composes features: its own dependent chain is a
-  multi-week programme and its own footprint is the whole system. Fill them
-  honestly at 0-1. The two fields worth filing carefully are `ed` and
-  `roster_delegable`; the rest are near-determined by the tier.
+  SCORE THE ACCEPTANCE PASS, NOT THE PROGRAMME. Every axis here is scored
+  on what remains once the roster has landed: the work of demonstrating the
+  outcome, not the work of building it. Waiting on an unlanded roster is an
+  ordering dependency — it belongs in the roster and in `blocked_by`, and it
+  is NOT a horizon or footprint score. A capstone whose features have all
+  landed and whose acceptance is one scripted walk-through against a
+  committed transcript genuinely has a short chain, and must be allowed to
+  score like one.
+  In practice this tier still tends to land low, because acceptance criteria
+  are the least likely to be closed and the most likely to need a person.
+  That must FALL OUT of the scores; it is never imposed on them.
 
   SCORE THIS CAPSTONE'S OWN DELIVERABLE — the system-level acceptance
   criteria and the outcome statement — never the union of its features.
@@ -326,19 +331,31 @@ flowchart TD
       1 acceptance is system-wide, or pins a published surface
       0 acceptance reaches consumers outside this repository, or call sites
         unknowable without searching the whole tree
-      Expect 0-1. A tier of this kind whose own blast radius is 4-5 is
-      probably mis-tiered.
+      Acceptance that only observes scores high; acceptance that must add
+      or change production code to become demonstrable scores low, and that
+      is a signal the features did not finish the job.
 
   HL  HORIZON LENGTH — the DEPENDENT-step chain, in expert time, from a
       cold start to gated evidence. Steps that can run in parallel count
       for less than steps that must run in order: reliability falls with
       the length of the dependent chain, not with total volume.
-      0-1 BY CONSTRUCTION. This tier composes multi-day units, so the only
-      honest scores are:
-      1 the acceptance pass alone exceeds a week once the roster lands
-      0 a multi-week programme composed of other multi-week units
-      A score of 2-5 means this is mis-tiered. Do not inflate it to improve
-      the band; a low band is expected here and is not a finding.
+      Measured AFTER the roster lands. This is NOT the sum of the features'
+      horizons, and it is NOT the length of the programme; it is the
+      demonstrate-reconcile-record chain of the acceptance pass itself.
+      5 under an expert-hour: run one scripted walk-through
+      4 one to four hours
+      3 half a day to two days: acceptance surfaces cross-feature
+        mismatches that must be reconciled before the outcome can be shown
+      2 several days, or two or more features whose behaviour must be
+        demonstrated together in a way neither demonstrates alone
+      1 more than a week, or acceptance crosses a subsystem it must first
+        learn
+      0 acceptance is itself a multi-week programme
+      A high score here is legitimate and reachable: a capstone whose roster
+      has landed and whose acceptance is already scripted is a short piece
+      of work. If you score 4-5 while the roster is incomplete, you have
+      scored the wrong thing — the waiting is an ordering dependency, not a
+      horizon.
 
   PD  PRECEDENT DENSITY — is there a closed sibling whose acceptance evidence this can be modelled on already in this repository?
       5 this issue names a specific in-repository precedent and it exists
@@ -356,12 +373,17 @@ flowchart TD
 
   CF  CONTEXT FOOTPRINT — how much must be held in mind simultaneously, not
       merely read.
-      0-1 by construction.
+      Scored on the acceptance pass, not on the system the features built.
+      5 one entry point and its transcript
+      4 one module; the outcome statement is sufficient context
+      3 two or three modules, or a module plus a format specification
+      2 a subsystem boundary that must be held from both sides at once
       1 a repository-wide invariant that cannot be verified locally
       0 the repository plus the semantics of an external toolchain, or the
         repository plus a hardware target
-      Score 2-5 only if acceptance genuinely fits inside one subsystem,
-      which is rare and worth a sentence in the prose line.
+      Acceptance that merely drives an already-built system from its
+      outside edge can legitimately score high; acceptance that must reason
+      about the system's internals to know whether the outcome holds cannot.
 
   RD  REVERSIBILITY / DEBT SURFACE — the cost of a completion that is wrong
       but plausible. Higher is cheaper to reverse.
@@ -483,11 +505,16 @@ flowchart TD
        unattended; a person makes the call and owns the artifact
     F  HUMAN-ONLY (ED<=1) or AGENT-ASSIST-ONLY
 
-  Band A is UNREACHABLE at this tier and that is intentional: with Horizon
-  Length and Context Footprint bounded at 1, RAW cannot exceed 27, so B is
-  the ceiling from RAW alone and the capping axes usually bring it lower
-  still. Landing at D or F is the tier working as designed, not a finding,
-  and never a reason to inflate an axis to escape it.
+  EVERY BAND IS REACHABLE AT THIS TIER, INCLUDING A. A capstone whose
+  features have landed, whose acceptance criteria name their artifacts, and
+  whose outcome is demonstrated by a committed transcript is genuinely
+  delegable, and the rubric must be able to say so. In practice this tier
+  lands low far more often than the others — but that has to be earned by
+  the scores, not imposed by the tier. If you find yourself reaching for a
+  low score because "capstones are not delegable", stop: score the
+  acceptance pass honestly and let the capping axes do their work.
+  Equally, do not inflate an axis to escape a low band. The band is a
+  routing decision; a low one costs nothing but a different route.
 
   DEBT TAG — the specific liability that delegating as-is would create.
   Exactly one, the most severe that applies, in this order:
@@ -548,10 +575,10 @@ flowchart TD
 adr: 1
 sc:                  # 0-5  specification closure of the acceptance criteria
 os:                  # 0-5  oracle strength of the acceptance evidence
-br:                  # 0-5  this capstone's OWN blast radius (expect 0-1)
-hl:                  # 0-5  0-1 by construction — this tier composes
+br:                  # 0-5  the acceptance pass's own blast radius
+hl:                  # 0-5  the acceptance pass, measured after the roster lands
 pd:                  # 0-5  precedent density
-cf:                  # 0-5  0-1 by construction — system-wide
+cf:                  # 0-5  the acceptance pass's own footprint
 rd:                  # 0-5  reversibility / debt surface
 raw:                 # sc+os+br+hl+pd+cf+rd, 0-35
 ed:                  # 0-5  environmental determinism (CAPPING). THE KEY FIELD:
@@ -559,9 +586,8 @@ ed:                  # 0-5  environmental determinism (CAPPING). THE KEY FIELD:
                      #   1 = needs hardware someone must operate
 da:                  # 0-5  design authority (CAPPING) — this capstone's own
 band:                # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
-action:              # DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST | SPLIT |
-                     #   HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
-                     #   (DELEGATE is unreachable here — band A cannot occur)
+action:              # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
+                     #   SPLIT | HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
 debt:                # predicted debt mode, or NONE
 roster_delegable:    # k/n — requires_features entries at band A or B, or `pending`
 ```

@@ -618,10 +618,10 @@ flowchart TD
 adr: 1
 sc:                  # 0-5  specification closure of the integration criteria
 os:                  # 0-5  oracle strength of the integration evidence
-br:                  # 0-5  this feature's OWN blast radius (composition => low)
-hl:                  # 0-5  this feature's OWN chain       (composition => low)
+br:                  # 0-5  the integration work's own blast radius
+hl:                  # 0-5  the integration chain, measured after the roster lands
 pd:                  # 0-5  precedent density
-cf:                  # 0-5  this feature's OWN footprint   (composition => low)
+cf:                  # 0-5  the integration work's own footprint
 rd:                  # 0-5  reversibility / debt surface
 raw:                 # sc+os+br+hl+pd+cf+rd, 0-35
 ed:                  # 0-5  environmental determinism (CAPPING)

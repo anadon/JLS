@@ -119,9 +119,10 @@ labels: ["tier:task"]
      the criterion silently.
   13. Open Questions are MARKED, not merely listed. Each entry ends in
      exactly one of `Recommended default: <answer>` (an executor may
-     proceed), `BLOCKING: <who decides>` (an executor must stop), or
-     `HYGIENE: <what to re-derive>` (not a decision at all — a citation, a
-     status check, an un-run build). This template requires the section, so
+     proceed and land), `PROPOSED: <answer>, pending <who confirms>` (an
+     executor may draft but not land), `BLOCKING: <who decides>` (an
+     executor must stop), or `HYGIENE: <what to re-derive>` (not a decision
+     at all — a citation, a status check, an un-run build). This template requires the section, so
      every issue has one; without a marker a reader cannot tell a decision
      that was made from one that was dodged, and § Agentic Delegability
      scores the entry as unresolved, which is usually not what was meant.
@@ -381,9 +382,10 @@ related: []             # reference only — never blocking, never ownership.
      recommended default, and whether it blocks filing, blocks execution,
      or can ride along. "N/A — fully specified" if nothing is open.
 
-     Mark every entry per rule 13 — `Recommended default:`, `BLOCKING:`, or
-     `HYGIENE:`. The marker is what an executor and § Agentic Delegability
-     both read; an unmarked entry is treated as blocking. -->
+     Mark every entry per rule 13 — `Recommended default:`, `PROPOSED:`,
+     `BLOCKING:` or `HYGIENE:`. The marker is what an executor and
+     § Agentic Delegability both read; an unmarked entry is scored on its
+     substance, and the marker fixed. -->
 
 ## 14. Completion Criteria (Definition of Done)
 
@@ -419,334 +421,206 @@ related: []             # reference only — never blocking, never ownership.
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v1. How safely this issue can be handed to an automated or
-  semi-automated executor, and what maintenance liability delegating it
-  as-is would create. This is NOT a rating of how good, important or urgent
-  the work is — the two are close to orthogonal. An issue can be excellent
-  work, correctly specified and well evidenced, and still band F because
-  closing it requires someone to physically operate a device. A LOW BAND IS
-  A ROUTING DECISION, NOT A CRITICISM.
-
-  Fill at filing time; re-score whenever an amendment changes the scope,
-  the evidence, or the open decisions.
-
-  Two failure modes are rated, not one: (i) the work is not finished, and
-  (ii) the work is finished in a way that leaves a liability behind —
-  duplicated logic, a check that asserts nothing, an abstraction chosen to
-  make the change tractable, an expected-output file pinning the wrong
-  behaviour, a document asserting evidence nobody gathered. The second is
-  the dangerous one, because it is invisible to the gate that accepted it.
-
-  THIS SECTION IS SELF-CONTAINED. The other tier templates carry their own
-  tier-adjusted copies of these anchors, because issue templates have no
-  include mechanism and a filer must be able to score from the one template
-  in front of them. The copies CAN drift, and nothing detects it
-  automatically: when an axis changes here, change it in every copy and
-  bump the version marker above in all of them together. A copy whose
-  marker disagrees with its siblings is stale by definition.
-
-  WHY THESE AXES. Each is anchored to a repeatedly measured effect rather
-  than to intuition. Underspecification is the dominant reason real issues
-  turn out not to be solvable as written. Verification, not generation, is
-  the binding constraint on automated work, and proxy checks get satisfied
-  the wrong way when they are the reward. Changes spanning many files
-  succeed at markedly lower rates than changes confined to one. Per-step
-  error compounds over a dependent chain, so reliability falls with horizon
-  length even when every individual step is strong. Output quality degrades
-  as the amount of context that must be held grows. And automated authoring
-  shifts work measurably from moving code to copying it, which is a
-  duplication pressure that precedent suppresses. The two capping axes
-  exist because two constraints do not trade against the others at all:
-  evidence that requires the physical or social world, and decisions that
-  have not been made.
+  ADR-1 v2. How safely this issue can be handed to an automated executor,
+  and what maintenance liability delegating it as-is would create. NOT a
+  rating of how good, important or urgent the work is. Two failure modes
+  are rated: the work is not finished, and the work is finished in a way
+  that leaves a liability behind — the second is the dangerous one, because
+  it is invisible to the gate that accepted it.
+  Fill at filing; re-score when an amendment changes scope, evidence or
+  open decisions. Each axis is scored in exactly one place: where two rules
+  could apply to one fact, the anchor ladder wins.
+  Self-contained by design; the other tier templates carry their own
+  tier-adjusted copies. They can drift — change an axis in all of them and
+  bump the version above together.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
   SC  SPECIFICATION CLOSURE — is the end state fixed by the text alone?
-      The test: could two competent implementers each satisfy the completion criteria
-      and produce artifacts differing in a way a reviewer would care about?
-      If so, it is not closed.
-      5 every completion criterion names the artifact, its location, and the assertion
-        that pins it; no "appropriate", "reasonable", "as needed"
-      4 concrete; one or two open naming or layout choices no reviewer would
-        litigate
-      3 the goal is unambiguous, the artifact's shape is not; at least one
-        structural decision must be inferred
-      2 the end state is stated as an outcome rather than as an artifact
-      1 a problem and a direction; what "done" looks like is not written down
-      0 open-ended, self-contradictory, or deferring its own definition
-      A criterion reading "documented", "considered", "reviewed" or
-      "improved" with no named artifact caps this at 3. A section honestly
-      marked not-applicable with a reason does not lower it; unfilled
-      template boilerplate does.
+      Test: could two competent implementers each satisfy the completion criteria and
+      produce artifacts differing in a way a reviewer would care about?
+      5 every completion criterion names the artifact, its location, and the
+        assertion that pins it
+      4 concrete; one or two open naming choices no reviewer would litigate
+      3 the goal is unambiguous, the artifact's shape is not
+      2 stated as an outcome rather than as an artifact
+      1 a problem and a direction; "done" is not written down
+      0 open-ended, or deferring its own definition
+      A criterion reading "documented", "considered" or "reviewed" with no
+      named artifact caps this at 3.
 
-  OS  ORACLE STRENGTH — the check that would actually gate the merge. Not
-      "could this be tested" but "is there a signal that is cheap to run,
-      faithful to intent, and hard to satisfy the wrong way?"
+  OS  ORACLE STRENGTH — the check that would actually gate the merge.
       5 exact comparison against a pre-existing expected artifact; an
         algebraic property (round-trip, idempotence, invariance); or a
         differential check against an independent implementation
-      4 behavioural assertions over enumerated cases INCLUDING the named
-        negative and failure cases; or a compiler, type or analysis gate
-        THAT THIS CHANGE WOULD FAIL BEFORE THE FIX. A standing project-wide
-        gate that every change already passes is not this issue's oracle
-        and does not score here
-      3 existence- or smoke-shaped: the artifact is produced, the command
-        exits zero, the output is non-empty — satisfiable without being
-        correct
-      2 a threshold or a count, with no behavioural content
+      4 behavioural assertions over enumerated cases including the named
+        failure cases; or a compiler, type or analysis gate THIS CHANGE
+        WOULD FAIL BEFORE THE FIX (a standing project-wide gate every change
+        already passes is not this issue's oracle)
+      3 existence- or smoke-shaped: produced, exits zero, non-empty
+      2 a threshold or a count, no behavioural content
       1 a person reads prose and agrees
-      0 none; success is asserted by whoever did the work
-      `os:` records the score AFTER any deduction; `os_deduction:` records
-      which one fired, because the debt tags depend on knowing that.
-      DEDUCT 2 (floor 0) if the same change authors both the implementation
-      and the expected values that certify it. That is the configuration in
-      which a failing check gets "fixed" by weakening it.
-      DEDUCT 1 if the acceptance evidence is a document asserting a
-      measurement. The document is trivially producible; the measurement
-      behind it is the real work and is not itself gated.
+      0 none; success asserted by whoever did the work
+      DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
+      both the implementation and the expected values certifying it. Deduct
+      1 if the acceptance evidence is a document asserting a measurement.
+      `os:` records the score AFTER deductions; `os_deduction:` records the
+      total deducted, 0-3.
 
-  BR  BLAST RADIUS — everything this unit of work must move, including generated
-      files, expected-output artifacts, and anything published. Higher is
-      smaller.
+  BR  BLAST RADIUS — everything this change must move, generated files,
+      expected-output artifacts and anything published included.
       5 one file, or one new file and its test; nothing published moves
-      4 a handful of files within one module
-      3 several files across two modules, every caller already identified
-      2 more than two modules, or an interface whose callers this issue does
-        not enumerate
-      1 a repository-wide sweep, or a change to a published format, a
-        command-line surface, or a registry everything downstream reads
+      4 a handful of files in one module
+      3 several files across two modules, every caller identified
+      2 more than two modules, or an interface whose callers are not
+        enumerated here
+      1 a repository-wide sweep, or a published format, command surface or
+        registry that everything downstream reads
       0 call sites unknowable without searching the whole tree, or a
         contract with consumers outside this repository
 
-  HL  HORIZON LENGTH — the DEPENDENT-step chain, in expert time, from a
-      cold start to gated evidence. Steps that can run in parallel count
-      for less than steps that must run in order: reliability falls with
-      the length of the dependent chain, not with total volume.
-      5 under an expert-hour     4 one to four hours
-      3 half a day to two days  2 several days, or two or more integration
-        points that must be designed together
-      1 more than a week, or a chain crossing a subsystem it must first learn
-      0 a multi-week programme composed of other multi-day units
+  HL  HORIZON LENGTH — the DEPENDENT-step chain, in expert time, from a cold
+      start to gated evidence. Parallel steps count for less than ordered
+      ones: reliability falls with chain length, not with volume.
+      5 under an hour   4 one to four hours   3 half a day to two days
+      2 several days    1 more than a week, or the chain crosses a subsystem
+        it must first learn                    0 a multi-week programme
+      Do not count time spent waiting on another issue; that is an ordering
+      dependency, recorded in `blocked_by`.
 
-  PD  PRECEDENT DENSITY — is there a worked example of this exact shape already in this repository?
-      5 this issue names a specific in-repository precedent and it exists
-      4 a near-identical sibling exists in-tree and is findable by name
+  PD  PRECEDENT DENSITY — is there a worked example of this shape already in
+      this repository?
+      5 this issue names one and it exists
+      4 a near-identical sibling is in-tree and findable by name
       3 analogous patterns exist but need adaptation
-      2 the category exists in-tree; this is the first instance of its kind
+      2 the category exists; this is the first instance of its kind
       1 no in-repository precedent; the pattern comes from an external
-        specification this issue does cite
-      0 no precedent named anywhere; whoever executes invents the shape
-      This axis predicts duplication. With a precedent, the work copies a
-      local pattern; without one, it reproduces whatever pattern is most
-      common in the wider world — which is how a codebase with a deliberate
-      house style acquires code that compiles, passes, and reads as though
-      it came from somewhere else.
-      A young project scores low here across the board. That is accurate,
-      not punitive: with nothing to copy, the duplication risk really is
-      higher. It is also self-correcting — the first instance of each shape
-      raises the score for everything that follows, which is a reason to
-      land one carefully rather than a reason to discount the axis.
+        specification this issue cites
+      0 none named; whoever executes invents the shape
+      This predicts duplication: without a local pattern to copy, the work
+      reproduces whatever pattern is commonest elsewhere. A young repository
+      scores low across the board, which is accurate rather than punitive,
+      and self-corrects as each first instance lands.
 
-  CF  CONTEXT FOOTPRINT — how much must be held in mind simultaneously, not
-      merely read.
+  CF  CONTEXT FOOTPRINT — how much must be held in mind at once, not merely
+      read.
       5 one unit and its test
-      4 one module; this issue's own citations are sufficient context
+      4 one module; this issue's own citations suffice
       3 two or three modules, or a module plus a format specification
-      2 a subsystem boundary that must be held from both sides at once
-      1 a repository-wide invariant that cannot be verified locally
-      0 the repository plus the semantics of an external toolchain
+      2 a subsystem boundary held from both sides at once
+      1 a repository-wide invariant not verifiable locally
+      0 the repository plus an external toolchain's semantics
 
-  RD  REVERSIBILITY / DEBT SURFACE — the cost of a completion that is wrong
-      but plausible. Higher is cheaper to reverse.
-      5 a pure addition behind a check; reverting is one commit and nothing
-        depends on it
-      4 internal; wrongness surfaces in CI or at the next person to touch it
-      3 latent but discoverable by a later reader; no consumer outside this
-        repository
-      2 the artifact becomes load-bearing: a committed expected-output file,
-        a ratchet floor, a published threshold, an opt-in invariant others
-        are then measured against
-      1 a published contract: a file format, a command-line flag, a public
-        API, user-facing documentation
+  RD  REVERSIBILITY / DEBT SURFACE — cost of a completion that is wrong but
+      plausible.
+      5 a pure addition behind a check; reverting is one commit
+      4 internal; wrongness surfaces at the next check or the next reader
+      3 latent but discoverable; no consumer outside this repository
+      2 load-bearing: a committed expected-output artifact, a ratchet floor,
+        a published threshold others are then measured against
+      1 a published contract: a format, a command flag, a public API,
+        user-facing documentation
       0 irreversible outside this repository: an archival identifier, a
-        package-registry coordinate, a public listing, a tagged release, a
-        commitment made to a third party
-      A score of 2 deserves particular care. An expected-output artifact
-      produced by the same process that produced the behaviour is not
-      evidence of that behaviour; it is a record of it. It will pass
-      indefinitely, and it will be cited as ground truth by everything built
-      on top of it.
+        registry coordinate, a public listing, a tagged release, a
+        commitment to a third party
+      At 2, note that an expected-output artifact produced by the same
+      process that produced the behaviour records it rather than evidencing
+      it, and will be cited as ground truth by everything built on it.
 
   TWO CAPPING AXES. They do not add; they impose a ceiling on the band.
 
-  ED  ENVIRONMENTAL DETERMINISM — can the evidence this issue demands be produced by whoever
-      executes this, unattended, inside the project's own automated
-      environment?
-      5 fully self-contained: the project's standard build-and-test command,
-        or a script already in the tree, produces everything ...... no cap
-      4 needs a pinned toolchain the project can fetch and reproduce
-        automatically ............................................. no cap
-      3 needs a substrate or network resource that exists but is
-        unreliable, or an external corpus that must be downloaded .. cap B
-      2 needs a particular host platform or device class, or credentials
-        the executor does not hold ................................ cap C
+  ED  ENVIRONMENTAL DETERMINISM — can the evidence be produced unattended,
+      wherever this project runs its checks (its automation, or a
+      maintainer's own checkout if it has none)? Score the evidence the work
+      REQUIRES, not only what the completion criteria happen to list.
+      5 self-contained: the project's standard check command, or a script
+        already in the tree, produces it ......................... no cap
+      4 needs a pinned toolchain the project can fetch and reproduce no cap
+      3 needs an unreliable substrate, or an external corpus to download
+        .......................................................... cap B
+      2 needs a particular host platform, device class, or credentials the
+        executor does not hold .................................... cap C
       1 needs hardware someone must physically possess or operate, or a
         recording of a real session ............................... cap F
-      0 needs OTHER PEOPLE TO PRODUCE THE EVIDENCE: a trial with human
-        subjects, an independent reproducer, a person who must personally
-        run or witness an evidence-producing step, an external publisher
-        whose acceptance is itself the evidence ................... cap F
-      ORDINARY REVIEW AND MERGE APPROVAL ARE NOT ED FACTORS. A second
-      person approving the change is how most projects merge anything, and
-      it is band B's checkpoint, not an environmental constraint. Score
-      only people whose participation PRODUCES evidence that would not
-      otherwise exist.
-      SCORE THE EVIDENCE THE WORK REQUIRES, NOT ONLY WHAT THE CRITERIA
-      DEMAND. If a criterion was left out because it could not be produced
-      unattended, that omission is exactly what this axis is for; score the
-      evidence needed to establish the work is correct, whether or not it
-      was written down. Otherwise the axis rewards omitting the hard
-      criterion.
-      A low score is NOT a criticism. It means the deliverable is not a
-      patch. Much of the work may still be produced unattended — the
-      harness, the script, the checklist, the analysis template — but the
-      issue cannot be CLOSED that way, and closing it anyway is precisely
-      the failure this rubric exists to prevent. Recording this at filing
-      time is the point: it tells whoever picks the issue up that they are
-      not looking at a coding task.
+      0 needs ANOTHER PERSON TO PRODUCE EVIDENCE: a human-subject trial, an
+        independent reproducer, someone who must personally run or witness a
+        step and report what they saw, an external publisher whose
+        acceptance is itself the evidence ......................... cap F
+      Reviewing a diff or approving a merge is NOT evidence production and
+      does not score here — that is the band-B checkpoint, and most projects
+      require it. Running the software on a platform and reporting the
+      result IS evidence production and does score here.
+      A low score is not a criticism; it means the deliverable is not a
+      patch. Much of the work may still be produced unattended, but the
+      issue cannot be closed that way.
 
-  DA  DESIGN AUTHORITY — does finishing require a decision the issue does
-      not already make? Scored on this issue.
-      A design decision is a choice that changes the shape of the artifact
-      and that a reviewer could reasonably contest: where a boundary goes,
-      what a type carries, which of two mechanisms is used, what a published
-      surface looks like, what is in or out of scope.
-      5 no open decisions; every choice is stated here or forced by existing
-        code ...................................................... no cap
-      4 only local, reversible choices remain — a name, where a helper
-        lives; OR every decision this issue names is resolved by a stated
-        preference an executor may act on without asking .......... no cap
-      3 decisions are named and a preference is stated, but the preference
-        is explicitly NOT this issue's to make — it is offered pending
-        someone else's confirmation ............................... cap B
-      2 exactly one structural decision is genuinely open, no preference
-        stated .................................................... cap C
-      1 two or more are open with no preference, or a decision is routed to
-        another owner who must answer first ....................... cap D
+  DA  DESIGN AUTHORITY — design decisions this issue leaves for whoever
+      executes it. A design decision changes the artifact's shape and a
+      reviewer could contest it: where a boundary goes, what a type carries,
+      which of two mechanisms is used, what a published surface looks like,
+      what is in scope.
+      Count a decision whether or not the issue names it: one an executor
+      will certainly hit that the text never mentions is OPEN, not absent.
+      Do not count evidence hygiene, bookkeeping, or a decision another
+      issue has ALREADY ANSWERED and this one cites.
+      5 none open ............................................... no cap
+      4 only local reversible choices remain (a name, a helper's home); or
+        every open decision carries a preference an executor may act on AND
+        that preference is forced by existing code, by a declared contract,
+        or by the filer's own authority to decide it (a `Recommended
+        default:` entry the filer may land) ...................... no cap
+      3 an open decision carries a preference the filer is NOT authorised to
+        make, offered pending someone's confirmation (a `PROPOSED:`
+        entry) ................................................... cap B
+      2 one open decision, no preference stated ................. cap C
+      1 two or more open with no preference; or any open decision another
+        owner must answer before this can finish (a `BLOCKING:` entry)
+        .......................................................... cap D
       0 the deliverable IS a decision: a verdict, a policy, a scope
-        boundary, a gate on whether a premise holds ............... cap D
-      This axis rates DESIGN authority only. These do NOT lower it:
-        - evidence hygiene: re-deriving citations, refreshing line numbers,
-          re-running something that was not run at filing time
-        - bookkeeping: confirming another issue's status, re-syncing a
-          roster, an entry not yet filed
-        - a question this issue poses and then answers with a stated
-          preference an executor may act on without asking — that is a
-          decision MADE, and it scores 4, never 3. Anchor 3 is only for a
-          preference offered pending someone else's confirmation
-        - a decision already ANSWERED by another issue, where the answer is
-          recorded there and cited here. An unmade decision owned elsewhere
-          is NOT excluded: it is anchor 1, because this issue cannot be
-          finished until someone else decides. Record the wait in
-          `blocked_by` as well; the wait itself scores on no axis
-      A template that requires an open-questions section will have one on
-      every issue. A populated section is therefore NOT evidence of an open
-      decision: score the entries, not the section's existence. Failing to
-      make that distinction collapses this axis to a constant and destroys
-      its value.
-      SCORE THE DECISIONS THE WORK REQUIRES, NOT ONLY THE ONES WRITTEN
-      DOWN. A decision an executor will certainly hit that this issue does
-      not name scores as unnamed and open (1 or 0), never as absent.
-      Otherwise the axis rewards concealment: a section reading "N/A —
-      fully specified" would score 5 by saying nothing. An N/A does not by
-      itself support 4 or 5; it supports them only when nothing in the
-      declared contract or criteria still has an unsettled shape.
-      Note the asymmetry with Environmental Determinism: a 0 here caps at D,
-      not F, because research and drafting on an undecided question is
-      genuinely most of the value — what cannot be delegated is the
-      decision itself. A 0 on ED caps at F because none of the value can be
-      produced.
+        boundary, a gate on whether a premise holds .............. cap D
+      Score the entries, not the presence of an open-questions section:
+      a template that mandates one will have one on every issue. Score an
+      unmarked entry on its substance and fix the marker.
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
-
-    A  DELEGATE — automated end to end; the gate is CI and one human
-       reading the diff
-    B  DELEGATE-WITH-CHECKPOINT — one named human approval, usually of the
-       oracle or of a boundary, before implementation
-    C  SPECIFY-FIRST or SPLIT — something must be supplied first: a closed
-       specification, pre-committed expected values, or a decomposition.
-       Supplying it is often itself an A- or B-band unit of work, and
-       filing that is the cheapest move available
-    D  HUMAN-LED — research, drafts and harnesses can be produced
-       unattended; a person makes the call and owns the artifact
+    A  DELEGATE                    automated end to end
+    B  DELEGATE-WITH-CHECKPOINT    one named human approval first
+    C  SPECIFY-FIRST or SPLIT      supply a closed spec, pre-committed
+                                   expected values, or a decomposition
+    D  HUMAN-LED                   research and harnesses can be produced
+                                   unattended; a person decides and owns it
     F  HUMAN-ONLY (ED<=1) or AGENT-ASSIST-ONLY
 
-  DEBT TAG — the specific liability that delegating as-is would create.
-  Exactly one, the most severe that applies, in this order:
-    FABRICATED-EVIDENCE (ED<=1)     a checklist marked done, a measurement
-                                    table with plausible numbers, a
-                                    "verified" claim behind which nothing
-                                    was run. Invisible to every automated
-                                    gate, which is why it ranks first
-    GOLDEN-LOCK-IN (RD=2, OS>=4)    a load-bearing expected-output artifact
-                                    that later work is then graded against.
-                                    The oracle is strong and may be
-                                    perfectly correct today; the liability
-                                    is that it entrenches, and revising it
-                                    later invalidates everything measured
-                                    against it. NOTE the boundary with the
-                                    tag below: an artifact authored by the
-                                    same change it certifies fires the
-                                    2-point deduction, so its oracle cannot
-                                    reach 4 and it is HOLLOW-ORACLE, not
-                                    this. The 1-point deduction does not
-                                    move a case between these two tags
-    HOLLOW-ORACLE (OS<=2, or the 2-point self-certification deduction
-    fired)
-    SPEC-DRIFT (SC<=2)
-    PREMATURE-SEAM (DA<=2)
-    PARTIAL-INTEGRATION (BR<=1 or CF<=1)
-    SCOPE-EXHAUSTION (HL<=1)
-    DUPLICATION (PD<=1)
-    NONE
-  A tag whose trigger is met ONLY because an axis is structurally bounded at
-  this tier reports a property of the tier, not of this issue, and carries
-  no information. Skip it and take the next tag whose trigger reflects
-  something about this issue specifically; if none does, record NONE. In
-  particular, where Horizon Length or Context Footprint are low by
-  construction rather than by circumstance, SCOPE-EXHAUSTION and
-  PARTIAL-INTEGRATION are not the finding.
+  DEBT TAG — the liability delegating as-is would create. Exactly one, the
+  first whose trigger fires:
+    FABRICATED-EVIDENCE      ED<=1          evidence nobody could produce,
+                                            produced anyway
+    IRREVERSIBLE-PUBLICATION RD<=1          a published or out-of-repo
+                                            commitment, wrong and not
+                                            cheaply withdrawn
+    HOLLOW-ORACLE            OS<=2, or the 2-point deduction fired
+    GOLDEN-LOCK-IN           RD=2 and OS>=4 a correct expected artifact that
+                                            entrenches as ground truth
+    SPEC-DRIFT               SC<=2
+    PREMATURE-SEAM           DA<=2
+    PARTIAL-INTEGRATION      BR<=1 or CF<=1
+    SCOPE-EXHAUSTION         HL<=1
+    DUPLICATION              PD<=1
+    NONE                     nothing above fired
+  Where an axis is low because of what this tier inherently is rather than
+  because of this issue, its tag reports the tier and not the issue: take
+  the next tag whose trigger reflects this issue specifically.
 
-  THREE FILING CHECKS THIS SECTION ASSUMES:
-    - ORACLE CUSTODY. Every criterion that compares against an expected
-      value names who produced that value and when. Values committed and
-      reviewed BEFORE the implementation, and values written by the same
-      change as the implementation, are different guarantees; only the
-      first is evidence.
-    - ARTIFACT PATHS RESOLVE AT FILING. Every path a criterion names either
-      exists already or is created by this work, and the criteria say
-      which. A criterion pointing at something that does not exist is
-      unclosable, and whoever picks it up will either invent a location or
-      skip it silently.
-    - OPEN QUESTIONS CARRY A MARKER, rather than merely being listed:
-      a stated preference an executor may proceed on, a blocking question
-      naming who must answer, or an item that is hygiene rather than a
-      decision at all. An unmarked entry reads as an unresolved structural
-      decision, scored by the table above — 2 if it is the only one, 1 if
-      there are two or more — which is usually not what was meant.
-
-  A low band is a signal, not a confession. The cheapest way to raise one
-  is almost always to answer an open question or to pre-commit the expected
-  values — rarely to rewrite the issue.
+  A low band is a routing decision, not a criticism. Issues can be excellent
+  work and band F because closing them needs a person or a device.
 -->
 
 ```yaml
-adr: 1
+adr: 2
 sc:              # 0-5  specification closure
-os:              # 0-5  oracle strength — apply the deductions
-os_deduction:          # 0|1|2 — which OS deduction fired, 0 if none
+os:              # 0-5  oracle strength, AFTER deductions
+os_deduction:    # 0-3  total deducted, 0 if none
 br:              # 0-5  blast radius
 hl:              # 0-5  horizon length
 pd:              # 0-5  precedent density
@@ -758,10 +632,9 @@ da:              # 0-5  design authority           (CAPPING)
 band:            # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
 action:          # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
                  #   SPLIT | HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
-debt:            # predicted debt mode, or NONE
+debt:            # first tag whose trigger fires, or NONE
 ```
 
-<!-- One or two sentences: what an executor handed this issue today would
-     actually do, where it would go wrong, and the single change that would
-     raise the band. Name the section, the criterion, the artifact — not
-     generic advice. -->
+<!-- One or two sentences: what an executor would actually do with this
+     issue, where it would go wrong, and the single change that would raise
+     the band. Name the section, the criterion, the artifact. -->

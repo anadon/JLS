@@ -372,6 +372,74 @@ routing decision, not a criticism.*
 
 ---
 
+## 5.5 Measured calibration of the DA axis (2026-09-21)
+
+The first corpus-wide run of ADR-1 over the 688 open JLS issues produced a
+**degenerate DA distribution**: 87% of issues scored exactly DA=1 and none
+scored above 3, while every other axis showed real spread. That is the
+signature of an instrument fault, not of a corpus in which nearly every
+issue is design-blocked.
+
+The fault was in the grading instruction, not the axis. Graders were told
+that an unanswered structural question in `## Open Questions & Decisions
+Needed` forces DA≤1 — and that section is mandatory in the JLS templates,
+so it is populated on essentially every issue. Graders therefore read
+"section is non-empty" as "decision is open".
+
+A DA-only re-grade was run on a 66-issue stratified sample (14 capstones,
+26 features, 26 tasks) with a corrected instruction that excludes three
+things the first pass conflated. The correction is now part of the axis
+definition:
+
+**These do NOT lower DA:**
+- **Evidence hygiene.** "citations must be re-derived", "line numbers will
+  drift", "no build was run during this filing pass", "re-verify the
+  observations at pickup". Executor discipline, not a decision.
+- **Bookkeeping and status.** "confirm #N is still open", roster re-sync
+  reminders, ownership and scheduling notes.
+- **Questions the issue answers itself.** An entry carrying "Recommended
+  default:", "Recommended:", "safe default is X", or "rides along, does not
+  block" is a *made* decision. An executor can proceed without asking.
+- **A decision owned by a different issue** this one merely waits on. That
+  is a blocker (`blocked_by`, and HL), not this issue's design authority.
+
+Measured result, n=66:
+
+| Quantity | Value |
+|---|---|
+| Mean DA shift | **+1.23** |
+| Direction | 41 raised, 25 unchanged, **0 lowered** — strictly one-sided |
+| DA mean, capstones | 1.07 → 2.79 |
+| DA mean, features | 1.08 → 2.38 |
+| DA mean, tasks | 1.00 → 1.88 |
+| Hygiene items miscounted as decisions, per issue | 2.42 |
+| Named decisions per issue | 2.38, of which 2.05 carry a stated preference |
+| Issues where *every* named decision carries a preference | 33 / 56 |
+| Issues with zero genuine open decisions | 10 / 66 |
+| Issues whose own deliverable IS a decision | 2 / 66 |
+
+**Band impact is small and one-directional:** 59/66 bands unchanged (89%);
+7 changed, all D→C. No issue moved into A or B, and the F population was
+completely unaffected, because F here is set by ED (work needing hardware
+or other people) and by low RAW, not by DA.
+
+Two conclusions, both of which matter more than the arithmetic:
+
+1. **The corpus-level findings are robust to this defect.** The absence of
+   A-band work, the ~1% B-band, and the size of the F population do not
+   depend on DA. Only the D/C boundary does, by roughly 11% of issues.
+2. **JLS's "Recommended default:" convention is doing real delegability
+   work, and the first pass was blind to it.** An issue that names its open
+   decisions *and* states a preference for each is materially more
+   delegable than one that names none — and on this corpus that pattern is
+   the norm, not the exception. Any future grader that treats a populated
+   Open Questions section as evidence of an open decision will systematically
+   understate how ready this backlog is.
+
+Grades posted to issues during the 2026-09-21 run carry the **uncorrected**
+DA. Read the DA row on those comments as biased low by ~1.2 points, with
+roughly a one-in-nine chance the band should read C rather than D.
+
 ## 6. Known limitations of ADR-1
 
 Stated so they are not discovered as surprises:

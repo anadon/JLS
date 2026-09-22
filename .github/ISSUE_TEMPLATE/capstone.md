@@ -234,8 +234,10 @@ flowchart TD
   SCORE THE ACCEPTANCE PASS — this capstone's own system-level criteria and
   outcome statement — never the union of its features.
   Fill at filing; re-score when a re-plan or amendment changes the roster or
-  the criteria. Each axis is scored in exactly one place: where two rules
-  could apply to one fact, the anchor ladder wins.
+  the criteria. Where two ANCHORS in one axis
+  could apply to one fact, take the lower. Caps and deductions stated inside
+  an axis apply on top of the anchor chosen; they are not in competition
+  with it.
   Self-contained by design; the other tier templates carry their own
   tier-adjusted copies. They can drift — change an axis in all of them and
   bump the version above together.
@@ -414,8 +416,11 @@ flowchart TD
                                             commitment, wrong and not
                                             cheaply withdrawn
     HOLLOW-ORACLE            OS<=2, or the 2-point deduction fired
-    GOLDEN-LOCK-IN           RD=2 and OS>=4 a correct expected artifact that
-                                            entrenches as ground truth
+    GOLDEN-LOCK-IN           RD=2           an expected artifact this work
+                                            commits that later work is then
+                                            graded against. HOLLOW-ORACLE
+                                            above already took the
+                                            self-certified cases
     SPEC-DRIFT               SC<=2
     PREMATURE-SEAM           DA<=2
     PARTIAL-INTEGRATION      BR<=1 or CF<=1

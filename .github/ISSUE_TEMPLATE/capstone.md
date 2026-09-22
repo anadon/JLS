@@ -349,14 +349,18 @@ flowchart TD
       4 needs a pinned toolchain the project can fetch and reproduce no cap
       3 needs an unreliable substrate, or an external corpus to download
         .......................................................... cap B
-      2 needs a particular host platform, device class, or credentials the
-        executor does not hold .................................... cap C
-      1 needs hardware someone must physically possess or operate, or a
-        recording of a real session ............................... cap F
-      0 needs ANOTHER PERSON TO PRODUCE EVIDENCE: a human-subject trial, an
-        independent reproducer, someone who must personally run or witness a
-        step and report what they saw, an external publisher whose
-        acceptance is itself the evidence ......................... cap F
+      The last three are disjoint on one question: could automation ever
+      produce this unattended?
+      2 YES, but not with what the executor has — another host platform, a
+        device class, or a credential that automation COULD be given ....
+        .......................................................... cap C
+      1 NO, because something physical must be connected, operated or
+        observed by hand, or because the evidence is a recording of a real
+        session ................................................... cap F
+      0 NO, because a person's participation or judgement IS the evidence:
+        a human-subject trial, an independent reproducer, someone who must
+        witness a step and report what they saw, an external publisher
+        whose acceptance is itself the evidence ................... cap F
       Reviewing a diff or approving a merge is NOT evidence production and
       does not score here — that is the band-B checkpoint, and most projects
       require it. Running the software on a platform and reporting the
@@ -384,19 +388,23 @@ flowchart TD
         make, offered pending someone's confirmation (a `PROPOSED:`
         entry) ................................................... cap B
       2 one open decision, no preference stated ................. cap C
-      1 two or more open with no preference; or any open decision another
-        owner must answer before this can finish (a `BLOCKING:` entry)
-        .......................................................... cap D
+      1 two or more open with no preference; or a `BLOCKING:` entry — an
+        open decision another owner must answer before work can START. A
+        `PROPOSED:` entry is 3, not this: work may begin against the stated
+        preference ................................................ cap D
       0 the deliverable IS a decision: a verdict, a policy, a scope
         boundary, a gate on whether a premise holds .............. cap D
       Score the entries, not the presence of an open-questions section:
       a template that mandates one will have one on every issue. Score an
       unmarked entry on its substance and fix the marker.
 
-  `roster_delegable` — of the entries in `requires_features`, how many are
-  individually band A or B. Score `pending` if the roster is empty or its
-  features are not yet scored; name in the prose line which feature's roster
-  is closest to yielding a delegable leaf.
+  `roster_delegable` — k/n over every FILED entry in the composition
+  roster (`requires_features` and `requires_capstones`). Unfiled planned entries are
+  not counted; where any exist the fraction is provisional and the prose
+  line must say so. Score `pending` when the roster is empty or its
+  children are not yet scored, and name in the prose line which entry is
+  closest to delegable. This predicts executability better than this
+  issue's own band does.
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).

@@ -202,7 +202,12 @@ flowchart TD
 <!-- Decisions this plan cannot make for itself — for each: the
      question, options with a recommended default, and whether it
      blocks filing features, blocks acceptance, or can ride along.
-     "N/A — fully specified" if nothing is open. -->
+     "N/A — fully specified" if nothing is open.
+
+     Mark every entry the way the task template's rule 13 requires —
+     `Recommended default:`, `BLOCKING:`, or `HYGIENE:`. The marker is
+     what an executor and § Agentic Delegability both read; an unmarked
+     entry is treated as blocking. -->
 
 ## Completion Criteria (Definition of Done)
 
@@ -213,4 +218,83 @@ flowchart TD
 - [ ] The §1 (Outcome Statement) walk-through executed at that commit and its transcript recorded
 - [ ] Every risk in §3 (Cross-Feature Integration Risks) checked at system scale; outcome recorded
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A, as read against this template)
+- [ ] § Agentic Delegability filled at filing and re-scored on any `REPLAN:` or `AMENDED:` edit that changed the roster or §4's acceptance criteria
 - [ ] ...
+
+
+## Agentic Delegability (ADR-1)
+
+<!--
+  ADR-1 v1 (2026-09), capstone tier. THE ANCHOR TABLE IS CANONICAL IN THE
+  SCIENTIFIC-TASK TEMPLATE — read the nine axis definitions, the band
+  arithmetic and the debt tags there. Only the capstone-tier deltas are
+  below.
+
+  This section rates DELEGABILITY TO AN AGENTIC LLM SYSTEM, not quality,
+  importance or urgency. A low band is a routing decision, not a criticism.
+
+  DELTA 1 — A CAPSTONE IS NEVER A SINGLE DELEGATION, AND THIS BLOCK DOES
+  NOT PRETEND OTHERWISE. HL is 0-1 and CF is 0-1 by construction: a
+  capstone composes features, so its own dependent-step chain is a
+  multi-week programme and its own footprint is the whole system. Fill them
+  honestly at 0-1. The resulting band will be D or F for essentially every
+  capstone, and that is the tier working as designed, not a finding.
+  Do not inflate the axes to avoid a low band.
+
+  DELTA 2 — THE TWO NUMBERS WORTH FILING ARE `ed` AND `roster_delegable`.
+
+  `ed`, scored against §4 (System-Level Acceptance Criteria), answers: can
+  this capstone's acceptance evidence be produced at all without a person
+  or a piece of hardware? This is the single most useful thing this block
+  records, because it is invariant to how good the models get, and because
+  it is cheap to know at filing and expensive to discover at close.
+  Measured in 2026-09: 25 of the 36 open capstones were ED-capped at F —
+  their §4 criteria required an outside reviewer, an instructor, a second
+  maintainer with merge rights, an independent reproducer, an n-of-5 user
+  trial, a JOSS editor, or physical hardware. If that is true here, say so
+  in §4 and in the prose line, and expect the close to need a human.
+
+  `roster_delegable` counts how many `requires_features` entries are
+  themselves band A or B. Across the whole 2026-09 corpus this was 0 for
+  every capstone. A 0/n is therefore expected; what makes it actionable is
+  naming, in the prose line, the ONE feature whose roster is closest to
+  producing a delegable leaf.
+
+  DELTA 3 — DA IS SCORED ON THIS CAPSTONE'S OWN OPEN DECISIONS ONLY. A
+  capstone does not inherit its features' open decisions, and a feature
+  does not inherit its tasks'. Score only what §4, §2 (Required Feature Set
+  & Sufficiency) or this template's Open Questions leave undecided here. A
+  capstone whose deliverable is itself a verdict, a scope boundary or a
+  does-this-premise-hold gate is DA=0.
+
+  DELTA 4 — SC AND OS ARE SCORED ON §4, NOT ON THE FEATURES. "The features
+  jointly deliver the outcome" is not an oracle. Ask what command, golden
+  or walk-through transcript would be pasted into the closing comment, and
+  score that. If the answer is "a reviewer agrees the outcome was
+  achieved", OS is 1.
+-->
+
+```yaml
+adr: 1
+sc:                  # 0-5  specification closure of §4's acceptance criteria
+os:                  # 0-5  oracle strength of §4 — not "the features landed"
+br:                  # 0-5  this capstone's OWN blast radius (expect 0-1)
+hl:                  # 0-5  0-1 by construction — a capstone composes
+pd:                  # 0-5  precedent density
+cf:                  # 0-5  0-1 by construction — system-wide
+rd:                  # 0-5  reversibility / debt surface
+raw:                 # sc+os+br+hl+pd+cf+rd, 0-35
+ed:                  # 0-5  environmental determinism (CAPPING) — on §4.
+                     #   THE KEY FIELD: 0 = §4 needs other people,
+                     #   1 = needs physical hardware or a recording
+da:                  # 0-5  design authority (CAPPING) — this capstone's own
+band:                # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
+action:              # HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY | SPLIT
+debt:                # predicted debt mode, or NONE
+roster_delegable:    # k/n — requires_features entries at band A or B, or `pending`
+```
+
+<!-- One or two sentences: if ED<=1, exactly which §4 criterion needs a
+     person or hardware and what an agent can still produce for it (the
+     harness, the checklist, the analysis template); and which single
+     feature's roster is closest to yielding a delegable leaf. -->

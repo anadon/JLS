@@ -102,6 +102,34 @@ labels: ["tier:task"]
      successor is needed). A criterion skipped without a WAIVED
      comment leaves the issue unclosable.
 
+  11. Oracle custody. Every completion criterion that compares against an
+     expected value names WHO produced that value and WHEN. "Pre-committed"
+     (the expected values land, reviewed, before the implementation) and
+     "same-change" (the executor writes the behaviour and the golden that
+     certifies it together) are different guarantees, and only the first is
+     evidence. Where a golden, fixture or expected-output file is generated
+     by the same change that produces the behaviour, say so in §9 (Data
+     Collection & Analysis) and apply the ADR-1 OS deduction below. Measured
+     over the 688 open issues in 2026-09, the same-change configuration was
+     the single largest predicted source of technical debt, at 58% of the
+     corpus — a check that is green forever and is then cited as ground
+     truth by every issue that builds on it.
+  12. Artifact paths resolve at filing. Every path a criterion names either
+     exists at `evidence_commit` or is created by this issue, and §14 says
+     which. A criterion pointing at a file that no longer exists is
+     unclosable: an executor will either invent a location or skip it
+     silently. 42 open issues were in this state in 2026-09 after the docs
+     tree was cleared.
+  13. Open Questions are MARKED, not merely listed. Each entry ends in
+     exactly one of `Recommended default: <answer>` (an executor may
+     proceed), `BLOCKING: <who decides>` (an executor must stop), or
+     `HYGIENE: <what to re-derive>` (not a decision at all — a citation, a
+     status check, an un-run build). An unmarked entry is read as an
+     unresolved structural decision and scores DA<=1 in § Agentic
+     Delegability, which is usually not what the filer meant: when the
+     whole corpus was graded in 2026-09 this single ambiguity depressed the
+     axis by a measured 1.23 points across the board.
+
   Decision/spike tasks ("evaluate X", "decide Y") use this template
   with "verdict recorded in <named doc/section>" as the completion
   contract; sections that presuppose a code defect are N/A (rule 2).
@@ -355,7 +383,11 @@ related: []             # reference only — never blocking, never ownership.
      from what genuinely needs a maintainer, so an executor knows what is
      safe to proceed on. For each: the question, the options with a
      recommended default, and whether it blocks filing, blocks execution,
-     or can ride along. "N/A — fully specified" if nothing is open. -->
+     or can ride along. "N/A — fully specified" if nothing is open.
+
+     Mark every entry per rule 13 — `Recommended default:`, `BLOCKING:`, or
+     `HYGIENE:`. The marker is what an executor and § Agentic Delegability
+     both read; an unmarked entry is treated as blocking. -->
 
 ## 14. Completion Criteria (Definition of Done)
 
@@ -382,5 +414,254 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10)
 - [ ] Not superseded: the §2 (Observations) failures still reproduced at pickup (rule 6); citations re-derived if HEAD had moved
-- [ ] Every decision in Open Questions & Decisions Needed is resolved (or explicitly deferred), none left blocking
+- [ ] Every decision in Open Questions & Decisions Needed is resolved (or explicitly deferred), none left blocking, and every entry carries its rule 13 marker
+- [ ] Every expected value this issue was graded against was pre-committed, or §9 records that it was authored in the same change and the ADR-1 OS deduction was applied (rule 11)
+- [ ] § Agentic Delegability filled at filing and re-scored on any `AMENDED:` edit that changed scope, evidence, or open decisions
 - [ ] ...
+
+
+## Agentic Delegability (ADR-1)
+
+<!--
+  ADR-1 v1 (2026-09). How safely this issue can be handed to an agentic LLM
+  system — NOT how good, important or urgent it is. The two are close to
+  orthogonal: an issue can be excellent work, correctly specified and well
+  evidenced, and still band F because it needs an FPGA on a desk. A low band
+  is a ROUTING DECISION, NOT A CRITICISM. Fill at filing time; re-score on
+  any `AMENDED:` edit that changes scope, evidence or open decisions.
+
+  THIS IS THE CANONICAL ANCHOR TABLE for all three tiers. The feature and
+  capstone templates carry only their tier deltas and refer here, the same
+  way this template refers to the feature template for the edge-legality
+  matrix.
+
+  Two failure modes are rated, not one: (i) the agent does not finish, and
+  (ii) the agent finishes in a way that leaves a maintenance liability —
+  duplicated logic, an assertion-free test, a premature abstraction, a
+  golden pinning the wrong behaviour, a document asserting evidence nobody
+  gathered. The second is the dangerous one: it is invisible to the gate
+  that accepted it.
+
+  SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
+
+  SC  SPECIFICATION CLOSURE — is the end state fixed by the text alone?
+      Test: could two competent implementers both satisfy it and produce
+      artifacts differing in a way a reviewer would care about?
+      5 every criterion names the artifact, its path, and the assertion
+        pinning it; no "appropriate", "reasonable", "as needed"
+      4 concrete; one or two open naming or layout choices no reviewer
+        would litigate
+      3 goal unambiguous, artifact shape is not; >=1 structural inference
+      2 end state stated as an outcome, not an artifact
+      1 problem and direction only; "done" is not written down
+      0 open-ended, self-contradictory, or defers its own definition
+      A §5 whose predictions are literally "do X, observe Y" plus a §14 of
+      checkable artifacts is the SC=5 shape. A §14 item reading
+      "documented"/"considered"/"reviewed" with no named file caps SC at 3.
+      "N/A — <reason>" does not lower SC; template comment text left in
+      place does.
+
+  OS  ORACLE STRENGTH — the signal that would actually gate the merge. Not
+      "could this be tested" but "is there a check that is cheap to run,
+      faithful to intent, and hard to satisfy the wrong way?"
+      5 byte or structural equality against a committed golden; a
+        round-trip or idempotence property; a differential check against an
+        independent implementation
+      4 behavioural assertions over enumerated cases INCLUDING the named
+        negative and refusal cases; or compiler, nullness or
+        sealed-dispatch gates that fail loudly
+      3 smoke-shaped: the artifact is produced, the command exits 0, the
+        file is non-empty — satisfiable without being correct
+      2 a threshold or a count (a coverage floor, a timing bound) with no
+        behavioural content
+      1 a human reads prose and agrees
+      0 none; success is asserted by the executor
+      DEDUCT 2 (floor 0) if the executor authors the oracle and the
+      implementation in the same change with no pre-committed expected
+      values (rule 11). That is the configuration in which a failing check
+      gets "fixed" by weakening it.
+      DEDUCT 1 if the acceptance evidence is a document asserting a
+      measurement — a table of numbers, a scored matrix, a published
+      figure. The prose is trivially producible; the measurement behind it
+      is the real work and is not itself gated.
+
+  BR  BLAST RADIUS — what must move, generated files, goldens and published
+      contracts included. Higher = smaller.
+      5 one file, or one new file and its test; no published contract moves
+      4 2-4 files in one package
+      3 5-10 files or 2 packages; one internal interface, all callers in view
+      2 multiple packages, or an interface with callers this issue does not
+        enumerate
+      1 a tree-wide sweep, or a change to `.jls` format / the CLI surface /
+        the element registry
+      0 call sites unknowable without a full-tree search, or a contract with
+        out-of-repo consumers
+
+  HL  HORIZON LENGTH — the DEPENDENT-step chain in human-expert time, cold
+      start to gated evidence. Parallelisable sub-steps count for less than
+      serially dependent ones: compounding is what fails, not volume.
+      5 <1 expert-hour   4 1-4h   3 4-16h
+      2 2-5 expert-days, or >=2 integration points that must be co-designed
+      1 >1 expert-week, or the chain crosses a subsystem it must first learn
+      0 a multi-week programme composing other multi-day units
+
+  PD  PRECEDENT DENSITY — is there a worked in-repo example of this shape?
+      5 this issue names a specific in-repo precedent and it exists
+      4 a near-identical sibling is in-tree, findable by name
+      3 analogous patterns exist but need adaptation
+      2 the category exists in-tree; this is the first instance of its kind
+      1 no in-repo precedent; the pattern comes from an external tool or
+        spec that this issue does cite
+      0 no precedent named anywhere; the executor invents the shape
+      PD is what predicts DUPLICATION. At 5 the agent copies a good local
+      pattern; at 0 it copies whatever it saw in training, which is how a
+      codebase with an explicit house style — tabs, `// end of X method`
+      trailers, sealed dispatch with no `default` arm, records by default,
+      the `@NullMarked` ratchet — acquires code that compiles, passes, and
+      reads like it came from somewhere else.
+
+  CF  CONTEXT FOOTPRINT — how much must be held simultaneously, not merely
+      read.
+      5 one class and its test
+      4 one package; this issue's citations are sufficient context
+      3 2-3 packages, or a package plus a file-format section
+      2 a subsystem boundary (sim/core, gui/edit, hdl/elem) held on both sides
+      1 a whole-tree invariant — determinism, nullness, sealedness, the
+        coverage ratchet — that cannot be verified locally
+      0 the tree plus an external toolchain's semantics (Yosys, nextpnr,
+        cocotb, Wokwi, GTKWave)
+
+  RD  REVERSIBILITY / DEBT SURFACE — cost of a wrong-but-plausible
+      completion. Higher = cheaper to reverse.
+      5 pure addition behind a test; revert is one commit, nothing depends
+        on it
+      4 internal; wrongness surfaces in CI or at the next touch
+      3 latent but discoverable by a later reader; no external consumer
+      2 the artifact becomes load-bearing: a committed golden, a ratchet
+        floor, a coverage or mutation threshold, a `@NullMarked` package
+      1 a published contract: `.jls` file-format text, a CLI flag, public
+        API, a help page, an exported HDL shape
+      0 irreversible outside the repo: a DOI, a Maven Central coordinate, a
+        Marketplace listing, a tagged release, a third-party invitation
+      RD=2 deserves its own care. A golden produced by the same agent that
+      produced the behaviour is not evidence — it is a photograph of the
+      behaviour. It will be green forever and will be cited as ground truth
+      by every issue that builds on it.
+
+  TWO CAPPING AXES. They do not add; they impose a ceiling on the band.
+
+  ED  ENVIRONMENTAL DETERMINISM — can the evidence this issue demands be
+      produced inside a headless container, by the executor, with no human,
+      no hardware and no third party?
+      5 headless and hermetic: `mvn verify` or an in-tree script does it
+        .......................................................... no cap
+      4 needs a pinned toolchain the repo can fetch — a nix devShell, a
+        container, `xvfb-run` — and is reproducible ............... no cap
+      3 needs a display substrate or network fetch that exists but is
+        flaky, or an external corpus to download .................. cap B
+      2 needs a specific host OS, a GPU, or a service account the executor
+        does not hold ............................................. cap C
+      1 needs physical hardware — an FPGA board, a breadboard, a screen
+        reader, a display panel — or a screen recording of a real
+        session ................................................... cap F
+      0 needs OTHER PEOPLE: an n-of-5 trial, an independent reproducer, a
+        second maintainer with merge rights, a peer reviewer, an outside
+        volunteer ................................................. cap F
+      ED<=1 IS NOT A CRITICISM. It means the deliverable is not a patch. An
+      agent may still do most of it — write the harness, the script, the
+      checklist, the analysis template — but it cannot close the issue, and
+      marking it closed is exactly the fabrication this rubric exists to
+      catch. Declaring ED<=1 at FILING time is the point: it tells whoever
+      picks the issue up that they are not looking at a coding task.
+
+  DA  DESIGN AUTHORITY — does finishing require a decision this issue does
+      not already make?
+      5 no open decisions; every choice stated or forced by existing code
+        .......................................................... no cap
+      4 only local reversible choices — a method name, a helper's home
+        .......................................................... no cap
+      3 decisions are named AND each carries a recommended default, so an
+        executor proceeds unblocked ............................... cap B
+      2 exactly one structural decision genuinely open, no preference
+        stated .................................................... cap C
+      1 two or more open with no preference, or a decision routed to
+        another owner the executor must wait on ................... cap D
+      0 the issue's own deliverable IS a decision — a verdict, a policy, a
+        scope boundary, a does-this-premise-hold gate ............. cap D
+      DA rates DESIGN authority only. These do NOT lower it:
+        - evidence hygiene: "re-derive the citations", "line numbers will
+          drift", "no build was run at filing"
+        - bookkeeping: "confirm #N is still open", a roster re-sync
+        - a question this issue answers itself with a recommended default
+        - a decision already owned by a different issue this one waits on —
+          that is `blocked_by`, and it scores in HL, not here
+      Note the asymmetry with ED: DA=0 caps at D, not F, because an agent's
+      research output on a decision is genuinely most of the value — it
+      just cannot make the call. ED=0 caps at F because the agent's output
+      is none of it.
+      Measured, 2026-09: grading all 688 open issues WITHOUT these four
+      exclusions collapsed 87% of the corpus to DA=1, because this
+      template makes an Open Questions section mandatory and graders read
+      "section populated" as "decision open". A re-grade with the
+      exclusions moved the axis by a measured +1.23, strictly one-sided.
+      A populated Open Questions section is not evidence of an open
+      decision. Rule 13's markers exist to make this unambiguous.
+
+  BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
+  FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
+
+    A  DELEGATE — an agent opens the PR, CI is the gate, a human reads the
+       diff once
+    B  DELEGATE-WITH-CHECKPOINT — one named human approval, usually of the
+       oracle or of a seam, before implementation
+    C  SPECIFY-FIRST or SPLIT — something must be supplied first: a closed
+       spec, a pre-committed golden, or a decomposition. The supplying act
+       is often itself an A/B task, and filing it is the cheapest move
+       available
+    D  HUMAN-LED — the agent researches, drafts and builds harnesses; a
+       human makes the call and owns the artifact
+    F  HUMAN-ONLY (ED<=1) or AGENT-ASSIST-ONLY
+
+  DEBT TAG — the specific liability delegating as-is would create. Exactly
+  one, most severe applicable, in this order:
+    FABRICATED-EVIDENCE (ED<=1)          a checklist marked done, a
+                                         measurement table with plausible
+                                         numbers, a "verified" claim behind
+                                         which nobody ran anything
+    GOLDEN-LOCK-IN (RD=2 and OS>=4)      a golden generated from the agent's
+                                         own output, now ground truth
+    HOLLOW-ORACLE (OS<=2, or a deduction fired)
+    SPEC-DRIFT (SC<=2)
+    PREMATURE-SEAM (DA<=2)
+    PARTIAL-INTEGRATION (BR<=1 or CF<=1)
+    SCOPE-EXHAUSTION (HL<=1)
+    DUPLICATION (PD<=1)
+    NONE
+
+  Filing a low band is a signal, not a confession. The cheapest way to
+  raise one is almost always to answer an Open Question (rule 13) or to
+  pre-commit the expected values (rule 11) — not to rewrite the issue.
+-->
+
+```yaml
+adr: 1
+sc:              # 0-5  specification closure
+os:              # 0-5  oracle strength — apply the deductions
+br:              # 0-5  blast radius
+hl:              # 0-5  horizon length
+pd:              # 0-5  precedent density
+cf:              # 0-5  context footprint
+rd:              # 0-5  reversibility / debt surface
+raw:             # sc+os+br+hl+pd+cf+rd, 0-35
+ed:              # 0-5  environmental determinism  (CAPPING)
+da:              # 0-5  design authority           (CAPPING)
+band:            # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
+action:          # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
+                 #   SPLIT | HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
+debt:            # predicted debt mode, or NONE
+```
+
+<!-- One or two sentences: what an agent handed this issue today would
+     actually do, where it would go wrong, and the single change that would
+     raise the band. Name the section, the criterion, the artifact — not
+     generic advice. -->

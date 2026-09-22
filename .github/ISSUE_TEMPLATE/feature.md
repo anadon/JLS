@@ -262,7 +262,12 @@ flowchart TD
 <!-- Decisions this plan cannot make for itself. For each: the
      question, options with a recommended default, and whether it
      blocks filing children, blocks integration, or can ride along.
-     "N/A — fully specified" if nothing is open. -->
+     "N/A — fully specified" if nothing is open.
+
+     Mark every entry the way the task template's rule 13 requires —
+     `Recommended default:`, `BLOCKING:`, or `HYGIENE:`. The marker is
+     what an executor and § Agentic Delegability both read; an unmarked
+     entry is treated as blocking. -->
 
 ## Completion Criteria (Definition of Done)
 
@@ -274,4 +279,82 @@ flowchart TD
 - [ ] §4 (Global Invariants) hold at the final commit, re-verified — not inferred from children's green runs
 - [ ] Every capstone in `serves_capstones` notified with a `STATUS:` comment
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A)
+- [ ] § Agentic Delegability filled at filing and re-scored on any `REPLAN:` or `AMENDED:` edit that changed the roster, the integration evidence, or the open decisions
 - [ ] ...
+
+
+## Agentic Delegability (ADR-1)
+
+<!--
+  ADR-1 v1 (2026-09), feature tier. THE ANCHOR TABLE IS CANONICAL IN THE
+  SCIENTIFIC-TASK TEMPLATE — read the nine axis definitions, the band
+  arithmetic and the debt tags there; they are not restated, the same way
+  this template's edge-legality matrix is not restated in that one. Only
+  the feature-tier deltas are below.
+
+  This section rates DELEGABILITY TO AN AGENTIC LLM SYSTEM, not quality,
+  importance or urgency. A low band is a routing decision, not a criticism.
+
+  DELTA 1 — SCORE THIS FEATURE'S OWN DELIVERABLE, NOT THE UNION OF ITS
+  CHILDREN. A feature's own work is the integration evidence in §5
+  (Integration Criteria & Evidence Plan) and the contract in §3
+  (Feature-Level Interface & Data Contract). Score SC, OS, ED, DA and RD
+  against those. Do not roll up the children's scope: each child carries
+  its own block.
+
+  DELTA 2 — BR, HL AND CF ARE COMPOSITION-DOMINATED AND WILL BE LOW. A
+  feature that mostly composes tasks scores BR 0-1, HL 0-1 and CF 0-1 by
+  construction, because its own dependent-step chain is "wait for the
+  roster, then verify". That is the tier working as designed. Do not
+  inflate them to make the band look better, and do not read them as a
+  defect: the feature's own band answers only "can this be handed over as
+  ONE unit", and for a composing feature the answer is structurally no.
+
+  DELTA 3 — THE NUMBER THAT ACTUALLY MATTERS IS `roster_delegable`. Of the
+  issues in `requires_tasks`, how many are individually band A or B? That,
+  not this feature's own band, predicts whether the feature can be executed
+  by delegation at all.
+    - k/n with k>=1  : at least one child can be handed over today; name
+                       which in the prose line.
+    - 0/n            : nothing in this roster is delegable as filed. The
+                       fix is at the TASK tier — answer a child's Open
+                       Question, or pre-commit a child's expected values —
+                       not here. Rewriting the feature will not move it.
+    - roster empty   : score `pending` and re-score when children are filed.
+  Measured across the 688 open issues in 2026-09: the aggregate delegable
+  fraction over all 632 parent->child roster edges was 8/632, and no
+  capstone had a single A- or B-band child. A 0/n roster is the normal
+  case on this backlog, not an alarm — but it is the number worth watching,
+  because decomposition that does not produce delegable leaves has not
+  bought what decomposition is supposed to buy.
+
+  DELTA 4 — ED IS SCORED ON §5's INTEGRATION EVIDENCE. If the integration
+  criteria require a person (an outside reviewer, an instructor, an
+  independent reproducer) or hardware, this feature is ED<=1 and bands F
+  however delegable its children are. Declaring that at filing time is the
+  point: it tells whoever picks it up that closing it is not a coding task.
+-->
+
+```yaml
+adr: 1
+sc:                  # 0-5  specification closure of §5's integration criteria
+os:                  # 0-5  oracle strength of the integration evidence
+br:                  # 0-5  this feature's OWN blast radius (composition => low)
+hl:                  # 0-5  this feature's OWN chain      (composition => low)
+pd:                  # 0-5  precedent density
+cf:                  # 0-5  this feature's OWN footprint  (composition => low)
+rd:                  # 0-5  reversibility / debt surface
+raw:                 # sc+os+br+hl+pd+cf+rd, 0-35
+ed:                  # 0-5  environmental determinism (CAPPING) — on §5
+da:                  # 0-5  design authority          (CAPPING)
+band:                # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
+action:              # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
+                     #   SPLIT | HUMAN-LED | HUMAN-ONLY | AGENT-ASSIST-ONLY
+debt:                # predicted debt mode, or NONE
+roster_delegable:    # k/n — requires_tasks entries at band A or B, or `pending`
+```
+
+<!-- One or two sentences: which children (if any) can be delegated today,
+     which single child's Open Question or missing pre-committed golden is
+     costing the roster the most, and — if ED<=1 — what part of §5's
+     evidence needs a person or hardware. -->

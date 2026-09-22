@@ -288,223 +288,295 @@ flowchart TD
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v1 (2026-09), feature tier. Self-contained: the task and capstone
-  templates carry their own tier-adjusted copies of these anchors, because
-  markdown issue templates have no include mechanism. When you change an
-  axis here, change it in all three.
+  ADR-1 v1, composition tier. How safely this feature can be handed to an
+  automated or semi-automated executor, and what maintenance liability
+  delegating it as-is would create. This is NOT a rating of how good,
+  important or urgent the work is. A LOW BAND IS A ROUTING DECISION, NOT A
+  CRITICISM.
 
-  How safely this feature can be handed to an agentic LLM system — NOT how
-  good, important or urgent it is. The two are close to orthogonal: a
-  feature can be excellent work, correctly specified and well evidenced,
-  and still band F because its integration evidence needs an outside
-  reviewer. A LOW BAND IS A ROUTING DECISION, NOT A CRITICISM. Fill at
-  filing; re-score on any `REPLAN:` or `AMENDED:` edit that changes the
+  SCORE THIS FEATURE'S OWN DELIVERABLE — the integration evidence and the
+  declared contract — never the union of its children. Each child carries
+  its own block; a parent that inherited its roster's axes would merely
+  restate them.
+
+  Fill at filing time; re-score whenever a re-plan or amendment changes the
   roster, the integration evidence, or the open decisions.
 
-  SCORE THIS FEATURE'S OWN DELIVERABLE — the integration evidence in §5
-  (Integration Criteria & Evidence Plan) and the contract in §3
-  (Feature-Level Interface & Data Contract). Do NOT roll up the children's
-  scope: each child carries its own block, and a feature that inherited its
-  roster's axes would just restate them.
+  Two failure modes are rated, not one: the work is not finished, and the
+  work is finished in a way that leaves a liability behind. The second is
+  the dangerous one, because it is invisible to the gate that accepted it.
 
-  Two failure modes are rated: the agent does not finish, and the agent
-  finishes in a way that leaves a maintenance liability behind. The second
-  is the dangerous one — it is invisible to the gate that accepted it.
+  THIS SECTION IS SELF-CONTAINED. The other tier templates carry their own
+  tier-adjusted copies of these anchors, because issue templates have no
+  include mechanism. The copies CAN drift, and nothing detects it
+  automatically: when an axis changes here, change it in every copy and
+  bump the version marker above in all of them together. A copy whose
+  marker disagrees with its siblings is stale by definition.
+
+  WHY THESE AXES. Each is anchored to a repeatedly measured effect rather
+  than to intuition. Underspecification is the dominant reason real issues
+  turn out not to be solvable as written. Verification, not generation, is
+  the binding constraint on automated work, and proxy checks get satisfied
+  the wrong way when they are the reward. Changes spanning many files
+  succeed at markedly lower rates than changes confined to one. Per-step
+  error compounds over a dependent chain, so reliability falls with horizon
+  length even when every individual step is strong. Output quality degrades
+  as the amount of context that must be held grows. And automated authoring
+  shifts work measurably from moving code to copying it, which is a
+  duplication pressure that precedent suppresses. The two capping axes
+  exist because two constraints do not trade against the others at all:
+  evidence that requires the physical or social world, and decisions that
+  have not been made.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
-  SC  SPECIFICATION CLOSURE of §5's integration criteria.
-      5 every integration criterion names the artifact, its path, and the
-        assertion pinning it
-      4 concrete; one or two open naming choices no reviewer would litigate
-      3 the integrated outcome is unambiguous, the evidence's shape is not
-      2 §5 states an outcome ("the features jointly deliver X") rather than
-        an artifact
-      1 §5 names a direction; what integration proves is not written down
-      0 open-ended, or §5 defers its own definition
-      "Every child closed" is NOT an integration criterion — it is the
-      roster. §5 must assert something no single child asserts.
+  SC  SPECIFICATION CLOSURE — is the end state fixed by the text alone?
+      The test: could two competent implementers each satisfy § Integration Criteria & Evidence Plan
+      and produce artifacts differing in a way a reviewer would care about?
+      If so, it is not closed.
+      5 every integration criterion names the artifact, its location, and the assertion
+        that pins it; no "appropriate", "reasonable", "as needed"
+      4 concrete; one or two open naming or layout choices no reviewer would
+        litigate
+      3 the goal is unambiguous, the artifact's shape is not; at least one
+        structural decision must be inferred
+      2 the end state is stated as an outcome rather than as an artifact
+      1 a problem and a direction; what "done" looks like is not written down
+      0 open-ended, self-contradictory, or deferring its own definition
+      A criterion reading "documented", "considered", "reviewed" or
+      "improved" with no named artifact caps this at 3. A section honestly
+      marked not-applicable with a reason does not lower it; unfilled
+      template boilerplate does.
+      "Every child closed" is not an integration criterion — that is the
+      roster. This section must assert something no single child asserts.
 
-  OS  ORACLE STRENGTH of the integration evidence. The check that would
-      gate the feature's closing comment.
-      5 byte or structural equality against a committed golden that spans
-        children; a round-trip or idempotence property across the seam; a
+  OS  ORACLE STRENGTH — the check that would actually gate the merge. Not
+      "could this be tested" but "is there a signal that is cheap to run,
+      faithful to intent, and hard to satisfy the wrong way?"
+      5 exact comparison against a pre-existing expected artifact spanning
+        children; an algebraic property across the composed boundary; or a
         differential check against an independent implementation
-      4 behavioural assertions over enumerated cross-child cases INCLUDING
-        the named refusal cases; or a §4 Global Invariant re-verified by a
-        test, not inferred
-      3 smoke-shaped: the composed path runs, the command exits 0
-      2 a threshold or a count with no behavioural content
-      1 a human reads prose and agrees the outcome was achieved
+      4 behavioural assertions over enumerated cases INCLUDING the named
+        negative and failure cases; or a compiler, type or analysis gate
+        that fails loudly
+      3 existence- or smoke-shaped: the artifact is produced, the command
+        exits zero, the output is non-empty — satisfiable without being
+        correct
+      2 a threshold or a count, with no behavioural content
+      1 a person reads prose and agrees
       0 none; the children's green runs are treated as the proof
-      DEDUCT 2 (floor 0) if the executor authors the integration oracle and
-      the integration itself in the same change with no pre-committed
-      expected values.
+      DEDUCT 2 (floor 0) if the same change authors both the implementation
+      and the expected values that certify it. That is the configuration in
+      which a failing check gets "fixed" by weakening it.
       DEDUCT 1 if the acceptance evidence is a document asserting a
-      measurement — the prose is trivially producible, the measurement is
-      the work, and nothing gates it.
+      measurement. The document is trivially producible; the measurement
+      behind it is the real work and is not itself gated.
 
-  BR  BLAST RADIUS of this feature's OWN work, §3's contract included.
+  BR  BLAST RADIUS — everything this feature's own integration work must move, including generated
+      files, expected-output artifacts, and anything published. Higher is
+      smaller.
       5 the integration evidence is one new test over already-landed
-        children; no contract moves
-      4 2-4 files of integration glue and tests in one package
-      3 §3's contract changes one internal interface, all children in view
-      2 the contract changes across packages, or children the roster does
-        not enumerate must change with it
-      1 the contract is a published surface — `.jls` format, the CLI, the
-        element registry — that every child must conform to
-      0 the contract has out-of-repo consumers, or integration touches call
-        sites unknowable without a full-tree search
+        children; nothing in the declared contract moves
+      4 a handful of integration files within one module
+      3 the declared contract changes one internal interface, all children
+        in view
+      2 the contract changes across modules, or children the roster does not
+        enumerate must change with it
+      1 the contract is a published surface every child must conform to
+      0 the contract has consumers outside this repository, or integration
+        touches call sites unknowable without searching the whole tree
 
-  HL  HORIZON LENGTH of this feature's OWN chain, measured AFTER the roster
-      lands. This is not the sum of the children's horizons; it is the
-      wait-then-reconcile-then-verify chain.
-      5 <1 expert-hour: run one integration test
-      4 1-4h
-      3 4-16h: integration surfaces contract mismatches to reconcile
-      2 2-5 expert-days, or >=2 children whose contracts must be co-designed
-      1 >1 expert-week, or integration crosses a subsystem it must first
+  HL  HORIZON LENGTH — the DEPENDENT-step chain, in expert time, from a
+      cold start to gated evidence. Steps that can run in parallel count
+      for less than steps that must run in order: reliability falls with
+      the length of the dependent chain, not with total volume.
+      Measured AFTER the roster lands. This is NOT the sum of the children's
+      horizons; it is the wait-then-reconcile-then-verify chain.
+      5 under an expert-hour: run one integration check
+      4 one to four hours
+      3 half a day to two days: integration surfaces contract mismatches to
+        reconcile
+      2 several days, or two or more children whose contracts must be
+        designed together
+      1 more than a week, or integration crosses a subsystem it must first
         learn
       0 a multi-week programme in its own right
-      A feature that mostly composes scores 0-1 here BY CONSTRUCTION. That
-      is the tier working as designed. Do not inflate it, and do not read
-      it as a defect — a feature's own band answers only "can this be
-      handed over as ONE unit", and for a composing feature the answer is
+      A feature that mostly composes scores 0-1 here in the ordinary case —
+      not as an absolute, since a thin feature really can be a one-hour
+      integration check. Where it is low, that is the tier working as
+      designed. Do not inflate it and do not read it as
+      a defect: this block's own band answers only "can this be handed over
+      as ONE unit", and for something that composes, the answer is
       structurally no.
 
-  PD  PRECEDENT DENSITY — is there a landed feature in-tree whose
-      integration proof this one can model on?
-      5 §5 names a specific landed feature's integration proof and it exists
-      4 a near-identical sibling feature is in-tree, findable by name
-      3 analogous integration patterns exist but need adaptation
-      2 the category exists; this is the first integration of its kind
-      1 no in-repo precedent; the pattern comes from an external tool or
-        spec that §1 does cite
-      0 none named; the executor invents what integration evidence means here
-      PD is what predicts DUPLICATION — at 0 the agent reproduces whatever
-      integration shape it saw in training rather than this repo's.
+  PD  PRECEDENT DENSITY — is there a landed sibling whose integration evidence this can be modelled on already in this repository?
+      5 this issue names a specific in-repository precedent and it exists
+      4 a near-identical sibling exists in-tree and is findable by name
+      3 analogous patterns exist but need adaptation
+      2 the category exists in-tree; this is the first instance of its kind
+      1 no in-repository precedent; the pattern comes from an external
+        specification this issue does cite
+      0 no precedent named anywhere; whoever executes invents the shape
+      This axis predicts duplication. With a precedent, the work copies a
+      local pattern; without one, it reproduces whatever pattern is most
+      common in the wider world — which is how a codebase with a deliberate
+      house style acquires code that compiles, passes, and reads as though
+      it came from somewhere else.
 
-  CF  CONTEXT FOOTPRINT of the integration work — what must be held at once.
-      5 one child's package plus the integration test
-      4 one package; §3's contract is sufficient context
-      3 2-3 packages, or a package plus a file-format section
-      2 a subsystem boundary (sim/core, gui/edit, hdl/elem) on both sides
-      1 a §4 Global Invariant — determinism, nullness, sealedness, the
-        coverage ratchet — not verifiable locally
-      0 the tree plus an external toolchain's semantics (Yosys, nextpnr,
-        cocotb, Wokwi, GTKWave)
-      A feature carrying §4 Global Invariants commonly scores 1, correctly.
+  CF  CONTEXT FOOTPRINT — how much must be held in mind simultaneously, not
+      merely read.
+      5 one child's module plus the integration check
+      4 one module; the declared contract is sufficient context
+      3 two or three modules, or a module plus a format specification
+      2 a subsystem boundary held from both sides at once
+      1 a repository-wide invariant declared by this feature and not
+        verifiable locally
+      0 the repository plus the semantics of an external toolchain
+      A feature that declares repository-wide invariants commonly scores 1,
+      correctly.
 
-  RD  REVERSIBILITY / DEBT SURFACE of a wrong-but-plausible integration.
-      5 pure addition behind a test; revert is one commit
-      4 internal; wrongness surfaces in CI or at the next touch
-      3 latent but discoverable by a later reader; no external consumer
-      2 the artifact becomes load-bearing: a committed cross-child golden, a
-        ratchet floor, a coverage or mutation threshold, a `@NullMarked`
-        package
-      1 a published contract: `.jls` format text, a CLI flag, public API, a
-        help page, an exported HDL shape
-      0 irreversible outside the repo: a DOI, a Maven Central coordinate, a
-        Marketplace listing, a tagged release, a third-party invitation
-      RD=2 deserves care. A cross-child golden produced by the same agent
-      that produced the integration is not evidence — it is a photograph of
-      the integration, green forever, and cited as ground truth by every
-      issue built on it.
+  RD  REVERSIBILITY / DEBT SURFACE — the cost of a completion that is wrong
+      but plausible. Higher is cheaper to reverse.
+      5 a pure addition behind a check; reverting is one commit and nothing
+        depends on it
+      4 internal; wrongness surfaces in CI or at the next person to touch it
+      3 latent but discoverable by a later reader; no consumer outside this
+        repository
+      2 the artifact becomes load-bearing: a committed expected-output file,
+        a ratchet floor, a published threshold, an opt-in invariant others
+        are then measured against
+      1 a published contract: a file format, a command-line flag, a public
+        API, user-facing documentation
+      0 irreversible outside this repository: an archival identifier, a
+        package-registry coordinate, a public listing, a tagged release, a
+        commitment made to a third party
+      A score of 2 deserves particular care. An expected-output artifact
+      produced by the same process that produced the behaviour is not
+      evidence of that behaviour; it is a record of it. It will pass
+      indefinitely, and it will be cited as ground truth by everything built
+      on top of it.
 
   TWO CAPPING AXES. They do not add; they impose a ceiling on the band.
 
-  ED  ENVIRONMENTAL DETERMINISM, scored on §5's integration evidence.
-      5 headless and hermetic: `mvn verify` or an in-tree script ... no cap
-      4 a pinned toolchain the repo can fetch — nix devShell, container,
-        `xvfb-run` — reproducible ............................... no cap
-      3 a display substrate or network fetch that exists but is flaky, or
-        an external corpus to download ......................... cap B
-      2 a specific host OS, a GPU, or a service account the executor does
-        not hold ............................................... cap C
-      1 physical hardware — an FPGA board, a breadboard, a screen reader, a
-        display panel — or a screen recording of a real session . cap F
-      0 OTHER PEOPLE: an n-of-5 trial, an independent reproducer, a second
-        maintainer with merge rights, a peer reviewer, an outside
-        volunteer ............................................... cap F
-      ED<=1 IS NOT A CRITICISM. It means the deliverable is not a patch:
-      this feature bands F however delegable its children are. An agent can
-      still write the harness, the script, the checklist and the analysis
-      template — it cannot close the feature, and marking it closed is
-      exactly the fabrication this rubric exists to catch. Declaring it at
-      FILING time is the point.
+  ED  ENVIRONMENTAL DETERMINISM — can the integration evidence be produced by whoever
+      executes this, unattended, inside the project's own automated
+      environment?
+      5 fully self-contained: the project's standard build-and-test command,
+        or a script already in the tree, produces everything ...... no cap
+      4 needs a pinned toolchain the project can fetch and reproduce
+        automatically ............................................. no cap
+      3 needs a substrate or network resource that exists but is
+        unreliable, or an external corpus that must be downloaded .. cap B
+      2 needs a particular host platform or device class, or credentials
+        the executor does not hold ................................ cap C
+      1 needs hardware someone must physically possess or operate, or a
+        recording of a real session ............................... cap F
+      0 needs OTHER PEOPLE: a trial with human subjects, an independent
+        reproducer, a second maintainer holding approval rights, an
+        external reviewer or publisher ............................ cap F
+      A low score is NOT a criticism. It means the deliverable is not a
+      patch. Much of the work may still be produced unattended — the
+      harness, the script, the checklist, the analysis template — but the
+      issue cannot be CLOSED that way, and closing it anyway is precisely
+      the failure this rubric exists to prevent. Recording this at filing
+      time is the point: it tells whoever picks the issue up that they are
+      not looking at a coding task.
+      A low score here bands the whole feature F however delegable its
+      children are.
 
-  DA  DESIGN AUTHORITY — decisions THIS FEATURE leaves open. A feature does
-      not inherit its tasks' open decisions; each child scores its own.
-      5 no open decisions; every choice stated or forced by landed code
-        ......................................................... no cap
-      4 only local reversible choices — a name, a helper's home . no cap
-      3 decisions named AND each carries a recommended default, so an
-        executor proceeds unblocked ............................. cap B
-      2 exactly one structural decision open, no preference stated  cap C
-      1 two or more open with no preference, or a decision routed to
-        another owner the executor must wait on ................. cap D
-      0 this feature's own deliverable IS a decision — a verdict, a policy,
-        a scope boundary, a does-this-premise-hold gate ......... cap D
-      DA rates DESIGN authority only. These do NOT lower it:
-        - evidence hygiene ("re-derive citations", "line numbers drift",
-          "no build was run at filing")
-        - bookkeeping ("confirm #N is still open", a roster re-sync, a
-          `planned_tasks` entry not yet filed)
-        - a question this feature answers itself with a recommended default
-        - a decision owned by a different issue this one waits on — that is
-          `blocked_by`, and it scores in HL, not here
-      Note the asymmetry with ED: DA=0 caps at D, not F, because an agent's
-      research on a decision is genuinely most of the value — it just
-      cannot make the call. ED=0 caps at F because the agent's output is
-      none of it.
-      Measured, 2026-09: grading all 688 open issues WITHOUT these four
-      exclusions collapsed 87% of the corpus to DA=1, because an Open
-      Questions section is mandatory here and graders read "section
-      populated" as "decision open". Re-grading with them moved the axis
-      +1.23, strictly one-sided. A populated Open Questions section is not
-      evidence of an open decision.
+  DA  DESIGN AUTHORITY — does finishing require a decision the issue does
+      not already make? Scored on this feature itself. A feature does not inherit its children's open
+      decisions; each child scores its own.
+      A design decision is a choice that changes the shape of the artifact
+      and that a reviewer could reasonably contest: where a boundary goes,
+      what a type carries, which of two mechanisms is used, what a published
+      surface looks like, what is in or out of scope.
+      5 no open decisions; every choice is stated here or forced by existing
+        code ...................................................... no cap
+      4 only local, reversible choices remain — a name, where a helper
+        lives ..................................................... no cap
+      3 decisions are named AND each carries a stated preference, so
+        execution proceeds unblocked .............................. cap B
+      2 exactly one structural decision is genuinely open, no preference
+        stated .................................................... cap C
+      1 two or more are open with no preference, or a decision is routed to
+        another owner who must answer first ....................... cap D
+      0 the deliverable IS a decision: a verdict, a policy, a scope
+        boundary, a gate on whether a premise holds ............... cap D
+      This axis rates DESIGN authority only. These do NOT lower it:
+        - evidence hygiene: re-deriving citations, refreshing line numbers,
+          re-running something that was not run at filing time
+        - bookkeeping: confirming another issue's status, re-syncing a
+          roster, an entry not yet filed
+        - a question this issue poses and then answers with a stated
+          preference
+        - a decision already owned by another issue this one waits on —
+          that is an ordering dependency, and it scores under Horizon Length
+      A template that requires an open-questions section will have one on
+      every issue. A populated section is therefore NOT evidence of an open
+      decision: score the entries, not the section's existence. Failing to
+      make that distinction collapses this axis to a constant and destroys
+      its value.
+      Note the asymmetry with Environmental Determinism: a 0 here caps at D,
+      not F, because research and drafting on an undecided question is
+      genuinely most of the value — what cannot be delegated is the
+      decision itself. A 0 on ED caps at F because none of the value can be
+      produced.
 
   AND THE NUMBER THAT USUALLY MATTERS MORE THAN THE BAND:
-  `roster_delegable` — of the issues in `requires_tasks`, how many are
+  `roster_delegable` — of the entries in `requires_tasks`, how many are
   individually band A or B? That, not this feature's own band, predicts
   whether the feature can be executed by delegation at all.
     k/n, k>=1     at least one child can be handed over today; name which
                   in the prose line
     0/n           nothing in this roster is delegable as filed. The fix is
-                  at the TASK tier — answer a child's Open Question, or
+                  at the child tier — answer a child's open question, or
                   pre-commit a child's expected values — not here.
-                  Rewriting the feature will not move it
-    roster empty  score `pending`; re-score when children are filed
-  Measured across the 688 open issues in 2026-09: the aggregate delegable
-  fraction over all 632 parent->child roster edges was 8/632, and no
-  capstone had a single A- or B-band child. A 0/n roster is the normal case
-  on this backlog, not an alarm — but it is the number worth watching,
-  because decomposition that does not produce delegable leaves has not
-  bought what decomposition is supposed to buy.
+                  Rewriting the parent will not move it
+    roster empty  score `pending`; re-score once children are filed
+  A decomposition that does not yield delegable leaves has not bought what
+  decomposition is supposed to buy. This number is how you notice.
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
 
-    A  DELEGATE — an agent opens the PR, CI is the gate, a human reads the
-       diff once
+    A  DELEGATE — automated end to end; the gate is CI and one human
+       reading the diff
     B  DELEGATE-WITH-CHECKPOINT — one named human approval, usually of the
-       oracle or of a seam, before implementation
+       oracle or of a boundary, before implementation
     C  SPECIFY-FIRST or SPLIT — something must be supplied first: a closed
-       spec, a pre-committed golden, or a decomposition. The supplying act
-       is often itself an A/B task, and filing it is the cheapest move
-       available
-    D  HUMAN-LED — the agent researches, drafts and builds harnesses; a
-       human makes the call and owns the artifact
+       specification, pre-committed expected values, or a decomposition.
+       Supplying it is often itself an A- or B-band unit of work, and
+       filing that is the cheapest move available
+    D  HUMAN-LED — research, drafts and harnesses can be produced
+       unattended; a person makes the call and owns the artifact
     F  HUMAN-ONLY (ED<=1) or AGENT-ASSIST-ONLY
 
-  DEBT TAG — the specific liability delegating as-is would create. Exactly
-  one, most severe applicable, in this order:
-    FABRICATED-EVIDENCE (ED<=1)          a checklist marked done, a
-                                         measurement table with plausible
-                                         numbers, a "verified" claim behind
-                                         which nobody ran anything
-    GOLDEN-LOCK-IN (RD=2 and OS>=4)      a golden generated from the agent's
-                                         own output, now ground truth
+  A feature that mostly composes will land at C, D or F, and that is the
+  tier working as designed — not a finding, and never a reason to inflate
+  an axis to escape it. A and B remain reachable, but only for a thin
+  feature whose own integration work is genuinely small; if you score one
+  that high, the prose line should say why this feature is not simply a
+  task.
+
+  DEBT TAG — the specific liability that delegating as-is would create.
+  Exactly one, the most severe that applies, in this order:
+    FABRICATED-EVIDENCE (ED<=1)     a checklist marked done, a measurement
+                                    table with plausible numbers, a
+                                    "verified" claim behind which nothing
+                                    was run. Invisible to every automated
+                                    gate, which is why it ranks first
+    GOLDEN-LOCK-IN (RD=2, OS>=4)    a load-bearing expected-output artifact
+                                    that later work is then graded against.
+                                    The oracle is strong and may be
+                                    perfectly correct today; the liability
+                                    is that it entrenches, and revising it
+                                    later invalidates everything measured
+                                    against it. NOTE the boundary with the
+                                    tag below: an artifact authored by the
+                                    same change it certifies fires the
+                                    deduction, so its oracle cannot reach 4
+                                    and it is HOLLOW-ORACLE, not this
     HOLLOW-ORACLE (OS<=2, or a deduction fired)
     SPEC-DRIFT (SC<=2)
     PREMATURE-SEAM (DA<=2)
@@ -512,34 +584,39 @@ flowchart TD
     SCOPE-EXHAUSTION (HL<=1)
     DUPLICATION (PD<=1)
     NONE
+  A tag whose trigger is met ONLY because an axis is structurally bounded at
+  this tier reports a property of the tier, not of this issue, and carries
+  no information. Skip it and take the next tag whose trigger reflects
+  something about this issue specifically; if none does, record NONE. In
+  particular, where Horizon Length or Context Footprint are low by
+  construction rather than by circumstance, SCOPE-EXHAUSTION and
+  PARTIAL-INTEGRATION are not the finding.
 
-  FILING CHECKS THIS SECTION ASSUMES (the scientific-task template states
-  these as rules 11-13; they bind at every tier):
-    - ORACLE CUSTODY. Every criterion comparing against an expected value
-      names WHO produced that value and WHEN. "Pre-committed" (the expected
-      values land, reviewed, before the implementation) and "same-change"
-      (the executor writes the behaviour and the golden certifying it
-      together) are different guarantees; only the first is evidence.
-      Measured over the 688 open issues in 2026-09, the same-change
-      configuration was the single largest predicted source of debt at 58%
-      of the corpus.
+  THREE FILING CHECKS THIS SECTION ASSUMES:
+    - ORACLE CUSTODY. Every criterion that compares against an expected
+      value names who produced that value and when. Values committed and
+      reviewed BEFORE the implementation, and values written by the same
+      change as the implementation, are different guarantees; only the
+      first is evidence.
     - ARTIFACT PATHS RESOLVE AT FILING. Every path a criterion names either
-      exists at the pinned evidence commit or is created by this issue, and
-      the Completion Criteria say which. 42 open issues named a deliverable
-      whose target no longer existed.
-    - OPEN QUESTIONS ARE MARKED, not merely listed: `Recommended default:`,
-      `BLOCKING:`, or `HYGIENE:`. An unmarked entry is read as an
-      unresolved structural decision and scores DA<=1, which is usually not
-      what the filer meant.
+      exists already or is created by this work, and the criteria say
+      which. A criterion pointing at something that does not exist is
+      unclosable, and whoever picks it up will either invent a location or
+      skip it silently.
+    - OPEN QUESTIONS CARRY A MARKER, rather than merely being listed:
+      a stated preference an executor may proceed on, a blocking question
+      naming who must answer, or an item that is hygiene rather than a
+      decision at all. An unmarked entry reads as an unresolved structural
+      decision and scores DA<=1, which is usually not what was meant.
 
-  Filing a low band is a signal, not a confession. The cheapest way to
-  raise one is almost always to answer an Open Question or to pre-commit
-  the expected values — not to rewrite the issue.
+  A low band is a signal, not a confession. The cheapest way to raise one
+  is almost always to answer an open question or to pre-commit the expected
+  values — rarely to rewrite the issue.
 -->
 
 ```yaml
 adr: 1
-sc:                  # 0-5  specification closure of §5's integration criteria
+sc:                  # 0-5  specification closure of the integration criteria
 os:                  # 0-5  oracle strength of the integration evidence
 br:                  # 0-5  this feature's OWN blast radius (composition => low)
 hl:                  # 0-5  this feature's OWN chain       (composition => low)
@@ -547,7 +624,7 @@ pd:                  # 0-5  precedent density
 cf:                  # 0-5  this feature's OWN footprint   (composition => low)
 rd:                  # 0-5  reversibility / debt surface
 raw:                 # sc+os+br+hl+pd+cf+rd, 0-35
-ed:                  # 0-5  environmental determinism (CAPPING) — scored on §5
+ed:                  # 0-5  environmental determinism (CAPPING)
 da:                  # 0-5  design authority          (CAPPING) — this feature's own
 band:                # A|B|C|D|F — most restrictive of RAW band, ED cap, DA cap
 action:              # DELEGATE | DELEGATE-WITH-CHECKPOINT | SPECIFY-FIRST |
@@ -557,7 +634,7 @@ roster_delegable:    # k/n — requires_tasks entries at band A or B, or `pendin
 ```
 
 <!-- One or two sentences: which children (if any) can be delegated today,
-     which single child's Open Question or missing pre-committed golden is
-     costing the roster the most, and — if ED<=1 — what part of §5's
-     evidence needs a person or hardware. Name the section, the criterion,
-     the artifact; not generic advice. -->
+     which single child's open question or missing pre-committed expected
+     value is costing the roster the most, and — if ED<=1 — which part of
+     the integration evidence needs a person or hardware. Name the section,
+     the criterion, the artifact — not generic advice. -->

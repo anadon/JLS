@@ -113,17 +113,21 @@ labels: ["tier:feature"]
      resolution comment) or the AMENDED, HANDOFF or REPLAN that
      re-scored it;
      ticking a gate or review box (the tick is the record); filling a
-     check-sheet's evidence and result cells (the `STATUS: landed`
-     comment links the body revision that holds them); ticking a DoD or check-sheet box whose backing evidence is
-     already recorded in a comment on this issue that quotes the box (a
-     PR link inside that comment is the usual evidence); re-pinning
+     check-sheet's evidence and result cells from recorded evidence (the
+     close-out comment links the revision holding them; the Mirrors cell
+     alone is filled after the mirrors are posted, citing them); ticking
+     a DoD or Pickup box whose backing evidence is in the validation
+     row(s) it names once `STATUS: landed` links the revision, in the
+     `STATUS: pickup` comment recording that row, or in a comment on this
+     issue that quotes the box (a PR link inside that comment is the
+     usual evidence); ticking the review box under the sheet; re-pinning
      evidence_commit, bookkeeping only when every cited line re-derives
      at the new commit, otherwise part of the REPLAN; adding or removing a `blocks` or
      `serves_capstones` entry that mirrors a counterpart's authoritative
      edge, citing the counterpart (its number, and the REPLAN or
      AMENDED comment where one created the edge); resolving a planned_tasks scope to its
      number — the resolver posts one comment on both issues and ticks
-     both Counterparts boxes in that step — or replacing an "unfiled"
+     this feature's Counterparts box in that step — or replacing an "unfiled"
      alignment with its citation —
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
@@ -183,9 +187,11 @@ labels: ["tier:feature"]
      feature mirrors every prefixed comment of its own except
      `STATUS: pickup` and `STATUS: progress` — landing, refutation,
      supersession, waivers and every REPLAN — led by this number (a
-     landing mirror carries the first line and the permalink to the
-     filled sheet; `STATUS: landed` itself carries the final commit, the
-     PR and that permalink), on
+     landing mirror carries the first line; `STATUS: landed` itself
+     carries, after a dash and never directly after the sub-tag, the
+     final commit, the PR, the permalink to the filled sheet, the REPLAN
+     of any contract deviation still to be reconciled, and the open
+     capstones it is mirrored on), on
      every OPEN capstone whose `requires_features` lists this feature
      (serves_capstones mirrors that set; task rule 9 applies
      unchanged). A roster that adopts a child by REPLAN links in that
@@ -354,11 +360,13 @@ flowchart TD
      `REFUTED:` — the premise of § Capability Statement & Scope Boundary
      fails". A feature's `REFUTED:` is that premise failure: the comment
      quotes the failing criterion and carries the command and output,
-     and the sheet stays empty (task rule 10). It is posted only after a
-     REPLAN that drops every still-open roster child with its disposition
-     (rule C, posted on each) and, where a serving capstone still needs
-     the scope, gives the closing dispositions of § Re-planning Protocol;
-     the REFUTED cites that REPLAN and is mirrored per rule D.
+     and the sheet stays empty (task rule 10). Where roster children are
+     still open or a serving capstone still needs the scope, it is posted
+     only after a REPLAN that drops each open child with its disposition
+     (rule C, posted on each — a "freed" child's answer arriving after
+     this feature closes is a notice) and gives the closing dispositions
+     of § Re-planning Protocol; the REFUTED cites that REPLAN and is
+     mirrored per rule D.
 
      ANNOTATE OWNERSHIP PER CRITERION. A blanket sentence ("none of
      these is covered by any single child alone") is not checkable and
@@ -415,7 +423,7 @@ flowchart TD
      the DAG walk (`blocks` and `serves_capstones` stay empty or
      mirrors-only). -->
 
-- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here or in the waiting feature's; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -525,7 +533,8 @@ flowchart TD
      outcome in a `STATUS: pickup` comment here (not mirrored; one line
      may list every "none" row). -->
 
-- [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed)
+- [ ] `review_clean` is not `false`; a `false` is answered by the REPLAN fixing the cited finding before integration begins
+- [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed; at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered (rule D)
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN or its roster row links its landing comment, or its disposition is recorded; `planned_tasks` is empty
@@ -558,11 +567,11 @@ flowchart TD
 | Contract: transformations | each defined stage located across the children's diffs | | |
 | Contract: handoff #A → #B | provider side and consumer side both present as declared | | |
 | Invariant 1 | re-verified at the final commit: command and output | | |
-| Child #A | deviations reconciled (landing and its mirror were blocked on at pickup) | | |
+| Child #A | landed — mirror here, adopting REPLAN link, or the pickup row re-run recorded in the adopting REPLAN (task rule 15); deviations reconciled | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation and deducted | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
-| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature (the one cell filled after the linked revision, citing the mirror comments) | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment | | |
@@ -826,11 +835,16 @@ flowchart TD
   finished issue is consistent. Tick them yourself; the filer reviewing
   their own issue is fine.
     - SUBSTANTIAL means acting on the finding would change a score above, a
-      section's mandate, a completion criterion, a prediction, an edge, or
-      the scope. Wording is not.
+      section's mandate or a section's conformance to its mandate as its
+      comment block states it, a completion criterion, a prediction, an
+      edge, or the scope. Wording is not.
     - Unticked means not yet reviewed. It is not a defect and does not block
       filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
+    - `false` is set — both boxes unticked, `review_evidence` pointing at
+      the comment naming the substantial finding — by whoever finds one
+      and does not fix it, as bookkeeping; the AMENDED (REPLAN) that fixes
+      the finding re-ticks. § Pickup Checks reads it.
 -->
 
 ```yaml

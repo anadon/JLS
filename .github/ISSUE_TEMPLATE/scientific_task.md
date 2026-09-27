@@ -134,14 +134,16 @@ labels: ["tier:task"]
      work's merge-base with the default branch, all other rows at the
      handoff commit. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
-     `STATUS: landed`, which carries the fix commit, the PR, and a
-     permalink to the body revision holding the filled § Post-
-     Implementation Validation (cells filled directly from the evidence
-     are bookkeeping once that comment links the revision). Post each
-     such comment on THIS issue and mirror it, led by this issue's number
-     (`STATUS: landed #N …`) — for a landing, its first line and the
-     permalink suffice — on every OPEN feature whose requires_tasks
-     roster lists this task
+     `STATUS: landed`, whose first line carries — after a dash, never
+     directly after the sub-tag — the fix commit, the PR, the permalink
+     to the body revision holding the filled § Post-Implementation
+     Validation, the AMENDED of any contract deviation still to be
+     reconciled, and the open listing features it is mirrored on
+     (`STATUS: landed — <sha>, PR #45, <permalink>; deviations: …;
+     mirrored on #F1, #F2`). Post each such comment on THIS issue and
+     mirror it, led by this issue's number (`STATUS: landed #N — …`) —
+     for a landing, its first line suffices — on every OPEN feature
+     whose requires_tasks roster lists this task
      (there may be several, or none) — except `STATUS: pickup` and
      `STATUS: progress`, which stay here. An AMENDED edit resets and
      re-runs gates as rule 14 says, and the AMENDED comment names the
@@ -203,12 +205,17 @@ labels: ["tier:task"]
      where — so omissions are auditable by reading the comment, not
      only by diffing bodies. Bookkeeping is exempt from the AMENDED
      requirement: ticking a gate or a review box (the tick is the
-     record); filling a check-sheet's evidence and result cells (the
-     `STATUS: landed` comment links the body revision that holds them);
-     ticking a Method, check-sheet or Completion checkbox
-     whose backing evidence is already recorded in a comment on this
+     record); filling a check-sheet's evidence and result cells from
+     recorded evidence (the close-out comment — `STATUS: landed`, or
+     REFUTED/SUPERSEDED where rows were already filled — links the
+     revision holding them; the Mirrors cell alone is filled after the
+     mirrors are posted, citing them); ticking a Completion, Pickup or
+     Method checkbox whose backing evidence is in the validation row(s)
+     it names once `STATUS: landed` links the revision, in the
+     `STATUS: pickup` comment recording that row, or in a comment on this
      issue that quotes the box (a PR link inside that comment is the
-     usual evidence); re-pinning evidence_commit after re-deriving
+     usual evidence); ticking the diff-review box under the sheet, which
+     is a review-box tick; re-pinning evidence_commit after re-deriving
      citations — bookkeeping only when every cited line re-derives at
      the new commit saying what it said and every observation's command
      reproduces its output there, otherwise part of the AMENDED that
@@ -242,8 +249,9 @@ labels: ["tier:task"]
      REPLAN, citing it), or "freed" where the answering AMENDED records
      that no standing rule or open feature can be cited and closes under
      it, needs no WAIVED comments: that comment is the close-out record,
-     the check-sheets stay empty, and any obligation still needed names
-     its successor inside it.
+     the check-sheets are not completed (rows already filled stand, and
+     the comment links the revision holding them), and any obligation
+     still needed names its successor inside it.
   11. Oracle custody. Every completion criterion that compares against an
      expected value names WHO produced that value and WHEN. Values
      committed and reviewed BEFORE the implementation, and values written
@@ -687,7 +695,8 @@ related: []             # reference only — never blocking, never ownership.
      § Threats to Validity carries the resulting threat with its
      acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE; the gate and
      the completion criterion cite it). Every material flagged as
-     not yet existing is built by a named step. Proposed diffs go here
+     not yet existing is built by a named step or is named as provided
+     by a `blocked_by` task (rule 12). Proposed diffs go here
      (or in later sections) — always after § Interface & Data Contract,
      never before it. -->
 
@@ -708,7 +717,7 @@ related: []             # reference only — never blocking, never ownership.
      an observation (rule 1): one line here, citation in
      § Observations. -->
 
-- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches (the same `git log` as at Gate — Observations, Background & Related Work pasted empty for those files, or the step re-derived at that head; each file within the scope § Related Work assigns to this task, a file a sibling's scope covers being restated there — after filing, rule 9 resets from that gate), and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches (the same `git log` as at Gate — Observations, Background & Related Work pasted empty for those files, or the step re-derived at that head; each file within the scope § Related Work assigns to this task, a file a sibling's scope covers being restated there — after filing, rule 9 resets from that gate), and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step or is named as provided by a `blocked_by` task (rule 12); no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
 ## Data Collection & Analysis
 
@@ -801,7 +810,8 @@ related: []             # reference only — never blocking, never ownership.
      comment recording the block, and only the steps it names as blocked
      wait. -->
 
-- [ ] `action` read; execution follows the rule 9 mapping — SPLIT: the split-HANDOFF order before step one; SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed and who supplies it; HUMAN-LED: research and harness steps proceed and the `STATUS: pickup` names the deciding step and who decides (an unmarked decision is an AMENDED adding the marker, not a pickup act); HUMAN-ONLY and ED-driven SPECIFY-FIRST: evidence steps through the materials row; DELEGATE-WITH-CHECKPOINT: the checkpoint named
+- [ ] `review_clean` is not `false`; a `false` is answered by the AMENDED fixing the cited finding before step one
+- [ ] `action` read; execution follows the rule 9 mapping — SPLIT: the split-HANDOFF order before step one; SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed and who supplies it; HUMAN-LED: research and harness steps proceed; where DA drove it the `STATUS: pickup` names the deciding step and who decides (an unmarked decision is an AMENDED adding the marker, not a pickup act), where RAW drove it it names who owns the spec or oracle; HUMAN-ONLY and ED-driven SPECIFY-FIRST: evidence steps through the materials row; DELEGATE-WITH-CHECKPOINT: the checkpoint named
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; each body-editing one names its predecessor and the gates it re-ran (a transfer HANDOFF states the body is unchanged), and the body matches the fold of all body-editing ones in stream order — one whose named predecessor is not the previous body-editing comment is re-folded first
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
@@ -856,7 +866,7 @@ related: []             # reference only — never blocking, never ownership.
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each path a criterion names exists at the fix commit; created ones by their named step or by the named `blocked_by` task (rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment | | |
-| Mirrors | `STATUS: landed` posted on every open listing feature | | |
+| Mirrors | `STATUS: landed` posted on every open listing feature (the one cell filled after the linked revision, citing the mirror comments) | | |
 | Amendments | every `AMENDED:` or `HANDOFF:` comment reconciled; the body describes what was built; ADR re-scored where an edit changed scope, evidence or decisions | | |
 
 - [ ] Adversarial review of the diff against this issue found no substantial finding
@@ -1109,11 +1119,16 @@ related: []             # reference only — never blocking, never ownership.
   finished issue is consistent. Tick them yourself; the filer reviewing
   their own issue is fine.
     - SUBSTANTIAL means acting on the finding would change a score above, a
-      section's mandate, a completion criterion, a prediction, an edge, or
-      the scope. Wording is not.
+      section's mandate or a section's conformance to its mandate as its
+      comment block states it, a completion criterion, a prediction, an
+      edge, or the scope. Wording is not.
     - Unticked means not yet reviewed. It is not a defect and does not block
       filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
+    - `false` is set — both boxes unticked, `review_evidence` pointing at
+      the comment naming the substantial finding — by whoever finds one
+      and does not fix it, as bookkeeping; the AMENDED (REPLAN) that fixes
+      the finding re-ticks. § Pickup Checks reads it.
 -->
 
 ```yaml

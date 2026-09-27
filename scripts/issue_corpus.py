@@ -55,8 +55,8 @@ TEMPLATES = {
         # Matched by exact normalised title or a suffix on it, never by
         # number: headings carry none since v8.
         "subheadings": [
-            "External interfaces consumed", "Data consumed (structure)",
-            "External interfaces modified",
+            "External interfaces consumed", "Internal interfaces consumed",
+            "Data consumed (structure)", "External interfaces modified",
             "Internal interfaces provided — public",
             "Internal interfaces provided — private",
             "Data provided (structure)", "Data durably tracked",
@@ -98,8 +98,8 @@ TEMPLATES = {
             "Intent & Alignment", "Status & Required Features",
             "Outcome Statement", "Required Feature Set & Sufficiency",
             "Cross-Feature Integration Risks",
-            "Code & Project Impact and Consequences",
-            "System-Level Acceptance Criteria", "Re-planning Protocol",
+            "System-Level Acceptance Criteria",
+            "Code & Project Impact and Consequences", "Re-planning Protocol",
             "Open Questions & Decisions Needed",
             "Completion Criteria (Definition of Done)",
             "Pickup Checks", "Post-Acceptance Validation",

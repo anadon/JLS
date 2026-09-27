@@ -72,10 +72,13 @@ labels: ["tier:capstone"]
   replacing an "unfiled" alignment with its citation provided the
   edit's comment states the filed issue's cited sections were read and
   agree with what was written against the scope — the filed feature's
-  § Capability Statement & Scope Boundary supplies its contribution row
-  and its § Feature-Level Interface & Data Contract declares each shared
-  interface § Cross-Feature Integration Risks assigns it (otherwise
-  REPLAN) (C); state reconstructed from prefixed comments, never from
+  § Capability Statement & Scope Boundary supplies its contribution row,
+  its § Feature-Level Interface & Data Contract declares each shared
+  interface § Cross-Feature Integration Risks assigns it, and its
+  § Integration Criteria & Evidence Plan and § Completion Criteria
+  (Definition of Done) leave every § System-Level Acceptance Criteria
+  annotation naming it correct — no span it covers alone, nothing it
+  disclaims (otherwise REPLAN) (C); state reconstructed from prefixed comments, never from
   checkboxes: required features and sub-capstones mirror every
   prefixed comment of theirs except `STATUS: pickup`/`progress` here,
   led by their number; a roster that adopts an already-landed entry
@@ -85,7 +88,11 @@ labels: ["tier:capstone"]
   whose `requires_capstones` lists it (roster search — there is no
   serves field at this tier), and posts a REPLAN that removes an entry
   from `requires_features` or `requires_capstones`, led by this number,
-  on the removed issue as well; a mirrored trigger whose reassessment finds nothing
+  on the removed issue as well, and a REPLAN that adds or changes an
+  artifact or risk mitigation § System-Level Acceptance Criteria or
+  § Cross-Feature Integration Risks assigns to a required feature, led
+  by this number, on that feature, which answers per its rule C; a
+  mirrored trigger whose reassessment finds nothing
   cited here changed, or whose comment this capstone's own REPLAN
   requested, is answered by a `STATUS: progress` acknowledgement
   naming the sections reassessed, not a REPLAN (D). Mirror `blocks`
@@ -102,7 +109,8 @@ labels: ["tier:capstone"]
      completion criteria cover. If every criterion is already owned by
      a feature, this is a milestone label, not a capstone — do not
      file it.
-  G. Orphaned scope. When a required feature closes, is re-tiered, or
+  G. Orphaned scope. When a required feature closes, is re-tiered (a
+     new issue plus a REPLAN on the old one — the tier model), or
      is descoped while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — add
      the task to the requires_tasks roster of an OPEN required feature
@@ -197,7 +205,7 @@ flowchart TD
 
 - [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `blocked_by` names this one appears in `blocks`; every feature in `requires_features` lists this capstone in its `serves_capstones`; every capstone or feature this capstone's `blocked_by` names carries the mirror in its `blocks`; every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; the alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
-- [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
 ## Outcome Statement
 
@@ -463,7 +471,8 @@ flowchart TD
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
       1 a person reads prose and agrees (review of prose only)
-      0 none; success asserted by whoever did the work
+      0 none; success asserted by whoever did the work, with no enumerated
+        procedure or transcript
       A person operating the software and recording enumerated
       observations is scored by the shape of the check (4 or 3), then the
       document deduction below applies.
@@ -556,7 +565,7 @@ flowchart TD
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
-        session ................................................... cap F
+        session with no named unattended harness .................. cap F
         A recorded manual procedure scores 1 unless the issue names the
         in-tree or CI substrate (a headless display run, a device farm) and
         the harness that would produce the same observation unattended —

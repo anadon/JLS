@@ -366,20 +366,29 @@ def h06(ctx):
         edited = last_edited.get(str(n))
         if not edited:
             continue
+        # A transfer HANDOFF changes no section (task rule 9); only a split
+        # records an edit. Bookkeeping edits (gate and Counterparts ticks,
+        # evidence_commit re-pins, mirror `blocks` entries) are sanctioned
+        # without a comment, so a late edit is a lead, not a defect: info.
+        def records_edit(b):
+            b = (b or "").lstrip()
+            return (b.startswith(("AMENDED:", "REPLAN:"))
+                    or re.match(r"HANDOFF:\s*split\b", b)) \
+                and received_from(b, n) is None
         stamps = [c.get("created_at") for c in ctx.comments(n)
-                  if (c.get("body") or "").lstrip().startswith(
-                      ("AMENDED:", "HANDOFF:", "REPLAN:"))
-                  and received_from(c.get("body"), n) is None]
+                  if records_edit(c.get("body"))]
         stamps = [s for s in stamps if s]
         if not stamps:
-            out.append(finding(n, "H06", "warn",
+            out.append(finding(n, "H06", "info",
                        f"body edited ({edited}) but no AMENDED:/REPLAN: "
-                       "comment exists (AMENDED-backfill candidate)",
+                       "comment exists (bookkeeping, or an "
+                       "AMENDED-backfill candidate)",
                        objects=[edited], fix_class="comment"))
         elif edited > max(stamps):
-            out.append(finding(n, "H06", "warn",
+            out.append(finding(n, "H06", "info",
                        f"body edited ({edited}) after the last "
-                       f"AMENDED:/REPLAN: comment ({max(stamps)})",
+                       f"AMENDED:/REPLAN: comment ({max(stamps)}) — "
+                       "bookkeeping unless a section changed",
                        objects=[edited, max(stamps)], fix_class="comment"))
     return out
 
@@ -419,6 +428,23 @@ def h07(ctx):
         else:
             parents = capstone_parents.get(n, [])
         parents = [p for p in parents if p in ctx.corpus.issues]
+        # Every issue that may legitimately post a led comment here: roster
+        # parents and children, ordering counterparts, related.
+        counterparts = set(parents)
+        for key in ("requires_tasks", "requires_features",
+                    "requires_capstones", "blocked_by", "blocks", "related"):
+            counterparts |= set(parse_edge_field(mb, key)["numbers"])
+        counterparts |= set(task_owners.get(n, []))
+        counterparts |= set(capstone_parents.get(n, []))
+        for c in ctx.comments(n):
+            src = received_from(c.get("body"), n)
+            if src is not None and src not in counterparts:
+                out.append(finding(n, "H07", "warn",
+                           f"comment led by #{src}, which is no counterpart "
+                           "of this issue (rule 9: an own comment is never "
+                           "led by another number; a mirror comes from a "
+                           "roster or ordering counterpart)",
+                           objects=[src], fix_class="comment"))
         if not parents:
             continue
         prefixes = set()
@@ -438,12 +464,18 @@ def h07(ctx):
             for par in parents:
                 # A parent that adopted #n after it landed links the landing
                 # comment in its REPLAN instead of carrying a STATUS mirror
-                # (feature rule D / capstone rule D).
-                accept = (pref, "REPLAN:") if pref == "STATUS:" else (pref,)
-                mirrored = any(
-                    (pc.get("body") or "").lstrip().startswith(accept)
-                    and re.search(rf"#{n}\b", pc.get("body") or "")
-                    for pc in ctx.comments(par))
+                # (feature rule D / capstone rule D): accept a REPLAN that
+                # names #n AND carries a comment link or the landing text.
+                def stands_in(pb):
+                    pb = (pb or "").lstrip()
+                    if pb.startswith(pref) and re.search(rf"#{n}\b", pb):
+                        return True
+                    return bool(pref == "STATUS:" and pb.startswith("REPLAN:")
+                                and re.search(rf"#{n}\b", pb)
+                                and ("#issuecomment-" in pb
+                                     or "STATUS: landed" in pb))
+                mirrored = any(stands_in(pc.get("body"))
+                               for pc in ctx.comments(par))
                 if not mirrored:
                     out.append(finding(n, "H07", "warn",
                                f"{pref} comment not mirrored on parent "

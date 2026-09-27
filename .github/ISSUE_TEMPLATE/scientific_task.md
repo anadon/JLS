@@ -37,14 +37,20 @@ labels: ["tier:task"]
      "§ Hypothesis" for "§ Hypothesis (falsifiable)", "§ Completion
      Criteria" for "§ Completion Criteria (Definition of Done)".
   6. Executors: before step one of § Method / Experimental Design, run
-     § Pickup Checks in full. If an observation fails to reproduce, or a
-     hypothesis is refuted mid-work, stop and comment on the issue with
-     the refuting evidence. A refuted issue is a successful experiment,
-     not a task to salvage — except in an investigation, where a refuted
-     candidate answer is a result (see the decision-task note below). If the observations no longer fail because
-     the work has already landed, the issue is superseded — close it
-     with that note instead of re-doing it. Re-derive any drifted line
-     numbers before trusting them; a stale citation is not evidence.
+     § Pickup Checks in full. A hypothesis refuted mid-work stops the
+     work: comment with the refuting evidence. A refuted issue is a
+     successful experiment, not a task to salvage — except in an
+     investigation, where a refuted candidate answer is a result (see
+     the decision-task note below). An observation that fails to
+     reproduce ends in `SUPERSEDED:` where the work has already landed
+     (close with that note instead of re-doing it), in `REFUTED:` where
+     the rule 3 failure no longer occurs and nothing landed, and
+     otherwise — the rule 3 failure still occurs — in an AMENDED that
+     re-derives or retires the observation (Dropped/Retired ledger),
+     re-anchors any hypothesis that named only it, and re-runs Gate —
+     Observations, Background & Related Work onward plus the pickup rows
+     touched. Re-derive any drifted line numbers before trusting them; a
+     stale citation is not evidence.
   7. Labels are not applied automatically for API-filed issues: set
      `bug` or `enhancement` explicitly, matching the corpus, plus the
      tier label `tier:task`.
@@ -73,7 +79,10 @@ labels: ["tier:task"]
      this task serves; that is a reference for alignment, not an
      ownership claim.
 
-     An issue's tier is defined by its machine block's `tier:` key;
+     `tier:` is fixed at filing. A re-tier is a new issue at the new
+     tier plus a HANDOFF on the old one moving its scope (a feature or
+     capstone posts a REPLAN instead); an in-place tier edit is a filing
+     defect. An issue's tier is defined by its machine block's `tier:` key;
      the tier:* label is a mirror for filtering — a missing or stale
      label is bookkeeping to fix, never an edge violation. The
      ORDERING GRAPH is blocked_by/blocks edges PLUS composition edges
@@ -88,13 +97,20 @@ labels: ["tier:task"]
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). `HANDOFF:` is the AMENDED of a split or
      transfer and is read as one everywhere this template says AMENDED
-     (gate resets, pickup rows, validation rows, mirrors). A split
-     HANDOFF carries the successor number(s), the Dropped/Retired ledger
-     moving each item to them, and the gates re-run (rule 14); its order
-     is fixed: REPLAN the listing feature first (successor as a
-     planned_tasks scope, handoffs moved), file the successor, post the
-     HANDOFF, then resolve the planned scope to the number as
-     bookkeeping. A transfer HANDOFF states that the body is unchanged
+     (gate resets, pickup rows, validation rows, mirrors). It carries a
+     sub-tag, `HANDOFF: split` or `HANDOFF: transfer`, so no issue number
+     stands first. A split HANDOFF carries the successor number(s), the
+     Dropped/Retired ledger moving each item to them, and the gates
+     re-run (rule 14); its order is fixed: REPLAN the listing feature
+     first (successor as a planned_tasks scope, handoffs moved), file the
+     successor, post the HANDOFF, then resolve the planned scope to the
+     number as bookkeeping. Where no feature lists this task yet, FILING
+     the feature stands in for that REPLAN: this task in requires_tasks,
+     the successors in planned_tasks, its roster row and handoffs
+     written against this task's contract as the HANDOFF will leave it,
+     and its Gate — Decomposition, Contract & Integration left unticked
+     until the HANDOFF is posted, then ticked as bookkeeping citing it.
+     A transfer HANDOFF states that the body is unchanged
      and carries the branch and commit of the work, the PR, each Method
      step already ticked with the comment that evidences it, and the
      first step the successor executes. The successor re-runs § Pickup
@@ -119,11 +135,13 @@ labels: ["tier:task"]
      contradiction stays unticked until that feature's REPLAN answers.
      A `REPLAN:` a listing feature posts here, led by its number, is
      answered on receipt (at pickup if none has happened yet): by an
-     AMENDED where § Interface & Data Contract, the machine block or
-     § Intent & Alignment must change — a drop with the disposition
-     "freed" restates the alignment, "closed" closes this issue under
-     rule 10 — otherwise by `STATUS: progress` naming the sections
-     reassessed. An own comment is never led by another issue's number:
+     AMENDED where any section of this body must change (typically
+     § Interface & Data Contract, the machine block or § Intent &
+     Alignment — a drop with the disposition "freed" restates the
+     alignment, "closed" closes this issue under rule 10), otherwise by
+     `STATUS: progress` naming the sections reassessed. That answer is
+     mirrored on the feature whose REPLAN it answers even when its roster
+     no longer lists this task. An own comment is never led by another issue's number:
      a number in the first position marks a mirror, or a notice posted
      on another issue. When an
      edit REMOVES or NARROWS any claim, observation, prediction,
@@ -137,7 +155,10 @@ labels: ["tier:task"]
      whose backing evidence is already recorded in a comment on this
      issue that quotes the box (a PR link inside that comment is the
      usual evidence); re-pinning evidence_commit after re-deriving
-     citations; adding or removing a `blocks` entry that mirrors a
+     citations — bookkeeping only when every cited line re-derives at
+     the new commit saying what it said and every observation's command
+     reproduces its output there, otherwise part of the AMENDED that
+     fixes the observation; adding or removing a `blocks` entry that mirrors a
      counterpart's authoritative `blocked_by`, citing the counterpart
      (its number, and the AMENDED or REPLAN comment where one created
      the edge); and replacing an
@@ -376,7 +397,7 @@ related: []             # reference only — never blocking, never ownership.
      must wait on this task, by an AMENDED on that sibling posted by
      whoever files this task. -->
 
-- [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Observations, Background & Related Work.** `evidence_commit` is reachable from the default branch, and `git log --oneline <evidence_commit>..origin/<default> -- <every path cited in § Observations and § Background & Prior Work>` is empty or its output is pasted with each observation touching a listed path re-run at that head; every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Research Question
 
@@ -495,7 +516,7 @@ related: []             # reference only — never blocking, never ownership.
      For each: its lifetime, what invalidates it, and what happens if it
      is lost mid-operation. -->
 
-- [ ] **Gate — Contract declarations.** Every interface or datum consumed names its provider and every one provided names its consumer, or says none exists yet; every structure links its authoritative definition or defines it here; every claim about existing code carries file:line at `evidence_commit`; hostile inputs are marked; every surface a prediction exercises appears in some subsection above, and no provided or modified declaration lacks a hypothesis or prediction that motivates it; every artifact or handoff that a listing or planning feature's § Feature-Level Interface & Data Contract or § Integration Criteria & Evidence Plan assigns to this task appears above, and no sibling interface consumed or provided above is one that contract does not assign to this task unless it is flagged as a re-plan request; nothing above is a diff. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Contract declarations.** Every interface or datum consumed names its provider and every one provided names its consumer, or says none exists yet; every structure links its authoritative definition or defines it here; every claim about existing code carries file:line at `evidence_commit`; hostile inputs are marked; every surface a prediction exercises appears in some subsection above, and no provided or modified declaration lacks a hypothesis or prediction that motivates it; every artifact or handoff that a listing or planning feature's § Feature-Level Interface & Data Contract or § Integration Criteria & Evidence Plan assigns to this task appears above, and no sibling interface consumed or provided above is one that contract does not assign to this task unless the filer has REPLANned that feature to assign it (feature rule C — the plan is living) and cites the REPLAN here; nothing above is a diff. Adversarial re-read of everything above found no substantial finding.
 
 ### Concurrency model
 
@@ -594,7 +615,7 @@ related: []             # reference only — never blocking, never ownership.
      an observation (rule 1): one line here, citation in
      § Observations. -->
 
-- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches, and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches (each unchanged between `evidence_commit` and the default-branch head, or the step re-derived there), and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
 ## Data Collection & Analysis
 
@@ -612,7 +633,7 @@ related: []             # reference only — never blocking, never ownership.
      § Data Collection & Analysis — or is explicitly accepted with the
      reason. -->
 
-- [ ] **Gate — Evidence & threats.** Every P and F has a named test or a recorded manual procedure with platform in § Data Collection & Analysis; every expected value names its custodian and date; every threat has a mitigation located in a named section or is accepted with a reason; no test named shortcuts the code path its prediction is about. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Evidence & threats.** Every P and F has a named test or a recorded manual procedure with platform in § Data Collection & Analysis; every expected value names its custodian and date; every threat has a mitigation located in a named section or is accepted with a reason; every Method step invoking the manual-procedure alternative names its recorded procedure with platform in § Data Collection & Analysis and its accepted threat in § Threats to Validity; no test named shortcuts the code path its prediction is about. Adversarial re-read of everything above found no substantial finding.
 
 ## Open Questions & Decisions Needed
 
@@ -678,16 +699,16 @@ related: []             # reference only — never blocking, never ownership.
      Experimental Design (rule 6). Each box is a precondition for
      starting, not a completion criterion. Record the outcome in a
      `STATUS: pickup` comment on this issue (not mirrored, rule 9). A
-     failed observation or supersession row ends in a `REFUTED:` or
-     `SUPERSEDED:` comment; any other failed row ends in the
-     `STATUS: pickup` comment recording the block — either way, not in
-     work. -->
+     failed observation row ends as rule 6 says — `SUPERSEDED:`,
+     `REFUTED:`, or an AMENDED that re-derives or retires the
+     observation; any other failed row ends in the `STATUS: pickup`
+     comment recording the block — either way, not in work. -->
 
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; the body matches the latest one
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
-- [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation stops the work (rule 6)
+- [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
+- [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation is routed as rule 6 says (SUPERSEDED, REFUTED, or AMENDED re-deriving or retiring it), never worked around
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
-- [ ] Citations re-derived if HEAD has moved past `evidence_commit`; `evidence_commit` re-pinned (bookkeeping, rule 9)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is asked to resolve it to this number (feature rule C) before it is owed anything
@@ -796,7 +817,8 @@ related: []             # reference only — never blocking, never ownership.
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
       1 a person reads prose and agrees (review of prose only)
-      0 none; success asserted by whoever did the work
+      0 none; success asserted by whoever did the work, with no enumerated
+        procedure or transcript
       A person operating the software and recording enumerated
       observations is scored by the shape of the check (4 or 3), then the
       document deduction below applies.
@@ -887,11 +909,13 @@ related: []             # reference only — never blocking, never ownership.
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
-        session ................................................... cap F
+        session with no named unattended harness .................. cap F
         A recorded manual procedure scores 1 unless the issue names the
         in-tree or CI substrate (a headless display run, a device farm) and
         the harness that would produce the same observation unattended —
-        then it scores 2 and that harness is a named builder.
+        then it scores 2, that harness is a regression-test step § Method
+        must name, and the procedure is interim evidence; without that
+        step the score stays 1.
       0 NO, because a person's participation or judgement IS the evidence:
         a human-subject trial, an independent reproducer, someone who must
         witness a step and report what they saw, an external publisher

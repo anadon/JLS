@@ -39,7 +39,10 @@ labels: ["tier:feature"]
   capstone's requires_features is authoritative and serves_capstones
   mirrors it.
 
-  An issue's tier is defined by its machine block's `tier:` key; the
+  `tier:` is fixed at filing: a re-tier is a new issue at the new tier
+  plus a HANDOFF (task) or REPLAN (feature, capstone) on the old one
+  moving its scope; an in-place tier edit is a filing defect. An issue's
+  tier is defined by its machine block's `tier:` key; the
   tier:* label is a mirror for filtering — a missing or stale label is
   bookkeeping to fix, never an edge violation.
 
@@ -121,9 +124,12 @@ labels: ["tier:feature"]
      answers a child's re-plan request, or changes a § Global
      Invariants entry or a handoff assigned to a filed child is also
      posted, led by this number, on each such child, which answers with
-     an AMENDED (mirrored here and acknowledged, since this REPLAN
-     requested it) or, where nothing it cites changed, a
-     `STATUS: progress` naming the sections reassessed. A mirrored trigger
+     an AMENDED where any section of its body must change (mirrored
+     here even after a drop, and acknowledged, since this REPLAN
+     requested it) or otherwise a `STATUS: progress` naming the sections
+     reassessed. A mirrored `HANDOFF: split` whose successor this
+     feature's filing already planned is likewise one this feature
+     requested. A mirrored trigger
      whose reassessment finds nothing cited here changed, or whose
      comment this feature's own REPLAN requested, is answered by a
      `STATUS: progress` comment naming the sections reassessed — not a
@@ -236,7 +242,7 @@ flowchart TD
 
 - [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`, and every capstone in `serves_capstones` still lists this feature; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
-- [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
 ## Capability Statement & Scope Boundary
 
@@ -311,7 +317,7 @@ flowchart TD
      proof the criterion is not a span; validator check G22 reports
      that case. -->
 
-- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub; a one-way handoff whose consumer must not wait may be stubbed the same way, and § Sequencing & Parallelism then lists the pair as independent with the stub's retirer ordered after the provider); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
 
 ## Global Invariants
 
@@ -372,9 +378,9 @@ flowchart TD
      disposition: re-homed (added to the requires_tasks of an OPEN
      feature — one not closed on landed, REFUTED or SUPERSEDED),
      freed (in no roster — legal only when the child's § Intent &
-     Alignment is at the same time restated by AMENDED to a standing
-     rule, a format document or another open feature; otherwise the
-     disposition is closed), or closed.
+     Alignment is restated, by the AMENDED that answers the drop REPLAN
+     (task rule 9), to a standing rule, a format document or another
+     open feature; otherwise the disposition is closed), or closed.
      Because a task may be shared, dropping it from THIS roster does not
      orphan it if another roster still lists it — check before assuming
      a disposition is needed. Closing this feature with scope UNMET
@@ -539,7 +545,8 @@ flowchart TD
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
       1 a person reads prose and agrees (review of prose only)
-      0 none; success asserted by whoever did the work
+      0 none; success asserted by whoever did the work, with no enumerated
+        procedure or transcript
       A person operating the software and recording enumerated
       observations is scored by the shape of the check (4 or 3), then the
       document deduction below applies.
@@ -631,7 +638,7 @@ flowchart TD
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
-        session ................................................... cap F
+        session with no named unattended harness .................. cap F
         A recorded manual procedure scores 1 unless the issue names the
         in-tree or CI substrate (a headless display run, a device farm) and
         the harness that would produce the same observation unattended —

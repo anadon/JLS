@@ -371,8 +371,8 @@ def h06(ctx):
         if not edited:
             continue
         # A transfer HANDOFF changes no section (task rule 9); only a split
-        # records an edit. Bookkeeping edits (gate and Counterparts ticks,
-        # evidence_commit re-pins, mirror `blocks` entries) are sanctioned
+        # records an edit. Bookkeeping edits (check-sheet cells, review
+        # flags, evidence_commit re-pins, mirror `blocks` entries) are sanctioned
         # without a comment, so a late edit is a lead, not a defect: info.
         def records_edit(b):
             b = (b or "").lstrip()
@@ -493,15 +493,13 @@ def h07(ctx):
                     break
         for pref in sorted(prefixes):
             for par in parents:
-                # A parent that adopted #n after it landed links the landing
-                # comment in its REPLAN instead of carrying a STATUS mirror
-                # (feature rule D / capstone rule D): accept a REPLAN that
-                # names #n AND carries a comment link or the landing text.
-                # A parent that adopted #n by REPLAN links the child's
-                # earlier prefixed comments in that REPLAN (rule D), so a
-                # REPLAN naming #n with a comment link stands in for any
-                # prefix; comments older than the parent itself could not
-                # have been mirrored and are exempt.
+                # Comments a child posted before the parent's roster listed
+                # it are read on the child, not mirrored (feature rule D).
+                # Two proxies for "before the roster listed it": comments
+                # older than the parent itself, and comments older than the
+                # parent's FIRST comment naming #n when that comment is the
+                # adopting REPLAN (a child listed at filing is normally
+                # never named by a REPLAN, or only by a later drop).
                 par_created = (ctx.corpus.issues[par].raw or {}).get(
                     "created_at") or ""
                 own = [c for c in ctx.comments(n)
@@ -517,24 +515,23 @@ def h07(ctx):
                 if not own:
                     continue
                 pcs = ctx.comments(par)
+                naming = [pc for pc in pcs
+                          if re.search(rf"#{n}\b", (pc.get("body") or ""))]
+                adopted_at = ""
+                if naming and (naming[0].get("body") or "").lstrip() \
+                        .startswith("REPLAN:"):
+                    adopted_at = naming[0].get("created_at") or ""
 
                 def covered(child_c):
                     ct = child_c.get("created_at") or ""
+                    if adopted_at and ct < adopted_at:
+                        return True     # posted before the adopting REPLAN
                     for pc in pcs:
                         pb = (pc.get("body") or "").lstrip()
                         # A mirror is LED by the child's number (rule 9 /
                         # rule D); a number mentioned later in the line
                         # ("mirrored on #P, #Q", "PR #45") is not a mirror.
                         if pb.startswith(pref) and received_from(pb, par) == n:
-                            return True
-                        # An adopting REPLAN links the child's EARLIER
-                        # comments (rule D): it stands in only for those.
-                        if pb.startswith("REPLAN:") \
-                                and re.search(rf"#{n}\b", pb) \
-                                and (pc.get("created_at") or "") >= ct \
-                                and ("#issuecomment-" in pb
-                                     or (pref == "STATUS:"
-                                         and "STATUS: landed" in pb)):
                             return True
                     return False
                 mirrored = all(covered(c) for c in own)

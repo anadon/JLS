@@ -50,94 +50,41 @@ labels: ["tier:capstone"]
   template's headings for same-body references and against the cited
   issue's template otherwise — headings carry no numbers; executor
   re-verification, here § Pickup Checks; explicit labels, here
-  `tier:capstone` plus `bug` or `enhancement` matching the corpus),
-  together with task rules 9–10 (comment protocol and waivers, with
-  `REPLAN:` in place of `AMENDED:` and the same `STATUS:` sub-tags;
-  `HANDOFF: transfer` applies unchanged when the acceptance pass changes
-  hands — body unchanged, no gate reset, the transferee runs § Pickup
-  Checks as task rule 9 says (rows not reached run, rows run at the same
-  checkout re-used, the named rows re-run) and posts its own
-  `STATUS: pickup` citing it; a split
-  is a REPLAN plus a new issue at this tier, a re-tier a REPLAN plus a
-  new issue at the new tier — that REPLAN carries the Dropped/Retired
-  ledger moving every item the new tier can hold to it, gives every
-  roster entry it cannot hold a disposition per § Re-planning Protocol
-  and rule G, and is the close-out record, task rule 10 read with REPLAN
-  in place of `HANDOFF: re-tier`),
-  task rules 11–13 (oracle custody, artifact paths resolve at filing,
-  marked open questions — applied to § System-Level Acceptance
-  Criteria and § Open Questions & Decisions Needed), task rules
-  14–15 (dependency order with consistency gates; three check-sheets
-  by when they run — gates at filing and at every REPLAN touching
-  their span, § Pickup Checks before the acceptance pass begins,
-  § Post-Acceptance Validation at close), and feature rules A–D read
-  against this template: the machine block below, in § Status &
-  Required Features, is the source of truth for the edges it can
-  express (A); the not-a-folder test is rule F below (B); living
-  body, plan changes REPLAN-logged, gates reset and re-run as task
-  rule 14 says with the REPLAN comment naming the gates re-run,
-  bookkeeping exempt as rule C's full list says — among others ticking
-  a gate or review box, filling a check-sheet's evidence and result
-  cells from recorded evidence (the close-out comment links the revision
-  holding them; the Mirrors cell alone is filled after the mirrors are
-  posted), ticking a DoD or Pickup box whose evidence is in its named
-  row, the pickup comment or a comment quoting it, mirror
-  `blocks` entries citing the
-  counterpart's comment, re-pinning evidence_commit (bookkeeping only
-  when every cited line re-derives at the new commit, otherwise part of
-  the REPLAN), flipping a roster
-  Status cell, and resolving a planned_features scope to its number or
-  replacing an "unfiled" alignment with its citation provided the
-  edit's comment states the filed issue's cited sections were read and
-  agree with what was written against the scope — the filed feature's
-  § Capability Statement & Scope Boundary supplies its contribution row,
-  its § Feature-Level Interface & Data Contract declares each shared
-  interface § Cross-Feature Integration Risks assigns it, every ordering
-  edge recorded here against its scope is carried by its machine block
-  or, where a filed feature waits on it, by that feature's after the
-  own REPLAN its filer posted on it, and its
-  § Integration Criteria & Evidence Plan and § Completion Criteria
-  (Definition of Done) leave every § System-Level Acceptance Criteria
-  annotation naming it correct — no span it covers alone, nothing it
-  disclaims (otherwise REPLAN) (C); state reconstructed from prefixed comments, never from
-  checkboxes: required features and sub-capstones mirror every
-  prefixed comment of theirs except `STATUS: pickup`/`progress` here,
-  led by their number; a roster that adopts an entry by REPLAN links in
-  that REPLAN the entry's prefixed comments posted before the adoption
-  (landed work is never adopted — see § Required Feature Set &
-  Sufficiency); THIS capstone
-  mirrors every prefixed comment of its own except
-  `STATUS: pickup`/`progress`, led by this number, on every capstone
-  whose `requires_capstones` lists it and is open (roster search — there is no
-  serves field at this tier), and posts a REPLAN that removes an entry
-  from `requires_features` or `requires_capstones`, led by this number,
-  on the removed issue as well, and a REPLAN that adds or changes an
-  artifact, risk mitigation or ordering edge § System-Level Acceptance
-  Criteria or § Cross-Feature Integration Risks assigns to a required
-  feature, or re-homes scope into it under rule G(a), led by this
-  number, on that feature, which answers per its rule C — such a REPLAN
-  leaves the gate that follows the changed section (Gate — Sufficiency
-  for re-homed scope, Gate — Risks, acceptance & edges for an artifact,
-  risk mitigation or ordering edge) and every later gate pending on
-  #feature, named as pending in the REPLAN, ticked as bookkeeping citing
-  the feature's REPLAN that accepts (for an edge, the one adding its
-  `blocked_by` entry) or its `STATUS: progress`; a disclaiming REPLAN is
-  answered here by a REPLAN re-owning the item before the gate is
-  ticked. Any deviation of what was built from what a closed required
-  feature's body records (contract, roster row, a cell recorded as held,
-  a criterion recorded as met) is recorded by a REPLAN on that closed
-  feature posted by the finder (corrected, ledger, the WAIVED stand-in
-  of task rule 10, no gate re-run, ADR left as it scored the filing), mirrored on every capstone listing it,
-  open or closed — an open one answers per its rule C, on a closed one
-  whose body the deviation contradicts the finder posts the same REPLAN
-  (otherwise the mirror is a notice and the chain stops), upward until
-  an open issue answers or none lists it; a
-  mirrored trigger whose reassessment finds nothing
-  cited here changed, or whose comment this capstone's own REPLAN
-  requested, is answered by a `STATUS: progress` acknowledgement
-  naming the sections reassessed, not a REPLAN (D). Mirror `blocks`
-  entries cite the counterpart (its number, and the REPLAN comment
-  where one created the edge). In addition:
+  `tier:capstone` plus `bug` or `enhancement` matching the corpus).
+  Task rules 9–15 and feature rules A–D apply with the feature
+  template's substitution table read one tier up:
+
+    feature tier                          | this tier
+    --------------------------------------|-------------------------------
+    serving capstone (`requires_features`)| parent capstone
+                                          |   (`requires_capstones`; no
+                                          |   serves field — roster search)
+    child task (`requires_tasks`)         | required feature or
+                                          |   sub-capstone (`requires_*`)
+    `planned_tasks`                       | `planned_features`
+    § Feature-Level Interface & Data      | § Cross-Feature Integration
+      Contract, § Global Invariants       |   Risks, § System-Level
+                                          |   Acceptance Criteria
+    § Decomposition & Rationale           | § Required Feature Set &
+                                          |   Sufficiency
+    integration step                      | acceptance step (§ Outcome
+                                          |   Statement walk-through)
+    § Post-Integration Validation         | § Post-Acceptance Validation
+    rule B (not a folder)                 | rule F below
+    § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
+
+  So: the machine block in § Status & Required Features is the source
+  of truth for the edges it can express (A); a split or re-tier is a
+  REPLAN plus a new issue, exactly as the feature template says; a
+  REPLAN that removes an entry from `requires_features` or
+  `requires_capstones`, or that adds or changes an artifact, risk
+  mitigation or ordering edge assigned to a required feature, or that
+  re-homes scope into it under rule G(a), is also posted, led by this
+  number, on that issue, which answers per its rule C — a disclaiming
+  REPLAN is answered here by a REPLAN re-owning the item (C); required
+  features and sub-capstones mirror their prefixed comments here, and
+  this capstone mirrors its own on every OPEN capstone whose
+  `requires_capstones` lists it (D). In addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§ Required Feature Set & Sufficiency): why exactly these
@@ -150,11 +97,8 @@ labels: ["tier:capstone"]
      a feature, this is a milestone label, not a capstone — do not
      file it.
   G. Orphaned scope. When a required feature closes, is re-tiered (a
-     new issue plus a REPLAN on the old one — the tier model; a task
-     re-tiered into a feature arrives as a `HANDOFF: re-tier` on the
-     task and a new feature this capstone may adopt), or
-     is descoped while leaving scope this capstone still needs, the
-     REPLAN must give that scope a disposition: (a) re-home it — add
+     new issue plus a REPLAN on the old one), or is descoped while
+     leaving scope this capstone still needs, the REPLAN must give that scope a disposition: (a) re-home it — add
      the task to the requires_tasks roster of an OPEN required feature
      (one not closed on landed, REFUTED or SUPERSEDED; a closed feature
      is never reopened — use (b)); (b) file a
@@ -215,8 +159,7 @@ labels: ["tier:capstone"]
        - `blocked_by`, `related` and the mermaid graph at the gate after
          § System-Level Acceptance Criteria (which is grouped with
          § Cross-Feature Integration Risks). `blocks` stays `[]` at
-         filing: it carries mirrors only, confirmed in the Counterparts
-         box.
+         filing: it carries mirrors only (validator G09 reports drift).
      Regenerate the mermaid graph on every REPLAN. -->
 
 ```yaml
@@ -236,7 +179,7 @@ blocked_by: []          # ordering: capstones or features that must land before 
                         #   capstone closes, beyond the required set. Never tasks.
 blocks: []              # mirrors only — the counterpart's blocked_by is authoritative:
                         #   capstones whose blocked_by names this one. Left [] at
-                        #   filing; confirmed in the Counterparts box.
+                        #   filing; G09 reports drift.
 related: []             # reference only — never blocking, never ownership
 ```
 
@@ -247,8 +190,6 @@ flowchart TD
   %% edges among those features (including edges to features or
   %% capstones outside this set). Regenerate on every REPLAN.
 ```
-
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `blocked_by` names this one appears in `blocks`; every feature in `requires_features` lists this capstone in its `serves_capstones`; every capstone or feature this capstone's `blocked_by` names carries the mirror in its `blocks`; every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; the alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out and is reachable from the default branch. Adversarial re-read of this span found no substantial finding.
 
@@ -299,8 +240,7 @@ flowchart TD
      section), an ordering edge, a feature's own invariant — or is
      explicitly accepted. Every necessary ordering is an edge: fill
      `blocked_by` and the mermaid graph at this group's gate (`blocks`
-     stays empty or mirrors-only; the other side mirrors in its
-     Counterparts box). -->
+     stays empty or mirrors-only). -->
 
 ## System-Level Acceptance Criteria
 
@@ -318,17 +258,13 @@ flowchart TD
 
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE with every required
      entry landed: a fix feature under rule G(b) adopted by REPLAN, or
-     `REFUTED:` — the premise of § Outcome Statement fails — posted after
-     a REPLAN removing every still-open required entry (posted on each,
-     rule D) with its disposition (re-parented to a named open capstone,
-     or released with the rule D notice) and descoping every planned one
-     (moved to a named open capstone's `planned_features`, or dropped
-     with the sufficiency argument re-derived, rule G(c)) — scope a parent capstone still
-     needs is that parent's rule G on receiving the mirrored REFUTED —
-     quoting the failing
-     criterion with command and output, the sheet not completed — rows
-     already filled stand and the REFUTED links the revision holding them
-     (task rule 10) — mirrored per rule D.
+     `REFUTED:` — the premise of § Outcome Statement fails — quoting the
+     failing criterion with command and output; it follows a REPLAN
+     giving every still-open or planned required entry its
+     § Re-planning Protocol disposition (posted on each filed one, rule
+     C) and cites it; the sheet is not completed — rows already filled
+     stand and the REFUTED links the revision holding them (task rule
+     10); a parent capstone applies its rule G on receiving the mirror.
 
      A "spans #A, #B" ANNOTATION IS NOT EVIDENCE. Before writing it,
      open #A and #B and read their § Integration Criteria & Evidence
@@ -349,7 +285,7 @@ flowchart TD
          evidence with no work item anywhere; mark it UNOWNED;
        - text left stale by a feature's later REPLAN. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule D; an edge involving a planned feature is recorded here; at its filing the planned feature's filer adds it to that feature's `blocked_by` or, where a filed feature waits on it, posts on that feature its own REPLAN adding the edge (feature rule C, mirrored per rule D), and the resolution is bookkeeping only when both blocks carry it) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing — the waiting feature's filer posts the REPLAN adding it, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -374,35 +310,27 @@ flowchart TD
      orphaned scope; a feature's contract deviates → reassess
      § Cross-Feature Integration Risks and § System-Level Acceptance
      Criteria (a required feature's mirrored REPLAN is the trigger); a
-     sub-capstone's mirrored REPLAN → re-derive § Required Feature Set &
-     Sufficiency; an acceptance criterion fails with every required
-     entry landed → its named next move (a rule G(b) fix feature adopted
-     by REPLAN, or `REFUTED:` after a REPLAN removing every still-open
-     required entry, posted on each, with its disposition — re-parented
-     to a named open capstone or released with the rule D notice); a
-     sub-capstone's mirrored REFUTED → re-derive § Required Feature Set &
-     Sufficiency and apply rule G to the orphaned scope; this capstone re-tiered (a REPLAN plus a new issue at
-     the new tier) → each required entry the new tier cannot hold is
-     moved to the new issue's roster where its tier fits, re-parented to
-     a named open capstone, or released with the rule D notice (it
-     re-checks its beneficiary), and scope the outcome still needs goes
-     through rule G applied by the new issue where it is a capstone, or
-     becomes a `planned_tasks` entry there where it is a feature, or is
-     released with a disposition in the REPLAN; the outcome itself is re-scoped → REPLAN with the old and
-     new § Outcome Statement both quoted, then § Intent & Alignment
-     re-checked; a required feature's mirrored WAIVED → the waived
-     obligation checked against § System-Level Acceptance Criteria, and
-     a successor outside the required set is rule G scope; a re-scope
-     after which no criterion in § System-Level Acceptance Criteria is a
-     genuine span or close-out criterion (rule F) → once the remaining required
-     entries have landed, close with `SUPERSEDED: label — every criterion
-     covered alone by #…`, mirrored to parent capstones, which re-derive
-     their sufficiency with the features listed directly. Every response
-     ends in a REPLAN comment here and a re-run of the gates covering
-     the changed span — or, when the reassessment finds nothing cited
-     here changed (or the trigger was a comment this capstone's own
-     REPLAN requested), in a `STATUS: progress` acknowledgement naming
-     the sections reassessed, which resets no gate (rule C). -->
+     sub-capstone's mirrored REPLAN or REFUTED → re-derive § Required
+     Feature Set & Sufficiency and apply rule G to any orphaned scope;
+     an acceptance criterion fails with every required entry landed →
+     its named next move (a rule G(b) fix feature adopted by REPLAN, or
+     `REFUTED:` as § System-Level Acceptance Criteria says); this
+     capstone re-tiered → that REPLAN, with rule G applied to scope the
+     new tier cannot hold; the outcome itself is re-scoped → REPLAN with
+     the old and new § Outcome Statement both quoted, then § Intent &
+     Alignment re-checked; a required feature's mirrored WAIVED → the
+     waived obligation checked against § System-Level Acceptance
+     Criteria, and a successor outside the required set is rule G scope;
+     a re-scope after which no criterion in § System-Level Acceptance
+     Criteria is a genuine span or close-out criterion (rule F) → once
+     the remaining required entries have landed, close with
+     `SUPERSEDED: label — every criterion covered alone by #…`, mirrored
+     to parent capstones, which re-derive their sufficiency with the
+     features listed directly. Dispositions for a removed required
+     entry: re-parented to a named open capstone, or released (it
+     re-checks its beneficiary); for a planned one: moved to a named
+     open capstone's `planned_features`, or dropped with the sufficiency
+     argument re-derived (rule G(c)). -->
 
 ## Open Questions & Decisions Needed
 
@@ -422,7 +350,7 @@ flowchart TD
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
-- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment where anything cited changed and in an acknowledgement otherwise, naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment where anything cited changed, naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
 
 ## Completion Criteria (Definition of Done)
 
@@ -457,11 +385,12 @@ flowchart TD
      `HANDOFF: transfer`, takes over) the acceptance pass (task rule 6,
      applied at this tier). Preconditions for starting, not completion
      criteria. Record the outcome in a `STATUS: pickup` comment here
-     (not mirrored; one line may list every "none" row). -->
+     (not mirrored; one line may list every "none" row). A failed row
+     ends in that comment naming the acceptance steps blocked (or all of
+     them) and what unblocks them; only those steps wait. -->
 
-- [ ] `review_clean` is not `false`; a `false` is answered before the acceptance pass begins by the REPLAN fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping) — where the executor cannot complete that REPLAN, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it
-- [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed; at this tier a SPLIT is a REPLAN plus a new issue)
-- [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
+- [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
+- [ ] Every own `REPLAN:` comment read; each names the sections changed and re-read, and the body matches their fold in stream order; where `review_clean` is `false`, the finding at `review_evidence` is answered before the acceptance pass begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), or its disposition is recorded; `planned_features` is empty
 - [ ] Every mirrored `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read, each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; a parent's REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
@@ -488,11 +417,11 @@ flowchart TD
 | Walk-through step 1 | executed at the commit; observation matches § Outcome Statement | | |
 | Acceptance criterion 1 | do X end-to-end, observe Y; each spanning feature's contribution shown | | |
 | Risk 1 | mitigation in place at system scale | | |
-| Required #A | landed — mirrored here (rule D; an adopted entry is open at adoption); deviations reconciled | | |
+| Required #A | landed — mirrored here, or the landing comment on the entry; deviations reconciled | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the system and deducted | | |
 | Roster | machine block, table and mermaid agree; `planned_features` empty | | |
-| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one (the one cell filled after the linked revision, citing the mirror comments) | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one, cited | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
@@ -763,15 +692,13 @@ flowchart TD
     - Unticked means not yet reviewed. It is not a defect and does not block
       filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
-    - `false` is set — both boxes unticked, `review_evidence` pointing at
-      the comment naming the substantial finding — by whoever finds one
-      and does not fix it, as bookkeeping, on an OPEN issue; the AMENDED
-      (REPLAN) that fixes the finding, or a comment recording why it does
-      not stand, re-ticks. § Pickup Checks reads it. On a closed issue the
-      boxes and `review_clean` stand as filed; a finding that what was
-      built deviates from the body is recorded by the after-close AMENDED
-      (REPLAN) of task rule 9; any other finding is a plain comment
-      quoting it, and nothing is re-scored.
+    - `false` means the review comment at `review_evidence` names a
+      substantial finding nobody has fixed; whoever finds one and does
+      not fix it sets it (bookkeeping), and the REPLAN fixing it, or a
+      comment recording why it does not stand, sets `true`. § Pickup
+      Checks reads it before the acceptance pass begins. On a closed
+      issue nothing here changes; a deviation of what was built from the
+      body is recorded as task rule 9 says.
 -->
 
 ```yaml

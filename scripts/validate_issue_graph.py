@@ -21,8 +21,8 @@ Check ids (stable): G01 parse defects; G02 nonexistent referents; G03 edge
 tier-legality; G04 combined-graph cycles; G05 RETIRED (task->feature ordering
 is now illegal outright — G03 owns it); G06 roster entries resolve to open
 tasks; G07 RETIRED (a task may be owned by many features); G08
-serves_capstones/requires_features mirror; G09 ordering symmetry (info) and
-feature<->capstone mirror obligations; G10 native sub-issue agreement; G11
+serves_capstones/requires_features mirror; G09 ordering symmetry (warn — the
+`blocks` mirror obligation at every tier pair); G10 native sub-issue agreement; G11
 edges to closed issues; G12 surviving retired capstone->task exception
 REPLAN comment; G13 planned_* hygiene (filed numbers still in planned;
 orphaned K/M/L/P/D scope ids); G14 mermaid vs machine block; G15
@@ -589,13 +589,12 @@ def run(corpus, repo_root, only_issue=None):
         for t in node.numbers("blocked_by"):
             other = nodes.get(t)
             if other and n not in set(other.numbers("blocks")) and want(n):
-                tiers = {node.tier, other.tier}
-                sev = ("warn" if tiers == {"feature", "capstone"} else "info")
-                F.append(finding(n, "G09", sev,
+                # warn at every tier pair: the templates carry no
+                # Counterparts box any more, so this check is the only
+                # record of a `blocks` mirror missing.
+                F.append(finding(n, "G09", "warn",
                                  f"blocked_by #{t} not mirrored by blocks "
-                                 "on the other side"
-                                 + (" (feature<->capstone mirror obligation)"
-                                    if sev == "warn" else ""),
+                                 "on the other side (mirror obligation)",
                                  objects=[t], fix_class="body"))
 
         # G10 native sub-issues vs machine block.

@@ -101,9 +101,13 @@ labels: ["tier:task"]
      transfer and is read as one everywhere this template says AMENDED
      (gate resets, pickup rows, validation rows, mirrors). It carries a
      sub-tag — `HANDOFF: split`, `HANDOFF: transfer` or
-     `HANDOFF: re-tier` — so no issue number stands first. A re-tier
-     HANDOFF carries the new issue's number and the Dropped/Retired
-     ledger moving every item to it, and closes this issue (rule 10). A split HANDOFF carries the successor number(s), the
+     `HANDOFF: re-tier` — so no issue number stands first; successor or
+     new-issue numbers follow a dash after the sub-tag ("HANDOFF: split —
+     successors #124, #125"), never directly after it, which is where a
+     mirror places the sender's number. A re-tier HANDOFF carries the new
+     issue's number and the Dropped/Retired ledger moving every item to
+     it, and closes this issue (rule 10). A split HANDOFF carries the
+     successor number(s), the
      Dropped/Retired ledger moving each item to them, and the gates
      re-run (rule 14); its order is fixed: REPLAN the listing feature
      first (successor as a planned_tasks scope, handoffs moved), file the

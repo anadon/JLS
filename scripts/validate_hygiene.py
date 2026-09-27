@@ -385,27 +385,45 @@ def h06(ctx):
 
 def h07(ctx):
     out = []
-    # A task no longer declares an owner (scientific-task v7): ownership lives
-    # in each owning feature's requires_tasks roster, and a task may have any
-    # number of owners. Build the reverse index once, then a task's mirror
-    # obligation runs to EVERY feature that lists it.
-    task_owners = {}
+    # Ownership lives in each owning feature's requires_tasks roster and a
+    # capstone's requires_capstones (a task may have any number of owners).
+    # Build the reverse indexes once, then an issue's mirror obligation runs
+    # to EVERY parent that lists it (task rule 9, feature rule D, capstone
+    # rule D).
+    task_owners, capstone_parents = {}, {}
     for fn, fi in ctx.corpus.issues.items():
-        if fi.tier != "feature" or not fi.machine:
+        if not fi.machine:
             continue
-        for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
-            task_owners.setdefault(t, []).append(fn)
+        if fi.tier == "feature":
+            for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
+                task_owners.setdefault(t, []).append(fn)
+        elif fi.tier == "capstone":
+            for c in parse_edge_field(fi.machine,
+                                      "requires_capstones")["numbers"]:
+                capstone_parents.setdefault(c, []).append(fn)
+
+    # What each tier must mirror upward. A task mirrors every prefixed
+    # comment except STATUS: pickup/progress. A feature or capstone mirrors
+    # only ITS OWN landing, refutation and re-plans; the child comments it
+    # hosts (mirrors that name a child number) are not re-mirrored.
+    OWN_PREFIXES = ("STATUS:", "REFUTED:", "REPLAN:")
 
     for n, iss in ctx.issues():
         mb = iss.machine
         if not mb:
             continue
         if iss.tier == "task":
-            parents = task_owners.get(n, [])
+            parents, allowed, children = task_owners.get(n, []), \
+                COMMENT_PREFIXES, set()
         elif iss.tier == "feature":
             parents = parse_edge_field(mb, "serves_capstones")["numbers"]
+            allowed = OWN_PREFIXES
+            children = set(parse_edge_field(mb, "requires_tasks")["numbers"])
         else:
-            continue
+            parents = capstone_parents.get(n, [])
+            allowed = OWN_PREFIXES
+            children = set(parse_edge_field(mb, "requires_features")["numbers"]
+                           + parse_edge_field(mb, "requires_capstones")["numbers"])
         parents = [p for p in parents if p in ctx.corpus.issues]
         if not parents:
             continue
@@ -416,7 +434,11 @@ def h07(ctx):
             # rule 9); only STATUS: landed and the other prefixes mirror.
             if re.match(r"STATUS:\s*(pickup|progress)\b", b):
                 continue
-            for p in COMMENT_PREFIXES:
+            head = b[:200]
+            if children and any(re.search(rf"#{ch}\b", head)
+                                for ch in children):
+                continue        # a hosted child mirror, not this issue's own
+            for p in allowed:
                 if b.startswith(p):
                     prefixes.add(p)
                     break
@@ -494,7 +516,7 @@ CRITERION_ID = re.compile(r"^[A-Z]{1,3}[-–]?\d+\b")
 # feature's "§ Global Invariants" is a cross-issue reference the same-body
 # check must not flag.
 ALL_CANONICAL_HEADINGS = [h for spec in TEMPLATES.values()
-                          for h in spec["headings"]]
+                          for h in spec["headings"] + spec["subheadings"]]
 
 
 def h10(ctx):

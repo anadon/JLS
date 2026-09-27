@@ -98,29 +98,34 @@ labels: ["tier:feature"]
      comment names the gates re-run. Bookkeeping is exempt: flipping a
      roster Status cell; ticking a gate or review box (the tick is the
      record); ticking a DoD or check-sheet box whose backing evidence is
-     already recorded in a comment or PR; re-pinning evidence_commit;
-     adding or removing a `blocks` or `serves_capstones` entry that
-     mirrors a counterpart's authoritative edge, citing the
-     counterpart's comment; resolving a planned_tasks scope to its
+     already recorded in a comment on this issue that quotes the box (a
+     PR link inside that comment is the usual evidence); re-pinning
+     evidence_commit; adding or removing a `blocks` or
+     `serves_capstones` entry that mirrors a counterpart's authoritative
+     edge, citing the counterpart's comment; resolving a planned_tasks scope to its
      number, or replacing an "unfiled" alignment with its citation —
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
      written against the scope (if they do not, the edit is a REPLAN).
-     A REPLAN that changes the contract or the roster is mirrored on
-     every capstone in serves_capstones. If another agent
+     Every REPLAN is mirrored on every capstone in serves_capstones
+     (a capstone reads this feature's roster, contract, capability,
+     invariants and integration criteria, so any of them changing is
+     its trigger). If another agent
      edited since you read, re-read and fold the newer body into your
      edit — the REPLAN comment stream is the arbiter of intent.
   D. State lives in comments, not checkboxes. Child tasks post
      `STATUS: landed`, `REFUTED:` (hypothesis failed, with evidence),
      `HANDOFF:` (work split or transferred), `SUPERSEDED:` (already
      shipped), `AMENDED:` and `WAIVED:` on their own issue AND mirror
-     the same comment here (`STATUS: pickup` and `STATUS: progress` stay
-     on the child); this feature mirrors its own landing, refutation,
-     and contract- or roster-changing REPLANs as `STATUS: landed` /
-     `REFUTED:` / `REPLAN:` comments on every capstone in
+     the same comment here, led by the child's number (`STATUS: pickup`
+     and `STATUS: progress` stay on the child); this feature mirrors its
+     own landing, refutation, and every REPLAN as `STATUS: landed #N` /
+     `REFUTED: #N` / `REPLAN: #N` comments on every capstone in
      serves_capstones. A roster that adopts an already-landed child by
      REPLAN links the child's landing comment in that REPLAN, since no
-     mirror was posted here. A fresh agent reconstructs execution state from
+     mirror was posted here. A child's mirrored AMENDED that contradicts
+     § Global Invariants or a handoff is a re-plan request answered ON
+     RECEIPT by a REPLAN here, not deferred to pickup. A fresh agent reconstructs execution state from
      the machine block plus the prefixed comments; checkbox state is a
      convenience rendering, never evidence.
 
@@ -201,7 +206,7 @@ flowchart TD
   %% among them and to external issues. Regenerate on every REPLAN.
 ```
 
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`; every capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
+- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
@@ -252,8 +257,9 @@ flowchart TD
 <!-- Feature-level predictions: do X, observe Y — each one something no
      single child's completion criteria assert (rule B). Name the
      integration test, golden file, or recorded manual procedure that
-     pins each, and note which do not exist yet and which child (or this
-     issue's close-out) builds them (task rule 12). For every golden
+     pins each, and note which do not exist yet and which child,
+     `blocked_by` predecessor, or this issue's close-out builds them
+     (task rule 12). For every golden
      file or expected value: who produced it, when, and whether it was
      pre-committed, independently derived, or will be produced by the
      implementation it certifies (task rule 11 — the ADR OS deduction
@@ -313,7 +319,7 @@ flowchart TD
      this feature's `blocked_by`, `blocks`, `serves_capstones` and the
      mermaid graph now, and record the DAG walk. -->
 
-- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by`, `blocks`, `serves_capstones` are filled, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by` and `serves_capstones` are filled and `blocks` is empty or carries only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -322,7 +328,8 @@ flowchart TD
      re-plans; a child split (HANDOFF) → roster update; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; a child's mirrored AMENDED or WAIVED → roster row
-     and handoffs re-derived; a shared child's other listing feature
+     and handoffs re-derived, and where it contradicts § Global
+     Invariants the answering REPLAN is posted on receipt; a shared child's other listing feature
      adds or changes a § Global Invariants entry that conflicts with
      one here → the feature whose invariant is newer re-plans; a
      serving capstone descoped → whether this feature
@@ -380,6 +387,7 @@ flowchart TD
 - [ ] Every expected value the integration evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
 - [ ] Every capstone in `serves_capstones` notified with a `STATUS: landed` comment [row: Mirrors]
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A) [row: Roster]
+- [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
 - [ ] Every cited evidence document and permalink resolves on the default branch at close [row: Links]
 - [ ] Every artifact named above exists at `evidence_commit` or is created by its named builder — this list says which (task rule 12) [row: Paths]
@@ -393,7 +401,7 @@ flowchart TD
      Preconditions for starting, not completion criteria. Record the
      outcome in a `STATUS: pickup` comment here (not mirrored). -->
 
-- [ ] Every `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran and those gates are ticked
+- [ ] Every `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN links its landing comment, or its disposition is recorded; `planned_tasks` is empty
 - [ ] Every mirrored `AMENDED:` or `WAIVED:` from a child read; roster rows and handoffs re-derived by REPLAN where they changed
 - [ ] Every child's landing comment checked for contract deviations; each deviation reconciled in § Feature-Level Interface & Data Contract by REPLAN
@@ -446,7 +454,7 @@ flowchart TD
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v2, composition tier. How safely this feature can be handed to an
+  ADR-1 v3, composition tier. How safely this feature can be handed to an
   automated executor, and what maintenance liability delegating it as-is
   would create. NOT a rating of how good, important or urgent the work is.
   SCORE THIS FEATURE'S OWN DELIVERABLE — its integration evidence and its
@@ -477,8 +485,9 @@ flowchart TD
       named artifact caps this at 3.
 
   OS  ORACLE STRENGTH — the check that would actually gate the merge.
-      5 exact comparison against a pre-existing expected artifact spanning
-        children; an algebraic property across the composed boundary; or a
+      5 exact comparison against an expected artifact spanning children that
+        pre-exists the implementation or is independently derived (task
+        rule 11); an algebraic property across the composed boundary; or a
         differential check against an independent implementation
       4 behavioural assertions over enumerated cases including the named
         failure cases; or a compiler, type or analysis gate THIS CHANGE
@@ -629,6 +638,12 @@ flowchart TD
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
+  Where the RAW band is C or D while SC>=4, OS>=4 and DA>=4, the low band is
+  driven by blast radius, reversibility, horizon, precedent or footprint,
+  not by the specification: SPECIFY-FIRST and SPLIT presuppose that SC or
+  OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
+  the checkpoint (the review of the published surface, the format
+  document, the flag's help text, the release note).
     A  DELEGATE                    automated end to end
     B  DELEGATE-WITH-CHECKPOINT    one named human approval first
     C  SPECIFY-FIRST or SPLIT      supply a closed spec, pre-committed
@@ -679,7 +694,7 @@ flowchart TD
 -->
 
 ```yaml
-adr: 2
+adr: 3
 sc:              # 0-5  specification closure
 os:              # 0-5  oracle strength, AFTER deductions
 os_deduction:    # 0-3  total deducted, 0 if none

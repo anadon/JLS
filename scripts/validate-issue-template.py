@@ -95,7 +95,7 @@ def validate(number, body, labels, forced_tier=None):
                    if find_subheading(headings, s) is None]
     if missing_sub:
         errors.append(
-            "missing § Interface & Data Contract subsection(s): "
+            "missing required subsection(s): "
             f"{'; '.join(missing_sub)} "
             "(each is required; use 'N/A — <reason>' if genuinely inapplicable)"
         )

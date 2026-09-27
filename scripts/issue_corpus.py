@@ -51,10 +51,12 @@ TEMPLATES = {
             "Pickup Checks", "Post-Implementation Validation",
             "Abstract", "Agentic Delegability (ADR-1)",
         ],
-        # Subsections of Interface & Data Contract, in dependency order.
+        # Required ### subsections: User impact (under Intent & Alignment)
+        # and the Interface & Data Contract subsections in dependency order.
         # Matched by exact normalised title or a suffix on it, never by
         # number: headings carry none since v8.
         "subheadings": [
+            "User impact",
             "External interfaces consumed", "Internal interfaces consumed",
             "Data consumed (structure)", "External interfaces modified",
             "Internal interfaces provided — public",
@@ -85,7 +87,7 @@ TEMPLATES = {
             "Pickup Checks", "Post-Integration Validation",
             "Abstract", "Agentic Delegability (ADR-1)",
         ],
-        "subheadings": [],
+        "subheadings": ["User impact"],
     },
     "capstone": {
         "version": "capstone v5",
@@ -105,7 +107,7 @@ TEMPLATES = {
             "Pickup Checks", "Post-Acceptance Validation",
             "Abstract", "Agentic Delegability (ADR-1)",
         ],
-        "subheadings": [],
+        "subheadings": ["User impact"],
     },
 }
 

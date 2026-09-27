@@ -45,7 +45,9 @@ def task_body(sec1="Background prose.", sec2="Steady behavior observed.",
     lines = []
     for h in TEMPLATES["task"]["headings"]:
         lines.append(f"## {h}\n")
-        if h == "Status & Dependencies":
+        if h == "Intent & Alignment":
+            lines.append("Intent prose.\n### User impact\nStudents.\n")
+        elif h == "Status & Dependencies":
             lines.append(mb)
         elif h == "Background & Prior Work":
             lines.append(sec1 + "\n")
@@ -56,6 +58,8 @@ def task_body(sec1="Background prose.", sec2="Steady behavior observed.",
         elif h == "Interface & Data Contract":
             lines.append("Contract overview.\n")
             for s in TEMPLATES["task"]["subheadings"]:
+                if s == "User impact":
+                    continue            # lives under Intent & Alignment
                 content = sec710 if s == "Data transformations" \
                     else "N/A — not exercised by this task."
                 lines.append(f"### {s}\n{content}\n")

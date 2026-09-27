@@ -79,21 +79,37 @@ labels: ["tier:feature"]
     task tier                            | this tier
     -------------------------------------|--------------------------------
     `AMENDED:`                           | `REPLAN:`
-    `HANDOFF: split` / `HANDOFF: re-tier`| a REPLAN plus a new issue (at
-                                         |   this tier / at the new tier);
-                                         |   that REPLAN carries the ledger,
-                                         |   gives every roster entry the
-                                         |   new issue cannot hold its
-                                         |   § Re-planning Protocol
-                                         |   disposition, and is the
-                                         |   close-out record (rule 10)
+    `HANDOFF: split`                     | a REPLAN plus a new issue at
+                                         |   this tier; the REPLAN carries
+                                         |   the ledger moving each item to
+                                         |   it and names the sections
+                                         |   changed and re-read (task
+                                         |   rule 14)
+    `HANDOFF: re-tier`                   | a REPLAN plus a new issue at the
+                                         |   new tier; that REPLAN carries
+                                         |   the ledger, gives every roster
+                                         |   entry the new issue cannot
+                                         |   hold its § Re-planning
+                                         |   Protocol disposition, and is
+                                         |   the close-out record (task
+                                         |   rule 10)
     `HANDOFF: transfer`                  | unchanged — the integration
                                          |   work changing hands
     listing feature (`requires_tasks`)   | serving capstone
                                          |   (`requires_features`;
                                          |   `serves_capstones` mirrors it)
+    a listing feature's § Global         | a serving capstone's § Cross-
+      Invariants entry, or a handoff it  |   Feature Integration Risks
+      assigns to this task               |   mitigation or § System-Level
+                                         |   Acceptance Criteria artifact
+                                         |   assigned to this feature
+    disposition freed / re-homed /       | as the feature § Re-planning
+      closed                             |   Protocol says; at the capstone
+                                         |   tier released / re-parented
     § Interface & Data Contract          | § Feature-Level Interface & Data
                                          |   Contract
+    § Scope Boundary                     | § Capability Statement & Scope
+                                         |   Boundary
     § Method / Experimental Design step  | integration step of § Integration
                                          |   Criteria & Evidence Plan
     § Post-Implementation Validation     | § Post-Integration Validation
@@ -118,7 +134,9 @@ labels: ["tier:feature"]
      this tier also covers: flipping a roster Status cell; refreshing
      `roster_delegable` from the children's current blocks, citing the
      comment that re-scored each; regenerating the mermaid graph from
-     the machine block; and resolving a `planned_tasks` scope to its
+     the machine block; adding or removing a `serves_capstones` entry
+     that mirrors a capstone's authoritative `requires_features`, citing
+     it; and resolving a `planned_tasks` scope to its
      number when the filed child's body satisfies every gate clause here
      that reads it — the resolver posts `STATUS: progress — resolved
      "<scope>" to #T` here, saying the cited sections were read;
@@ -127,9 +145,11 @@ labels: ["tier:feature"]
      that issue's block and posts the REPLAN or AMENDED there. A REPLAN
      that drops a child from `requires_tasks`, or changes a § Global
      Invariants entry or a handoff assigned to a filed child, is also
-     posted, led by this number, on each such OPEN child, which answers
-     per task rule 9 (a closed child receives it as a notice at most;
-     the REPLAN cites its close-out comment as the disposition).
+     posted, led by this number, on each OPEN child the change binds —
+     the dropped child, both parties to the handoff, every roster child
+     for an invariant — which answers per task rule 9 (a closed child
+     receives it as a notice at most; the REPLAN cites its close-out
+     comment as the disposition).
      Dispositions for dropped or orphaned scope are those of
      § Re-planning Protocol.
   D. State lives in comments, not checkboxes. Children mirror their
@@ -143,8 +163,10 @@ labels: ["tier:feature"]
      or provided surface § Feature-Level Interface & Data Contract does
      not, is a re-plan request answered ON RECEIPT by a REPLAN here, not
      deferred to pickup; so is a serving capstone's REPLAN posted here
-     that assigns this feature an artifact, risk mitigation, ordering
-     edge or re-homed scope (rule G(a)). A mirrored comment that changes
+     that assigns this feature an artifact, risk mitigation or re-homed
+     scope (the last under rule G(a)); an ordering edge is instead added
+     on this block by the REPLAN posted here (rule C). A mirrored comment
+     that changes
      nothing cited here needs no answer. A fresh agent reconstructs
      execution state from the machine block plus the prefixed comments;
      checkbox state is a convenience rendering, never evidence.
@@ -368,12 +390,14 @@ flowchart TD
 
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED → which siblings' premises are affected and who
-     re-plans; a child split or transferred → as rule C says; a contract
+     re-plans; a child split → the REPLAN task rule 9 requires of every
+     listing feature (successors in the roster, handoffs moved, citing
+     the HANDOFF); a child transferred → no plan change; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; an integration criterion fails with every spanning
      child landed → the criterion's named next move (a REPLAN adding the
      fix child, or `REFUTED:` as § Integration Criteria & Evidence Plan
-     says); a serving capstone's REPLAN assigning this feature an edge,
+     says); a serving capstone's REPLAN assigning this feature an
      artifact, risk mitigation or re-homed scope → as rule D says (a
      REPLAN widening § Capability Statement & Scope Boundary and the
      roster, or one disclaiming it, after which the capstone re-owns the
@@ -390,7 +414,9 @@ flowchart TD
      child's answering AMENDED restates its § Intent & Alignment to a
      standing rule, a format document or another open feature, or
      records that none can be cited and closes under task rule 10), or
-     closed. Because a task may be shared, dropping it from THIS roster
+     closed; a planned scope is moved to a named open feature's
+     `planned_tasks`, or dropped with the rule B sufficiency argument
+     re-derived. Because a task may be shared, dropping it from THIS roster
      does not orphan it if another roster still lists it — check before
      assuming a disposition is needed. Closing this feature with scope
      UNMET while a serving capstone still needs it → each unmet scope
@@ -460,9 +486,9 @@ flowchart TD
      unblocks them; only those steps wait. -->
 
 - [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
-- [ ] Every own `REPLAN:` comment read; each names the sections changed and re-read, and the body matches their fold in stream order; where `review_clean` is `false`, the finding at `review_evidence` is answered before integration begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
+- [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before integration begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered by REPLAN where anything cited changed (rule D)
-- [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, or its disposition is recorded; `planned_tasks` is empty
+- [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, and no later `AMENDED:` notice on the child qualifies what it landed, or its disposition is recorded; `planned_tasks` is empty
 - [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (mirrored here, or on the child for one posted before this roster listed it), and every `REPLAN:` another listing feature posted on a shared child; each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Global Invariants and § Feature-Level Interface & Data Contract re-derived by REPLAN where they changed
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)
@@ -753,7 +779,7 @@ flowchart TD
   A low band is a routing decision, not a criticism. Issues can be excellent
   work and band F because closing them needs a person or a device.
 
-  REVIEW GATE — THE TERMINAL GATE OF RULE 14. The two boxes below cover
+  REVIEW GATE — THE TERMINAL GATE OF TASK RULE 14. The two boxes below cover
   the ENTIRE body, § Abstract included: an issue with both ticked has been
   read adversarially and by a peer, end to end, and neither read left
   anything substantial outstanding. The section gates above record that

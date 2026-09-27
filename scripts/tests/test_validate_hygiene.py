@@ -131,7 +131,6 @@ def main():
     has(101, "H01", "error")     # FEAT- prefix on a task
     has(104, "H01", "warn")      # no prefix at all
     has(101, "H04", "error")     # bug without command+output block in §2
-    has(102, "H04", "info")      # enhancement pasting an observed failure
     has(101, "H09", "error")     # zero DoD checkboxes
     has(102, "H09", "warn")      # ticked box, open issue, no evidence
     has(101, "H11", "warn")      # bare N/A in §12

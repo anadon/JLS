@@ -333,10 +333,8 @@ def h04(ctx):
                        "label `bug` but § Observations carries no fenced "
                        "command+output block (template rule 3)",
                        fix_class="body"))
-        elif "enhancement" in labels and has_block:
-            out.append(finding(n, "H04", "info",
-                       "possible bug mislabel: `enhancement` but § Observations pastes "
-                       "an observed failure"))
+        # An `enhancement` that pastes an observed failure is what rule 3
+        # requires of every improvement; it is not a mislabel signal.
     return out
 
 
@@ -500,23 +498,37 @@ def h07(ctx):
                 # have been mirrored and are exempt.
                 par_created = (ctx.corpus.issues[par].raw or {}).get(
                     "created_at") or ""
-                if par_created and all(
-                        (c.get("created_at") or "") < par_created
-                        for c in ctx.comments(n)
-                        if (c.get("body") or "").lstrip().startswith(pref)
-                        and received_from(c.get("body"), n) is None):
+                own = [c for c in ctx.comments(n)
+                       if (c.get("body") or "").lstrip().startswith(pref)
+                       and not re.match(r"STATUS:\s*(pickup|progress)\b",
+                                        (c.get("body") or "").lstrip())
+                       and received_from(c.get("body"), n) is None]
+                # Comments older than the parent could not have been
+                # mirrored (rule D: linked from the roster row instead).
+                if par_created:
+                    own = [c for c in own
+                           if (c.get("created_at") or "") >= par_created]
+                if not own:
                     continue
-                def stands_in(pb):
-                    pb = (pb or "").lstrip()
-                    if pb.startswith(pref) and re.search(rf"#{n}\b", pb):
-                        return True
-                    return bool(pb.startswith("REPLAN:")
-                                and re.search(rf"#{n}\b", pb)
+                pcs = ctx.comments(par)
+
+                def covered(child_c):
+                    ct = child_c.get("created_at") or ""
+                    for pc in pcs:
+                        pb = (pc.get("body") or "").lstrip()
+                        if pb.startswith(pref) and re.search(rf"#{n}\b", pb):
+                            return True
+                        # An adopting REPLAN links the child's EARLIER
+                        # comments (rule D): it stands in only for those.
+                        if pb.startswith("REPLAN:") \
+                                and re.search(rf"#{n}\b", pb) \
+                                and (pc.get("created_at") or "") >= ct \
                                 and ("#issuecomment-" in pb
                                      or (pref == "STATUS:"
-                                         and "STATUS: landed" in pb)))
-                mirrored = any(stands_in(pc.get("body"))
-                               for pc in ctx.comments(par))
+                                         and "STATUS: landed" in pb)):
+                            return True
+                    return False
+                mirrored = all(covered(c) for c in own)
                 if not mirrored:
                     out.append(finding(n, "H07", "warn",
                                f"{pref} comment not mirrored on parent "

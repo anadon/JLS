@@ -75,7 +75,9 @@ labels: ["tier:capstone"]
   body, plan changes REPLAN-logged, gates reset and re-run as task
   rule 14 says with the REPLAN comment naming the gates re-run,
   bookkeeping exempt as rule C's full list says — among others ticking
-  a gate or review box, mirror `blocks` entries citing the
+  a gate or review box, filling a check-sheet's evidence and result
+  cells with evidence recorded in or linked from a comment here, mirror
+  `blocks` entries citing the
   counterpart's comment, re-pinning evidence_commit (bookkeeping only
   when every cited line re-derives at the new commit, otherwise part of
   the REPLAN), flipping a roster
@@ -98,14 +100,17 @@ labels: ["tier:capstone"]
   Sufficiency); THIS capstone
   mirrors every prefixed comment of its own except
   `STATUS: pickup`/`progress`, led by this number, on every capstone
-  whose `requires_capstones` lists it (roster search — there is no
+  whose `requires_capstones` lists it and is open (roster search — there is no
   serves field at this tier), and posts a REPLAN that removes an entry
   from `requires_features` or `requires_capstones`, led by this number,
   on the removed issue as well, and a REPLAN that adds or changes an
   artifact or risk mitigation § System-Level Acceptance Criteria or
   § Cross-Feature Integration Risks assigns to a required feature, or
   re-homes scope into it under rule G(a), led by this number, on that
-  feature, which answers per its rule C; a
+  feature, which answers per its rule C — such a REPLAN leaves Gate —
+  Risks, acceptance & edges and every later gate pending on #feature,
+  named as pending in the REPLAN, ticked as bookkeeping citing the
+  answering REPLAN or `STATUS: progress`; a
   mirrored trigger whose reassessment finds nothing
   cited here changed, or whose comment this capstone's own REPLAN
   requested, is answered by a `STATUS: progress` acknowledgement
@@ -335,7 +340,12 @@ flowchart TD
      § Cross-Feature Integration Risks and § System-Level Acceptance
      Criteria (a required feature's mirrored REPLAN is the trigger); a
      sub-capstone's mirrored REPLAN → re-derive § Required Feature Set &
-     Sufficiency; the outcome itself is re-scoped → REPLAN with the old and
+     Sufficiency; this capstone re-tiered (a REPLAN plus a new issue at
+     the new tier) → each required entry the new tier cannot hold is
+     moved to the new issue's roster where its tier fits, re-parented to
+     a named open capstone, or released with the rule D notice (it
+     re-checks its beneficiary), and scope the outcome still needs goes
+     through rule G; the outcome itself is re-scoped → REPLAN with the old and
      new § Outcome Statement both quoted, then § Intent & Alignment
      re-checked; a required feature's mirrored WAIVED → the waived
      obligation checked against § System-Level Acceptance Criteria, and
@@ -387,7 +397,7 @@ flowchart TD
 - [ ] Every risk in § Cross-Feature Integration Risks is mitigated as stated, checked at system scale [rows: Risk]
 - [ ] Every expected value the acceptance evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A) [row: Roster]
-- [ ] Landing reported with a `STATUS: landed` comment on every capstone whose `requires_capstones` lists this one (rule D) [row: Mirrors]
+- [ ] Landing reported with a `STATUS: landed` comment on every OPEN capstone whose `requires_capstones` lists this one (rule D) [row: Mirrors]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
 - [ ] Every cited evidence document and permalink resolves on the default branch at close [row: Links]
@@ -397,13 +407,16 @@ flowchart TD
 
 ## Pickup Checks
 
-<!-- Run once per executor by whoever begins (or, after a
+<!-- The rows are fixed and never deleted: a row whose referent is N/A
+     or empty is recorded "none" in the pickup comment and neither
+     passes nor fails. Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the acceptance pass (task rule 6,
      applied at this tier). Preconditions for starting, not completion
      criteria. Record the outcome in a `STATUS: pickup` comment here
      (not mirrored). -->
 
-- [ ] Every own `REPLAN:` comment read; each names its predecessor and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the one before it in the stream is re-folded first
+- [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed)
+- [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), or its disposition is recorded; `planned_features` is empty
 - [ ] Every mirrored `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read; § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; a parent's REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
@@ -420,7 +433,9 @@ flowchart TD
 <!-- Run at close, at one named commit. One row per item; rows are
      enumerated AT FILING (a row per walk-through step, per acceptance
      criterion, per risk, per required entry, per open question, per
-     added completion criterion) with evidence cells empty. Evidence is a transcript, a command with its
+     added completion criterion) with evidence cells empty; the rows of
+     pre-filled criteria marked N/A are deleted at filing unless another
+     criterion names the row. Evidence is a transcript, a command with its
      output, a test name at the commit, a permalink, or a comment link —
      never "done". -->
 
@@ -433,7 +448,7 @@ flowchart TD
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the system and deducted | | |
 | Roster | machine block, table and mermaid agree; `planned_features` empty | | |
-| Mirrors | `STATUS: landed` posted on every capstone whose `requires_capstones` lists this one | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment | | |
@@ -441,7 +456,7 @@ flowchart TD
 
 - [ ] Adversarial review of the delivered system against this issue found no substantial finding
 
-- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit` or has a named builder (task rule 12); every pre-filled criterion's bracketed rows exist and every added criterion, walk-through step, acceptance criterion, risk, required entry and open question has a validation row; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Required Feature Set & Sufficiency. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit` or has a named builder (task rule 12); every pre-filled criterion not marked N/A has its bracketed rows (a per-item row family with zero items satisfies its bracket) and every added criterion, walk-through step, acceptance criterion, risk, required entry and open question has a validation row, and no row remains for an N/A pre-filled criterion that no other criterion names; every pickup check refers to something the body contains or marks N/A; nothing in the sheets contradicts § Required Feature Set & Sufficiency. Adversarial re-read of everything above found no substantial finding.
 
 ## Abstract
 

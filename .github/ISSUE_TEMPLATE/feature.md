@@ -110,7 +110,9 @@ labels: ["tier:feature"]
      comment names the gates re-run. Bookkeeping is exempt: flipping a
      roster Status cell; refreshing `roster_delegable` from the
      children's current blocks, citing the child's AMENDED or HANDOFF;
-     ticking a gate or review box (the tick is the record); ticking a DoD or check-sheet box whose backing evidence is
+     ticking a gate or review box (the tick is the record); filling a
+     check-sheet's evidence and result cells with evidence recorded in,
+     or linked from, a comment on this issue; ticking a DoD or check-sheet box whose backing evidence is
      already recorded in a comment on this issue that quotes the box (a
      PR link inside that comment is the usual evidence); re-pinning
      evidence_commit, bookkeeping only when every cited line re-derives
@@ -143,14 +145,19 @@ labels: ["tier:feature"]
      SUPERSEDED, HANDOFF: re-tier) receives it as a notice at most and
      owes no answer — the REPLAN cites its close-out comment as the
      disposition. A REPLAN that changes a handoff or § Global Invariants
-     entry assigned to an open child leaves Gate — Decomposition,
-     Contract & Integration and every later gate pending on that child's
-     answer; the REPLAN names them as pending on #child, and the tick is
-     bookkeeping citing the answering AMENDED or `STATUS: progress`.
-     Every REPLAN names the own prefixed comment it was folded onto (or
-     "first"); the writer re-reads the comment stream immediately before
-     the body edit and folds in any prefixed comment newer than its
-     read. A mirrored `HANDOFF: split` whose successor this
+     entry assigned to an open child, or answers an open child's re-plan
+     request without changing them (the child then re-conforms by
+     AMENDED), leaves the gate that follows the changed section (Gate —
+     Decomposition, Contract & Integration for a handoff, Gate —
+     Invariants & consequences for an invariant) and every later gate
+     pending on that child's answer; the REPLAN names them as pending on
+     #child, and the tick is bookkeeping citing the answering AMENDED or
+     `STATUS: progress`. Every REPLAN names its predecessor — the latest
+     own REPLAN, or "first" — and the writer re-reads the comment stream
+     immediately before the body edit and folds in any REPLAN newer than
+     its read. A contract deviation discovered after a child closed is
+     recorded by an AMENDED on that closed child posted by the finder
+     (task rule 9) and answered here by REPLAN. A mirrored `HANDOFF: split` whose successor this
      feature's filing already planned is likewise one this feature
      requested. A mirrored trigger
      whose reassessment finds nothing cited here changed, or whose
@@ -182,7 +189,8 @@ labels: ["tier:feature"]
      surface § Feature-Level Interface & Data Contract does not, is a
      re-plan request answered ON RECEIPT by a REPLAN here, not deferred
      to pickup; so is a serving capstone's REPLAN posted here that
-     assigns this feature an artifact or risk mitigation. A fresh agent reconstructs execution state from
+     assigns this feature an artifact, risk mitigation, ordering edge or
+     re-homed scope (rule G(a)). A fresh agent reconstructs execution state from
      the machine block plus the prefixed comments; checkbox state is a
      convenience rendering, never evidence.
 
@@ -332,6 +340,13 @@ flowchart TD
      implementation it certifies (task rule 11 — the ADR OS deduction
      reads this).
 
+     EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE: "if not-Y after all
+     spanning children landed → fix child by REPLAN (scope stated) |
+     `REFUTED:` — the premise of § Capability Statement & Scope Boundary
+     fails". A feature's `REFUTED:` is that premise failure, with the
+     failing evidence in the comment; the failing validation row is its
+     record.
+
      ANNOTATE OWNERSHIP PER CRITERION. A blanket sentence ("none of
      these is covered by any single child alone") is not checkable and
      is forbidden; give every criterion exactly one of:
@@ -349,7 +364,7 @@ flowchart TD
      proof the criterion is not a span; validator check G22 reports
      that case. -->
 
-- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub; a one-way handoff whose consumer must not wait may be stubbed the same way, and § Sequencing & Parallelism then lists the pair as independent with a third child that retires the stub, ordered after both provider and consumer); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub; a one-way handoff whose consumer must not wait may be stubbed the same way, and § Sequencing & Parallelism then lists the pair as independent with a third child that retires the stub, ordered after both provider and consumer); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and names its next move on failure, and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
 
 ## Global Invariants
 
@@ -399,7 +414,12 @@ flowchart TD
      the successor's number as bookkeeping; a transfer HANDOFF is
      acknowledged; a contract
      deviation → § Feature-Level Interface & Data Contract
-     reconciliation; a serving capstone's REPLAN assigning this feature
+     reconciliation; an integration criterion fails with every spanning
+     child landed → the criterion's named next move: a REPLAN adding the
+     fix child, or `REFUTED:` closing this feature with the evidence,
+     mirrored per rule D; a serving capstone's REPLAN assigning this feature
+     an ordering edge → REPLAN adding the `blocked_by` edge and Gate —
+     Sequencing & edges re-run; a serving capstone's REPLAN assigning
      a new artifact, risk mitigation or re-homed scope (rule G) → Gate
      — Capability re-run: a
      REPLAN widening § Capability Statement & Scope Boundary and the
@@ -471,7 +491,7 @@ flowchart TD
 - [ ] The integrated result satisfies § Feature-Level Interface & Data Contract; deviations recorded by REPLAN, none silently absorbed [rows: Contract]
 - [ ] § Global Invariants hold at the final commit, re-verified — not inferred from children's green runs [rows: Invariant]
 - [ ] Every expected value the integration evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
-- [ ] Every capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) [row: Mirrors]
+- [ ] Every OPEN capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) [row: Mirrors]
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A) [row: Roster]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
@@ -482,13 +502,16 @@ flowchart TD
 
 ## Pickup Checks
 
-<!-- Run once per executor by whoever begins (or, after a
+<!-- The rows are fixed and never deleted: a row whose referent is N/A
+     or empty is recorded "none" in the pickup comment and neither
+     passes nor fails. Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the integration work of § Integration
      Criteria & Evidence Plan (task rule 6, applied at this tier).
      Preconditions for starting, not completion criteria. Record the
      outcome in a `STATUS: pickup` comment here (not mirrored). -->
 
-- [ ] Every own `REPLAN:` comment read; each names its predecessor and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the one before it in the stream is re-folded first
+- [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed)
+- [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered (rule D)
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN or its roster row links its landing comment, or its disposition is recorded; `planned_tasks` is empty
 - [ ] Every mirrored `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (or, for a comment posted before this roster listed the child, read on the child or from the adopting REPLAN's links), every `REPLAN:` another listing feature posted on a shared child, and each child's `STATUS: progress` answering an own REPLAN read on the child — a REPLAN posted on an OPEN child with no answer is chased before integration begins; roster rows, handoffs and § Global Invariants re-derived by REPLAN where they changed
@@ -506,7 +529,9 @@ flowchart TD
 <!-- Run at close against the integrated result. One row per item; rows
      are enumerated AT FILING (a row per integration criterion, per
      contract item, per invariant, per child, per open question, per
-     added completion criterion) with evidence cells empty. Evidence is a command with its output, a test
+     added completion criterion) with evidence cells empty; the rows of
+     pre-filled criteria marked N/A are deleted at filing unless another
+     criterion names the row. Evidence is a command with its output, a test
      name at a commit, a permalink, or a comment link — never "done". -->
 
 | Item | Check | Evidence | Result |
@@ -523,7 +548,7 @@ flowchart TD
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation and deducted | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
-| Mirrors | `STATUS: landed` posted on every capstone whose `requires_features` lists this feature | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment | | |
@@ -531,7 +556,7 @@ flowchart TD
 
 - [ ] Adversarial review of the integrated result against this issue found no substantial finding
 
-- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit` or has a named builder (task rule 12); every pre-filled criterion's bracketed rows exist and every added criterion, integration criterion, contract item, invariant, child and open question has a validation row; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Sequencing & Parallelism or § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit` or has a named builder (task rule 12); every pre-filled criterion not marked N/A has its bracketed rows (a per-item row family with zero items satisfies its bracket) and every added criterion, integration criterion, contract item, invariant, child and open question has a validation row, and no row remains for an N/A pre-filled criterion that no other criterion names; every pickup check refers to something the body contains or marks N/A; nothing in the sheets contradicts § Sequencing & Parallelism or § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Abstract
 

@@ -18,8 +18,9 @@ labels: ["tier:task"]
      carry the exact command that produced them and its output.
   2. No padding. A section that does not apply is "N/A — <one-line
      reason>", decided at filing time. A criterion discovered to be wrong
-     during execution gets an issue comment with evidence — do not work
-     around it and do not silently edit it.
+     during execution gets an AMENDED with evidence that corrects it
+     (rule 9) — a bare comment records nothing; do not work around it
+     and do not silently edit it.
   3. Predictions are observable: do X, observe Y. For defects and
      improvements, at least one prediction must fail at the named commit,
      and its failure must be OBSERVED before filing — run it and paste
@@ -50,8 +51,8 @@ labels: ["tier:task"]
      question is still open) in an AMENDED that
      re-derives or retires the observation (Dropped/Retired ledger),
      re-anchors any hypothesis that named only it, and re-runs Gate —
-     Observations, Background & Related Work onward plus the pickup rows
-     touched. Re-derive any drifted line numbers before trusting them; a
+     Intent & Status onward (evidence_commit is re-pinned there, rule 14)
+     plus the pickup rows touched. Re-derive any drifted line numbers before trusting them; a
      stale citation is not evidence.
   7. Labels are not applied automatically for API-filed issues: set
      `bug` or `enhancement` explicitly, matching the corpus, plus the
@@ -133,7 +134,7 @@ labels: ["tier:task"]
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
      `STATUS: landed`. Post each such comment on THIS issue and mirror
      the same comment, led by this issue's number (`STATUS: landed #N
-     …`), on every feature whose requires_tasks roster lists this task
+     …`), on every OPEN feature whose requires_tasks roster lists this task
      (there may be several, or none) — except `STATUS: pickup` and
      `STATUS: progress`, which stay here. An AMENDED edit resets and
      re-runs gates as rule 14 says, and the AMENDED comment names the
@@ -147,9 +148,8 @@ labels: ["tier:task"]
      contradiction stays unticked until that feature's REPLAN answers.
      A `REPLAN:` a listing feature posts here, led by its number, is
      answered on receipt (at pickup if none has happened yet) — unless
-     this issue has closed, when the REPLAN is a notice, no answer is
-     owed, and whoever posts it ticks any gate here left pending on it
-     as bookkeeping citing the REPLAN: by an
+     this issue has closed, when the REPLAN is a notice and no answer is
+     owed: by an
      AMENDED where any section of this body must change (typically
      § Interface & Data Contract, the machine block or § Intent &
      Alignment — a drop with the disposition "freed" restates the
@@ -161,18 +161,27 @@ labels: ["tier:task"]
      re-scores § Agentic Delegability and `action` changes, the comment
      states the new action and execution follows it from that point:
      SPLIT → the split-HANDOFF order; SPECIFY-FIRST → stop after the
-     AMENDED, which names the closed spec or oracle owed and who supplies
-     it (no marker change — SC or OS drove it); HUMAN-LED → stop, with
-     the decision marked BLOCKING; HUMAN-ONLY or AGENT-ASSIST-ONLY → the
-     evidence steps are named blocked and handed to a holder as the
-     materials row of § Pickup Checks does, every other step proceeds;
+     AMENDED, which names what is owed and who supplies it — the closed
+     spec or oracle (SC or OS drove it), or the marker and preference for
+     the open decision (DA drove it; then follow that marker), or, where
+     ED drove it, the platform holder as the materials row of § Pickup
+     Checks does, every other step proceeding; HUMAN-LED → research and
+     harness steps proceed, the deciding step is marked
+     `BLOCKING: <who decides>` and waits; HUMAN-ONLY → the evidence steps
+     are named blocked and handed to a holder as the materials row does,
+     every other step proceeds; AGENT-ASSIST-ONLY → stop after the
+     AMENDED, which names the spec, oracle or decomposition owed;
      DELEGATE-WITH-CHECKPOINT → the named checkpoint precedes the next
      step or the merge; DELEGATE → nothing. An AMENDED that adds a module
      or file that a sibling named in § Related Work owns, or that § Scope
      Boundary lists as out, resets from Gate — Observations, Background &
      Related Work (rule 14), since sibling scopes are read there. An own comment is never led by another issue's number:
      a number in the first position marks a mirror, or a notice posted
-     on another issue. When an
+     on another issue. Every AMENDED or HANDOFF names the own prefixed
+     comment it was folded onto (or "first"); the writer re-reads the
+     comment stream immediately before the body edit and folds in any
+     prefixed comment newer than its read, since body edits are
+     last-write-wins and the stream is the arbiter. When an
      edit REMOVES or NARROWS any claim, observation, prediction,
      criterion, edge, or scope item, the AMENDED comment must carry a
      "Dropped/Retired" ledger enumerating each removed item with its
@@ -187,7 +196,10 @@ labels: ["tier:task"]
      citations — bookkeeping only when every cited line re-derives at
      the new commit saying what it said and every observation's command
      reproduces its output there, otherwise part of the AMENDED that
-     fixes the observation; adding or removing a `blocks` entry that mirrors a
+     fixes the observation; adding to § Interface & Data Contract the
+     citation of the listing feature's REPLAN that answered this task's
+     re-plan request, together with ticking the gate left pending on it;
+     adding or removing a `blocks` entry that mirrors a
      counterpart's authoritative `blocked_by`, citing the counterpart
      (its number, and the AMENDED or REPLAN comment where one created
      the edge); and replacing an
@@ -310,6 +322,16 @@ labels: ["tier:task"]
   investigation's own premise failing. The apparatus that produces the
   decision evidence lands at a named path, or is pinned by a PR that
   retains its commits, so the evidence can be re-run at that commit.
+
+  Refactor tasks (behaviour-preserving changes) use this template with
+  the preservation claim as the hypothesis, naming the call-site
+  observations it covers; the rule 3 failure is the structural check
+  (compilation, an analysis gate, a signature or call-graph assertion)
+  that fails at `evidence_commit`. § Agentic Delegability's OS axis
+  scores the preservation check: a differential or round-trip over the
+  changed surface is 5; the existing suite is 4 only when § Data
+  Collection & Analysis names the tests exercising every changed call
+  site; otherwise the structural check's own shape applies.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -598,14 +620,16 @@ related: []             # reference only — never blocking, never ownership.
      still load, save output stays byte-identical (or the version bump is
      documented), in-tree callers still compile, round-trips still hold.
      State each compatibility claim so a test can pin it. Every surface
-     in § External interfaces modified and every datum in § Data durably
-     tracked has a claim here. For a durable format or command surface,
+     in § External interfaces modified, every datum in § Data durably
+     tracked, and every surface in § Internal interfaces provided —
+     public that already has callers at `evidence_commit` has a claim
+     here. For a durable format or command surface,
      also state what a consumer at the PREVIOUS version does with the
      new output — refuses with a named message, ignores it, mis-loads —
      pinned by a test or by a recorded procedure naming the previous
      build's commit. -->
 
-- [ ] **Gate — Contract complete.** Every partial point flagged at the previous gate has an owner in § Failure modes & error handling; every durable datum names what is guaranteed uncorrupted on failure; every modified external surface and durable datum has a compatibility claim stated so a test can pin it, and every durable format or command surface states the previous version's behaviour on the new output; every compatibility claim that matters has a prediction in § Predictions & Falsification Criteria, or one was added; the contract as a whole is what § Hypothesis (falsifiable) implies — no more, no less; nothing in § Compatibility, versioning & migration contradicts the § Global Invariants of any feature whose `requires_tasks` lists this task or whose `planned_tasks` carries this scope. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Contract complete.** Every partial point flagged at the previous gate has an owner in § Failure modes & error handling; every durable datum names what is guaranteed uncorrupted on failure; every modified external surface, durable datum, and already-called public internal surface has a compatibility claim stated so a test can pin it, and every durable format or command surface states the previous version's behaviour on the new output; every compatibility claim that matters has a prediction in § Predictions & Falsification Criteria, or one was added; the contract as a whole is what § Hypothesis (falsifiable) implies — no more, no less; nothing in § Compatibility, versioning & migration contradicts the § Global Invariants of any feature whose `requires_tasks` lists this task or whose `planned_tasks` carries this scope. Adversarial re-read of everything above found no substantial finding.
 
 ## Scope Boundary
 
@@ -708,7 +732,7 @@ related: []             # reference only — never blocking, never ownership.
 
      Integrity rule: tests verify the work, they do not define it. If a
      criterion below turns out to be wrong or unsatisfiable, follow
-     rule 2 — comment with evidence, do not work around it. -->
+     rule 2 — an AMENDED with evidence, do not work around it. -->
 
 - [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit, and no falsification criterion fired unaddressed [rows: P/F]
 - [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded by an AMENDED of the deviating subsection before close (rule 9), never by a bare comment or silently absorbed [rows: Contract]
@@ -739,7 +763,7 @@ related: []             # reference only — never blocking, never ownership.
      comment recording the block, and only the steps it names as blocked
      wait. -->
 
-- [ ] Every `AMENDED:` or `HANDOFF:` comment read; the body matches the latest one
+- [ ] Every `AMENDED:` or `HANDOFF:` comment read; each names its predecessor and the body matches the fold of all of them in stream order — one whose named predecessor is not the one before it in the stream is re-folded first
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
@@ -760,7 +784,9 @@ related: []             # reference only — never blocking, never ownership.
      subsection not marked N/A, per threat, per open question, per added
      completion criterion) with the evidence cells empty, so the gate
      below can check that nothing above lacks a row; the pre-filled rows
-     of subsections marked "N/A — <reason>" are deleted at filing. Evidence is a command with
+     of subsections marked "N/A — <reason>", and of pre-filled criteria
+     marked N/A, are deleted at filing unless another criterion names
+     the row. Evidence is a command with
      its output, a test name at a commit, a permalink into the diff, or
      a comment link — never "done". A row that cannot be filled is a
      rule 2 comment, not a blank. -->
@@ -797,7 +823,7 @@ related: []             # reference only — never blocking, never ownership.
 
 - [ ] Adversarial review of the diff against this issue found no substantial finding
 
-- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design or by a task in `blocked_by`, and the criterion says which (rule 12); every pre-filled criterion's bracketed rows exist and every added criterion, P/F pair, contract subsection not marked N/A, threat and open question has a validation row, and no row remains for an N/A subsection; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design or by a task in `blocked_by`, and the criterion says which (rule 12); every pre-filled criterion not marked N/A has its bracketed rows and every added criterion, P/F pair, contract subsection not marked N/A, threat and open question has a validation row, and no row remains for an N/A subsection or an N/A pre-filled criterion that no other criterion names; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Abstract
 

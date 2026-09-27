@@ -493,14 +493,28 @@ def h07(ctx):
                 # comment in its REPLAN instead of carrying a STATUS mirror
                 # (feature rule D / capstone rule D): accept a REPLAN that
                 # names #n AND carries a comment link or the landing text.
+                # A parent that adopted #n by REPLAN links the child's
+                # earlier prefixed comments in that REPLAN (rule D), so a
+                # REPLAN naming #n with a comment link stands in for any
+                # prefix; comments older than the parent itself could not
+                # have been mirrored and are exempt.
+                par_created = (ctx.corpus.issues[par].raw or {}).get(
+                    "created_at") or ""
+                if par_created and all(
+                        (c.get("created_at") or "") < par_created
+                        for c in ctx.comments(n)
+                        if (c.get("body") or "").lstrip().startswith(pref)
+                        and received_from(c.get("body"), n) is None):
+                    continue
                 def stands_in(pb):
                     pb = (pb or "").lstrip()
                     if pb.startswith(pref) and re.search(rf"#{n}\b", pb):
                         return True
-                    return bool(pref == "STATUS:" and pb.startswith("REPLAN:")
+                    return bool(pb.startswith("REPLAN:")
                                 and re.search(rf"#{n}\b", pb)
                                 and ("#issuecomment-" in pb
-                                     or "STATUS: landed" in pb))
+                                     or (pref == "STATUS:"
+                                         and "STATUS: landed" in pb)))
                 mirrored = any(stands_in(pc.get("body"))
                                for pc in ctx.comments(par))
                 if not mirrored:

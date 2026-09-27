@@ -80,9 +80,10 @@ labels: ["tier:feature"]
   citing it; `HANDOFF: split` and `HANDOFF: re-tier` do not exist at
   this tier: a split is a REPLAN plus a new issue at this tier, a
   re-tier a REPLAN plus a new issue at the new tier — that REPLAN
-  carries the Dropped/Retired ledger moving every item to it and is the
-  close-out record (task rule 10 read with REPLAN in place of
-  `HANDOFF: re-tier`). Task rules 11–13 (oracle custody, artifact paths resolve
+  carries the Dropped/Retired ledger moving every item the new tier can
+  hold to it, gives every roster entry it cannot hold a disposition per
+  § Re-planning Protocol (posted per rule C), and is the close-out
+  record (task rule 10 read with REPLAN in place of `HANDOFF: re-tier`). Task rules 11–13 (oracle custody, artifact paths resolve
   at filing, marked open questions) apply to § Integration Criteria &
   Evidence Plan and § Open Questions & Decisions Needed. Task rules
   14–15 (dependency order with consistency gates; three check-sheets by
@@ -112,7 +113,8 @@ labels: ["tier:feature"]
      ticking a gate or review box (the tick is the record); ticking a DoD or check-sheet box whose backing evidence is
      already recorded in a comment on this issue that quotes the box (a
      PR link inside that comment is the usual evidence); re-pinning
-     evidence_commit; adding or removing a `blocks` or
+     evidence_commit, bookkeeping only when every cited line re-derives
+     at the new commit, otherwise part of the REPLAN; adding or removing a `blocks` or
      `serves_capstones` entry that mirrors a counterpart's authoritative
      edge, citing the counterpart (its number, and the REPLAN or
      AMENDED comment where one created the edge); resolving a planned_tasks scope to its
@@ -126,8 +128,9 @@ labels: ["tier:feature"]
      assigns it; any additional sibling interface makes the resolution
      a REPLAN that re-runs Gate — Decomposition, Contract & Integration
      and every later gate (if they do not agree, the edit is a REPLAN).
-     Every REPLAN is mirrored on every capstone in serves_capstones
-     (a capstone reads this feature's roster, contract, capability,
+     Every REPLAN is mirrored on every OPEN capstone whose
+     `requires_features` lists this feature (serves_capstones mirrors
+     that set; a capstone reads this feature's roster, contract, capability,
      invariants and integration criteria, so any of them changing is
      its trigger); a REPLAN that drops a child from `requires_tasks`,
      answers a child's re-plan request, or changes a § Global
@@ -137,10 +140,17 @@ labels: ["tier:feature"]
      here even after a drop, and acknowledged, since this REPLAN
      requested it) or otherwise a `STATUS: progress` naming the sections
      reassessed; a child that has already closed (landed, REFUTED,
-     SUPERSEDED, HANDOFF: re-tier) receives it as a notice at most, owes
-     no answer — the REPLAN cites its close-out comment as the
-     disposition — and whoever posts it ticks any gate there left
-     pending on this feature as bookkeeping citing the REPLAN. A mirrored `HANDOFF: split` whose successor this
+     SUPERSEDED, HANDOFF: re-tier) receives it as a notice at most and
+     owes no answer — the REPLAN cites its close-out comment as the
+     disposition. A REPLAN that changes a handoff or § Global Invariants
+     entry assigned to an open child leaves Gate — Decomposition,
+     Contract & Integration and every later gate pending on that child's
+     answer; the REPLAN names them as pending on #child, and the tick is
+     bookkeeping citing the answering AMENDED or `STATUS: progress`.
+     Every REPLAN names the own prefixed comment it was folded onto (or
+     "first"); the writer re-reads the comment stream immediately before
+     the body edit and folds in any prefixed comment newer than its
+     read. A mirrored `HANDOFF: split` whose successor this
      feature's filing already planned is likewise one this feature
      requested. A mirrored trigger
      whose reassessment finds nothing cited here changed, or whose
@@ -160,10 +170,11 @@ labels: ["tier:feature"]
      feature mirrors every prefixed comment of its own except
      `STATUS: pickup` and `STATUS: progress` — landing, refutation,
      supersession, waivers and every REPLAN — led by this number, on
-     every capstone whose `requires_features` lists this feature
+     every OPEN capstone whose `requires_features` lists this feature
      (serves_capstones mirrors that set; task rule 9 applies
-     unchanged). A roster that adopts an already-landed child by
-     REPLAN links the child's landing comment in that REPLAN, and a
+     unchanged). A roster that adopts a child by REPLAN links in that
+     REPLAN the child's prefixed comments posted before the adoption
+     (its landing comment, if landed), and a
      child listed at filing that landed before this feature existed has
      its landing comment linked from its § Decomposition & Rationale
      row, since no mirror was posted here. A child's mirrored AMENDED that contradicts
@@ -272,7 +283,7 @@ flowchart TD
      cite this section as the alignment target of their own § Intent &
      Alignment, so it must say what they will assume it says. -->
 
-- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact or risk mitigation a serving or planning capstone's § System-Level Acceptance Criteria or § Cross-Feature Integration Risks assigns to this feature is inside the boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact, risk mitigation or re-homed scope a serving or planning capstone's § System-Level Acceptance Criteria, § Cross-Feature Integration Risks or rule G assigns to this feature is inside the boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Decomposition & Rationale
 
@@ -376,7 +387,7 @@ flowchart TD
      the DAG walk (`blocks` and `serves_capstones` stay empty or
      mirrors-only). -->
 
-- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for children that landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -389,7 +400,8 @@ flowchart TD
      acknowledged; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; a serving capstone's REPLAN assigning this feature
-     a new artifact or risk mitigation → Gate — Capability re-run: a
+     a new artifact, risk mitigation or re-homed scope (rule G) → Gate
+     — Capability re-run: a
      REPLAN widening § Capability Statement & Scope Boundary and the
      roster, or one disclaiming it (the capstone then re-owns the
      criterion); a child re-tiered (`HANDOFF: re-tier`) → dropped by
@@ -459,7 +471,7 @@ flowchart TD
 - [ ] The integrated result satisfies § Feature-Level Interface & Data Contract; deviations recorded by REPLAN, none silently absorbed [rows: Contract]
 - [ ] § Global Invariants hold at the final commit, re-verified — not inferred from children's green runs [rows: Invariant]
 - [ ] Every expected value the integration evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
-- [ ] Every capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment (`serves_capstones` mirrors that set) [row: Mirrors]
+- [ ] Every capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) [row: Mirrors]
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A) [row: Roster]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
@@ -476,10 +488,10 @@ flowchart TD
      Preconditions for starting, not completion criteria. Record the
      outcome in a `STATUS: pickup` comment here (not mirrored). -->
 
-- [ ] Every own `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
+- [ ] Every own `REPLAN:` comment read; each names its predecessor and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the one before it in the stream is re-folded first
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered (rule D)
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN or its roster row links its landing comment, or its disposition is recorded; `planned_tasks` is empty
-- [ ] Every mirrored `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (or, for a child landed before this roster listed it, read on the child), every `REPLAN:` another listing feature posted on a shared child, and each child's `STATUS: progress` answering an own REPLAN read on the child — a REPLAN with no answer is chased before integration begins; roster rows, handoffs and § Global Invariants re-derived by REPLAN where they changed
+- [ ] Every mirrored `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (or, for a comment posted before this roster listed the child, read on the child or from the adopting REPLAN's links), every `REPLAN:` another listing feature posted on a shared child, and each child's `STATUS: progress` answering an own REPLAN read on the child — a REPLAN posted on an OPEN child with no answer is chased before integration begins; roster rows, handoffs and § Global Invariants re-derived by REPLAN where they changed
 - [ ] Every child's mirrored AMENDED checked for contract deviations (a deviation is recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; each reconciled in § Feature-Level Interface & Data Contract by REPLAN
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)

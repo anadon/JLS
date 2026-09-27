@@ -102,7 +102,8 @@ labels: ["tier:feature"]
      PR link inside that comment is the usual evidence); re-pinning
      evidence_commit; adding or removing a `blocks` or
      `serves_capstones` entry that mirrors a counterpart's authoritative
-     edge, citing the counterpart's comment; resolving a planned_tasks scope to its
+     edge, citing the counterpart (its number, and the REPLAN or
+     AMENDED comment where one created the edge); resolving a planned_tasks scope to its
      number, or replacing an "unfiled" alignment with its citation —
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
@@ -110,18 +111,26 @@ labels: ["tier:feature"]
      Every REPLAN is mirrored on every capstone in serves_capstones
      (a capstone reads this feature's roster, contract, capability,
      invariants and integration criteria, so any of them changing is
-     its trigger). If another agent
+     its trigger); a REPLAN that drops a child from `requires_tasks` is
+     also posted, led by this number, on that child. A mirrored trigger
+     whose reassessment finds nothing cited here changed, or whose
+     comment this feature's own REPLAN requested, is answered by a
+     `STATUS: progress` comment naming the sections reassessed — not a
+     REPLAN — and resets no gate. If another agent
      edited since you read, re-read and fold the newer body into your
      edit — the REPLAN comment stream is the arbiter of intent.
   D. State lives in comments, not checkboxes. Child tasks post
      `STATUS: landed`, `REFUTED:` (hypothesis failed, with evidence),
-     `HANDOFF:` (work split or transferred), `SUPERSEDED:` (already
-     shipped), `AMENDED:` and `WAIVED:` on their own issue AND mirror
-     the same comment here, led by the child's number (`STATUS: pickup`
-     and `STATUS: progress` stay on the child); this feature mirrors its
-     own landing, refutation, and every REPLAN as `STATUS: landed #N` /
-     `REFUTED: #N` / `REPLAN: #N` comments on every capstone in
-     serves_capstones. A roster that adopts an already-landed child by
+     `HANDOFF:` (the AMENDED of a split or transfer, task rule 9 — read
+     here as an AMENDED for gate and roster purposes), `SUPERSEDED:`
+     (already shipped), `AMENDED:` and `WAIVED:` on their own issue AND
+     mirror the same comment here, led by the child's number
+     (`STATUS: pickup` and `STATUS: progress` stay on the child); this
+     feature mirrors every prefixed comment of its own except
+     `STATUS: pickup` and `STATUS: progress` — landing, refutation,
+     supersession, waivers and every REPLAN — led by this number, on
+     every capstone in serves_capstones (task rule 9 applies
+     unchanged). A roster that adopts an already-landed child by
      REPLAN links the child's landing comment in that REPLAN, since no
      mirror was posted here. A child's mirrored AMENDED that contradicts
      § Global Invariants or a handoff is a re-plan request answered ON
@@ -144,7 +153,8 @@ labels: ["tier:feature"]
 
      Alignment: what this feature serves, cited by issue number AND
      section name — each capstone's § Outcome Statement it contributes
-     to (these become serves_capstones), or the standing project
+     to (each becomes a serves_capstones entry once that capstone's
+     requires_features lists this number), or the standing project
      commitment it upholds. When the parent is not yet filed, write
      "serving capstone unfiled — <one-line scope>" and replace it with
      the citation once it exists (bookkeeping, rule C). A feature
@@ -173,8 +183,10 @@ labels: ["tier:feature"]
          is pinned to.
        - `requires_tasks`, `planned_tasks` at the gate after
          § Integration Criteria & Evidence Plan, once the cuts are made.
-       - `blocked_by`, `blocks`, `serves_capstones`, and the mermaid
-         graph at the gate after § Sequencing & Parallelism.
+       - `blocked_by` and the mermaid graph at the gate after
+         § Sequencing & Parallelism. `blocks` and `serves_capstones`
+         stay `[]` at filing: they carry mirrors only, confirmed in the
+         Counterparts box.
      Regenerate the mermaid graph on every REPLAN. -->
 
 ```yaml
@@ -187,13 +199,17 @@ requires_tasks: []      # composition: FILED children only, numbers, e.g. [101, 
 planned_tasks: []       # one-line scopes for children not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it
                         #   (a landed scope is Background, not a plan); resolve
-                        #   each to a number via REPLAN when it is filed. A
+                        #   each to its number when filed — bookkeeping under rule C
+                        #   when the filed body agrees with what was written against
+                        #   the scope, otherwise REPLAN. A
                         #   non-empty planned_tasks means this feature's rule B
                         #   sufficiency argument is PROVISIONAL and the feature
                         #   is not Ready.
 blocked_by: []          # ordering: features or tasks that must land first
                         #   (never capstones — upward edges are illegal)
-blocks: []              # ordering: features or capstones waiting on this feature
+blocks: []              # mirrors only — the counterpart's blocked_by is authoritative:
+                        #   features or capstones whose blocked_by names this feature.
+                        #   Left [] at filing; confirmed in the Counterparts box.
 serves_capstones: []    # capstones whose required set includes this feature
                         #   (mirror; the capstone's requires_features is authoritative)
 related: []             # reference only — never blocking, never ownership
@@ -206,7 +222,7 @@ flowchart TD
   %% among them and to external issues. Regenerate on every REPLAN.
 ```
 
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
+- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`, and every capstone in `serves_capstones` still lists this feature; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
@@ -316,10 +332,11 @@ flowchart TD
      any ordering that is convention rather than necessity — marked as
      such, so a scheduler may break it knowingly. Every necessary order
      here is a `blocked_by` edge in the child's own machine block; fill
-     this feature's `blocked_by`, `blocks`, `serves_capstones` and the
-     mermaid graph now, and record the DAG walk. -->
+     this feature's `blocked_by` and the mermaid graph now and record
+     the DAG walk (`blocks` and `serves_capstones` stay empty or
+     mirrors-only). -->
 
-- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by` and `serves_capstones` are filled and `blocks` is empty or carries only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by` is filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -336,7 +353,10 @@ flowchart TD
      still has a beneficiary; a child dropped from the roster or this
      feature descoped → the REPLAN comment gives EACH affected child a
      disposition: re-homed (added to another feature's requires_tasks),
-     freed (in no roster — legal, it is simply unowned), or closed.
+     freed (in no roster — legal only when the child's § Intent &
+     Alignment is at the same time restated by AMENDED to a standing
+     rule, a format document or another open feature; otherwise the
+     disposition is closed), or closed.
      Because a task may be shared, dropping it from THIS roster does not
      orphan it if another roster still lists it — check before assuming
      a disposition is needed. Closing this feature with scope UNMET
@@ -346,7 +366,10 @@ flowchart TD
      its rule G, or descoped with the capstone's sufficiency argument
      re-derived — never silently dropped. Every response ends in a
      REPLAN comment here and a re-run of the gates covering the changed
-     span. -->
+     span — or, when the reassessment finds nothing cited here changed
+     (or the trigger was a comment this feature's own REPLAN requested),
+     in a `STATUS: progress` acknowledgement naming the sections
+     reassessed, which resets no gate (rule C). -->
 
 ## Open Questions & Decisions Needed
 
@@ -366,7 +389,7 @@ flowchart TD
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
-- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response that ends in a REPLAN comment and names which sections it re-derives; the protocol covers every child in the roster and every capstone in `serves_capstones`; every open question carries exactly one task rule 13 marker; every decision the integration will hit is listed or settled above; nothing marked `Recommended default:` contradicts the contract or an invariant. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response that ends in a REPLAN comment where anything cited changed and in an acknowledgement otherwise, and names which sections it re-derives; the protocol covers every child in the roster and every capstone in `serves_capstones`; every open question carries exactly one task rule 13 marker; every decision the integration will hit is listed or settled above; nothing marked `Recommended default:` contradicts the contract or an invariant. Adversarial re-read of everything above found no substantial finding.
 
 ## Completion Criteria (Definition of Done)
 
@@ -405,6 +428,7 @@ flowchart TD
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN links its landing comment, or its disposition is recorded; `planned_tasks` is empty
 - [ ] Every mirrored `AMENDED:` or `WAIVED:` from a child read; roster rows and handoffs re-derived by REPLAN where they changed
 - [ ] Every child's landing comment checked for contract deviations; each deviation reconciled in § Feature-Level Interface & Data Contract by REPLAN
+- [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
@@ -638,9 +662,9 @@ flowchart TD
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
-  Where the RAW band is C or D while SC>=4, OS>=4 and DA>=4, the low band is
-  driven by blast radius, reversibility, horizon, precedent or footprint,
-  not by the specification: SPECIFY-FIRST and SPLIT presuppose that SC or
+  Where the RAW band is C or D while SC>=4, OS>=4, DA>=4 and ED>=3 (no cap
+  below B), the low band is driven by blast radius, reversibility, horizon,
+  precedent or footprint, not by the specification or the environment: SPECIFY-FIRST and SPLIT presuppose that SC or
   OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
   the checkpoint (the review of the published surface, the format
   document, the flag's help text, the release note).

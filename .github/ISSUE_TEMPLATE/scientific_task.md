@@ -86,7 +86,11 @@ labels: ["tier:task"]
      and on what evidence — a silent edit is invisible to executors,
      who reconstruct state from the machine block plus the prefixed
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
-     `AMENDED:` / `WAIVED:`). `STATUS:` carries a sub-tag —
+     `AMENDED:` / `WAIVED:`). `HANDOFF:` is the AMENDED of a split or
+     transfer: it carries the successor number(s) and the Dropped/Retired
+     ledger moving each item to them, or states that the body is
+     unchanged for a pure transfer; features read it as an AMENDED for
+     gate and roster purposes. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
      `STATUS: landed`. Post each such comment on THIS issue and mirror
      the same comment, led by this issue's number (`STATUS: landed #N
@@ -98,9 +102,11 @@ labels: ["tier:task"]
      the § Pickup Checks rows its edit touches (observations,
      `blocked_by`, materials, paths) and records those re-runs. An
      AMENDED whose contract now contradicts a listing feature's
-     § Global Invariants is a re-plan request: the mirrored comment says
-     so, and the gate covering the contradiction stays unticked until
-     that feature's REPLAN answers. When an
+     § Global Invariants, or a handoff that feature's § Feature-Level
+     Interface & Data Contract assigns to this task, is a re-plan
+     request: the mirrored comment says so, and the gate covering the
+     contradiction stays unticked until that feature's REPLAN answers.
+     When an
      edit REMOVES or NARROWS any claim, observation, prediction,
      criterion, edge, or scope item, the AMENDED comment must carry a
      "Dropped/Retired" ledger enumerating each removed item with its
@@ -113,8 +119,9 @@ labels: ["tier:task"]
      issue that quotes the box (a PR link inside that comment is the
      usual evidence); re-pinning evidence_commit after re-deriving
      citations; adding or removing a `blocks` entry that mirrors a
-     counterpart's authoritative `blocked_by`, citing the counterpart's
-     comment; and replacing an
+     counterpart's authoritative `blocked_by`, citing the counterpart
+     (its number, and the AMENDED or REPLAN comment where one created
+     the edge); and replacing an
      "unfiled" alignment in § Intent & Alignment with the citation once
      the parent exists — provided the edit's comment states that the
      cited section was read and says what this task assumes (if it does
@@ -129,7 +136,10 @@ labels: ["tier:task"]
      `WAIVED:` comment naming the reason AND the successor issue that
      now tracks the dropped obligation (or stating explicitly why no
      successor is needed). A criterion skipped without a WAIVED
-     comment leaves the issue unclosable.
+     comment leaves the issue unclosable. A close on `REFUTED:` or
+     `SUPERSEDED:` needs no WAIVED comments: that comment is the
+     close-out record, the check-sheets stay empty, and any obligation
+     still needed names its successor inside it.
   11. Oracle custody. Every completion criterion that compares against an
      expected value names WHO produced that value and WHEN. Values
      committed and reviewed BEFORE the implementation, and values written
@@ -192,13 +202,19 @@ labels: ["tier:task"]
      review boxes (`review_clean: pending`); whoever amends re-ticks
      them in order, and the AMENDED comment names the gates re-run —
      that comment, not checkbox state, is what § Pickup Checks reads.
-     Gate clauses never depend on a counterpart's later edit; mirror
-     entries that a counterpart forces onto the machine block are
-     confirmed in the Counterparts box under it, as bookkeeping.
+     For a machine-block key, the changed section is the one at whose
+     gate the block's comment says that key is filled. Gate clauses
+     never depend on a counterpart's later edit, except where a clause
+     reads the counterpart's current body (a listing feature's § Global
+     Invariants, rule 9); mirror entries that a counterpart forces onto
+     the machine block are confirmed in the Counterparts box under it,
+     as bookkeeping.
      § Abstract is written last and read first.
   15. Three check-sheets, distinguished by WHEN they run. The gates of
-     rule 14 run at filing. § Pickup Checks runs once, before step one of
-     § Method / Experimental Design, by whoever executes (rule 6).
+     rule 14 run at filing. § Pickup Checks runs once in full, before
+     step one of § Method / Experimental Design, by whoever executes
+     (rule 6); after a post-pickup AMENDED, rule 9 re-runs only the rows
+     the edit touches, recorded in that comment.
      § Post-Implementation Validation runs at close, against the actual
      diff and PR, one row per item. § Completion Criteria states WHAT
      must be true of the finished work; the validation sheet records HOW
@@ -270,9 +286,11 @@ labels: ["tier:task"]
          single SHA every § Observations file:line is pinned to — cite
          by permalink at this commit (rule 1); if HEAD has moved,
          re-derive citations before trusting them.
-       - `blocked_by`, `blocks`, `related` at the gate after § Related
-         Work, once the siblings are known. Annotate each blocked_by
-         entry with the one-line reason it blocks, as a YAML comment.
+       - `blocked_by` and `related` at the gate after § Related Work,
+         once the siblings are known. Annotate each blocked_by entry
+         with the one-line reason it blocks, as a YAML comment.
+         `blocks` stays `[]` at filing: it carries mirrors only, confirmed
+         in the Counterparts box.
        - `owned_by_derived` is inserted by tooling, never by hand.
      Executors: § Pickup Checks reads this block first. -->
 
@@ -289,14 +307,16 @@ evidence_commit:        # SHA all § Observations citations are pinned to
 blocked_by: []          # ordering: TASKS that must land first — tasks only.
                         #   Never a feature, never a capstone (upward edges are
                         #   illegal); name the specific sibling tasks instead.
-blocks: []              # ordering: TASKS waiting on this one, plus the mirror of any
-                        #   FEATURE whose blocked_by names this task (never a capstone)
+blocks: []              # mirrors only — the counterpart's blocked_by is authoritative:
+                        #   tasks, or features, whose blocked_by names this task (never
+                        #   a capstone). Left [] at filing; confirmed in the
+                        #   Counterparts box.
 related: []             # reference only — never blocking, never ownership.
                         #   Ownership is not recorded here: it lives in each
                         #   owning feature's requires_tasks roster.
 ```
 
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every task or feature whose `blocked_by` names this task appears in `blocks`; every task this task's `blocked_by` names carries this task in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
+- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every task or feature whose `blocked_by` names this task appears in `blocks`; every task this task's `blocked_by` names carries this task in its `blocks`; the alignment in § Intent & Alignment cites an open issue or a standing rule, or is still marked unfiled — a closed target is re-aligned by AMENDED.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states an intent a reader could later confirm or deny; its alignment target was opened at its current revision and the cited section says what this task assumes it says, or the target is marked unfiled with a one-line scope; every audience named is one this change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
@@ -319,11 +339,11 @@ related: []             # reference only — never blocking, never ownership.
 <!-- Sibling issues, the features whose rosters list this task or
      whose `planned_tasks` carries this scope (search both; rule 8),
      audit findings, external references. Where
-     scopes touch, state which issue owns which fix. The `blocked_by`,
-     `blocks` and `related` entries of the machine block are derived
-     from this section — fill them now, and record the DAG walk (follow
-     each named issue's edges outward and confirm no path returns
-     here). -->
+     scopes touch, state which issue owns which fix. The `blocked_by`
+     and `related` entries of the machine block are derived from this
+     section — fill them now, and record the DAG walk (follow each named
+     issue's edges outward and confirm no path returns here); `blocks`
+     stays empty or mirrors-only. -->
 
 - [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
@@ -866,9 +886,9 @@ related: []             # reference only — never blocking, never ownership.
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
-  Where the RAW band is C or D while SC>=4, OS>=4 and DA>=4, the low band is
-  driven by blast radius, reversibility, horizon, precedent or footprint,
-  not by the specification: SPECIFY-FIRST and SPLIT presuppose that SC or
+  Where the RAW band is C or D while SC>=4, OS>=4, DA>=4 and ED>=3 (no cap
+  below B), the low band is driven by blast radius, reversibility, horizon,
+  precedent or footprint, not by the specification or the environment: SPECIFY-FIRST and SPLIT presuppose that SC or
   OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
   the checkpoint (the review of the published surface, the format
   document, the flag's help text, the release note).

@@ -402,28 +402,29 @@ def h07(ctx):
                                       "requires_capstones")["numbers"]:
                 capstone_parents.setdefault(c, []).append(fn)
 
-    # What each tier must mirror upward. A task mirrors every prefixed
-    # comment except STATUS: pickup/progress. A feature or capstone mirrors
-    # only ITS OWN landing, refutation and re-plans; the child comments it
-    # hosts (mirrors that name a child number) are not re-mirrored.
-    OWN_PREFIXES = ("STATUS:", "REFUTED:", "REPLAN:")
+    # Every tier mirrors every prefixed comment of its own except
+    # STATUS: pickup/progress (task rule 9, feature and capstone rule D).
+    # The child comments a composite hosts -- mirrors led by a child's
+    # number, "PREFIX: #child ..." or "STATUS: landed #child ..." -- are not
+    # re-mirrored upward.
 
     for n, iss in ctx.issues():
         mb = iss.machine
         if not mb:
             continue
+        allowed = COMMENT_PREFIXES
         if iss.tier == "task":
-            parents, allowed, children = task_owners.get(n, []), \
-                COMMENT_PREFIXES, set()
+            parents, children = task_owners.get(n, []), set()
         elif iss.tier == "feature":
             parents = parse_edge_field(mb, "serves_capstones")["numbers"]
-            allowed = OWN_PREFIXES
             children = set(parse_edge_field(mb, "requires_tasks")["numbers"])
         else:
             parents = capstone_parents.get(n, [])
-            allowed = OWN_PREFIXES
             children = set(parse_edge_field(mb, "requires_features")["numbers"]
                            + parse_edge_field(mb, "requires_capstones")["numbers"])
+        hosted = re.compile(
+            r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(?:%s)\b"
+            % "|".join(map(str, sorted(children)))) if children else None
         parents = [p for p in parents if p in ctx.corpus.issues]
         if not parents:
             continue
@@ -434,9 +435,7 @@ def h07(ctx):
             # rule 9); only STATUS: landed and the other prefixes mirror.
             if re.match(r"STATUS:\s*(pickup|progress)\b", b):
                 continue
-            head = b[:200]
-            if children and any(re.search(rf"#{ch}\b", head)
-                                for ch in children):
+            if hosted and hosted.match(b):
                 continue        # a hosted child mirror, not this issue's own
             for p in allowed:
                 if b.startswith(p):
@@ -496,11 +495,12 @@ def h09(ctx):
             continue
         cbodies = [re.sub(r"\s+", " ", c.get("body") or "")
                    for c in ctx.comments(n)]
-        dod_cited = any("DoD" in cb for cb in cbodies)
+        # Rule 9 / rule C: a tick is bookkeeping only when a comment on the
+        # issue quotes the box; a bare "DoD" mention is not evidence.
         unevidenced = []
         for txt in ticked:
             nt = re.sub(r"\s+", " ", txt).strip()
-            if dod_cited or (nt and any(nt in cb for cb in cbodies)):
+            if nt and any(nt in cb for cb in cbodies):
                 continue
             unevidenced.append(txt)
         if unevidenced:
@@ -612,6 +612,9 @@ def h12(ctx):
             content = ctx.section_by_num(n, "7.10")   # pre-v8 numbered body
         if content is None:
             continue                    # missing subsection is H19's finding
+        # The template's own guidance comment carries literal $...$ / $$...$$
+        # examples; only the filer's text counts.
+        content = re.sub(r"<!--.*?-->", "", content, flags=re.S)
         if content.count("$$") % 2:
             out.append(finding(n, "H12", "error",
                        "§ Data transformations has unbalanced $$ delimiters",

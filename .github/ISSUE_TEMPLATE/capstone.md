@@ -73,13 +73,21 @@ labels: ["tier:capstone"]
   edit's comment states the filed issue's cited sections were read and
   agree with what was written against the scope (otherwise REPLAN)
   (C); state reconstructed from prefixed comments, never from
-  checkboxes: required features and sub-capstones mirror
-  `STATUS: landed #N` / `REFUTED: #N` / `REPLAN: #N` here, a roster
-  that adopts an already-landed entry links its landing comment in the
-  adopting REPLAN, and THIS capstone mirrors its own landing,
-  refutation and every REPLAN on every capstone whose
-  `requires_capstones` lists it (roster search — there is no serves
-  field at this tier) (D). In addition:
+  checkboxes: required features and sub-capstones mirror every
+  prefixed comment of theirs except `STATUS: pickup`/`progress` here,
+  led by their number; a roster that adopts an already-landed entry
+  links its landing comment in the adopting REPLAN; THIS capstone
+  mirrors every prefixed comment of its own except
+  `STATUS: pickup`/`progress`, led by this number, on every capstone
+  whose `requires_capstones` lists it (roster search — there is no
+  serves field at this tier), and posts a REPLAN that removes an entry
+  from `requires_features` or `requires_capstones` on the removed
+  issue as well; a mirrored trigger whose reassessment finds nothing
+  cited here changed, or whose comment this capstone's own REPLAN
+  requested, is answered by a `STATUS: progress` acknowledgement
+  naming the sections reassessed, not a REPLAN (D). Mirror `blocks`
+  entries cite the counterpart (its number, and the REPLAN comment
+  where one created the edge). In addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§ Required Feature Set & Sufficiency): why exactly these
@@ -94,7 +102,9 @@ labels: ["tier:capstone"]
   G. Orphaned scope. When a required feature closes, is re-tiered, or
      is descoped while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — add
-     the task to another feature's requires_tasks roster; (b) file a
+     the task to the requires_tasks roster of a required feature that
+     has not yet posted `STATUS: landed` (a landed feature is never
+     reopened; use (b)); (b) file a
      new feature to host it and add that feature to requires_features;
      or (c) descope it, re-deriving the § Required Feature Set &
      Sufficiency argument. There is NO capstone→task edge; a capstone
@@ -146,9 +156,11 @@ labels: ["tier:capstone"]
          claim is pinned to.
        - `requires_features`, `requires_capstones`, `planned_features`
          at the gate after § Required Feature Set & Sufficiency.
-       - `blocked_by`, `blocks`, and the mermaid graph at the gate after
+       - `blocked_by` and the mermaid graph at the gate after
          § System-Level Acceptance Criteria (which is grouped with
-         § Cross-Feature Integration Risks).
+         § Cross-Feature Integration Risks). `blocks` stays `[]` at
+         filing: it carries mirrors only, confirmed in the Counterparts
+         box.
      Regenerate the mermaid graph on every REPLAN. -->
 
 ```yaml
@@ -159,13 +171,16 @@ requires_capstones: []  # composition — sub-capstones whose whole outcome gate
                         #   (nesting; the only sanctioned form, see the tier-model note)
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
-                        #   each to a number via REPLAN when it is filed. A non-empty
+                        #   each to its number when filed — bookkeeping under rule C when
+                        #   the filed body agrees with what was written against the
+                        #   scope, otherwise REPLAN. A non-empty
                         #   planned_features means the sufficiency argument is
                         #   PROVISIONAL and this capstone is not Ready.
 blocked_by: []          # ordering: capstones or features that must land before this
                         #   capstone closes, beyond the required set. Never tasks.
-blocks: []              # ordering: capstones waiting on this one (mirror of their
-                        #   blocked_by entry naming this capstone)
+blocks: []              # mirrors only — the counterpart's blocked_by is authoritative:
+                        #   capstones whose blocked_by names this one. Left [] at
+                        #   filing; confirmed in the Counterparts box.
 related: []             # reference only — never blocking, never ownership
 ```
 
@@ -223,8 +238,9 @@ flowchart TD
      § System-Level Acceptance Criteria (written together with this
      section), an ordering edge, a feature's own invariant — or is
      explicitly accepted. Every necessary ordering is an edge: fill
-     `blocked_by`, `blocks` and the mermaid graph at this group's gate,
-     mirrored on the other side. -->
+     `blocked_by` and the mermaid graph at this group's gate (`blocks`
+     stays empty or mirrors-only; the other side mirrors in its
+     Counterparts box). -->
 
 ## System-Level Acceptance Criteria
 
@@ -287,8 +303,16 @@ flowchart TD
      sub-capstone's mirrored REPLAN → re-derive § Required Feature Set &
      Sufficiency; the outcome itself is re-scoped → REPLAN with the old and
      new § Outcome Statement both quoted, then § Intent & Alignment
-     re-checked. Every response ends in a REPLAN comment here and a
-     re-run of the gates covering the changed span. -->
+     re-checked; a re-scope after which no criterion in § System-Level
+     Acceptance Criteria is a genuine span → once the remaining required
+     entries have landed, close with `SUPERSEDED: label — every criterion
+     covered alone by #…`, mirrored to parent capstones, which re-derive
+     their sufficiency with the features listed directly. Every response
+     ends in a REPLAN comment here and a re-run of the gates covering
+     the changed span — or, when the reassessment finds nothing cited
+     here changed (or the trigger was a comment this capstone's own
+     REPLAN requested), in a `STATUS: progress` acknowledgement naming
+     the sections reassessed, which resets no gate (rule C). -->
 
 ## Open Questions & Decisions Needed
 
@@ -308,7 +332,7 @@ flowchart TD
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
-- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment and naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment where anything cited changed and in an acknowledgement otherwise, naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
 
 ## Completion Criteria (Definition of Done)
 
@@ -574,9 +598,9 @@ flowchart TD
 
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
-  Where the RAW band is C or D while SC>=4, OS>=4 and DA>=4, the low band is
-  driven by blast radius, reversibility, horizon, precedent or footprint,
-  not by the specification: SPECIFY-FIRST and SPLIT presuppose that SC or
+  Where the RAW band is C or D while SC>=4, OS>=4, DA>=4 and ED>=3 (no cap
+  below B), the low band is driven by blast radius, reversibility, horizon,
+  precedent or footprint, not by the specification or the environment: SPECIFY-FIRST and SPLIT presuppose that SC or
   OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
   the checkpoint (the review of the published surface, the format
   document, the flag's help text, the release note).

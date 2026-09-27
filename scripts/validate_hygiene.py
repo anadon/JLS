@@ -27,7 +27,7 @@ otherwise); H07 prefixed comments not mirrored on the parent; H08
 unrecognized pseudo-prefixes (UPDATE:/Status: ...); H09 DoD checkbox
 integrity (zero boxes = error, ticked-on-open without evidence = warn);
 H10 §-reference integrity (named must resolve, bare numbers violate rule 5);
-H11 N/A without a reason; H12 §7.10 LaTeX presence/balance (task tier);
+H11 N/A without a reason; H12 § Data transformations LaTeX presence/balance (task tier);
 H13 body size vs GitHub's 65536 limit; H14 scratchpad-path leaks (paths
 committed at meta.head are exempt); H15 citation sweep via
 verify_citations.py at each issue's evidence_commit; H16 vacuous evidence
@@ -53,15 +53,15 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from issue_corpus import (COMMENT_PREFIXES, HEADING, TEMPLATES, find_heading,
-                          finding, findings_report, load_corpus,
-                          parse_edge_field, sig_tokens)
+                          find_subheading, finding, findings_report,
+                          load_corpus, parse_edge_field, sig_tokens)
 
 VALIDATOR = "hygiene"
 CHECK_VERSION = "h-v1"
 
 TIER_PREFIX = {"task": "TASK", "feature": "FEAT", "capstone": "CAP"}
 PREFIX_TIER = {v: k for k, v in TIER_PREFIX.items()}
-DOD_HEADING = {"task": "14. Completion Criteria (Definition of Done)",
+DOD_HEADING = {"task": "Completion Criteria (Definition of Done)",
                "feature": "Completion Criteria (Definition of Done)",
                "capstone": "Completion Criteria (Definition of Done)"}
 # Closed-not-planned rescue vehicles (maintainer disposition pending); cites
@@ -197,6 +197,16 @@ class Ctx:
                 return self.corpus.issues[n].body[he:ce]
         return None
 
+    def subsection_content(self, n, canonical):
+        secs = self.sections(n)
+        actual = find_subheading([s[0] for s in secs], canonical)
+        if actual is None:
+            return None
+        for title, _hs, he, ce in secs:
+            if title == actual:
+                return self.corpus.issues[n].body[he:ce]
+        return None
+
     def section_by_num(self, n, num):
         for title, _hs, he, ce in self.sections(n):
             if re.match(rf"^{re.escape(num)}(?!\d)", title):
@@ -308,9 +318,9 @@ def h04(ctx):
     out = []
     for n, iss in ctx.issues():
         if iss.tier != "task":
-            continue        # rule 3 (§2 Observations) is a task-template rule
+            continue        # rule 3 (§ Observations) is a task-template rule
         labels = set(iss.labels)
-        content = ctx.section_content(n, "2. Observations")
+        content = ctx.section_content(n, "Observations")
         has_block = False
         for m in FENCED.finditer(content or ""):
             if m.group(1).strip().lower() in NON_CODE_FENCES:
@@ -320,12 +330,12 @@ def h04(ctx):
                 break
         if "bug" in labels and not has_block:
             out.append(finding(n, "H04", "error",
-                       "label `bug` but §2 Observations carries no fenced "
+                       "label `bug` but § Observations carries no fenced "
                        "command+output block (template rule 3)",
                        fix_class="body"))
         elif "enhancement" in labels and has_block:
             out.append(finding(n, "H04", "info",
-                       "possible bug mislabel: `enhancement` but §2 pastes "
+                       "possible bug mislabel: `enhancement` but § Observations pastes "
                        "an observed failure"))
     return out
 
@@ -571,12 +581,14 @@ def h12(ctx):
     for n, iss in ctx.issues():
         if iss.tier != "task":
             continue
-        content = ctx.section_by_num(n, "7.10")
+        content = ctx.subsection_content(n, "Data transformations")
+        if content is None:
+            content = ctx.section_by_num(n, "7.10")   # pre-v8 numbered body
         if content is None:
             continue                    # missing subsection is H19's finding
         if content.count("$$") % 2:
             out.append(finding(n, "H12", "error",
-                       "§7.10 has unbalanced $$ delimiters",
+                       "§ Data transformations has unbalanced $$ delimiters",
                        fix_class="body"))
             continue
         has_math = bool(MATH_BLOCK.search(content)
@@ -584,8 +596,8 @@ def h12(ctx):
         if has_math or NA_JUSTIFIED.search(content):
             continue
         out.append(finding(n, "H12", "error",
-                   "§7.10 carries no $...$/$$...$$ math and is not a "
-                   "justified N/A", fix_class="body"))
+                   "§ Data transformations carries no $...$/$$...$$ math and "
+                   "is not a justified N/A", fix_class="body"))
     return out
 
 

@@ -47,19 +47,19 @@ def task_body(sec1="Background prose.", sec2="Steady behavior observed.",
         lines.append(f"## {h}\n")
         if h == "Status & Dependencies":
             lines.append(mb)
-        elif h == "1. Background & Prior Work":
+        elif h == "Background & Prior Work":
             lines.append(sec1 + "\n")
-        elif h == "2. Observations":
+        elif h == "Observations":
             lines.append(sec2 + "\n")
-        elif h == "12. Related Work":
+        elif h == "Related Work":
             lines.append(sec12 + "\n")
-        elif h == "7. Interface & Data Contract":
+        elif h == "Interface & Data Contract":
             lines.append("Contract overview.\n")
             for s in TEMPLATES["task"]["subheadings"]:
-                content = sec710 if s == "7.10" \
+                content = sec710 if s == "Data transformations" \
                     else "N/A — not exercised by this task."
-                lines.append(f"### {s} Sub\n{content}\n")
-        elif h == "14. Completion Criteria (Definition of Done)":
+                lines.append(f"### {s}\n{content}\n")
+        elif h == "Completion Criteria (Definition of Done)":
             lines.append(dod)
         else:
             lines.append("Filler prose for this section.\n")

@@ -5,7 +5,7 @@ labels: ["tier:feature"]
 ---
 
 <!--
-  Template: feature v4 (2026-08)
+  Template: feature v5 (2026-09)
 
   TIER MODEL — task → feature → capstone. THIS BLOCK IS CANONICAL: the
   task and capstone templates cite it rather than restating it.
@@ -31,16 +31,9 @@ labels: ["tier:feature"]
   shared — there is no single-owner rule and no per-task owner field.
   Ownership is recorded ONLY here, in this feature's requires_tasks
   roster, which is the sole authority. To learn which features own a
-  task, read the rosters; the task itself does not claim an owner.
-  (v3 and earlier imposed a single-owner rule via a task-side
-  `part_of_feature` field. That was never the intended model. The rule
-  was fully obeyed — at the time of the v4 correction no open task had
-  more than one owner — so the cost is not a corrupted corpus but an
-  unrepresentable one: wherever work genuinely served several features,
-  the plan could not say so, and the relationship could only be noted
-  in `related`, which carries no ownership. The field is retired; each
-  task's single claim was preserved into its owning feature's roster
-  first, so nothing was lost.)
+  task, read the rosters; the task itself does not claim an owner. A
+  task's § Intent & Alignment may name this feature as what it aligns
+  with; that is a reference, not ownership.
 
   A feature may likewise serve any number of capstones; there the
   capstone's requires_features is authoritative and serves_capstones
@@ -70,14 +63,19 @@ labels: ["tier:feature"]
   to this tier: evidence with file:line at a pinned commit (1); no
   padding — "N/A — <reason>" (2); claims stated observably (3); atomic
   scope (4); cross-references cite section NAMES, resolved against
-  THIS template's own headings (5); executor re-verification of
-  evidence before acting (6); explicit labels, here `tier:feature` (7).
-  Where a task rule names a task-tier section (Observations, Method),
-  apply it to the analogous section here. Task rules 9–10 (comment
-  protocol and waivers) also apply, with `REPLAN:` in place of
-  `AMENDED:`. In addition:
+  THIS template's own headings — headings carry no numbers (5);
+  executor re-verification of evidence before acting, here § Pickup
+  Checks (6); explicit labels, here `tier:feature` (7). Where a task
+  rule names a task-tier section (Observations, Method), apply it to
+  the analogous section here. Task rules 9–10 (comment protocol and
+  waivers) apply with `REPLAN:` in place of `AMENDED:`. Task rules
+  14–15 (dependency order with consistency gates; three check-sheets by
+  when they run) apply unchanged: gates are ticked at filing and at
+  every REPLAN that touches the span they cover, § Pickup Checks runs
+  before the integration work begins, § Post-Integration Validation
+  runs at close. In addition:
 
-  A. The machine block in Status & Dependency Graph is the source of
+  A. The machine block in § Status & Dependency Graph is the source of
      truth for graph assembly. Prose and the mermaid graph elaborate
      it and must agree with it; on conflict, fix the body — do not
      guess.
@@ -89,12 +87,13 @@ labels: ["tier:feature"]
      feature — do not file it.
   C. This body is a living plan. Plan changes — roster membership,
      contract, invariants, criteria, edges — are edited only together
-     with a `REPLAN:` comment stating what changed and why.
-     Bookkeeping is exempt: flipping a roster Status cell, ticking a
-     DoD box whose backing evidence is already recorded in a comment
-     or PR, and re-pinning evidence_commit. If another agent edited
-     since you read, re-read and fold the newer body into your edit —
-     the REPLAN comment stream is the arbiter of intent.
+     with a `REPLAN:` comment stating what changed and why, and the
+     gates covering the changed span are re-run. Bookkeeping is
+     exempt: flipping a roster Status cell, ticking a gate, DoD or
+     check-sheet box whose backing evidence is already recorded in a
+     comment or PR, and re-pinning evidence_commit. If another agent
+     edited since you read, re-read and fold the newer body into your
+     edit — the REPLAN comment stream is the arbiter of intent.
   D. State lives in comments, not checkboxes. Child tasks post
      `STATUS:` (landed / progress), `REFUTED:` (hypothesis failed,
      with evidence), `HANDOFF:` (work split or transferred),
@@ -104,20 +103,51 @@ labels: ["tier:feature"]
      serves_capstones. A fresh agent reconstructs execution state from
      the machine block plus the prefixed comments; checkbox state is a
      convenience rendering, never evidence.
+
+  These comments do not render on GitHub — leave them in place for the
+  next reader of the raw issue body.
 -->
 
-## Abstract
+## Intent & Alignment
 
-<!-- 2–4 sentences: the capability, why it matters, and the one-line
-     shape of the decomposition. -->
+<!-- Written FIRST; everything below is checked against it at every
+     gate.
 
-## Intended Audience & Impact
+     Intent: the capability this feature makes true, in one paragraph
+     phrased so a reader can later say whether it happened. Not the
+     decomposition — that is § Decomposition & Rationale.
 
-<!-- Same discipline as the task template: name the concrete
-     audience(s) served and the change they experience once the whole
-     feature — not any single task — has landed. -->
+     Alignment: what this feature serves, cited by issue number AND
+     section name — each capstone's § Outcome Statement it contributes
+     to (these become serves_capstones), or the standing project
+     commitment it upholds. A feature aligned with nothing has no
+     beneficiary and does not belong on the backlog (rule 2). -->
+
+### User impact
+
+<!-- The concrete audience(s) served and, per audience, the change they
+     experience once the WHOLE feature — not any single task — has
+     landed. Pick and name the ones this feature serves:
+       - Students drawing and simulating circuits in the editor.
+       - Instructors authoring, grading, or auto-checking work in batch
+         (`-b`) mode.
+       - Circuit-file authors and third-party tools that read or write
+         `.jls` files against docs/file-format.md.
+       - Packagers and distributors shipping the installers and container.
+     Effects on the codebase itself belong in § Code & Project Impact
+     and Consequences, below the contract that determines them. -->
 
 ## Status & Dependency Graph
+
+<!-- The machine block is the source of truth for graph assembly
+     (rule A). It is filled PROGRESSIVELY, the gates say when:
+       - `evidence_commit` now: the SHA every roster and contract claim
+         is pinned to.
+       - `requires_tasks`, `planned_tasks` at the gate after
+         § Integration Criteria & Evidence Plan, once the cuts are made.
+       - `blocked_by`, `blocks`, `serves_capstones`, and the mermaid
+         graph at the gate after § Sequencing & Parallelism.
+     Regenerate the mermaid graph on every REPLAN. -->
 
 ```yaml
 tier: feature
@@ -148,68 +178,61 @@ flowchart TD
   %% among them and to external issues. Regenerate on every REPLAN.
 ```
 
-## 1. Capability Statement & Scope Boundary
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
-<!-- What the feature makes true, phrased observably, and explicitly
-     what is OUT of scope — the adjacent work an executor might be
-     tempted to absorb, with the issue that owns it instead. -->
+## Capability Statement & Scope Boundary
 
-## 2. Decomposition & Rationale
+<!-- What the feature makes true, phrased observably — do X, observe Y
+     at the feature boundary — and explicitly what is OUT of scope: the
+     adjacent work an executor might be tempted to absorb, with the
+     issue that owns it instead, or "unfiled — file at close". Children
+     cite this section as the alignment target of their own § Intent &
+     Alignment, so it must say what they will assume it says. -->
 
-<!-- One row per child task. The one-line contract is the handoff
-     summary an agent reads before deciding whether to open the child
-     at all. Below the table: why these cuts and not others — the
-     alternative decompositions considered and rejected, so a
-     re-planning agent does not re-derive them from scratch. -->
+- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it. Adversarial re-read of everything above found no substantial finding.
+
+## Decomposition & Rationale
+
+<!-- One row per child task, filed or planned. The one-line contract is
+     the handoff summary an agent reads before deciding whether to open
+     the child at all; it must match the child's own § Intent &
+     Alignment and § Hypothesis (falsifiable) as they read NOW. Below
+     the table: why these cuts and not others — the alternative
+     decompositions considered and rejected, so a re-planning agent does
+     not re-derive them from scratch. -->
 
 | Task | One-line contract | Status |
 |------|-------------------|--------|
 | #    |                   |        |
 
-## 3. Feature-Level Interface & Data Contract
+## Feature-Level Interface & Data Contract
 
-<!-- §7 (Interface & Data Contract) of the task template, applied at
-     the feature boundary: what the feature as a whole modifies,
-     consumes, provides, tracks durably, uses ephemerally, its
-     concurrency model, and its transformations — stated so the
-     integrated result can be checked against it. Then the internal
-     handoffs: which child provides which interface to which sibling,
-     citing the child's contract subsection by name (e.g. "#101
-     provides `ElementRegistry` per its Internal interfaces provided —
-     public; consumed by #102"). Transformations at the feature
-     boundary follow the task template's §7.10 (Data transformations)
+<!-- § Interface & Data Contract of the task template, applied at the
+     feature boundary: what the feature as a whole modifies, consumes,
+     provides, tracks durably, uses ephemerally, its concurrency model,
+     and its transformations — stated so the integrated result can be
+     checked against it. Then the internal handoffs: which child
+     provides which interface to which sibling, citing the child's
+     contract subsection by name (e.g. "#101 provides `ElementRegistry`
+     per its § Internal interfaces provided — public; consumed by #102
+     per its § External interfaces consumed"). Transformations at the
+     feature boundary follow the task template's § Data transformations
      discipline: fully defined and expressed in embedded LaTeX math
-     (GitHub math rendering), never prose alone. When a child lands
-     with a contract deviation, this section is stale until a REPLAN
-     comment resolves it. -->
+     (GitHub math rendering), never prose alone. When a child lands with
+     a contract deviation, this section is stale until a REPLAN comment
+     resolves it. -->
 
-## 4. Global Invariants
+## Integration Criteria & Evidence Plan
 
-<!-- What EVERY child must preserve at every intermediate landing —
-     e.g. historical `.jls` files still load, save output
-     byte-identical unless a version bump is declared, `mvn verify`
-     green, no new SpotBugs exclusions. Children cite this section
-     instead of restating it. -->
-
-## 5. Integration Criteria & Evidence Plan
-
-<!-- Feature-level predictions: do X, observe Y — each one something
-     no single child's completion criteria assert (rule B). Name the
+<!-- Feature-level predictions: do X, observe Y — each one something no
+     single child's completion criteria assert (rule B). Name the
      integration test, golden file, or recorded manual procedure that
-     pins each, and note which do not exist yet and which child (or
-     this issue's close-out) builds them.
+     pins each, and note which do not exist yet and which child (or this
+     issue's close-out) builds them.
 
-     ANNOTATE OWNERSHIP PER CRITERION. Do NOT open this section with a
-     blanket sentence like "none of these is covered by any single
-     child alone" and then leave the individual criteria unattributed.
-     A 2026-08 audit of all 173 open features found that pattern is the
-     single highest-yield defect in the corpus: features carrying a
-     blanket preamble almost always had at least one criterion that a
-     child's own Definition of Done covered end to end, while features
-     that attributed each criterion individually had almost none. A
-     blanket claim is not checkable, so it does not get checked.
-
-     Instead, give every criterion one of:
+     ANNOTATE OWNERSHIP PER CRITERION. A blanket sentence ("none of
+     these is covered by any single child alone") is not checkable and
+     is forbidden; give every criterion exactly one of:
        - "spans #A + #B" — and state what each contributes, so the
          claim can be falsified by reading either child.
        - "covered alone by #A" — honest, and it simply does not count
@@ -217,52 +240,81 @@ flowchart TD
        - "no child; built by this feature's close-out".
        - "UNOWNED — no builder yet" — a real gap, worth stating.
 
-     WRITE THIS AGAINST THE CHILD'S ACTUAL TEXT, not from memory or
-     from the plan you filed it under. Several features in this corpus
-     record that they were written without reading their children
-     ("child issue body not read during this migration"), and their
-     span claims are wrong as a direct result. If a child later amends
-     its scope by REPLAN, this section is stale until re-derived.
+     WRITE THIS AGAINST THE CHILD'S ACTUAL TEXT at its current revision,
+     not from memory or from the plan it was filed under. If a child
+     later amends its scope, this section is stale until re-derived.
+     A child that cites one of these criteria as its own deliverable is
+     proof the criterion is not a span; validator check G22 reports
+     that case. -->
 
-     A child that cites one of these criteria by number as its own
-     deliverable is proof the criterion is not a span; validator check
-     G22 reports that case. -->
+- [ ] **Gate — Decomposition, Contract & Integration.** Every child body was read at its current revision; every roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each child's contract actually declares its side; every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
 
-## 6. Sequencing & Parallelism
+## Global Invariants
+
+<!-- What EVERY child must preserve at every intermediate landing —
+     e.g. historical `.jls` files still load, save output
+     byte-identical unless a version bump is declared, `mvn verify`
+     green, no new SpotBugs exclusions. Each stated so a test can pin
+     it at any landing. Children cite this section instead of restating
+     it. -->
+
+## Code & Project Impact and Consequences
+
+<!-- What changes for contributors, maintainers, LLM agents working the
+     codebase, and the project's own commitments once the feature is
+     integrated, now that the contract fixes what moves: interfaces that
+     move, invariants that tighten or loosen, build or CI behaviour,
+     published surfaces, maintenance cost taken on or retired. State
+     consequences as well as benefits — what becomes harder, what a
+     later change must now respect, what this forecloses. A consequence
+     too costly to accept is a reason to narrow § Capability Statement &
+     Scope Boundary or re-cut § Decomposition & Rationale (REPLAN). -->
+
+- [ ] **Gate — Invariants & consequences.** Every invariant is pinnable by a test at any intermediate landing and is not already a child's own completion criterion restated; every interface the feature-level contract moves has its consequence stated; at least one consequence is a cost, not a benefit; no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+
+## Sequencing & Parallelism
 
 <!-- The critical path through the roster, which tasks are mutually
-     independent (safe to execute concurrently by separate agents),
-     and any ordering that is convention rather than necessity —
-     marked as such, so a scheduler may break it knowingly. -->
+     independent (safe to execute concurrently by separate agents), and
+     any ordering that is convention rather than necessity — marked as
+     such, so a scheduler may break it knowingly. Every necessary order
+     here is a `blocked_by` edge in the child's own machine block; fill
+     this feature's `blocked_by`, `blocks`, `serves_capstones` and the
+     mermaid graph now, and record the DAG walk. -->
 
-## 7. Re-planning Protocol
+- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the children's machine blocks and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by`, `blocks`, `serves_capstones` are filled, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A); each capstone in `serves_capstones` was opened and its `requires_features` lists this feature. Adversarial re-read of everything above found no substantial finding.
+
+## Re-planning Protocol
 
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED → which siblings' premises are affected and who
      re-plans; a child split (HANDOFF) → roster update; a contract
      deviation → § Feature-Level Interface & Data Contract
-     reconciliation; a serving capstone descoped → whether this
-     feature still has a beneficiary; a child dropped from the roster
-     or this feature descoped → the REPLAN comment gives EACH affected
-     child a disposition: re-homed (added to another feature's
-     requires_tasks), freed (in no roster — legal, it is simply
-     unowned), or closed. Because a task may be shared, dropping it
-     from THIS roster does not orphan it if another roster still lists
-     it — check before assuming a disposition is needed. Closing
-     this feature with scope UNMET while a serving capstone still
-     needs it → each unmet scope item gets a disposition in the
-     closing REPLAN: re-homed into another required feature, filed as
-     a task the capstone adopts via its rule G orphaned-scope
-     exception, or descoped with the capstone's sufficiency argument
+     reconciliation; a serving capstone descoped → whether this feature
+     still has a beneficiary; a child dropped from the roster or this
+     feature descoped → the REPLAN comment gives EACH affected child a
+     disposition: re-homed (added to another feature's requires_tasks),
+     freed (in no roster — legal, it is simply unowned), or closed.
+     Because a task may be shared, dropping it from THIS roster does not
+     orphan it if another roster still lists it — check before assuming
+     a disposition is needed. Closing this feature with scope UNMET
+     while a serving capstone still needs it → each unmet scope item
+     gets a disposition in the closing REPLAN: re-homed into another
+     required feature, filed as a new feature the capstone adopts under
+     its rule G, or descoped with the capstone's sufficiency argument
      re-derived — never silently dropped. Every response ends in a
-     REPLAN comment here. -->
+     REPLAN comment here and a re-run of the gates covering the changed
+     span. -->
 
 ## Open Questions & Decisions Needed
 
-<!-- Decisions this plan cannot make for itself. For each: the
-     question, options with a recommended default, and whether it
-     blocks filing children, blocks integration, or can ride along.
-     "N/A — fully specified" if nothing is open.
+<!-- Decisions this plan cannot make for itself. Include every design
+     decision the integration work will certainly hit, whether or not
+     the text above names it: an unlisted one is open, not absent
+     (§ Agentic Delegability, DA axis). For each: the question, options
+     with a recommended default, and whether it blocks filing children,
+     blocks integration, or can ride along. "N/A — fully specified" if
+     nothing is open.
 
      Mark every entry with exactly one of `Recommended default: <answer>`
      (proceed and land), `PROPOSED: <answer>, pending <who confirms>` (draft
@@ -272,19 +324,76 @@ flowchart TD
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
+- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response that ends in a REPLAN comment and names which sections it re-derives; the protocol covers every child in the roster and every capstone in `serves_capstones`; every open question carries exactly one rule 13 marker; every decision the integration will hit is listed or settled above; nothing marked `Recommended default:` contradicts the contract or an invariant. Adversarial re-read of everything above found no substantial finding.
+
 ## Completion Criteria (Definition of Done)
 
+<!-- WHAT must be true of the integrated feature — not how it is
+     checked (§ Post-Integration Validation) and not what is checked
+     before integration starts (§ Pickup Checks). Every box names the
+     artifact, its location and the assertion that pins it. -->
+
 - [ ] Every entry in `requires_tasks` closed as landed, or descoped via a `REPLAN:` comment with the roster updated and each child's disposition recorded; `planned_tasks` empty (each resolved to a filed issue or descoped)
-- [ ] Every cited evidence document and permalink resolves on the default branch at close
-- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10)
-- [ ] Every prediction in §5 (Integration Criteria & Evidence Plan) verified at a named commit; command and output recorded in a closing comment
-- [ ] §3 (Feature-Level Interface & Data Contract) re-checked against the integrated result; deviations recorded, none silently absorbed
-- [ ] §4 (Global Invariants) hold at the final commit, re-verified — not inferred from children's green runs
+- [ ] Every prediction in § Integration Criteria & Evidence Plan holds at a named commit
+- [ ] The integrated result satisfies § Feature-Level Interface & Data Contract; deviations recorded by REPLAN, none silently absorbed
+- [ ] § Global Invariants hold at the final commit, re-verified — not inferred from children's green runs
 - [ ] Every capstone in `serves_capstones` notified with a `STATUS:` comment
 - [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A)
-- [ ] § Agentic Delegability filled at filing and re-scored on any `REPLAN:` or `AMENDED:` edit that changed the roster, the integration evidence, or the open decisions
+- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10)
+- [ ] Every cited evidence document and permalink resolves on the default branch at close
+- [ ] § Agentic Delegability re-scored on any `REPLAN:` edit that changed the roster, the integration evidence, or the open decisions
 - [ ] ...
 
+## Pickup Checks
+
+<!-- Run once by whoever begins the integration work of § Integration
+     Criteria & Evidence Plan (task rule 6, applied at this tier).
+     Preconditions for starting, not completion criteria. Record the
+     outcome in a `STATUS:` comment. -->
+
+- [ ] Every `REPLAN:` comment read; the body matches the latest one; the gates covering each re-planned span were re-run
+- [ ] Every child in `requires_tasks` has a landing `STATUS:` comment mirrored here, or its disposition is recorded; `planned_tasks` is empty
+- [ ] Every child's landing comment checked for contract deviations; each deviation reconciled in § Feature-Level Interface & Data Contract by REPLAN
+- [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout
+- [ ] Every `blocked_by` entry has landed, or was waived per task rule 10
+- [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
+- [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
+
+## Post-Integration Validation
+
+<!-- Run at close against the integrated result. One row per item; rows
+     are enumerated AT FILING (a row per integration criterion, per
+     contract item, per invariant, per child, per open question) with
+     evidence cells empty. Evidence is a command with its output, a test
+     name at a commit, a permalink, or a comment link — never "done". -->
+
+| Item | Check | Evidence | Result |
+|------|-------|----------|--------|
+| Integration criterion 1 | do X at the named commit, observe Y; each spanning child's contribution shown | | |
+| Contract: modified / consumed / provided | declared at the feature boundary vs. observed in the integrated code | | |
+| Contract: durable / ephemeral / concurrency | as declared | | |
+| Contract: transformations | each defined stage located across the children's diffs | | |
+| Contract: handoff #A → #B | provider side and consumer side both present as declared | | |
+| Invariant 1 | re-verified at the final commit: command and output | | |
+| Child #A | landed; `STATUS:` mirrored here; deviations reconciled | | |
+| Open question 1 | resolving comment | | |
+| Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
+| Mirrors | `STATUS:` posted on every capstone in `serves_capstones` | | |
+| Links | every permalink and document resolves on the default branch | | |
+| Waivers | every skipped criterion has its `WAIVED:` comment | | |
+| Re-plans | every `REPLAN:` comment reconciled; the body describes what was built | | |
+
+- [ ] Adversarial review of the integrated result against this issue found no substantial finding
+
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every integration criterion, contract item, invariant, child and open question has a validation row; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Sequencing & Parallelism or § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+
+## Abstract
+
+<!-- Written last, read first. 2–4 sentences: the capability, why it
+     matters, and the one-line shape of the decomposition — drawn from
+     § Intent & Alignment, § Capability Statement & Scope Boundary and
+     § Decomposition & Rationale, contradicting none of them. The
+     terminal gate in § Agentic Delegability covers it. -->
 
 ## Agentic Delegability (ADR-1)
 
@@ -503,14 +612,17 @@ flowchart TD
   A low band is a routing decision, not a criticism. Issues can be excellent
   work and band F because closing them needs a person or a device.
 
-  REVIEW GATE. The two boxes below are a fast filter: an issue with both
-  ticked has been read adversarially and by a peer, and neither read left
-  anything substantial outstanding. Tick them yourself; the filer reviewing
+  REVIEW GATE — THE TERMINAL GATE OF RULE 14. The two boxes below cover
+  the ENTIRE body, § Abstract included: an issue with both ticked has been
+  read adversarially and by a peer, end to end, and neither read left
+  anything substantial outstanding. The section gates above record that
+  each span was re-read when reached; only these two boxes assert that the
+  finished issue is consistent. Tick them yourself; the filer reviewing
   their own issue is fine.
     - SUBSTANTIAL means acting on the finding would change a score above, a
       completion criterion, a prediction, or the scope. Wording is not.
     - Unticked means not yet reviewed. It is not a defect and does not block
-      filing; it means the band above is still unvalidated.
+      filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
 -->
 

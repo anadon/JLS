@@ -31,59 +31,79 @@ import re
 
 TEMPLATES = {
     "task": {
-        "version": "scientific-task v7",
+        "version": "scientific-task v8",
         "file": "scientific_task.md",
         "label": "tier:task",
         "yaml_keys": ["tier", "evidence_commit",
                       "blocked_by", "blocks", "related"],
+        # Dependency (filing) order, which since v8 is also the body order.
         "headings": [
-            "Abstract", "Intended Audience & Impact", "Status & Dependencies",
-            "1. Background & Prior Work", "2. Observations",
-            "3. Research Question", "4. Hypothesis (falsifiable)",
-            "5. Predictions", "6. Materials & Apparatus",
-            "7. Interface & Data Contract", "8. Method / Experimental Design",
-            "9. Data Collection & Analysis", "10. Falsification Criteria",
-            "11. Threats to Validity", "12. Related Work",
-            "13. Conclusion & Future Work", "Open Questions & Decisions Needed",
-            "14. Completion Criteria (Definition of Done)",
+            "Intent & Alignment", "Status & Dependencies",
+            "Observations", "Background & Prior Work", "Related Work",
+            "Research Question", "Hypothesis (falsifiable)",
+            "Predictions & Falsification Criteria", "Materials & Apparatus",
+            "Interface & Data Contract",
+            "Scope Boundary", "Method / Experimental Design",
+            "Code & Project Impact and Consequences",
+            "Data Collection & Analysis", "Threats to Validity",
+            "Open Questions & Decisions Needed", "Conclusion & Future Work",
+            "Completion Criteria (Definition of Done)",
+            "Pickup Checks", "Post-Implementation Validation",
+            "Abstract", "Agentic Delegability (ADR-1)",
         ],
-        "subheadings": [f"7.{n}" for n in range(1, 13)],
+        # Subsections of Interface & Data Contract, in dependency order.
+        # Matched by exact normalised title or a suffix on it, never by
+        # number: headings carry none since v8.
+        "subheadings": [
+            "External interfaces consumed", "Data consumed (structure)",
+            "External interfaces modified",
+            "Internal interfaces provided — public",
+            "Internal interfaces provided — private",
+            "Data provided (structure)", "Data durably tracked",
+            "Data ephemerally used", "Concurrency model",
+            "Data transformations", "Failure modes & error handling",
+            "Compatibility, versioning & migration",
+        ],
     },
     "feature": {
-        "version": "feature v4",
+        "version": "feature v5",
         "file": "feature.md",
         "label": "tier:feature",
         "yaml_keys": ["tier", "evidence_commit", "requires_tasks",
                       "planned_tasks", "blocked_by", "blocks",
                       "serves_capstones", "related"],
         "headings": [
-            "Abstract", "Intended Audience & Impact",
-            "Status & Dependency Graph",
-            "1. Capability Statement & Scope Boundary",
-            "2. Decomposition & Rationale",
-            "3. Feature-Level Interface & Data Contract",
-            "4. Global Invariants", "5. Integration Criteria & Evidence Plan",
-            "6. Sequencing & Parallelism", "7. Re-planning Protocol",
+            "Intent & Alignment", "Status & Dependency Graph",
+            "Capability Statement & Scope Boundary",
+            "Decomposition & Rationale",
+            "Feature-Level Interface & Data Contract",
+            "Integration Criteria & Evidence Plan",
+            "Global Invariants", "Code & Project Impact and Consequences",
+            "Sequencing & Parallelism", "Re-planning Protocol",
             "Open Questions & Decisions Needed",
             "Completion Criteria (Definition of Done)",
+            "Pickup Checks", "Post-Integration Validation",
+            "Abstract", "Agentic Delegability (ADR-1)",
         ],
         "subheadings": [],
     },
     "capstone": {
-        "version": "capstone v4",
+        "version": "capstone v5",
         "file": "capstone.md",
         "label": "tier:capstone",
         "yaml_keys": ["tier", "evidence_commit", "requires_features",
                       "requires_capstones",
                       "planned_features", "blocked_by", "blocks", "related"],
         "headings": [
-            "Abstract", "Intended Audience & Impact",
-            "Status & Required Features", "1. Outcome Statement",
-            "2. Required Feature Set & Sufficiency",
-            "3. Cross-Feature Integration Risks",
-            "4. System-Level Acceptance Criteria", "5. Re-planning Protocol",
+            "Intent & Alignment", "Status & Required Features",
+            "Outcome Statement", "Required Feature Set & Sufficiency",
+            "Cross-Feature Integration Risks",
+            "Code & Project Impact and Consequences",
+            "System-Level Acceptance Criteria", "Re-planning Protocol",
             "Open Questions & Decisions Needed",
             "Completion Criteria (Definition of Done)",
+            "Pickup Checks", "Post-Acceptance Validation",
+            "Abstract", "Agentic Delegability (ADR-1)",
         ],
         "subheadings": [],
     },
@@ -177,6 +197,23 @@ def yaml_key_state(block, key):
                 return "populated"
         return "empty"
     return "absent"
+
+
+def find_subheading(headings, canonical):
+    """The actual heading for a contract subsection, or None.
+
+    Subsections are matched by exact normalised title or by a suffix on it
+    ("Data transformations (routing only)"), never by drift: the contract
+    subsections share leading words ("Data consumed", "Data provided",
+    "Data transformations"), so the drift rule of find_heading would let
+    one stand in for another and mask a missing subsection."""
+    canon_n = norm(canonical)
+    for raw in headings:
+        r = norm(raw)
+        if r == canon_n or r.startswith(canon_n + " ") \
+                or r.startswith(canon_n + "("):
+            return raw
+    return None
 
 
 def find_heading(headings, canonical):

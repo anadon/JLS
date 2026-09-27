@@ -5,13 +5,13 @@ labels: ["tier:task"]
 ---
 
 <!--
-  Template: scientific-task v7 (2026-08)
+  Template: scientific-task v8 (2026-09)
 
   RULES — for humans and LLM agents alike, filing or executing.
 
   1. Evidence, not memory. Every code claim carries file:line at a named
      commit, re-derived at that commit — quote the line you cite. Pin that
-     commit once in Status & Dependencies and cite by commit-locked
+     commit once in § Status & Dependencies and cite by commit-locked
      permalink, never a branch path (branch links rot the moment the
      branch is deleted). Source comments and audit summaries are hearsay
      until re-derived. Aggregate claims (counts, "all X", "no Y anywhere")
@@ -23,26 +23,25 @@ labels: ["tier:task"]
   3. Predictions are observable: do X, observe Y. For defects and
      improvements, at least one prediction must fail at the named commit,
      and its failure must be OBSERVED before filing — run it and paste
-     the command and wrong output into §2 (Observations). For
+     the command and wrong output into § Observations. For
      investigations, state instead the decision criterion: the
      observation that discriminates between the candidate answers.
   4. Atomic scope. One hypothesis cluster per issue; where scopes touch a
-     sibling issue, §12 (Related Work) states which issue owns which fix.
-  5. Cross-references cite the section NAME — "§ Threats to Validity" —
-     optionally with its number. The name is canonical: numbers drift
-     across template versions, names do not. Never a bare number.
-     Subsections of § Interface & Data Contract may use the short form
-     "§7.N (<short name>)" — e.g. "§7.4 (Internal interfaces — public)"
-     — the parenthesized name is still required.
-  6. Executors: before step one of §8 (Method), re-verify every
-     observation in §2 (Observations) at your checkout. If one fails to
-     reproduce, or a hypothesis is refuted
-     mid-work, stop and comment on the issue with the refuting evidence.
-     A refuted issue is a successful experiment, not a task to salvage.
-     If the observations no longer fail because the work has already
-     landed, the issue is superseded — close it with that note instead of
-     re-doing it. Re-derive any drifted line numbers before trusting them;
-     a stale citation is not evidence.
+     sibling issue, § Related Work states which issue owns which fix and
+     § Scope Boundary states what this issue will not absorb.
+  5. Cross-references cite the section NAME — "§ Threats to Validity".
+     Headings carry no numbers, so there is nothing else to cite.
+     Subsections of § Interface & Data Contract and § Intent & Alignment
+     are cited the same way — "§ Data transformations", "§ User impact".
+     § Code & Project Impact and Consequences is a top-level section.
+  6. Executors: before step one of § Method / Experimental Design, run
+     § Pickup Checks in full. If an observation fails to reproduce, or a
+     hypothesis is refuted mid-work, stop and comment on the issue with
+     the refuting evidence. A refuted issue is a successful experiment,
+     not a task to salvage. If the observations no longer fail because
+     the work has already landed, the issue is superseded — close it
+     with that note instead of re-doing it. Re-derive any drifted line
+     numbers before trusting them; a stale citation is not evidence.
   7. Labels are not applied automatically for API-filed issues: set
      `bug` or `enhancement` explicitly, matching the corpus, plus the
      tier label `tier:task`.
@@ -58,13 +57,12 @@ labels: ["tier:task"]
 
      THIS TASK DECLARES NO OWNER. A task may be shared by any number
      of features, and ownership lives solely in each feature's
-     requires_tasks roster. There is no part_of_feature field: it was
-     retired in scientific-task v7 / feature v4 because the
-     single-owner rule it enforced was never the intended model and
-     had pushed genuine shared ownership into `related`. To find the
-     features that own this task, search the rosters — an executor
-     does not need them to do the work, and the readiness derivation
-     supplies them to any workflow that does.
+     requires_tasks roster. To find the features that own this task,
+     search the rosters — an executor does not need them to do the
+     work, and the readiness derivation supplies them to any workflow
+     that does. § Intent & Alignment may NAME the feature or capstone
+     this task serves; that is a reference for alignment, not an
+     ownership claim.
 
      An issue's tier is defined by its machine block's `tier:` key;
      the tier:* label is a mirror for filtering — a missing or stale
@@ -72,7 +70,7 @@ labels: ["tier:task"]
      ORDERING GRAPH is blocked_by/blocks edges PLUS composition edges
      read child-before-parent (a parent cannot close before its
      children land); that combined graph must stay a DAG. The machine
-     block in Status & Dependencies is the source of truth for the
+     block in § Status & Dependencies is the source of truth for the
      edges it can express.
   9. Amendment & comment protocol. This body may be edited, but only
      together with an `AMENDED:` comment stating what changed, why,
@@ -81,15 +79,16 @@ labels: ["tier:task"]
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). Post each such comment on THIS issue
      and mirror the same comment on every feature whose requires_tasks
-     roster lists this task (there may be several, or none). When an edit REMOVES or NARROWS any claim, observation,
-     prediction, criterion, or scope item, the AMENDED comment must
-     carry a "Dropped/Retired" ledger enumerating each removed item
-     with its disposition — retired with reason, moved to issue #N, or
-     restated where — so omissions are auditable by reading the
-     comment, not only by diffing bodies. Bookkeeping is exempt from
-     the AMENDED requirement: ticking a Method or Completion checkbox
-     whose backing evidence is already recorded in a comment or PR,
-     and re-pinning evidence_commit after re-deriving citations.
+     roster lists this task (there may be several, or none). When an
+     edit REMOVES or NARROWS any claim, observation, prediction,
+     criterion, or scope item, the AMENDED comment must carry a
+     "Dropped/Retired" ledger enumerating each removed item with its
+     disposition — retired with reason, moved to issue #N, or restated
+     where — so omissions are auditable by reading the comment, not
+     only by diffing bodies. Bookkeeping is exempt from the AMENDED
+     requirement: ticking a gate, Method, check-sheet or Completion
+     checkbox whose backing evidence is already recorded in a comment
+     or PR, and re-pinning evidence_commit after re-deriving citations.
      Checkbox state remains a convenience rendering — the recorded
      evidence is the record. Write mechanics: cite a line range as ONE
      link — "[L100–L120](<permalink>#L100-L120)" — never two adjacent
@@ -101,31 +100,66 @@ labels: ["tier:task"]
      now tracks the dropped obligation (or stating explicitly why no
      successor is needed). A criterion skipped without a WAIVED
      comment leaves the issue unclosable.
-
   11. Oracle custody. Every completion criterion that compares against an
      expected value names WHO produced that value and WHEN. Values
      committed and reviewed BEFORE the implementation, and values written
      by the same change as the implementation, are different guarantees,
      and only the first is evidence. Where an expected-output artifact is
      generated by the same change that produces the behaviour it certifies,
-     say so in §9 (Data Collection & Analysis) and apply the corresponding
+     say so in § Data Collection & Analysis and apply the corresponding
      deduction in § Agentic Delegability. A check authored alongside the
      thing it checks passes indefinitely and is then cited as ground truth
      by everything built on it.
   12. Artifact paths resolve at filing. Every path a criterion names either
-     exists at `evidence_commit` or is created by this issue, and §14 says
-     which. A criterion pointing at something that does not exist is
-     unclosable: whoever picks it up will either invent a location or skip
-     the criterion silently.
+     exists at `evidence_commit` or is created by this issue, and
+     § Completion Criteria says which. A criterion pointing at something
+     that does not exist is unclosable: whoever picks it up will either
+     invent a location or skip the criterion silently.
   13. Open Questions are MARKED, not merely listed. Each entry ends in
      exactly one of `Recommended default: <answer>` (an executor may
      proceed and land), `PROPOSED: <answer>, pending <who confirms>` (an
      executor may draft but not land), `BLOCKING: <who decides>` (an
      executor must stop), or `HYGIENE: <what to re-derive>` (not a decision
-     at all — a citation, a status check, an un-run build). This template requires the section, so
-     every issue has one; without a marker a reader cannot tell a decision
-     that was made from one that was dodged, and § Agentic Delegability
-     scores the entry as unresolved, which is usually not what was meant.
+     at all — a citation, a status check, an un-run build). This template
+     requires the section, so every issue has one; without a marker a
+     reader cannot tell a decision that was made from one that was dodged,
+     and § Agentic Delegability scores the entry as unresolved, which is
+     usually not what was meant.
+  14. Filing order and consistency gates. Sections appear in DEPENDENCY
+     order, not read order: each section is written from the sections
+     above it and from nothing below it. Sections that define each other
+     are grouped and written together; within a group the order is free.
+     After each section or group stands a GATE checkbox. Tick a gate only
+     after (a) re-reading every section above it against that section's
+     own mandate, (b) re-reading them against each other, (c) re-reading
+     them against the external context the gate names — usually another
+     issue's body at its current revision, and code at evidence_commit —
+     and then (d) an adversarial re-read of the same span, fixing each
+     finding and re-reading until a pass yields no SUBSTANTIAL finding.
+     Substantial has the meaning the review gate in § Agentic
+     Delegability gives it: acting on the finding would change a mandate,
+     a score, a criterion, a prediction, an edge, or the scope; wording is
+     not. There is no bound on the number of passes.
+     Gates are cumulative. Gate k covers every section through k, so a
+     finding at gate k that changes an earlier section is fixed there
+     and the earlier gate is not re-ticked: its tick records that the
+     re-read happened when it was reached, not that the section was
+     final. The terminal gate (the two review boxes in § Agentic
+     Delegability) covers the whole body, § Abstract included, and is
+     the only gate whose tick asserts consistency of the finished issue.
+     A filed issue with unticked gates is valid but unvalidated, exactly
+     as an unticked review gate leaves the band unvalidated. Executors do
+     not tick gates. § Abstract is written last and read first.
+  15. Three check-sheets, distinguished by WHEN they run. The gates of
+     rule 14 run at filing. § Pickup Checks runs once, before step one of
+     § Method / Experimental Design, by whoever executes (rule 6).
+     § Post-Implementation Validation runs at close, against the actual
+     diff and PR, one row per item. § Completion Criteria states WHAT
+     must be true of the finished work; the validation sheet records HOW
+     each of those things, and each prediction, contract subsection,
+     threat and open question, was verified. Rows of both sheets are
+     ENUMERATED AT FILING with their evidence cells empty, so the gate
+     after them can check that nothing the body asserts lacks a row.
 
   Decision/spike tasks ("evaluate X", "decide Y") use this template
   with "verdict recorded in <named doc/section>" as the completion
@@ -135,52 +169,62 @@ labels: ["tier:task"]
   next reader of the raw issue body.
 -->
 
-## Abstract
+## Intent & Alignment
 
-<!-- 2-4 sentences: what is wrong or missing, why it matters, and the
-     one-line shape of the proposed remedy. -->
+<!-- Written FIRST. Everything below is checked against this section
+     at every gate, and this section is checked against § Observations
+     once they exist (impact claims are observations too, rule 1: where
+     the harm or gap is measurable — a wrong simulation, a crash, a lost
+     edit, a silent mis-load — § Observations pins it and this section
+     must agree).
 
-## Intended Audience & Impact
+     Intent: the change in the world this work is for, in one
+     paragraph, phrased so that a reader can later say whether it
+     happened. Not the mechanism — the mechanism is § Hypothesis and
+     § Method / Experimental Design.
 
-<!-- Who is this work for, and how is it meaningful to them? Name the
-     concrete audience(s) JLS actually serves and, per audience, the
-     change they experience — what they can do afterward that they can't
-     today, or what stops going wrong for them. Impact claims are
-     observations too (rule 1): where the harm or gap is measurable
-     (a wrong simulation, a crash, a lost edit, a silent mis-load),
-     point at it.
+     Alignment: what this work serves, cited by issue number AND
+     section name — a feature's § Capability Statement & Scope
+     Boundary, a capstone's § Outcome Statement — or the standing
+     invariant, format document or project rule it upholds. This is a
+     reference for checking alignment, not an ownership claim (rule 8).
+     A task that aligns with nothing has no beneficiary and does not
+     belong on the backlog (rule 2). -->
 
-     The recurring audiences — pick and name the ones this task serves,
-     do not list them all:
+### User impact
+
+<!-- The concrete audience(s) this task serves and, per audience, the
+     change they experience: what they can do afterward that they
+     cannot today, or what stops going wrong for them. Pick and name
+     the ones this task serves; do not list them all:
        - Students drawing and simulating circuits in the editor.
        - Instructors authoring, grading, or auto-checking work in batch
          (`-b`) mode.
        - Circuit-file authors and third-party tools that read or write
          `.jls` files against docs/file-format.md.
-       - Contributors, maintainers, and LLM agents working the codebase.
        - Packagers and distributors shipping the installers and container.
-     If a task genuinely serves an internal audience only (a refactor, a
-     CI gate), say so and name the downstream audience it protects; "N/A"
-     with no audience means the work has no beneficiary and does not
-     belong on the backlog (rule 2). -->
+     If the task serves no user directly (a refactor, a CI gate), say so
+     and name the downstream audience the work protects; the effects on
+     the codebase itself belong in § Code & Project Impact and
+     Consequences, below the contract that determines them. -->
 
 ## Status & Dependencies
 
-<!-- The front matter an executor reads before touching anything. Keep it
-     at the top, not buried in §12 (Related Work) — an issue picked up cold
-     must not miss a blocker (a fix hardening code another issue is about
-     to delete is wasted work). The machine block is the source of truth
-     for graph assembly (rule 8); annotate each blocked_by entry with the
-     one-line reason it blocks, as a YAML comment. Evidence commit is the
-     single SHA every §2 (Observations) file:line is pinned to — cite by
-     permalink at this commit (rule 1); if HEAD has moved, re-derive
-     citations before trusting them. Before executing, run the
-     supersession check: confirm the work has not already shipped
-     (rule 6); if it has, close as superseded rather than re-doing it. -->
+<!-- The machine block is the source of truth for graph assembly
+     (rule 8). It is filled PROGRESSIVELY, the gates say when:
+       - `evidence_commit` now, before anything is observed. It is the
+         single SHA every § Observations file:line is pinned to — cite
+         by permalink at this commit (rule 1); if HEAD has moved,
+         re-derive citations before trusting them.
+       - `blocked_by`, `blocks`, `related` at the gate after § Related
+         Work, once the siblings are known. Annotate each blocked_by
+         entry with the one-line reason it blocks, as a YAML comment.
+       - `owned_by_derived` is generated, never hand-edited.
+     Executors: § Pickup Checks reads this block first. -->
 
 ```yaml
 tier: task
-evidence_commit:        # SHA all §2 citations are pinned to
+evidence_commit:        # SHA all § Observations citations are pinned to
 owned_by_derived: []    # OPTIONAL and NON-AUTHORITATIVE. A generated copy of the
                         #   features whose requires_tasks lists this task, so the
                         #   issue names its owners when read alone. Those rosters
@@ -192,53 +236,104 @@ blocked_by: []          # ordering: TASKS that must land first — tasks only.
 blocks: []              # ordering: TASKS waiting on this one — tasks only
 related: []             # reference only — never blocking, never ownership.
                         #   Ownership is not recorded here: it lives in each
-                        #   owning feature's requires_tasks roster (feature v4).
+                        #   owning feature's requires_tasks roster.
 ```
 
-## 1. Background & Prior Work
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states an intent a reader could later confirm or deny; its alignment target was opened at its current revision and the cited section says what this task assumes it says; every audience named is one this change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
+
+## Observations
+
+<!-- Numbered, reproducible facts. Each carries file:line at
+     `evidence_commit` plus the quoted line(s), or the exact command and
+     its output. Include the observed failure required by rule 3. Every
+     measurable claim made in § Intent & Alignment has its observation
+     here. -->
+
+## Background & Prior Work
 
 <!-- What already exists: relevant code paths, prior issues/PRs, audit
-     findings, external tools or literature. Link them. -->
+     findings, external tools or literature. Link them. Code claims
+     carry file:line at `evidence_commit` (rule 1). -->
 
-## 2. Observations
+## Related Work
 
-<!-- Numbered, reproducible facts. Each carries file:line at a named
-     commit plus the quoted line(s), or the exact command and its output.
-     Include the observed failure required by rule 3. -->
+<!-- Sibling issues, the features whose rosters list this task (search
+     the rosters; rule 8), audit findings, external references. Where
+     scopes touch, state which issue owns which fix. The `blocked_by`,
+     `blocks` and `related` entries of the machine block are derived
+     from this section — fill them now, and record the DAG walk (follow
+     each named issue's edges outward and confirm no path returns
+     here). -->
 
-## 3. Research Question
+- [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by`, `blocks`, `related` are filled from it, every ordering edge points at a task, the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+
+## Research Question
 
 <!-- The single question this work answers, phrased so the answer is
-     yes or no. -->
+     yes or no. It is the question § Observations raises and § Intent &
+     Alignment needs answered — not a wider one. -->
 
-## 4. Hypothesis (falsifiable)
+## Hypothesis (falsifiable)
 
-<!-- H1, H2, ...: statements about root cause or expected effect that the
-     Method can prove wrong. If no observation could refute it, it is not
-     a hypothesis — rewrite it. -->
+<!-- H1, H2, ...: statements about root cause or expected effect that
+     § Method / Experimental Design can prove wrong. If no observation
+     could refute it, it is not a hypothesis — rewrite it. Each Hn names
+     the observation(s) it explains. -->
 
-## 5. Predictions
+- [ ] **Gate — Question & Hypothesis.** The research question is answerable yes or no and is the question the observations raise; every hypothesis explains at least one observation and names it; every hypothesis is refutable by an observation-shaped check; no hypothesis reaches beyond the question; together they cover the intent stated in § Intent & Alignment. Adversarial re-read of everything above found no substantial finding.
 
-<!-- P1, P2, ...: concrete observable outcomes if the hypothesis holds,
-     each phrased as: do X, observe Y. Mark which fail at the named
-     commit (pre-fix) and which must hold after the fix. -->
+## Predictions & Falsification Criteria
 
-## 6. Materials & Apparatus
+<!-- One paired entry per prediction. A falsification criterion is a
+     prediction's negation plus the next move; keeping them apart is how
+     they drift apart, so they are written together:
 
-<!-- Toolchain, fixtures, test rigs, corpora. Note anything that does not
-     exist yet and must be built first. -->
+       P1. do X, observe Y.   Fails at evidence_commit: yes/no (pasted in
+           § Observations if yes).   Must hold after the fix: yes/no.
+           Tests: H1.
+       F1. If after the fix X still yields not-Y, H1 is wrong — next
+           move: investigate Z / file successor / stop.
 
-## 7. Interface & Data Contract
+     Every hypothesis has at least one P and one F. Predictions that
+     hold only after the fix say so. For investigations, the pairs are
+     the decision criteria (rule 3). -->
+
+## Materials & Apparatus
+
+<!-- Toolchain, fixtures, test rigs, corpora, platforms: everything
+     needed to perform each "do X" above. Note anything that does not
+     exist yet and must be built first — § Method / Experimental Design
+     must build it. -->
+
+- [ ] **Gate — Predictions & Materials.** Every hypothesis has at least one P and one F; every P is do-X-observe-Y with X executable using only the materials named; every P marked failing at `evidence_commit` has its failure pasted in § Observations; every F names the hypothesis it refutes and the next move; materials that do not exist yet are flagged for § Method / Experimental Design to build. Adversarial re-read of everything above found no substantial finding.
+
+## Interface & Data Contract
 
 <!-- The shape of the work before the work: everything this task touches
      at a boundary, stated precisely enough that a reviewer can check the
-     eventual diff against it. This section MUST be filled in before any
-     proposed diff — diffs belong in §8 (Method) or later, never ahead of
-     the contract they implement. Rule 2 applies per subsection:
-     inapplicable ones are "N/A — <one-line reason>", and claims about
-     existing code carry file:line evidence (rule 1). -->
+     eventual diff against it. This section MUST be complete before any
+     proposed diff — diffs belong in § Method / Experimental Design or
+     later, never ahead of the contract they implement. Rule 2 applies per
+     subsection: inapplicable ones are "N/A — <one-line reason>", and
+     claims about existing code carry file:line evidence (rule 1).
+     Subsections are in dependency order with gates between the groups:
+     declarations first, then the properties defined over them, then the
+     behaviour at their edges. -->
 
-### 7.1 External interfaces modified
+### External interfaces consumed
+
+<!-- Surfaces outside this codebase the work depends on: JDK/Swing/AWT
+     APIs, file formats read, environment variables, fonts, OS services,
+     CI facilities. Note version or platform assumptions. -->
+
+### Data consumed (structure)
+
+<!-- Each input: where it comes from, its format/schema/encoding/units,
+     and the authoritative definition of that structure (link it — e.g.
+     docs/file-format.md), plus whether the source is trusted or must be
+     treated as hostile (a user-supplied `.jls` file is hostile input). -->
+
+### External interfaces modified
 
 <!-- Surfaces visible outside the process that this work changes: the
      `.jls` file format (docs/file-format.md), CLI/batch (`-b`) flags and
@@ -246,177 +341,268 @@ related: []             # reference only — never blocking, never ownership.
      third parties depend on, installer/container layout. For each: the
      surface, the change, and who sees it. -->
 
-### 7.2 External interfaces consumed
-
-<!-- Surfaces outside this codebase the work depends on: JDK/Swing/AWT
-     APIs, file formats read, environment variables, fonts, OS services,
-     CI facilities. Note version or platform assumptions. -->
-
-### 7.3 Data consumed (structure)
-
-<!-- Each input: where it comes from, its format/schema/encoding/units,
-     and the authoritative definition of that structure (link it — e.g.
-     docs/file-format.md), plus whether the source is trusted or must be
-     treated as hostile (a user-supplied `.jls` file is hostile input). -->
-
-### 7.4 Internal interfaces provided — public
+### Internal interfaces provided — public
 
 <!-- Classes, methods, or packages this work adds or changes that OTHER
      parts of the codebase are meant to call: the signature, the expected
      caller(s), and the behavioral contract (pre/postconditions, error
      behavior). -->
 
-### 7.5 Internal interfaces provided — private
+### Internal interfaces provided — private
 
 <!-- Implementation-only helpers introduced: what they do and how their
      privacy is enforced (visibility modifier, package placement) so they
      do not silently become load-bearing API. -->
 
-### 7.6 Data provided (structure)
+### Data provided (structure)
 
 <!-- Each output: format/schema/encoding/units and where that structure
      is authoritatively defined; for a new structure, define it here or
      name the doc that will. -->
 
-### 7.7 Data durably tracked
+### Data durably tracked
 
 <!-- State that outlives the process: files written, settings, on-disk
      formats. For each: where it lives, its structure and version, and
      the migration story for data written by older versions. -->
 
-### 7.8 Data ephemerally used
+### Data ephemerally used
 
 <!-- Transient state: caches, undo stacks, simulation state, temp files.
      For each: its lifetime, what invalidates it, and what happens if it
      is lost mid-operation. -->
 
-### 7.9 Concurrency model
+- [ ] **Gate — Contract declarations.** Every interface or datum consumed names its provider and every one provided names its consumer, or says none exists yet; every structure links its authoritative definition or defines it here; every claim about existing code carries file:line at `evidence_commit`; hostile inputs are marked; every surface a prediction exercises appears in some subsection above, and no declaration lacks a hypothesis or prediction that motivates it; nothing above is a diff. Adversarial re-read of everything above found no substantial finding.
 
-<!-- For each interface and data item above: synchronous, asynchronous,
-     parallel, or concurrent — and the mechanism (EDT vs. background
-     thread, SwingWorker, locks, immutability, single-threaded batch
-     mode). Name what guards each piece of shared mutable state;
+### Concurrency model
+
+<!-- For each interface and data item declared above: synchronous,
+     asynchronous, parallel, or concurrent — and the mechanism (EDT vs.
+     background thread, SwingWorker, locks, immutability, single-threaded
+     batch mode). Name what guards each piece of shared mutable state;
      "synchronous, EDT-only" is a complete answer where true. -->
 
-### 7.10 Data transformations
+### Data transformations
 
-<!-- How the inputs of §7.3 (Data consumed) and the stored data of §7.7
-     (Data durably tracked) become the outputs of §7.6 (Data provided):
-     the pipeline stage by stage, with the representation at each stage
-     boundary. Every transform must be FULLY DEFINED — no "then it is
-     processed" hand-waving — and expressed as embedded LaTeX math
-     using GitHub's math rendering (inline $`...`$ or display $$...$$
-     blocks; syntax reference:
+<!-- How the inputs of § Data consumed (structure) and the stored data of
+     § Data durably tracked become the outputs of § Data provided
+     (structure): the pipeline stage by stage, with the representation at
+     each stage boundary. Every transform must be FULLY DEFINED — no
+     "then it is processed" hand-waving — and expressed as embedded
+     LaTeX math using GitHub's math rendering (inline $`...`$ or display
+     $$...$$ blocks; syntax reference:
      https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions).
      For each stage: name the transform, give its signature over the
-     structures declared in §7.3 (Data consumed) and §7.6 (Data
-     provided), and define the mapping itself, e.g.
+     structures declared above, and define the mapping itself, e.g.
 
        $$f_{\mathrm{route}} : \mathrm{Wire} \times \mathrm{Grid}
          \to \mathrm{Segment}^{*}, \qquad
          f_{\mathrm{route}}(w, g) = \ldots$$
 
      with side conditions and partiality explicit — wherever a
-     transform is undefined, §7.11 (Failure modes & error handling)
-     owns the behavior. Prose may accompany the math; it may not
-     replace it. A reviewer must be able to locate each defined stage
-     in the diff. -->
+     transform is undefined, § Failure modes & error handling owns the
+     behavior. Prose may accompany the math; it may not replace it. A
+     reviewer must be able to locate each defined stage in the diff. -->
 
-### 7.11 Failure modes & error handling
+- [ ] **Gate — Concurrency & transformations.** Every piece of shared mutable state declared above has a named guard, or the model is stated single-threaded where that is true; every transform's signature ranges over structures declared above and nothing undeclared; every transform is fully defined in math with its domain stated; every point where a transform is partial is listed for § Failure modes & error handling. Adversarial re-read of everything above found no substantial finding.
 
-<!-- At each boundary above: what happens on malformed input, missing
-     resources, I/O failure, or interrupted operation. Which errors are
-     surfaced to the user, which are recovered, which abort — and what
-     durable data is guaranteed not to be corrupted on the way down. -->
+### Failure modes & error handling
 
-### 7.12 Compatibility, versioning & migration
+<!-- At each boundary above, and at each partial point of § Data
+     transformations: what happens on malformed input, missing resources,
+     I/O failure, or interrupted operation. Which errors are surfaced to
+     the user, which are recovered, which abort — and what durable data
+     is guaranteed not to be corrupted on the way down. -->
+
+### Compatibility, versioning & migration
 
 <!-- What existing artifacts and callers keep working: old `.jls` files
      still load, save output stays byte-identical (or the version bump is
      documented), in-tree callers still compile, round-trips still hold.
-     State each compatibility claim so a test can pin it. -->
+     State each compatibility claim so a test can pin it. Every surface
+     in § External interfaces modified and every datum in § Data durably
+     tracked has a claim here. -->
 
-## 8. Method / Experimental Design
+- [ ] **Gate — Contract complete.** Every partial point flagged at the previous gate has an owner in § Failure modes & error handling; every durable datum names what is guaranteed uncorrupted on failure; every modified external surface and durable datum has a compatibility claim stated so a test can pin it; every compatibility claim that matters has a prediction in § Predictions & Falsification Criteria, or one was added; the contract as a whole is what § Hypothesis (falsifiable) implies — no more, no less. Adversarial re-read of everything above found no substantial finding.
 
-<!-- Ordered checklist of the work, each step small enough to review.
-     Every behavioral fix carries a regression test that fails at the
-     pre-change commit and passes with the fix. Proposed diffs go here
-     (or in later sections) — always after §7 (Interface & Data
-     Contract), never before it. -->
+## Scope Boundary
+
+<!-- What is OUT: the adjacent work an executor might be tempted to
+     absorb, each item with the issue that owns it instead, or
+     "unfiled — file at close". Derived from § Related Work and the
+     contract: anything the contract does not declare and Method does
+     not step through is out, and this section says so where a reader
+     would otherwise assume it is in. -->
+
+## Method / Experimental Design
+
+<!-- Ordered checklist of the work, each step small enough to review and
+     each step traceable to a contract subsection or a prediction. Every
+     behavioral fix carries a regression test that fails at the
+     pre-change commit and passes with the fix. Every material flagged as
+     not yet existing is built by a named step. Proposed diffs go here
+     (or in later sections) — always after § Interface & Data Contract,
+     never before it. -->
 
 - [ ] ...
 
-## 9. Data Collection & Analysis
+## Code & Project Impact and Consequences
 
-<!-- How results are recorded and judged: which tests assert what; what
-     manual verification (with platform) is recorded in the PR. -->
+<!-- What changes for contributors, maintainers, LLM agents working the
+     codebase, and the project's own commitments, now that the contract
+     and the method fix what moves: interfaces that move (from
+     § Interface & Data Contract), invariants that tighten or loosen,
+     build or CI behaviour, published surfaces, maintenance cost taken
+     on or retired. State consequences as well as benefits — what
+     becomes harder, what a later change must now respect, what this
+     forecloses. A consequence too costly to accept is a reason to
+     narrow § Scope Boundary or § Method / Experimental Design, which is
+     why the three are gated together. Each claim about existing code is
+     an observation (rule 1): one line here, citation in
+     § Observations. -->
 
-## 10. Falsification Criteria
+- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own and names the contract subsection or prediction it serves; every behavioral change has its regression-test step; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, at least one consequence is a cost and not a benefit, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
-<!-- For each hypothesis: the specific post-fix observation that refutes
-     it, and the next move if refuted. "If after the fix X still occurs,
-     H1 is wrong — investigate Y instead." -->
+## Data Collection & Analysis
 
-## 11. Threats to Validity
+<!-- How results are recorded and judged: which tests assert which
+     prediction; what manual verification (with platform) is recorded in
+     the PR. For every expected value compared against, who produced it
+     and when (rule 11). -->
+
+## Threats to Validity
 
 <!-- What could make the results misleading: platform differences,
      headless-vs-GUI divergence, stale line numbers or counts, fixture
-     bias, tests that shortcut the real code path. -->
+     bias, tests that shortcut the real code path. Each threat names its
+     mitigation — a step in § Method / Experimental Design, a check in
+     § Data Collection & Analysis — or is explicitly accepted with the
+     reason. -->
 
-## 12. Related Work
-
-<!-- Tracking issue, sibling issues, audit findings, external references.
-     Where scopes touch, state which issue owns which fix. -->
-
-## 13. Conclusion & Future Work
-
-<!-- Expected end state in one or two sentences; follow-ups explicitly
-     out of scope here. -->
+- [ ] **Gate — Evidence & threats.** Every P and F has a named test or a recorded manual procedure with platform in § Data Collection & Analysis; every expected value names its custodian and date; every threat has a mitigation located in a named section or is accepted with a reason; no test named shortcuts the code path its prediction is about. Adversarial re-read of everything above found no substantial finding.
 
 ## Open Questions & Decisions Needed
 
 <!-- Decisions this task cannot make for itself — cost, custody, policy,
-     taste, or unverified external state. Separate what is answerable now
-     from what genuinely needs a maintainer, so an executor knows what is
-     safe to proceed on. For each: the question, the options with a
-     recommended default, and whether it blocks filing, blocks execution,
-     or can ride along. "N/A — fully specified" if nothing is open.
+     taste, or unverified external state. Include every design decision
+     an executor will certainly hit, whether or not the text above has
+     named it: an unlisted one is open, not absent (§ Agentic
+     Delegability, DA axis). For each: the question, the options with a
+     recommended default, and whether it blocks filing, blocks
+     execution, or can ride along. "N/A — fully specified" if nothing is
+     open.
 
      Mark every entry per rule 13 — `Recommended default:`, `PROPOSED:`,
      `BLOCKING:` or `HYGIENE:`. The marker is what an executor and
      § Agentic Delegability both read; an unmarked entry is scored on its
      substance, and the marker fixed. -->
 
-## 14. Completion Criteria (Definition of Done)
+## Conclusion & Future Work
 
-<!-- How anyone — author, reviewer, or agent — recognizes this task is
-     finished. Every box is checkable by pointing at evidence: a test
-     name, a CI run, a command's output pasted in the PR. Edit the
-     pre-filled boxes to fit (rule 2 governs inapplicable ones), and add
-     criteria specific to this task.
+<!-- Expected end state in one or two sentences, stated so that
+     § Intent & Alignment is visibly satisfied by it; follow-ups
+     explicitly out of scope here, each consistent with § Scope Boundary
+     and carrying its owning issue or "unfiled". -->
+
+- [ ] **Gate — Decisions & conclusion.** Every open question carries exactly one rule 13 marker; every design decision an executor will hit is listed or is settled by the text above; nothing marked `Recommended default:` contradicts the contract; every future-work item is outside § Scope Boundary and has an owner or "unfiled"; the end state satisfies the intent stated in § Intent & Alignment. Adversarial re-read of everything above found no substantial finding.
+
+## Completion Criteria (Definition of Done)
+
+<!-- WHAT must be true of the finished work — not how it is checked
+     (that is § Post-Implementation Validation) and not what is checked
+     before starting (that is § Pickup Checks). Every box names the
+     artifact, its location, and the assertion that pins it; that is the
+     SC=5 test in § Agentic Delegability. Edit the pre-filled boxes to
+     fit (rule 2 governs inapplicable ones), and add criteria specific to
+     this task.
 
      Integrity rule: tests verify the work, they do not define it. If a
      criterion below turns out to be wrong or unsatisfiable, follow
      rule 2 — comment with evidence, do not work around it. -->
 
-- [ ] Every post-fix prediction in §5 (Predictions) verified; command and output recorded in the PR
-- [ ] Every check in §10 (Falsification Criteria) performed post-fix; outcome (not refuted / refuted → action taken) recorded in the PR
-- [ ] Post-change code re-checked against §7 (Interface & Data Contract): interfaces provided/consumed, data structures, concurrency model, and compatibility claims hold as declared; any deviation recorded as an issue comment (rule 2), not silently absorbed
-- [ ] New regression tests fail at the pre-change commit and pass at the fix commit
-- [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the §5 prediction that justifies the new expectation
+- [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit, and no falsification criterion fired unaddressed
+- [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded as an issue comment (rule 2), not silently absorbed
+- [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit
+- [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the prediction that justifies the new expectation
 - [ ] `mvn verify` green (tests + SpotBugs, warnings-as-errors)
 - [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification
-- [ ] No changes outside the scope of §8 (Method); adjacent work discovered en route is filed as new issues
-- [ ] Every `blocked_by` entry in Status & Dependencies has landed, or the dependency was waived per rule 10
-- [ ] Landing reported with a `STATUS:` comment on every feature whose `requires_tasks` lists this task, including any contract deviations those plans must reconcile
-- [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs
+- [ ] No changes outside § Method / Experimental Design and inside § Scope Boundary; adjacent work discovered en route is filed as new issues
+- [ ] Every expected value this issue was graded against was pre-committed, or § Data Collection & Analysis records that it was authored in the same change and the ADR-1 OS deduction was applied (rule 11)
+- [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10)
-- [ ] Not superseded: the §2 (Observations) failures still reproduced at pickup (rule 6); citations re-derived if HEAD had moved
-- [ ] Every decision in Open Questions & Decisions Needed is resolved (or explicitly deferred), none left blocking, and every entry carries its rule 13 marker
-- [ ] Every expected value this issue was graded against was pre-committed, or §9 records that it was authored in the same change and the ADR-1 OS deduction was applied (rule 11)
-- [ ] § Agentic Delegability filled at filing and re-scored on any `AMENDED:` edit that changed scope, evidence, or open decisions
+- [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs
+- [ ] Landing reported with a `STATUS:` comment on every feature whose `requires_tasks` lists this task, including any contract deviations those plans must reconcile
+- [ ] § Agentic Delegability re-scored on any `AMENDED:` edit that changed scope, evidence, or open decisions
 - [ ] ...
 
+## Pickup Checks
+
+<!-- Run once by the executor, before step one of § Method /
+     Experimental Design (rule 6). Each box is a precondition for
+     starting, not a completion criterion. Record the outcome in a
+     `STATUS:` comment; a failed check ends in a `REFUTED:` or
+     `SUPERSEDED:` comment, not in work. -->
+
+- [ ] Every `AMENDED:` comment read; the body matches the latest one
+- [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation stops the work (rule 6)
+- [ ] Not superseded: the rule 3 failure still occurs; if the work has already landed, close with a `SUPERSEDED:` comment
+- [ ] Citations re-derived if HEAD has moved past `evidence_commit`; `evidence_commit` re-pinned (bookkeeping, rule 9)
+- [ ] Every `blocked_by` entry has landed, or was waived per rule 10
+- [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
+- [ ] Features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9
+- [ ] Every material in § Materials & Apparatus available or scheduled by its Method step
+
+## Post-Implementation Validation
+
+<!-- Run at close against the actual diff and PR. One row per item;
+     rows are enumerated AT FILING (a row per prediction, per contract
+     subsection, per threat, per open question, per completion
+     criterion) with the evidence cells empty, so the gate below can
+     check that nothing above lacks a row. Evidence is a command with
+     its output, a test name at a commit, a permalink into the diff, or
+     a comment link — never "done". A row that cannot be filled is a
+     rule 2 comment, not a blank. -->
+
+| Item | Check | Evidence | Result |
+|------|-------|----------|--------|
+| P1 | do X at the fix commit, observe Y | | |
+| F1 | X does not yield not-Y; if it did, the next move was taken | | |
+| § External interfaces consumed | declared vs. observed in the diff, file:line | | |
+| § Data consumed (structure) | declared vs. observed | | |
+| § External interfaces modified | declared vs. observed; who sees it was told | | |
+| § Internal interfaces provided — public | signature and contract as declared; callers as named | | |
+| § Internal interfaces provided — private | privacy enforced as declared | | |
+| § Data provided (structure) | structure as declared and documented | | |
+| § Data durably tracked | location, version, migration as declared | | |
+| § Data ephemerally used | lifetime and loss behaviour as declared | | |
+| § Concurrency model | every guard present at its named state | | |
+| § Data transformations | each defined stage located in the diff | | |
+| § Failure modes & error handling | each failure path exercised or shown unreachable | | |
+| § Compatibility, versioning & migration | each claim pinned by a test | | |
+| Threat 1 | mitigation applied | | |
+| Open question 1 | resolving comment | | |
+| Regression tests | each fails at pre-change commit, passes at fix: command and output | | |
+| Existing tests | unmodified, or each change justified by a named prediction | | |
+| Scope | files in the diff ⊆ files § Method / Experimental Design touches; extras filed as # | | |
+| Standing gates | `mvn verify` run link; SpotBugs exclusions unchanged or justified | | |
+| Oracle custody | each expected value: who, when, pre-committed or deducted | | |
+| Links | every permalink and document resolves on the default branch | | |
+| Waivers | every skipped criterion has its `WAIVED:` comment | | |
+| Mirrors | `STATUS:` posted on every listing feature | | |
+| Amendments | every `AMENDED:` comment reconciled; the body describes what was built | | |
+
+- [ ] Adversarial review of the diff against this issue found no substantial finding
+
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every criterion, prediction, falsification criterion, contract subsection, threat and open question has a validation row; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+
+## Abstract
+
+<!-- Written last, read first. 2–4 sentences: what is wrong or missing,
+     why it matters, and the one-line shape of the proposed remedy —
+     each drawn from § Intent & Alignment, § Observations, § Hypothesis
+     (falsifiable) and § Conclusion & Future Work, and contradicting
+     none of them. The terminal gate in § Agentic Delegability covers
+     it. -->
 
 ## Agentic Delegability (ADR-1)
 
@@ -624,14 +810,17 @@ related: []             # reference only — never blocking, never ownership.
   A low band is a routing decision, not a criticism. Issues can be excellent
   work and band F because closing them needs a person or a device.
 
-  REVIEW GATE. The two boxes below are a fast filter: an issue with both
-  ticked has been read adversarially and by a peer, and neither read left
-  anything substantial outstanding. Tick them yourself; the filer reviewing
+  REVIEW GATE — THE TERMINAL GATE OF RULE 14. The two boxes below cover
+  the ENTIRE body, § Abstract included: an issue with both ticked has been
+  read adversarially and by a peer, end to end, and neither read left
+  anything substantial outstanding. The section gates above record that
+  each span was re-read when reached; only these two boxes assert that the
+  finished issue is consistent. Tick them yourself; the filer reviewing
   their own issue is fine.
     - SUBSTANTIAL means acting on the finding would change a score above, a
       completion criterion, a prediction, or the scope. Wording is not.
     - Unticked means not yet reviewed. It is not a defect and does not block
-      filing; it means the band above is still unvalidated.
+      filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
 -->
 

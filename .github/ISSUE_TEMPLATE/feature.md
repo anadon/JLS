@@ -131,8 +131,10 @@ labels: ["tier:feature"]
      `serves_capstones` entry that mirrors a counterpart's authoritative
      edge, citing the counterpart (its number, and the REPLAN or
      AMENDED comment where one created the edge); resolving a planned_tasks scope to its
-     number — the resolver posts one comment on both issues and ticks
-     this feature's Counterparts box in that step — or replacing an "unfiled"
+     number — the resolver posts `STATUS: progress — resolved "<scope>"
+     to #T` here and the same led by this feature's number on the task,
+     and ticks this feature's Counterparts box in that step — adding the
+     citation of a counterpart's REPLAN this feature's filer posted, or replacing an "unfiled"
      alignment with its citation —
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
@@ -177,7 +179,8 @@ labels: ["tier:feature"]
      child (task rule 9) and answered here by REPLAN; the same deviation
      found in THIS feature after it closed is recorded by the finder's
      REPLAN here (roster row, integration evidence or contract corrected,
-     ledger, no gate re-run, ADR left as it scored the filing) and
+     ledger, the WAIVED stand-in of task rule 10, no gate re-run, ADR left
+     as it scored the filing) and
      mirrored on every capstone listing it, open or closed — an open one
      answers per its rule C — upward until an open issue answers. A mirrored `HANDOFF: split` whose successor this
      feature's filing already planned is likewise one this feature
@@ -377,9 +380,10 @@ flowchart TD
      roster entry is still open or planned, or a serving capstone still
      needs the scope, it is posted only after a REPLAN that drops each
      open child with its disposition and descopes each planned scope —
-     moved to a named open feature's `planned_tasks`, or dropped with the
-     serving capstone's sufficiency argument re-derived (capstone rule
-     G(c)) — (rule C, posted on each filed child — a "freed" child's answer arriving after
+     moved, by a REPLAN posted on the receiving open feature as its own
+     (predecessor per rule C, mirrored per rule D) and cited here, or
+     dropped, the serving capstone applying rule G(c) on receiving the
+     mirrored REFUTED — (rule C, posted on each filed child — a "freed" child's answer arriving after
      this feature closes is a notice) and gives the closing dispositions
      of § Re-planning Protocol; the REFUTED cites that REPLAN and is
      mirrored per rule D.
@@ -439,9 +443,11 @@ flowchart TD
      the DAG walk (`blocks` and `serves_capstones` stay empty or
      mirrors-only). Where a serving or planning capstone's § Cross-Feature
      Integration Risks orders an already-filed feature after this one,
-     whoever files this feature posts on that feature that feature's own
-     REPLAN adding the `blocked_by` edge (naming its predecessor per
-     rule C, mirrored per rule D) and cites it here. -->
+     whoever files this feature posts, after filing, on that feature that
+     feature's own REPLAN adding the `blocked_by` edge (naming its
+     predecessor per rule C, mirrored per rule D) and cites it here; Gate
+     — Sequencing & edges and every later gate stay unticked until then
+     and are ticked in order as bookkeeping citing it (rule C). -->
 
 - [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here, or — where a filed feature must wait on this one — was added to it by that feature's own REPLAN adding the edge, posted on it by whoever files this feature (naming its predecessor per rule C, mirrored per rule D) and cited here, or the other feature is still planned and the capstone's § Cross-Feature Integration Risks records the edge for its filing; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
@@ -546,7 +552,8 @@ flowchart TD
 
 <!-- The rows are fixed and never deleted: a row whose referent is N/A
      or empty is recorded "none" in the pickup comment and neither
-     passes nor fails. Run once per executor by whoever begins (or, after a
+     passes nor fails; the `STATUS: pickup` names the checkout commit and
+     lists the rows run and the rows not reached. Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the integration work of § Integration
      Criteria & Evidence Plan (task rule 6, applied at this tier).
      Preconditions for starting, not completion criteria. Record the
@@ -594,7 +601,7 @@ flowchart TD
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature (the one cell filled after the linked revision, citing the mirror comments) | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder (task rule 12) | | |
-| Waivers | every skipped criterion has its `WAIVED:` comment | | |
+| Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was built; ADR re-scored where a re-plan changed roster, evidence or decisions | | |
 
 - [ ] Adversarial review of the integrated result against this issue found no substantial finding
@@ -743,7 +750,8 @@ flowchart TD
       The last three are disjoint on one question: could automation ever
       produce this unattended?
       2 YES, but not with what the executor has — another host platform, a
-        device class, or a credential that automation COULD be given ....
+        device class, a credential that automation COULD be given, or a
+        fixture withheld until a named disclosure event (task rule 2) .
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand against an enumerated procedure, or because the

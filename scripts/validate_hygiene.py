@@ -328,7 +328,13 @@ def h04(ctx):
             if _cmdish(m.group(2)):
                 has_block = True
                 break
-        if "bug" in labels and not has_block:
+        withheld = re.search(r"WITHHELD\s*[—–-]\s*held by .+ until",
+                             content or "", re.I)
+        if withheld and not has_block:
+            out.append(finding(n, "H04", "info",
+                       "§ Observations withheld (rule 2): "
+                       + withheld.group(0)[:80]))
+        elif "bug" in labels and not has_block:
             out.append(finding(n, "H04", "error",
                        "label `bug` but § Observations carries no fenced "
                        "command+output block (template rule 3)",
@@ -578,26 +584,23 @@ def h09(ctx):
         ticked = [txt or "" for mark, txt in boxes if mark in "xX"]
         if not ticked:
             continue
-        cbodies = [re.sub(r"\s+", " ", c.get("body") or "")
-                   for c in ctx.comments(n)]
+        raw_bodies = [(c.get("body") or "") for c in ctx.comments(n)]
+        cbodies = [re.sub(r"\s+", " ", b) for b in raw_bodies]
         # Rule 9 / rule C: a tick is bookkeeping when a comment on the issue
-        # quotes the box, or when the issue's own STATUS: landed links the
-        # revision holding the filled validation rows the box names. A bare
-        # "DoD" mention is not evidence.
-        # Rule 9: the tick is exempt only once the own STATUS: landed
-        # links the body revision holding the filled rows — a permalink,
-        # comment link or commit-ish in its first line.
-        landed = any(re.match(r"STATUS:\s*landed\b", cb)
-                     and received_from(cb, n) is None
-                     and re.search(r"https?://\S+|#issuecomment-\d+"
-                                   r"|\b[0-9a-f]{7,40}\b",
-                                   cb.split("\n", 1)[0])
-                     for cb in cbodies)
+        # quotes the box, or when the issue's own STATUS: landed links, in
+        # its FIRST LINE, the body revision holding the filled validation
+        # rows the box names. A bare "DoD" mention is not evidence.
+        landed = any(re.match(r"STATUS:\s*landed\b", b.lstrip())
+                     and received_from(b, n) is None
+                     and re.search(r"https?://\S+", b.lstrip().split("\n", 1)[0])
+                     for b in raw_bodies)
         if landed:
             continue
         unevidenced = []
         for txt in ticked:
-            nt = re.sub(r"\s+", " ", txt).strip()
+            # The "[row: X]" bracket is a pointer, not part of the box text.
+            nt = re.sub(r"\s*\[rows?:[^\]]*\]\s*$", "", txt)
+            nt = re.sub(r"\s+", " ", nt).strip()
             if nt and any(nt in cb for cb in cbodies):
                 continue
             unevidenced.append(txt)
@@ -737,7 +740,10 @@ def h12(ctx):
             continue
         has_math = bool(MATH_BLOCK.search(content)
                         or MATH_INLINE.search(MATH_BLOCK.sub("", content)))
-        if has_math or NA_JUSTIFIED.search(content):
+        # A justified N/A may follow a lead-in on the same line.
+        na_anywhere = re.search(r"N/?A[ \t]*(?:[—–-]{1,2})[ \t]*\S",
+                                content, re.I)
+        if has_math or NA_JUSTIFIED.search(content) or na_anywhere:
             continue
         out.append(finding(n, "H12", "error",
                    "§ Data transformations carries no $...$/$$...$$ math and "

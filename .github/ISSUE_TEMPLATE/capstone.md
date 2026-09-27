@@ -126,11 +126,12 @@ labels: ["tier:capstone"]
   ticked. Any deviation of what was built from what a closed required
   feature's body records (contract, roster row, a cell recorded as held,
   a criterion recorded as met) is recorded by a REPLAN on that closed
-  feature posted by the finder (corrected, ledger, no gate re-run, ADR
-  left as it scored the filing), mirrored on every capstone listing it,
+  feature posted by the finder (corrected, ledger, the WAIVED stand-in
+  of task rule 10, no gate re-run, ADR left as it scored the filing), mirrored on every capstone listing it,
   open or closed — an open one answers per its rule C, on a closed one
-  the finder posts the same REPLAN, upward until an open issue answers
-  or none lists it; a
+  whose body the deviation contradicts the finder posts the same REPLAN
+  (otherwise the mirror is a notice and the chain stops), upward until
+  an open issue answers or none lists it; a
   mirrored trigger whose reassessment finds nothing
   cited here changed, or whose comment this capstone's own REPLAN
   requested, is answered by a `STATUS: progress` acknowledgement
@@ -451,7 +452,8 @@ flowchart TD
 
 <!-- The rows are fixed and never deleted: a row whose referent is N/A
      or empty is recorded "none" in the pickup comment and neither
-     passes nor fails. Run once per executor by whoever begins (or, after a
+     passes nor fails; the `STATUS: pickup` names the checkout commit and
+     lists the rows run and the rows not reached. Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the acceptance pass (task rule 6,
      applied at this tier). Preconditions for starting, not completion
      criteria. Record the outcome in a `STATUS: pickup` comment here
@@ -493,7 +495,7 @@ flowchart TD
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one (the one cell filled after the linked revision, citing the mirror comments) | | |
 | Links | every permalink and document resolves on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder (task rule 12) | | |
-| Waivers | every skipped criterion has its `WAIVED:` comment | | |
+| Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was delivered; ADR re-scored where a re-plan changed roster, criteria or open decisions | | |
 
 - [ ] Adversarial review of the delivered system against this issue found no substantial finding
@@ -642,7 +644,8 @@ flowchart TD
       The last three are disjoint on one question: could automation ever
       produce this unattended?
       2 YES, but not with what the executor has — another host platform, a
-        device class, or a credential that automation COULD be given ....
+        device class, a credential that automation COULD be given, or a
+        fixture withheld until a named disclosure event (task rule 2) .
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand against an enumerated procedure, or because the

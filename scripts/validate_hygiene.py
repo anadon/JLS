@@ -412,6 +412,10 @@ def h07(ctx):
         prefixes = set()
         for c in ctx.comments(n):
             b = (c.get("body") or "").lstrip()
+            # STATUS: pickup / STATUS: progress stay on the issue (task
+            # rule 9); only STATUS: landed and the other prefixes mirror.
+            if re.match(r"STATUS:\s*(pickup|progress)\b", b):
+                continue
             for p in COMMENT_PREFIXES:
                 if b.startswith(p):
                     prefixes.add(p)

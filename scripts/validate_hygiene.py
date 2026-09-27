@@ -368,7 +368,7 @@ def h06(ctx):
             continue
         stamps = [c.get("created_at") for c in ctx.comments(n)
                   if (c.get("body") or "").lstrip().startswith(
-                      ("AMENDED:", "REPLAN:"))]
+                      ("AMENDED:", "HANDOFF:", "REPLAN:"))]
         stamps = [s for s in stamps if s]
         if not stamps:
             out.append(finding(n, "H06", "warn",
@@ -404,9 +404,11 @@ def h07(ctx):
 
     # Every tier mirrors every prefixed comment of its own except
     # STATUS: pickup/progress (task rule 9, feature and capstone rule D).
-    # The child comments a composite hosts -- mirrors led by a child's
-    # number, "PREFIX: #child ..." or "STATUS: landed #child ..." -- are not
-    # re-mirrored upward.
+    # An issue's OWN comment is never led by a foreign number; every mirror
+    # or notice it receives is ("PREFIX: #other ...", "STATUS: landed #other
+    # ..."), whether from a current child, a dropped one, or a parent posting
+    # a drop or re-plan notice. Received comments are not re-mirrored.
+    RECEIVED = re.compile(r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(\d+)\b")
 
     for n, iss in ctx.issues():
         mb = iss.machine
@@ -414,17 +416,11 @@ def h07(ctx):
             continue
         allowed = COMMENT_PREFIXES
         if iss.tier == "task":
-            parents, children = task_owners.get(n, []), set()
+            parents = task_owners.get(n, [])
         elif iss.tier == "feature":
             parents = parse_edge_field(mb, "serves_capstones")["numbers"]
-            children = set(parse_edge_field(mb, "requires_tasks")["numbers"])
         else:
             parents = capstone_parents.get(n, [])
-            children = set(parse_edge_field(mb, "requires_features")["numbers"]
-                           + parse_edge_field(mb, "requires_capstones")["numbers"])
-        hosted = re.compile(
-            r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(?:%s)\b"
-            % "|".join(map(str, sorted(children)))) if children else None
         parents = [p for p in parents if p in ctx.corpus.issues]
         if not parents:
             continue
@@ -435,8 +431,9 @@ def h07(ctx):
             # rule 9); only STATUS: landed and the other prefixes mirror.
             if re.match(r"STATUS:\s*(pickup|progress)\b", b):
                 continue
-            if hosted and hosted.match(b):
-                continue        # a hosted child mirror, not this issue's own
+            led = RECEIVED.match(b)
+            if led and int(led.group(1)) != n:
+                continue        # received from another issue, not its own
             for p in allowed:
                 if b.startswith(p):
                     prefixes.add(p)

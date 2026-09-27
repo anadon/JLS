@@ -87,10 +87,21 @@ labels: ["tier:task"]
      who reconstruct state from the machine block plus the prefixed
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). `HANDOFF:` is the AMENDED of a split or
-     transfer: it carries the successor number(s) and the Dropped/Retired
-     ledger moving each item to them, or states that the body is
-     unchanged for a pure transfer; features read it as an AMENDED for
-     gate and roster purposes. `STATUS:` carries a sub-tag —
+     transfer and is read as one everywhere this template says AMENDED
+     (gate resets, pickup rows, validation rows, mirrors). A split
+     HANDOFF carries the successor number(s), the Dropped/Retired ledger
+     moving each item to them, and the gates re-run (rule 14); its order
+     is fixed: REPLAN the listing feature first (successor as a
+     planned_tasks scope, handoffs moved), file the successor, post the
+     HANDOFF, then resolve the planned scope to the number as
+     bookkeeping. A transfer HANDOFF states that the body is unchanged
+     and carries the branch and commit of the work, the PR, each Method
+     step already ticked with the comment that evidences it, and the
+     first step the successor executes. The successor re-runs § Pickup
+     Checks in full and posts its own `STATUS: pickup` citing the
+     HANDOFF — observation, supersession and evidence_commit rows at the
+     work's merge-base with the default branch, all other rows at the
+     handoff commit. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
      `STATUS: landed`. Post each such comment on THIS issue and mirror
      the same comment, led by this issue's number (`STATUS: landed #N
@@ -197,7 +208,7 @@ labels: ["tier:task"]
      the finished issue. A filed issue with unticked gates is valid but
      unvalidated, exactly as an unticked review gate leaves the band
      unvalidated. Execution ticks no gate.
-     AFTER FILING, an AMENDED edit (rule 9) unticks the gate that
+     AFTER FILING, an AMENDED or HANDOFF edit (rule 9) unticks the gate that
      follows the changed section and every later gate, and the two
      review boxes (`review_clean: pending`); whoever amends re-ticks
      them in order, and the AMENDED comment names the gates re-run —
@@ -213,8 +224,9 @@ labels: ["tier:task"]
   15. Three check-sheets, distinguished by WHEN they run. The gates of
      rule 14 run at filing. § Pickup Checks runs once in full, before
      step one of § Method / Experimental Design, by whoever executes
-     (rule 6); after a post-pickup AMENDED, rule 9 re-runs only the rows
-     the edit touches, recorded in that comment.
+     (rule 6), and again in full by a HANDOFF successor (rule 9); after
+     a post-pickup AMENDED, rule 9 re-runs only the rows the edit
+     touches, recorded in that comment.
      § Post-Implementation Validation runs at close, against the actual
      diff and PR, one row per item. § Completion Criteria states WHAT
      must be true of the finished work; the validation sheet records HOW
@@ -343,7 +355,11 @@ related: []             # reference only — never blocking, never ownership.
      and `related` entries of the machine block are derived from this
      section — fill them now, and record the DAG walk (follow each named
      issue's edges outward and confirm no path returns here); `blocks`
-     stays empty or mirrors-only. -->
+     stays empty or mirrors-only. Include every ordering a listing or
+     planning feature's § Sequencing & Parallelism records against this
+     scope: into `blocked_by` here, or, where an already-filed sibling
+     must wait on this task, by an AMENDED on that sibling posted by
+     whoever files this task. -->
 
 - [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
@@ -464,7 +480,7 @@ related: []             # reference only — never blocking, never ownership.
      For each: its lifetime, what invalidates it, and what happens if it
      is lost mid-operation. -->
 
-- [ ] **Gate — Contract declarations.** Every interface or datum consumed names its provider and every one provided names its consumer, or says none exists yet; every structure links its authoritative definition or defines it here; every claim about existing code carries file:line at `evidence_commit`; hostile inputs are marked; every surface a prediction exercises appears in some subsection above, and no provided or modified declaration lacks a hypothesis or prediction that motivates it; every artifact or handoff that a listing or planning feature's § Feature-Level Interface & Data Contract or § Integration Criteria & Evidence Plan assigns to this task appears above; nothing above is a diff. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Contract declarations.** Every interface or datum consumed names its provider and every one provided names its consumer, or says none exists yet; every structure links its authoritative definition or defines it here; every claim about existing code carries file:line at `evidence_commit`; hostile inputs are marked; every surface a prediction exercises appears in some subsection above, and no provided or modified declaration lacks a hypothesis or prediction that motivates it; every artifact or handoff that a listing or planning feature's § Feature-Level Interface & Data Contract or § Integration Criteria & Evidence Plan assigns to this task appears above, and no sibling interface consumed or provided above is one that contract does not assign to this task unless it is flagged as a re-plan request; nothing above is a diff. Adversarial re-read of everything above found no substantial finding.
 
 ### Concurrency model
 
@@ -641,18 +657,23 @@ related: []             # reference only — never blocking, never ownership.
 <!-- Run once by the executor, before step one of § Method /
      Experimental Design (rule 6). Each box is a precondition for
      starting, not a completion criterion. Record the outcome in a
-     `STATUS: pickup` comment on this issue (not mirrored, rule 9); a
-     failed check ends in a `REFUTED:` or `SUPERSEDED:` comment, not in
+     `STATUS: pickup` comment on this issue (not mirrored, rule 9). A
+     failed observation or supersession row ends in a `REFUTED:` or
+     `SUPERSEDED:` comment; any other failed row ends in the
+     `STATUS: pickup` comment recording the block — either way, not in
      work. -->
 
-- [ ] Every `AMENDED:` comment read; the body matches the latest one
+- [ ] Every `AMENDED:` or `HANDOFF:` comment read; the body matches the latest one
+- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant or handoff, and answered by AMENDED or `STATUS: progress` (rule 9)
 - [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation stops the work (rule 6)
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit`; `evidence_commit` re-pinned (bookkeeping, rule 9)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is asked to resolve it to this number (feature rule C) before it is owed anything
-- [ ] Every `AMENDED:` comment names the gates it re-ran
+- [ ] Every `AMENDED:` or `HANDOFF:` comment names the gates it re-ran
+- [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by`, or its absence is explained by an AMENDED
+- [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and its § Internal interfaces provided — public re-read at the landed commit; a deviation from what this task assumes is an AMENDED here before step one
 - [ ] Every material in § Materials & Apparatus available or scheduled by its Method step
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
 
@@ -695,7 +716,7 @@ related: []             # reference only — never blocking, never ownership.
 | Paths | each path a criterion names exists at the fix commit; created ones by their named step or by the named `blocked_by` task (rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment | | |
 | Mirrors | `STATUS: landed` posted on every listing feature | | |
-| Amendments | every `AMENDED:` comment reconciled; the body describes what was built; ADR re-scored where an edit changed scope, evidence or decisions | | |
+| Amendments | every `AMENDED:` or `HANDOFF:` comment reconciled; the body describes what was built; ADR re-scored where an edit changed scope, evidence or decisions | | |
 
 - [ ] Adversarial review of the diff against this issue found no substantial finding
 

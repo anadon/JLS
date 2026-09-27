@@ -107,12 +107,22 @@ labels: ["tier:feature"]
      number, or replacing an "unfiled" alignment with its citation —
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
-     written against the scope (if they do not, the edit is a REPLAN).
+     written against the scope — for handoffs, "agree" means the filed
+     child's § Internal interfaces consumed and § Internal interfaces
+     provided — public name exactly the sibling handoffs this body
+     assigns it; any additional sibling interface makes the resolution
+     a REPLAN that re-runs Gate — Decomposition, Contract & Integration
+     (if they do not agree, the edit is a REPLAN).
      Every REPLAN is mirrored on every capstone in serves_capstones
      (a capstone reads this feature's roster, contract, capability,
      invariants and integration criteria, so any of them changing is
-     its trigger); a REPLAN that drops a child from `requires_tasks` is
-     also posted, led by this number, on that child. A mirrored trigger
+     its trigger); a REPLAN that drops a child from `requires_tasks`,
+     answers a child's re-plan request, or changes a § Global
+     Invariants entry or a handoff assigned to a filed child is also
+     posted, led by this number, on each such child, which answers with
+     an AMENDED (mirrored here and acknowledged, since this REPLAN
+     requested it) or, where nothing it cites changed, a
+     `STATUS: progress` naming the sections reassessed. A mirrored trigger
      whose reassessment finds nothing cited here changed, or whose
      comment this feature's own REPLAN requested, is answered by a
      `STATUS: progress` comment naming the sections reassessed — not a
@@ -183,7 +193,7 @@ labels: ["tier:feature"]
          is pinned to.
        - `requires_tasks`, `planned_tasks` at the gate after
          § Integration Criteria & Evidence Plan, once the cuts are made.
-       - `blocked_by` and the mermaid graph at the gate after
+       - `blocked_by`, `related` and the mermaid graph at the gate after
          § Sequencing & Parallelism. `blocks` and `serves_capstones`
          stay `[]` at filing: they carry mirrors only, confirmed in the
          Counterparts box.
@@ -222,7 +232,7 @@ flowchart TD
   %% among them and to external issues. Regenerate on every REPLAN.
 ```
 
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`, and every capstone in `serves_capstones` still lists this feature; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
+- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `requires_features` lists this feature appears in `serves_capstones`, and every capstone in `serves_capstones` still lists this feature; every feature or capstone whose `blocked_by` names this feature appears in `blocks`; every task or feature this feature's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
@@ -298,7 +308,7 @@ flowchart TD
      proof the criterion is not a span; validator check G22 reports
      that case. -->
 
-- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or one direction is declared a stub in the provider's contract); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit`, every filed child's tier is task. Adversarial re-read of everything above found no substantial finding.
 
 ## Global Invariants
 
@@ -352,7 +362,8 @@ flowchart TD
      serving capstone descoped → whether this feature
      still has a beneficiary; a child dropped from the roster or this
      feature descoped → the REPLAN comment gives EACH affected child a
-     disposition: re-homed (added to another feature's requires_tasks),
+     disposition: re-homed (added to the requires_tasks of an OPEN
+     feature — one not closed on landed, REFUTED or SUPERSEDED),
      freed (in no roster — legal only when the child's § Intent &
      Alignment is at the same time restated by AMENDED to a standing
      rule, a format document or another open feature; otherwise the
@@ -426,7 +437,7 @@ flowchart TD
 
 - [ ] Every `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here, or the adopting REPLAN links its landing comment, or its disposition is recorded; `planned_tasks` is empty
-- [ ] Every mirrored `AMENDED:` or `WAIVED:` from a child read; roster rows and handoffs re-derived by REPLAN where they changed
+- [ ] Every mirrored `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read, and every `REPLAN:` another listing feature posted on a shared child; roster rows, handoffs and § Global Invariants re-derived by REPLAN where they changed
 - [ ] Every child's landing comment checked for contract deviations; each deviation reconciled in § Feature-Level Interface & Data Contract by REPLAN
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)

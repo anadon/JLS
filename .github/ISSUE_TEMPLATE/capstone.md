@@ -102,9 +102,9 @@ labels: ["tier:capstone"]
   G. Orphaned scope. When a required feature closes, is re-tiered, or
      is descoped while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — add
-     the task to the requires_tasks roster of a required feature that
-     has not yet posted `STATUS: landed` (a landed feature is never
-     reopened; use (b)); (b) file a
+     the task to the requires_tasks roster of an OPEN required feature
+     (one not closed on landed, REFUTED or SUPERSEDED; a closed feature
+     is never reopened — use (b)); (b) file a
      new feature to host it and add that feature to requires_features;
      or (c) descope it, re-deriving the § Required Feature Set &
      Sufficiency argument. There is NO capstone→task edge; a capstone
@@ -156,7 +156,7 @@ labels: ["tier:capstone"]
          claim is pinned to.
        - `requires_features`, `requires_capstones`, `planned_features`
          at the gate after § Required Feature Set & Sufficiency.
-       - `blocked_by` and the mermaid graph at the gate after
+       - `blocked_by`, `related` and the mermaid graph at the gate after
          § System-Level Acceptance Criteria (which is grouped with
          § Cross-Feature Integration Risks). `blocks` stays `[]` at
          filing: it carries mirrors only, confirmed in the Counterparts
@@ -192,7 +192,7 @@ flowchart TD
   %% capstones outside this set). Regenerate on every REPLAN.
 ```
 
-- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `blocked_by` names this one appears in `blocks`; every feature in `requires_features` lists this capstone in its `serves_capstones`; every capstone or feature this capstone's `blocked_by` names carries the mirror in its `blocks`; the alignment in § Intent & Alignment cites a filed issue or is still marked unfiled.
+- [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `blocked_by` names this one appears in `blocks`; every feature in `requires_features` lists this capstone in its `serves_capstones`; every capstone or feature this capstone's `blocked_by` names carries the mirror in its `blocks`; every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; the alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
@@ -303,8 +303,11 @@ flowchart TD
      sub-capstone's mirrored REPLAN → re-derive § Required Feature Set &
      Sufficiency; the outcome itself is re-scoped → REPLAN with the old and
      new § Outcome Statement both quoted, then § Intent & Alignment
-     re-checked; a re-scope after which no criterion in § System-Level
-     Acceptance Criteria is a genuine span → once the remaining required
+     re-checked; a required feature's mirrored WAIVED → the waived
+     obligation checked against § System-Level Acceptance Criteria, and
+     a successor outside the required set is rule G scope; a re-scope
+     after which no criterion in § System-Level Acceptance Criteria is a
+     genuine span or close-out criterion (rule F) → once the remaining required
      entries have landed, close with `SUPERSEDED: label — every criterion
      covered alone by #…`, mirrored to parent capstones, which re-derive
      their sufficiency with the features listed directly. Every response
@@ -367,7 +370,8 @@ flowchart TD
 
 - [ ] Every `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), or the adopting REPLAN links its landing comment, or its disposition is recorded; `planned_features` is empty
-- [ ] Every mirrored `REPLAN:` from a required feature or sub-capstone read; § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
+- [ ] Every mirrored `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read; § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
+- [ ] Every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; a parent's REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Every feature's landing comment checked for contract deviations; each reassessed in § Cross-Feature Integration Risks and § System-Level Acceptance Criteria by REPLAN
 - [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry

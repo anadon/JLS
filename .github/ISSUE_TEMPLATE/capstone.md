@@ -98,11 +98,12 @@ labels: ["tier:capstone"]
      file it.
   G. Orphaned scope. When a required feature closes, is re-tiered (a
      new issue plus a REPLAN on the old one), or is descoped while
-     leaving scope this capstone still needs, the REPLAN must give that scope a disposition: (a) re-home it — add
-     the task to the requires_tasks roster of an OPEN required feature
-     (one not closed on landed, REFUTED or SUPERSEDED; a closed feature
-     is never reopened — use (b)); (b) file a
-     new feature to host it and add that feature to requires_features;
+     leaving scope this capstone still needs, the REPLAN must give
+     that scope a disposition: (a) re-home it — add the task to the
+     requires_tasks roster of an OPEN required feature (one not closed
+     on landed, REFUTED or SUPERSEDED; a closed feature is never
+     reopened — use (b)); (b) file a new feature to host it and add
+     that feature to requires_features;
      or (c) descope it, re-deriving the § Required Feature Set &
      Sufficiency argument. There is NO capstone→task edge; a capstone
      that appears to need a task directly is missing a feature — file

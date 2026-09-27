@@ -78,9 +78,11 @@ labels: ["tier:task"]
      of features, and ownership lives solely in each feature's
      requires_tasks roster. To find the features that own this task,
      search the rosters — `requires_tasks` for this number, and
-     `planned_tasks` for this scope while the number is fresh — an
-     executor does not need them to do the work, and the readiness
-     derivation supplies them to any workflow that does. § Intent & Alignment may NAME the feature or capstone
+     `planned_tasks` for this scope while the number is fresh. An
+     executor needs them at pickup (the listing-features row) and at
+     close (the Invariants and Mirrors criteria): `owned_by_derived` or
+     the readiness derivation supplies them where tooling runs, otherwise
+     the executor searches. § Intent & Alignment may NAME the feature or capstone
      this task serves; that is a reference for alignment, not an
      ownership claim.
 
@@ -128,9 +130,13 @@ labels: ["tier:task"]
      A transfer HANDOFF states that the body is unchanged
      and carries the branch and commit of the work, the PR, each Method
      step already ticked with the comment that evidences it, and the
-     first step the successor executes. The successor re-runs § Pickup
-     Checks in full and posts its own `STATUS: pickup` citing the
-     HANDOFF — observation, supersession and evidence_commit rows at the
+     first step the successor executes (`HANDOFF: transfer — no step
+     executed` where the predecessor stopped before step one). The
+     successor posts its own `STATUS: pickup` citing the HANDOFF, re-uses
+     the predecessor's rows run at the same checkout, and re-runs the
+     observation, supersession and evidence_commit rows where HEAD moved
+     plus any row whose referent gained comments since — observation,
+     supersession and evidence_commit rows at the
      work's merge-base with the default branch, all other rows at the
      handoff commit. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
@@ -158,11 +164,17 @@ labels: ["tier:task"]
      A `REPLAN:` a listing feature posts here, led by its number, is
      answered on receipt (at pickup if none has happened yet) — unless
      this issue has closed, when the REPLAN is a notice and no answer is
-     owed (a contract deviation discovered after close is instead
-     recorded by an AMENDED on this closed issue posted by the finder —
-     deviating subsection corrected, Dropped/Retired ledger, no gate
-     re-run — and mirrored on every open listing feature, which
-     REPLANs): by an
+     owed (any deviation of what was built from what this body records —
+     a contract subsection, a prediction or sheet cell recorded as held,
+     a criterion recorded as met — discovered after close is instead
+     recorded by an AMENDED on this closed issue posted by the finder:
+     the cell or subsection corrected, the Dropped/Retired ledger, the
+     successor now tracking any unmet obligation or why none is needed
+     (standing in for rule 10's WAIVED), no gate re-run, the ADR block
+     left as it scored the filing; it is mirrored on every listing
+     feature, open or closed — an open one REPLANs, on a closed one the
+     finder posts the closed-feature REPLAN of capstone rule D, and so on
+     upward until an open issue answers or none lists it): by an
      AMENDED where any section of this body must change (typically
      § Interface & Data Contract, the machine block or § Intent &
      Alignment — a drop with the disposition "freed" restates the
@@ -215,7 +227,10 @@ labels: ["tier:task"]
      `STATUS: pickup` comment recording that row, or in a comment on this
      issue that quotes the box (a PR link inside that comment is the
      usual evidence); ticking the diff-review box under the sheet, which
-     is a review-box tick; re-pinning evidence_commit after re-deriving
+     is a review-box tick; setting `review_clean: false` with both review
+     boxes unticked and `review_evidence` pointing at the finding, on an
+     open issue, and re-ticking with `true` once the finding is fixed or
+     recorded as not standing; re-pinning evidence_commit after re-deriving
      citations — bookkeeping only when every cited line re-derives at
      the new commit saying what it said and every observation's command
      reproduces its output there, otherwise part of the AMENDED that
@@ -296,8 +311,9 @@ labels: ["tier:task"]
      and then (d) an adversarial re-read of the same span, fixing each
      finding and re-reading until a pass yields no SUBSTANTIAL finding.
      Substantial has the meaning the review gate in § Agentic
-     Delegability gives it: acting on the finding would change a mandate,
-     a score, a criterion, a prediction, an edge, or the scope; wording is
+     Delegability gives it: acting on the finding would change a mandate
+     or a section's conformance to it as its comment block states it, a
+     score, a criterion, a prediction, an edge, or the scope; wording is
      not. There is no bound on the number of passes.
      Gates are cumulative. Gate k covers every section through k, so
      while filing, a finding at gate k that changes an earlier section
@@ -803,17 +819,22 @@ related: []             # reference only — never blocking, never ownership.
      deleted: a row whose referent is N/A or empty is recorded "none" in
      the pickup comment (one line may list every "none" row) and neither
      passes nor fails. Record the outcome in a
-     `STATUS: pickup` comment on this issue (not mirrored, rule 9). A
+     `STATUS: pickup` comment on this issue (not mirrored, rule 9) that
+     names the checkout commit and lists the rows run and the rows not
+     reached — a later executor at that checkout cites the rows run and
+     re-runs only the observation, supersession and evidence_commit rows
+     where HEAD moved plus any row whose referent gained comments since.
+     A
      failed supersession or observation row ends as rule 6 says —
      `SUPERSEDED:`, `REFUTED:`, or an AMENDED that re-derives or retires
      the observation; any other failed row ends in the `STATUS: pickup`
      comment recording the block, and only the steps it names as blocked
      wait. -->
 
-- [ ] `review_clean` is not `false`; a `false` is answered by the AMENDED fixing the cited finding before step one
+- [ ] `review_clean` is not `false`; a `false` is answered before step one by the AMENDED fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping) — where the executor cannot complete that AMENDED, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it, and no step starts
 - [ ] `action` read; execution follows the rule 9 mapping — SPLIT: the split-HANDOFF order before step one; SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed and who supplies it; HUMAN-LED: research and harness steps proceed; where DA drove it the `STATUS: pickup` names the deciding step and who decides (an unmarked decision is an AMENDED adding the marker, not a pickup act), where RAW drove it it names who owns the spec or oracle; HUMAN-ONLY and ED-driven SPECIFY-FIRST: evidence steps through the materials row; DELEGATE-WITH-CHECKPOINT: the checkpoint named
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; each body-editing one names its predecessor and the gates it re-ran (a transfer HANDOFF states the body is unchanged), and the body matches the fold of all body-editing ones in stream order — one whose named predecessor is not the previous body-editing comment is re-folded first
-- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
+- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9) — where the answer needs an AMENDED the executor cannot complete, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it (the filer, or the feature that posted the REPLAN), and no step starts
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
 - [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation is routed as rule 6 says (SUPERSEDED, REFUTED, or AMENDED re-deriving or retiring it, using the row above's determination), never worked around
@@ -1127,8 +1148,12 @@ related: []             # reference only — never blocking, never ownership.
     - Where a review comment exists, point `review_evidence` at it.
     - `false` is set — both boxes unticked, `review_evidence` pointing at
       the comment naming the substantial finding — by whoever finds one
-      and does not fix it, as bookkeeping; the AMENDED (REPLAN) that fixes
-      the finding re-ticks. § Pickup Checks reads it.
+      and does not fix it, as bookkeeping, on an OPEN issue; the AMENDED
+      (REPLAN) that fixes the finding, or a comment recording why it does
+      not stand, re-ticks. § Pickup Checks reads it. On a closed issue the
+      boxes and `review_clean` stand as filed; the finding is recorded by
+      the after-close AMENDED (REPLAN) of task rule 9 whether or not the
+      finder fixes it.
 -->
 
 ```yaml

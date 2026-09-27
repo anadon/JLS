@@ -516,7 +516,10 @@ def h07(ctx):
                     ct = child_c.get("created_at") or ""
                     for pc in pcs:
                         pb = (pc.get("body") or "").lstrip()
-                        if pb.startswith(pref) and re.search(rf"#{n}\b", pb):
+                        # A mirror is LED by the child's number (rule 9 /
+                        # rule D); a number mentioned later in the line
+                        # ("mirrored on #P, #Q", "PR #45") is not a mirror.
+                        if pb.startswith(pref) and received_from(pb, par) == n:
                             return True
                         # An adopting REPLAN links the child's EARLIER
                         # comments (rule D): it stands in only for those.
@@ -577,8 +580,14 @@ def h09(ctx):
             continue
         cbodies = [re.sub(r"\s+", " ", c.get("body") or "")
                    for c in ctx.comments(n)]
-        # Rule 9 / rule C: a tick is bookkeeping only when a comment on the
-        # issue quotes the box; a bare "DoD" mention is not evidence.
+        # Rule 9 / rule C: a tick is bookkeeping when a comment on the issue
+        # quotes the box, or when the issue's own STATUS: landed links the
+        # revision holding the filled validation rows the box names. A bare
+        # "DoD" mention is not evidence.
+        landed = any(re.match(r"STATUS:\s*landed\b", cb)
+                     and received_from(cb, n) is None for cb in cbodies)
+        if landed:
+            continue
         unevidenced = []
         for txt in ticked:
             nt = re.sub(r"\s+", " ", txt).strip()

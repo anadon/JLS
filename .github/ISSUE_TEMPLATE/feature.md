@@ -120,7 +120,11 @@ labels: ["tier:feature"]
      row(s) it names once `STATUS: landed` links the revision, in the
      `STATUS: pickup` comment recording that row, or in a comment on this
      issue that quotes the box (a PR link inside that comment is the
-     usual evidence); ticking the review box under the sheet; re-pinning
+     usual evidence); ticking the review box under the sheet; setting
+     `review_clean: false` with both review boxes unticked and
+     `review_evidence` pointing at the finding, on an open issue, and
+     re-ticking with `true` once it is fixed or recorded as not standing;
+     re-pinning
      evidence_commit, bookkeeping only when every cited line re-derives
      at the new commit, otherwise part of the REPLAN; adding or removing a `blocks` or
      `serves_capstones` entry that mirrors a counterpart's authoritative
@@ -147,7 +151,8 @@ labels: ["tier:feature"]
      Invariants entry or a handoff assigned to a filed child is also
      posted, led by this number, on each such OPEN child, which answers
      with an AMENDED where any section of its body must change (mirrored
-     here even after a drop, and acknowledged, since this REPLAN
+     here even after a drop, and acknowledged while this feature is open
+     — after close it is a notice, task rule 9 — since this REPLAN
      requested it) or otherwise a `STATUS: progress` naming the sections
      reassessed; a child that has already closed (landed, REFUTED,
      SUPERSEDED, HANDOFF: re-tier) receives it as a notice at most and
@@ -165,9 +170,14 @@ labels: ["tier:feature"]
      pending. Every REPLAN names its predecessor — the latest
      own REPLAN, or "first" — and the writer re-reads the comment stream
      immediately before the body edit and folds in any REPLAN newer than
-     its read. A contract deviation discovered after a child closed is
-     recorded by an AMENDED on that closed child posted by the finder
-     (task rule 9) and answered here by REPLAN. A mirrored `HANDOFF: split` whose successor this
+     its read. Any deviation of what was built from what a closed child's
+     body records (contract, a cell recorded as held, a criterion
+     recorded as met) is recorded by the finder's AMENDED on that closed
+     child (task rule 9) and answered here by REPLAN; the same deviation
+     found in THIS feature after it closed is recorded by the finder's
+     REPLAN here (roster row, integration evidence or contract corrected,
+     ledger, no gate re-run) and mirrored on every capstone listing it,
+     open or closed, upward until an open issue answers. A mirrored `HANDOFF: split` whose successor this
      feature's filing already planned is likewise one this feature
      requested. A mirrored trigger
      whose reassessment finds nothing cited here changed, or whose
@@ -360,9 +370,11 @@ flowchart TD
      `REFUTED:` — the premise of § Capability Statement & Scope Boundary
      fails". A feature's `REFUTED:` is that premise failure: the comment
      quotes the failing criterion and carries the command and output,
-     and the sheet stays empty (task rule 10). Where roster children are
-     still open or a serving capstone still needs the scope, it is posted
-     only after a REPLAN that drops each open child with its disposition
+     and the sheet is not completed — rows already filled stand and the
+     REFUTED links the revision holding them (task rule 10). Where any
+     roster entry is still open or planned, or a serving capstone still
+     needs the scope, it is posted only after a REPLAN that drops each
+     open child and descopes each planned scope with its disposition
      (rule C, posted on each — a "freed" child's answer arriving after
      this feature closes is a notice) and gives the closing dispositions
      of § Re-planning Protocol; the REFUTED cites that REPLAN and is
@@ -421,9 +433,12 @@ flowchart TD
      here is a `blocked_by` edge in the child's own machine block; fill
      this feature's `blocked_by` and the mermaid graph now and record
      the DAG walk (`blocks` and `serves_capstones` stay empty or
-     mirrors-only). -->
+     mirrors-only). Where a serving or planning capstone's § Cross-Feature
+     Integration Risks orders an already-filed feature after this one,
+     whoever files this feature posts the REPLAN adding that feature's
+     `blocked_by` edge (rule D) and cites it here. -->
 
-- [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here or in the waiting feature's; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here or, where a filed feature must wait on this one, was added to it by a REPLAN posted by whoever files this feature and cited here; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -533,7 +548,7 @@ flowchart TD
      outcome in a `STATUS: pickup` comment here (not mirrored; one line
      may list every "none" row). -->
 
-- [ ] `review_clean` is not `false`; a `false` is answered by the REPLAN fixing the cited finding before integration begins
+- [ ] `review_clean` is not `false`; a `false` is answered before integration begins by the REPLAN fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping)
 - [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed; at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered (rule D)
@@ -567,7 +582,7 @@ flowchart TD
 | Contract: transformations | each defined stage located across the children's diffs | | |
 | Contract: handoff #A → #B | provider side and consumer side both present as declared | | |
 | Invariant 1 | re-verified at the final commit: command and output | | |
-| Child #A | landed — mirror here, adopting REPLAN link, or the pickup row re-run recorded in the adopting REPLAN (task rule 15); deviations reconciled | | |
+| Child #A | landed — mirror here, adopting REPLAN link, its § Decomposition & Rationale row link (rule D), or the pickup row re-run recorded in the adopting REPLAN (task rule 15); deviations reconciled | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation and deducted | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
@@ -843,8 +858,12 @@ flowchart TD
     - Where a review comment exists, point `review_evidence` at it.
     - `false` is set — both boxes unticked, `review_evidence` pointing at
       the comment naming the substantial finding — by whoever finds one
-      and does not fix it, as bookkeeping; the AMENDED (REPLAN) that fixes
-      the finding re-ticks. § Pickup Checks reads it.
+      and does not fix it, as bookkeeping, on an OPEN issue; the AMENDED
+      (REPLAN) that fixes the finding, or a comment recording why it does
+      not stand, re-ticks. § Pickup Checks reads it. On a closed issue the
+      boxes and `review_clean` stand as filed; the finding is recorded by
+      the after-close AMENDED (REPLAN) of task rule 9 whether or not the
+      finder fixes it.
 -->
 
 ```yaml

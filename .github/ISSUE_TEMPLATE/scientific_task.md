@@ -57,7 +57,8 @@ labels: ["tier:task"]
      stale citation is not evidence.
   7. Labels are not applied automatically for API-filed issues: set
      `bug` or `enhancement` explicitly, matching the corpus, plus the
-     tier label `tier:task`.
+     tier label `tier:task`. An investigation takes `enhancement` (it has
+     no observed failure to label `bug`).
   8. Tier model — task → feature → capstone (canonical edge rules in
      the feature template; read them there, they are not restated
      here). This is the task tier, and the model is strictly layered:
@@ -133,9 +134,14 @@ labels: ["tier:task"]
      work's merge-base with the default branch, all other rows at the
      handoff commit. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
-     `STATUS: landed`. Post each such comment on THIS issue and mirror
-     the same comment, led by this issue's number (`STATUS: landed #N
-     …`), on every OPEN feature whose requires_tasks roster lists this task
+     `STATUS: landed`, which carries the fix commit, the PR, and a
+     permalink to the body revision holding the filled § Post-
+     Implementation Validation (cells filled directly from the evidence
+     are bookkeeping once that comment links the revision). Post each
+     such comment on THIS issue and mirror it, led by this issue's number
+     (`STATUS: landed #N …`) — for a landing, its first line and the
+     permalink suffice — on every OPEN feature whose requires_tasks
+     roster lists this task
      (there may be several, or none) — except `STATUS: pickup` and
      `STATUS: progress`, which stay here. An AMENDED edit resets and
      re-runs gates as rule 14 says, and the AMENDED comment names the
@@ -197,8 +203,8 @@ labels: ["tier:task"]
      where — so omissions are auditable by reading the comment, not
      only by diffing bodies. Bookkeeping is exempt from the AMENDED
      requirement: ticking a gate or a review box (the tick is the
-     record); filling a check-sheet's evidence and result cells with
-     evidence recorded in, or linked from, a comment on this issue;
+     record); filling a check-sheet's evidence and result cells (the
+     `STATUS: landed` comment links the body revision that holds them);
      ticking a Method, check-sheet or Completion checkbox
      whose backing evidence is already recorded in a comment on this
      issue that quotes the box (a PR link inside that comment is the
@@ -208,7 +214,10 @@ labels: ["tier:task"]
      reproduces its output there, otherwise part of the AMENDED that
      fixes the observation; adding to § Interface & Data Contract the
      citation of the listing feature's REPLAN that answered this task's
-     re-plan request, together with ticking the gate left pending on it;
+     re-plan request by changing the invariant or handoff, together with
+     ticking the gate left pending on it (a REPLAN that keeps them is
+     answered by the AMENDED that re-conforms this contract, which re-runs
+     the gate);
      adding or removing a `blocks` entry that mirrors a
      counterpart's authoritative `blocked_by`, citing the counterpart
      (its number, and the AMENDED or REPLAN comment where one created
@@ -286,7 +295,10 @@ labels: ["tier:task"]
      while filing, a finding at gate k that changes an earlier section
      is fixed there and the earlier gate is not re-ticked: its tick
      records that the re-read happened when it was reached, not that
-     the section was final. The terminal gate (the two review boxes in
+     the section was final — but the fix repeats clause (c) of the gate
+     that follows the changed section, for the external context that
+     gate names (siblings, the planning feature's assignments, the
+     alignment target), and gate k's tick records that. The terminal gate (the two review boxes in
      § Agentic Delegability) covers the whole body, § Abstract
      included, and is the only gate whose tick asserts consistency of
      the finished issue. A filed issue with unticked gates is valid but
@@ -305,7 +317,13 @@ labels: ["tier:task"]
      Background & Related Work (rule 9). Gate clauses
      never depend on a counterpart's later edit, except where a clause
      reads the counterpart's current body (a listing feature's § Global
-     Invariants, rule 9); mirror entries that a counterpart forces onto
+     Invariants, rule 9) or where this rule, rule 9's split stand-in,
+     feature rule C or the capstone's rule D leaves a gate pending on a
+     counterpart's answer to a REPLAN or HANDOFF this issue requested
+     (the comment names the pending gates). On a closed issue the
+     finder's AMENDED of rule 9 unticks nothing: the gates record the
+     filing, the AMENDED records what was built. Mirror entries that a
+     counterpart forces onto
      the machine block are confirmed in the Counterparts box under it,
      as bookkeeping.
      § Abstract is written last and read first.
@@ -344,7 +362,8 @@ labels: ["tier:task"]
   site; otherwise score the preservation evidence actually present, at
   most 3 (a green suite not mapped to the changed call sites is
   smoke-shaped) — the structural check is the rule 3 failure, never the
-  preservation oracle.
+  preservation oracle: OS anchor 4's analysis-gate clause does not apply
+  to it, since it evidences the change, not preservation.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -481,9 +500,11 @@ related: []             # reference only — never blocking, never ownership.
 <!-- H1, H2, ...: statements about root cause or expected effect that
      § Method / Experimental Design can prove wrong. If no observation
      could refute it, it is not a hypothesis — rewrite it. Each Hn names
-     the observation(s) it explains. -->
+     the observation(s) it explains. Candidate causes rejected before
+     filing are listed here with the observation that rejected them, so
+     an executor does not re-suspect them. -->
 
-- [ ] **Gate — Question & Hypothesis.** The research question is answerable yes or no, or enumerates the candidate answers of an investigation, and is the question the observations raise; every hypothesis explains at least one observation and names it, or, for an investigation, names the candidate answer of § Research Question it stands for, or, for a refactor, names the call-site observations it preserves; every hypothesis is refutable by an observation-shaped check; no hypothesis reaches beyond the question; together they cover the intent stated in § Intent & Alignment. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Question & Hypothesis.** The research question is answerable yes or no, or enumerates the candidate answers of an investigation, and is the question the observations raise; every hypothesis explains at least one observation and names it, or, for an investigation, names the candidate answer of § Research Question it stands for, or, for a refactor, names the call-site observations it preserves; every hypothesis is refutable by an observation-shaped check; each rejected candidate names its refuting observation; no hypothesis reaches beyond the question; together they cover the intent stated in § Intent & Alignment. Adversarial re-read of everything above found no substantial finding.
 
 ## Predictions & Falsification Criteria
 
@@ -506,9 +527,10 @@ related: []             # reference only — never blocking, never ownership.
 <!-- Toolchain, fixtures, test rigs, corpora, platforms: everything
      needed to perform each "do X" above. Note anything that does not
      exist yet and must be built first — § Method / Experimental Design
-     must build it. -->
+     must build it, or a task in `blocked_by` provides it (landed at
+     pickup). -->
 
-- [ ] **Gate — Predictions & Materials.** Every hypothesis has at least one P and one F; every P is do-X-observe-Y with X executable using only the materials named; every P marked failing at `evidence_commit` has its failure pasted in § Observations; every F names the hypothesis it refutes and the next move; materials that do not exist yet are flagged for § Method / Experimental Design to build. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Predictions & Materials.** Every hypothesis has at least one P and one F; every P is do-X-observe-Y with X executable using only the materials named; every P marked failing at `evidence_commit` has its failure pasted in § Observations; every F names the hypothesis it refutes and the next move; materials that do not exist yet are flagged for § Method / Experimental Design to build or named as provided by a `blocked_by` task. Adversarial re-read of everything above found no substantial finding.
 
 ## Interface & Data Contract
 
@@ -770,7 +792,8 @@ related: []             # reference only — never blocking, never ownership.
      Experimental Design (rule 6). Each box is a precondition for
      starting, not a completion criterion. The rows are fixed and never
      deleted: a row whose referent is N/A or empty is recorded "none" in
-     the pickup comment and neither passes nor fails. Record the outcome in a
+     the pickup comment (one line may list every "none" row) and neither
+     passes nor fails. Record the outcome in a
      `STATUS: pickup` comment on this issue (not mirrored, rule 9). A
      failed supersession or observation row ends as rule 6 says —
      `SUPERSEDED:`, `REFUTED:`, or an AMENDED that re-derives or retires
@@ -778,8 +801,8 @@ related: []             # reference only — never blocking, never ownership.
      comment recording the block, and only the steps it names as blocked
      wait. -->
 
-- [ ] `action` read; execution follows the rule 9 mapping for it — SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY stop after `STATUS: pickup` naming what is owed and who supplies it, HUMAN-LED marks the deciding step BLOCKING where DA drove it, HUMAN-ONLY and an ED-driven SPECIFY-FIRST route evidence steps through the materials row, DELEGATE-WITH-CHECKPOINT names its checkpoint
-- [ ] Every `AMENDED:` or `HANDOFF:` comment read; each body-editing one names its predecessor and the body matches the fold of all body-editing ones in stream order — one whose named predecessor is not the previous body-editing comment is re-folded first
+- [ ] `action` read; execution follows the rule 9 mapping — SPLIT: the split-HANDOFF order before step one; SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed and who supplies it; HUMAN-LED: research and harness steps proceed and the `STATUS: pickup` names the deciding step and who decides (an unmarked decision is an AMENDED adding the marker, not a pickup act); HUMAN-ONLY and ED-driven SPECIFY-FIRST: evidence steps through the materials row; DELEGATE-WITH-CHECKPOINT: the checkpoint named
+- [ ] Every `AMENDED:` or `HANDOFF:` comment read; each body-editing one names its predecessor and the gates it re-ran (a transfer HANDOFF states the body is unchanged), and the body matches the fold of all body-editing ones in stream order — one whose named predecessor is not the previous body-editing comment is re-folded first
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
@@ -787,10 +810,9 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Open features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is asked to resolve it to this number (feature rule C) before it is owed anything
-- [ ] Every `AMENDED:` or `HANDOFF:` comment names the gates it re-ran, or is a transfer HANDOFF stating the body is unchanged
 - [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by` here or, where the sibling waits on this task, in that sibling's `blocked_by` (mirrored in `blocks`), or its absence is explained by an AMENDED
 - [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and its § Internal interfaces provided — public re-read at the landed commit; a deviation from what this task assumes is an AMENDED here before step one
-- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
+- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or provided by a `blocked_by` task that has landed (row above), or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
 
 ## Post-Implementation Validation

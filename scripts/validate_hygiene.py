@@ -400,7 +400,7 @@ def h07(ctx):
     # Build the reverse indexes once, then an issue's mirror obligation runs
     # to EVERY parent that lists it (task rule 9, feature rule D, capstone
     # rule D).
-    task_owners, capstone_parents = {}, {}
+    task_owners, feature_parents, capstone_parents = {}, {}, {}
     for fn, fi in ctx.corpus.issues.items():
         if not fi.machine:
             continue
@@ -408,6 +408,10 @@ def h07(ctx):
             for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
                 task_owners.setdefault(t, []).append(fn)
         elif fi.tier == "capstone":
+            # requires_features is authoritative; serves_capstones mirrors it.
+            for f in parse_edge_field(fi.machine,
+                                      "requires_features")["numbers"]:
+                feature_parents.setdefault(f, []).append(fn)
             for c in parse_edge_field(fi.machine,
                                       "requires_capstones")["numbers"]:
                 capstone_parents.setdefault(c, []).append(fn)
@@ -424,22 +428,45 @@ def h07(ctx):
         if iss.tier == "task":
             parents = task_owners.get(n, [])
         elif iss.tier == "feature":
-            parents = parse_edge_field(mb, "serves_capstones")["numbers"]
+            parents = sorted(set(feature_parents.get(n, []))
+                             | set(parse_edge_field(mb, "serves_capstones")
+                                   ["numbers"]))
         else:
             parents = capstone_parents.get(n, [])
         parents = [p for p in parents if p in ctx.corpus.issues]
         # Every issue that may legitimately post a led comment here: roster
-        # parents and children, ordering counterparts, related.
+        # parents and children (current), ordering counterparts, related,
+        # any issue whose own REPLAN/AMENDED/HANDOFF names #n (a dropping
+        # parent, a planning feature, a sibling ordering per § Related Work),
+        # and any issue this issue's own such comments name.
         counterparts = set(parents)
         for key in ("requires_tasks", "requires_features",
                     "requires_capstones", "blocked_by", "blocks", "related"):
             counterparts |= set(parse_edge_field(mb, key)["numbers"])
         counterparts |= set(task_owners.get(n, []))
+        counterparts |= set(feature_parents.get(n, []))
         counterparts |= set(capstone_parents.get(n, []))
+        own_named = set()
+        for c in ctx.comments(n):
+            b = (c.get("body") or "").lstrip()
+            if b.startswith(("REPLAN:", "AMENDED:", "HANDOFF:")) \
+                    and received_from(b, n) is None:
+                own_named |= {int(x) for x in re.findall(r"#(\d+)\b", b)}
+        counterparts |= own_named
+        for on, oi in ctx.corpus.issues.items():
+            if on == n or on in counterparts:
+                continue
+            for c in ctx.comments(on):
+                b = (c.get("body") or "").lstrip()
+                if b.startswith(("REPLAN:", "AMENDED:", "HANDOFF:")) \
+                        and received_from(b, on) is None \
+                        and re.search(rf"#{n}\b", b):
+                    counterparts.add(on)
+                    break
         for c in ctx.comments(n):
             src = received_from(c.get("body"), n)
             if src is not None and src not in counterparts:
-                out.append(finding(n, "H07", "warn",
+                out.append(finding(n, "H07", "info",
                            f"comment led by #{src}, which is no counterpart "
                            "of this issue (rule 9: an own comment is never "
                            "led by another number; a mirror comes from a "
@@ -547,7 +574,9 @@ CRITERION_ID = re.compile(r"^[A-Z]{1,3}[-–]?\d+\b")
 # Task rule 9: an issue's OWN comment is never led by another issue's
 # number; a number in the first position marks a mirror or a notice posted
 # from another issue ("STATUS: landed #other ...", "REPLAN: #other ...").
-RECEIVED = re.compile(r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(\d+)\b")
+RECEIVED = re.compile(
+    r"(?:STATUS:\s*\w+|HANDOFF:\s*(?:split|transfer|re-tier)|[A-Z]+:)"
+    r"\s*#(\d+)\b")
 
 
 def received_from(body, n):

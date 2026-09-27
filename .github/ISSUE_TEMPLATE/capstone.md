@@ -52,7 +52,11 @@ labels: ["tier:capstone"]
   re-verification, here § Pickup Checks; explicit labels, here
   `tier:capstone` plus `bug` or `enhancement` matching the corpus),
   together with task rules 9–10 (comment protocol and waivers, with
-  `REPLAN:` in place of `AMENDED:` and the same `STATUS:` sub-tags),
+  `REPLAN:` in place of `AMENDED:` and the same `STATUS:` sub-tags;
+  `HANDOFF: transfer` applies unchanged when the acceptance pass changes
+  hands — body unchanged, no gate reset, the transferee re-runs § Pickup
+  Checks in full and posts its own `STATUS: pickup` citing it; split and
+  re-tier are a REPLAN plus a new issue at this tier),
   task rules 11–13 (oracle custody, artifact paths resolve at filing,
   marked open questions — applied to § System-Level Acceptance
   Criteria and § Open Questions & Decisions Needed), task rules
@@ -110,7 +114,9 @@ labels: ["tier:capstone"]
      a feature, this is a milestone label, not a capstone — do not
      file it.
   G. Orphaned scope. When a required feature closes, is re-tiered (a
-     new issue plus a REPLAN on the old one — the tier model), or
+     new issue plus a REPLAN on the old one — the tier model; a task
+     re-tiered into a feature arrives as a `HANDOFF: re-tier` on the
+     task and a new feature this capstone may adopt), or
      is descoped while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — add
      the task to the requires_tasks roster of an OPEN required feature
@@ -374,7 +380,8 @@ flowchart TD
 
 ## Pickup Checks
 
-<!-- Run once by whoever begins the acceptance pass (task rule 6,
+<!-- Run once per executor by whoever begins (or, after a
+     `HANDOFF: transfer`, takes over) the acceptance pass (task rule 6,
      applied at this tier). Preconditions for starting, not completion
      criteria. Record the outcome in a `STATUS: pickup` comment here
      (not mirrored). -->
@@ -389,7 +396,7 @@ flowchart TD
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact a criterion names exists, or its named builder has landed, or its builder is this capstone's close-out and is scheduled (task rule 12)
-- [ ] Every platform, device or apparatus the walk-through or a criterion names is available to whoever picks up, or the `STATUS: pickup` comment records the block
+- [ ] Every platform, device or apparatus the walk-through or a criterion names is available to whoever picks up, or the `STATUS: pickup` comment names the acceptance steps blocked and the holder they are handed to; every other step may proceed
 
 ## Post-Acceptance Validation
 
@@ -430,7 +437,7 @@ flowchart TD
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v4, outcome tier. How safely this capstone can be handed to an
+  ADR-1 v5, outcome tier. How safely this capstone can be handed to an
   automated executor, and what maintenance liability delegating it as-is
   would create. NOT a rating of how good, important or urgent the work is.
   SCORE THE ACCEPTANCE PASS — this capstone's own system-level criteria and
@@ -564,16 +571,19 @@ flowchart TD
         device class, or a credential that automation COULD be given ....
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
-        observed by hand, or because the evidence is a recording of a real
-        session with no named unattended harness .................. cap F
+        observed by hand against an enumerated procedure, or because the
+        evidence is a recording of a real session with no named unattended
+        harness ................................................... cap F
         A recorded manual procedure scores 1 unless the issue names the
         in-tree or CI substrate (a headless display run, a device farm) and
         the harness that would produce the same observation unattended —
         then it scores 2 and that harness is a named builder.
       0 NO, because a person's participation or judgement IS the evidence:
-        a human-subject trial, an independent reproducer, someone who must
-        witness a step and report what they saw, an external publisher
-        whose acceptance is itself the evidence ................... cap F
+        a human-subject trial, an independent reproducer, someone whose
+        judgement of what they saw — not an enumerated observation of the
+        software's behaviour that anyone holding the apparatus would
+        repeat, which is 1 — is the report, an external publisher whose
+        acceptance is itself the evidence .......................... cap F
       Reviewing a diff or approving a merge is NOT evidence production and
       does not score here — that is the band-B checkpoint, and most projects
       require it. Running the software on a platform and reporting the
@@ -678,7 +688,7 @@ flowchart TD
 -->
 
 ```yaml
-adr: 4
+adr: 5
 sc:              # 0-5  specification closure
 os:              # 0-5  oracle strength, AFTER deductions
 os_deduction:    # 0-3  total deducted, 0 if none

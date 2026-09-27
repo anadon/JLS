@@ -428,9 +428,9 @@ def h07(ctx):
         if iss.tier == "task":
             parents = task_owners.get(n, [])
         elif iss.tier == "feature":
-            parents = sorted(set(feature_parents.get(n, []))
-                             | set(parse_edge_field(mb, "serves_capstones")
-                                   ["numbers"]))
+            # Rule D: the capstones whose requires_features list this
+            # feature; serves_capstones only mirrors that set.
+            parents = sorted(set(feature_parents.get(n, [])))
         else:
             parents = capstone_parents.get(n, [])
         parents = [p for p in parents if p in ctx.corpus.issues]

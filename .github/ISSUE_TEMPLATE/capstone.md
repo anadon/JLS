@@ -55,8 +55,11 @@ labels: ["tier:capstone"]
   `REPLAN:` in place of `AMENDED:` and the same `STATUS:` sub-tags;
   `HANDOFF: transfer` applies unchanged when the acceptance pass changes
   hands — body unchanged, no gate reset, the transferee re-runs § Pickup
-  Checks in full and posts its own `STATUS: pickup` citing it; split and
-  re-tier are a REPLAN plus a new issue at this tier),
+  Checks in full and posts its own `STATUS: pickup` citing it; a split
+  is a REPLAN plus a new issue at this tier, a re-tier a REPLAN plus a
+  new issue at the new tier — that REPLAN carries the Dropped/Retired
+  ledger moving every item to it and is the close-out record, task
+  rule 10 read with REPLAN in place of `HANDOFF: re-tier`),
   task rules 11–13 (oracle custody, artifact paths resolve at filing,
   marked open questions — applied to § System-Level Acceptance
   Criteria and § Open Questions & Decisions Needed), task rules
@@ -126,7 +129,9 @@ labels: ["tier:capstone"]
      or (c) descope it, re-deriving the § Required Feature Set &
      Sufficiency argument. There is NO capstone→task edge; a capstone
      that appears to need a task directly is missing a feature — file
-     one.
+     one where a genuine span exists (feature rule B); work already
+     landed at `evidence_commit` is a precondition cited by permalink in
+     § Required Feature Set & Sufficiency, never a roster entry.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -211,7 +216,7 @@ flowchart TD
 
 - [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every capstone whose `blocked_by` names this one appears in `blocks`; every feature in `requires_features` lists this capstone in its `serves_capstones`; every capstone or feature this capstone's `blocked_by` names carries the mirror in its `blocks`; every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; the alignment cites an open issue or a standing commitment, or is still marked unfiled — a closed target is re-aligned by REPLAN.
 
-- [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states an outcome a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this capstone claims to deliver, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the system-level change reaches. `evidence_commit` is the SHA actually checked out and is reachable from the default branch. Adversarial re-read of this span found no substantial finding.
 
 ## Outcome Statement
 
@@ -234,7 +239,10 @@ flowchart TD
      the set. Write each contribution against the feature's own
      § Capability Statement & Scope Boundary as it reads NOW; a feature
      whose boundary disclaims the contribution claimed here is a plan
-     defect. Fill `requires_features`, `requires_capstones` and
+     defect. Work already landed at `evidence_commit` is a precondition
+     cited here by permalink, never a roster entry; a feature filed only
+     to group landed tasks fails feature rule B. Fill
+     `requires_features`, `requires_capstones` and
      `planned_features` now, and record the DAG walk. -->
 
 | Feature | Contribution to the outcome | Status |
@@ -386,7 +394,7 @@ flowchart TD
      criteria. Record the outcome in a `STATUS: pickup` comment here
      (not mirrored). -->
 
-- [ ] Every `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
+- [ ] Every own `REPLAN:` comment read; the body matches the latest one; each names the gates it re-ran
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), or the adopting REPLAN links its landing comment, or its disposition is recorded; `planned_features` is empty
 - [ ] Every mirrored `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read; § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; a parent's REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
@@ -396,7 +404,7 @@ flowchart TD
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact a criterion names exists, or its named builder has landed, or its builder is this capstone's close-out and is scheduled (task rule 12)
-- [ ] Every platform, device or apparatus the walk-through or a criterion names is available to whoever picks up, or the `STATUS: pickup` comment names the acceptance steps blocked and the holder they are handed to; every other step may proceed
+- [ ] Every platform, device or apparatus the walk-through or a criterion names is available to whoever picks up, or the `STATUS: pickup` comment names the acceptance steps blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked); every other step may proceed
 
 ## Post-Acceptance Validation
 

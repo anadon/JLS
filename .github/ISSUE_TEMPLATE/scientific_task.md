@@ -146,7 +146,10 @@ labels: ["tier:task"]
      request: the mirrored comment says so, and the gate covering the
      contradiction stays unticked until that feature's REPLAN answers.
      A `REPLAN:` a listing feature posts here, led by its number, is
-     answered on receipt (at pickup if none has happened yet): by an
+     answered on receipt (at pickup if none has happened yet) — unless
+     this issue has closed, when the REPLAN is a notice, no answer is
+     owed, and whoever posts it ticks any gate here left pending on it
+     as bookkeeping citing the REPLAN: by an
      AMENDED where any section of this body must change (typically
      § Interface & Data Contract, the machine block or § Intent &
      Alignment — a drop with the disposition "freed" restates the
@@ -157,13 +160,17 @@ labels: ["tier:task"]
      here and the feature reads it on this issue. Where an AMENDED
      re-scores § Agentic Delegability and `action` changes, the comment
      states the new action and execution follows it from that point:
-     SPLIT → the split-HANDOFF order; SPECIFY-FIRST or HUMAN-LED → stop
-     after the AMENDED with the open question marked BLOCKING or
-     PROPOSED; DELEGATE-WITH-CHECKPOINT → the named checkpoint precedes
-     the next step or the merge. An AMENDED that adds a module or file
-     outside what § Related Work assigns to this task resets from Gate —
-     Observations, Background & Related Work, since sibling scopes are
-     read there. An own comment is never led by another issue's number:
+     SPLIT → the split-HANDOFF order; SPECIFY-FIRST → stop after the
+     AMENDED, which names the closed spec or oracle owed and who supplies
+     it (no marker change — SC or OS drove it); HUMAN-LED → stop, with
+     the decision marked BLOCKING; HUMAN-ONLY or AGENT-ASSIST-ONLY → the
+     evidence steps are named blocked and handed to a holder as the
+     materials row of § Pickup Checks does, every other step proceeds;
+     DELEGATE-WITH-CHECKPOINT → the named checkpoint precedes the next
+     step or the merge; DELEGATE → nothing. An AMENDED that adds a module
+     or file that a sibling named in § Related Work owns, or that § Scope
+     Boundary lists as out, resets from Gate — Observations, Background &
+     Related Work (rule 14), since sibling scopes are read there. An own comment is never led by another issue's number:
      a number in the first position marks a mirror, or a notice posted
      on another issue. When an
      edit REMOVES or NARROWS any claim, observation, prediction,
@@ -270,7 +277,10 @@ labels: ["tier:task"]
      them in order, and the AMENDED comment names the gates re-run —
      that comment, not checkbox state, is what § Pickup Checks reads.
      For a machine-block key, the changed section is the one at whose
-     gate the block's comment says that key is filled. Gate clauses
+     gate the block's comment says that key is filled; for a file or
+     module that a sibling named in § Related Work owns, or that § Scope
+     Boundary lists as out, the reset starts at Gate — Observations,
+     Background & Related Work (rule 9). Gate clauses
      never depend on a counterpart's later edit, except where a clause
      reads the counterpart's current body (a listing feature's § Global
      Invariants, rule 9); mirror entries that a counterpart forces onto
@@ -639,7 +649,7 @@ related: []             # reference only — never blocking, never ownership.
      an observation (rule 1): one line here, citation in
      § Observations. -->
 
-- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches (the same `git log` as at Gate — Observations, Background & Related Work pasted empty for those files, or the step re-derived at that head; each file within the scope § Related Work assigns to this task, a file a sibling's scope covers being restated there with that gate re-run), and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches (the same `git log` as at Gate — Observations, Background & Related Work pasted empty for those files, or the step re-derived at that head; each file within the scope § Related Work assigns to this task, a file a sibling's scope covers being restated there — after filing, rule 9 resets from that gate), and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
 ## Data Collection & Analysis
 
@@ -701,7 +711,7 @@ related: []             # reference only — never blocking, never ownership.
      rule 2 — comment with evidence, do not work around it. -->
 
 - [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit, and no falsification criterion fired unaddressed [rows: P/F]
-- [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded as an issue comment (rule 2), not silently absorbed [rows: Contract]
+- [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded by an AMENDED of the deviating subsection before close (rule 9), never by a bare comment or silently absorbed [rows: Contract]
 - [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit, or the manual-procedure alternative of § Method / Experimental Design was recorded with platform [row: Regression tests]
 - [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the prediction that justifies the new expectation [row: Existing tests]
 - [ ] § Global Invariants of every feature whose `requires_tasks` lists this task hold at the fix commit [row: Invariants]
@@ -713,7 +723,7 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10) [row: Waivers]
 - [ ] Every cited evidence document and permalink resolves on the default branch at close — no branch-path links, no deleted docs [row: Links]
 - [ ] Every path named above exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design, or by a task in `blocked_by` — this list says which (rule 12) [row: Paths]
-- [ ] Landing reported with a `STATUS: landed` comment on every feature whose `requires_tasks` lists this task, including any contract deviations those plans must reconcile [row: Mirrors]
+- [ ] Landing reported with a `STATUS: landed` comment on every feature whose `requires_tasks` lists this task, citing the AMENDED of any contract deviation those plans must reconcile [row: Mirrors]
 - [ ] § Agentic Delegability re-scored on any `AMENDED:` edit that changed scope, evidence, or open decisions [row: Amendments]
 - [ ] ... [row: <added below>]
 
@@ -723,10 +733,11 @@ related: []             # reference only — never blocking, never ownership.
      Experimental Design (rule 6). Each box is a precondition for
      starting, not a completion criterion. Record the outcome in a
      `STATUS: pickup` comment on this issue (not mirrored, rule 9). A
-     failed observation row ends as rule 6 says — `SUPERSEDED:`,
-     `REFUTED:`, or an AMENDED that re-derives or retires the
-     observation; any other failed row ends in the `STATUS: pickup`
-     comment recording the block — either way, not in work. -->
+     failed supersession or observation row ends as rule 6 says —
+     `SUPERSEDED:`, `REFUTED:`, or an AMENDED that re-derives or retires
+     the observation; any other failed row ends in the `STATUS: pickup`
+     comment recording the block, and only the steps it names as blocked
+     wait. -->
 
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; the body matches the latest one
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
@@ -739,7 +750,7 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every `AMENDED:` or `HANDOFF:` comment names the gates it re-ran, or is a transfer HANDOFF stating the body is unchanged
 - [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by` here or, where the sibling waits on this task, in that sibling's `blocked_by` (mirrored in `blocks`), or its absence is explained by an AMENDED
 - [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and its § Internal interfaces provided — public re-read at the landed commit; a deviation from what this task assumes is an AMENDED here before step one
-- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, and every other step may proceed
+- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
 
 ## Post-Implementation Validation

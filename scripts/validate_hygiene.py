@@ -584,8 +584,15 @@ def h09(ctx):
         # quotes the box, or when the issue's own STATUS: landed links the
         # revision holding the filled validation rows the box names. A bare
         # "DoD" mention is not evidence.
+        # Rule 9: the tick is exempt only once the own STATUS: landed
+        # links the body revision holding the filled rows — a permalink,
+        # comment link or commit-ish in its first line.
         landed = any(re.match(r"STATUS:\s*landed\b", cb)
-                     and received_from(cb, n) is None for cb in cbodies)
+                     and received_from(cb, n) is None
+                     and re.search(r"https?://\S+|#issuecomment-\d+"
+                                   r"|\b[0-9a-f]{7,40}\b",
+                                   cb.split("\n", 1)[0])
+                     for cb in cbodies)
         if landed:
             continue
         unevidenced = []

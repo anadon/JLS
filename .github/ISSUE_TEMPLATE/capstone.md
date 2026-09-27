@@ -54,8 +54,10 @@ labels: ["tier:capstone"]
   together with task rules 9–10 (comment protocol and waivers, with
   `REPLAN:` in place of `AMENDED:` and the same `STATUS:` sub-tags;
   `HANDOFF: transfer` applies unchanged when the acceptance pass changes
-  hands — body unchanged, no gate reset, the transferee re-runs § Pickup
-  Checks in full and posts its own `STATUS: pickup` citing it; a split
+  hands — body unchanged, no gate reset, the transferee runs § Pickup
+  Checks as task rule 9 says (rows not reached run, rows run at the same
+  checkout re-used, the named rows re-run) and posts its own
+  `STATUS: pickup` citing it; a split
   is a REPLAN plus a new issue at this tier, a re-tier a REPLAN plus a
   new issue at the new tier — that REPLAN carries the Dropped/Retired
   ledger moving every item the new tier can hold to it, gives every
@@ -93,7 +95,7 @@ labels: ["tier:capstone"]
   interface § Cross-Feature Integration Risks assigns it, every ordering
   edge recorded here against its scope is carried by its machine block
   or, where a filed feature waits on it, by that feature's after the
-  REPLAN its filer posted, and its
+  own REPLAN its filer posted on it, and its
   § Integration Criteria & Evidence Plan and § Completion Criteria
   (Definition of Done) leave every § System-Level Acceptance Criteria
   annotation naming it correct — no span it covers alone, nothing it
@@ -124,10 +126,11 @@ labels: ["tier:capstone"]
   ticked. Any deviation of what was built from what a closed required
   feature's body records (contract, roster row, a cell recorded as held,
   a criterion recorded as met) is recorded by a REPLAN on that closed
-  feature posted by the finder (corrected, ledger, no gate re-run),
-  mirrored on every capstone listing it, open or closed — an open one
-  REPLANs, on a closed one the finder posts the same REPLAN, upward
-  until an open issue answers or none lists it; a
+  feature posted by the finder (corrected, ledger, no gate re-run, ADR
+  left as it scored the filing), mirrored on every capstone listing it,
+  open or closed — an open one answers per its rule C, on a closed one
+  the finder posts the same REPLAN, upward until an open issue answers
+  or none lists it; a
   mirrored trigger whose reassessment finds nothing
   cited here changed, or whose comment this capstone's own REPLAN
   requested, is answered by a `STATUS: progress` acknowledgement
@@ -315,10 +318,11 @@ flowchart TD
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE with every required
      entry landed: a fix feature under rule G(b) adopted by REPLAN, or
      `REFUTED:` — the premise of § Outcome Statement fails — posted after
-     a REPLAN removing every still-open required entry and descoping
-     every planned one (posted on each filed one, rule D) with its
-     disposition (re-parented to a named open capstone,
-     or released with the rule D notice) — scope a parent capstone still
+     a REPLAN removing every still-open required entry (posted on each,
+     rule D) with its disposition (re-parented to a named open capstone,
+     or released with the rule D notice) and descoping every planned one
+     (moved to a named open capstone's `planned_features`, or dropped
+     with the sufficiency argument re-derived, rule G(c)) — scope a parent capstone still
      needs is that parent's rule G on receiving the mirrored REFUTED —
      quoting the failing
      criterion with command and output, the sheet not completed — rows
@@ -344,7 +348,7 @@ flowchart TD
          evidence with no work item anywhere; mark it UNOWNED;
        - text left stale by a feature's later REPLAN. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule D; an edge involving a planned feature is recorded here; at its filing the planned feature's filer adds it to that feature's `blocked_by` or, where a filed feature waits on it, posts the REPLAN on that feature (rule D), and the resolution is bookkeeping only when both blocks carry it) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule D; an edge involving a planned feature is recorded here; at its filing the planned feature's filer adds it to that feature's `blocked_by` or, where a filed feature waits on it, posts on that feature its own REPLAN adding the edge (feature rule C, mirrored per rule D), and the resolution is bookkeeping only when both blocks carry it) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -453,7 +457,7 @@ flowchart TD
      criteria. Record the outcome in a `STATUS: pickup` comment here
      (not mirrored; one line may list every "none" row). -->
 
-- [ ] `review_clean` is not `false`; a `false` is answered before the acceptance pass begins by the REPLAN fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping)
+- [ ] `review_clean` is not `false`; a `false` is answered before the acceptance pass begins by the REPLAN fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping) — where the executor cannot complete that REPLAN, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it
 - [ ] `action` read; execution follows the task rule 9 mapping for it (stop, block named steps, or proceed; at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every own `REPLAN:` comment read; each names its predecessor (the previous own REPLAN) and the gates it re-ran, and the body matches the fold of all of them in stream order — one whose named predecessor is not the previous REPLAN is re-folded first
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), or its disposition is recorded; `planned_features` is empty
@@ -512,8 +516,8 @@ flowchart TD
   would create. NOT a rating of how good, important or urgent the work is.
   SCORE THE ACCEPTANCE PASS — this capstone's own system-level criteria and
   outcome statement — never the union of its features.
-  Fill at filing; re-score when a re-plan or amendment changes the roster,
-  the criteria or the open decisions. Where two ANCHORS in one axis
+  Fill at filing; re-score when a re-plan or amendment before close changes
+  the roster, the criteria or the open decisions. Where two ANCHORS in one axis
   could apply to one fact, take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
@@ -761,9 +765,10 @@ flowchart TD
       and does not fix it, as bookkeeping, on an OPEN issue; the AMENDED
       (REPLAN) that fixes the finding, or a comment recording why it does
       not stand, re-ticks. § Pickup Checks reads it. On a closed issue the
-      boxes and `review_clean` stand as filed; the finding is recorded by
-      the after-close AMENDED (REPLAN) of task rule 9 whether or not the
-      finder fixes it.
+      boxes and `review_clean` stand as filed; a finding that what was
+      built deviates from the body is recorded by the after-close AMENDED
+      (REPLAN) of task rule 9; any other finding is a plain comment
+      quoting it, and nothing is re-scored.
 -->
 
 ```yaml

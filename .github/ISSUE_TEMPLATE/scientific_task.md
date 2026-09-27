@@ -17,7 +17,12 @@ labels: ["tier:task"]
      until re-derived. Aggregate claims (counts, "all X", "no Y anywhere")
      carry the exact command that produced them and its output.
   2. No padding. A section that does not apply is "N/A — <one-line
-     reason>", decided at filing time. A criterion discovered to be wrong
+     reason>", decided at filing time. Evidence that applies but must not
+     yet be disclosed (a security fix before release) is "WITHHELD — held
+     by <custodian> until <event>", permitted for an observation's
+     command and output, a quoted line and a fixture path; the
+     custodian's re-run comment is cited in `review_evidence`, and the
+     un-redacting AMENDED is posted at the event. A criterion discovered to be wrong
      during execution gets an AMENDED with evidence that corrects it
      (rule 9) — a bare comment records nothing; do not work around it
      and do not silently edit it.
@@ -39,7 +44,11 @@ labels: ["tier:task"]
      Criteria" for "§ Completion Criteria (Definition of Done)".
   6. Executors: before step one of § Method / Experimental Design, run
      § Pickup Checks in full. A hypothesis refuted mid-work stops the
-     work: comment with the refuting evidence. A refuted issue is a
+     work where no other hypothesis in § Hypothesis (falsifiable) still
+     stands; otherwise execution follows the fired F's next move and the
+     refutation is recorded by `STATUS: progress` quoting the F, and
+     `REFUTED:` closes the issue only when the last standing hypothesis
+     falls. Comment with the refuting evidence. A refuted issue is a
      successful experiment, not a task to salvage — except in an
      investigation, where a refuted candidate answer is a result (see
      the decision-task note below). An observation that fails to
@@ -81,8 +90,8 @@ labels: ["tier:task"]
      `planned_tasks` for this scope while the number is fresh. An
      executor needs them at pickup (the listing-features row) and at
      close (the Invariants and Mirrors criteria): `owned_by_derived` or
-     the readiness derivation supplies them where tooling runs, otherwise
-     the executor searches. § Intent & Alignment may NAME the feature or capstone
+     the readiness derivation is the starting list, and the pickup row's
+     roster search confirms it. § Intent & Alignment may NAME the feature or capstone
      this task serves; that is a reference for alignment, not an
      ownership claim.
 
@@ -132,13 +141,15 @@ labels: ["tier:task"]
      step already ticked with the comment that evidences it, and the
      first step the successor executes (`HANDOFF: transfer — no step
      executed` where the predecessor stopped before step one). The
-     successor posts its own `STATUS: pickup` citing the HANDOFF, re-uses
-     the predecessor's rows run at the same checkout, and re-runs the
-     observation, supersession and evidence_commit rows where HEAD moved
-     plus any row whose referent gained comments since — observation,
-     supersession and evidence_commit rows at the
-     work's merge-base with the default branch, all other rows at the
-     handoff commit. `STATUS:` carries a sub-tag —
+     successor posts its own `STATUS: pickup` citing the HANDOFF and
+     naming the handoff commit as its checkout, runs every row the
+     predecessor recorded as not reached, re-uses the rows run at the
+     same checkout, and re-runs the observation, supersession and
+     evidence_commit rows where HEAD moved plus any row whose referent
+     gained comments since — observation, supersession and
+     evidence_commit rows at the work's merge-base with the default
+     branch (named in the comment), all other rows at the handoff
+     commit. `STATUS:` carries a sub-tag —
      `STATUS: pickup` (§ Pickup Checks outcome), `STATUS: progress`,
      `STATUS: landed`, whose first line carries — after a dash, never
      directly after the sub-tag — the fix commit, the PR, the permalink
@@ -172,9 +183,11 @@ labels: ["tier:task"]
      successor now tracking any unmet obligation or why none is needed
      (standing in for rule 10's WAIVED), no gate re-run, the ADR block
      left as it scored the filing; it is mirrored on every listing
-     feature, open or closed — an open one REPLANs, on a closed one the
-     finder posts the closed-feature REPLAN of capstone rule D, and so on
-     upward until an open issue answers or none lists it): by an
+     feature, open or closed — an open one answers per its rule C (REPLAN
+     where anything it cites changed, otherwise `STATUS: progress` naming
+     the sections reassessed), on a closed one the finder posts the
+     closed-feature REPLAN of capstone rule D, and so on upward until an
+     open issue answers or none lists it): by an
      AMENDED where any section of this body must change (typically
      § Interface & Data Contract, the machine block or § Intent &
      Alignment — a drop with the disposition "freed" restates the
@@ -257,7 +270,11 @@ labels: ["tier:task"]
   10. Waivers. A completion criterion may be waived only via a
      `WAIVED:` comment naming the reason AND the successor issue that
      now tracks the dropped obligation (or stating explicitly why no
-     successor is needed). A criterion skipped without a WAIVED
+     successor is needed); after close, the finder's AMENDED of rule 9
+     stands in for the WAIVED of any criterion it records as not met,
+     naming the successor or why none is needed, and corrects the
+     Waivers row. A `REFUTED:` names as successor any task in `blocks`
+     that pins the same rule 3 failure. A criterion skipped without a WAIVED
      comment leaves the issue unclosable. A close on `REFUTED:`,
      `SUPERSEDED:` or `HANDOFF: re-tier`, or on a listing feature's REPLAN
      disposition "closed" (recorded by the AMENDED that answers that
@@ -354,9 +371,12 @@ labels: ["tier:task"]
   15. Three check-sheets, distinguished by WHEN they run. The gates of
      rule 14 run at filing. § Pickup Checks runs once in full, before
      step one of § Method / Experimental Design, by whoever executes
-     (rule 6), and again in full by a HANDOFF successor (rule 9); after
-     a post-pickup AMENDED, rule 9 re-runs only the rows the edit
-     touches, recorded in that comment.
+     (rule 6), and by a HANDOFF successor as rule 9 says (rows not
+     reached run; rows run at the same checkout re-used; observation,
+     supersession and evidence_commit rows re-run where HEAD moved, plus
+     any row whose referent gained comments); after a post-pickup
+     AMENDED, rule 9 re-runs only the rows the edit touches, recorded in
+     that comment.
      § Post-Implementation Validation runs at close, against the actual
      diff and PR, one row per item. § Completion Criteria states WHAT
      must be true of the finished work; the validation sheet records HOW
@@ -498,8 +518,17 @@ related: []             # reference only — never blocking, never ownership.
 
 <!-- Sibling issues, the features whose rosters list this task or
      whose `planned_tasks` carries this scope (search both; rule 8),
-     audit findings, external references. Where
-     scopes touch, state which issue owns which fix. The `blocked_by`
+     audit findings, external references — with the sibling-search
+     command and its output (rule 1: "every sibling" is an aggregate
+     claim). Where scopes touch, state which issue owns which fix. A
+     sibling whose § Observations pins the SAME rule 3 failure is a
+     competing hypothesis, not a touching scope: add this hypothesis,
+     its P/F pair and rejected candidates to the sibling by AMENDED
+     (reset from Gate — Question & Hypothesis) and do not file; only
+     where the sibling is past step one, file with `blocked_by` the
+     sibling, an F reading "SUPERSEDED when #N lands", and an AMENDED on
+     the sibling's § Related Work naming this task as its successor on
+     REFUTED. The `blocked_by`
      and `related` entries of the machine block are derived from this
      section — fill them now, and record the DAG walk (follow each named
      issue's edges outward and confirm no path returns here); `blocks`
@@ -509,7 +538,7 @@ related: []             # reference only — never blocking, never ownership.
      must wait on this task, by an AMENDED on that sibling posted by
      whoever files this task. -->
 
-- [ ] **Gate — Observations, Background & Related Work.** `evidence_commit` is reachable from the default branch, and `git log --oneline <evidence_commit>..origin/<default> -- <every path cited in § Observations and § Background & Prior Work>` is empty or its output is pasted with each observation touching a listed path re-run at that head; every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Observations, Background & Related Work.** `evidence_commit` is reachable from the default branch, and `git log --oneline <evidence_commit>..origin/<default> -- <every path cited in § Observations and § Background & Prior Work>` is empty or its output is pasted with each observation touching a listed path re-run at that head; every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink, or is WITHHELD with its custodian's re-run comment cited in `review_evidence` (rule 2); the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Research Question
 
@@ -552,7 +581,8 @@ related: []             # reference only — never blocking, never ownership.
      needed to perform each "do X" above. Note anything that does not
      exist yet and must be built first — § Method / Experimental Design
      must build it, or a task in `blocked_by` provides it (landed at
-     pickup). -->
+     pickup); a material that exists but is withheld until an event
+     (rule 2) is listed with its holder. -->
 
 - [ ] **Gate — Predictions & Materials.** Every hypothesis has at least one P and one F; every P is do-X-observe-Y with X executable using only the materials named; every P marked failing at `evidence_commit` has its failure pasted in § Observations; every F names the hypothesis it refutes and the next move; materials that do not exist yet are flagged for § Method / Experimental Design to build or named as provided by a `blocked_by` task. Adversarial re-read of everything above found no substantial finding.
 
@@ -821,23 +851,28 @@ related: []             # reference only — never blocking, never ownership.
      passes nor fails. Record the outcome in a
      `STATUS: pickup` comment on this issue (not mirrored, rule 9) that
      names the checkout commit and lists the rows run and the rows not
-     reached — a later executor at that checkout cites the rows run and
-     re-runs only the observation, supersession and evidence_commit rows
-     where HEAD moved plus any row whose referent gained comments since.
+     reached — a later executor at that checkout runs the rows not
+     reached, cites the rows run, and re-runs only the observation,
+     supersession and evidence_commit rows where HEAD moved plus any row
+     whose referent gained comments since. Work whose evidence is
+     withheld until a release (rule 2) is filed at release with
+     `evidence_commit` the last pre-fix commit; pickup runs BEFORE the fix
+     merges, and the un-redacting AMENDED (reset from Gate —
+     Observations, Background & Related Work) is posted with it.
      A
      failed supersession or observation row ends as rule 6 says —
      `SUPERSEDED:`, `REFUTED:`, or an AMENDED that re-derives or retires
      the observation; any other failed row ends in the `STATUS: pickup`
      comment recording the block, and only the steps it names as blocked
-     wait. -->
+     wait — or every step, where the row records a whole-issue block. -->
 
 - [ ] `review_clean` is not `false`; a `false` is answered before step one by the AMENDED fixing the cited finding, or by a comment quoting the finding and recording why it does not stand (re-ticking is then bookkeeping) — where the executor cannot complete that AMENDED, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it, and no step starts
 - [ ] `action` read; execution follows the rule 9 mapping — SPLIT: the split-HANDOFF order before step one; SPECIFY-FIRST (SC, OS or DA driven) and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed and who supplies it; HUMAN-LED: research and harness steps proceed; where DA drove it the `STATUS: pickup` names the deciding step and who decides (an unmarked decision is an AMENDED adding the marker, not a pickup act), where RAW drove it it names who owns the spec or oracle; HUMAN-ONLY and ED-driven SPECIFY-FIRST: evidence steps through the materials row; DELEGATE-WITH-CHECKPOINT: the checkpoint named
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; each body-editing one names its predecessor and the gates it re-ran (a transfer HANDOFF states the body is unchanged), and the body matches the fold of all body-editing ones in stream order — one whose named predecessor is not the previous body-editing comment is re-folded first
 - [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9) — where the answer needs an AMENDED the executor cannot complete, the `STATUS: pickup` records a whole-issue block naming what is owed and who supplies it (the filer, or the feature that posted the REPLAN), and no step starts
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED below
-- [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
-- [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation is routed as rule 6 says (SUPERSEDED, REFUTED, or AMENDED re-deriving or retiring it, using the row above's determination), never worked around
+- [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment; and no OPEN task filed since Gate — Observations, Background & Related Work was ticked pins the same rule 3 failure or names a file § Method / Experimental Design touches (search command and output in the `STATUS: pickup`) — one found is named in § Related Work by AMENDED with the ownership per its note before step one
+- [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation is routed as rule 6 says (SUPERSEDED, REFUTED, or AMENDED re-deriving or retiring it, using the row above's determination), never worked around; an observation whose apparatus is a material the materials row hands to a holder is recorded "not run — held by <holder>", re-run by the holder before the evidence steps, and neither passes nor fails
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Open features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is asked to resolve it to this number (feature rule C) before it is owed anything
@@ -912,8 +947,8 @@ related: []             # reference only — never blocking, never ownership.
   are rated: the work is not finished, and the work is finished in a way
   that leaves a liability behind — the second is the dangerous one, because
   it is invisible to the gate that accepted it.
-  Fill at filing; re-score when an amendment changes scope, evidence or
-  open decisions. Where two ANCHORS in one axis could apply to one fact,
+  Fill at filing; re-score when an amendment before close changes scope,
+  evidence or open decisions. Where two ANCHORS in one axis could apply to one fact,
   take the lower. Caps and deductions stated inside an axis apply on top of
   the anchor chosen; they are not in competition with it.
   Self-contained by design; the other tier templates carry their own
@@ -1035,7 +1070,8 @@ related: []             # reference only — never blocking, never ownership.
       The last three are disjoint on one question: could automation ever
       produce this unattended?
       2 YES, but not with what the executor has — another host platform, a
-        device class, or a credential that automation COULD be given ....
+        device class, a credential that automation COULD be given, or a
+        fixture withheld until a named disclosure event (rule 2) ....
         .......................................................... cap C
       1 NO, because something physical must be connected, operated or
         observed by hand against an enumerated procedure, or because the
@@ -1151,9 +1187,10 @@ related: []             # reference only — never blocking, never ownership.
       and does not fix it, as bookkeeping, on an OPEN issue; the AMENDED
       (REPLAN) that fixes the finding, or a comment recording why it does
       not stand, re-ticks. § Pickup Checks reads it. On a closed issue the
-      boxes and `review_clean` stand as filed; the finding is recorded by
-      the after-close AMENDED (REPLAN) of task rule 9 whether or not the
-      finder fixes it.
+      boxes and `review_clean` stand as filed; a finding that what was
+      built deviates from the body is recorded by the after-close AMENDED
+      (REPLAN) of task rule 9; any other finding is a plain comment
+      quoting it, and nothing is re-scored.
 -->
 
 ```yaml

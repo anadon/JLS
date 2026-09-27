@@ -71,8 +71,11 @@ labels: ["tier:capstone"]
   Status cell, and resolving a planned_features scope to its number or
   replacing an "unfiled" alignment with its citation provided the
   edit's comment states the filed issue's cited sections were read and
-  agree with what was written against the scope (otherwise REPLAN)
-  (C); state reconstructed from prefixed comments, never from
+  agree with what was written against the scope — the filed feature's
+  § Capability Statement & Scope Boundary supplies its contribution row
+  and its § Feature-Level Interface & Data Contract declares each shared
+  interface § Cross-Feature Integration Risks assigns it (otherwise
+  REPLAN) (C); state reconstructed from prefixed comments, never from
   checkboxes: required features and sub-capstones mirror every
   prefixed comment of theirs except `STATUS: pickup`/`progress` here,
   led by their number; a roster that adopts an already-landed entry
@@ -81,8 +84,8 @@ labels: ["tier:capstone"]
   `STATUS: pickup`/`progress`, led by this number, on every capstone
   whose `requires_capstones` lists it (roster search — there is no
   serves field at this tier), and posts a REPLAN that removes an entry
-  from `requires_features` or `requires_capstones` on the removed
-  issue as well; a mirrored trigger whose reassessment finds nothing
+  from `requires_features` or `requires_capstones`, led by this number,
+  on the removed issue as well; a mirrored trigger whose reassessment finds nothing
   cited here changed, or whose comment this capstone's own REPLAN
   requested, is answered by a `STATUS: progress` acknowledgement
   naming the sections reassessed, not a REPLAN (D). Mirror `blocks`
@@ -275,7 +278,7 @@ flowchart TD
          evidence with no work item anywhere; mark it UNOWNED;
        - text left stale by a feature's later REPLAN. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and both declare it; every ordering hazard is an edge in the machine block with no edge pointing at a task; `blocked_by` is filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against the features' actual text at their current revision; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and both declare it; every ordering hazard is an edge in the machine block with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against the features' actual text at their current revision; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -378,6 +381,7 @@ flowchart TD
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact a criterion names exists, or its named builder has landed, or its builder is this capstone's close-out and is scheduled (task rule 12)
+- [ ] Every platform, device or apparatus the walk-through or a criterion names is available to whoever picks up, or the `STATUS: pickup` comment records the block
 
 ## Post-Acceptance Validation
 
@@ -418,7 +422,7 @@ flowchart TD
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v3, outcome tier. How safely this capstone can be handed to an
+  ADR-1 v4, outcome tier. How safely this capstone can be handed to an
   automated executor, and what maintenance liability delegating it as-is
   would create. NOT a rating of how good, important or urgent the work is.
   SCORE THE ACCEPTANCE PASS — this capstone's own system-level criteria and
@@ -458,8 +462,11 @@ flowchart TD
         already passes is not this issue's oracle)
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
-      1 a person reads prose and agrees
+      1 a person reads prose and agrees (review of prose only)
       0 none; success asserted by whoever did the work
+      A person operating the software and recording enumerated
+      observations is scored by the shape of the check (4 or 3), then the
+      document deduction below applies.
       DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
       both the implementation and the expected values certifying it (task
       rule 11 defines "the same change" and the independently-derived
@@ -550,6 +557,10 @@ flowchart TD
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
         session ................................................... cap F
+        A recorded manual procedure scores 1 unless the issue names the
+        in-tree or CI substrate (a headless display run, a device farm) and
+        the harness that would produce the same observation unattended —
+        then it scores 2 and that harness is a named builder.
       0 NO, because a person's participation or judgement IS the evidence:
         a human-subject trial, an independent reproducer, someone who must
         witness a step and report what they saw, an external publisher
@@ -658,7 +669,7 @@ flowchart TD
 -->
 
 ```yaml
-adr: 3
+adr: 4
 sc:              # 0-5  specification closure
 os:              # 0-5  oracle strength, AFTER deductions
 os_deduction:    # 0-3  total deducted, 0 if none

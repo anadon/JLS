@@ -368,7 +368,8 @@ def h06(ctx):
             continue
         stamps = [c.get("created_at") for c in ctx.comments(n)
                   if (c.get("body") or "").lstrip().startswith(
-                      ("AMENDED:", "HANDOFF:", "REPLAN:"))]
+                      ("AMENDED:", "HANDOFF:", "REPLAN:"))
+                  and received_from(c.get("body"), n) is None]
         stamps = [s for s in stamps if s]
         if not stamps:
             out.append(finding(n, "H06", "warn",
@@ -404,11 +405,7 @@ def h07(ctx):
 
     # Every tier mirrors every prefixed comment of its own except
     # STATUS: pickup/progress (task rule 9, feature and capstone rule D).
-    # An issue's OWN comment is never led by a foreign number; every mirror
-    # or notice it receives is ("PREFIX: #other ...", "STATUS: landed #other
-    # ..."), whether from a current child, a dropped one, or a parent posting
-    # a drop or re-plan notice. Received comments are not re-mirrored.
-    RECEIVED = re.compile(r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(\d+)\b")
+    # Received comments (RECEIVED, module level) are not re-mirrored.
 
     for n, iss in ctx.issues():
         mb = iss.machine
@@ -431,8 +428,7 @@ def h07(ctx):
             # rule 9); only STATUS: landed and the other prefixes mirror.
             if re.match(r"STATUS:\s*(pickup|progress)\b", b):
                 continue
-            led = RECEIVED.match(b)
-            if led and int(led.group(1)) != n:
+            if received_from(b, n) is not None:
                 continue        # received from another issue, not its own
             for p in allowed:
                 if b.startswith(p):
@@ -440,8 +436,12 @@ def h07(ctx):
                     break
         for pref in sorted(prefixes):
             for par in parents:
+                # A parent that adopted #n after it landed links the landing
+                # comment in its REPLAN instead of carrying a STATUS mirror
+                # (feature rule D / capstone rule D).
+                accept = (pref, "REPLAN:") if pref == "STATUS:" else (pref,)
                 mirrored = any(
-                    (pc.get("body") or "").lstrip().startswith(pref)
+                    (pc.get("body") or "").lstrip().startswith(accept)
                     and re.search(rf"#{n}\b", pc.get("body") or "")
                     for pc in ctx.comments(par))
                 if not mirrored:
@@ -512,6 +512,21 @@ CRITERION_ID = re.compile(r"^[A-Z]{1,3}[-–]?\d+\b")
 # Canonical heading names across ALL tiers: a task citing its parent
 # feature's "§ Global Invariants" is a cross-issue reference the same-body
 # check must not flag.
+# Task rule 9: an issue's OWN comment is never led by another issue's
+# number; a number in the first position marks a mirror or a notice posted
+# from another issue ("STATUS: landed #other ...", "REPLAN: #other ...").
+RECEIVED = re.compile(r"(?:STATUS:\s*\w+|[A-Z]+:)\s*#(\d+)\b")
+
+
+def received_from(body, n):
+    """The foreign issue number a comment is led by, or None if it is #n's
+    own comment."""
+    m = RECEIVED.match((body or "").lstrip())
+    if m and int(m.group(1)) != n:
+        return int(m.group(1))
+    return None
+
+
 ALL_CANONICAL_HEADINGS = [h for spec in TEMPLATES.values()
                           for h in spec["headings"] + spec["subheadings"]]
 

@@ -108,11 +108,12 @@ labels: ["tier:feature"]
      provided the edit's comment states that the filed issue's cited
      sections were read and agree with the row, handoffs and criteria
      written against the scope — for handoffs, "agree" means the filed
-     child's § Internal interfaces consumed and § Internal interfaces
-     provided — public name exactly the sibling handoffs this body
+     child's § Internal interfaces consumed, § Internal interfaces
+     provided — public and, for a stubbed handoff, § Internal interfaces
+     provided — private name exactly the sibling handoffs this body
      assigns it; any additional sibling interface makes the resolution
      a REPLAN that re-runs Gate — Decomposition, Contract & Integration
-     (if they do not agree, the edit is a REPLAN).
+     and every later gate (if they do not agree, the edit is a REPLAN).
      Every REPLAN is mirrored on every capstone in serves_capstones
      (a capstone reads this feature's roster, contract, capability,
      invariants and integration criteria, so any of them changing is
@@ -126,7 +127,8 @@ labels: ["tier:feature"]
      whose reassessment finds nothing cited here changed, or whose
      comment this feature's own REPLAN requested, is answered by a
      `STATUS: progress` comment naming the sections reassessed — not a
-     REPLAN — and resets no gate. If another agent
+     REPLAN — and resets no gate, unless that comment is itself a
+     re-plan request (rule D). If another agent
      edited since you read, re-read and fold the newer body into your
      edit — the REPLAN comment stream is the arbiter of intent.
   D. State lives in comments, not checkboxes. Child tasks post
@@ -245,7 +247,7 @@ flowchart TD
      cite this section as the alignment target of their own § Intent &
      Alignment, so it must say what they will assume it says. -->
 
-- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact or risk mitigation a serving capstone's § System-Level Acceptance Criteria or § Cross-Feature Integration Risks assigns to this feature is inside the boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact or risk mitigation a serving or planning capstone's § System-Level Acceptance Criteria or § Cross-Feature Integration Risks assigns to this feature is inside the boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Decomposition & Rationale
 
@@ -285,7 +287,8 @@ flowchart TD
      integration test, golden file, or recorded manual procedure that
      pins each, and note which do not exist yet and which child,
      `blocked_by` predecessor, or this issue's close-out builds them
-     (task rule 12). For every golden
+     (task rule 12). A recorded manual procedure names its platform and
+     operator class (a person, a display substrate, a device). For every golden
      file or expected value: who produced it, when, and whether it was
      pre-committed, independently derived, or will be produced by the
      implementation it certifies (task rule 11 — the ADR OS deduction
@@ -346,13 +349,17 @@ flowchart TD
      the DAG walk (`blocks` and `serves_capstones` stay empty or
      mirrors-only). -->
 
-- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract; convention-only orderings are marked; `blocked_by` is filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the stub's retirer is then ordered after the provider); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED → which siblings' premises are affected and who
-     re-plans; a child split (HANDOFF) → roster update; a contract
+     re-plans; a child split → the REPLAN precedes the HANDOFF (task
+     rule 9's order: successor as a planned scope, handoffs moved), the
+     mirrored HANDOFF is acknowledged and the planned scope resolved to
+     the successor's number as bookkeeping; a transfer HANDOFF is
+     acknowledged; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; a child's mirrored AMENDED or WAIVED → roster row
      and handoffs re-derived, and where it contradicts § Global
@@ -400,7 +407,7 @@ flowchart TD
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
-- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response that ends in a REPLAN comment where anything cited changed and in an acknowledgement otherwise, and names which sections it re-derives; the protocol covers every child in the roster and every capstone in `serves_capstones`; every open question carries exactly one task rule 13 marker; every decision the integration will hit is listed or settled above; nothing marked `Recommended default:` contradicts the contract or an invariant. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Re-planning & decisions.** Every trigger named in § Re-planning Protocol has a response that ends in a REPLAN comment where anything cited changed and in an acknowledgement otherwise, and names which sections it re-derives; the protocol covers every child in the roster and every serving or planning capstone (alignment targets, and any whose `planned_features` carries this scope); every open question carries exactly one task rule 13 marker; every decision the integration will hit is listed or settled above; nothing marked `Recommended default:` contradicts the contract or an invariant. Adversarial re-read of everything above found no substantial finding.
 
 ## Completion Criteria (Definition of Done)
 
@@ -445,6 +452,7 @@ flowchart TD
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact an integration criterion names exists at the checkout, or its named builder has landed, or its builder is this feature's close-out and is scheduled (task rule 12)
+- [ ] Every platform, device or apparatus the evidence plan names is available to whoever picks up, or the `STATUS: pickup` comment records the block
 
 ## Post-Integration Validation
 
@@ -489,7 +497,7 @@ flowchart TD
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v3, composition tier. How safely this feature can be handed to an
+  ADR-1 v4, composition tier. How safely this feature can be handed to an
   automated executor, and what maintenance liability delegating it as-is
   would create. NOT a rating of how good, important or urgent the work is.
   SCORE THIS FEATURE'S OWN DELIVERABLE — its integration evidence and its
@@ -530,8 +538,11 @@ flowchart TD
         already passes is not this issue's oracle)
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
-      1 a person reads prose and agrees
+      1 a person reads prose and agrees (review of prose only)
       0 none; success asserted by whoever did the work
+      A person operating the software and recording enumerated
+      observations is scored by the shape of the check (4 or 3), then the
+      document deduction below applies.
       DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
       both the implementation and the expected values certifying it (task
       rule 11 defines "the same change" and the independently-derived
@@ -621,6 +632,10 @@ flowchart TD
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
         session ................................................... cap F
+        A recorded manual procedure scores 1 unless the issue names the
+        in-tree or CI substrate (a headless display run, a device farm) and
+        the harness that would produce the same observation unattended —
+        then it scores 2 and that harness is a named builder.
       0 NO, because a person's participation or judgement IS the evidence:
         a human-subject trial, an independent reproducer, someone who must
         witness a step and report what they saw, an external publisher
@@ -729,7 +744,7 @@ flowchart TD
 -->
 
 ```yaml
-adr: 3
+adr: 4
 sc:              # 0-5  specification closure
 os:              # 0-5  oracle strength, AFTER deductions
 os_deduction:    # 0-3  total deducted, 0 if none

@@ -117,7 +117,15 @@ labels: ["tier:task"]
      Interface & Data Contract assigns to this task, is a re-plan
      request: the mirrored comment says so, and the gate covering the
      contradiction stays unticked until that feature's REPLAN answers.
-     When an
+     A `REPLAN:` a listing feature posts here, led by its number, is
+     answered on receipt (at pickup if none has happened yet): by an
+     AMENDED where § Interface & Data Contract, the machine block or
+     § Intent & Alignment must change — a drop with the disposition
+     "freed" restates the alignment, "closed" closes this issue under
+     rule 10 — otherwise by `STATUS: progress` naming the sections
+     reassessed. An own comment is never led by another issue's number:
+     a number in the first position marks a mirror, or a notice posted
+     on another issue. When an
      edit REMOVES or NARROWS any claim, observation, prediction,
      criterion, edge, or scope item, the AMENDED comment must carry a
      "Dropped/Retired" ledger enumerating each removed item with its
@@ -148,9 +156,11 @@ labels: ["tier:task"]
      now tracks the dropped obligation (or stating explicitly why no
      successor is needed). A criterion skipped without a WAIVED
      comment leaves the issue unclosable. A close on `REFUTED:` or
-     `SUPERSEDED:` needs no WAIVED comments: that comment is the
-     close-out record, the check-sheets stay empty, and any obligation
-     still needed names its successor inside it.
+     `SUPERSEDED:`, or on a listing feature's REPLAN disposition
+     "closed" (recorded by the AMENDED that answers that REPLAN, citing
+     it), needs no WAIVED comments: that comment is the close-out record,
+     the check-sheets stay empty, and any obligation still needed names
+     its successor inside it.
   11. Oracle custody. Every completion criterion that compares against an
      expected value names WHO produced that value and WHEN. Values
      committed and reviewed BEFORE the implementation, and values written
@@ -208,7 +218,8 @@ labels: ["tier:task"]
      the finished issue. A filed issue with unticked gates is valid but
      unvalidated, exactly as an unticked review gate leaves the band
      unvalidated. Execution ticks no gate.
-     AFTER FILING, an AMENDED or HANDOFF edit (rule 9) unticks the gate that
+     AFTER FILING, an AMENDED or split-HANDOFF edit (rule 9; a transfer
+     HANDOFF changes no section and resets no gate) unticks the gate that
      follows the changed section and every later gate, and the two
      review boxes (`review_clean: pending`); whoever amends re-ticks
      them in order, and the AMENDED comment names the gates re-run —
@@ -266,12 +277,16 @@ labels: ["tier:task"]
      Alignment: what this work serves, cited by issue number AND
      section name — a feature's § Capability Statement & Scope
      Boundary, a capstone's § Outcome Statement — or the standing
-     invariant, format document or project rule it upholds. This is a
+     invariant, format document or project rule it upholds. A rule no
+     document carries is stated here in one line ("user-visible text is
+     spelled correctly"); the gate then checks only that a maintainer
+     would uphold it and that the intent follows from it. This is a
      reference for checking alignment, not an ownership claim (rule 8).
-     When the parent is not yet filed, write "owning feature unfiled —
-     <one-line scope>" and replace it with the citation once it exists
-     (bookkeeping, rule 9). A task that aligns with nothing has no
-     beneficiary and does not belong on the backlog (rule 2). -->
+     When a parent WILL exist but is not yet filed, write "owning feature
+     unfiled — <one-line scope>" and replace it with the citation once it
+     exists (bookkeeping, rule 9); a task that will never have a parent
+     cites its standing rule instead. A task that aligns with nothing has
+     no beneficiary and does not belong on the backlog (rule 2). -->
 
 ### User impact
 
@@ -330,7 +345,7 @@ related: []             # reference only — never blocking, never ownership.
 
 - [ ] **Counterparts synced** (bookkeeping, ticked after filing and re-ticked whenever a counterpart changes): every task or feature whose `blocked_by` names this task appears in `blocks`; every task this task's `blocked_by` names carries this task in its `blocks`; the alignment in § Intent & Alignment cites an open issue or a standing rule, or is still marked unfiled — a closed target is re-aligned by AMENDED.
 
-- [ ] **Gate — Intent & Status.** § Intent & Alignment states an intent a reader could later confirm or deny; its alignment target was opened at its current revision and the cited section says what this task assumes it says, or the target is marked unfiled with a one-line scope; every audience named is one this change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states an intent a reader could later confirm or deny; its alignment target was opened at its current revision and the cited section says what this task assumes it says, or the target is marked unfiled with a one-line scope, or it is a standing rule stated here that a maintainer would uphold and from which the intent follows; every audience named is one this change reaches. `evidence_commit` is the SHA actually checked out. Adversarial re-read of this span found no substantial finding.
 
 ## Observations
 
@@ -361,7 +376,7 @@ related: []             # reference only — never blocking, never ownership.
      must wait on this task, by an AMENDED on that sibling posted by
      whoever files this task. -->
 
-- [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Observations, Background & Related Work.** Every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors (every `blocked_by` entry is a task; every `blocks` entry is a task or a feature whose `blocked_by` names this one), the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Research Question
 
@@ -552,7 +567,12 @@ related: []             # reference only — never blocking, never ownership.
      naming the files it touches, and traceable to a contract subsection
      or a prediction. Every
      behavioral fix carries a regression test that fails at the
-     pre-change commit and passes with the fix. Every material flagged as
+     pre-change commit and passes with the fix — or, where no automated
+     check can observe it, § Data Collection & Analysis names the
+     recorded manual procedure, with platform, that stands in for it and
+     § Threats to Validity carries the resulting threat with its
+     acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE; the gate and
+     the completion criterion cite it). Every material flagged as
      not yet existing is built by a named step. Proposed diffs go here
      (or in later sections) — always after § Interface & Data Contract,
      never before it. -->
@@ -574,7 +594,7 @@ related: []             # reference only — never blocking, never ownership.
      an observation (rule 1): one line here, citation in
      § Observations. -->
 
-- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches, and names the contract subsection or prediction it serves; every behavioral change has its regression-test step; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Scope, Method & Consequences.** Every step is reviewable on its own, names the files it touches, and names the contract subsection or prediction it serves; every behavioral change has its regression-test step or invokes the manual-procedure alternative of § Method / Experimental Design; every not-yet-existing material has its build step; no step crosses § Scope Boundary and no out-of-scope item lacks an owning issue or an explicit "unfiled"; every contract subsection that declares a change is implemented by some step; every interface or invariant the contract moves has its consequence stated, every cost identified is stated or the section says there is none and why, and no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
 ## Data Collection & Analysis
 
@@ -637,7 +657,7 @@ related: []             # reference only — never blocking, never ownership.
 
 - [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit, and no falsification criterion fired unaddressed [rows: P/F]
 - [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded as an issue comment (rule 2), not silently absorbed [rows: Contract]
-- [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit [row: Regression tests]
+- [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit, or the manual-procedure alternative of § Method / Experimental Design was recorded with platform [row: Regression tests]
 - [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the prediction that justifies the new expectation [row: Existing tests]
 - [ ] § Global Invariants of every feature whose `requires_tasks` lists this task hold at the fix commit [row: Invariants]
 - [ ] `mvn verify` green (tests + SpotBugs, warnings-as-errors) [row: Standing gates]
@@ -664,15 +684,15 @@ related: []             # reference only — never blocking, never ownership.
      work. -->
 
 - [ ] Every `AMENDED:` or `HANDOFF:` comment read; the body matches the latest one
-- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant or handoff, and answered by AMENDED or `STATUS: progress` (rule 9)
+- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED or `STATUS: progress` (rule 9)
 - [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation stops the work (rule 6)
 - [ ] Not superseded: the rule 3 failure still occurs, or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment
 - [ ] Citations re-derived if HEAD has moved past `evidence_commit`; `evidence_commit` re-pinned (bookkeeping, rule 9)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is asked to resolve it to this number (feature rule C) before it is owed anything
-- [ ] Every `AMENDED:` or `HANDOFF:` comment names the gates it re-ran
-- [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by`, or its absence is explained by an AMENDED
+- [ ] Every `AMENDED:` or `HANDOFF:` comment names the gates it re-ran, or is a transfer HANDOFF stating the body is unchanged
+- [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by` here or, where the sibling waits on this task, in that sibling's `blocked_by` (mirrored in `blocks`), or its absence is explained by an AMENDED
 - [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and its § Internal interfaces provided — public re-read at the landed commit; a deviation from what this task assumes is an AMENDED here before step one
 - [ ] Every material in § Materials & Apparatus available or scheduled by its Method step
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
@@ -681,9 +701,10 @@ related: []             # reference only — never blocking, never ownership.
 
 <!-- Run at close against the actual diff and PR. One row per item;
      rows are enumerated AT FILING (a row per P/F pair, per contract
-     subsection, per threat, per open question, per added completion
-     criterion) with the evidence cells empty, so the gate below can
-     check that nothing above lacks a row. Evidence is a command with
+     subsection not marked N/A, per threat, per open question, per added
+     completion criterion) with the evidence cells empty, so the gate
+     below can check that nothing above lacks a row; the pre-filled rows
+     of subsections marked "N/A — <reason>" are deleted at filing. Evidence is a command with
      its output, a test name at a commit, a permalink into the diff, or
      a comment link — never "done". A row that cannot be filled is a
      rule 2 comment, not a blank. -->
@@ -706,7 +727,7 @@ related: []             # reference only — never blocking, never ownership.
 | Contract: § Compatibility, versioning & migration | each claim pinned by a test, or by a recorded procedure naming the previous build's commit | | |
 | Threat 1 | mitigation applied, or the acceptance re-confirmed at the fix commit | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
-| Regression tests | each fails at pre-change commit, passes at fix: command and output | | |
+| Regression tests | each fails at pre-change commit, passes at fix: command and output; or the recorded manual procedure's transcript with platform | | |
 | Existing tests | unmodified, or each change justified by a named prediction | | |
 | Invariants | each listing feature's § Global Invariants re-verified at the fix commit | | |
 | Scope | files in the diff ⊆ files the § Method / Experimental Design steps name; extras filed as # | | |
@@ -720,7 +741,7 @@ related: []             # reference only — never blocking, never ownership.
 
 - [ ] Adversarial review of the diff against this issue found no substantial finding
 
-- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design or by a task in `blocked_by`, and the criterion says which (rule 12); every pre-filled criterion's bracketed rows exist and every added criterion, P/F pair, contract subsection, threat and open question has a validation row; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design or by a task in `blocked_by`, and the criterion says which (rule 12); every pre-filled criterion's bracketed rows exist and every added criterion, P/F pair, contract subsection not marked N/A, threat and open question has a validation row, and no row remains for an N/A subsection; every pickup check refers to something the body actually contains; nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Abstract
 
@@ -734,7 +755,7 @@ related: []             # reference only — never blocking, never ownership.
 ## Agentic Delegability (ADR-1)
 
 <!--
-  ADR-1 v3. How safely this issue can be handed to an automated executor,
+  ADR-1 v4. How safely this issue can be handed to an automated executor,
   and what maintenance liability delegating it as-is would create. NOT a
   rating of how good, important or urgent the work is. Two failure modes
   are rated: the work is not finished, and the work is finished in a way
@@ -774,8 +795,11 @@ related: []             # reference only — never blocking, never ownership.
         already passes is not this issue's oracle)
       3 existence- or smoke-shaped: produced, exits zero, non-empty
       2 a threshold or a count, no behavioural content
-      1 a person reads prose and agrees
+      1 a person reads prose and agrees (review of prose only)
       0 none; success asserted by whoever did the work
+      A person operating the software and recording enumerated
+      observations is scored by the shape of the check (4 or 3), then the
+      document deduction below applies.
       For an investigation, score the check behind the rule 3 decision
       criterion (the P/F pairs), not the verdict document.
       DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
@@ -864,6 +888,10 @@ related: []             # reference only — never blocking, never ownership.
       1 NO, because something physical must be connected, operated or
         observed by hand, or because the evidence is a recording of a real
         session ................................................... cap F
+        A recorded manual procedure scores 1 unless the issue names the
+        in-tree or CI substrate (a headless display run, a device farm) and
+        the harness that would produce the same observation unattended —
+        then it scores 2 and that harness is a named builder.
       0 NO, because a person's participation or judgement IS the evidence:
         a human-subject trial, an independent reproducer, someone who must
         witness a step and report what they saw, an external publisher
@@ -963,7 +991,7 @@ related: []             # reference only — never blocking, never ownership.
 -->
 
 ```yaml
-adr: 3
+adr: 4
 sc:              # 0-5  specification closure
 os:              # 0-5  oracle strength, AFTER deductions
 os_deduction:    # 0-3  total deducted, 0 if none

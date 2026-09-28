@@ -93,7 +93,16 @@ labels: ["tier:feature"]
       assigns to this task, or a surface |   mitigation or shared
       its contract declares              |   interface, or § System-Level
                                          |   Acceptance Criteria artifact,
-                                         |   assigned to this feature
+                                         |   assigned to this feature or to
+                                         |   a sibling required feature
+    planning feature (`planned_tasks`),  | planning capstone
+      its § Sequencing & Parallelism     |   (`planned_features`), its
+                                         |   § Cross-Feature Integration
+                                         |   Risks
+    § Predictions & Falsification        | § Integration Criteria &
+      Criteria, its P/F rows             |   Evidence Plan, its Integration
+                                         |   criterion rows
+    § Status & Dependencies              | § Status & Dependency Graph
     disposition freed / re-homed,        | released / re-parented (the
       received from a parent             |   capstone § Re-planning
                                          |   Protocol)
@@ -165,7 +174,7 @@ labels: ["tier:feature"]
      not, is a re-plan request answered ON RECEIPT by a REPLAN here, not
      deferred to pickup; so is a serving capstone's REPLAN posted here
      that assigns this feature an artifact, risk mitigation or re-homed
-     scope (the last under rule G(a)). A mirrored comment
+     scope (the last under capstone rule G(a)). A mirrored comment
      that changes
      nothing cited here needs no answer.
 
@@ -260,7 +269,7 @@ flowchart TD
      cite this section as the alignment target of their own § Intent &
      Alignment, so it must say what they will assume it says. -->
 
-- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact, risk mitigation or re-homed scope a serving or planning capstone's § System-Level Acceptance Criteria, § Cross-Feature Integration Risks or rule G assigns to this feature is inside the boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact, risk mitigation or re-homed scope a serving or planning capstone's § System-Level Acceptance Criteria, § Cross-Feature Integration Risks or rule G assigns to this feature is inside the boundary, and nothing inside it is scope that capstone's § Cross-Feature Integration Risks or § Required Feature Set & Sufficiency assigns to another required feature (that feature is named as its owner among the out-of-scope items). Adversarial re-read of everything above found no substantial finding.
 
 ## Decomposition & Rationale
 
@@ -269,8 +278,7 @@ flowchart TD
      the child at all; it must match the child's own § Intent &
      Alignment and § Hypothesis (falsifiable) as they read NOW. Below
      the table: why these cuts and not others — the alternative
-     decompositions considered and rejected, so a re-planning agent does
-     not re-derive them from scratch. -->
+     decompositions considered and rejected. -->
 
 | Task | One-line contract | Status |
 |------|-------------------|--------|
@@ -350,7 +358,7 @@ flowchart TD
      too costly to accept is a reason to narrow § Capability Statement &
      Scope Boundary or re-cut § Decomposition & Rationale (REPLAN). -->
 
-- [ ] **Gate — Invariants & consequences.** Every invariant is pinnable by a test at any intermediate landing; for every filed child, its § Compatibility, versioning & migration was read and contradicts none of these; for every child another feature's roster also lists, that feature's § Global Invariants were read and none contradicts these; every interface the feature-level contract moves has its consequence stated; every cost identified is stated or the section says there is none and why; no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Invariants & consequences.** Every invariant is pinnable by a test at any intermediate landing and holds at `evidence_commit` (command and output recorded beside it — one that does not yet hold is a planned child's deliverable or an integration criterion, not an invariant); for every filed child, its § Compatibility, versioning & migration was read and contradicts none of these; for every child another feature's roster also lists, that feature's § Global Invariants were read and none contradicts these; every interface the feature-level contract moves has its consequence stated; every cost identified is stated or the section says there is none and why; no consequence was accepted that § Intent & Alignment would not justify. Adversarial re-read of everything above found no substantial finding.
 
 ## Sequencing & Parallelism
 
@@ -367,24 +375,32 @@ flowchart TD
 ## Re-planning Protocol
 
 <!-- What invalidates this plan and the required response. At minimum:
-     a child REFUTED → which siblings' premises are affected and who
-     re-plans; a child split → the REPLAN task rule 9 requires of every
+     a child REFUTED or SUPERSEDED → which siblings' premises are
+     affected and who re-plans (a SUPERSEDED child is dropped by REPLAN
+     citing its close-out, the landed work it cites becoming a
+     precondition; each criterion annotated as spanning it is
+     re-annotated); a child split → the REPLAN task rule 9 requires of every
      listing feature; a child re-tiered → a REPLAN dropping it with
      disposition closed, citing the HANDOFF (its handoffs re-cited to
      the new feature's children where this feature still needs them, and
      the serving capstone applies rule G to the new issue); a child
      transferred → no plan change; a contract
      deviation → § Feature-Level Interface & Data Contract
-     reconciliation; an integration criterion, or a § Global Invariants
-     entry, fails with every spanning child landed → the criterion's
-     named next move (a REPLAN adding the fix child, or `REFUTED:` as
-     § Integration Criteria & Evidence Plan says; an invariant's next
-     move is always the fix child, since it is no premise; a criterion or
-     contract stage found wrong, the children being right → corrected by
-     REPLAN with the evidence, task rule 2, no next move fired); a serving
+     reconciliation; an integration criterion fails with every spanning
+     child landed, or a § Global Invariants entry fails at any child's
+     landing (a child's Invariants row recording it already failing at
+     its pre-change commit included) → the criterion's named next move (a
+     REPLAN adding the fix child, or `REFUTED:` as § Integration Criteria
+     & Evidence Plan says; an invariant's next move is always the fix
+     child, since it is no premise; a criterion, invariant or contract
+     stage found wrong, the children being right → corrected by REPLAN
+     with the evidence, task rule 2, no next move fired); a serving
      capstone's REPLAN assigning this feature an artifact, risk
      mitigation or re-homed scope → rule D; a child's mirrored AMENDED or
-     WAIVED → roster row and handoffs re-derived (rule D); a child's
+     WAIVED → roster row, handoffs and every criterion or invariant that
+     names the child re-derived (rule D), a WAIVED successor outside the
+     roster adopted (rule C) or the obligation shown to be one no
+     criterion here needs; a child's
      landing or AMENDED after which no criterion in § Integration
      Criteria & Evidence Plan is a genuine span or close-out criterion
      (rule B) → once the remaining roster has landed, close with
@@ -404,8 +420,9 @@ flowchart TD
      — which this REPLAN cites), freed
      (in no roster; the child answers per task rule 9), or closed (no
      other roster lists it and no beneficiary remains — a child another
-     OPEN roster lists is re-homed there, never closed); the REPLAN
-     records the roster search; a
+     OPEN roster lists is re-homed there, never closed — or the child is
+     already closed, its close-out comment cited as the disposition, rule
+     C); the REPLAN records the roster search; a
      planned scope is moved to a named open feature's `planned_tasks`,
      or dropped with the § Decomposition & Rationale argument (rule B)
      re-derived; closing with scope a serving capstone still needs → the
@@ -435,7 +452,7 @@ flowchart TD
      Validation that verify it, and each added criterion gets a row of
      its own. -->
 
-- [ ] Every entry in `requires_tasks` closed as landed, or descoped via a `REPLAN:` comment with the roster updated and each child's disposition recorded; `planned_tasks` empty (each resolved to a filed issue or descoped) [rows: Child, Roster]
+- [ ] Every entry in `requires_tasks` closed as landed, or dropped via a `REPLAN:` comment with the roster updated and each child's disposition recorded (a `REFUTED:` or `SUPERSEDED:` child citing its close-out); `planned_tasks` empty (each resolved to a filed issue or descoped) [rows: Child, Roster]
 - [ ] The capability of § Capability Statement & Scope Boundary is observed at the final commit [row: Capability]
 - [ ] Nothing outside § Capability Statement & Scope Boundary was absorbed; adjacent work is filed [row: Scope]
 - [ ] Every prediction in § Integration Criteria & Evidence Plan holds at a named commit [rows: Integration criterion]
@@ -468,7 +485,7 @@ flowchart TD
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before integration begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered by REPLAN where anything cited changed (rule D)
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, and no later `STATUS: landed` or `AMENDED:` notice on the child qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_tasks` is empty
-- [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (mirrored here, or on the child for one posted before this roster listed it), and every `REPLAN:` another listing feature posted on a shared child; each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Global Invariants and § Feature-Level Interface & Data Contract re-derived by REPLAN where they changed
+- [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (mirrored here, or on the child for one posted before this roster listed it or led by a counterpart's number), and every `REPLAN:` another listing feature posted on a shared child; each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Global Invariants and § Feature-Level Interface & Data Contract re-derived by REPLAN where they changed
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
@@ -485,7 +502,8 @@ flowchart TD
      added completion criterion) with evidence cells empty; the rows of
      pre-filled criteria marked N/A are deleted at filing unless another
      criterion names the row. Evidence is a command with its output, a test
-     name at a commit, a permalink, or a comment link — never "done". -->
+     name at a commit, a permalink, or a comment link — never "done". A
+     row that cannot be filled is a rule 2 comment, not a blank. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -635,8 +653,6 @@ flowchart TD
       4 needs a pinned toolchain the project can fetch and reproduce no cap
       3 needs an unreliable substrate, or an external corpus to download
         .......................................................... cap B
-      The last three are disjoint on one question: could automation ever
-      produce this unattended?
       2 YES, but not with what the executor has — another host platform, a
         device class, a credential that automation COULD be given, or a
         fixture withheld until a named disclosure event (task rule 2) .
@@ -694,11 +710,10 @@ flowchart TD
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
   Where the RAW band is C or D while SC>=4, OS>=4, DA>=4 and ED>=3 (no cap
-  below B), the low band is driven by blast radius, reversibility, horizon,
-  precedent or footprint, not by the specification or the environment: SPECIFY-FIRST and SPLIT presuppose that SC or
-  OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
-  the checkpoint (the review of the published surface, the format
-  document, the flag's help text, the release note).
+  below B), SPECIFY-FIRST and SPLIT presuppose that SC or OS is what is
+  low: record `action: DELEGATE-WITH-CHECKPOINT` and name the checkpoint
+  (the review of the published surface, the format document, the flag's
+  help text, the release note).
     A  DELEGATE                    automated end to end
     B  DELEGATE-WITH-CHECKPOINT    one named human approval first
     C  SPECIFY-FIRST or SPLIT      supply a closed spec, pre-committed
@@ -728,8 +743,7 @@ flowchart TD
   because of this issue, its tag reports the tier and not the issue: take
   the next tag whose trigger reflects this issue specifically.
 
-  A low band is a routing decision, not a criticism. Issues can be excellent
-  work and band F because closing them needs a person or a device.
+  A low band is a routing decision, not a criticism.
 
   REVIEW GATE — THE TERMINAL GATE OF TASK RULE 14. The two boxes below cover
   the ENTIRE body, § Abstract included: an issue with both ticked has been

@@ -17,9 +17,7 @@ labels: ["tier:capstone"]
       (blocked_by / blocks). Rule G covers scope no feature can host.
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
-      edge). A parent that also needs one of the sub-capstone's features
-      individually lists that feature in its own requires_features as
-      well. Do not enumerate a sub-capstone's features in place of the
+      edge). Do not enumerate a sub-capstone's features in place of the
       sub-capstone (no composition edge: the parent could close first).
 
   RULES — the scientific-task template's rules 1–7 apply adapted to
@@ -41,8 +39,11 @@ labels: ["tier:capstone"]
                                           |   sub-capstone (`requires_*`)
     `planned_tasks`                       | `planned_features`
     § Feature-Level Interface & Data      | § Cross-Feature Integration
-      Contract, § Global Invariants       |   Risks, § System-Level
-                                          |   Acceptance Criteria
+      Contract, § Global Invariants,      |   Risks, § System-Level
+      § Integration Criteria & Evidence   |   Acceptance Criteria (its
+      Plan (its Integration criterion     |   Acceptance criterion rows)
+      rows)                               |
+    § Status & Dependency Graph           | § Status & Required Features
     § Decomposition & Rationale           | § Required Feature Set &
                                           |   Sufficiency
     § Capability Statement & Scope        | § Outcome Statement,
@@ -173,7 +174,7 @@ flowchart TD
      acceptance walk-through a reviewer (or agent) executes to see it.
      "Do X, observe Y" at the system level. -->
 
-- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository and the named platform; each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository, the named platform and the external services the steps name (each a risk in § Cross-Feature Integration Risks); each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
 
 ## Required Feature Set & Sufficiency
 
@@ -222,8 +223,8 @@ flowchart TD
      rule 12). For every
      golden artifact or expected value: who produced it, when, and
      whether it was pre-committed, independently derived, or will be
-     produced by the system it certifies — any required feature's code
-     counts (task rule 11). Together they
+     produced by the system it certifies — any required feature's, or its
+     child's, code counts (task rule 11). Together they
      pin every step of § Outcome Statement and every risk mitigation
      assigned here.
 
@@ -239,7 +240,8 @@ flowchart TD
      contributes, read from its § Integration Criteria & Evidence Plan
      and § Completion Criteria (Definition of Done) as they read now. If
      one of them already asserts the whole thing, say "covered alone by
-     #A" — honest, and it simply does not count toward rule F.
+     #A" — honest, and it simply does not count toward rule F — or "no
+     feature; built by this capstone's close-out".
 
      A criterion nothing covers is marked UNOWNED. -->
 
@@ -356,7 +358,8 @@ flowchart TD
      pre-filled criteria marked N/A are deleted at filing unless another
      criterion names the row. Evidence is a transcript, a command with its
      output, a test name at the commit, a permalink, or a comment link —
-     never "done". -->
+     never "done". A row that cannot be filled is a rule 2 comment, not a
+     blank. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -458,8 +461,7 @@ flowchart TD
       2 several days    1 more than a week, or the chain crosses a subsystem
         it must first learn                    0 a multi-week programme
       Measured as if the roster had landed: do not count time spent waiting
-      for features. Where a harness, fixture or script the criteria rely on does
-      not exist yet, score building it, wherever that work is assigned.
+      for features.
 
   PD  PRECEDENT DENSITY — is there a worked example of this shape already in
       this repository?
@@ -502,8 +504,6 @@ flowchart TD
       4 needs a pinned toolchain the project can fetch and reproduce no cap
       3 needs an unreliable substrate, or an external corpus to download
         .......................................................... cap B
-      The last three are disjoint on one question: could automation ever
-      produce this unattended?
       2 YES, but not with what the executor has — another host platform, a
         device class, a credential that automation COULD be given, or a
         fixture withheld until a named disclosure event (task rule 2) .
@@ -561,11 +561,10 @@ flowchart TD
   BAND from RAW: 30-35 A | 24-29 B | 17-23 C | 10-16 D | 0-9 F.
   FINAL BAND = the most restrictive of (RAW band, ED cap, DA cap).
   Where the RAW band is C or D while SC>=4, OS>=4, DA>=4 and ED>=3 (no cap
-  below B), the low band is driven by blast radius, reversibility, horizon,
-  precedent or footprint, not by the specification or the environment: SPECIFY-FIRST and SPLIT presuppose that SC or
-  OS is what is low, so record `action: DELEGATE-WITH-CHECKPOINT` and name
-  the checkpoint (the review of the published surface, the format
-  document, the flag's help text, the release note).
+  below B), SPECIFY-FIRST and SPLIT presuppose that SC or OS is what is
+  low: record `action: DELEGATE-WITH-CHECKPOINT` and name the checkpoint
+  (the review of the published surface, the format document, the flag's
+  help text, the release note).
     A  DELEGATE                    automated end to end
     B  DELEGATE-WITH-CHECKPOINT    one named human approval first
     C  SPECIFY-FIRST or SPLIT      supply a closed spec, pre-committed
@@ -595,8 +594,7 @@ flowchart TD
   because of this issue, its tag reports the tier and not the issue: take
   the next tag whose trigger reflects this issue specifically.
 
-  A low band is a routing decision, not a criticism. Issues can be excellent
-  work and band F because closing them needs a person or a device.
+  A low band is a routing decision, not a criticism.
 
   REVIEW GATE — THE TERMINAL GATE OF TASK RULE 14. The two boxes below cover
   the ENTIRE body, § Abstract included: an issue with both ticked has been

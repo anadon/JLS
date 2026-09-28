@@ -208,9 +208,8 @@ labels: ["tier:feature"]
 
      Alignment: what this feature serves, cited by issue number AND
      section name — each capstone's § Outcome Statement it contributes
-     to (each becomes a serves_capstones entry once that capstone's
-     requires_features lists this number), or the standing project
-     commitment it upholds. When the parent is not yet filed, write
+     to, or the standing project commitment it upholds. When the parent
+     is not yet filed, write
      "serving capstone unfiled — <one-line scope>" and replace it with
      the citation once it exists (bookkeeping, rule C). A feature
      aligned with nothing has no beneficiary and does not belong on the
@@ -240,7 +239,12 @@ labels: ["tier:feature"]
          § Integration Criteria & Evidence Plan, once the cuts are made.
        - `blocked_by`, `related` and the mermaid graph at the gate after
          § Sequencing & Parallelism.
-     -->
+     A capability integrated on a release branch names it as a YAML
+     comment on `evidence_commit` (`# release: <branch>`; validator G18
+     reads it); wherever this template says "the default branch", that
+     branch is read instead — a child's own landing stays cited where it
+     landed, and its Child row names the commit carrying that work onto
+     the release branch. -->
 
 ```yaml
 tier: feature
@@ -248,8 +252,9 @@ evidence_commit:        # SHA the roster and contract claims are pinned to
 requires_tasks: []      # composition: FILED children OF THIS REPOSITORY not yet
                         #   landed when listed (rule B); work in another repository
                         #   is a surface § Feature-Level Interface & Data Contract
-                        #   consumes or a `related` reference, never a roster or
-                        #   `blocked_by` entry. AUTHORITATIVE for ownership (TIER
+                        #   consumes, cited by permalink in the body — never a roster,
+                        #   `blocked_by` or `related` entry (edge fields hold this
+                        #   repository's numbers, G01). AUTHORITATIVE for ownership (TIER
                         #   MODEL: a task may be shared).
 planned_tasks: []       # one-line scopes for children not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it
@@ -272,7 +277,7 @@ flowchart TD
   %% among them and to external issues. Regenerate on every REPLAN.
 ```
 
-- [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out and is reachable from the default branch. Adversarial re-read of this span found no substantial finding.
+- [ ] **Gate — Intent & Status.** § Intent & Alignment states a capability a reader could later confirm or deny; each alignment target was opened at its current revision and its cited section needs what this feature claims to supply, or the target is marked unfiled with a one-line scope, or it is a standing commitment stated here that a maintainer would uphold and from which the intent follows; every audience named is one the whole feature reaches. `evidence_commit` is the SHA actually checked out and is reachable from the default branch, or from the release branch named beside it. Adversarial re-read of this span found no substantial finding.
 
 ## Capability Statement & Scope Boundary
 
@@ -326,20 +331,23 @@ flowchart TD
      pre-committed, independently derived, or will be produced by the
      implementation it certifies — any child's code counts as the
      implementation here (task rule 11 — the ADR OS deduction reads
-     this). A threshold or count also names the substrate it was set
-     against (the CI runner class or host) and the run count the
-     criterion's do-X repeats; the Integration criterion row and the
-     Oracle custody row carry both (task rule 3's loop clause: the count
-     is the sample size, not the oracle).
+     this). A threshold or count — and any criterion whose do-X does
+     not yield the same observation on every run — also names the
+     substrate it was set against (the CI runner class or host), the run
+     count the criterion's do-X repeats and how many runs failed; the
+     Integration criterion row and the Oracle custody row carry them
+     (task rule 3's loop clause: one failed run fails the criterion and
+     fires its next move unless the criterion states the count it
+     tolerates).
 
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE: "if not-Y after all
      spanning children landed → fix child by REPLAN (scope stated) |
      `REFUTED:` — the premise of § Capability Statement & Scope Boundary
      fails". A feature's `REFUTED:` is that premise failure: the comment
      quotes the failing criterion and carries the command and output, or
-     cites the child's `REFUTED:` close-out that fells the premise
-     (§ Re-planning Protocol) — the close-out record, task rule 10;
-     § Re-planning Protocol's close clause runs first.
+     cites the child's `REFUTED:` close-out that fells the premise — the
+     close-out record, task rule 10; § Re-planning Protocol's close
+     clause runs first.
 
      ANNOTATE OWNERSHIP PER CRITERION — exactly one of:
        - "spans #A + #B" — and state what each contributes, so the
@@ -392,9 +400,11 @@ flowchart TD
 ## Re-planning Protocol
 
 <!-- What invalidates this plan and the required response. At minimum:
-     a child REFUTED or SUPERSEDED → which siblings' premises are
-     affected and who re-plans (a SUPERSEDED child: dropped by REPLAN
-     citing its close-out, the landed work cited per rule B, criteria
+     a child REFUTED, SUPERSEDED, or closed with no close-out record
+     (the finder's AMENDED standing in, task rule 10) → which siblings'
+     premises are affected and who re-plans (a SUPERSEDED child: dropped
+     by REPLAN citing its close-out, the landed work cited per rule B,
+     criteria
      spanning it re-annotated; a REFUTED child: dropped likewise, and
      scope a criterion here still needs re-enters `planned_tasks` as a
      new one-line scope framed by the close-out's refuting evidence
@@ -439,12 +449,14 @@ flowchart TD
      genuine span or close-out criterion (rule B) → once the remaining
      roster has landed, close with
      `SUPERSEDED: — label, not a feature (rule B); every criterion
-     covered alone by #…`, mirrored
+     covered alone by #…, an UNOWNED one tracked by #…`, mirrored
      to serving capstones, which re-derive their sufficiency citing the
      landed work by permalink as preconditions; a shared child's other
-     listing feature adds or changes a § Global Invariants entry that
-     conflicts with one here → the feature whose invariant is newer
-     re-plans; a serving capstone descoped, this feature released from
+     listing feature adds or changes a § Global Invariants entry, or a
+     handoff or surface its § Feature-Level Interface & Data Contract
+     assigns to the child (a REPLAN adopting the child's re-plan request
+     included), that conflicts with one here → the feature whose entry
+     is newer re-plans; a serving capstone descoped, this feature released from
      one, or the commitment § Intent & Alignment cites withdrawn →
      whether this feature still has a beneficiary (none: the answering
      REPLAN gives every roster entry, filed or planned, its disposition
@@ -462,8 +474,8 @@ flowchart TD
      (in no roster; the child answers per task rule 9), or closed (no
      other roster lists it, no beneficiary remains and no `STATUS:
      landed` stands on it — a child another OPEN roster lists is
-     re-homed there, never closed; one that has landed is cited as
-     landed, rule B); the REPLAN records the roster search; a
+     re-homed there, never closed; one that has landed is kept as landed,
+     the Child row); the REPLAN records the roster search; a
      planned scope is moved to a named open feature's `planned_tasks`,
      or dropped with the § Decomposition & Rationale argument (rule B)
      re-derived; closing with scope a serving capstone still needs → the
@@ -533,7 +545,7 @@ flowchart TD
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact an integration criterion names exists at the checkout, or its named builder has landed, or its builder is this feature's close-out and is scheduled (task rule 12)
-- [ ] Every platform, device or apparatus the evidence plan names, and write access to each issue the pass or its close-out posts on (rule D mirrors, rule C postings, a task rule 9 finder's AMENDED), is available to whoever picks up, or the `STATUS: pickup` comment names the integration steps or postings blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked; a row a held posting leaves unfillable is WITHHELD held by that holder, task rule 2; a holder's or custodian's re-run: command and output in a `STATUS: progress` citing the pickup, as the task observations row says); every other step may proceed
+- [ ] Every platform, device or apparatus the evidence plan names, and write access to each issue the pass or its close-out posts on (rule D mirrors, rule C postings, a task rule 9 finder's AMENDED), is available to whoever picks up, or the `STATUS: pickup` comment names the integration steps or postings blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked; a row a held posting leaves unfillable is WITHHELD — held by that holder until they post, task rule 2; a holder's or custodian's re-run: command and output in a `STATUS: progress` citing the pickup, as the task observations row says); every other step may proceed
 
 ## Post-Integration Validation
 
@@ -546,25 +558,26 @@ flowchart TD
      name at a commit, a permalink, or a comment link — never "done". A
      row whose evidence exists but may not yet be disclosed is a task
      rule 2 WITHHELD, never a blank; one whose step has not run leaves
-     its criterion unmet (task rule 10); one whose referent a REPLAN
-     retired cites it. -->
+     its criterion unmet (task rule 10) — a posting handed to a holder
+     excepted: it is the Mirrors row's WITHHELD; one whose referent a
+     REPLAN retired cites it. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
 | Capability | do X at the final commit, observe Y, as § Capability Statement & Scope Boundary states | | |
 | Scope | integrated diffs stay inside the boundary; extras filed as # | | |
-| Integration criterion 1 | do X at the named commit, observe Y; each spanning child's contribution shown; a threshold or count: run count and substrate | | |
+| Integration criterion 1 | do X at the named commit, observe Y; each spanning child's contribution shown; a threshold, count or repeated run: run count, runs failed, substrate | | |
 | Contract: modified / consumed / provided | declared at the feature boundary vs. observed in the integrated code | | |
 | Contract: durable / ephemeral / concurrency | as declared | | |
 | Contract: transformations | each defined stage located across the children's diffs, and their composition observed to be the declared math | | |
 | Contract: handoff #A → #B | provider side and consumer side both present as declared | | |
 | Invariant 1 | re-verified at the final commit: command and output | | |
-| Child #A | landed — mirror here, or the landing comment on the child, or dropped — the REPLAN and its disposition cited; later `STATUS: landed` or `AMENDED:` notices on the child re-read at close; deviations reconciled | | |
+| Child #A | landed — mirror here, or the landing comment on the child (on a release branch, the commit carrying the landed work onto it), or dropped — the REPLAN and its disposition cited; later `STATUS: landed` or `AMENDED:` notices on the child re-read at close; deviations reconciled | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
-| Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation, or of unshowable derivation, and deducted; a threshold or count: its substrate and run count | | |
+| Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation, or of unshowable derivation, and deducted; a threshold, count or repeated run: run count, runs failed, substrate | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
-| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature, cited; a posting handed to a holder (the platform row): WITHHELD held by them, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
-| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch; every document on the default branch | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature, cited; a posting handed to a holder (the platform row): WITHHELD — held by them until they post, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
+| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (a child's landing: its own branch); every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was built; ADR re-scored where a re-plan changed roster, evidence or decisions | | |
@@ -648,8 +661,7 @@ flowchart TD
       5 under an hour   4 one to four hours   3 half a day to two days
       2 several days    1 more than a week, or the chain crosses a subsystem
         it must first learn                    0 a multi-week programme
-      Measured as if the roster had landed: do not count time spent waiting
-      for children.
+      Measured as if the roster had landed.
 
   PD  PRECEDENT DENSITY — is there a worked example of this shape already in
       this repository?

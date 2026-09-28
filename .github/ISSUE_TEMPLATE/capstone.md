@@ -8,9 +8,7 @@ labels: ["tier:capstone"]
   Template: capstone v5 (2026-09)
 
   TIER MODEL — task → feature → capstone; the full edge-legality
-  matrix is in the feature template and applies unchanged (`related`
-  is reference-only and may point at any tier; tier identity is the
-  machine block's `tier:` key, labels are mirrors). The
+  matrix is in the feature template and applies unchanged. The
   capstone-specific consequences:
     - Capstones COMPOSE features (requires_features) and SUB-CAPSTONES
       (requires_capstones), and ORDER against capstones and features
@@ -143,7 +141,7 @@ labels: ["tier:capstone"]
 ```yaml
 tier: capstone
 evidence_commit:        # SHA the roster and acceptance claims are pinned to
-requires_features: []   # composition — the closed required set (rule E), FILED numbers only
+requires_features: []   # composition — the closed required set (rule E), FILED, not yet landed when listed
 requires_capstones: []  # composition — sub-capstones (nesting; see the tier-model note)
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
@@ -181,11 +179,11 @@ flowchart TD
 <!-- One row per required feature (and per sub-capstone), filed or
      planned, then the sufficiency argument (rule E): why this set
      jointly delivers § Outcome Statement, and per feature, what breaks
-     in the walk-through if it were removed — the minimality check. A
-     feature with no answer to the second question does not belong in
-     the set.
+     in the walk-through if it were removed — the minimality check.
      Write each contribution against the feature's own § Capability
-     Statement & Scope Boundary as it reads NOW; a feature
+     Statement & Scope Boundary (a sub-capstone: its § Outcome
+     Statement, resolved against its own template's headings — task
+     rule 5) as it reads NOW; a feature
      whose boundary disclaims the contribution claimed here is a plan
      defect. Work already landed when this capstone lists it (at filing
      or by an adopting REPLAN) is a precondition cited here by permalink,
@@ -197,7 +195,7 @@ flowchart TD
 |---------|-----------------------------|--------|
 | #       |                             |        |
 
-- [ ] **Gate — Sufficiency.** Every FILED required feature's body was read at its current revision and its § Capability Statement & Scope Boundary supplies the contribution claimed; every row names the walk-through step that breaks without it, or, for a sub-capstone's feature listed under the tier-model note, the criterion, risk or rule G item that names it; the set, together with the landed preconditions cited, covers every step of § Outcome Statement; every planned scope is verified absent at `evidence_commit`; `requires_features`, `requires_capstones`, `planned_features` are filled, every filed entry is of the tier its key requires and had not landed when listed (checked at the `evidence_commit` of the revision that listed it), and the DAG walk for the composition edges is recorded. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sufficiency.** Every FILED required entry's body was read at its current revision and its § Capability Statement & Scope Boundary (a sub-capstone: its § Outcome Statement, resolved against its own template's headings — task rule 5) supplies the contribution claimed; every row names the walk-through step that breaks without it, or, for a sub-capstone's feature listed under the tier-model note, the criterion, risk or rule G item that names it; the set, together with the landed preconditions cited, covers every step of § Outcome Statement; every planned scope is verified absent at `evidence_commit`; `requires_features`, `requires_capstones`, `planned_features` are filled, every filed entry is of the tier its key requires and had not landed when listed (checked at the `evidence_commit` of the revision that listed it), and the DAG walk for the composition edges is recorded. Adversarial re-read of everything above found no substantial finding.
 
 ## Cross-Feature Integration Risks
 
@@ -286,8 +284,8 @@ flowchart TD
      its disposition below, posted on each filed one — rule C — and
      closes this capstone under task rule 10, being its close-out
      record); a close on `REFUTED:` or `SUPERSEDED:` with required
-     entries still open or planned → the same REPLAN first, cited by the
-     close-out; a required
+     entries still open or planned → a REPLAN giving each its
+     disposition below first, cited by the close-out; a required
      feature's mirrored WAIVED → the waived obligation checked against
      § System-Level Acceptance
      Criteria, and a successor outside the required set is rule G scope;
@@ -358,14 +356,14 @@ flowchart TD
 - [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before the acceptance pass begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here or on the entry (rule D), and no later `STATUS: landed`, `REPLAN:` or `AMENDED:` notice on the entry qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_features` is empty
-- [ ] Every `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read (mirrored here, or on the entry for one posted before this roster listed it — rule D), each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
+- [ ] Every `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read (mirrored here or on the entry — rule D; an entry filed from a template that does not mirror is read on the entry throughout), each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every OPEN capstone whose `requires_capstones` lists this one located (roster search) — these receive the mirrored comments of rule D; each parent cited in § Intent & Alignment still lists it, or its REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan (the required set's own landings do not count) — where it does, close with `SUPERSEDED:` citing the landing (task rule 6; § Re-planning Protocol's close clause runs first)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact a criterion names exists, or its named builder has landed, or its builder is this capstone's close-out and is scheduled (task rule 12)
-- [ ] Every platform, device or apparatus the walk-through or a criterion names, and write access to each issue the pass or its close-out posts on (rule D mirrors, rule C postings, a task rule 9 finder's AMENDED), is available to whoever picks up, or the `STATUS: pickup` comment names the acceptance steps or postings blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked; a row a held posting leaves unfillable is WITHHELD held by that holder, task rule 2); every other step may proceed
+- [ ] Every platform, device or apparatus the walk-through or a criterion names, and write access to each issue the pass or its close-out posts on (rule D mirrors, rule C postings, a finder's REPLAN or AMENDED under task rule 9), is available to whoever picks up, or the `STATUS: pickup` comment names the acceptance steps or postings blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked; a row a held posting leaves unfillable is WITHHELD held by that holder, task rule 2; a holder's or custodian's re-run: command and output in a `STATUS: progress` citing the pickup, as the task observations row says); every other step may proceed
 
 ## Post-Acceptance Validation
 
@@ -382,14 +380,14 @@ flowchart TD
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
 | Walk-through step 1 | executed at the commit; observation matches § Outcome Statement | | |
-| Acceptance criterion 1 | do X end-to-end, observe Y; each spanning feature's contribution shown | | |
+| Acceptance criterion 1 | do X end-to-end, observe Y; each spanning feature's contribution shown; a threshold or count: run count and substrate | | |
 | Risk 1 | mitigation in place at system scale, or the acceptance re-confirmed at the acceptance commit | | |
 | Required #A | landed — mirrored here or the landing comment on the entry (rule D), or removed — the REPLAN and its disposition cited; later `STATUS: landed`, `AMENDED:` or `REPLAN:` notices on the entry re-read at close; deviations reconciled | | |
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the system, or of unshowable derivation, and deducted; a threshold or count: its substrate and run count | | |
 | Roster | machine block, table and mermaid agree; `planned_features` empty | | |
-| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one, cited | | |
-| Links | every permalink and document resolves on the default branch | | |
+| Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one, cited; a posting handed to a holder (the platform row): WITHHELD held by them, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
+| Links | every permalink commit-locked and resolving; every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was delivered; ADR re-scored where a re-plan changed roster, criteria or open decisions | | |
@@ -451,11 +449,9 @@ flowchart TD
       certifying the acceptance were produced by running the system —
       here the composed required set, so a value any required feature's
       or child's PR generated from its own code counts, whatever PR the
-      comparison lands in (task rule 11; the independently-derived
-      exemption stands). Deduct
+      comparison lands in, or whose derivation cannot be shown (task
+      rule 11; the independently-derived exemption stands). Deduct
       1 if the acceptance evidence is a document asserting a measurement.
-      `os:` records the score AFTER deductions; `os_deduction:` records the
-      total deducted, 0-3.
 
   BR  BLAST RADIUS — everything this capstone's own acceptance work must move, generated files,
       expected-output artifacts and anything published included.
@@ -521,8 +517,8 @@ flowchart TD
         .......................................................... cap B
       2 YES, but not with what the executor has — another host platform, a
         device class, a credential that automation COULD be given, or a
-        fixture withheld until a named disclosure event (task rule 2) .
-        .......................................................... cap C
+        fixture only a named custodian holds, withheld until a disclosure
+        event or never disclosable (task rule 2) ................. cap C
       1 NO, because something physical must be connected, operated or
         observed by hand against an enumerated procedure, or because the
         evidence is a recording of a real session with no named unattended

@@ -9,10 +9,7 @@ labels: ["tier:capstone"]
 
   TIER MODEL — task → feature → capstone; the full edge-legality
   matrix is in the feature template and applies unchanged. The
-  capstone-specific consequences:
-    - Capstones COMPOSE features (requires_features) and SUB-CAPSTONES
-      (requires_capstones), and ORDER against capstones and features
-      (blocked_by / blocks).
+  capstone-specific consequence:
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
       edge). Do not enumerate a sub-capstone's features in place of the
@@ -56,7 +53,8 @@ labels: ["tier:capstone"]
     rule B (not a folder)                 | rule F below
     § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
 
-  A required feature's REPLAN disclaiming an item assigned to it is
+  A required feature's REPLAN disclaiming an item assigned to it — its
+  boundary excludes it or a § Global Invariants entry forbids it — is
   answered here by a REPLAN re-owning the item (feature rule C). In
   addition:
 
@@ -245,7 +243,7 @@ flowchart TD
 
      A criterion nothing covers is marked UNOWNED. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing, or by the REPLAN resolving the scope to a feature filed without it — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN posted on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason; every external service or platform § Outcome Statement names is a risk here. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing, or by the REPLAN resolving the scope to a feature filed without it — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN posted on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason; every external service or platform § Outcome Statement names is a risk here. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner's § Capability Statement & Scope Boundary or § Global Invariants disclaims or forbids what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -336,7 +334,7 @@ flowchart TD
 - [ ] Landing reported with a `STATUS: landed` comment on every OPEN capstone whose `requires_capstones` lists this one (rule D) [row: Mirrors]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
-- [ ] Every cited evidence document and permalink resolves on the default branch at close [row: Links]
+- [ ] Every cited evidence document resolves on the default branch at close and every permalink is commit-locked and resolves [row: Links]
 - [ ] Every artifact named above exists at `evidence_commit` or is created by its named builder — this list says which (task rule 12) [row: Paths]
 - [ ] § Agentic Delegability re-scored on any `REPLAN:` edit that changed the roster, the acceptance criteria, or the open decisions [row: Re-plans]
 - [ ] ... [row: <added below>]
@@ -374,8 +372,10 @@ flowchart TD
      pre-filled criteria marked N/A are deleted at filing unless another
      criterion names the row. Evidence is a transcript, a command with its
      output, a test name at the commit, a permalink, or a comment link —
-     never "done". A row that cannot be filled is a task rule 2 WITHHELD,
-     never a blank. -->
+     never "done". A row whose evidence exists but may not yet be
+     disclosed is a task rule 2 WITHHELD, never a blank; one whose step
+     has not run leaves its criterion unmet (task rule 10); one whose
+     referent a REPLAN retired cites it. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -387,7 +387,7 @@ flowchart TD
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the system, or of unshowable derivation, and deducted; a threshold or count: its substrate and run count | | |
 | Roster | machine block, table and mermaid agree; `planned_features` empty | | |
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one, cited; a posting handed to a holder (the platform row): WITHHELD held by them, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
-| Links | every permalink commit-locked and resolving; every document on the default branch | | |
+| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch; every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was delivered; ADR re-scored where a re-plan changed roster, criteria or open decisions | | |
@@ -446,11 +446,10 @@ flowchart TD
       0 none; success asserted by whoever did the work, with no enumerated
         procedure or transcript
       DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the expected values
-      certifying the acceptance were produced by running the system —
-      here the composed required set, so a value any required feature's
-      or child's PR generated from its own code counts, whatever PR the
-      comparison lands in, or whose derivation cannot be shown (task
-      rule 11; the independently-derived exemption stands). Deduct
+      certifying the acceptance were produced by running the system as
+      § System-Level Acceptance Criteria defines it, or their derivation
+      cannot be shown (task rule 11; the independently-derived exemption
+      stands). Deduct
       1 if the acceptance evidence is a document asserting a measurement.
 
   BR  BLAST RADIUS — everything this capstone's own acceptance work must move, generated files,

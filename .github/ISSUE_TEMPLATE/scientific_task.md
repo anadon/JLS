@@ -12,7 +12,9 @@ labels: ["tier:task"]
   1. Evidence, not memory. Every code claim carries file:line at a named
      commit, re-derived at that commit — quote the line you cite. Pin that
      commit once in § Status & Dependencies and cite by commit-locked
-     permalink, never a branch path. Source comments and audit summaries
+     permalink at this repository's URL (a fork's URL is never cited:
+     the commit, reachable from the default branch, is cited here),
+     never a branch path. Source comments and audit summaries
      are hearsay until re-derived. Aggregate claims (counts, "all X", "no Y anywhere")
      carry the exact command that produced them and its output.
   2. No padding. A section that does not apply is "N/A — <one-line
@@ -21,7 +23,9 @@ labels: ["tier:task"]
      by <custodian> until <event>" (an event that will never come:
      "until never — <reason>"); the custodian re-runs it where § Pickup
      Checks says and, at the event where one is named, un-redacts it by
-     AMENDED (rule 9). A criterion, prediction, hypothesis or expected
+     AMENDED (rule 9; a held posting's cell is filled when they post,
+     bookkeeping — the Mirrors row). A criterion, prediction, hypothesis
+     or expected
      value found wrong — or unfalsifiable — during execution is corrected
      by AMENDED with the evidence (rule 9), never worked around, closed
      `REFUTED:` or silently edited.
@@ -54,7 +58,13 @@ labels: ["tier:task"]
      contract subsections, steps and criteria only the fallen hypothesis
      motivated are retired by AMENDED (Dropped/Retired ledger) before
      close, and `REFUTED:` closes the issue only when the last standing
-     hypothesis falls. Comment with the refuting evidence. An F whose
+     hypothesis falls — or when the rule 3 failure is shown not to be
+     one: the standing rule or format document § Intent & Alignment
+     cites says, at its current revision, that the observed behaviour is
+     correct (the premise failing, as the decision-task note has it; the
+     close-out cites that section and names under rule 10 the task
+     correcting whatever document misled the observer, or none). Comment
+     with the refuting evidence. An F whose
      antecedent occurs while the evidence shows its hypothesis right —
      the fix is necessary and the residual failure has an independent
      cause — refutes nothing: the prediction was wrong (rule 2), and the
@@ -105,7 +115,8 @@ labels: ["tier:task"]
      never directly after it (`HANDOFF: split — successors #124, #125`;
      `STATUS: landed — <fix or apparatus sha as it lands on the default
      branch: the squash or rebased commit, or the merge commit where the
-     PR merged by one>, PR #N, <permalink to the body revision holding
+     PR merged by one; an investigation: the pinned apparatus commit,
+     the decision-task note>, PR #N, <permalink to the body revision holding
      the filled § Post-Implementation Validation, its Mirrors row filled
      afterwards
      (bookkeeping)>; contract deviations: <AMENDED
@@ -119,10 +130,10 @@ labels: ["tier:task"]
      issue and mirrored, led by this issue's number directly after the
      prefix or sub-tag (`STATUS: landed #N — …`; a landing mirror carries
      the first line), on every OPEN feature whose `requires_tasks`
-     roster lists this task. An own comment is never led by another
-     issue's number: a number in the first position marks a mirror, a
-     notice posted on another issue, or a counterpart's REPLAN or
-     AMENDED editing this body (feature rule C; § Related Work).
+     roster lists this task. A number directly after the prefix or
+     sub-tag marks a mirror, a notice posted on another issue, or a
+     counterpart's REPLAN or AMENDED editing this body (feature rule C;
+     § Related Work).
        HANDOFF is the AMENDED of a split, transfer or re-tier and is
      read as one everywhere this template says AMENDED. A split HANDOFF
      carries the successor number(s) and the Dropped/Retired ledger
@@ -135,10 +146,8 @@ labels: ["tier:task"]
      or `SUPERSEDED:` naming a successor for an obligation this task
      still owes (rule 10), a sibling whose `blocked_by` names this task
      for an item its ledger or close-out hands to a successor re-points
-     it at that successor (after a re-tier, the new issue — or, where
-     the tier model forbids that edge from the sibling, the issue at a
-     legal tier that carries the item: the new issue's child, or the
-     roster entry that lists it) by AMENDED (§ Related Work); where that
+     it at that successor (after a re-tier, the issue at a legal tier
+     that carries the item) by AMENDED (§ Related Work); where that
      successor
      is still a planned scope, the edge is retired and the planning
      feature's § Sequencing & Parallelism records the ordering for that
@@ -180,7 +189,7 @@ labels: ["tier:task"]
      where it adopted what this body says, otherwise by the AMENDED
      restoring the contract (ledger); where two listing features'
      REPLANs answer oppositely, the contract is restored and the
-     adopting feature, its entry the newer, re-plans (feature
+     adopting feature, its entry the newer, re-plans (the listing tier's
      § Re-planning Protocol). A `REPLAN:` a listing feature posts
      here, led by its number, that changes anything this body cites is
      answered by an AMENDED — on receipt once a pickup has happened,
@@ -207,8 +216,11 @@ labels: ["tier:task"]
      comment's cited landing that did not remove the rule 3 failure (a
      composite: did not make its capability or outcome observable), or
      the landed change reverted from the default branch — found after
-     close is
-     recorded by the finder's AMENDED on this closed issue: the cell or
+     close (found before close, the executor's own AMENDED in this same
+     form, the re-land then posting a second `STATUS: landed` in the
+     fix-up form above, or the criteria the revert leaves unmet
+     `WAIVED:` naming their successor, rule 10) is recorded by the
+     finder's AMENDED on this closed issue: the cell or
      subsection corrected (a revert: the P/F rows, re-run at the
      reverting commit and citing it), the Dropped/Retired ledger, and
      the successor tracking any unmet obligation (after a revert, the
@@ -250,13 +262,16 @@ labels: ["tier:task"]
      `WAIVED:` comment naming the reason AND the successor that now
      tracks the dropped obligation — a filed issue, or the feature whose
      `planned_tasks` carries or whose § Re-planning Protocol supplies it
-     (the Invariants row) — or stating explicitly why no successor is
-     needed; after close, the finder's AMENDED of rule 9
-     stands in for the WAIVED of any criterion it records as not met
-     and corrects the Waivers row; an issue closed with no close-out
-     record (a bare close) receives that AMENDED recording every
-     criterion as not met, and it is the close-out record a listing
-     feature's REPLAN cites. A criterion skipped without a WAIVED
+     (the Invariants row); a successor no mirror of this comment reaches
+     receives it as a notice led by this number, a feature so named
+     adopting it per its § Re-planning Protocol — or stating explicitly
+     why no successor is needed; after close, the finder's AMENDED of
+     rule 9 stands in for the WAIVED of any criterion it records as not
+     met and corrects the Waivers row; an issue closed with no close-out
+     record (a bare close) receives that AMENDED recording each
+     criterion as not met, or as met where the sheet or the stream holds
+     its evidence, and it is the close-out record a listing feature's
+     REPLAN cites. A criterion skipped without a WAIVED
      comment leaves the issue unclosable. A close on `REFUTED:`,
      `SUPERSEDED:`, `HANDOFF: re-tier` or a `HANDOFF: split` whose ledger
      moves every item, or on a listing feature's REPLAN disposition
@@ -297,7 +312,10 @@ labels: ["tier:task"]
      executor must stop), or `HYGIENE: <what to re-derive>` (not a decision
      at all — a citation, a status check, an un-run build). An unmarked
      entry is scored on its substance by § Agentic Delegability and the
-     marker is fixed.
+     marker is fixed. An entry answered after filing keeps its marker
+     and appends the answer with the comment that gave it (the Open
+     question row's resolving comment), by the AMENDED that re-scores
+     DA (rule 9).
   14. Filing order and consistency gates. Sections appear in DEPENDENCY
      order, not read order: each section is written from the sections
      above it and from nothing below it. Sections that define each other
@@ -568,7 +586,10 @@ related: []             # reference only — never blocking, never ownership.
      format document where one exists, otherwise the code that writes
      it, by permalink at `evidence_commit` (for `.jls`, the save
      routine and `FORMAT_VERSION` in `Circuit`), or, where a `blocked_by`
-     task will write it, that task's § Data provided (structure) — plus
+     task will write it, that task's § Data provided (structure), or,
+     where a sibling ordered after this task will write it, the listing
+     feature's § Feature-Level Interface & Data Contract that defines it
+     — plus
      whether the source is trusted or must be treated as hostile (a
      user-supplied `.jls` file is hostile input). -->
 
@@ -640,8 +661,8 @@ related: []             # reference only — never blocking, never ownership.
 
      with side conditions and partiality explicit — wherever a
      transform is undefined, § Failure modes & error handling owns the
-     behavior. Prose may accompany the math; it may not replace it. A
-     reviewer must be able to locate each defined stage in the diff. -->
+     behavior. A reviewer must be able to locate each defined stage in
+     the diff. -->
 
 - [ ] **Gate — Concurrency & transformations.** Every piece of shared mutable state declared above has a named guard, or the model is stated single-threaded where that is true; every transform's signature ranges over structures declared above and nothing undeclared; every transform is fully defined in math with its domain stated; every point where a transform is partial is listed for § Failure modes & error handling. Adversarial re-read of everything above found no substantial finding.
 
@@ -770,15 +791,14 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit, or the manual-procedure alternative of § Method / Experimental Design was recorded with platform; a test added with no behavioural change fails at a commit, or under a fault, that its row names, where the behaviour it pins is broken [row: Regression tests]
 - [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the prediction that justifies the new expectation [row: Existing tests]
 - [ ] § Global Invariants of every OPEN feature whose `requires_tasks` lists this task hold at the fix commit as merged into the default branch (the merge result, not the branch tip) [row: Invariants]
-- [ ] `mvn verify` green at the fix commit as merged into the default branch (tests + SpotBugs, warnings-as-errors) [row: Standing gates]
-- [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification [row: Standing gates]
+- [ ] `mvn verify` green at the fix commit as merged into the default branch (tests + SpotBugs, warnings-as-errors), and no new entry in `config/spotbugs-exclude.xml`, or each new entry `Class`-scoped with a justification [row: Standing gates]
 - [ ] No changes outside § Method / Experimental Design or into what § Scope Boundary lists as out; adjacent work discovered en route is filed as new issues [row: Scope]
 - [ ] Every expected value this issue was graded against was pre-committed or independently derived, or § Data Collection & Analysis records that it was produced by the implementation, or that its derivation cannot be shown, and the ADR-1 OS deduction was applied (rule 11) [row: Oracle custody]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10) [row: Waivers]
 - [ ] Every cited evidence document resolves on the default branch at close and every permalink is commit-locked and resolves — no branch-path links, no deleted docs [row: Links]
 - [ ] Every path named above exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design, or by a task in `blocked_by` — this list says which (rule 12) [row: Paths]
-- [ ] Landing reported with a `STATUS: landed` comment on every OPEN feature whose `requires_tasks` lists this task, citing the AMENDED of any contract deviation those plans must reconcile [row: Mirrors]
+- [ ] Landing reported with a `STATUS: landed` comment on every OPEN feature whose `requires_tasks` lists this task, citing the AMENDED of any contract deviation those plans must reconcile — or that posting handed to a holder, the Mirrors row [row: Mirrors]
 - [ ] § Agentic Delegability re-scored on any `AMENDED:` edit that changed scope, evidence, or open decisions [row: Amendments]
 - [ ] ... [row: <added below>]
 
@@ -814,9 +834,10 @@ related: []             # reference only — never blocking, never ownership.
 
 <!-- Run at close against the actual diff and PR, every row at the fix
      commit as it lands on the default branch (the sha `STATUS: landed`
-     carries — never a branch commit a rebase or squash replaced; a step
-     that runs only after deployment is observed at the deployed commit
-     reaching that sha, named in its cell). One row per item;
+     carries — never a branch commit a rebase or squash replaced; an
+     investigation: the pinned apparatus commit, as the P/F row says; a
+     step that runs only after deployment is observed at the deployed
+     commit reaching that sha, named in its cell). One row per item;
      rows are enumerated AT FILING (a row per P/F pair, per threat, per
      open question, per added completion criterion) with the evidence
      cells empty; the pre-filled rows of criteria marked
@@ -826,8 +847,9 @@ related: []             # reference only — never blocking, never ownership.
      a comment link — never "done". A row whose evidence exists but may
      not yet be disclosed is a rule 2 WITHHELD, never a blank; one whose
      step has not run leaves its criterion unmet (rule 10) — a posting
-     handed to a holder excepted: it is the Mirrors row's WITHHELD; one
-     whose referent an AMENDED retired cites it. -->
+     handed to a holder excepted: the row citing it is WITHHELD, as the
+     Mirrors row says; one whose referent an AMENDED retired cites it.
+     -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -838,7 +860,7 @@ related: []             # reference only — never blocking, never ownership.
 | Regression tests | each fails at pre-change commit, passes at fix: command and output (a test added alone: fails at the broken commit, or under the fault, this cell names); or the recorded manual procedure's transcript with platform | | |
 | Existing tests | unmodified, or each change justified by a named prediction | | |
 | Invariants | each open listing feature's § Global Invariants re-verified at the fix commit as merged into the default branch; one that also fails at the pre-change commit is recorded so here, command and output, and its criterion `WAIVED:` naming that feature (its § Re-planning Protocol supplies the fix child) | | |
-| Scope | files in the diff ⊆ files the § Method / Experimental Design steps name, and each hunk at the landed sha (a merge commit: its diff against its first parent) is one a step describes (a merger's squash edit included); extras filed as #, or the step added by an AMENDED before close where they serve the contract (rule 9) | | |
+| Scope | files in the diff ⊆ files the § Method / Experimental Design steps name, and each hunk at the landed sha (a merge commit: its diff against its first parent) is one a step describes (a merger's squash edit included); extras filed as #, or the step added by an AMENDED before close where they serve the contract (rule 9); a hunk undoing part of a sibling's landed change is a revert of it — the finder's AMENDED of rule 9 on that sibling, this executor being the finder, naming the re-land | | |
 | Standing gates | `mvn verify` run link at the landed sha on the default branch (the merge result, as the Invariants row); SpotBugs exclusions unchanged or justified | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation, or of unshowable derivation, and deducted | | |
 | Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (an investigation's pinned apparatus commit: from the PR that pins it, the decision-task note); every document on the default branch | | |

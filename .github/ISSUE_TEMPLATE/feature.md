@@ -243,8 +243,7 @@ labels: ["tier:feature"]
      comment on `evidence_commit` (`# release: <branch>`; validator G18
      reads it); wherever this template says "the default branch", that
      branch is read instead — a child's own landing stays cited where it
-     landed, and its Child row names the commit carrying that work onto
-     the release branch. -->
+     landed (the Child row). -->
 
 ```yaml
 tier: feature
@@ -336,9 +335,9 @@ flowchart TD
      substrate it was set against (the CI runner class or host), the run
      count the criterion's do-X repeats and how many runs failed; the
      Integration criterion row and the Oracle custody row carry them
-     (task rule 3's loop clause: one failed run fails the criterion and
-     fires its next move unless the criterion states the count it
-     tolerates).
+     (the loop of task rule 3 as the do-X: one failed run fails the
+     criterion and fires its next move unless the criterion states the
+     count it tolerates; OS scores the assertion each run makes).
 
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE: "if not-Y after all
      spanning children landed → fix child by REPLAN (scope stated) |
@@ -366,7 +365,9 @@ flowchart TD
 
 <!-- What EVERY child must preserve at every intermediate landing —
      e.g. historical `.jls` files still load, save output
-     byte-identical unless a version bump is declared, `mvn verify`
+     byte-identical until the landing of the child § Feature-Level
+     Interface & Data Contract assigns the declared version bump to, a
+     file saved at any landing loads at that landing, `mvn verify`
      green, no new SpotBugs exclusions. Each stated so a test can pin
      it at any landing. An invariant a repository document also states
      is still listed here, citing it. -->
@@ -395,7 +396,7 @@ flowchart TD
      this feature's `blocked_by` and the mermaid graph now and record
      the DAG walk. -->
 
-- [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here, or — where a filed feature must wait on this one — was added to it by that feature's REPLAN adding the edge, posted on it by whoever files this feature (rule C) and cited here, or the other feature is still planned and the capstone's § Cross-Feature Integration Risks records the edge for its filing; every necessary ordering is an edge in the filed children's machine blocks (an open child waiting on a landed one still carries the edge in its `blocked_by`), or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here, or — where a filed feature must wait on this one — was added to it by that feature's REPLAN adding the edge, posted on it by whoever files this feature (rule C) and cited here, or the other feature is still planned and the capstone's § Cross-Feature Integration Risks records the edge for its filing; every necessary ordering — one without which a § Global Invariants entry fails at some child's landing included, whichever way the handoff runs — is an edge in the filed children's machine blocks (an open child waiting on a landed one still carries the edge in its `blocked_by`), or is recorded here to be added when a planned child is filed, and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
 ## Re-planning Protocol
 
@@ -505,15 +506,14 @@ flowchart TD
      Validation that verify it, and each added criterion gets a row of
      its own. -->
 
-- [ ] Every entry in `requires_tasks` closed as landed, or dropped via a `REPLAN:` comment with the roster updated and each child's disposition recorded (a `REFUTED:`, `SUPERSEDED:` or re-tiered child citing its close-out); `planned_tasks` empty (each resolved to a filed issue or descoped) [rows: Child, Roster]
+- [ ] Every entry in `requires_tasks` closed as landed, or dropped via a `REPLAN:` comment with the roster updated and each child's disposition recorded (a `REFUTED:`, `SUPERSEDED:`, split, re-tiered or bare-closed child citing its close-out — for the last, the finder's AMENDED, task rule 10); `planned_tasks` empty (each resolved to a filed issue or descoped); machine block, roster table and mermaid graph agree with reality (rule A) [rows: Child, Roster]
 - [ ] The capability of § Capability Statement & Scope Boundary is observed at the final commit [row: Capability]
 - [ ] Nothing outside § Capability Statement & Scope Boundary was absorbed; adjacent work is filed [row: Scope]
 - [ ] Every prediction in § Integration Criteria & Evidence Plan holds at a named commit [rows: Integration criterion]
 - [ ] The integrated result satisfies § Feature-Level Interface & Data Contract; deviations recorded by REPLAN, none silently absorbed [rows: Contract]
 - [ ] § Global Invariants hold at the final commit, re-verified — not inferred from children's green runs [rows: Invariant]
 - [ ] Every expected value the integration evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
-- [ ] Every OPEN capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) [row: Mirrors]
-- [ ] Machine block, roster table, and mermaid graph agree with reality at close (rule A) [row: Roster]
+- [ ] Every OPEN capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) — or that posting handed to a holder, the Mirrors row [row: Mirrors]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
 - [ ] Every cited evidence document resolves on the default branch at close and every permalink is commit-locked and resolves [row: Links]
@@ -559,8 +559,8 @@ flowchart TD
      row whose evidence exists but may not yet be disclosed is a task
      rule 2 WITHHELD, never a blank; one whose step has not run leaves
      its criterion unmet (task rule 10) — a posting handed to a holder
-     excepted: it is the Mirrors row's WITHHELD; one whose referent a
-     REPLAN retired cites it. -->
+     excepted: the row citing it is WITHHELD, as the Mirrors row says;
+     one whose referent a REPLAN retired cites it. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -577,7 +577,7 @@ flowchart TD
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation, or of unshowable derivation, and deducted; a threshold, count or repeated run: run count, runs failed, substrate | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature, cited; a posting handed to a holder (the platform row): WITHHELD — held by them until they post, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
-| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (a child's landing: its own branch); every document on the default branch | | |
+| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (a child's landing: the default or release branch its own block names); every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was built; ADR re-scored where a re-plan changed roster, evidence or decisions | | |
@@ -699,8 +699,9 @@ flowchart TD
       wherever this project runs its checks (its automation, or a
       maintainer's own checkout if it has none)? Score the evidence the work
       REQUIRES, not only what the integration criteria happen to list.
-      5 self-contained: the project's standard check command, or a script
-        already in the tree, produces it ......................... no cap
+      5 self-contained: the project's standard check command, a script
+        already in the tree, or its automation's own run produces it
+        .......................................................... no cap
       4 needs a pinned toolchain the project can fetch and reproduce no cap
       3 needs an unreliable substrate, or an external corpus to download
         .......................................................... cap B

@@ -578,6 +578,24 @@ def run(corpus, repo_root, only_issue=None):
                             "scope as delivered; drop it via REPLAN or "
                             "re-home the scope",
                             objects=[t], fix_class="adjudicate"))
+                    else:
+                        # Feature rule B: work already landed when the feature
+                        # listed it is a blocked_by predecessor cited by
+                        # permalink, never a roster entry. Detectable only
+                        # for filing-time listings (a later adopting REPLAN's
+                        # timestamp is not read here); closed_at is absent in
+                        # snapshots older than this check.
+                        closed_at = rec.get("closed_at") or ""
+                        created = (node.iss.raw or {}).get("created_at") or ""
+                        if closed_at and created and closed_at < created:
+                            F.append(finding(
+                                n, "G06", "warn",
+                                f"requires_tasks lists #{t}, which closed "
+                                f"({closed_at[:10]}) before this feature was "
+                                f"filed ({created[:10]}) — landed work is a "
+                                "blocked_by predecessor cited by permalink, "
+                                "not a roster entry (feature rule B)",
+                                objects=[t], fix_class="body"))
                 elif child.tier != "task":
                     F.append(finding(
                         n, "G06", "error",

@@ -123,7 +123,8 @@ def main():
                 {"number": d["number"], "title": d["title"],
                  "state": d["state"], "state_reason": d.get("state_reason"),
                  "labels": [l["name"] for l in d.get("labels") or []],
-                 "updated_at": d["updated_at"]}) + "\n")
+                 "updated_at": d["updated_at"],
+                 "closed_at": d.get("closed_at")}) + "\n")
     print(f"closed: {len(closed)} issues "
           f"({len(closed_raw) - len(closed)} PRs filtered)")
 

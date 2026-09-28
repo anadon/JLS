@@ -21,8 +21,7 @@ labels: ["tier:task"]
      yet be disclosed (a security fix before release) is "WITHHELD — held
      by <custodian> until <event>"; the custodian re-runs it where
      § Pickup Checks says and, at the event, un-redacts it by AMENDED
-     (rule 9 — after close, one that changes no claim carries no ledger
-     or successor and re-runs no gate or pickup row). A criterion
+     (rule 9). A criterion
      discovered to be wrong during execution gets an AMENDED with
      evidence that corrects it (rule 9) —
      a bare comment records nothing; do not work around it and do not
@@ -47,10 +46,12 @@ labels: ["tier:task"]
   6. Executors: before step one of § Method / Experimental Design, run
      § Pickup Checks in full. A hypothesis refuted mid-work stops the
      work where no other hypothesis in § Hypothesis (falsifiable) still
-     stands; otherwise execution follows the fired F's next move and the
-     refutation is recorded by `STATUS: progress` quoting the F, and
-     `REFUTED:` closes the issue only when the last standing hypothesis
-     falls. Comment with the refuting evidence. A refuted issue is a
+     stands; otherwise execution follows the fired F's next move, the
+     refutation is recorded by `STATUS: progress` quoting the F, the
+     contract subsections, steps and criteria only the fallen hypothesis
+     motivated are retired by AMENDED (Dropped/Retired ledger) before
+     close, and `REFUTED:` closes the issue only when the last standing
+     hypothesis falls. Comment with the refuting evidence. A refuted issue is a
      successful experiment, not a task to salvage — except in an
      investigation, where a refuted candidate answer is a result (see
      the decision-task note below). An observation that fails to
@@ -76,8 +77,9 @@ labels: ["tier:task"]
      search (`requires_tasks` for this number, `planned_tasks` for this
      scope while the number is fresh) at pickup and at close.
   9. Amendment & comment protocol. This body may be edited, but only
-     together with an `AMENDED:` comment stating what changed, why,
-     and on what evidence — a silent edit is invisible to executors,
+     together with an `AMENDED:` comment — edit first, then post it
+     (validator H06 reads the order) — stating what changed, why, and on
+     what evidence — a silent edit is invisible to executors,
      who reconstruct state from the machine block plus the prefixed
      comments (`STATUS:` / `REFUTED:` / `HANDOFF:` / `SUPERSEDED:` /
      `AMENDED:` / `WAIVED:`). Checkbox state is a convenience
@@ -88,8 +90,12 @@ labels: ["tier:task"]
      a sub-tag after a dash, never directly after it (`HANDOFF: split —
      successors #124, #125`; `STATUS: landed — <fix or apparatus sha>,
      PR #N, <permalink to the body
-     revision holding the filled § Post-Implementation Validation>;
-     contract deviations: <AMENDED links, or none>`). Every prefixed
+     revision holding the filled § Post-Implementation Validation — its
+     Mirrors row filled once the mirrors are posted, bookkeeping>;
+     contract deviations: <AMENDED links, or none>`; a fix-up merged
+     before close posts a second `STATUS: landed` citing the first and
+     naming both PRs, mirrored the same way — a posted prefixed comment
+     is never edited, a later one supersedes it). Every prefixed
      comment
      except `STATUS: pickup` and `STATUS: progress` is posted on THIS
      issue and mirrored, led by this issue's number directly after the
@@ -97,8 +103,9 @@ labels: ["tier:task"]
      the first line), on every OPEN
      feature whose `requires_tasks` roster lists this task (there may
      be several, or none). An own comment is never led by another
-     issue's number: a number in the first position marks a mirror, or a
-     notice posted on another issue. Before any body edit re-read the
+     issue's number: a number in the first position marks a mirror, a
+     notice posted on another issue, or a counterpart's REPLAN or AMENDED
+     editing this block (feature rule C). Before any body edit re-read the
      comment stream and fold in every body-editing comment newer than
      your read — body edits are last-write-wins and the stream is the
      arbiter.
@@ -107,28 +114,29 @@ labels: ["tier:task"]
      carries the successor number(s), the Dropped/Retired ledger moving
      each item to them, and the sections re-read (rule 14); every
      listing feature is REPLANned to carry the successors — in place of
-     this task where it closes (rule 10) — with handoffs moved, and the
-     later of the HANDOFF and that REPLAN cites the earlier; in either
-     case a sibling's `blocked_by` that names this task for an item the
-     ledger moves is re-pointed at that item's successor by AMENDED on
-     that sibling (§ Related Work) — where no feature lists this task,
-     the HANDOFF alone carries the split. A re-tier HANDOFF carries the
-     new issue's number and the ledger moving every item to it (an item
-     the new tier's sections cannot hold is restated in the scope line
-     of the planned child that will carry it), and closes this issue
-     (rule 10); every listing feature drops it by REPLAN with
-     disposition closed, citing the HANDOFF, its serving capstones apply
-     rule G to the new issue, and a sibling's `blocked_by` naming this
-     task is re-pointed by AMENDED on that sibling to the new feature's
-     child that now provides what it consumed, or retired with that
-     child's planned scope named until it is filed. A
-     transfer HANDOFF states that the body is unchanged and carries the
+     this task where it closes (every item moved, rule 10) — with
+     handoffs moved, and the later of the HANDOFF and that REPLAN cites
+     the earlier; where no feature lists this task, the HANDOFF alone
+     carries the split. A re-tier HANDOFF carries the new issue's number
+     and the ledger moving every item to it, and closes this issue (rule
+     10); listing features answer per their § Re-planning Protocol. After
+     either, a sibling whose `blocked_by` names this task for a moved
+     item re-points it at the item's successor by AMENDED (§ Related
+     Work); where the successor is still a planned scope, the edge is
+     retired and the planning feature's § Sequencing & Parallelism
+     records the ordering for that child's filing (feature rule C). A
+          transfer HANDOFF states that the body is unchanged and carries the
      branch and commit of the work, the PR, each Method step already
-     ticked with the comment that evidences it, and the first step the
-     successor executes (`HANDOFF: transfer — no step executed` where
-     the predecessor stopped before step one); the successor posts its
-     own `STATUS: pickup` citing it, names the handoff commit as its
-     checkout, and runs § Pickup Checks in full there — observation and
+     ticked with the comment that evidences it at a commit the handoff
+     commit reaches (a PR or branch link alone is not evidence, rule 1),
+     and the first step the successor executes (`HANDOFF: transfer — no
+     step executed` where the predecessor stopped before step one); the
+     successor posts its own `STATUS: pickup` citing it, names the
+     handoff commit as its checkout (or, where it is no longer reachable,
+     the commit actually checked out, each ticked step whose evidence no
+     longer resolves either re-evidenced there in that comment or named
+     as not executed and started from), and runs § Pickup Checks in full
+     there — observation and
      supersession rows at the work's merge-base with the default branch,
      so partial work does not mask the rule 3 failure, and
      `evidence_commit`, if re-pinned, re-pinned to that merge-base, never
@@ -149,35 +157,43 @@ labels: ["tier:task"]
      bodies.
        Re-plan requests and answers. An AMENDED whose contract now
      contradicts a listing feature's § Global Invariants, or a handoff
-     that feature assigns to this task, is a re-plan request: the
+     that feature assigns to this task, or declares a modified or
+     provided surface that feature's § Feature-Level Interface & Data
+     Contract does not (feature rule D), is a re-plan request: the
      mirrored comment says so, and the Method steps consuming the
-     contested handoff or invariant are marked `BLOCKING: #F REPLAN`
-     until that feature answers (its REPLAN is posted here, feature rule
-     C); clearing the marks is bookkeeping citing that REPLAN, or part
-     of the AMENDED that answers it where it changed something cited
-     here — where the invariant or handoff stands, that AMENDED restores
-     the contract to it. A `REPLAN:` a listing feature posts here, led
-     by its number, that changes anything this body cites is answered by
-     an AMENDED — on receipt once a pickup has happened, otherwise at
-     pickup, unless the tier's own rules say on receipt — typically to
-     § Interface & Data Contract, the machine block or § Intent &
-     Alignment; a drop with disposition "freed" restates the
-     alignment or, where none can be cited, closes this issue under rule
-     10; "closed" closes it under rule 10 — mirrored on that feature
-     even when its roster no longer lists this task; a REPLAN that
-     changes nothing cited here needs no answer. A
+     contested handoff, invariant or surface are marked `BLOCKING: #F
+     REPLAN` until that feature answers (its REPLAN is posted here,
+     feature rule C). Where that REPLAN changes the invariant, handoff
+     or contract to what this body says, clearing the marks is
+     bookkeeping citing it; where they stand or the surface is
+     disclaimed, the AMENDED restoring the contract to them (Dropped/
+     Retired ledger) clears the marks. A `REPLAN:` a listing feature
+     posts here, led by its number, that changes anything this body
+     cites is answered by an AMENDED — on receipt once a pickup has
+     happened, otherwise at pickup, unless the tier's own rules say on
+     receipt — typically to § Interface & Data Contract, the machine
+     block or § Intent & Alignment; one that first lists this task
+     (resolving a planned scope to it, adopting or re-homing it) is
+     answered as if every § Global Invariants entry and handoff of that
+     feature had changed, and adds the feature to § Related Work; a drop
+     with disposition "freed" restates the alignment or, where none can
+     be cited, closes this issue under rule 10; "re-homed" names the
+     feature that lists it — an alignment that cited the dropping
+     feature moves there by AMENDED, and § Related Work's listing line
+     follows the rosters (bookkeeping, citing the REPLAN); "closed"
+     closes it under rule 10 on receipt, by whoever posted the REPLAN,
+     citing it — mirrored on that feature even when its roster no longer
+     lists this task; a REPLAN that changes nothing cited here and
+     answers no re-plan request needs no answer. A
      REPLAN arriving after this issue closed is a notice. A deviation of
      what was built from what this body records — a contract
      subsection, a prediction or sheet cell recorded as held, a
      criterion recorded as met — found after close is recorded by the
      finder's AMENDED on this closed issue: the cell or subsection
      corrected, the Dropped/Retired ledger, and the successor tracking
-     any unmet obligation or why none is needed (standing in for rule
-     10's WAIVED); no gate is re-run and the ADR block stays as it
-     scored the filing. It is mirrored on every listing feature: an
-     open one answers per its rules C–D; a closed one receives a notice
-     and its body is not corrected — the notice beneath it is the
-     record.
+     any unmet obligation or why none is needed. It is mirrored on every
+     listing feature: an open one answers per its rules C–D; a closed
+     one receives a notice.
        Bookkeeping — an edit that records evidence already in this
      issue's comment stream or in a counterpart's authoritative block,
      and changes no claim, edge, criterion or score — needs no AMENDED:
@@ -188,13 +204,17 @@ labels: ["tier:task"]
      `review_evidence` at the finding, and back to `true` once it is
      fixed or recorded as not standing; re-pinning `evidence_commit`
      when every cited line re-derives unchanged there (renamed paths
-     followed, the citation's path updated) and every observation
-     reproduces (otherwise it is part of the AMENDED that
+     followed, the citation's path updated, every permalink re-issued at
+     the new commit) and every observation reproduces (otherwise it is
+     part of the AMENDED that
      fixes the observation); adding or removing a `blocks` entry that
      mirrors a counterpart's authoritative `blocked_by`, citing the
-     counterpart; and replacing an "unfiled" alignment with its citation
-     when the cited section says what this task assumes (a plain comment
-     says so); any other edit is an AMENDED.
+     counterpart; adding to § Internal interfaces consumed the file:line
+     of a `blocked_by` task's landed surface where it matches that
+     task's declaration (the interfaces pickup row); and replacing an
+     "unfiled" alignment with its citation when the cited section says
+     what this task assumes (a plain comment says so); any other edit is
+     an AMENDED.
        Write mechanics: cite a line range as ONE link —
      "[L100–L120](<permalink>#L100-L120)" — never two adjacent links
      joined by a dash (some write paths corrupt that form), and after
@@ -209,9 +229,8 @@ labels: ["tier:task"]
      comment leaves the issue unclosable. A close on `REFUTED:`,
      `SUPERSEDED:`, `HANDOFF: re-tier` or a `HANDOFF: split` whose ledger
      moves every item, or on a listing feature's REPLAN disposition
-     "closed", or "freed" where no alignment can be cited (recorded by
-     the AMENDED that answers that REPLAN, citing it), needs no WAIVED
-     comments:
+     "closed", or "freed" where no alignment can be cited, needs no
+     WAIVED comments:
      that comment is the close-out record, the check-sheets are not
      completed (rows already filled stand, and the comment links the
      revision holding them), and any obligation still needed names its
@@ -246,8 +265,8 @@ labels: ["tier:task"]
      at all — a citation, a status check, an un-run build). This template
      requires the section, so every issue has one; without a marker a
      reader cannot tell a decision that was made from one that was dodged,
-     and § Agentic Delegability scores the entry as unresolved, which is
-     usually not what was meant.
+     and § Agentic Delegability scores the entry on its substance and
+     the marker is fixed.
   14. Filing order and consistency gates. Sections appear in DEPENDENCY
      order, not read order: each section is written from the sections
      above it and from nothing below it. Sections that define each other
@@ -260,18 +279,14 @@ labels: ["tier:task"]
      and then (d) an adversarial re-read of the same span, fixing each
      finding and re-reading until a pass yields no SUBSTANTIAL finding.
      Substantial has the meaning the review gate in § Agentic
-     Delegability gives it: acting on the finding would change a mandate
-     or a section's conformance to it as its comment block states it, a
-     score, a criterion, a prediction, an edge, or the scope; wording is
-     not. There is no bound on the number of passes.
+     Delegability gives it. There is no bound on the number of passes.
      Gates are cumulative. Gate k covers every section through k, so
      while filing, a finding at gate k that changes an earlier section
      is fixed there and the earlier gate is not re-ticked: its tick
      records that the re-read happened when it was reached, not that
      the section was final — but the fix repeats clause (c) of the gate
      that follows the changed section, for the external context that
-     gate names (siblings, the planning feature's assignments, the
-     alignment target), and gate k's tick records that. The terminal gate (the two review boxes in
+     gate names, and gate k's tick records that. The terminal gate (the two review boxes in
      § Agentic Delegability) covers the whole body, § Abstract
      included, and is the only gate whose tick asserts consistency of
      the finished issue. A filed issue with unticked gates is valid but
@@ -282,18 +297,17 @@ labels: ["tier:task"]
      sections it changed and confirms that every later section, and the
      external context the gates over that span name, were re-read
      against the change per (a)–(d) — an edit that adds a file or module
-     a sibling owns, or that § Scope Boundary lists as out, changes
-     § Related Work too. That comment, not checkbox state, is what
-     § Pickup Checks reads. Gate clauses read a counterpart's body at
+     a sibling owns, or a planning feature's `planned_tasks` carries, or
+     that § Scope Boundary lists as out, changes § Related Work too.
+     That comment, not checkbox state, is what § Pickup Checks reads.
+     Gate clauses read a counterpart's body at
      its current revision and never depend on its later edit; a gate is
      never left pending on another issue.
      § Abstract is written last and read first.
-  15. Three check-sheets, distinguished by WHEN they run: the gates of
-     rule 14 at filing; § Pickup Checks once in full before step one of
-     § Method / Experimental Design, by whoever executes (rule 6);
-     § Post-Implementation Validation at close, against the actual diff
-     and PR. Each sheet's comment block says what it records and when
-     its rows are enumerated.
+  15. Three check-sheets: the gates of rule 14 at filing; § Pickup
+     Checks once before step one (rule 6); § Post-Implementation
+     Validation at close. Each sheet's comment block says what it
+     records.
 
   Decision/spike tasks ("evaluate X", "decide Y") use this template
   with "verdict recorded in <named doc/section>" as the completion
@@ -304,9 +318,8 @@ labels: ["tier:task"]
   investigation's own premise failing. The apparatus that produces the
   decision evidence lands at a named path, or is pinned by a PR that
   retains its commits, so the evidence can be re-run at that commit.
-  The verdict scores DA 0 (band D): § Data Collection & Analysis names
-  who records it, and the `action` pickup row names that person as the
-  decider of the verdict step; every other step proceeds.
+  The verdict is DA 0 (cap D); § Data Collection & Analysis names who
+  records it.
 
   Refactor tasks (behaviour-preserving changes) use this template with
   the preservation claim as the hypothesis, naming the call-site
@@ -329,8 +342,7 @@ labels: ["tier:task"]
 ## Intent & Alignment
 
 <!-- Written FIRST. Everything below is checked against this section
-     at every gate, and this section is checked against § Observations
-     once they exist (measurable impact claims are observations, rule 1).
+     at every gate.
 
      Intent: the change in the world this work is for, in one
      paragraph, phrased so that a reader can later say whether it
@@ -378,8 +390,7 @@ labels: ["tier:task"]
        - `blocked_by` and `related` at the gate after § Related Work,
          once the siblings are known. Annotate each blocked_by entry
          with the one-line reason it blocks, as a YAML comment.
-         `blocks` stays `[]` at filing: it carries mirrors only
-         (validator G09 reports drift).
+         `blocks` stays `[]` at filing: it carries mirrors only.
      Executors: § Pickup Checks reads this block first. -->
 
 ```yaml
@@ -395,8 +406,6 @@ blocks: []              # mirrors only — the counterpart's blocked_by is autho
                         #   tasks, or features, whose blocked_by names this task (never
                         #   a capstone). Left [] at filing; G09 reports drift.
 related: []             # reference only — never blocking, never ownership.
-                        #   Ownership is not recorded here: it lives in each
-                        #   owning feature's requires_tasks roster.
 ```
 
 - [ ] **Gate — Intent & Status.** § Intent & Alignment states an intent a reader could later confirm or deny; its alignment target was opened at its current revision and the cited section says what this task assumes it says, or the target is marked unfiled with a one-line scope, or it is a standing rule stated here that a maintainer would uphold and from which the intent follows; every audience named is one this change reaches. `evidence_commit` is the SHA actually checked out and is reachable from the default branch. Adversarial re-read of this span found no substantial finding.
@@ -425,10 +434,7 @@ related: []             # reference only — never blocking, never ownership.
      sibling whose § Observations pins the SAME rule 3 failure is a
      competing hypothesis, not a touching scope: add this hypothesis,
      its P/F pair and rejected candidates to the sibling by AMENDED and
-     do not file (a task being split into this one is its predecessor,
-     not a competitor: its HANDOFF, posted once this number exists,
-     names this successor); only where the
-     sibling is past step one, file
+     do not file; only where the sibling is past step one, file
      `blocked_by` it with a P/F pair predicting the failure persists
      after it lands (next move `SUPERSEDED:`), and its REFUTED names
      this task as successor (rule 10). The `blocked_by`
@@ -473,7 +479,8 @@ related: []             # reference only — never blocking, never ownership.
            built by step N").   Must hold after the fix (an investigation:
            at the apparatus commit): yes/no.   Tests: H1.
        F1. If after the fix X still yields not-Y, H1 is wrong — next
-           move: investigate Z / file successor / stop.
+           move: investigate Z / file successor / stop this line (the
+           issue stops only when no hypothesis stands, rule 6).
 
      Every hypothesis has at least one P and one F. Predictions that
      hold only after the fix say so. For investigations, the pairs are
@@ -622,7 +629,7 @@ related: []             # reference only — never blocking, never ownership.
      pinned by a test or by a recorded procedure naming the previous
      build's commit. -->
 
-- [ ] **Gate — Contract complete.** Every partial point flagged at the previous gate has an owner in § Failure modes & error handling; every durable datum names what is guaranteed uncorrupted on failure; every modified external surface, durable datum, and already-called public internal surface has a compatibility claim stated so a test can pin it, and every durable format or command surface states the previous version's behaviour on the new output; every compatibility claim that matters has a prediction in § Predictions & Falsification Criteria, or one was added; the contract as a whole is what § Hypothesis (falsifiable) implies — no more, no less; nothing in § Compatibility, versioning & migration contradicts the § Global Invariants of any feature whose `requires_tasks` lists this task or whose `planned_tasks` carries this scope (two listing features' invariants that contradict each other are a `BLOCKING:` entry of § Open Questions & Decisions Needed naming the feature whose invariant is newer, which re-plans per its § Re-planning Protocol). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Contract complete.** Every partial point flagged at the previous gate has an owner in § Failure modes & error handling; every durable datum names what is guaranteed uncorrupted on failure; every modified external surface, durable datum, and already-called public internal surface has a compatibility claim stated so a test can pin it, and every durable format or command surface states the previous version's behaviour on the new output; every compatibility claim that matters has a prediction in § Predictions & Falsification Criteria, or one was added; the contract as a whole is what § Hypothesis (falsifiable) implies — no more, no less; nothing in § Compatibility, versioning & migration contradicts the § Global Invariants of any OPEN feature whose `requires_tasks` lists this task or whose `planned_tasks` carries this scope (two listing features' invariants that contradict each other are a `BLOCKING:` entry of § Open Questions & Decisions Needed naming the feature whose invariant is newer, which re-plans per its § Re-planning Protocol). Adversarial re-read of everything above found no substantial finding.
 
 ## Scope Boundary
 
@@ -643,8 +650,7 @@ related: []             # reference only — never blocking, never ownership.
      check can observe it, § Data Collection & Analysis names the
      recorded manual procedure, with platform, that stands in for it and
      § Threats to Validity carries the resulting threat with its
-     acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE; the gate and
-     the completion criterion cite it). -->
+     acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE). -->
 
 - [ ] ...
 
@@ -695,9 +701,7 @@ related: []             # reference only — never blocking, never ownership.
      open.
 
      Mark every entry per rule 13 — `Recommended default:`, `PROPOSED:`,
-     `BLOCKING:` or `HYGIENE:`. The marker is what an executor and
-     § Agentic Delegability both read; an unmarked entry is scored on its
-     substance, and the marker fixed. -->
+     `BLOCKING:` or `HYGIENE:`. -->
 
 ## Conclusion & Future Work
 
@@ -715,22 +719,23 @@ related: []             # reference only — never blocking, never ownership.
      before starting (that is § Pickup Checks). Every box names the
      artifact, its location, and the assertion that pins it; that is the
      SC=5 test in § Agentic Delegability. Edit the pre-filled boxes to
-     fit (rule 2 governs inapplicable ones), and add criteria specific to
+     fit (rule 2 governs inapplicable ones; a criterion quantified over
+     listing features is never N/A at filing — its row records the
+     close-time roster search), and add criteria specific to
      this task; each pre-filled box names in brackets the row(s) of
      § Post-Implementation Validation that verify it, and each added
      criterion gets a row of its own.
 
-     A wrong or unsatisfiable criterion is corrected per rule 2, never
-     worked around. -->
+     -->
 
-- [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit, and no falsification criterion fired unaddressed — for an investigation, every P/F pair's outcome is recorded at the pinned apparatus commit and each fired F's next move taken [rows: P/F]
+- [ ] Every post-fix prediction in § Predictions & Falsification Criteria holds at the fix commit (an investigation: at the pinned apparatus commit), or its falsification criterion fired and its next move was taken (rule 6) — none fired unaddressed [rows: P/F]
 - [ ] The post-change code satisfies § Interface & Data Contract in every subsection — interfaces provided/consumed, structures, concurrency model, failure behaviour, compatibility claims — with any deviation recorded by an AMENDED of the deviating subsection before close (rule 9), never by a bare comment or silently absorbed [row: Contract]
 - [ ] Every behavioral change has a regression test that fails at the pre-change commit and passes at the fix commit, or the manual-procedure alternative of § Method / Experimental Design was recorded with platform [row: Regression tests]
 - [ ] Existing tests pass unmodified, except tests whose asserted behavior this issue intentionally changes — each named, with the prediction that justifies the new expectation [row: Existing tests]
-- [ ] § Global Invariants of every OPEN feature whose `requires_tasks` lists this task hold at the fix commit [row: Invariants]
+- [ ] § Global Invariants of every OPEN feature whose `requires_tasks` lists this task hold at the fix commit as merged into the default branch (the merge result, not the branch tip) [row: Invariants]
 - [ ] `mvn verify` green (tests + SpotBugs, warnings-as-errors) [row: Standing gates]
 - [ ] No new entries in `config/spotbugs-exclude.xml`, or each new entry is `Class`-scoped with a justification [row: Standing gates]
-- [ ] No changes outside § Method / Experimental Design and inside § Scope Boundary; adjacent work discovered en route is filed as new issues [row: Scope]
+- [ ] No changes outside § Method / Experimental Design or into what § Scope Boundary lists as out; adjacent work discovered en route is filed as new issues [row: Scope]
 - [ ] Every expected value this issue was graded against was pre-committed or independently derived, or § Data Collection & Analysis records that it was produced by the implementation and the ADR-1 OS deduction was applied (rule 11) [row: Oracle custody]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
 - [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (rule 10) [row: Waivers]
@@ -742,7 +747,7 @@ related: []             # reference only — never blocking, never ownership.
 
 ## Pickup Checks
 
-<!-- Run once by the executor, before step one of § Method /
+<!-- Run once per executor, before step one of § Method /
      Experimental Design (rule 6). The rows are fixed and never
      deleted: a row whose referent is N/A or empty is recorded "none" in
      the pickup comment (one line may list every "none" row) and neither
@@ -755,18 +760,18 @@ related: []             # reference only — never blocking, never ownership.
      (or all of them) and what unblocks them, and only those steps
      wait. -->
 
-- [ ] `action` read and followed — DELEGATE and DELEGATE-WITH-CHECKPOINT: proceed, the named checkpoint precedes the merge; SPECIFY-FIRST, SPLIT and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed (spec, oracle, decomposition or split) and who supplies it — an ED-driven SPECIFY-FIRST instead hands the evidence steps to a holder as the materials row does; HUMAN-LED and HUMAN-ONLY: steps needing a person's decision or evidence are named blocked with who decides or holds (an unmarked decision is an AMENDED adding the marker, not a pickup act), every other step proceeds
-- [ ] Every `AMENDED:` or `HANDOFF:` read (own, or a counterpart's posted here led by its number); each body-editing one names the sections changed and re-read (a transfer HANDOFF states the body is unchanged), and the body matches their fold in stream order, rule 9 bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; a re-plan request no listing feature has answered leaves its `BLOCKING: #F REPLAN` steps blocked, named in the `STATUS: pickup`; where `review_clean` is `false`, the finding at `review_evidence` is answered before step one — by the AMENDED fixing it, or by a comment quoting it and recording why it does not stand
-- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed invariant, handoff or drop disposition, and answered by AMENDED where anything cited changed (rule 9)
-- [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed); `evidence_commit` re-pinned — bookkeeping only under rule 9's condition, otherwise part of the AMENDED that fixes the observation (rule 9)
+- [ ] `action` read and followed — DELEGATE and DELEGATE-WITH-CHECKPOINT: proceed, the named checkpoint precedes the merge; SPECIFY-FIRST, SPLIT and AGENT-ASSIST-ONLY: stop after `STATUS: pickup`, which names what is owed (spec, oracle, decomposition or split) and who supplies it — an ED-driven SPECIFY-FIRST instead hands the evidence steps to a holder as the materials row does; HUMAN-LED and HUMAN-ONLY: steps needing a person's decision or evidence are named blocked with who decides or holds, every other step proceeds
+- [ ] Every `AMENDED:` or `HANDOFF:` read (own, or a counterpart's posted here led by its number); each body-editing one names the sections changed and re-read, and the body matches their fold in stream order, rule 9 bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; a re-plan request no listing feature has answered leaves its `BLOCKING: #F REPLAN` steps blocked, named in the `STATUS: pickup`; where `review_clean` is `false`, the finding at `review_evidence` is answered before step one — by the AMENDED fixing it, or by a comment quoting it and recording why it does not stand
+- [ ] Every `REPLAN:` a listing feature posted here read; § Interface & Data Contract re-checked against each changed — or, for a feature that first listed this task, each — invariant, handoff or drop disposition, and answered by AMENDED where anything cited changed (rule 9)
+- [ ] Citations re-derived if HEAD has moved past `evidence_commit` (renamed paths followed; a deleted path retires or re-derives its citation by AMENDED, ledger entry included); `evidence_commit` re-pinned (rule 9)
 - [ ] Not superseded: the rule 3 failure still occurs (where its apparatus is handed to a holder or WITHHELD, the observations row's "not run — held by" stands for this clause until their re-run), or, for an investigation, the question is still open; if the work has already landed, close with a `SUPERSEDED:` comment; and no OPEN task filed since this issue was created pins the same rule 3 failure or names a file § Method / Experimental Design touches (search command and output in the `STATUS: pickup`; a successor this issue's own `HANDOFF: split` names, or one named alongside this issue by the HANDOFF that created it, excepted) — a later-filed competitor folds its hypothesis here by AMENDED and closes `SUPERSEDED:`, or is `blocked_by` this task with the § Related Work P/F pair
 - [ ] Every observation in § Observations re-verified at the checkout; command and output recorded — a non-reproducing observation is routed as rule 6 says, never worked around; an observation whose apparatus is a material the materials row hands to a holder, or that is WITHHELD under rule 2, is recorded "not run — held by <holder or custodian>", re-run by them before the evidence steps, and neither passes nor fails
 - [ ] Every `blocked_by` entry has landed, or closed `REFUTED:` naming this task as its successor (rule 10), or the edge was removed by an `AMENDED:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Open features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is resolved to this number by whoever reaches this row first (feature rule C) before it is owed anything; a closed alignment target is re-aligned by AMENDED
 - [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by` here or, where the sibling waits on this task, in that sibling's `blocked_by` (mirrored in `blocks`), or its absence is explained by an AMENDED
-- [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and the provided surface re-derived from code at its fix commit, the file:line added to § Internal interfaces consumed — bookkeeping when it matches that task's declaration, otherwise an AMENDED here before step one, and the deviation recorded on that task by the finder's AMENDED of rule 9
-- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or provided by a `blocked_by` task that has landed (row above), or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
+- [ ] For every `blocked_by` task providing an interface § Internal interfaces consumed relies on: its `STATUS: landed` comment read and the provided surface re-derived from code at its fix commit, the file:line added to § Internal interfaces consumed — bookkeeping when it matches that task's declaration, otherwise an AMENDED here before step one
+- [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or provided by a `blocked_by` task that has landed (the `blocked_by` row), or needed only by named evidence steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
 
 ## Post-Implementation Validation
@@ -774,8 +779,7 @@ related: []             # reference only — never blocking, never ownership.
 <!-- Run at close against the actual diff and PR. One row per item;
      rows are enumerated AT FILING (a row per P/F pair, per threat, per
      open question, per added completion criterion) with the evidence
-     cells empty, so the gate below can check that nothing above lacks
-     a row; the pre-filled rows of criteria marked
+     cells empty; the pre-filled rows of criteria marked
      N/A are deleted at filing unless another criterion names the row.
      Evidence is a command with
      its output, a test name at a commit, a permalink into the diff, or
@@ -790,7 +794,7 @@ related: []             # reference only — never blocking, never ownership.
 | Open question 1 | resolving comment, or permalink to the diff landing the `Recommended default:` / the re-derived `HYGIENE:` item | | |
 | Regression tests | each fails at pre-change commit, passes at fix: command and output; or the recorded manual procedure's transcript with platform | | |
 | Existing tests | unmodified, or each change justified by a named prediction | | |
-| Invariants | each open listing feature's § Global Invariants re-verified at the fix commit | | |
+| Invariants | each open listing feature's § Global Invariants re-verified at the fix commit as merged into the default branch | | |
 | Scope | files in the diff ⊆ files the § Method / Experimental Design steps name; extras filed as # | | |
 | Standing gates | `mvn verify` run link; SpotBugs exclusions unchanged or justified | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation and deducted | | |
@@ -800,7 +804,7 @@ related: []             # reference only — never blocking, never ownership.
 | Mirrors | `STATUS: landed` posted on every open listing feature, cited | | |
 | Amendments | every `AMENDED:` or `HANDOFF:` comment reconciled; the body describes what was built; ADR re-scored where an edit changed scope, evidence or decisions | | |
 
-- [ ] Adversarial review of the diff against this issue found no substantial finding
+- [ ] Adversarial review of the diff against this issue found no substantial finding standing (each fixed before close or `WAIVED:` per rule 10)
 
 - [ ] **Gate — Criteria & sheets.** Every completion criterion names its artifact, location and assertion; every path a criterion names exists at `evidence_commit`, or is created by a named step of § Method / Experimental Design or by a task in `blocked_by`, and the criterion says which (rule 12); every pre-filled criterion not marked N/A has its bracketed rows and every added criterion, P/F pair, threat and open question has a validation row, the Contract row carries a line per contract subsection not marked N/A and none for an N/A subsection, and no row remains for an N/A pre-filled criterion that no other criterion names (a per-item row family with zero items satisfies its bracket); nothing in the sheets contradicts § Method / Experimental Design or § Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
@@ -951,12 +955,10 @@ related: []             # reference only — never blocking, never ownership.
         the harness that would produce the same observation unattended —
         then it scores 2, that harness is a regression-test step § Method /
         Experimental Design must name, and the procedure is interim
-        evidence; without that step the score stays 1.
+        evidence.
       0 NO, because a person's participation or judgement IS the evidence:
         a human-subject trial, an independent reproducer, someone whose
-        judgement of what they saw — not an enumerated observation of the
-        software's behaviour that anyone holding the apparatus would
-        repeat, which is 1 — is the report, an external publisher whose
+        judgement of what they saw is the report, an external publisher whose
         acceptance is itself the evidence .......................... cap F
       Reviewing a diff or approving a merge is NOT evidence production and
       does not score here — that is the band-B checkpoint, and most projects
@@ -1017,9 +1019,7 @@ related: []             # reference only — never blocking, never ownership.
     HOLLOW-ORACLE            OS<=2, or the 2-point deduction fired
     GOLDEN-LOCK-IN           RD=2           an expected artifact this work
                                             commits that later work is then
-                                            graded against. HOLLOW-ORACLE
-                                            above already took the
-                                            self-certified cases
+                                            graded against
     SPEC-DRIFT               SC<=2
     PREMATURE-SEAM           DA<=2
     PARTIAL-INTEGRATION      BR<=1 or CF<=1
@@ -1032,20 +1032,16 @@ related: []             # reference only — never blocking, never ownership.
   REVIEW GATE — THE TERMINAL GATE OF RULE 14. The two boxes below cover
   the ENTIRE body, § Abstract included: an issue with both ticked has been
   read adversarially and by a peer, end to end, and neither read left
-  anything substantial outstanding. The section gates above record that
-  each span was re-read when reached; only these two boxes assert that the
-  finished issue is consistent. Tick them yourself; the filer reviewing
+  anything substantial outstanding. Tick them yourself; the filer reviewing
   their own issue is fine.
     - SUBSTANTIAL means acting on the finding would change a score above, a
       section's mandate or a section's conformance to its mandate as its
       comment block states it, a completion criterion, a prediction, an
       edge, or the scope. Wording is not.
-    - Where a review comment exists, point `review_evidence` at it.
     - `false` means the review comment at `review_evidence` names a
       substantial finding nobody has fixed; whoever finds one and does
       not fix it sets it (bookkeeping), and the AMENDED fixing it, or a
-      comment recording why it does not stand, sets `true`. § Pickup
-      Checks reads it before step one.
+      comment recording why it does not stand, sets `true`..
 -->
 
 ```yaml

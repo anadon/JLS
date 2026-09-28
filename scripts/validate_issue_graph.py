@@ -97,7 +97,7 @@ def planned_entries(mb, key):
 
 # A child task that cites its OWN PARENT feature's integration criterion by
 # number is the highest-precision signal of a feature rule B violation that
-# exists in this corpus. Rule B requires at least one §5 criterion that no
+# exists in this corpus. Rule B requires at least one integration criterion that no
 # single child covers alone; when the child's own body says "this is #F's
 # Integration Criterion 5", that criterion is covered alone by construction.
 # Two independent audits converged on this as "the most reliable tell".
@@ -500,7 +500,7 @@ def run(corpus, repo_root, only_issue=None):
                     f"child #{t} names this feature's own integration "
                     f"criteri{'on' if len(crits) == 1 else 'a'} "
                     f"{', '.join(crits)} as its own deliverable — if no other "
-                    "§5 criterion is jointly owned, rule B is not met and "
+                    "integration criterion is jointly owned, rule B is not met and "
                     "this is a folder, not a feature",
                     objects=[t] + crits, fix_class="adjudicate"))
 

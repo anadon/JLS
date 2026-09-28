@@ -66,6 +66,11 @@ ORDERING_TARGETS = {
 PLANNED_FIELDS = {"planned_tasks", "planned_features"}
 SCOPE_ID = re.compile(r"\b([KLPD]\d+|M(?!0\b|1\b|2\b|3\b|4\b)\d+)\b")
 EVIDENCE_SHA = re.compile(r"^evidence_commit\s*:\s*([0-9a-f]{7,40})\b", re.M)
+# A release-only defect names its release branch as a YAML comment on the
+# evidence_commit line (task § Status & Dependencies): `# release: v3.2`.
+# G18 then checks ancestry against that branch instead of HEAD.
+RELEASE_REF = re.compile(
+    r"^evidence_commit\s*:[^\n]*#\s*release(?:-branch)?\s*:\s*(\S+)", re.M)
 
 
 def planned_entries(mb, key):
@@ -426,23 +431,40 @@ def run(corpus, repo_root, only_issue=None):
                                  "the local clone", objects=[sha],
                                  fix_class="adjudicate"))
             else:
+                rel = RELEASE_REF.search(node.machine)
+                tip = "HEAD"
+                if rel:
+                    ref = rel.group(1)
+                    for cand in (ref, "origin/" + ref):
+                        if subprocess.run(["git", "-C", repo_root,
+                                           "rev-parse", "--verify", "-q",
+                                           cand + "^{commit}"],
+                                          capture_output=True).returncode == 0:
+                            tip = cand
+                            break
+                    else:
+                        F.append(finding(n, "G18", "warn",
+                                         f"release branch {ref!r} named on "
+                                         "evidence_commit does not resolve "
+                                         "in the local clone", objects=[sha],
+                                         fix_class="adjudicate"))
                 r = subprocess.run(["git", "-C", repo_root, "merge-base",
-                                    "--is-ancestor", sha, "HEAD"],
+                                    "--is-ancestor", sha, tip],
                                    capture_output=True)
                 if r.returncode != 0:
                     F.append(finding(n, "G18", "warn",
                                      f"evidence_commit {sha} is not an "
-                                     "ancestor of HEAD", objects=[sha],
+                                     f"ancestor of {tip}", objects=[sha],
                                      fix_class="adjudicate"))
                 else:
                     cnt = subprocess.run(
                         ["git", "-C", repo_root, "rev-list", "--count",
-                         f"{sha}..HEAD"], capture_output=True, text=True)
+                         f"{sha}..{tip}"], capture_output=True, text=True)
                     behind = int(cnt.stdout.strip() or 0)
                     if behind > 0:
                         F.append(finding(n, "G18", "info",
                                          f"evidence_commit {sha} is {behind} "
-                                         "commits behind HEAD",
+                                         f"commits behind {tip}",
                                          objects=[sha, behind],
                                          fix_class="body"))
 

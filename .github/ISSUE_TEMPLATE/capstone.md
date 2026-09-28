@@ -18,7 +18,10 @@ labels: ["tier:capstone"]
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
       edge). Do not enumerate a sub-capstone's features in place of the
-      sub-capstone (no composition edge: the parent could close first).
+      sub-capstone (no composition edge: the parent could close first);
+      one this capstone's criteria, risks or rule G name directly is
+      listed in requires_features as well, that use being its rule E
+      contribution.
 
   RULES — the scientific-task template's rules 1–7 apply adapted to
   this tier (evidence at a pinned commit; no padding; observable
@@ -43,7 +46,7 @@ labels: ["tier:capstone"]
       § Integration Criteria & Evidence   |   Acceptance Criteria (its
       Plan (its Integration criterion     |   Acceptance criterion rows)
       rows)                               |
-    § Status & Dependency Graph           | § Status & Required Features
+    final commit                          | the acceptance commit
     § Decomposition & Rationale           | § Required Feature Set &
                                           |   Sufficiency
     § Capability Statement & Scope        | § Outcome Statement,
@@ -55,14 +58,9 @@ labels: ["tier:capstone"]
     rule B (not a folder)                 | rule F below
     § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
 
-  So: a REPLAN that binds a
-  required entry — drops it, adds it already filed (rule G(b)),
-  resolves a `planned_features` scope to it, answers its re-plan
-  request, re-homes scope into it (rule G(a)), or assigns it an
-  artifact or risk mitigation — is also posted, led by this number, on
-  that issue, which answers per its own rules (task rule 9 substituted;
-  feature rules C–D); a disclaiming REPLAN is answered here by a REPLAN
-  re-owning the item (C). In addition:
+  A required feature's REPLAN disclaiming an item assigned to it is
+  answered here by a REPLAN re-owning the item (feature rule C). In
+  addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§ Required Feature Set & Sufficiency): why exactly these
@@ -108,7 +106,7 @@ labels: ["tier:capstone"]
      the parent is not yet filed, write "parent capstone unfiled —
      <one-line scope>" and replace it once it exists (bookkeeping,
      rule C). A capstone aligned with nothing has no beneficiary and
-     does not belong on the backlog (rule 2). -->
+     does not belong on the backlog (task rule 2). -->
 
 ### User impact
 
@@ -142,8 +140,7 @@ labels: ["tier:capstone"]
 tier: capstone
 evidence_commit:        # SHA the roster and acceptance claims are pinned to
 requires_features: []   # composition — the closed required set (rule E), FILED numbers only
-requires_capstones: []  # composition — sub-capstones whose whole outcome gates this one
-                        #   (nesting; the only sanctioned form, see the tier-model note)
+requires_capstones: []  # composition — sub-capstones (nesting; see the tier-model note)
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
                         #   each to its number when filed (rule C). A non-empty
@@ -174,7 +171,7 @@ flowchart TD
      acceptance walk-through a reviewer (or agent) executes to see it.
      "Do X, observe Y" at the system level. -->
 
-- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository, the named platform and the external services the steps name (each a risk in § Cross-Feature Integration Risks); each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository, the named platform and the external services the steps name; each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
 
 ## Required Feature Set & Sufficiency
 
@@ -245,7 +242,7 @@ flowchart TD
 
      A criterion nothing covers is marked UNOWNED. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing, or by the REPLAN resolving the scope to a feature filed without it — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN posted on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing, or by the REPLAN resolving the scope to a feature filed without it — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN posted on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason; every external service or platform § Outcome Statement names is a risk here. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -270,10 +267,14 @@ flowchart TD
      mirrored REPLAN is the trigger); an acceptance criterion fails with
      every required entry landed → its named next move (a rule G(b) fix
      feature adopted by REPLAN, or `REFUTED:` as § System-Level
-     Acceptance Criteria says); the outcome itself is re-scoped → REPLAN with
-     the old and new § Outcome Statement both quoted, then § Intent &
-     Alignment re-checked; a required feature's mirrored WAIVED → the
-     waived obligation checked against § System-Level Acceptance
+     Acceptance Criteria says); the outcome itself is re-scoped → REPLAN
+     with the old and new § Outcome Statement both quoted, then § Intent
+     & Alignment re-checked and § Required Feature Set & Sufficiency and
+     § System-Level Acceptance Criteria re-derived, each released entry
+     whose scope an OPEN parent capstone still needs named unmet for that
+     parent's rule G REPLAN (a notice here, feature rule C); a required
+     feature's mirrored WAIVED → the waived obligation checked against
+     § System-Level Acceptance
      Criteria, and a successor outside the required set is rule G scope;
      a re-scope after which no criterion in § System-Level Acceptance
      Criteria is a genuine span or close-out criterion (rule F) → once
@@ -282,8 +283,10 @@ flowchart TD
      covered alone by #…`, mirrored
      to parent capstones, which re-derive their sufficiency citing the
      landed work by permalink as preconditions. Dispositions for a
-     removed required entry: re-parented to a named open capstone, or
-     released (it re-checks its beneficiary); for a planned one: moved
+     removed required entry: re-parented to a named open capstone,
+     released (it re-checks its beneficiary — a parent it was named
+     unmet for is one), or, already closed, its close-out cited (feature
+     rule C); for a planned one: moved
      to a named
      open capstone's `planned_features`, or dropped with the sufficiency
      argument re-derived (rule G(c)). -->
@@ -358,8 +361,9 @@ flowchart TD
      pre-filled criteria marked N/A are deleted at filing unless another
      criterion names the row. Evidence is a transcript, a command with its
      output, a test name at the commit, a permalink, or a comment link —
-     never "done". A row that cannot be filled is a rule 2 comment, not a
-     blank. -->
+     never "done". A row that cannot be filled is a task rule 2 WITHHELD,
+     or waits for the holder the platform pickup row handed its step to —
+     never a blank or an N/A decided at close. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -396,12 +400,10 @@ flowchart TD
   would create.
   SCORE THE ACCEPTANCE PASS — this capstone's own system-level criteria and
   outcome statement — never the union of its features.
-  Fill at filing; re-score when a re-plan or amendment before close changes
-  the roster, the criteria or the open decisions. Where two ANCHORS in one axis
-  could apply to one fact, take the lower. Caps and deductions stated inside
+  Fill at filing. Where two ANCHORS in one axis could apply to one fact,
+  take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; test_adr_blocks.py keeps the three copies aligned.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 

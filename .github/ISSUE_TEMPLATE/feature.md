@@ -84,7 +84,8 @@ labels: ["tier:feature"]
                                          |   the close-out record (task
                                          |   rule 10)
     `HANDOFF: transfer`                  | unchanged — the integration
-                                         |   work changing hands
+                                         |   work changing hands (no
+                                         |   observation row at this tier)
     listing feature (`requires_tasks`)   | serving capstone
                                          |   (`requires_features`;
                                          |   `serves_capstones` mirrors it)
@@ -94,7 +95,11 @@ labels: ["tier:feature"]
       its contract declares              |   interface, or § System-Level
                                          |   Acceptance Criteria artifact,
                                          |   assigned to this feature or to
-                                         |   a sibling required feature
+                                         |   a sibling required feature; "a
+                                         |   surface its contract declares"
+                                         |   → a shared interface § Cross-
+                                         |   Feature Integration Risks
+                                         |   records
     planning feature (`planned_tasks`),  | planning capstone
       its § Sequencing & Parallelism     |   (`planned_features`), its
                                          |   § Cross-Feature Integration
@@ -102,10 +107,14 @@ labels: ["tier:feature"]
     § Predictions & Falsification        | § Integration Criteria &
       Criteria, its P/F rows             |   Evidence Plan, its Integration
                                          |   criterion rows
-    § Status & Dependencies              | § Status & Dependency Graph
+    fix commit / fix sha                 | the final commit (the integration
+                                         |   evidence's named commit)
     disposition freed / re-homed,        | released / re-parented (the
       received from a parent             |   capstone § Re-planning
-                                         |   Protocol)
+                                         |   Protocol; no "closed" — a
+                                         |   released feature with no
+                                         |   beneficiary closes itself,
+                                         |   task rule 10)
     § Interface & Data Contract          | § Feature-Level Interface & Data
                                          |   Contract
     § Scope Boundary                     | § Capability Statement & Scope
@@ -199,7 +208,7 @@ labels: ["tier:feature"]
      "serving capstone unfiled — <one-line scope>" and replace it with
      the citation once it exists (bookkeeping, rule C). A feature
      aligned with nothing has no beneficiary and does not belong on the
-     backlog (rule 2). -->
+     backlog (task rule 2). -->
 
 ### User impact
 
@@ -231,9 +240,8 @@ labels: ["tier:feature"]
 tier: feature
 evidence_commit:        # SHA the roster and contract claims are pinned to
 requires_tasks: []      # composition: FILED children only, numbers, e.g. [101, 102]
-                        #   AUTHORITATIVE for ownership. A task may appear in any
-                        #   number of feature rosters — a shared task is shared,
-                        #   and lists it in each. Tasks carry no owner field.
+                        #   AUTHORITATIVE for ownership (TIER MODEL: a task may be
+                        #   shared).
 planned_tasks: []       # one-line scopes for children not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it
                         #   (a landed scope is Background, not a plan); resolve
@@ -269,7 +277,7 @@ flowchart TD
      cite this section as the alignment target of their own § Intent &
      Alignment, so it must say what they will assume it says. -->
 
-- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact, risk mitigation or re-homed scope a serving or planning capstone's § System-Level Acceptance Criteria, § Cross-Feature Integration Risks or rule G assigns to this feature is inside the boundary, and nothing inside it is scope that capstone's § Cross-Feature Integration Risks or § Required Feature Set & Sufficiency assigns to another required feature (that feature is named as its owner among the out-of-scope items). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Capability.** The capability is stated as an observation at the feature boundary; it is the intent of § Intent & Alignment and not a wider one; every out-of-scope item names its owning issue or "unfiled"; the boundary was read against each alignment target's text and contradicts none of it, and every artifact, risk mitigation or re-homed scope a serving or planning capstone's § System-Level Acceptance Criteria, § Cross-Feature Integration Risks or capstone rule G assigns to this feature is inside the boundary, and nothing inside it is scope that capstone's § Cross-Feature Integration Risks, § System-Level Acceptance Criteria or § Required Feature Set & Sufficiency assigns to another required feature (that feature is named as its owner among the out-of-scope items). Adversarial re-read of everything above found no substantial finding.
 
 ## Decomposition & Rationale
 
@@ -324,13 +332,11 @@ flowchart TD
      REPLAN giving each its § Re-planning Protocol disposition (posted
      on each filed child, rule C) and cites it.
 
-     ANNOTATE OWNERSHIP PER CRITERION. A blanket sentence ("none of
-     these is covered by any single child alone") is not checkable and
-     is forbidden; give every criterion exactly one of:
+     ANNOTATE OWNERSHIP PER CRITERION — exactly one of:
        - "spans #A + #B" — and state what each contributes, so the
          claim can be falsified by reading either child.
        - "covered alone by #A" — honest, and it simply does not count
-         toward rule B. Listing it is fine; miscalling it a span is not.
+         toward rule B.
        - "no child; built by this feature's close-out".
        - "UNOWNED — no builder yet" — a real gap, worth stating.
 
@@ -376,14 +382,15 @@ flowchart TD
 
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED or SUPERSEDED → which siblings' premises are
-     affected and who re-plans (a SUPERSEDED child is dropped by REPLAN
-     citing its close-out, the landed work it cites becoming a
-     precondition; each criterion annotated as spanning it is
-     re-annotated); a child split → the REPLAN task rule 9 requires of every
-     listing feature; a child re-tiered → a REPLAN dropping it with
+     affected and who re-plans (a SUPERSEDED child: dropped by REPLAN
+     citing its close-out, the landed work cited by permalink where
+     § Integration Criteria & Evidence Plan names builders, criteria
+     spanning it re-annotated); a child split → the REPLAN task rule 9
+     requires of every listing feature; a child re-tiered → a REPLAN
+     dropping it with
      disposition closed, citing the HANDOFF (its handoffs re-cited to
-     the new feature's children where this feature still needs them, and
-     the serving capstone applies rule G to the new issue); a child
+     the new feature's children where this feature still needs them); a
+     child
      transferred → no plan change; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; an integration criterion fails with every spanning
@@ -398,9 +405,8 @@ flowchart TD
      capstone's REPLAN assigning this feature an artifact, risk
      mitigation or re-homed scope → rule D; a child's mirrored AMENDED or
      WAIVED → roster row, handoffs and every criterion or invariant that
-     names the child re-derived (rule D), a WAIVED successor outside the
-     roster adopted (rule C) or the obligation shown to be one no
-     criterion here needs; a child's
+     names the child re-derived (rule D), a WAIVED successor a criterion
+     here needs adopted (rule C); a child's
      landing or AMENDED after which no criterion in § Integration
      Criteria & Evidence Plan is a genuine span or close-out criterion
      (rule B) → once the remaining roster has landed, close with
@@ -420,9 +426,8 @@ flowchart TD
      — which this REPLAN cites), freed
      (in no roster; the child answers per task rule 9), or closed (no
      other roster lists it and no beneficiary remains — a child another
-     OPEN roster lists is re-homed there, never closed — or the child is
-     already closed, its close-out comment cited as the disposition, rule
-     C); the REPLAN records the roster search; a
+     OPEN roster lists is re-homed there, never closed); the REPLAN
+     records the roster search; a
      planned scope is moved to a named open feature's `planned_tasks`,
      or dropped with the § Decomposition & Rationale argument (rule B)
      re-derived; closing with scope a serving capstone still needs → the
@@ -452,7 +457,7 @@ flowchart TD
      Validation that verify it, and each added criterion gets a row of
      its own. -->
 
-- [ ] Every entry in `requires_tasks` closed as landed, or dropped via a `REPLAN:` comment with the roster updated and each child's disposition recorded (a `REFUTED:` or `SUPERSEDED:` child citing its close-out); `planned_tasks` empty (each resolved to a filed issue or descoped) [rows: Child, Roster]
+- [ ] Every entry in `requires_tasks` closed as landed, or dropped via a `REPLAN:` comment with the roster updated and each child's disposition recorded (a `REFUTED:`, `SUPERSEDED:` or re-tiered child citing its close-out); `planned_tasks` empty (each resolved to a filed issue or descoped) [rows: Child, Roster]
 - [ ] The capability of § Capability Statement & Scope Boundary is observed at the final commit [row: Capability]
 - [ ] Nothing outside § Capability Statement & Scope Boundary was absorbed; adjacent work is filed [row: Scope]
 - [ ] Every prediction in § Integration Criteria & Evidence Plan holds at a named commit [rows: Integration criterion]
@@ -503,7 +508,9 @@ flowchart TD
      pre-filled criteria marked N/A are deleted at filing unless another
      criterion names the row. Evidence is a command with its output, a test
      name at a commit, a permalink, or a comment link — never "done". A
-     row that cannot be filled is a rule 2 comment, not a blank. -->
+     row that cannot be filled is a task rule 2 WITHHELD, or waits for the
+     holder the platform pickup row handed its step to — never a blank or
+     an N/A decided at close. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -545,12 +552,10 @@ flowchart TD
   SCORE THIS FEATURE'S OWN DELIVERABLE — its integration evidence and its
   declared contract — never the union of its children; each child carries
   its own block.
-  Fill at filing; re-score when a re-plan or amendment before close changes
-  the roster, the integration evidence or the open decisions. Where two ANCHORS in one axis
-  could apply to one fact, take the lower. Caps and deductions stated inside
+  Fill at filing. Where two ANCHORS in one axis could apply to one fact,
+  take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; test_adr_blocks.py keeps the three copies aligned.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 

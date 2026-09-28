@@ -27,7 +27,9 @@ labels: ["tier:task"]
      the command and wrong output into § Observations (a failure that
      does not occur on every run: the loop as the command, with the run
      count and how many failed — every re-run of it, in § Pickup Checks
-     and § Post-Implementation Validation, repeats the count), or record
+     and § Post-Implementation Validation, repeats the count; the count is
+     the sample size, not the oracle — OS scores the assertion each run
+     makes), or record
      it WITHHELD per rule 2 with its custodian named. For
      investigations, state instead the decision criterion: the
      observation that discriminates between the candidate answers.
@@ -68,10 +70,9 @@ labels: ["tier:task"]
      canonical in the feature template's TIER MODEL block. This is the
      task tier: it orders against tasks only, `blocks` carries mirrors,
      `related` is reference-only — the machine-block comments in
-     § Status & Dependencies say the rest. THIS TASK DECLARES NO OWNER: a
-     task may be shared by any number of features, and ownership lives
-     solely in each feature's `requires_tasks` roster, found by roster
-     search (§ Related Work; the listing-features pickup row).
+     § Status & Dependencies say the rest. THIS TASK DECLARES NO OWNER
+     (TIER MODEL); listing features are found by roster search (§ Related
+     Work; the listing-features pickup row).
   9. Amendment & comment protocol. This body may be edited, but only
      together with an `AMENDED:` comment — edit first, then post it
      (validator H06 reads the order); before editing, fold in every
@@ -122,11 +123,14 @@ labels: ["tier:task"]
      is still a planned scope, the edge is retired and the planning
      feature's § Sequencing & Parallelism records the ordering for that
      child's filing (feature
-     rule C). A transfer HANDOFF states that the body is unchanged and
+     rule C). A transfer HANDOFF — posted by the predecessor or, where
+     the predecessor has gone silent, by the successor from the branch
+     and the comment stream — states that the body is unchanged and
      carries the branch and commit of the work, the PR, each Method step
      already ticked with the comment that evidences it at a commit the
-     handoff commit reaches, and the first step the successor executes;
-     the successor posts its own
+     handoff commit reaches (a tick with no such comment is listed as
+     cleared), and the first step the successor executes; the successor
+     posts its own
      `STATUS: pickup` citing it, names the handoff commit as its checkout
      (or, where unreachable, the commit actually checked out,
      re-evidencing or clearing each tick whose evidence no longer
@@ -209,9 +213,11 @@ labels: ["tier:task"]
      validator H17 rejects two dash-joined links); re-fetch after every
      edit.
   10. Waivers. A completion criterion may be waived only via a
-     `WAIVED:` comment naming the reason AND the successor issue that
-     now tracks the dropped obligation (or stating explicitly why no
-     successor is needed); after close, the finder's AMENDED of rule 9
+     `WAIVED:` comment naming the reason AND the successor that now
+     tracks the dropped obligation — a filed issue, or the feature whose
+     `planned_tasks` carries or whose § Re-planning Protocol supplies it
+     (the Invariants row) — or stating explicitly why no successor is
+     needed; after close, the finder's AMENDED of rule 9
      stands in for the WAIVED of any criterion it records as not met
      and corrects the Waivers row. A criterion skipped without a WAIVED
      comment leaves the issue unclosable. A close on `REFUTED:`,
@@ -242,7 +248,8 @@ labels: ["tier:task"]
   12. Artifact paths resolve at filing. Every path a criterion names either
      exists at `evidence_commit`, or is created by a named step of this
      issue, or is created by a task named in `blocked_by` — and
-     § Completion Criteria says which.
+     § Completion Criteria says which (a path a step removes exists at
+     `evidence_commit` and the criterion names that step).
   13. Open Questions are MARKED, not merely listed. Each entry ends in
      exactly one of `Recommended default: <answer>` (an executor may
      proceed and land), `PROPOSED: <answer>, pending <who confirms>` (an
@@ -410,9 +417,7 @@ related: []             # reference only — never blocking, never ownership.
      command and its output (rule 1: "every sibling" is an aggregate
      claim). Where scopes touch, state which issue owns which fix. An
      OPEN sibling whose § Observations pins the SAME rule 3 failure is a
-     competing hypothesis, not a touching scope (a closed one whose
-     landed fix left the failure standing is prior work: the finder's
-     AMENDED of rule 9 on it names this task as successor): add this hypothesis,
+     competing hypothesis, not a touching scope: add this hypothesis,
      its P/F pair and rejected candidates to the sibling by AMENDED and
      do not file; only where the sibling is past step one, file
      `blocked_by` it with a P/F pair predicting the failure persists
@@ -426,7 +431,7 @@ related: []             # reference only — never blocking, never ownership.
      must wait on this task, by an AMENDED on that sibling posted by
      whoever files this task. -->
 
-- [ ] **Gate — Observations, Background & Related Work.** `git log --oneline <evidence_commit>..origin/<default> -- <every path cited in § Observations and § Background & Prior Work>` is empty or its output is pasted with each observation touching a listed path re-run at that head; every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink, or is WITHHELD with custodian and event (rule 2); no OPEN sibling pins the same rule 3 failure (search command and output recorded), or this task is `blocked_by` it with the § Related Work P/F pair, or it is the predecessor whose split files this task; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors, the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Observations, Background & Related Work.** `git log --oneline <evidence_commit>..origin/<default, or the release branch named beside evidence_commit> -- <every path cited in § Observations and § Background & Prior Work>` is empty or its output is pasted with each observation touching a listed path re-run at that head; every observation reproduces at `evidence_commit` with command and output pasted, or is a quoted line at a commit-locked permalink, or is WITHHELD with custodian and event (rule 2); no OPEN sibling pins the same rule 3 failure (search command and output recorded), or this task is `blocked_by` it with the § Related Work P/F pair, or it is the predecessor whose split files this task; the rule 3 failure is among them, or the task is an investigation and needs none; every code claim in § Background & Prior Work carries a permalink at `evidence_commit`; § Intent & Alignment's measurable claims each have an observation and agree with it. § Related Work names every sibling whose scope touches this one and says which owns which fix; `blocked_by` and `related` are filled from it and `blocks` is empty or carries only mirrors, the DAG walk is recorded, and each named issue's body was read at its current revision — nothing here contradicts a sibling's stated scope or a listing or planning feature's § Capability Statement & Scope Boundary. Adversarial re-read of everything above found no substantial finding.
 
 ## Research Question
 
@@ -631,9 +636,7 @@ related: []             # reference only — never blocking, never ownership.
      check can observe it, § Data Collection & Analysis names the
      recorded manual procedure, with platform, that stands in for it and
      § Threats to Validity carries the resulting threat with its
-     acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE); a test added
-     with no behavioural change names the commit or fault under which it
-     fails (the Regression tests criterion). -->
+     acceptance reason (the MANUAL-PROCEDURE ALTERNATIVE). -->
 
 - [ ] ...
 
@@ -670,7 +673,7 @@ related: []             # reference only — never blocking, never ownership.
      § Data Collection & Analysis — or is explicitly accepted with the
      reason. -->
 
-- [ ] **Gate — Evidence & threats.** Every P and F has a named test or a recorded manual procedure with platform in § Data Collection & Analysis; every expected value names its custodian and date; every threat has a mitigation located in a named section or is accepted with a reason; every Method step invoking the manual-procedure alternative names its recorded procedure with platform in § Data Collection & Analysis and its accepted threat in § Threats to Validity, and that platform or apparatus appears in § Materials & Apparatus; no test named shortcuts the code path its prediction is about. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Evidence & threats.** Every P and F has a named test, the exact command whose pasted output is its observation, or a recorded manual procedure with platform in § Data Collection & Analysis; every expected value names its custodian and date; every threat has a mitigation located in a named section or is accepted with a reason; every Method step invoking the manual-procedure alternative names its recorded procedure with platform in § Data Collection & Analysis and its accepted threat in § Threats to Validity, and that platform or apparatus appears in § Materials & Apparatus; no test named shortcuts the code path its prediction is about. Adversarial re-read of everything above found no substantial finding.
 
 ## Open Questions & Decisions Needed
 
@@ -748,7 +751,7 @@ related: []             # reference only — never blocking, never ownership.
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] Open features whose `requires_tasks` lists this task located (roster search) — these receive the mirrored comments of rule 9, and their § Global Invariants bind this work; a feature whose `planned_tasks` still carries this scope is resolved to this number by whoever reaches this row first (feature rule C) before it is owed anything; a closed alignment target is re-aligned by AMENDED
 - [ ] Every ordering a listing feature's § Sequencing & Parallelism records against this task is in `blocked_by` here or, where the sibling waits on this task, in that sibling's `blocked_by` (mirrored in `blocks`), or its absence is explained by an AMENDED
-- [ ] For every `blocked_by` task providing an interface or structure § Internal interfaces consumed or § Data consumed (structure) relies on: its `STATUS: landed` comment read and the provided surface or structure re-derived from code at its fix commit, the file:line added to that subsection — bookkeeping when it matches that task's declaration, otherwise an AMENDED here before step one
+- [ ] For every `blocked_by` task providing an interface or structure § Internal interfaces consumed or § Data consumed (structure) relies on: its `STATUS: landed` comment (or the `SUPERSEDED:` citation the `blocked_by` row accepted) read and the provided surface or structure re-derived from code at its fix commit, the file:line added to that subsection — bookkeeping when it matches that task's declaration, otherwise an AMENDED here before step one
 - [ ] Every material in § Materials & Apparatus available, or scheduled by its Method step, or provided by a `blocked_by` task that has landed (the `blocked_by` row), or needed only by named steps — then the `STATUS: pickup` comment names those steps as blocked and the holder they are handed to, or that no holder is yet known (those steps stay blocked), and every other step may proceed
 - [ ] Every path a completion criterion names exists at the checkout, or the Method step that creates it is scheduled, or the `blocked_by` task that creates it has landed (rule 12)
 
@@ -756,8 +759,9 @@ related: []             # reference only — never blocking, never ownership.
 
 <!-- Run at close against the actual diff and PR, every row at the fix
      commit as it lands on the default branch (the sha `STATUS: landed`
-     carries — never a branch commit a rebase or squash replaced). One
-     row per item;
+     carries — never a branch commit a rebase or squash replaced; the
+     Invariants and Standing gates rows at the merge result they name).
+     One row per item;
      rows are enumerated AT FILING (a row per P/F pair, per threat, per
      open question, per added completion criterion) with the evidence
      cells empty; the pre-filled rows of criteria marked
@@ -765,7 +769,7 @@ related: []             # reference only — never blocking, never ownership.
      Evidence is a command with
      its output, a test name at a commit, a permalink into the diff, or
      a comment link — never "done". A row that cannot be filled is a
-     rule 2 comment, not a blank. -->
+     rule 2 WITHHELD, not a blank. -->
 
 | Item | Check | Evidence | Result |
 |------|-------|----------|--------|
@@ -780,7 +784,7 @@ related: []             # reference only — never blocking, never ownership.
 | Standing gates | `mvn verify` run link at the landed sha on the default branch (the merge result, as the Invariants row); SpotBugs exclusions unchanged or justified | | |
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation and deducted | | |
 | Links | every permalink and document resolves on the default branch | | |
-| Paths | each path a criterion names exists at the fix commit; created ones by their named step or by the named `blocked_by` task (rule 12) | | |
+| Paths | each path a criterion names exists at the fix commit, or is absent where the criterion names the step that removes it; created ones by their named step or by the named `blocked_by` task (rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED standing in for it (rule 10) | | |
 | Mirrors | `STATUS: landed` posted on every open listing feature, cited | | |
 | Amendments | every `AMENDED:` or `HANDOFF:` comment reconciled; the body describes what was built; ADR re-scored where an edit changed scope, evidence or decisions | | |
@@ -915,7 +919,9 @@ related: []             # reference only — never blocking, never ownership.
         observed by hand against an enumerated procedure, or because the
         evidence is a recording of a real session with no named unattended
         harness ................................................... cap F
-        A recorded manual procedure scores 1 unless the issue names the
+        A recorded manual procedure (one a person performs by hand — a
+        command run in a shell with its output pasted is not one) scores 1
+        unless the issue names the
         in-tree or CI substrate (a headless display run, a device farm) and
         the harness that would produce the same observation unattended —
         then it scores 2, that harness is a regression-test step § Method /
@@ -974,9 +980,9 @@ related: []             # reference only — never blocking, never ownership.
   first whose trigger fires:
     FABRICATED-EVIDENCE      ED<=1          evidence nobody could produce,
                                             produced anyway
-    IRREVERSIBLE-PUBLICATION RD<=1          a published or out-of-repo
-                                            commitment, wrong and not
-                                            cheaply withdrawn
+    IRREVERSIBLE-PUBLICATION RD<=1          a published contract or
+                                            out-of-repo commitment others
+                                            may already rely on
     HOLLOW-ORACLE            OS<=2, or the 2-point deduction fired
     GOLDEN-LOCK-IN           RD=2           an expected artifact this work
                                             commits that later work is then

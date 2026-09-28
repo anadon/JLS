@@ -82,9 +82,7 @@ labels: ["tier:feature"]
     `HANDOFF: split`                     | a REPLAN plus a new issue at
                                          |   this tier; the REPLAN carries
                                          |   the ledger moving each item to
-                                         |   it and names the sections
-                                         |   changed and re-read (task
-                                         |   rule 14)
+                                         |   it
     `HANDOFF: re-tier`                   | a REPLAN plus a new issue at the
                                          |   new tier; that REPLAN carries
                                          |   the ledger, gives every roster
@@ -103,9 +101,12 @@ labels: ["tier:feature"]
       assigns to this task               |   mitigation or § System-Level
                                          |   Acceptance Criteria artifact
                                          |   assigned to this feature
-    disposition freed / re-homed /       | as the feature § Re-planning
-      closed                             |   Protocol says; at the capstone
-                                         |   tier released / re-parented
+    disposition freed / re-homed /       | released / re-parented (the
+      closed, received from a parent     |   capstone § Re-planning
+                                         |   Protocol); released re-checks
+                                         |   the beneficiary and, where
+                                         |   none remains, closes under
+                                         |   task rule 10
     § Interface & Data Contract          | § Feature-Level Interface & Data
                                          |   Contract
     § Scope Boundary                     | § Capability Statement & Scope
@@ -137,17 +138,21 @@ labels: ["tier:feature"]
      the machine block; adding or removing a `serves_capstones` entry
      that mirrors a capstone's authoritative `requires_features`, citing
      it; and resolving a `planned_tasks` scope to its
-     number when the filed child's body satisfies every gate clause here
-     that reads it — the resolver posts `STATUS: progress — resolved
+     number when the filed child's § Related Work names this feature's
+     planned scope and its body satisfies every gate clause here that
+     reads it — the resolver posts `STATUS: progress — resolved
      "<scope>" to #T` here, saying the cited sections were read;
-     otherwise the resolution is a REPLAN. Edges live on the
+     otherwise the resolution is a REPLAN, posted on the child as below.
+     Edges live on the
      authoritative side: whoever needs an edge on another issue edits
      that issue's block and posts the REPLAN or AMENDED there. A REPLAN
-     that drops a child from `requires_tasks`, or changes a § Global
-     Invariants entry or a handoff assigned to a filed child, is also
-     posted, led by this number, on each OPEN child the change binds —
-     the dropped child, both parties to the handoff, every roster child
-     for an invariant — which answers per task rule 9 (a closed child
+     that drops a child from `requires_tasks`, resolves a planned scope
+     to a filed child, answers a child's re-plan request, or changes a
+     § Global Invariants entry or a handoff assigned to a filed child,
+     is also posted, led by this number, on each OPEN child the change
+     binds — the dropped, resolved or requesting child, both parties to
+     the handoff, every roster child for an invariant — which answers
+     per task rule 9 (a closed child
      receives it as a notice at most; the REPLAN cites its close-out
      comment as the disposition).
      Dispositions for dropped or orphaned scope are those of
@@ -167,9 +172,7 @@ labels: ["tier:feature"]
      scope (the last under rule G(a)); an ordering edge is instead added
      on this block by the REPLAN posted here (rule C). A mirrored comment
      that changes
-     nothing cited here needs no answer. A fresh agent reconstructs
-     execution state from the machine block plus the prefixed comments;
-     checkbox state is a convenience rendering, never evidence.
+     nothing cited here needs no answer.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -220,7 +223,7 @@ labels: ["tier:feature"]
          § Sequencing & Parallelism. `blocks` and `serves_capstones`
          stay `[]` at filing: they carry mirrors only (validators G08
          and G09 report drift).
-     Regenerate the mermaid graph on every REPLAN. -->
+     -->
 
 ```yaml
 tier: feature
@@ -232,9 +235,7 @@ requires_tasks: []      # composition: FILED children only, numbers, e.g. [101, 
 planned_tasks: []       # one-line scopes for children not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it
                         #   (a landed scope is Background, not a plan); resolve
-                        #   each to its number when filed — bookkeeping under rule C
-                        #   when the filed body agrees with what was written against
-                        #   the scope, otherwise REPLAN. A
+                        #   each to its number when filed (rule C). A
                         #   non-empty planned_tasks means this feature's rule B
                         #   sufficiency argument is PROVISIONAL and the feature
                         #   is not Ready.
@@ -295,9 +296,7 @@ flowchart TD
      per its § Internal interfaces consumed"). Transformations at the
      feature boundary follow the task template's § Data transformations
      discipline: fully defined and expressed in embedded LaTeX math
-     (GitHub math rendering), never prose alone. When a child lands with
-     a contract deviation, this section is stale until a REPLAN comment
-     resolves it. -->
+     (GitHub math rendering), never prose alone. -->
 
 ## Integration Criteria & Evidence Plan
 
@@ -322,8 +321,7 @@ flowchart TD
      REFUTED links the revision holding them (task rule 10). Where
      roster entries are still open or planned, the REFUTED follows a
      REPLAN giving each its § Re-planning Protocol disposition (posted
-     on each filed child, rule C) and cites it; a serving capstone
-     applies its rule G on receiving the mirrored REFUTED.
+     on each filed child, rule C) and cites it.
 
      ANNOTATE OWNERSHIP PER CRITERION. A blanket sentence ("none of
      these is covered by any single child alone") is not checkable and
@@ -336,9 +334,8 @@ flowchart TD
        - "UNOWNED — no builder yet" — a real gap, worth stating.
 
      WRITE THIS AGAINST THE CHILD'S ACTUAL TEXT at its current revision,
-     not from memory or from the plan it was filed under. If a child
-     later amends its scope, this section is stale until re-derived.
-     A child that cites one of these criteria as its own deliverable is
+     not from memory or from the plan it was filed under. A child that
+     cites one of these criteria as its own deliverable is
      proof the criterion is not a span; validator check G22 reports
      that case. -->
 
@@ -350,10 +347,8 @@ flowchart TD
      e.g. historical `.jls` files still load, save output
      byte-identical unless a version bump is declared, `mvn verify`
      green, no new SpotBugs exclusions. Each stated so a test can pin
-     it at any landing. Children's pre-filled completion criterion
-     "§ Global Invariants of every feature whose `requires_tasks` lists
-     this task" binds them to this section; a task shared by several
-     features satisfies all of their invariants. -->
+     it at any landing. Children's pre-filled Invariants criterion binds
+     them to this section while this feature is open. -->
 
 ## Code & Project Impact and Consequences
 
@@ -378,11 +373,9 @@ flowchart TD
      here is a `blocked_by` edge in the child's own machine block; fill
      this feature's `blocked_by` and the mermaid graph now and record
      the DAG walk (`blocks` and `serves_capstones` stay empty or
-     mirrors-only). Where a serving or planning capstone's § Cross-Feature
-     Integration Risks orders an already-filed feature after this one,
-     whoever files this feature posts on that feature its REPLAN adding
-     the `blocked_by` edge (rule C) and cites it here before ticking
-     Gate — Sequencing & edges. -->
+     mirrors-only). A capstone's ordering against this feature is an
+     edge here, or — where a filed feature waits on this one — on it, by
+     REPLAN (rule C). -->
 
 - [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here, or — where a filed feature must wait on this one — was added to it by that feature's REPLAN adding the edge, posted on it by whoever files this feature (rule C) and cited here, or the other feature is still planned and the capstone's § Cross-Feature Integration Risks records the edge for its filing; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
@@ -390,9 +383,12 @@ flowchart TD
 
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED → which siblings' premises are affected and who
-     re-plans; a child split → the REPLAN task rule 9 requires of every
-     listing feature (successors in the roster, handoffs moved, citing
-     the HANDOFF); a child transferred → no plan change; a contract
+     re-plans; a child split or re-tiered → the REPLAN task rule 9
+     requires of every listing feature (a re-tiered child is dropped as
+     closed, its handoffs re-cited to the new feature's children where
+     this feature still needs them, and the serving capstone applies
+     rule G to the new issue); a child transferred → no plan change; a
+     contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; an integration criterion fails with every spanning
      child landed → the criterion's named next move (a REPLAN adding the
@@ -400,22 +396,23 @@ flowchart TD
      says); a serving capstone's REPLAN assigning this feature an
      artifact, risk mitigation or re-homed scope → as rule D says (a
      REPLAN widening § Capability Statement & Scope Boundary and the
-     roster, or one disclaiming it, after which the capstone re-owns the
-     item); a child's mirrored AMENDED or WAIVED → roster row and
-     handoffs re-derived, and where it contradicts § Global Invariants
-     the answering REPLAN is posted on receipt; a shared child's other
+     roster, or one disclaiming it); a child's mirrored AMENDED or
+     WAIVED → roster row and handoffs re-derived (rule D); a child's
+     landing or AMENDED after which no criterion in § Integration
+     Criteria & Evidence Plan is a genuine span or close-out criterion
+     (rule B) → once the remaining roster has landed, close with
+     `SUPERSEDED: label — every criterion covered alone by #…`, mirrored
+     to serving capstones, which re-derive their sufficiency citing the
+     children's landings as preconditions; a shared child's other
      listing feature adds or changes a § Global Invariants entry that
      conflicts with one here → the feature whose invariant is newer
      re-plans; a serving capstone descoped → whether this feature still
      has a beneficiary; a child dropped from the roster or this feature
      descoped → the REPLAN gives EACH affected child a disposition:
-     re-homed (added to the requires_tasks of an OPEN feature — one not
-     closed on landed, REFUTED or SUPERSEDED), freed (in no roster — the
-     child's answering AMENDED restates its § Intent & Alignment to a
-     standing rule, a format document or another open feature, or
-     records that none can be cited and closes under task rule 10), or
-     closed; a planned scope is moved to a named open feature's
-     `planned_tasks`, or dropped with the rule B sufficiency argument
+     re-homed (added to the requires_tasks of an OPEN feature), freed
+     (in no roster; the child answers per task rule 9), or closed; a
+     planned scope is moved to a named open feature's `planned_tasks`,
+     or dropped with the § Decomposition & Rationale argument (rule B)
      re-derived. Because a task may be shared, dropping it from THIS roster
      does not orphan it if another roster still lists it — check before
      assuming a disposition is needed. Closing this feature with scope
@@ -435,11 +432,8 @@ flowchart TD
      blocks integration, or can ride along. "N/A — fully specified" if
      nothing is open.
 
-     Mark every entry with exactly one of `Recommended default: <answer>`
-     (proceed and land), `PROPOSED: <answer>, pending <who confirms>` (draft
-     but do not land), `BLOCKING: <who decides>` (stop), or
-     `HYGIENE: <what to re-derive>` (not a decision at all — a
-     citation, a status check, an un-run build). The marker is what an
+     Mark every entry per task rule 13 — `Recommended default:`,
+     `PROPOSED:`, `BLOCKING:` or `HYGIENE:`. The marker is what an
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
@@ -473,25 +467,24 @@ flowchart TD
 
 ## Pickup Checks
 
-<!-- The rows are fixed and never deleted: a row whose referent is N/A
-     or empty is recorded "none" in the pickup comment and neither
-     passes nor fails; the `STATUS: pickup` names the checkout commit and
-     lists the rows run and the rows not reached. Run once per executor by whoever begins (or, after a
+<!-- Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the integration work of § Integration
-     Criteria & Evidence Plan (task rule 6, applied at this tier).
-     Preconditions for starting, not completion criteria. Record the
-     outcome in a `STATUS: pickup` comment here (not mirrored; one line
-     may list every "none" row). A failed row ends in that comment
+     Criteria & Evidence Plan (task rule 6, applied at this tier). The
+     rows are fixed and never deleted: a row whose referent is N/A or
+     empty is recorded "none" in the `STATUS: pickup` comment here (not
+     mirrored; one line may list every "none" row) and neither passes
+     nor fails; that comment names the checkout commit and lists the
+     rows run and the rows not reached. A failed row ends in that comment
      naming the integration steps blocked (or all of them) and what
      unblocks them; only those steps wait. -->
 
 - [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before integration begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered by REPLAN where anything cited changed (rule D)
-- [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, and no later `AMENDED:` notice on the child qualifies what it landed, or its disposition is recorded; `planned_tasks` is empty
+- [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, and no later `AMENDED:` notice on the child qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_tasks` is empty
 - [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child read (mirrored here, or on the child for one posted before this roster listed it), and every `REPLAN:` another listing feature posted on a shared child; each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Global Invariants and § Feature-Level Interface & Data Contract re-derived by REPLAN where they changed
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
-- [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count)
+- [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count; where the check needs a platform the platform row hands to a holder, "not run — held by" stands until their re-run)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
@@ -554,9 +547,8 @@ flowchart TD
   could apply to one fact, take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; the other tier templates carry their own
-  tier-adjusted copies. They can drift — change an axis in all of them and
-  bump the version above together.
+  Self-contained by design; scripts/tests/test_adr_blocks.py checks the
+  three tier copies agree.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
@@ -618,8 +610,7 @@ flowchart TD
         it must first learn                    0 a multi-week programme
       Measured as if the roster had landed: do not count time spent waiting
       for children; that is an ordering dependency, recorded in the roster
-      and in `blocked_by`. "Every child closed" is the roster, not a
-      criterion — the criteria must assert something no child asserts.
+      and in `blocked_by`.
 
   PD  PRECEDENT DENSITY — is there a worked example of this shape already in
       this repository?
@@ -630,11 +621,6 @@ flowchart TD
       1 no in-repository precedent; the pattern comes from an external
         specification this issue cites
       0 none named; whoever executes invents the shape
-      This predicts duplication: without a local pattern to copy, the work
-      reproduces whatever pattern is commonest elsewhere. A young repository
-      scores low across the board, which is accurate rather than punitive,
-      and self-corrects as each first instance lands.
-
   CF  CONTEXT FOOTPRINT — how much must be held in mind at once, not merely
       read.
       5 one unit and its test
@@ -656,10 +642,6 @@ flowchart TD
       0 irreversible outside this repository: an archival identifier, a
         registry coordinate, a public listing, a tagged release, a
         commitment to a third party
-      At 2, note that an expected-output artifact produced by the same
-      process that produced the behaviour records it rather than evidencing
-      it, and will be cited as ground truth by everything built on it.
-
   TWO CAPPING AXES. They do not add; they impose a ceiling on the band.
 
   ED  ENVIRONMENTAL DETERMINISM — can the evidence be produced unattended,
@@ -695,10 +677,6 @@ flowchart TD
       does not score here — that is the band-B checkpoint, and most projects
       require it. Running the software on a platform and reporting the
       result IS evidence production and does score here.
-      A low score is not a criticism; it means the deliverable is not a
-      patch. Much of the work may still be produced unattended, but the
-      issue cannot be closed that way.
-
   DA  DESIGN AUTHORITY — design decisions this issue leaves for whoever
       executes it. A design decision changes the artifact's shape and a
       reviewer could contest it: where a boundary goes, what a type carries,
@@ -790,16 +768,12 @@ flowchart TD
       section's mandate or a section's conformance to its mandate as its
       comment block states it, a completion criterion, a prediction, an
       edge, or the scope. Wording is not.
-    - Unticked means not yet reviewed. It is not a defect and does not block
-      filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
     - `false` means the review comment at `review_evidence` names a
       substantial finding nobody has fixed; whoever finds one and does
       not fix it sets it (bookkeeping), and the REPLAN fixing it, or a
       comment recording why it does not stand, sets `true`. § Pickup
-      Checks reads it before integration begins. On a closed issue
-      nothing here changes; a deviation of what was built from the body
-      is recorded as task rule 9 says.
+      Checks reads it before integration begins.
 -->
 
 ```yaml

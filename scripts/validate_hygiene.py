@@ -376,9 +376,12 @@ def h06(ctx):
         # without a comment, so a late edit is a lead, not a defect: info.
         def records_edit(b):
             b = (b or "").lstrip()
+            # A counterpart's REPLAN/AMENDED posted here led by its number
+            # may edit this body too (rule C: edges live on the
+            # authoritative side), so a leading foreign number is not
+            # excluded.
             return (b.startswith(("AMENDED:", "REPLAN:"))
-                    or re.match(r"HANDOFF:\s*split\b", b)) \
-                and received_from(b, n) is None
+                    or re.match(r"HANDOFF:\s*split\b", b))
         stamps = [c.get("created_at") for c in ctx.comments(n)
                   if records_edit(c.get("body"))]
         stamps = [s for s in stamps if s]

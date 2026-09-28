@@ -30,19 +30,10 @@ labels: ["tier:capstone"]
       could close before the sub-capstone's acceptance pass, and its
       spanning criteria have no place in this issue's ownership
       vocabulary.
-    - Ordering between capstones is expressed DIRECTLY:
-      capstone-to-capstone blocked_by / blocks is legal. Use
-      requires_capstones when a sub-capstone's whole outcome is PART OF
-      this one, and blocked_by when it merely must land first.
-    - The ordering graph (defined in the feature template: blocked_by/
-      blocks plus composition edges read child-before-parent) must
-      stay a DAG. Before adding a capstone or feature to the required
-      set, walk its machine-block edges outward and confirm no path
-      returns to this capstone; record the walk in the filing or
-      REPLAN comment.
-    - Ordering edges touching this capstone are recorded on BOTH
-      sides: when another capstone declares blocked_by this one,
-      mirror it in `blocks` below.
+    - Use requires_capstones when a sub-capstone's whole outcome is
+      PART OF this one, and blocked_by when it merely must land first.
+    - The combined graph must stay a DAG (feature template); both
+      gates below record the walk.
 
   RULES — the scientific-task template's rules 1–7 apply adapted to
   this tier (evidence at a pinned commit; no padding; observable
@@ -65,8 +56,9 @@ labels: ["tier:capstone"]
     § Feature-Level Interface & Data      | § Cross-Feature Integration
       Contract, § Global Invariants       |   Risks, § System-Level
                                           |   Acceptance Criteria
-    § Decomposition & Rationale           | § Required Feature Set &
-                                          |   Sufficiency
+    § Decomposition & Rationale,          | § Required Feature Set &
+      § Sequencing & Parallelism          |   Sufficiency, § Cross-Feature
+                                          |   Integration Risks
     integration step                      | acceptance step (§ Outcome
                                           |   Statement walk-through)
     § Post-Integration Validation         | § Post-Acceptance Validation
@@ -76,16 +68,16 @@ labels: ["tier:capstone"]
     § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
 
   So: the machine block in § Status & Required Features is the source
-  of truth for the edges it can express (A); a split or re-tier is a
-  REPLAN plus a new issue, exactly as the feature template says; a
-  REPLAN that removes an entry from `requires_features` or
-  `requires_capstones`, or that adds or changes an artifact or risk
-  mitigation assigned to a required feature, or that re-homes scope
-  into it under rule G(a), is also posted, led by this number, on that
-  issue, which answers per its rules C–D — a disclaiming REPLAN is
-  answered here by a REPLAN re-owning the item; an ordering edge is
-  added on the waiting feature's block by the REPLAN posted there
-  (feature rule C) (C); required
+  of truth for the edges it can express (A); a REPLAN that removes an
+  entry from `requires_features` or `requires_capstones`, or adds an
+  already-filed one (rule G(b)), or that adds or changes an artifact or
+  risk mitigation assigned to a required feature, or that re-homes
+  scope into it under rule G(a), is also posted, led by this number, on
+  that issue, which answers per its own rules (task rule 9 substituted;
+  feature rules C–D) — a disclaiming REPLAN is answered here by a
+  REPLAN re-owning the item; an ordering edge is added on the waiting
+  feature's block by the REPLAN posted there (feature rule C) (C);
+  required
   features and sub-capstones mirror their prefixed comments here, and
   this capstone mirrors its own on every OPEN capstone whose
   `requires_capstones` lists it (D). In addition:
@@ -104,17 +96,13 @@ labels: ["tier:capstone"]
      new issue plus a REPLAN on the old one), or is descoped while
      leaving scope this capstone still needs, the REPLAN must give
      that scope a disposition: (a) re-home it — add the task to the
-     requires_tasks roster of an OPEN required feature (one not closed
-     on landed, REFUTED or SUPERSEDED; a closed feature is never
-     reopened — use (b)); (b) file a new feature to host it and add
-     that feature to requires_features;
+     requires_tasks roster of an OPEN required feature (a closed
+     feature is never reopened — use (b)); (b) file a new feature to
+     host it, or adopt the feature already hosting it (a sub-capstone's
+     disposition "re-parented" names this capstone), and add that
+     feature to requires_features;
      or (c) descope it, re-deriving the § Required Feature Set &
-     Sufficiency argument. There is NO capstone→task edge; a capstone
-     that appears to need a task directly is missing a feature — file
-     one where a genuine span exists (feature rule B); work already
-     landed when this capstone would list it is a precondition cited by
-     permalink in § Required Feature Set & Sufficiency, never a roster
-     entry.
+     Sufficiency argument.
 
   These comments do not render on GitHub — leave them in place for the
   next reader of the raw issue body.
@@ -165,7 +153,7 @@ labels: ["tier:capstone"]
          § System-Level Acceptance Criteria (which is grouped with
          § Cross-Feature Integration Risks). `blocks` stays `[]` at
          filing: it carries mirrors only (validator G09 reports drift).
-     Regenerate the mermaid graph on every REPLAN. -->
+     -->
 
 ```yaml
 tier: capstone
@@ -175,9 +163,7 @@ requires_capstones: []  # composition — sub-capstones whose whole outcome gate
                         #   (nesting; the only sanctioned form, see the tier-model note)
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
-                        #   each to its number when filed — bookkeeping under rule C when
-                        #   the filed body agrees with what was written against the
-                        #   scope, otherwise REPLAN. A non-empty
+                        #   each to its number when filed (rule C). A non-empty
                         #   planned_features means the sufficiency argument is
                         #   PROVISIONAL and this capstone is not Ready.
 blocked_by: []          # ordering: capstones or features that must land before this
@@ -269,7 +255,7 @@ flowchart TD
      § Re-planning Protocol disposition (posted on each filed one, rule
      C) and cites it; the sheet is not completed — rows already filled
      stand and the REFUTED links the revision holding them (task rule
-     10); a parent capstone applies its rule G on receiving the mirror.
+     10).
 
      A "spans #A, #B" ANNOTATION IS NOT EVIDENCE. Before writing it,
      open #A and #B and read their § Integration Criteria & Evidence
@@ -279,16 +265,10 @@ flowchart TD
      toward rule F. A capstone needs only ONE genuine system-level
      criterion, but it does need one.
 
-     Defects to check for, each of which voids a criterion:
-       - the second party named in a "span" is not in requires_features
-         or planned_features at all — then it is not a composition claim and the criterion
-         is effectively unowned;
-       - a criterion whose named owner DISCLAIMS it (one feature's
-         scope boundary explicitly refuses the work the capstone
-         assigns it);
-       - a criterion no feature covers and no task owns — acceptance
-         evidence with no work item anywhere; mark it UNOWNED;
-       - text left stale by a feature's later REPLAN. -->
+     A span naming a feature outside the required set, an owner that
+     disclaims the assignment, a criterion nothing covers (mark it
+     UNOWNED), or text a feature's later REPLAN left stale each voids a
+     criterion; the gate checks each. -->
 
 - [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN its filer posts on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
@@ -310,18 +290,14 @@ flowchart TD
 ## Re-planning Protocol
 
 <!-- What invalidates this plan and the required response: a required
-     feature descoped or refuted → re-derive the sufficiency argument in
-     § Required Feature Set & Sufficiency and apply rule G to any
-     orphaned scope; a feature's contract deviates → reassess
-     § Cross-Feature Integration Risks and § System-Level Acceptance
-     Criteria (a required feature's mirrored REPLAN is the trigger); a
-     sub-capstone's mirrored REPLAN or REFUTED → re-derive § Required
-     Feature Set & Sufficiency and apply rule G to any orphaned scope;
-     an acceptance criterion fails with every required entry landed →
-     its named next move (a rule G(b) fix feature adopted by REPLAN, or
-     `REFUTED:` as § System-Level Acceptance Criteria says); this
-     capstone re-tiered → that REPLAN, with rule G applied to scope the
-     new tier cannot hold; the outcome itself is re-scoped → REPLAN with
+     feature or sub-capstone descoped, refuted or REPLANned → re-derive
+     § Required Feature Set & Sufficiency and apply rule G to orphaned
+     scope; a feature's contract deviates → reassess § Cross-Feature
+     Integration Risks and § System-Level Acceptance Criteria (its
+     mirrored REPLAN is the trigger); an acceptance criterion fails with
+     every required entry landed → its named next move (a rule G(b) fix
+     feature adopted by REPLAN, or `REFUTED:` as § System-Level
+     Acceptance Criteria says); the outcome itself is re-scoped → REPLAN with
      the old and new § Outcome Statement both quoted, then § Intent &
      Alignment re-checked; a required feature's mirrored WAIVED → the
      waived obligation checked against § System-Level Acceptance
@@ -347,11 +323,8 @@ flowchart TD
      acceptance, or can ride along. "N/A — fully specified" if nothing
      is open.
 
-     Mark every entry with exactly one of `Recommended default: <answer>`
-     (proceed and land), `PROPOSED: <answer>, pending <who confirms>` (draft
-     but do not land), `BLOCKING: <who decides>` (stop), or
-     `HYGIENE: <what to re-derive>` (not a decision at all — a
-     citation, a status check, an un-run build). The marker is what an
+     Mark every entry per task rule 13 — `Recommended default:`,
+     `PROPOSED:`, `BLOCKING:` or `HYGIENE:`. The marker is what an
      executor and § Agentic Delegability both read; an unmarked entry is
      scored on its substance, and the marker fixed. -->
 
@@ -383,23 +356,23 @@ flowchart TD
 
 ## Pickup Checks
 
-<!-- The rows are fixed and never deleted: a row whose referent is N/A
-     or empty is recorded "none" in the pickup comment and neither
-     passes nor fails; the `STATUS: pickup` names the checkout commit and
-     lists the rows run and the rows not reached. Run once per executor by whoever begins (or, after a
+<!-- Run once per executor by whoever begins (or, after a
      `HANDOFF: transfer`, takes over) the acceptance pass (task rule 6,
-     applied at this tier). Preconditions for starting, not completion
-     criteria. Record the outcome in a `STATUS: pickup` comment here
-     (not mirrored; one line may list every "none" row). A failed row
+     applied at this tier). The rows are fixed and never deleted: a row
+     whose referent is N/A or empty is recorded "none" in the
+     `STATUS: pickup` comment here (not mirrored; one line may list every
+     "none" row) and neither passes nor fails; that comment names the
+     checkout commit and lists the rows run and the rows not reached. A
+     failed row
      ends in that comment naming the acceptance steps blocked (or all of
      them) and what unblocks them; only those steps wait. -->
 
 - [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before the acceptance pass begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
-- [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), and no later `REPLAN:` or `AMENDED:` notice on the entry qualifies what it landed, or its disposition is recorded; `planned_features` is empty
+- [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), and no later `REPLAN:` or `AMENDED:` notice on the entry qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_features` is empty
 - [ ] Every mirrored `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read, each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
-- [ ] Every parent capstone cited in § Intent & Alignment still lists this capstone in `requires_capstones`; a parent's REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
-- [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan
+- [ ] Every OPEN capstone whose `requires_capstones` lists this one located (roster search) — these receive the mirrored comments of rule D; each parent cited in § Intent & Alignment still lists it, or its REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
+- [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan (where a step needs a platform the platform row hands to a holder, "not run — held by" stands until their re-run)
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
@@ -457,9 +430,8 @@ flowchart TD
   could apply to one fact, take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; the other tier templates carry their own
-  tier-adjusted copies. They can drift — change an axis in all of them and
-  bump the version above together.
+  Self-contained by design; scripts/tests/test_adr_blocks.py checks the
+  three tier copies agree.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
@@ -534,11 +506,6 @@ flowchart TD
       1 no in-repository precedent; the pattern comes from an external
         specification this issue cites
       0 none named; whoever executes invents the shape
-      This predicts duplication: without a local pattern to copy, the work
-      reproduces whatever pattern is commonest elsewhere. A young repository
-      scores low across the board, which is accurate rather than punitive,
-      and self-corrects as each first instance lands.
-
   CF  CONTEXT FOOTPRINT — how much must be held in mind at once, not merely
       read.
       5 one unit and its test
@@ -560,10 +527,6 @@ flowchart TD
       0 irreversible outside this repository: an archival identifier, a
         registry coordinate, a public listing, a tagged release, a
         commitment to a third party
-      At 2, note that an expected-output artifact produced by the same
-      process that produced the behaviour records it rather than evidencing
-      it, and will be cited as ground truth by everything built on it.
-
   TWO CAPPING AXES. They do not add; they impose a ceiling on the band.
 
   ED  ENVIRONMENTAL DETERMINISM — can the evidence be produced unattended,
@@ -599,10 +562,6 @@ flowchart TD
       does not score here — that is the band-B checkpoint, and most projects
       require it. Running the software on a platform and reporting the
       result IS evidence production and does score here.
-      A low score is not a criticism; it means the deliverable is not a
-      patch. Much of the work may still be produced unattended, but the
-      issue cannot be closed that way.
-
   DA  DESIGN AUTHORITY — design decisions this issue leaves for whoever
       executes it. A design decision changes the artifact's shape and a
       reviewer could contest it: where a boundary goes, what a type carries,
@@ -694,16 +653,12 @@ flowchart TD
       section's mandate or a section's conformance to its mandate as its
       comment block states it, a completion criterion, a prediction, an
       edge, or the scope. Wording is not.
-    - Unticked means not yet reviewed. It is not a defect and does not block
-      filing; it means the band above, and the body, are still unvalidated.
     - Where a review comment exists, point `review_evidence` at it.
     - `false` means the review comment at `review_evidence` names a
       substantial finding nobody has fixed; whoever finds one and does
       not fix it sets it (bookkeeping), and the REPLAN fixing it, or a
       comment recording why it does not stand, sets `true`. § Pickup
-      Checks reads it before the acceptance pass begins. On a closed
-      issue nothing here changes; a deviation of what was built from the
-      body is recorded as task rule 9 says.
+      Checks reads it before the acceptance pass begins.
 -->
 
 ```yaml

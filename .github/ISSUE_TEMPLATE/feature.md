@@ -66,8 +66,8 @@ labels: ["tier:feature"]
   (7). Task rules 9–10 (comment protocol, waivers) and 14–15 (gates,
   check-sheets) apply with the substitutions below; task rules 11–13
   (oracle custody, artifact paths resolve at filing, marked open
-  questions) apply to § Integration Criteria & Evidence Plan and § Open
-  Questions & Decisions Needed.
+  questions) apply, with the same substitutions, to § Integration
+  Criteria & Evidence Plan and § Open Questions & Decisions Needed.
 
     task tier                            | this tier
     -------------------------------------|--------------------------------
@@ -329,8 +329,8 @@ flowchart TD
      file or expected value: who produced it, when, and whether it was
      pre-committed, independently derived, or will be produced by the
      implementation it certifies — any child's code counts as the
-     implementation here (task rule 11 — the ADR OS deduction reads
-     this). A threshold or count — and any criterion whose do-X does
+     implementation here (task rule 11). A threshold or count — and any
+     criterion whose do-X does
      not yield the same observation on every run — also names the
      substrate it was set against (the CI runner class or host), the run
      count the criterion's do-X repeats and how many runs failed; the
@@ -359,7 +359,7 @@ flowchart TD
 
      -->
 
-- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable) and would match no sibling row's child (two children the roster cannot tell apart are one child filed twice — the task template's § Related Work competing-hypothesis clause; re-cut or drop one); every handoff names provider child, consumer child and both contract subsections by name, and each filed child's contract actually declares its side; no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and names its next move on failure, and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit` (a REPLAN listing one after HEAD has moved first re-pins `evidence_commit` and re-derives the roster claims, as the pickup row does), every filed child's tier is task and its work had not landed when listed (checked at the `evidence_commit` of the revision that listed it; rule B). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Decomposition, Contract & Integration.** Every FILED child body was read at its current revision; every filed roster row's one-line contract matches the child's own § Intent & Alignment and § Hypothesis (falsifiable) and would match no sibling row's child (two children the roster cannot tell apart are one child filed twice — the task template's § Related Work competing-hypothesis clause; re-cut or drop one); every handoff names provider child, consumer child and both contract subsections by name, each filed child's contract actually declares its side, and no other child's declares the provided side (a second provider of one surface consumes it from the named provider, or is re-cut — the child the handoff does not name is the one whose declaration is retired); no two children hand off in both directions (a mutual handoff is re-cut with an interface-first child, or the consuming child of one direction declares a private stub of that interface under its own § Internal interfaces provided — private so that direction carries no `blocked_by` edge, and the handoff names the child that later retires the stub); every feature-boundary transformation is fully defined in math; every integration criterion carries exactly one ownership annotation and names its next move on failure, and at least one is a genuine span or close-out criterion (rule B); no child claims a criterion here as its own deliverable; every artifact a criterion names exists at `evidence_commit` or has a named builder; every expected value names its custodian, date and provenance; the rejected decompositions are stated. `requires_tasks` and `planned_tasks` are filled, together non-empty, every planned scope verified absent at `evidence_commit` (a REPLAN listing one after HEAD has moved first re-pins `evidence_commit` and re-derives the roster claims, as the pickup row does), every filed child's tier is task and its work had not landed when listed (checked at the `evidence_commit` of the revision that listed it; rule B). Adversarial re-read of everything above found no substantial finding.
 
 ## Global Invariants
 
@@ -403,15 +403,17 @@ flowchart TD
 <!-- What invalidates this plan and the required response. At minimum:
      a child REFUTED, SUPERSEDED, or closed with no close-out record
      (the finder's AMENDED standing in, task rule 10) → which siblings'
-     premises are affected and who re-plans (a SUPERSEDED child: dropped
-     by REPLAN citing its close-out, the landed work cited per rule B,
-     criteria
-     spanning it re-annotated; a REFUTED child: dropped likewise, and
+     premises are affected and who re-plans (a SUPERSEDED child, or a
+     bare-closed one for the criteria its finder's AMENDED records met:
+     dropped by REPLAN citing its close-out, the landed work cited per
+     rule B, criteria spanning it re-annotated; a REFUTED child: dropped
+     likewise, and
      scope a criterion here still needs re-enters `planned_tasks` as a
-     new one-line scope framed by the close-out's refuting evidence
-     (none of the child's hypotheses stands, task rule 6), or the
-     criterion is re-annotated UNOWNED, or the premise fails →
-     `REFUTED:`); a child
+     new one-line scope framed by the refuting evidence of every REFUTED
+     child that carried it (none of their hypotheses stands, task rule
+     6; a child whose failure proved none sends the criterion needing it
+     to the found-wrong branch below), or the criterion is re-annotated
+     UNOWNED, or the premise fails → `REFUTED:`); a child
      split → the REPLAN task rule 9
      requires of every listing feature; a child re-tiered → a REPLAN
      dropping it, citing the HANDOFF as its close-out (rule C; its
@@ -419,8 +421,10 @@ flowchart TD
      still needs them, each filed one in `blocked_by` here as the
      predecessor § Integration Criteria & Evidence Plan names, a planned
      one recorded in the new feature's § Sequencing & Parallelism for
-     its filing — task rule 9); a child transferred
-     → no plan change; a contract
+     its filing — task rule 9); a child transferred → no plan change; a
+     `blocked_by` predecessor closed without landing → the edge
+     re-pointed or retired as the `blocked_by` pickup row says, or the
+     premise fails → `REFUTED:`; a contract
      deviation → § Feature-Level Interface & Data Contract
      reconciliation; an integration criterion fails with every spanning
      child landed, or a § Global Invariants entry fails at any child's
@@ -435,8 +439,9 @@ flowchart TD
      serving
      capstone's REPLAN assigning this feature an artifact, risk
      mitigation or re-homed scope → rule D; a child's mirrored AMENDED or
-     WAIVED — a dropped child's after-close AMENDED (task rule 9)
-     included → roster row, handoffs, § Sequencing & Parallelism edges
+     WAIVED — a dropped child's after-close AMENDED (task rule 9), and a
+     WAIVED notice naming this feature (task rule 10), included → roster
+     row, handoffs, § Sequencing & Parallelism edges
      and every criterion or invariant that names the child or cites the
      landing its close-out cited (rule B) re-derived (rule D), a WAIVED
      successor, or the one that AMENDED names, that a criterion here
@@ -515,7 +520,7 @@ flowchart TD
 - [ ] Every expected value the integration evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
 - [ ] Every OPEN capstone whose `requires_features` lists this feature notified with a `STATUS: landed` comment citing the REPLAN of any contract deviation those capstones must reconcile (`serves_capstones` mirrors that set) — or that posting handed to a holder, the Mirrors row [row: Mirrors]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
-- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
+- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor, or why none is needed (task rule 10) [row: Waivers]
 - [ ] Every cited evidence document resolves on the default branch at close and every permalink is commit-locked and resolves [row: Links]
 - [ ] Every artifact named above exists at `evidence_commit` or is created by its named builder — this list says which (task rule 12) [row: Paths]
 - [ ] § Agentic Delegability re-scored on any `REPLAN:` edit that changed the roster, the integration evidence, or the open decisions [row: Re-plans]
@@ -538,10 +543,10 @@ flowchart TD
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before integration begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every `REPLAN:` a serving capstone posted here read and answered by REPLAN where anything cited changed (rule D)
 - [ ] Every child in `requires_tasks` has a `STATUS: landed` comment mirrored here or on the child, and no later `STATUS: landed` or `AMENDED:` notice on the child qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_tasks` is empty
-- [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child, current or dropped, read (mirrored here, or on the child for one posted before this roster listed it or led by a counterpart's number), and every `REPLAN:` another listing feature posted on a shared child; each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Sequencing & Parallelism edges, § Global Invariants, § Feature-Level Interface & Data Contract and § Integration Criteria & Evidence Plan re-derived by REPLAN where they changed
+- [ ] Every `AMENDED:`, `HANDOFF:` or `WAIVED:` from a child, current or dropped, read (mirrored here, or on the child for one posted before this roster listed it or led by a counterpart's number), and every `REPLAN:` another listing feature posted on a shared child, and every `WAIVED:` notice naming this feature its successor (task rule 10); each AMENDED checked for contract deviations (recorded only by AMENDED, task rule 9), including surfaces the feature-level contract does not declare; roster rows, handoffs, § Sequencing & Parallelism edges, § Global Invariants, § Feature-Level Interface & Data Contract and § Integration Criteria & Evidence Plan re-derived by REPLAN where they changed
 - [ ] Every capstone in `serves_capstones` still lists this feature in `requires_features`; a capstone's REPLAN dropping this feature was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the capability of § Capability Statement & Scope Boundary is not already observable at the checkout for reasons outside this plan (the roster's own landings do not count) — where it is, close with `SUPERSEDED:` citing the landing (task rule 6; § Re-planning Protocol's close clause runs first)
-- [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
+- [ ] Every `blocked_by` entry has landed (a `SUPERSEDED:` close counts where it cites the landed work this edge waited for), or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry — an entry closed without landing (`REFUTED:`, or a close-out naming another successor or none) is re-pointed at the successor its close-out names or retired so, what consumed it re-derived, or this issue's premise falls with it (task rule 9)
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact an integration criterion names exists at the checkout, or its named builder has landed, or its builder is this feature's close-out and is scheduled (task rule 12)
@@ -577,7 +582,7 @@ flowchart TD
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the implementation, or of unshowable derivation, and deducted; a threshold, count or repeated run: run count, runs failed, substrate | | |
 | Roster | machine block, table and mermaid agree; `planned_tasks` empty | | |
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_features` lists this feature, cited; a posting handed to a holder (the platform row): WITHHELD — held by them until they post, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
-| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (a child's landing: the default or release branch its own block names); every document on the default branch | | |
+| Links | every permalink commit-locked, at this repository's URL, resolving and at a commit reachable from the default branch (a child's landing: where it landed, the Child row); every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the final commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was built; ADR re-scored where a re-plan changed roster, evidence or decisions | | |
@@ -644,7 +649,8 @@ flowchart TD
       1 if the acceptance evidence is a document asserting a measurement.
 
   BR  BLAST RADIUS — everything this feature's own integration work must move, generated files,
-      expected-output artifacts and anything published included.
+      expected-output artifacts, anything published, and the in-tree
+      callers of a dependency whose version it changes, included.
       5 one file, or one new file and its test; nothing published moves
       4 a handful of files in one module
       3 several files across two modules, every caller identified
@@ -803,15 +809,17 @@ flowchart TD
   read adversarially and by a peer, end to end, and neither read left
   anything substantial outstanding. Tick them yourself; the filer reviewing
   their own issue is fine, and so is an executor reviewing before the
-  first step — that is review, not execution (task rule 14).
+  first step — that is review, not execution (task rule 14's exception;
+  the tick is bookkeeping, task rule 9).
     - SUBSTANTIAL means acting on the finding would change a score above, a
       section's mandate or a section's conformance to its mandate as its
       comment block states it, a completion criterion, a prediction, an
       edge, or the scope. Wording is not.
     - `false` means the review comment at `review_evidence` names a
       substantial finding nobody has fixed; whoever finds one and does
-      not fix it sets it (bookkeeping), and the REPLAN fixing it, or a
-      comment recording why it does not stand, sets `true`.
+      not fix it sets it and `review_evidence` (bookkeeping), and the
+      REPLAN fixing it, or a comment recording why it does not stand,
+      sets `true`.
 -->
 
 ```yaml
@@ -836,8 +844,8 @@ review_evidence: # permalink to the review comment, if there is one
 roster_delegable: # k/n over requires_tasks, or `pending`
 ```
 
-- [ ] Adversarial review of this issue found no substantial finding
-- [ ] Peer review of this issue found no substantial finding
+- [ ] Adversarial review of this issue left no substantial finding standing
+- [ ] Peer review of this issue left no substantial finding standing
 
 <!-- One or two sentences: which children are delegable today, which
      child is costing the roster most, the checkpoint where `action` is

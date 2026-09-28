@@ -400,6 +400,12 @@ def h06(ctx):
     return out
 
 
+# Own comments whose issue references make their author a counterpart of the
+# issue referenced: re-plans, amendments, handoffs, and waivers naming a
+# successor (task rule 10's notice to a successor no mirror reaches).
+COUNTERPART_PREFIXES = ("REPLAN:", "AMENDED:", "HANDOFF:", "WAIVED:")
+
+
 def h07(ctx):
     out = []
     # Ownership lives in each owning feature's requires_tasks roster and a
@@ -443,8 +449,9 @@ def h07(ctx):
         parents = [p for p in parents if p in ctx.corpus.issues]
         # Every issue that may legitimately post a led comment here: roster
         # parents and children (current), ordering counterparts, related,
-        # any issue whose own REPLAN/AMENDED/HANDOFF names #n (a dropping
-        # parent, a planning feature, a sibling ordering per § Related Work),
+        # any issue whose own REPLAN/AMENDED/HANDOFF/WAIVED names #n (a
+        # dropping parent, a planning feature, a sibling ordering per
+        # § Related Work, a waiver naming #n its successor — task rule 10),
         # and any issue this issue's own such comments name.
         counterparts = set(parents)
         for key in ("requires_tasks", "requires_features",
@@ -456,7 +463,7 @@ def h07(ctx):
         own_named = set()
         for c in ctx.comments(n):
             b = (c.get("body") or "").lstrip()
-            if b.startswith(("REPLAN:", "AMENDED:", "HANDOFF:")) \
+            if b.startswith(COUNTERPART_PREFIXES) \
                     and received_from(b, n) is None:
                 own_named |= {int(x) for x in re.findall(r"#(\d+)\b", b)}
         counterparts |= own_named
@@ -465,7 +472,7 @@ def h07(ctx):
                 continue
             for c in ctx.comments(on):
                 b = (c.get("body") or "").lstrip()
-                if b.startswith(("REPLAN:", "AMENDED:", "HANDOFF:")) \
+                if b.startswith(COUNTERPART_PREFIXES) \
                         and received_from(b, on) is None \
                         and re.search(rf"#{n}\b", b):
                     counterparts.add(on)
@@ -475,9 +482,10 @@ def h07(ctx):
             if src is not None and src not in counterparts:
                 out.append(finding(n, "H07", "info",
                            f"comment led by #{src}, which is no counterpart "
-                           "of this issue (rule 9: an own comment is never "
-                           "led by another number; a mirror comes from a "
-                           "roster or ordering counterpart)",
+                           "of this issue (task rule 9: an own comment puts "
+                           "numbers after a dash; a led comment is a mirror "
+                           "or notice from a roster, ordering or waiver "
+                           "counterpart)",
                            objects=[src], fix_class="comment"))
         if not parents:
             continue
@@ -616,9 +624,10 @@ CRITERION_ID = re.compile(r"^[A-Z]{1,3}[-–]?\d+\b")
 # Canonical heading names across ALL tiers: a task citing its parent
 # feature's "§ Global Invariants" is a cross-issue reference the same-body
 # check must not flag.
-# Task rule 9: an issue's OWN comment is never led by another issue's
-# number; a number in the first position marks a mirror or a notice posted
-# from another issue ("STATUS: landed #other ...", "REPLAN: #other ...").
+# Task rule 9: in an issue's OWN comment numbers follow the prefix or
+# sub-tag after a dash; a number directly after it marks a mirror, a notice
+# posted from another issue, or a counterpart's REPLAN or AMENDED editing
+# this body ("STATUS: landed #other ...", "REPLAN: #other ...").
 RECEIVED = re.compile(
     r"(?:STATUS:\s*\w+|HANDOFF:\s*(?:split|transfer|re-tier)|[A-Z]+:)"
     r"\s*#(\d+)\b")

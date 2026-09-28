@@ -12,7 +12,12 @@ Builds four crafted task issues in a tempdir snapshot:
                 failure (H04 info), ticked DoD box without evidence (H09
                 warn), oversized body (H13 warn)
   #103 clean  — must trigger NONE of the checks above
-  #104 dirty  — missing title prefix (H01 warn)
+  #104 dirty  — missing title prefix (H01 warn); a comment led by #102,
+                which is no counterpart (H07 info)
+
+Comments: #104's own WAIVED names #103 as successor and #103 receives the
+notice led by #104 (task rule 10) — #104 is thereby a counterpart of #103
+and H07 stays silent on #103.
 
 H06's fetcher and H15's git paths are exercised only through their skip
 branches (no network, no git repo required). Stdlib only, plain asserts.
@@ -102,7 +107,22 @@ def build_snapshot(snap):
     with open(os.path.join(snap, "issues.jsonl"), "w") as fh:
         for iss in issues:
             fh.write(json.dumps(iss) + "\n")
-    for name in ("comments.jsonl", "subissues.jsonl", "board.jsonl"):
+    url = "https://api.github.com/repos/example/repo/issues/{}"
+    comments = [
+        {"id": 1, "issue_url": url.format(104), "created_at":
+         "2026-08-20T00:00:00Z", "body": "WAIVED: — criterion 2 dropped: "
+         "no fixture exists; successor #103"},
+        {"id": 2, "issue_url": url.format(103), "created_at":
+         "2026-08-20T01:00:00Z", "body": "WAIVED: #104 — criterion 2 "
+         "dropped: no fixture exists; successor #103"},
+        {"id": 3, "issue_url": url.format(104), "created_at":
+         "2026-08-21T00:00:00Z", "body": "REPLAN: #102 — drops a scope "
+         "this issue never held"},
+    ]
+    with open(os.path.join(snap, "comments.jsonl"), "w") as fh:
+        for c in comments:
+            fh.write(json.dumps(c) + "\n")
+    for name in ("subissues.jsonl", "board.jsonl"):
         open(os.path.join(snap, name), "w").close()
     for name, payload in (("milestones.json", []), ("labels.json", []),
                           ("meta.json", {"fetched_at": "2026-08-23T00:00:00Z",
@@ -140,6 +160,10 @@ def main():
     has(101, "H18", "error")     # #99999 fabricated
     has(101, "H18", "warn")      # #485 retired rescue vehicle
     has(0, "H06", "info")        # skip branch: no last_edited.json
+    has(104, "H07", "info")      # led by #102, no counterpart
+    h07 = [f for f in F if f["check"] == "H07"]
+    assert not any(f["issue"] == 103 for f in h07), h07   # waiver notice
+    assert all(f["objects"] == [102] for f in h07 if f["issue"] == 104), h07
 
     # H03: pair emitted once, owned by the lower number
     pairs = [f for f in F if f["check"] == "H03"]

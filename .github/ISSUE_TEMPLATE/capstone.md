@@ -54,9 +54,10 @@ labels: ["tier:capstone"]
     § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
 
   A required entry's REPLAN disclaiming an item assigned to it — its
-  boundary excludes it or a § Global Invariants entry forbids it — is
-  answered here by a REPLAN re-owning the item (rule G; posted on the
-  entry, feature rule C). In addition:
+  boundary (a sub-capstone: its § Outcome Statement) excludes it or a
+  § Global Invariants entry forbids it — is answered here by a REPLAN
+  re-owning the item (rule G; posted on the entry, feature rule C). In
+  addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§ Required Feature Set & Sufficiency): why exactly these
@@ -69,11 +70,11 @@ labels: ["tier:capstone"]
      file it.
   G. Orphaned scope. When a required entry (feature or sub-capstone)
      closes, is re-tiered, REPLANs a child away, is descoped, or has its
-     landed work reverted,
-     or its close-out's cited landing found not to deliver, after close
-     (the task rule 9 notices the roster pickup row and the REPLAN row
-     read), while leaving scope this capstone still needs, the
-     REPLAN must give that scope a disposition: (a) re-home it — assign
+     landed work reverted, or its close-out's cited landing found not to
+     deliver, after close (the task rule 9 notices the required-entry
+     landing row and the required-entry REPLAN row read), while leaving
+     scope this capstone still needs, the REPLAN must give that scope a
+     disposition: (a) re-home it — assign
      the task or planned scope to an OPEN required feature by this
      REPLAN, posted on it led by this number (feature rule C), which
      adopts it into its `requires_tasks` or `planned_tasks` by its own
@@ -172,9 +173,10 @@ flowchart TD
 <!-- What becomes true of the project when this capstone lands, phrased
      as an observation: the demo script, command sequence, or
      acceptance walk-through a reviewer (or agent) executes to see it.
-     "Do X, observe Y" at the system level. -->
+     "Do X, observe Y" at the system level. A step a person performs or
+     takes part in names its operator class. -->
 
-- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository, the named platform and the external services the steps name; each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Outcome.** The walk-through is executable step by step by someone with only the repository, the named platform, the operator class each hand-performed step names (a person, a display substrate, a device — a study's participants included) and the external services the steps name; each step states what is observed; it is the intent of § Intent & Alignment and not a wider one; every audience in § User impact is reached by some observed step. Adversarial re-read of everything above found no substantial finding.
 
 ## Required Feature Set & Sufficiency
 
@@ -237,11 +239,12 @@ flowchart TD
      here.
 
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE with every required
-     entry landed: a fix under rule G adopted by REPLAN — a task
-     re-homed into an OPEN required feature (a), or a fix feature (b) —
-     or `REFUTED:` — the premise of § Outcome Statement fails — quoting the
-     failing criterion with command and output (the close-out record,
-     task rule 10; § Re-planning Protocol's close clause runs first).
+     entry landed: a fix feature adopted by REPLAN under rule G(b) (a
+     landed required feature has closed, and rule G(a) never reopens
+     one), or `REFUTED:` — the premise of § Outcome Statement fails —
+     quoting the failing criterion with command and output (the
+     close-out record, task rule 10; § Re-planning Protocol's close
+     clause runs first).
 
      A "spans #A, #B" ANNOTATION IS NOT EVIDENCE: state what each
      contributes, read from its § Integration Criteria & Evidence Plan
@@ -275,8 +278,11 @@ flowchart TD
      rule 10) → re-derive § Required Feature Set & Sufficiency and apply
      rule G to orphaned scope; a feature's contract deviates → reassess
      § Cross-Feature Integration Risks and § System-Level Acceptance
-     Criteria (its mirrored REPLAN is the trigger); a shared required
-     entry's other parent capstone assigns it an artifact, risk
+     Criteria (its mirrored REPLAN is the trigger); a `blocked_by`
+     predecessor closed without landing → the edge re-pointed or retired
+     as the `blocked_by` pickup row says, or the premise fails →
+     `REFUTED:`; a shared required entry's other parent capstone assigns
+     it an artifact, risk
      mitigation or re-homed scope (a REPLAN adopting the entry's re-plan
      request included) that conflicts with one here → the capstone whose
      entry is newer re-plans; an acceptance criterion fails with
@@ -301,9 +307,11 @@ flowchart TD
      record); a close on `REFUTED:` or `SUPERSEDED:` with required
      entries still open or planned → a REPLAN giving each its
      disposition below first, cited by the close-out; a required
-     feature's mirrored WAIVED → the waived obligation checked against
-     § System-Level Acceptance
-     Criteria, and a successor outside the required set is rule G scope;
+     feature's mirrored WAIVED, or a WAIVED notice naming this capstone
+     (task rule 10) → the waived obligation checked against
+     § System-Level Acceptance Criteria (one naming this capstone
+     adopted by REPLAN into the criterion standing in for it), and a
+     successor outside the required set is rule G scope;
      a re-scope after which no criterion in § System-Level Acceptance
      Criteria is a genuine span or close-out criterion (rule F) → once
      the remaining required entries have landed, close with
@@ -350,7 +358,7 @@ flowchart TD
 - [ ] Every expected value the acceptance evidence compares against was pre-committed or independently derived, or the ADR-1 OS deduction was applied (task rule 11) [row: Oracle custody]
 - [ ] Landing reported with a `STATUS: landed` comment on every OPEN capstone whose `requires_capstones` lists this one (rule D) — or that posting handed to a holder, the Mirrors row [row: Mirrors]
 - [ ] Every decision in § Open Questions & Decisions Needed is resolved or explicitly deferred, none left blocking [rows: Open question]
-- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor issue (task rule 10) [row: Waivers]
+- [ ] Every skipped or waived criterion carries a `WAIVED:` comment naming its successor, or why none is needed (task rule 10) [row: Waivers]
 - [ ] Every cited evidence document resolves on the default branch at close and every permalink is commit-locked and resolves [row: Links]
 - [ ] Every artifact named above exists at `evidence_commit` or is created by its named builder — this list says which (task rule 12) [row: Paths]
 - [ ] § Agentic Delegability re-scored on any `REPLAN:` edit that changed the roster, the acceptance criteria, or the open decisions [row: Re-plans]
@@ -371,10 +379,10 @@ flowchart TD
 - [ ] `action` read and followed per the task template's `action` pickup row (at this tier a SPLIT is a REPLAN plus a new issue)
 - [ ] Every `REPLAN:` that edited this body read (own, or a counterpart's posted here led by its number); each names the sections changed and re-read, and the body matches their fold in stream order, bookkeeping edits aside — a mismatch is repaired by re-applying the fold from the comments and the body's edit history before proceeding; where `review_clean` is `false`, the finding at `review_evidence` is answered before the acceptance pass begins — by the REPLAN fixing it, or by a comment quoting it and recording why it does not stand
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here or on the entry (rule D), and no later `STATUS: landed`, `REPLAN:` or `AMENDED:` notice on the entry qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_features` is empty
-- [ ] Every `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read (mirrored here or on the entry — rule D; an entry filed from a template that does not mirror is read on the entry throughout), each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
+- [ ] Every `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read (mirrored here or on the entry — rule D; an entry filed from a template that does not mirror is read on the entry throughout), and every `WAIVED:` notice naming this capstone its successor (task rule 10), each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every OPEN capstone whose `requires_capstones` lists this one located (roster search) — these receive the mirrored comments of rule D; each parent cited in § Intent & Alignment still lists it, or its REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
 - [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan (the required set's own landings do not count) — where it does, close with `SUPERSEDED:` citing the landing (task rule 6; § Re-planning Protocol's close clause runs first)
-- [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
+- [ ] Every `blocked_by` entry has landed (a `SUPERSEDED:` close counts where it cites the landed work this edge waited for), or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry — an entry closed without landing (`REFUTED:`, or a close-out naming another successor or none) is re-pointed at the successor its close-out names or retired so, what consumed it re-derived, or this issue's premise falls with it (task rule 9)
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
 - [ ] Every artifact a criterion names exists, or its named builder has landed, or its builder is this capstone's close-out and is scheduled (task rule 12)
@@ -405,7 +413,7 @@ flowchart TD
 | Oracle custody | each expected value: who, when, pre-committed / independently derived / produced by the system, or of unshowable derivation, and deducted; a threshold, count or repeated run: run count, runs failed, substrate | | |
 | Roster | machine block, table and mermaid agree; `planned_features` empty | | |
 | Mirrors | `STATUS: landed` posted on every open capstone whose `requires_capstones` lists this one, cited; a posting handed to a holder (the platform row): WITHHELD — held by them until they post, the close not waiting on it, the cell filled when they post (bookkeeping) | | |
-| Links | every permalink commit-locked, resolving and at a commit reachable from the default branch (a required entry's landing: the default or release branch its own block names); every document on the default branch | | |
+| Links | every permalink commit-locked, at this repository's URL, resolving and at a commit reachable from the default branch (a required entry's landing: where it landed, the Required row); every document on the default branch | | |
 | Paths | each artifact a criterion names exists at the acceptance commit, created by its named builder, or is absent where the criterion names the step that removes it (task rule 12) | | |
 | Waivers | every skipped criterion has its `WAIVED:` comment, or after close the finder's AMENDED (REPLAN) standing in for it (task rule 10) | | |
 | Re-plans | every `REPLAN:` comment reconciled; the body describes what was delivered; ADR re-scored where a re-plan changed roster, criteria or open decisions | | |
@@ -471,7 +479,8 @@ flowchart TD
       1 if the acceptance evidence is a document asserting a measurement.
 
   BR  BLAST RADIUS — everything this capstone's own acceptance work must move, generated files,
-      expected-output artifacts and anything published included.
+      expected-output artifacts, anything published, and the in-tree
+      callers of a dependency whose version it changes, included.
       5 one file, or one new file and its test; nothing published moves
       4 a handful of files in one module
       3 several files across two modules, every caller identified
@@ -630,15 +639,17 @@ flowchart TD
   read adversarially and by a peer, end to end, and neither read left
   anything substantial outstanding. Tick them yourself; the filer reviewing
   their own issue is fine, and so is an executor reviewing before the
-  first step — that is review, not execution (task rule 14).
+  first step — that is review, not execution (task rule 14's exception;
+  the tick is bookkeeping, task rule 9).
     - SUBSTANTIAL means acting on the finding would change a score above, a
       section's mandate or a section's conformance to its mandate as its
       comment block states it, a completion criterion, a prediction, an
       edge, or the scope. Wording is not.
     - `false` means the review comment at `review_evidence` names a
       substantial finding nobody has fixed; whoever finds one and does
-      not fix it sets it (bookkeeping), and the REPLAN fixing it, or a
-      comment recording why it does not stand, sets `true`.
+      not fix it sets it and `review_evidence` (bookkeeping), and the
+      REPLAN fixing it, or a comment recording why it does not stand,
+      sets `true`.
 -->
 
 ```yaml
@@ -663,8 +674,8 @@ review_evidence: # permalink to the review comment, if there is one
 roster_delegable: # k/n over requires_features + requires_capstones (filed), or `pending`
 ```
 
-- [ ] Adversarial review of this issue found no substantial finding
-- [ ] Peer review of this issue found no substantial finding
+- [ ] Adversarial review of this issue left no substantial finding standing
+- [ ] Peer review of this issue left no substantial finding standing
 
 <!-- One or two sentences: if ED<=1, which criterion needs a person or a
      device and what can still be produced unattended for it; the

@@ -27,7 +27,7 @@ otherwise); H07 prefixed comments not mirrored on the parent; H08
 unrecognized pseudo-prefixes (UPDATE:/Status: ...); H09 DoD checkbox
 integrity (zero boxes = error, ticked-on-open without evidence = warn);
 H10 §-reference integrity (named must resolve, bare numbers violate rule 5);
-H11 N/A without a reason; H12 §7.10 LaTeX presence/balance (task tier);
+H11 N/A without a reason; H12 § Data transformations LaTeX presence/balance (task tier);
 H13 body size vs GitHub's 65536 limit; H14 scratchpad-path leaks (paths
 committed at meta.head are exempt); H15 citation sweep via
 verify_citations.py at each issue's evidence_commit; H16 vacuous evidence
@@ -53,15 +53,15 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from issue_corpus import (COMMENT_PREFIXES, HEADING, TEMPLATES, find_heading,
-                          finding, findings_report, load_corpus,
-                          parse_edge_field, sig_tokens)
+                          find_subheading, finding, findings_report,
+                          load_corpus, parse_edge_field, sig_tokens)
 
 VALIDATOR = "hygiene"
 CHECK_VERSION = "h-v1"
 
 TIER_PREFIX = {"task": "TASK", "feature": "FEAT", "capstone": "CAP"}
 PREFIX_TIER = {v: k for k, v in TIER_PREFIX.items()}
-DOD_HEADING = {"task": "14. Completion Criteria (Definition of Done)",
+DOD_HEADING = {"task": "Completion Criteria (Definition of Done)",
                "feature": "Completion Criteria (Definition of Done)",
                "capstone": "Completion Criteria (Definition of Done)"}
 # Closed-not-planned rescue vehicles (maintainer disposition pending); cites
@@ -197,6 +197,16 @@ class Ctx:
                 return self.corpus.issues[n].body[he:ce]
         return None
 
+    def subsection_content(self, n, canonical):
+        secs = self.sections(n)
+        actual = find_subheading([s[0] for s in secs], canonical)
+        if actual is None:
+            return None
+        for title, _hs, he, ce in secs:
+            if title == actual:
+                return self.corpus.issues[n].body[he:ce]
+        return None
+
     def section_by_num(self, n, num):
         for title, _hs, he, ce in self.sections(n):
             if re.match(rf"^{re.escape(num)}(?!\d)", title):
@@ -308,9 +318,9 @@ def h04(ctx):
     out = []
     for n, iss in ctx.issues():
         if iss.tier != "task":
-            continue        # rule 3 (§2 Observations) is a task-template rule
+            continue        # rule 3 (§ Observations) is a task-template rule
         labels = set(iss.labels)
-        content = ctx.section_content(n, "2. Observations")
+        content = ctx.section_content(n, "Observations")
         has_block = False
         for m in FENCED.finditer(content or ""):
             if m.group(1).strip().lower() in NON_CODE_FENCES:
@@ -318,15 +328,19 @@ def h04(ctx):
             if _cmdish(m.group(2)):
                 has_block = True
                 break
-        if "bug" in labels and not has_block:
+        withheld = re.search(r"WITHHELD\s*[—–-]\s*held by .+ until",
+                             content or "", re.I)
+        if withheld and not has_block:
+            out.append(finding(n, "H04", "info",
+                       "§ Observations withheld (rule 2): "
+                       + withheld.group(0)[:80]))
+        elif "bug" in labels and not has_block:
             out.append(finding(n, "H04", "error",
-                       "label `bug` but §2 Observations carries no fenced "
+                       "label `bug` but § Observations carries no fenced "
                        "command+output block (template rule 3)",
                        fix_class="body"))
-        elif "enhancement" in labels and has_block:
-            out.append(finding(n, "H04", "info",
-                       "possible bug mislabel: `enhancement` but §2 pastes "
-                       "an observed failure"))
+        # An `enhancement` that pastes an observed failure is what rule 3
+        # requires of every improvement; it is not a mislabel signal.
     return out
 
 
@@ -356,62 +370,182 @@ def h06(ctx):
         edited = last_edited.get(str(n))
         if not edited:
             continue
+        # A transfer HANDOFF changes no section (task rule 9); only a split
+        # records an edit. Bookkeeping edits (check-sheet cells, review
+        # flags, evidence_commit re-pins, mirror `blocks` entries) are sanctioned
+        # without a comment, so a late edit is a lead, not a defect: info.
+        def records_edit(b):
+            b = (b or "").lstrip()
+            # A counterpart's REPLAN/AMENDED posted here led by its number
+            # may edit this body too (rule C: edges live on the
+            # authoritative side), so a leading foreign number is not
+            # excluded.
+            return (b.startswith(("AMENDED:", "REPLAN:"))
+                    or re.match(r"HANDOFF:\s*split\b", b))
         stamps = [c.get("created_at") for c in ctx.comments(n)
-                  if (c.get("body") or "").lstrip().startswith(
-                      ("AMENDED:", "REPLAN:"))]
+                  if records_edit(c.get("body"))]
         stamps = [s for s in stamps if s]
         if not stamps:
-            out.append(finding(n, "H06", "warn",
+            out.append(finding(n, "H06", "info",
                        f"body edited ({edited}) but no AMENDED:/REPLAN: "
-                       "comment exists (AMENDED-backfill candidate)",
+                       "comment exists (bookkeeping, or an "
+                       "AMENDED-backfill candidate)",
                        objects=[edited], fix_class="comment"))
         elif edited > max(stamps):
-            out.append(finding(n, "H06", "warn",
+            out.append(finding(n, "H06", "info",
                        f"body edited ({edited}) after the last "
-                       f"AMENDED:/REPLAN: comment ({max(stamps)})",
+                       f"AMENDED:/REPLAN: comment ({max(stamps)}) — "
+                       "bookkeeping unless a section changed",
                        objects=[edited, max(stamps)], fix_class="comment"))
     return out
 
 
+# Own comments whose issue references make their author a counterpart of the
+# issue referenced: re-plans, amendments, handoffs, and waivers naming a
+# successor (task rule 10's notice to a successor no mirror reaches).
+COUNTERPART_PREFIXES = ("REPLAN:", "AMENDED:", "HANDOFF:", "WAIVED:")
+
+
 def h07(ctx):
     out = []
-    # A task no longer declares an owner (scientific-task v7): ownership lives
-    # in each owning feature's requires_tasks roster, and a task may have any
-    # number of owners. Build the reverse index once, then a task's mirror
-    # obligation runs to EVERY feature that lists it.
-    task_owners = {}
+    # Ownership lives in each owning feature's requires_tasks roster and a
+    # capstone's requires_capstones (a task may have any number of owners).
+    # Build the reverse indexes once, then an issue's mirror obligation runs
+    # to EVERY parent that lists it (task rule 9, feature rule D, capstone
+    # rule D).
+    task_owners, feature_parents, capstone_parents = {}, {}, {}
     for fn, fi in ctx.corpus.issues.items():
-        if fi.tier != "feature" or not fi.machine:
+        if not fi.machine:
             continue
-        for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
-            task_owners.setdefault(t, []).append(fn)
+        if fi.tier == "feature":
+            for t in parse_edge_field(fi.machine, "requires_tasks")["numbers"]:
+                task_owners.setdefault(t, []).append(fn)
+        elif fi.tier == "capstone":
+            # requires_features is authoritative; serves_capstones mirrors it.
+            for f in parse_edge_field(fi.machine,
+                                      "requires_features")["numbers"]:
+                feature_parents.setdefault(f, []).append(fn)
+            for c in parse_edge_field(fi.machine,
+                                      "requires_capstones")["numbers"]:
+                capstone_parents.setdefault(c, []).append(fn)
+
+    # Every tier mirrors every prefixed comment of its own except
+    # STATUS: pickup/progress (task rule 9, feature and capstone rule D).
+    # Received comments (RECEIVED, module level) are not re-mirrored.
 
     for n, iss in ctx.issues():
         mb = iss.machine
         if not mb:
             continue
+        allowed = COMMENT_PREFIXES
         if iss.tier == "task":
             parents = task_owners.get(n, [])
         elif iss.tier == "feature":
-            parents = parse_edge_field(mb, "serves_capstones")["numbers"]
+            # Rule D: the capstones whose requires_features list this
+            # feature; serves_capstones only mirrors that set.
+            parents = sorted(set(feature_parents.get(n, [])))
         else:
-            continue
+            parents = capstone_parents.get(n, [])
         parents = [p for p in parents if p in ctx.corpus.issues]
+        # Every issue that may legitimately post a led comment here: roster
+        # parents and children (current), ordering counterparts, related,
+        # any issue whose own REPLAN/AMENDED/HANDOFF/WAIVED names #n (a
+        # dropping parent, a planning feature, a sibling ordering per
+        # § Related Work, a waiver naming #n its successor — task rule 10),
+        # and any issue this issue's own such comments name.
+        counterparts = set(parents)
+        for key in ("requires_tasks", "requires_features",
+                    "requires_capstones", "blocked_by", "blocks", "related"):
+            counterparts |= set(parse_edge_field(mb, key)["numbers"])
+        counterparts |= set(task_owners.get(n, []))
+        counterparts |= set(feature_parents.get(n, []))
+        counterparts |= set(capstone_parents.get(n, []))
+        own_named = set()
+        for c in ctx.comments(n):
+            b = (c.get("body") or "").lstrip()
+            if b.startswith(COUNTERPART_PREFIXES) \
+                    and received_from(b, n) is None:
+                own_named |= {int(x) for x in re.findall(r"#(\d+)\b", b)}
+        counterparts |= own_named
+        for on, oi in ctx.corpus.issues.items():
+            if on == n or on in counterparts:
+                continue
+            for c in ctx.comments(on):
+                b = (c.get("body") or "").lstrip()
+                if b.startswith(COUNTERPART_PREFIXES) \
+                        and received_from(b, on) is None \
+                        and re.search(rf"#{n}\b", b):
+                    counterparts.add(on)
+                    break
+        for c in ctx.comments(n):
+            src = received_from(c.get("body"), n)
+            if src is not None and src not in counterparts:
+                out.append(finding(n, "H07", "info",
+                           f"comment led by #{src}, which is no counterpart "
+                           "of this issue (task rule 9: an own comment puts "
+                           "numbers after a dash; a led comment is a mirror "
+                           "or notice from a roster, ordering or waiver "
+                           "counterpart)",
+                           objects=[src], fix_class="comment"))
         if not parents:
             continue
         prefixes = set()
         for c in ctx.comments(n):
             b = (c.get("body") or "").lstrip()
-            for p in COMMENT_PREFIXES:
+            # STATUS: pickup / STATUS: progress stay on the issue (task
+            # rule 9); only STATUS: landed and the other prefixes mirror.
+            if re.match(r"STATUS:\s*(pickup|progress)\b", b):
+                continue
+            if received_from(b, n) is not None:
+                continue        # received from another issue, not its own
+            for p in allowed:
                 if b.startswith(p):
                     prefixes.add(p)
                     break
         for pref in sorted(prefixes):
             for par in parents:
-                mirrored = any(
-                    (pc.get("body") or "").lstrip().startswith(pref)
-                    and re.search(rf"#{n}\b", pc.get("body") or "")
-                    for pc in ctx.comments(par))
+                # Comments a child posted before the parent's roster listed
+                # it are read on the child, not mirrored (feature rule D).
+                # Two proxies for "before the roster listed it": comments
+                # older than the parent itself, and comments older than the
+                # parent's FIRST comment naming #n when that comment is the
+                # adopting REPLAN (a child listed at filing is normally
+                # never named by a REPLAN, or only by a later drop).
+                par_created = (ctx.corpus.issues[par].raw or {}).get(
+                    "created_at") or ""
+                own = [c for c in ctx.comments(n)
+                       if (c.get("body") or "").lstrip().startswith(pref)
+                       and not re.match(r"STATUS:\s*(pickup|progress)\b",
+                                        (c.get("body") or "").lstrip())
+                       and received_from(c.get("body"), n) is None]
+                # Comments older than the parent could not have been
+                # mirrored (rule D: linked from the roster row instead).
+                if par_created:
+                    own = [c for c in own
+                           if (c.get("created_at") or "") >= par_created]
+                if not own:
+                    continue
+                pcs = ctx.comments(par)
+                naming = [pc for pc in pcs
+                          if re.search(rf"#{n}\b", (pc.get("body") or ""))]
+                adopted_at = ""
+                if naming and (naming[0].get("body") or "").lstrip() \
+                        .startswith("REPLAN:"):
+                    adopted_at = naming[0].get("created_at") or ""
+
+                def covered(child_c):
+                    ct = child_c.get("created_at") or ""
+                    if adopted_at and ct < adopted_at:
+                        return True     # posted before the adopting REPLAN
+                    for pc in pcs:
+                        pb = (pc.get("body") or "").lstrip()
+                        # A mirror is LED by the child's number (rule 9 /
+                        # rule D); a number mentioned later in the line
+                        # ("mirrored on #P, #Q", "PR #45") is not a mirror.
+                        if pb.startswith(pref) and received_from(pb, par) == n:
+                            return True
+                    return False
+                mirrored = all(covered(c) for c in own)
                 if not mirrored:
                     out.append(finding(n, "H07", "warn",
                                f"{pref} comment not mirrored on parent "
@@ -458,13 +592,24 @@ def h09(ctx):
         ticked = [txt or "" for mark, txt in boxes if mark in "xX"]
         if not ticked:
             continue
-        cbodies = [re.sub(r"\s+", " ", c.get("body") or "")
-                   for c in ctx.comments(n)]
-        dod_cited = any("DoD" in cb for cb in cbodies)
+        raw_bodies = [(c.get("body") or "") for c in ctx.comments(n)]
+        cbodies = [re.sub(r"\s+", " ", b) for b in raw_bodies]
+        # Rule 9 / rule C: a tick is bookkeeping when a comment on the issue
+        # quotes the box, or when the issue's own STATUS: landed links, in
+        # its FIRST LINE, the body revision holding the filled validation
+        # rows the box names. A bare "DoD" mention is not evidence.
+        landed = any(re.match(r"STATUS:\s*landed\b", b.lstrip())
+                     and received_from(b, n) is None
+                     and re.search(r"https?://\S+", b.lstrip().split("\n", 1)[0])
+                     for b in raw_bodies)
+        if landed:
+            continue
         unevidenced = []
         for txt in ticked:
-            nt = re.sub(r"\s+", " ", txt).strip()
-            if dod_cited or (nt and any(nt in cb for cb in cbodies)):
+            # The "[row: X]" bracket is a pointer, not part of the box text.
+            nt = re.sub(r"\s*\[rows?:[^\]]*\]\s*$", "", txt)
+            nt = re.sub(r"\s+", " ", nt).strip()
+            if nt and any(nt in cb for cb in cbodies):
                 continue
             unevidenced.append(txt)
         if unevidenced:
@@ -479,8 +624,26 @@ CRITERION_ID = re.compile(r"^[A-Z]{1,3}[-–]?\d+\b")
 # Canonical heading names across ALL tiers: a task citing its parent
 # feature's "§ Global Invariants" is a cross-issue reference the same-body
 # check must not flag.
+# Task rule 9: in an issue's OWN comment numbers follow the prefix or
+# sub-tag after a dash; a number directly after it marks a mirror, a notice
+# posted from another issue, or a counterpart's REPLAN or AMENDED editing
+# this body ("STATUS: landed #other ...", "REPLAN: #other ...").
+RECEIVED = re.compile(
+    r"(?:STATUS:\s*\w+|HANDOFF:\s*(?:split|transfer|re-tier)|[A-Z]+:)"
+    r"\s*#(\d+)\b")
+
+
+def received_from(body, n):
+    """The foreign issue number a comment is led by, or None if it is #n's
+    own comment."""
+    m = RECEIVED.match((body or "").lstrip())
+    if m and int(m.group(1)) != n:
+        return int(m.group(1))
+    return None
+
+
 ALL_CANONICAL_HEADINGS = [h for spec in TEMPLATES.values()
-                          for h in spec["headings"]]
+                          for h in spec["headings"] + spec["subheadings"]]
 
 
 def h10(ctx):
@@ -571,21 +734,29 @@ def h12(ctx):
     for n, iss in ctx.issues():
         if iss.tier != "task":
             continue
-        content = ctx.section_by_num(n, "7.10")
+        content = ctx.subsection_content(n, "Data transformations")
+        if content is None:
+            content = ctx.section_by_num(n, "7.10")   # pre-v8 numbered body
         if content is None:
             continue                    # missing subsection is H19's finding
+        # The template's own guidance comment carries literal $...$ / $$...$$
+        # examples; only the filer's text counts.
+        content = re.sub(r"<!--.*?-->", "", content, flags=re.S)
         if content.count("$$") % 2:
             out.append(finding(n, "H12", "error",
-                       "§7.10 has unbalanced $$ delimiters",
+                       "§ Data transformations has unbalanced $$ delimiters",
                        fix_class="body"))
             continue
         has_math = bool(MATH_BLOCK.search(content)
                         or MATH_INLINE.search(MATH_BLOCK.sub("", content)))
-        if has_math or NA_JUSTIFIED.search(content):
+        # A justified N/A may follow a lead-in on the same line.
+        na_anywhere = re.search(r"N/?A[ \t]*(?:[—–-]{1,2})[ \t]*\S",
+                                content, re.I)
+        if has_math or NA_JUSTIFIED.search(content) or na_anywhere:
             continue
         out.append(finding(n, "H12", "error",
-                   "§7.10 carries no $...$/$$...$$ math and is not a "
-                   "justified N/A", fix_class="body"))
+                   "§ Data transformations carries no $...$/$$...$$ math and "
+                   "is not a justified N/A", fix_class="body"))
     return out
 
 

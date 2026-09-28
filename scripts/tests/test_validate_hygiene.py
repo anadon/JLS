@@ -12,7 +12,12 @@ Builds four crafted task issues in a tempdir snapshot:
                 failure (H04 info), ticked DoD box without evidence (H09
                 warn), oversized body (H13 warn)
   #103 clean  — must trigger NONE of the checks above
-  #104 dirty  — missing title prefix (H01 warn)
+  #104 dirty  — missing title prefix (H01 warn); a comment led by #102,
+                which is no counterpart (H07 info)
+
+Comments: #104's own WAIVED names #103 as successor and #103 receives the
+notice led by #104 (task rule 10) — #104 is thereby a counterpart of #103
+and H07 stays silent on #103.
 
 H06's fetcher and H15's git paths are exercised only through their skip
 branches (no network, no git repo required). Stdlib only, plain asserts.
@@ -45,21 +50,25 @@ def task_body(sec1="Background prose.", sec2="Steady behavior observed.",
     lines = []
     for h in TEMPLATES["task"]["headings"]:
         lines.append(f"## {h}\n")
-        if h == "Status & Dependencies":
+        if h == "Intent & Alignment":
+            lines.append("Intent prose.\n### User impact\nStudents.\n")
+        elif h == "Status & Dependencies":
             lines.append(mb)
-        elif h == "1. Background & Prior Work":
+        elif h == "Background & Prior Work":
             lines.append(sec1 + "\n")
-        elif h == "2. Observations":
+        elif h == "Observations":
             lines.append(sec2 + "\n")
-        elif h == "12. Related Work":
+        elif h == "Related Work":
             lines.append(sec12 + "\n")
-        elif h == "7. Interface & Data Contract":
+        elif h == "Interface & Data Contract":
             lines.append("Contract overview.\n")
             for s in TEMPLATES["task"]["subheadings"]:
-                content = sec710 if s == "7.10" \
+                if s == "User impact":
+                    continue            # lives under Intent & Alignment
+                content = sec710 if s == "Data transformations" \
                     else "N/A — not exercised by this task."
-                lines.append(f"### {s} Sub\n{content}\n")
-        elif h == "14. Completion Criteria (Definition of Done)":
+                lines.append(f"### {s}\n{content}\n")
+        elif h == "Completion Criteria (Definition of Done)":
             lines.append(dod)
         else:
             lines.append("Filler prose for this section.\n")
@@ -98,7 +107,22 @@ def build_snapshot(snap):
     with open(os.path.join(snap, "issues.jsonl"), "w") as fh:
         for iss in issues:
             fh.write(json.dumps(iss) + "\n")
-    for name in ("comments.jsonl", "subissues.jsonl", "board.jsonl"):
+    url = "https://api.github.com/repos/example/repo/issues/{}"
+    comments = [
+        {"id": 1, "issue_url": url.format(104), "created_at":
+         "2026-08-20T00:00:00Z", "body": "WAIVED: — criterion 2 dropped: "
+         "no fixture exists; successor #103"},
+        {"id": 2, "issue_url": url.format(103), "created_at":
+         "2026-08-20T01:00:00Z", "body": "WAIVED: #104 — criterion 2 "
+         "dropped: no fixture exists; successor #103"},
+        {"id": 3, "issue_url": url.format(104), "created_at":
+         "2026-08-21T00:00:00Z", "body": "REPLAN: #102 — drops a scope "
+         "this issue never held"},
+    ]
+    with open(os.path.join(snap, "comments.jsonl"), "w") as fh:
+        for c in comments:
+            fh.write(json.dumps(c) + "\n")
+    for name in ("subissues.jsonl", "board.jsonl"):
         open(os.path.join(snap, name), "w").close()
     for name, payload in (("milestones.json", []), ("labels.json", []),
                           ("meta.json", {"fetched_at": "2026-08-23T00:00:00Z",
@@ -127,7 +151,6 @@ def main():
     has(101, "H01", "error")     # FEAT- prefix on a task
     has(104, "H01", "warn")      # no prefix at all
     has(101, "H04", "error")     # bug without command+output block in §2
-    has(102, "H04", "info")      # enhancement pasting an observed failure
     has(101, "H09", "error")     # zero DoD checkboxes
     has(102, "H09", "warn")      # ticked box, open issue, no evidence
     has(101, "H11", "warn")      # bare N/A in §12
@@ -137,6 +160,10 @@ def main():
     has(101, "H18", "error")     # #99999 fabricated
     has(101, "H18", "warn")      # #485 retired rescue vehicle
     has(0, "H06", "info")        # skip branch: no last_edited.json
+    has(104, "H07", "info")      # led by #102, no counterpart
+    h07 = [f for f in F if f["check"] == "H07"]
+    assert not any(f["issue"] == 103 for f in h07), h07   # waiver notice
+    assert all(f["objects"] == [102] for f in h07 if f["issue"] == 104), h07
 
     # H03: pair emitted once, owned by the lower number
     pairs = [f for f in F if f["check"] == "H03"]

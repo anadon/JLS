@@ -24,7 +24,8 @@ def mk_issue(number, tier, title, machine_lines, labels=None, body_extra=""):
         body += "\n```mermaid\nflowchart TD\n  A --> B\n```\n"
     return {"number": number, "title": title, "body": body,
             "labels": [{"name": f"tier:{tier}"}, {"name": "enhancement"}],
-            "state": "open", "updated_at": "2026-08-23T00:00:00Z"}
+            "state": "open", "updated_at": "2026-08-23T00:00:00Z",
+            "created_at": "2026-08-01T00:00:00Z"}
 
 
 def build_snapshot(tmp):
@@ -62,7 +63,7 @@ def build_snapshot(tmp):
         # 20: roster lists 10 and 13, plus 99998 which is not an open issue
         #     (G06). serves capstone 30, not mirrored there (G08).
         mk_issue(20, "feature", "FEAT-A", [
-            f"evidence_commit: {ec}", "requires_tasks: [10, 13, 99998]",
+            f"evidence_commit: {ec}", "requires_tasks: [10, 13, 99998, 9]",
             "planned_tasks: none", "blocked_by: none", "blocks: none",
             "serves_capstones: [30]", "related: none"]),
         # 21: ALSO owns task 13 — sharing is legal now, must NOT raise G07
@@ -92,6 +93,13 @@ def build_snapshot(tmp):
                                          "index": {}}),):
         with open(os.path.join(tmp, name), "w") as fh:
             json.dump(content, fh)
+    # 9: a task that landed before feature 20 was filed — rule B says
+    # landed work is a blocked_by predecessor, never a roster entry (G06 warn)
+    open(os.path.join(tmp, "closed.jsonl"), "w").write(json.dumps(
+        {"number": 9, "title": "TASK-OLD", "state": "closed",
+         "state_reason": "completed", "labels": ["tier:task"],
+         "updated_at": "2026-07-02T00:00:00Z",
+         "closed_at": "2026-07-01T00:00:00Z"}) + "\n")
     open(os.path.join(tmp, "subissues.jsonl"), "w").write(
         json.dumps({"parent": 20, "children": [10],
                     "children_state": {"10": "open"}}) + "\n")
@@ -161,6 +169,7 @@ def main():
     has(12, "G18")                 # unresolvable evidence_commit
     has(13, "G04")                 # 13<->14 cycle (min node owns it)
     has(20, "G06")                 # roster entry 99998 is not an open task
+    has(20, "G06", "warn")         # roster entry 9 landed before 20 was filed (rule B)
     has(20, "G08", "warn")         # serves_capstones not mirrored
     has(21, "G01", "info")         # quoted '#13' style
     has(30, "G12")                 # retired capstone->task exception survives

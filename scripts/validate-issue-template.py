@@ -29,15 +29,17 @@ and board validators. Design notes, both learned from a 679-issue audit on
 2026-08-17:
   - A YAML key populated by an indented block-style list on FOLLOWING lines is
     populated. Reading only the same line reports false emptiness.
-  - A heading may carry a suffix or a plural ("4. Hypotheses (falsifiable)",
-    "1. Background & Prior Work (current state, landed at 2eb3e0c)") and is
+  - A heading may carry a suffix or a plural ("Hypotheses (falsifiable)",
+    "Background & Prior Work (current state, landed at 2eb3e0c)") and is
     still that section. Matching is by title similarity, never by section
-    number alone -- "2. Engine Decision" is NOT "2. Decomposition & Rationale".
+    number -- headings carry none since the v8/v5 templates, and an older
+    body's "2. Engine Decision" is NOT "Decomposition & Rationale".
 """
 import argparse, json, re, subprocess, sys
 
 from issue_corpus import (TEMPLATES, BANNED_YAML_KEYS, YAML_BLOCK, HEADING,
-                          find_heading, load_corpus, yaml_key_state)
+                          find_heading, find_subheading, load_corpus,
+                          yaml_key_state)
 
 
 def validate(number, body, labels, forced_tier=None):
@@ -90,10 +92,11 @@ def validate(number, body, labels, forced_tier=None):
         errors.append(f"missing required section(s): {'; '.join(missing)}")
 
     missing_sub = [s for s in spec["subheadings"]
-                   if not re.search(rf"^#{{1,4}}\s*{re.escape(s)}(?!\d)", body, re.M)]
+                   if find_subheading(headings, s) is None]
     if missing_sub:
         errors.append(
-            f"missing §7 subsection(s): {', '.join(missing_sub)} "
+            "missing required subsection(s): "
+            f"{'; '.join(missing_sub)} "
             "(each is required; use 'N/A — <reason>' if genuinely inapplicable)"
         )
 

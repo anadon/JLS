@@ -21,8 +21,8 @@ Check ids (stable): G01 parse defects; G02 nonexistent referents; G03 edge
 tier-legality; G04 combined-graph cycles; G05 RETIRED (task->feature ordering
 is now illegal outright — G03 owns it); G06 roster entries resolve to open
 tasks; G07 RETIRED (a task may be owned by many features); G08
-serves_capstones/requires_features mirror; G09 ordering symmetry (info) and
-feature<->capstone mirror obligations; G10 native sub-issue agreement; G11
+serves_capstones/requires_features mirror; G09 ordering symmetry (warn — the
+`blocks` mirror obligation at every tier pair); G10 native sub-issue agreement; G11
 edges to closed issues; G12 surviving retired capstone->task exception
 REPLAN comment; G13 planned_* hygiene (filed numbers still in planned;
 orphaned K/M/L/P/D scope ids); G14 mermaid vs machine block; G15
@@ -66,6 +66,11 @@ ORDERING_TARGETS = {
 PLANNED_FIELDS = {"planned_tasks", "planned_features"}
 SCOPE_ID = re.compile(r"\b([KLPD]\d+|M(?!0\b|1\b|2\b|3\b|4\b)\d+)\b")
 EVIDENCE_SHA = re.compile(r"^evidence_commit\s*:\s*([0-9a-f]{7,40})\b", re.M)
+# A release-only defect names its release branch as a YAML comment on the
+# evidence_commit line (task § Status & Dependencies): `# release: v3.2`.
+# G18 then checks ancestry against that branch instead of HEAD.
+RELEASE_REF = re.compile(
+    r"^evidence_commit\s*:[^\n]*#\s*release(?:-branch)?\s*:\s*(\S+)", re.M)
 
 
 def planned_entries(mb, key):
@@ -97,7 +102,7 @@ def planned_entries(mb, key):
 
 # A child task that cites its OWN PARENT feature's integration criterion by
 # number is the highest-precision signal of a feature rule B violation that
-# exists in this corpus. Rule B requires at least one §5 criterion that no
+# exists in this corpus. Rule B requires at least one integration criterion that no
 # single child covers alone; when the child's own body says "this is #F's
 # Integration Criterion 5", that criterion is covered alone by construction.
 # Two independent audits converged on this as "the most reliable tell".
@@ -426,23 +431,40 @@ def run(corpus, repo_root, only_issue=None):
                                  "the local clone", objects=[sha],
                                  fix_class="adjudicate"))
             else:
+                rel = RELEASE_REF.search(node.machine)
+                tip = "HEAD"
+                if rel:
+                    ref = rel.group(1)
+                    for cand in (ref, "origin/" + ref):
+                        if subprocess.run(["git", "-C", repo_root,
+                                           "rev-parse", "--verify", "-q",
+                                           cand + "^{commit}"],
+                                          capture_output=True).returncode == 0:
+                            tip = cand
+                            break
+                    else:
+                        F.append(finding(n, "G18", "warn",
+                                         f"release branch {ref!r} named on "
+                                         "evidence_commit does not resolve "
+                                         "in the local clone", objects=[sha],
+                                         fix_class="adjudicate"))
                 r = subprocess.run(["git", "-C", repo_root, "merge-base",
-                                    "--is-ancestor", sha, "HEAD"],
+                                    "--is-ancestor", sha, tip],
                                    capture_output=True)
                 if r.returncode != 0:
                     F.append(finding(n, "G18", "warn",
                                      f"evidence_commit {sha} is not an "
-                                     "ancestor of HEAD", objects=[sha],
+                                     f"ancestor of {tip}", objects=[sha],
                                      fix_class="adjudicate"))
                 else:
                     cnt = subprocess.run(
                         ["git", "-C", repo_root, "rev-list", "--count",
-                         f"{sha}..HEAD"], capture_output=True, text=True)
+                         f"{sha}..{tip}"], capture_output=True, text=True)
                     behind = int(cnt.stdout.strip() or 0)
                     if behind > 0:
                         F.append(finding(n, "G18", "info",
                                          f"evidence_commit {sha} is {behind} "
-                                         "commits behind HEAD",
+                                         f"commits behind {tip}",
                                          objects=[sha, behind],
                                          fix_class="body"))
 
@@ -500,7 +522,7 @@ def run(corpus, repo_root, only_issue=None):
                     f"child #{t} names this feature's own integration "
                     f"criteri{'on' if len(crits) == 1 else 'a'} "
                     f"{', '.join(crits)} as its own deliverable — if no other "
-                    "§5 criterion is jointly owned, rule B is not met and "
+                    "integration criterion is jointly owned, rule B is not met and "
                     "this is a folder, not a feature",
                     objects=[t] + crits, fix_class="adjudicate"))
 
@@ -556,6 +578,24 @@ def run(corpus, repo_root, only_issue=None):
                             "scope as delivered; drop it via REPLAN or "
                             "re-home the scope",
                             objects=[t], fix_class="adjudicate"))
+                    else:
+                        # Feature rule B: work already landed when the feature
+                        # listed it is a blocked_by predecessor cited by
+                        # permalink, never a roster entry. Detectable only
+                        # for filing-time listings (a later adopting REPLAN's
+                        # timestamp is not read here); closed_at is absent in
+                        # snapshots older than this check.
+                        closed_at = rec.get("closed_at") or ""
+                        created = (node.iss.raw or {}).get("created_at") or ""
+                        if closed_at and created and closed_at < created:
+                            F.append(finding(
+                                n, "G06", "warn",
+                                f"requires_tasks lists #{t}, which closed "
+                                f"({closed_at[:10]}) before this feature was "
+                                f"filed ({created[:10]}) — landed work is a "
+                                "blocked_by predecessor cited by permalink, "
+                                "not a roster entry (feature rule B)",
+                                objects=[t], fix_class="body"))
                 elif child.tier != "task":
                     F.append(finding(
                         n, "G06", "error",
@@ -589,13 +629,12 @@ def run(corpus, repo_root, only_issue=None):
         for t in node.numbers("blocked_by"):
             other = nodes.get(t)
             if other and n not in set(other.numbers("blocks")) and want(n):
-                tiers = {node.tier, other.tier}
-                sev = ("warn" if tiers == {"feature", "capstone"} else "info")
-                F.append(finding(n, "G09", sev,
+                # warn at every tier pair: the templates carry no
+                # Counterparts box any more, so this check is the only
+                # record of a `blocks` mirror missing.
+                F.append(finding(n, "G09", "warn",
                                  f"blocked_by #{t} not mirrored by blocks "
-                                 "on the other side"
-                                 + (" (feature<->capstone mirror obligation)"
-                                    if sev == "warn" else ""),
+                                 "on the other side (mirror obligation)",
                                  objects=[t], fix_class="body"))
 
         # G10 native sub-issues vs machine block.

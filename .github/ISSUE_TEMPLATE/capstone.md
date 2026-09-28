@@ -14,10 +14,7 @@ labels: ["tier:capstone"]
   capstone-specific consequences:
     - Capstones COMPOSE features (requires_features) and SUB-CAPSTONES
       (requires_capstones), and ORDER against capstones and features
-      (blocked_by / blocks). Both directions are downward or
-      same-tier; no edge from a capstone ever points at a task, and
-      nothing upward exists above this tier. Rule G covers scope no
-      feature can host.
+      (blocked_by / blocks). Rule G covers scope no feature can host.
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
       edge). A parent that also needs one of the sub-capstone's features
@@ -57,24 +54,19 @@ labels: ["tier:capstone"]
     rule B (not a folder)                 | rule F below
     § Re-planning Protocol dispositions   | § Re-planning Protocol, rule G
 
-  So: the machine block in § Status & Required Features is the source
-  of truth for the edges it can express (A); a REPLAN that binds a
+  So: a REPLAN that binds a
   required entry — drops it, adds it already filed (rule G(b)),
   resolves a `planned_features` scope to it, answers its re-plan
   request, re-homes scope into it (rule G(a)), or assigns it an
   artifact or risk mitigation — is also posted, led by this number, on
   that issue, which answers per its own rules (task rule 9 substituted;
   feature rules C–D); a disclaiming REPLAN is answered here by a REPLAN
-  re-owning the item (C); required
-  features and sub-capstones mirror their prefixed comments here, and
-  this capstone mirrors its own on every OPEN capstone whose
-  `requires_capstones` lists it (D). In addition:
+  re-owning the item (C). In addition:
 
   E. The required set is a closed list with a sufficiency argument
      (§ Required Feature Set & Sufficiency): why exactly these
      features, together, make § Outcome Statement true — and why none
-     is removable. Adding or removing a feature is a re-plan recorded
-     with a REPLAN comment, not a quiet edit.
+     is removable.
   F. A capstone must assert system-level acceptance criteria
      (§ System-Level Acceptance Criteria) that no single feature's
      completion criteria cover. If every criterion is already owned by
@@ -84,8 +76,9 @@ labels: ["tier:capstone"]
      new issue plus a REPLAN on the old one), REPLANs a child away, or
      is descoped while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — assign
-     the task to an OPEN required feature, which adopts it into its
-     requires_tasks by its own REPLAN (feature rule D; a closed feature
+     the task or planned scope to an OPEN required feature, which adopts
+     it into its `requires_tasks` or `planned_tasks` by its own REPLAN
+     (feature rule D; a closed feature
      is never reopened — use (b)); (b) file a new feature to
      host it, or adopt the feature already hosting it (a re-parented
      feature or sub-capstone names this capstone; a sub-capstone is
@@ -141,8 +134,7 @@ labels: ["tier:capstone"]
          at the gate after § Required Feature Set & Sufficiency.
        - `blocked_by`, `related` and the mermaid graph at the gate after
          § System-Level Acceptance Criteria (which is grouped with
-         § Cross-Feature Integration Risks). `blocks` stays `[]` at
-         filing: it carries mirrors only (validator G09 reports drift).
+         § Cross-Feature Integration Risks).
      -->
 
 ```yaml
@@ -218,8 +210,7 @@ flowchart TD
      § System-Level Acceptance Criteria (written together with this
      section), an ordering edge, a feature's own invariant — or is
      explicitly accepted. Every necessary ordering is an edge: fill
-     `blocked_by` and the mermaid graph at this group's gate (`blocks`
-     stays empty or mirrors-only). -->
+     `blocked_by` and the mermaid graph at this group's gate. -->
 
 ## System-Level Acceptance Criteria
 
@@ -231,7 +222,8 @@ flowchart TD
      rule 12). For every
      golden artifact or expected value: who produced it, when, and
      whether it was pre-committed, independently derived, or will be
-     produced by the system it certifies (task rule 11). Together they
+     produced by the system it certifies — any required feature's code
+     counts (task rule 11). Together they
      pin every step of § Outcome Statement and every risk mitigation
      assigned here.
 
@@ -241,21 +233,17 @@ flowchart TD
      failing criterion with command and output; it follows a REPLAN
      giving every still-open or planned required entry its
      § Re-planning Protocol disposition (posted on each filed one, rule
-     C) and cites it; the sheet is not completed — rows already filled
-     stand and the REFUTED links the revision holding them (task rule
-     10).
+     C) and cites it (the close-out record, task rule 10).
 
-     A "spans #A, #B" ANNOTATION IS NOT EVIDENCE. Before writing it,
-     open #A and #B and read their § Integration Criteria & Evidence
-     Plan and § Completion Criteria (Definition of Done). State what
-     each contributes. If one of them already asserts the whole thing,
-     say "covered alone by #A" — honest, and it simply does not count
-     toward rule F. A capstone needs only ONE genuine system-level
-     criterion, but it does need one.
+     A "spans #A, #B" ANNOTATION IS NOT EVIDENCE: state what each
+     contributes, read from its § Integration Criteria & Evidence Plan
+     and § Completion Criteria (Definition of Done) as they read now. If
+     one of them already asserts the whole thing, say "covered alone by
+     #A" — honest, and it simply does not count toward rule F.
 
      A criterion nothing covers is marked UNOWNED. -->
 
-- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN its filer posts on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Risks, acceptance & edges.** Every shared interface cites both features' contracts by section name and each FILED feature's § Feature-Level Interface & Data Contract declares its side (a planned feature's side is confirmed at resolution, rule C); every ordering hazard is an edge in the waiting feature's machine block (assigned by a REPLAN posted on it, rule C; an edge involving a planned feature is recorded here and carried into the machine blocks at its filing, or by the REPLAN resolving the scope to a feature filed without it — into its own `blocked_by`, or, where a filed feature waits on it, by the REPLAN posted on that feature, feature rule C) or, where this capstone itself waits, in this block, with no edge pointing at a task; `blocked_by` and `related` are filled, `blocks` is empty or carries only mirrors, and the DAG walk for the edges added here is recorded; the mermaid graph agrees with the machine block (rule A); every risk names a mitigation — a criterion here, an edge, a feature's invariant — or is accepted with a reason. Every acceptance criterion carries exactly one ownership annotation written against each FILED feature's actual text at its current revision (a planned feature's side and annotation are written against its planned scope and confirmed by the rule C resolution comment, otherwise REPLAN) and names its next move on failure; at least one is a genuine span or close-out criterion (rule F); every step of § Outcome Statement is pinned by some criterion; every risk mitigation assigned to this section exists here; no span names a feature outside the required set; no owner disclaims what is assigned to it; every artifact named exists at `evidence_commit` or has a named builder (task rule 12); every expected value names its custodian, date and provenance (task rule 11). Adversarial re-read of everything above found no substantial finding.
 
 ## Code & Project Impact and Consequences
 
@@ -309,7 +297,7 @@ flowchart TD
      Mark every entry per task rule 13 — `Recommended default:`,
      `PROPOSED:`, `BLOCKING:` or `HYGIENE:`. -->
 
-- [ ] **Gate — Re-planning, consequences & decisions.** Every published surface or commitment the outcome moves has its consequence stated; every cost identified is stated or the section says there is none and why; none was accepted that § Intent & Alignment would not justify. Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment where anything cited changed, naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Consequences, re-planning & decisions.** Every published surface or commitment the outcome moves has its consequence stated; every cost identified is stated or the section says there is none and why; none was accepted that § Intent & Alignment would not justify. Every trigger named in § Re-planning Protocol has a response ending in a REPLAN comment where anything cited changed, naming the sections it re-derives; the protocol covers every entry of the required set; every open question carries exactly one task rule 13 marker; every decision the acceptance pass will hit is listed or settled above; nothing marked `Recommended default:` contradicts a criterion or a risk mitigation. Adversarial re-read of everything above found no substantial finding.
 
 ## Completion Criteria (Definition of Done)
 
@@ -410,8 +398,7 @@ flowchart TD
   could apply to one fact, take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; scripts/tests/test_adr_blocks.py checks the
-  three tier copies agree.
+  Self-contained by design; test_adr_blocks.py keeps the three copies aligned.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
@@ -442,10 +429,12 @@ flowchart TD
       1 a person reads prose and agrees (review of prose only)
       0 none; success asserted by whoever did the work, with no enumerated
         procedure or transcript
-      DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
-      both the implementation and the expected values certifying it (task
-      rule 11 defines "the same change" and the independently-derived
-      exemption). Deduct
+      DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the expected values
+      certifying the acceptance were produced by running the system —
+      here the composed required set, so a value any required feature's
+      or child's PR generated from its own code counts, whatever PR the
+      comparison lands in (task rule 11; the independently-derived
+      exemption stands). Deduct
       1 if the acceptance evidence is a document asserting a measurement.
       `os:` records the score AFTER deductions; `os_deduction:` records the
       total deducted, 0-3.

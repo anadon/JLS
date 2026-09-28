@@ -31,9 +31,7 @@ labels: ["tier:feature"]
   shared — there is no single-owner rule and no per-task owner field.
   Ownership is recorded ONLY here, in this feature's requires_tasks
   roster, which is the sole authority. To learn which features own a
-  task, read the rosters; the task itself does not claim an owner. A
-  task's § Intent & Alignment may name this feature as what it aligns
-  with; that is a reference, not ownership.
+  task, read the rosters; the task itself does not claim an owner.
 
   `tier:` is fixed at filing: a re-tier is a new issue at the new tier
   plus a `HANDOFF: re-tier` (task) or REPLAN (feature, capstone) on the
@@ -217,8 +215,7 @@ labels: ["tier:feature"]
        - `requires_tasks`, `planned_tasks` at the gate after
          § Integration Criteria & Evidence Plan, once the cuts are made.
        - `blocked_by`, `related` and the mermaid graph at the gate after
-         § Sequencing & Parallelism. `blocks` and `serves_capstones`
-         stay `[]` at filing: they carry mirrors only.
+         § Sequencing & Parallelism.
      -->
 
 ```yaml
@@ -305,16 +302,16 @@ flowchart TD
      operator class (a person, a display substrate, a device). For every golden
      file or expected value: who produced it, when, and whether it was
      pre-committed, independently derived, or will be produced by the
-     implementation it certifies (task rule 11 — the ADR OS deduction
-     reads this).
+     implementation it certifies — any child's code counts as the
+     implementation here (task rule 11 — the ADR OS deduction reads
+     this).
 
      EVERY CRITERION NAMES ITS NEXT MOVE ON FAILURE: "if not-Y after all
      spanning children landed → fix child by REPLAN (scope stated) |
      `REFUTED:` — the premise of § Capability Statement & Scope Boundary
      fails". A feature's `REFUTED:` is that premise failure: the comment
-     quotes the failing criterion and carries the command and output,
-     and the sheet is not completed — rows already filled stand and the
-     REFUTED links the revision holding them (task rule 10). Where
+     quotes the failing criterion and carries the command and output
+     (the close-out record, task rule 10). Where
      roster entries are still open or planned, the REFUTED follows a
      REPLAN giving each its § Re-planning Protocol disposition (posted
      on each filed child, rule C) and cites it.
@@ -363,8 +360,7 @@ flowchart TD
      such, so a scheduler may break it knowingly. Every necessary order
      here is a `blocked_by` edge in the child's own machine block; fill
      this feature's `blocked_by` and the mermaid graph now and record
-     the DAG walk (`blocks` and `serves_capstones` stay empty or
-     mirrors-only). -->
+     the DAG walk. -->
 
 - [ ] **Gate — Sequencing & edges.** Every ordering a serving or planning capstone's § Cross-Feature Integration Risks records against this feature is in `blocked_by` here, or — where a filed feature must wait on this one — was added to it by that feature's REPLAN adding the edge, posted on it by whoever files this feature (rule C) and cited here, or the other feature is still planned and the capstone's § Cross-Feature Integration Risks records the edge for its filing; every necessary ordering is an edge in the filed children's machine blocks, or is recorded here to be added when a planned child is filed, or — for an ordering both of whose children landed before this feature existed — § Sequencing & Parallelism records the landing order in place of the edge (an open child waiting on a landed one still carries the edge in its `blocked_by`), and appears in the mermaid graph; tasks called mutually independent share no handoff in § Feature-Level Interface & Data Contract other than one stubbed under Gate — Decomposition, Contract & Integration (the retiring child is then ordered after both); convention-only orderings are marked; `blocked_by` and `related` are filled, `blocks` and `serves_capstones` are empty or carry only mirrors, no edge points upward, the DAG walk is recorded, and the mermaid graph agrees with the machine block (rule A). Adversarial re-read of everything above found no substantial finding.
 
@@ -406,11 +402,16 @@ flowchart TD
      re-homed (an OPEN feature already listing it, named; one not yet
      listing it adopts it by its own REPLAN — rule C, posted on the child
      — which this REPLAN cites), freed
-     (in no roster; the child answers per task rule 9), or closed; a
+     (in no roster; the child answers per task rule 9), or closed (no
+     other roster lists it and no beneficiary remains — a child another
+     OPEN roster lists is re-homed there, never closed); the REPLAN
+     records the roster search; a
      planned scope is moved to a named open feature's `planned_tasks`,
      or dropped with the § Decomposition & Rationale argument (rule B)
-     re-derived; closing with scope a serving capstone still needs →
-     that capstone's rule G disposition, cited in the closing REPLAN. -->
+     re-derived; closing with scope a serving capstone still needs → the
+     closing REPLAN names each such scope item as unmet, and that
+     capstone's rule G REPLAN, answering it, gives the disposition
+     (posted here as a notice, rule C). -->
 
 ## Open Questions & Decisions Needed
 
@@ -531,8 +532,7 @@ flowchart TD
   could apply to one fact, take the lower. Caps and deductions stated inside
   an axis apply on top of the anchor chosen; they are not in competition
   with it.
-  Self-contained by design; scripts/tests/test_adr_blocks.py checks the
-  three tier copies agree.
+  Self-contained by design; test_adr_blocks.py keeps the three copies aligned.
 
   SEVEN ADDITIVE AXES, 0-5 each. RAW = their sum, 0-35.
 
@@ -563,10 +563,12 @@ flowchart TD
       1 a person reads prose and agrees (review of prose only)
       0 none; success asserted by whoever did the work, with no enumerated
         procedure or transcript
-      DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the same change authors
-      both the implementation and the expected values certifying it (task
-      rule 11 defines "the same change" and the independently-derived
-      exemption). Deduct
+      DEDUCTIONS, CUMULATIVE, floor 0. Deduct 2 if the expected values
+      certifying the integration were produced by running the
+      implementation — here the composed roster, so a value any child's
+      PR generated from its own code counts, whatever PR the comparison
+      lands in (task rule 11; the independently-derived exemption
+      stands). Deduct
       1 if the acceptance evidence is a document asserting a measurement.
       `os:` records the score AFTER deductions; `os_deduction:` records the
       total deducted, 0-3.
@@ -590,8 +592,7 @@ flowchart TD
       2 several days    1 more than a week, or the chain crosses a subsystem
         it must first learn                    0 a multi-week programme
       Measured as if the roster had landed: do not count time spent waiting
-      for children; that is an ordering dependency, recorded in the roster
-      and in `blocked_by`.
+      for children.
 
   PD  PRECEDENT DENSITY — is there a worked example of this shape already in
       this repository?

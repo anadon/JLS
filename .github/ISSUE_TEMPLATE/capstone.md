@@ -14,7 +14,8 @@ labels: ["tier:capstone"]
   capstone-specific consequences:
     - Capstones COMPOSE features (requires_features) and SUB-CAPSTONES
       (requires_capstones), and ORDER against capstones and features
-      (blocked_by / blocks). Rule G covers scope no feature can host.
+      (blocked_by / blocks). Rule G covers scope a required entry leaves
+      behind.
     - Nested capstones: list a sub-capstone in requires_capstones (its
       whole outcome gates this one; the DAG rule covers the composition
       edge). Do not enumerate a sub-capstone's features in place of the
@@ -73,8 +74,9 @@ labels: ["tier:capstone"]
      file it.
   G. Orphaned scope. When a required entry (feature or sub-capstone)
      closes, is re-tiered (a new issue plus a REPLAN on the old one),
-     REPLANs a child away, or
-     is descoped while leaving scope this capstone still needs, the
+     REPLANs a child away, is descoped, or has its landed work reverted
+     after close (the task rule 9 notice the roster pickup row reads),
+     while leaving scope this capstone still needs, the
      REPLAN must give that scope a disposition: (a) re-home it — assign
      the task or planned scope to an OPEN required feature by this
      REPLAN, posted on it led by this number (feature rule C), which
@@ -145,9 +147,8 @@ requires_features: []   # composition — the closed required set (rule E), FILE
 requires_capstones: []  # composition — sub-capstones (nesting; see the tier-model note)
 planned_features: []    # one-line scopes for required features not yet filed; verify each
                         #   scope is ABSENT at evidence_commit before listing it; resolve
-                        #   each to its number when filed (rule C). A non-empty
-                        #   planned_features means the sufficiency argument is
-                        #   PROVISIONAL and this capstone is not Ready.
+                        #   each to its number when filed (rule C). Non-empty: G19
+                        #   warns; the board derives Blocked.
 blocked_by: []          # ordering: capstones or features that must land before this
                         #   capstone closes, beyond the required set. Never tasks.
 blocks: []              # mirrors only — the counterpart's blocked_by is authoritative:
@@ -182,8 +183,7 @@ flowchart TD
      jointly delivers § Outcome Statement, and per feature, what breaks
      in the walk-through if it were removed — the minimality check. A
      feature with no answer to the second question does not belong in
-     the set (a sub-capstone's feature listed under the tier-model note
-     answers it with the criterion, risk or rule G item that names it).
+     the set.
      Write each contribution against the feature's own § Capability
      Statement & Scope Boundary as it reads NOW; a feature
      whose boundary disclaims the contribution claimed here is a plan
@@ -198,7 +198,7 @@ flowchart TD
 |---------|-----------------------------|--------|
 | #       |                             |        |
 
-- [ ] **Gate — Sufficiency.** Every FILED required feature's body was read at its current revision and its § Capability Statement & Scope Boundary supplies the contribution claimed; every row names the walk-through step that breaks without it, or, for a sub-capstone's feature listed under the tier-model note, the criterion, risk or rule G item that names it; the set, together with the landed preconditions cited, covers every step of § Outcome Statement; every planned scope is verified absent at `evidence_commit`; `requires_features`, `requires_capstones`, `planned_features` are filled, every filed entry is of the tier its key requires, and the DAG walk for the composition edges is recorded. Adversarial re-read of everything above found no substantial finding.
+- [ ] **Gate — Sufficiency.** Every FILED required feature's body was read at its current revision and its § Capability Statement & Scope Boundary supplies the contribution claimed; every row names the walk-through step that breaks without it, or, for a sub-capstone's feature listed under the tier-model note, the criterion, risk or rule G item that names it; the set, together with the landed preconditions cited, covers every step of § Outcome Statement; every planned scope is verified absent at `evidence_commit`; `requires_features`, `requires_capstones`, `planned_features` are filled, every filed entry is of the tier its key requires and had not landed at `evidence_commit` (landed work is a cited precondition, never a roster entry), and the DAG walk for the composition edges is recorded. Adversarial re-read of everything above found no substantial finding.
 
 ## Cross-Feature Integration Risks
 
@@ -271,7 +271,11 @@ flowchart TD
      Integration Risks and § System-Level Acceptance Criteria (its
      mirrored REPLAN is the trigger); an acceptance criterion fails with
      every required entry landed → its named next move (§ System-Level
-     Acceptance Criteria); the outcome itself is re-scoped → REPLAN
+     Acceptance Criteria; a criterion, risk or walk-through step found
+     wrong — its fixture removed by a required entry's child, its
+     expected value mis-derived — the required entries being right →
+     corrected by REPLAN with the evidence, task rule 2, no next move
+     fired); the outcome itself is re-scoped → REPLAN
      with the old and new § Outcome Statement both quoted, then § Intent
      & Alignment re-checked and § Required Feature Set & Sufficiency and
      § System-Level Acceptance Criteria re-derived, each released entry
@@ -349,7 +353,7 @@ flowchart TD
 - [ ] Every entry in `requires_features` and `requires_capstones` has a `STATUS: landed` comment mirrored here (rule D), and no later `STATUS: landed`, `REPLAN:` or `AMENDED:` notice on the entry qualifies what it landed without a REPLAN here reconciling it or naming the successor it tracks, or its disposition is recorded; `planned_features` is empty
 - [ ] Every `REPLAN:` or `WAIVED:` from a required feature or sub-capstone read (mirrored here, or on the entry for one posted before this roster listed it — rule D), each REPLAN checked for contract deviations (recorded only by REPLAN, feature rule C); § Cross-Feature Integration Risks, § System-Level Acceptance Criteria and § Required Feature Set & Sufficiency reassessed by REPLAN where anything they cite changed
 - [ ] Every OPEN capstone whose `requires_capstones` lists this one located (roster search) — these receive the mirrored comments of rule D; each parent cited in § Intent & Alignment still lists it, or its REPLAN dropping it was read and § Intent & Alignment re-checked for a remaining beneficiary
-- [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan — where it does, close with `SUPERSEDED:` citing the landing (task rule 6)
+- [ ] Not superseded: the § Outcome Statement walk-through does not already succeed at the checkout for reasons outside this plan — where it does, close with `SUPERSEDED:` citing the landing (task rule 6), after the REPLAN giving each still-open or planned required entry its § Re-planning Protocol disposition, as § System-Level Acceptance Criteria says of a `REFUTED:`
 - [ ] Every `blocked_by` entry has landed, or the edge was removed by a `REPLAN:` comment with a Dropped/Retired ledger entry
 - [ ] Every `BLOCKING:` entry in § Open Questions & Decisions Needed is answered; `PROPOSED:` entries noted as draft-only
 - [ ] `evidence_commit` re-pinned and roster claims re-derived if HEAD has moved
@@ -459,8 +463,8 @@ flowchart TD
         contract with consumers outside this repository
 
   HL  HORIZON LENGTH — the DEPENDENT-step chain, in expert time, from a cold
-      start to gated evidence. Parallel steps count for less than ordered
-      ones: reliability falls with chain length, not with volume.
+      start to gated evidence; parallel steps count for less than ordered
+      ones.
       5 under an hour   4 one to four hours   3 half a day to two days
       2 several days    1 more than a week, or the chain crosses a subsystem
         it must first learn                    0 a multi-week programme

@@ -131,7 +131,9 @@ install onto, or if you already have a Java runtime (JDK/JRE 25 or newer):
   image export (`-i`, PNG named after the circuit file by
   default, or pass an output path such as `-i out.jpg` for JPEG or
   `-i out.svg` for resolution-independent SVG — the right format for
-  slides, lab reports and hosted docs),
+  slides, lab reports and hosted docs; add `-circuit alu` to export
+  subcircuit `alu` instead of the top level, or a dotted path such as
+  `-circuit alu.adder` for a subcircuit nested inside another),
   Verilog export (`-export out.v circuit.jls` writes the drawn circuit
   as a structural Verilog-2005 module — a deployment bridge, not an HDL
   tutorial; note JLS's two-state-plus-HiZ semantics),

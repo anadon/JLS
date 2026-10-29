@@ -234,6 +234,49 @@ public final class Util {
 	} // end of isValidName method
 
 	/**
+	 * Compare names case-insensitively, with runs of digits compared
+	 * by numeric value, so HalfAdder2 sorts before HalfAdder10.
+	 *
+	 * @param a The first name.
+	 * @param b The second name.
+	 *
+	 * @return negative, zero or positive as a sorts before, with or
+	 *         after b.
+	 *
+	 * @jls.testedby jls.UtilFunctionsTest#naturalCompareOrdersDigitRunsByValue()
+	 */
+	public static int naturalCompare(String a, String b) {
+
+		int i = 0;
+		int j = 0;
+		while (i < a.length() && j < b.length()) {
+			final char ca = a.charAt(i);
+			final char cb = b.charAt(j);
+			if (Character.isDigit(ca) && Character.isDigit(cb)) {
+				final int startA = i;
+				final int startB = j;
+				while (i < a.length() && Character.isDigit(a.charAt(i)))
+					i += 1;
+				while (j < b.length() && Character.isDigit(b.charAt(j)))
+					j += 1;
+				final int c = new BigInteger(a.substring(startA, i))
+						.compareTo(new BigInteger(b.substring(startB, j)));
+				if (c != 0)
+					return c;
+			}
+			else {
+				final int c = Character.compare(Character.toLowerCase(ca),
+						Character.toLowerCase(cb));
+				if (c != 0)
+					return c;
+				i += 1;
+				j += 1;
+			}
+		}
+		return Integer.compare(a.length() - i, b.length() - j);
+	} // end of naturalCompare method
+
+	/**
 	 * Check for a valid circuit file name.
 	 * A valid name can be a path name (with slashes or backslashes), but the actual
 	 * file name must be a valid name as defined by isValidName.

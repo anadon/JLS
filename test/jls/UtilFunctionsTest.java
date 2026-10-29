@@ -147,6 +147,25 @@ class UtilFunctionsTest {
 	}
 
 	@Test
+	void naturalCompareOrdersDigitRunsByValue() {
+		assertEquals(-1, Integer.signum(Util.naturalCompare("HalfAdder2", "HalfAdder10")));
+		assertEquals(1, Integer.signum(Util.naturalCompare("HalfAdder10", "HalfAdder2")));
+		assertEquals(-1, Integer.signum(Util.naturalCompare("x1y2", "x1y10")),
+				"every digit run, not only the first");
+		assertEquals(0, Util.naturalCompare("a01", "a1"), "leading zeros");
+		assertEquals(0, Util.naturalCompare("Alu", "aLU"), "case-insensitive");
+		assertEquals(-1, Integer.signum(Util.naturalCompare("a", "B")));
+		assertEquals(-1, Integer.signum(Util.naturalCompare("ab", "abc")),
+				"a proper prefix sorts first");
+		assertEquals(1, Integer.signum(Util.naturalCompare("alu2", "alu")));
+		assertEquals(-1, Integer.signum(Util.naturalCompare("a1", "ab")),
+				"a digit against a letter compares as characters");
+		assertEquals(-1, Integer.signum(Util.naturalCompare(
+				"r99999999999999999999", "r100000000000000000000")),
+				"digit runs longer than a long");
+	}
+
+	@Test
 	void fileNameValidationStripsDirectoriesOnBothSeparators() {
 		assertEquals("circ", Util.isValidFileName("circ"));
 		assertEquals("circ", Util.isValidFileName("/home/user/circ"));

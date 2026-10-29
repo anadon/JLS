@@ -3,6 +3,7 @@ package jls;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1685,6 +1686,76 @@ public class Circuit {
 
 		return subElement;
 	} // end of getSubElement method
+
+	/**
+	 * Get the subcircuit with a given name directly inside this circuit.
+	 * Loading names each SubCircuit element after its nested circuit, and
+	 * the editor keeps those names unique within a circuit; should a
+	 * hand-edited file repeat one, the first in stable element order is
+	 * returned, so the choice is deterministic.
+	 *
+	 * @param name The subcircuit name.
+	 *
+	 * @return the nested circuit, or null if this circuit has no
+	 *         subcircuit by that name.
+	 *
+	 * @jls.testedby jls.CircuitSubcircuitLookupTest#findsADirectSubcircuitByName()
+	 * @jls.testedby jls.CircuitSubcircuitLookupTest#aRepeatedNameResolvesToTheFirstInStableOrder()
+	 */
+	public @Nullable Circuit getSubCircuit(String name) {
+
+		for (Element el : getElementsInStableOrder()) {
+			if (el instanceof SubCircuit sub && name.equals(sub.getName())) {
+				return sub.getSubCircuit();
+			}
+		}
+		return null;
+	} // end of getSubCircuit method
+
+	/**
+	 * Follow a path of subcircuit names down from this circuit: the path
+	 * (alu, adder) is subcircuit adder inside subcircuit alu - the
+	 * dotted name "alu.adder" once split by JLSStart.parseName. The
+	 * empty path is this circuit.
+	 *
+	 * @param path The subcircuit names, outermost first.
+	 *
+	 * @return the nested circuit, or null if some name along the path
+	 *         names no subcircuit.
+	 *
+	 * @jls.testedby jls.CircuitSubcircuitLookupTest#followsAPathIntoNestedSubcircuits()
+	 * @jls.testedby jls.CircuitSubcircuitLookupTest#aPathWithAMissingStepFindsNothing()
+	 */
+	public @Nullable Circuit getSubCircuit(List<String> path) {
+
+		Circuit circ = this;
+		for (String name : path) {
+			final Circuit next = circ.getSubCircuit(name);
+			if (next == null) {
+				return null;
+			}
+			circ = next;
+		}
+		return circ;
+	} // end of getSubCircuit method
+
+	/**
+	 * Get the names of the subcircuits directly inside this circuit.
+	 *
+	 * @return the names, in stable element order; unmodifiable.
+	 *
+	 * @jls.testedby jls.CircuitSubcircuitLookupTest#namesTheDirectSubcircuitsOnly()
+	 */
+	public List<String> getSubCircuitNames() {
+
+		final List<String> names = new ArrayList<String>();
+		for (Element el : getElementsInStableOrder()) {
+			if (el instanceof SubCircuit sub) {
+				names.add(sub.getName());
+			}
+		}
+		return List.copyOf(names);
+	} // end of getSubCircuitNames method
 
 	/**
 	 * Remove all probes from this circuit and all subcircuits.

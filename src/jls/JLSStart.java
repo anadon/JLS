@@ -104,6 +104,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 	private static @Nullable String startFile = null;
 	/** Image export output file name (-i flag operand), or null to derive it from the circuit name. */
 	private static @Nullable String imageFile = null;
+	/** Dotted subcircuit instance path to export instead of the top level (-circuit flag), or null for the top level. */
+	private static @Nullable String imageCircuit = null;
 	/** VCD waveform output file name (-vcd flag), or null if none given. */
 	private static @Nullable String vcdFile = null;
 	/** HDL export output file name (-export flag), or null if none given. */
@@ -347,12 +349,35 @@ public class JLSStart extends JFrame implements ChangeListener {
 						+ " is not a valid circuit file: " + JLSInfo.loadError);
 				System.exit(1);
 			}
+			// -circuit: draw the named subcircuit instead of the top level
+			Circuit drawn = circ;
+			final String path = imageCircuit;
+			if (path != null) {
+				final List<String> names = parseName(path);
+				if (names == null) {
+					// unreachable: apply() rejected a malformed path
+					throw new IllegalStateException(
+							"unvalidated -circuit path " + path);
+				}
+				final Circuit found = circ.getSubCircuit(names);
+				if (found == null) {
+					System.err.println("jls: error: " + startFile
+							+ " has no subcircuit " + path + "; "
+							+ subcircuitListing(circ, names));
+					System.exit(1);
+					return;
+				}
+				drawn = found;
+			}
+
 			// export to the caller-chosen path, or PNG named after the
-			// circuit by default; the format follows the file extension
-			// (issue #71)
-			String outFile = (imageFile != null) ? imageFile : name + ".png";
+			// circuit (and subcircuit) by default; the format follows the
+			// file extension (issue #71)
+			final String outFile = (imageFile != null) ? imageFile
+					: (path == null) ? name + ".png"
+					: name + "-" + path + ".png";
 			try {
-				CircuitRenderer.of(circ).exportImage(outFile);
+				CircuitRenderer.of(drawn).exportImage(outFile);
 			} catch (Exception e) {
 				System.err.println("jls: error: can't export image to "
 						+ outFile + ": " + e);
@@ -763,6 +788,8 @@ public class JLSStart extends JFrame implements ChangeListener {
 				"run in batch (headless) mode"),
 		new FlagSpec("i", Arity.OPTIONAL, "imagefile", "an image file",
 				"export an image of the circuit (default circuit_file.png; use .jpg/.jpeg for JPEG, .svg for SVG)"),
+		new FlagSpec("circuit", Arity.REQUIRED, "name", "a subcircuit name",
+				"with -i: export the named subcircuit instead of the top level; nested subcircuits are named by dotted path, e.g. alu.adder (default image circuit_file-name.png)"),
 		new FlagSpec("s", Arity.REQUIRED, "file", "a startup file",
 				"startup parameter file"),
 		new FlagSpec("t", Arity.REQUIRED, "file", "a test file",
@@ -915,6 +942,11 @@ public class JLSStart extends JFrame implements ChangeListener {
 		if ((boardName == null) != (pinsFile == null)) {
 			usageError("options -board and -pins must be used together");
 		}
+
+		// -circuit selects what -i draws and means nothing without it
+		if (imageCircuit != null && !JLSInfo.imgexport) {
+			usageError("option -circuit requires -i");
+		}
 	} // end of parseCommandLine method
 
 	/**
@@ -1040,6 +1072,18 @@ public class JLSStart extends JFrame implements ChangeListener {
 				}
 				imageFile = opnd;
 			}
+			break;
+		case "circuit":
+			// a dotted path of subcircuit names, the same form the
+			// startup file uses for elements inside subcircuits
+			// (-circuit is Arity.REQUIRED, so opnd cannot be null; the
+			// guard keeps that invariant locally checkable)
+			if (opnd == null || parseName(opnd) == null) {
+				usageError("option -circuit requires a subcircuit name or "
+						+ "dotted path of names (letters, digits and "
+						+ "underscores, starting with a letter): " + opnd);
+			}
+			imageCircuit = opnd;
 			break;
 		case "r":
 			printer = opnd;
@@ -3034,6 +3078,45 @@ public class JLSStart extends JFrame implements ChangeListener {
 		Circuit circ = ed.getCircuit();
 		CircuitRenderer.of(circ).exportImage(fileName);
 	} // end of exportImage method
+
+	/**
+	 * Describe the subcircuits a user could have meant when a dotted
+	 * path names no subcircuit: those at the deepest level the path
+	 * does reach, e.g. for "group1.HalfAdder3" (with group1 present)
+	 * the subcircuits inside group1, in natural order (HalfAdder2
+	 * before HalfAdder10).
+	 *
+	 * @param top The circuit the path starts from.
+	 * @param path The path, as split by parseName, that failed to
+	 *            resolve.
+	 *
+	 * @return e.g. "subcircuits in group1: HalfAdder1, HalfAdder2",
+	 *         "top-level subcircuits: alu", or
+	 *         "group1 has no subcircuits".
+	 *
+	 * @jls.testedby jls.CliImageExportTest#circuitOptionNamingNoSubcircuitIsARuntimeError()
+	 */
+	static String subcircuitListing(Circuit top, List<String> path) {
+
+		Circuit level = top;
+		String levelPath = "";
+		for (String step : path) {
+			final Circuit next = level.getSubCircuit(step);
+			if (next == null)
+				break;
+			level = next;
+			levelPath = levelPath.isEmpty() ? step : levelPath + "." + step;
+		}
+		final List<String> subs = new ArrayList<>(level.getSubCircuitNames());
+		subs.sort(Util::naturalCompare);
+		if (subs.isEmpty()) {
+			return levelPath.isEmpty() ? "the top level has no subcircuits"
+					: levelPath + " has no subcircuits";
+		}
+		return (levelPath.isEmpty() ? "top-level subcircuits: "
+				: "subcircuits in " + levelPath + ": ")
+				+ String.join(", ", subs);
+	} // end of subcircuitListing method
 
 	/**
 	 * Break compound name (a.b.c) into components.

@@ -28,7 +28,9 @@ import org.junit.jupiter.api.io.TempDir;
  * for JPEG), and an unsupported extension is a usage error. The tests
  * assert file existence, size, container magic, and that the image
  * decodes with plausible dimensions - deliberately no pixel goldens,
- * which are brittle across JDK font rendering.
+ * which are brittle across JDK font rendering. -circuit selects a
+ * subcircuit by dotted path; SVG text labels identify which level was
+ * drawn.
  */
 class CliImageExportTest {
 
@@ -104,6 +106,68 @@ class CliImageExportTest {
 				+ "END\n"
 				+ "ENDCIRCUIT\n";
 		Files.writeString(tmp.resolve(fileName), text, StandardCharsets.UTF_8);
+	}
+
+	/**
+	 * The body of a one-level circuit (a constant wired to an output
+	 * pin named pin), without its ENDCIRCUIT line, so a caller can
+	 * append SubCircuit elements before closing it.
+	 */
+	private static String levelBody(String name, String pin) {
+		return "CIRCUIT " + name + "\n"
+				+ "ELEMENT Constant\n"
+				+ " int id 0\n int x 60\n int y 60\n"
+				+ " int width 24\n int height 24\n"
+				+ " Int value 1\n int base 10\n"
+				+ " String orient \"RIGHT\"\n"
+				+ "END\n"
+				+ "ELEMENT OutputPin\n"
+				+ " int id 1\n int x 480\n int y 120\n"
+				+ " int width 48\n int height 24\n"
+				+ " String name \"" + pin + "\"\n int bits 1\n int watch 0\n"
+				+ " String orient \"RIGHT\"\n"
+				+ "END\n"
+				+ "ELEMENT WireEnd\n"
+				+ " int id 2\n int x 24\n int y 240\n"
+				+ " int width 8\n int height 8\n"
+				+ " String put \"output\"\n ref attach 0\n ref wire 3\n"
+				+ "END\n"
+				+ "ELEMENT WireEnd\n"
+				+ " int id 3\n int x 36\n int y 240\n"
+				+ " int width 8\n int height 8\n"
+				+ " String put \"input\"\n ref attach 1\n ref wire 2\n"
+				+ "END\n";
+	}
+
+	/** A SubCircuit element wrapping the (unclosed) circuit body. */
+	private static String subCircuit(int id, String body) {
+		return "ELEMENT SubCircuit\n"
+				+ " String orient \"RIGHT\"\n"
+				+ " int id " + id + "\n int x 300\n int y 300\n"
+				+ " int width 60\n int height 40\n"
+				+ body
+				+ "ENDCIRCUIT\n"
+				+ "END\n";
+	}
+
+	/**
+	 * Write a three-level circuit: top level cpu (output pin "out")
+	 * holds subcircuit alu (pin "r"), which holds subcircuit inner
+	 * (pin "q"). Each level's pin name identifies it in SVG output.
+	 */
+	private void writeNestedCircuit(String fileName) throws Exception {
+		final String inner = levelBody("inner", "q");
+		final String alu = levelBody("alu", "r") + subCircuit(10, inner);
+		final String text = levelBody("cpu", "out") + subCircuit(20, alu)
+				+ "ENDCIRCUIT\n";
+		Files.writeString(tmp.resolve(fileName), text, StandardCharsets.UTF_8);
+	}
+
+	/** The SVG file's text labels, e.g. ">r<" for a pin named r. */
+	private String svgText(String fileName) throws Exception {
+		final File file = new File(tmp.toFile(), fileName);
+		assertTrue(file.exists(), fileName + " was not written");
+		return Files.readString(file.toPath(), StandardCharsets.UTF_8);
 	}
 
 	/** Assert the file exists, has the given magic bytes, and decodes. */
@@ -187,6 +251,99 @@ class CliImageExportTest {
 		Result r = run("-i", "--", "export.jls");
 		assertEquals(0, r.exit, r.stderr);
 		assertDecodableImage("export.png", 0x89, 'P', 'N', 'G');
+	}
+
+	@Test
+	void circuitOptionExportsTheNamedSubcircuitWithADerivedDefaultName()
+			throws Exception {
+		writeNestedCircuit("cpu.jls");
+		final Result r = run("-i", "-circuit", "alu", "cpu.jls");
+		assertEquals(0, r.exit, r.stderr);
+		assertDecodableImage("cpu-alu.png", 0x89, 'P', 'N', 'G');
+		assertFalse(new File(tmp.toFile(), "cpu.png").exists(),
+				"the top-level default must not be written for -circuit");
+	}
+
+	@Test
+	void circuitOptionDrawsOnlyTheNamedLevel() throws Exception {
+		writeNestedCircuit("cpu.jls");
+		final Result r = run("-i", "alu.svg", "-circuit", "alu", "cpu.jls");
+		assertEquals(0, r.exit, r.stderr);
+		final String svg = svgText("alu.svg");
+		assertTrue(svg.contains(">r<"), "alu's own pin is missing");
+		assertTrue(svg.contains(">inner<"), "alu's subcircuit block is missing");
+		assertFalse(svg.contains(">out<"), "the top level was drawn");
+	}
+
+	@Test
+	void circuitOptionFollowsADottedPathIntoNestedSubcircuits()
+			throws Exception {
+		writeNestedCircuit("cpu.jls");
+		final Result r = run("-i", "inner.svg", "-circuitalu.inner", "cpu.jls");
+		assertEquals(0, r.exit, r.stderr);
+		final String svg = svgText("inner.svg");
+		assertTrue(svg.contains(">q<"), "inner's own pin is missing");
+		assertFalse(svg.contains(">r<"), "the alu level was drawn");
+	}
+
+	@Test
+	void circuitOptionNamingNoSubcircuitIsARuntimeError() throws Exception {
+		writeNestedCircuit("cpu.jls");
+		// each miss lists the subcircuits at the deepest level the path
+		// reached; inner exists, but only inside alu - paths start at
+		// the top
+		final String[][] cases = {
+			{"nope", "top-level subcircuits: alu"},
+			{"inner", "top-level subcircuits: alu"},
+			{"alu.nope", "subcircuits in alu: inner"},
+			{"alu.nope.deeper", "subcircuits in alu: inner"},
+			{"alu.inner.nope", "alu.inner has no subcircuits"},
+		};
+		for (String[] c : cases) {
+			final Result r = run("-i", "-circuit", c[0], "cpu.jls");
+			assertEquals(1, r.exit, c[0] + ": " + r.stderr);
+			assertTrue(r.stderr.contains("has no subcircuit " + c[0]
+					+ "; " + c[1]), r.stderr);
+		}
+		assertFalse(new File(tmp.toFile(), "cpu-nope.png").exists());
+	}
+
+	@Test
+	void subcircuitListingSortsNumberedNamesNaturally() throws Exception {
+		// group1 holds HalfAdder2, HalfAdder10, HalfAdder1 (file order)
+		final String group1 = levelBody("group1", "g")
+				+ subCircuit(10, levelBody("HalfAdder2", "a"))
+				+ subCircuit(11, levelBody("HalfAdder10", "b"))
+				+ subCircuit(12, levelBody("HalfAdder1", "c"));
+		Files.writeString(tmp.resolve("top.jls"),
+				levelBody("top", "out") + subCircuit(20, group1)
+						+ "ENDCIRCUIT\n",
+				StandardCharsets.UTF_8);
+		final Result r = run("-i", "-circuit", "group1.HalfAdder3", "top.jls");
+		assertEquals(1, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("has no subcircuit group1.HalfAdder3; "
+				+ "subcircuits in group1: HalfAdder1, HalfAdder2, HalfAdder10"),
+				r.stderr);
+	}
+
+	@Test
+	void malformedCircuitPathIsAUsageError() throws Exception {
+		writeNestedCircuit("cpu.jls");
+		for (String path : new String[] {"alu..inner", "alu.", "9alu"}) {
+			final Result r = run("-i", "-circuit", path, "cpu.jls");
+			assertEquals(2, r.exit, path + ": " + r.stderr);
+			assertTrue(r.stderr.contains(
+					"option -circuit requires a subcircuit name"), r.stderr);
+		}
+	}
+
+	@Test
+	void circuitOptionWithoutImageExportIsAUsageError() throws Exception {
+		writeNestedCircuit("cpu.jls");
+		final Result r = run("-b", "-circuit", "alu", "cpu.jls");
+		assertEquals(2, r.exit, r.stderr);
+		assertTrue(r.stderr.contains("option -circuit requires -i"),
+				r.stderr);
 	}
 
 	@Test

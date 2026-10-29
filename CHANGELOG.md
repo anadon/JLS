@@ -11,6 +11,14 @@ All notable changes to JLS are documented here. The format follows
 - The move-selection drag commit now routes a pure relocation through the `MoveElements` operation behind the `OpSink` seam (#167), keeping the inline `connect()`/`removeCoLinear()` commit only for drops that form a connection, drag a wire end, or induce colinear cleanup.
 
 ### Added
+- `-circuit <name>` selects what `-i` image export draws: the named
+  subcircuit instead of the top level, with nested subcircuits named
+  by dotted path (`-circuit alu.adder`), the same form startup files
+  use for elements inside subcircuits. Without an explicit output
+  file the image is named `circuit_file-<name>.png`. A path that names
+  no subcircuit exits 1 (`jls: error: ... has no subcircuit ...`)
+  and lists the subcircuits at the deepest level the path reached; a
+  malformed path, or `-circuit` without `-i`, is a usage error (exit 2).
 - The PIT mutation-testing gate is promoted from report-only to a
   blocking climb-ratchet (#159): the `pitest` profile now carries
   `mutationThreshold` 80 / `testStrengthThreshold` 82, floored 2+

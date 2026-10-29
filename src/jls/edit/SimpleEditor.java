@@ -5426,12 +5426,25 @@ public abstract class SimpleEditor extends JPanel {
 
 								// get ready to place it
 								setState(State.chosen);
+
+								// macOS can report no pointer for a moment
+								// after the modal creation dialog closes, even
+								// with the pointer over the canvas; retry
+								// briefly so the element jumps to the pointer
+								// without waiting for the first mouse move
+								retryChosenSnap(item, CHOSEN_SNAP_RETRIES);
 							}
 							else {
 								// invert the component position to model (#74)
 								pos = viewport.toModel(pos);
 								x = pos.x;
 								y = pos.y;
+								// move the element to the pointer, as the
+								// chosen-state mouseMoved does; otherwise it
+								// stays at the drop point and keeps that
+								// offset from the pointer while placing
+								autoGrow(x,y);
+								item.setXY(x,y);
 								item.savePosition();
 
 								// add to circuit and selected set
@@ -5454,6 +5467,52 @@ public abstract class SimpleEditor extends JPanel {
 							requestFocusInWindow();
 						}
 					} // end of setup method
+
+					/** How many times {@link #retryChosenSnap} polls the pointer. */
+					private static final int CHOSEN_SNAP_RETRIES = 5;
+
+					/** Delay between {@link #retryChosenSnap} polls, in ms. */
+					private static final int CHOSEN_SNAP_DELAY_MS = 40;
+
+					/**
+					 * While a just-created element is still waiting in the
+					 * chosen state, poll {@code getMousePosition()} a few
+					 * times; as soon as the pointer is reported over the
+					 * canvas, move the element there and start placing it,
+					 * exactly as the chosen-state mouseMoved does. Stops
+					 * early if the state or selection changes (a mouse move,
+					 * a cancel, a keyboard placement).
+					 *
+					 * @param item The element being placed.
+					 * @param triesLeft Remaining polls, including this one.
+					 */
+					private void retryChosenSnap(Element item, int triesLeft) {
+
+						javax.swing.Timer timer = new javax.swing.Timer(
+								CHOSEN_SNAP_DELAY_MS, ev -> {
+							if (currentState != State.chosen
+									|| !selected.contains(item)) {
+								return;
+							}
+							Point p = getMousePosition();
+							if (p == null) {
+								if (triesLeft > 1) {
+									retryChosenSnap(item, triesLeft-1);
+								}
+								return;
+							}
+							p = viewport.toModel(p);
+							x = p.x;
+							y = p.y;
+							autoGrow(x,y);
+							item.setXY(x,y);
+							item.savePosition();
+							setState(State.placing);
+							repaint();
+						});
+						timer.setRepeats(false);
+						timer.start();
+					} // end of retryChosenSnap method
 
 					/**
 					 * Import a copy of a subcircuit.

@@ -1,6 +1,7 @@
 package jls.ui;
 
 import static jls.ui.CircuitAssert.assertElementPresent;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -128,6 +129,50 @@ class PaletteDropTest {
 			assertTrue(viewport.contains(jls.edit.AwtGeom.awt(gate.getRect())),
 					CircuitAssert.describe(gate) + " with bounds " + gate.getRect()
 							+ " is not within the visible canvas viewport " + viewport);
+		}
+	}
+
+	/**
+	 * When the pointer is already over the canvas as the creation dialog
+	 * closes, the new element must start at the pointer and then track it
+	 * exactly. Previously SimpleEditor.setup recorded the pointer but left
+	 * the element at the tool-bar drop point, so the element trailed the
+	 * pointer by that fixed offset for the whole placement.
+	 *
+	 * The real pointer is parked with
+	 * {@link EditorGestureSupport#warpPointerTo(int, int)} because setup
+	 * reads {@code getMousePosition()}. A fresh editor has the identity
+	 * view transform, so canvas and model coordinates coincide; the
+	 * points are multiples of Geometry.SPACING (12) so the gate's
+	 * snap-to-grid leaves them unchanged.
+	 */
+	@Test
+	void paletteElementStartsAtAndTracksAPointerOverTheCanvas()
+			throws Exception {
+		Circuit circuit = new Circuit("golden");
+		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
+			JButton andButton = findToolbarButton(ui.editor, "AND gate");
+			assertNotNull(andButton, "toolbar has an \"AND gate\" button");
+
+			ui.warpPointerTo(300, 420);
+			SwingUtilities.invokeAndWait(andButton::doClick);
+			AndGate gate = assertElementPresent(circuit, AndGate.class);
+			assertEquals(new Point(300, 420),
+					new Point(gate.getX(), gate.getY()),
+					"new gate starts at the pointer, not the drop point");
+
+			// a pointer move during placement must carry the gate with
+			// it, with no leftover offset
+			ui.moveTo(360, 480);
+			assertEquals(new Point(360, 480),
+					new Point(gate.getX(), gate.getY()),
+					"gate tracks the pointer while placing");
+
+			ui.leftClick(360, 480);
+			ui.waitFor(() -> !gate.isHighlighted(), "gate placed");
+			assertEquals(new Point(360, 480),
+					new Point(gate.getX(), gate.getY()),
+					"gate placed where it was clicked");
 		}
 	}
 

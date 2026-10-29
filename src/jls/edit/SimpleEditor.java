@@ -752,6 +752,33 @@ public abstract class SimpleEditor extends JPanel {
 	} // end of quickReset method
 
 	/**
+	 * Cancel an in-flight gesture that has put uncommitted geometry into
+	 * the circuit - an element chosen from the palette or being placed,
+	 * pasted elements being placed, a half-drawn wire, or a drag in
+	 * progress - exactly as Esc or a right-click cancel would. Called
+	 * before the circuit is serialized for saving: an element waiting to
+	 * be placed is already in the circuit, so without this a save wrote
+	 * it wherever it happened to be (often stacked on another element at
+	 * the default drop point). A plain selection is left alone.
+	 *
+	 * @return true if a gesture was cancelled, false if there was none.
+	 */
+	public boolean cancelPendingEdit() {
+
+		switch (ew.currentState) {
+			case chosen:
+			case placing:
+			case moving:
+			case startwire:
+			case drawire:
+				ew.cancelGesture();
+				return true;
+			default:
+				return false;
+		}
+	} // end of cancelPendingEdit method
+
+	/**
 	 * This should be overridden in the Editor subclass.
 	 */
 	public void close() {
@@ -5700,8 +5727,11 @@ public abstract class SimpleEditor extends JPanel {
 							}
 						}
 
-						// elements not yet placed are removed
-						else if (currentState == State.placing) {
+						// elements not yet placed are removed (a just-chosen
+						// element is already in the circuit, waiting for the
+						// pointer, so it goes too)
+						else if (currentState == State.placing
+								|| currentState == State.chosen) {
 							for (Element el : selected) {
 								el.remove(circuit);
 							}

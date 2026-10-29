@@ -1,6 +1,7 @@
 package jls.ui;
 
 import static jls.ui.CircuitAssert.assertElementPresent;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,6 +11,9 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.awt.event.KeyEvent;
+import java.nio.file.Path;
+import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -22,8 +26,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 
 import jls.Circuit;
+import jls.FileAbstractor;
+import jls.JLSInfo;
 import jls.elem.AndGate;
 
 /**
@@ -129,6 +136,90 @@ class PaletteDropTest {
 					CircuitAssert.describe(gate) + " with bounds " + gate.getRect()
 							+ " is not within the visible canvas viewport " + viewport);
 		}
+	}
+
+	/**
+	 * Saving while a palette element is still waiting to be placed must
+	 * not write it. The element is already in the circuit at the default
+	 * drop point, so before the fix File > Save wrote it there - stacked
+	 * on any element already placed at that point, which left a file
+	 * whose two elements could not be separated. The pointer is parked
+	 * off the canvas so the new element stays in the chosen state, as
+	 * when the creation dialog is accepted with Enter while the pointer
+	 * is over the tool bar.
+	 */
+	@Test
+	void savingWithAChosenElementDoesNotWriteIt(@TempDir Path tmp)
+			throws Exception {
+		Circuit circuit = new Circuit("golden");
+		circuit.setDirectory(tmp.toString());
+		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
+			JButton andButton = findToolbarButton(ui.editor, "AND gate");
+			assertNotNull(andButton, "toolbar has an \"AND gate\" button");
+			ui.warpPointerTo(500, -60);
+
+			// first gate: chosen, then committed in place with Enter
+			SwingUtilities.invokeAndWait(andButton::doClick);
+			ui.pressKey(KeyEvent.VK_ENTER);
+			assertEquals(1, andGates(circuit), "first gate placed");
+
+			// second gate: chosen, still waiting at the same drop point
+			SwingUtilities.invokeAndWait(andButton::doClick);
+			assertEquals(2, andGates(circuit), "second gate pending");
+
+			SwingUtilities.invokeAndWait(() -> ui.editor.save());
+			assertEquals(1, andGates(circuit),
+					"save cancels the pending placement");
+		}
+		assertEquals(1, andGates(reload(tmp, "golden")),
+				"only the placed gate is written");
+	}
+
+	/**
+	 * The same for an element that is following the pointer (the placing
+	 * state): saving cancels the placement instead of writing the element
+	 * wherever it happens to be.
+	 */
+	@Test
+	void savingWithAPlacingElementDoesNotWriteIt(@TempDir Path tmp)
+			throws Exception {
+		Circuit circuit = new Circuit("golden");
+		circuit.setDirectory(tmp.toString());
+		try (EditorGestureSupport ui = new EditorGestureSupport(circuit)) {
+			JButton andButton = findToolbarButton(ui.editor, "AND gate");
+			assertNotNull(andButton, "toolbar has an \"AND gate\" button");
+			ui.warpPointerTo(300, 420);
+			SwingUtilities.invokeAndWait(andButton::doClick);
+			assertEquals(1, andGates(circuit), "gate pending");
+
+			SwingUtilities.invokeAndWait(() -> ui.editor.save());
+			assertEquals(0, andGates(circuit),
+					"save cancels the pending placement");
+
+			// the editor is back to idle: a click places nothing
+			ui.leftClick(300, 420);
+			assertEquals(0, andGates(circuit), "no placement in flight");
+		}
+		assertEquals(0, andGates(reload(tmp, "golden")),
+				"the unplaced gate is not written");
+	}
+
+	/** Number of AND gates in a circuit. */
+	private static long andGates(Circuit circuit) {
+		return circuit.getElements().stream()
+				.filter(el -> el instanceof AndGate).count();
+	}
+
+	/** Load a saved circuit back from disk. */
+	private static Circuit reload(Path dir, String name) throws Exception {
+		Scanner input = FileAbstractor.openCircuit(
+				dir.resolve(name + ".jls").toString());
+		assertNotNull(input, "saved file must open");
+		Circuit loaded = new Circuit("");
+		assertTrue(loaded.load(input), () -> "load: " + JLSInfo.loadError);
+		assertTrue(loaded.finishLoad(null),
+				() -> "finishLoad: " + JLSInfo.loadError);
+		return loaded;
 	}
 
 	/** The toolbar button for the given tooltip (set by makeElement). */

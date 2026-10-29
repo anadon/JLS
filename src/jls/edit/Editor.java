@@ -51,6 +51,9 @@ public final class Editor extends SimpleEditor {
 	 */
 	public boolean save() {
 
+		// never write an element that has not been placed yet
+		cancelPendingEdit();
+
 		// if imported, can't save
 		if (circuit.isImported()) {
 			TellUser.error(getTopLevelAncestor(),
@@ -91,6 +94,9 @@ public final class Editor extends SimpleEditor {
 	 * Give new name to circuit, then save it.
 	 */
 	public void saveAs() {
+
+		// never write an element that has not been placed yet
+		cancelPendingEdit();
 
 		// if imported, can't save
 		if (circuit.isImported()) {

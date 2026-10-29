@@ -1345,6 +1345,7 @@ public class JLSStart extends JFrame implements ChangeListener {
 	 */
 	private void shutdown() {
 
+		cancelPendingEdits();
 		boolean cancel = false;
 		for (Component comp : edits.getComponents()) {
 			if (comp instanceof Editor editor) {
@@ -1358,6 +1359,21 @@ public class JLSStart extends JFrame implements ChangeListener {
 		if (!cancel)
 			System.exit(0);
 	} // end of shutdown method
+
+	/**
+	 * Cancel any unplaced element, half-drawn wire, or drag in every open
+	 * editor before a save. Saving a circuit also writes its subcircuits,
+	 * which may be open (with a pending placement) in other tabs, so
+	 * cancelling only the visible editor is not enough.
+	 */
+	private void cancelPendingEdits() {
+
+		for (Component comp : edits.getComponents()) {
+			if (comp instanceof Editor editor) {
+				editor.cancelPendingEdit();
+			}
+		}
+	} // end of cancelPendingEdits method
 
 	/**
 	 * Get currently visible editor.
@@ -1438,8 +1454,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
-				if (ed != null)
+				if (ed != null) {
+					cancelPendingEdits();
 					ed.save();
+				}
 			}
 		});
 
@@ -1459,8 +1477,10 @@ public class JLSStart extends JFrame implements ChangeListener {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				Editor ed = (Editor)(edits.getSelectedComponent());
-				if (ed != null)
+				if (ed != null) {
+					cancelPendingEdits();
 					ed.saveAs();
+				}
 			}
 		});
 

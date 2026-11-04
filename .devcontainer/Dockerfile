@@ -18,7 +18,7 @@
 
 # Maven + Temurin JDK 26 (satisfies the JDK 25+ floor; the CI baseline is
 # JDK 25, the current LTS — #92).
-FROM maven:3-eclipse-temurin-26@sha256:6206ae5e460fbc803743b53addc31c5caca04582cf6a99f0f91df29c54954b52
+FROM maven:3-eclipse-temurin-26@sha256:69a6c37f0a91fca2c9d0cdd684c9c0ea7b1bc00d4196749c24440b2e02ad163d
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # version control and downloads (the maven image ships neither)
